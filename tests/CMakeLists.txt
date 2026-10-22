@@ -96,8 +96,18 @@ if(MSVC)
 endif()
 
 include(GoogleTest)
+
+# Copies the runtime DLLs (SDL3) next to a test exe. Post-build steps run in the
+# order they're added, so this goes before gtest_discover_tests launches the exe.
+function(interstice_copy_test_dlls target)
+  add_custom_command(TARGET ${target} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+    COMMAND_EXPAND_LISTS)
+endfunction()
+
 # Discovery and ctest run in the build folder (discovery leaves a JSON file behind);
 # main.cpp switches to workdirectory itself.
+interstice_copy_test_dlls(gui_core_tests)
 gtest_discover_tests(gui_core_tests)
 
 set_target_properties(gui_core_tests PROPERTIES
@@ -137,18 +147,10 @@ if(MSVC)
   target_compile_options(gui_gpu_tests PRIVATE /wd4702)
 endif()
 
-# Discovery and ctest run in the build folder (discovery leaves a JSON file behind);
-# main.cpp switches to workdirectory itself.
+interstice_copy_test_dlls(gui_gpu_tests)
 gtest_discover_tests(gui_gpu_tests)
 
 set_target_properties(gui_gpu_tests PROPERTIES
   FOLDER "Tests"
   VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory"
-)
-
-# Copy runtime DLLs (e.g. SDL3.dll) next to the test exe so gtest_discover_tests
-# and ctest can launch it.
-add_custom_command(TARGET gui_gpu_tests POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:gui_gpu_tests> $<TARGET_FILE_DIR:gui_gpu_tests>
-  COMMAND_EXPAND_LISTS
 )
