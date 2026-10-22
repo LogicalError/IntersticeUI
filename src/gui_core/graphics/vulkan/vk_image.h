@@ -2,6 +2,9 @@
 
 #include <gui_core/graphics/gui_image.h>
 
+#include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
+
 namespace Vulkan
 {
     class VulkanImage : public GUI::Image

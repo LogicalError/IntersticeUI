@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 # On by default only when this is the top-level project.
 option(INTERSTICE_BUILD_DEMO  "Build the demo application" ${PROJECT_IS_TOP_LEVEL})
 option(INTERSTICE_BUILD_TESTS "Build the tests"            ${PROJECT_IS_TOP_LEVEL})
+option(INTERSTICE_BUILD_EXAMPLES "Build the examples"      ${PROJECT_IS_TOP_LEVEL})
 
 find_package(Vulkan REQUIRED)
 
@@ -27,6 +28,9 @@ include(ThirdPartyCache)
 include(Shaders)
 
 add_subdirectory(src)
+if(INTERSTICE_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # The libraries load the compiled shaders at runtime.
 add_dependencies(gui_core Shaders)

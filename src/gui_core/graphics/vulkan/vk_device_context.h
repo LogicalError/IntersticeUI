@@ -10,6 +10,9 @@
 #include <gui_core/graphics/vulkan/vk_rhi.h>
 #include <gui_core/graphics/vulkan/vk_descriptors.h>
 
+#include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
+
 #include <array>
 #include <mutex>
 #include <optional>

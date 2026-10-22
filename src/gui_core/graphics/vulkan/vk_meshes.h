@@ -2,6 +2,9 @@
 
 #include <gui_core/graphics/gui_buffer.h>
 
+#include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
+
 namespace Vulkan
 {
     struct Buffer

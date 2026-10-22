@@ -3,6 +3,8 @@
 #include <deque>
 #include <span>
 
+#include <vulkan/vulkan.h>
+
 namespace Vulkan
 {
     struct DescriptorLayoutBuilder 

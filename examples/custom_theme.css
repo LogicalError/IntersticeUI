@@ -1,0 +1,30 @@
+/* The custom_theme example's own classes. Style files load after the palette
+   (themes/dark.css or light.css), so they can use its variables. */
+
+.banner {
+    padding: 12px;
+    margin: 4px;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: var(--accent-light);
+    background-color: var(--accent-dark);
+    color: var(--text-bright);
+    font-size: 20px;
+    text-align: center;
+}
+
+.warning-button {
+    border-width: 1px;
+    border-radius: 12px;
+    border-color: #e0a030;
+    background-color: #5a3a10;
+    color: #ffe0a0;
+    margin: 1px;
+    padding: 4px 12px 4px 12px;
+    text-align: center;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.warning-button:hover  { background-color: #7a5018; }
+.warning-button:active { background-color: #a06a20; }
