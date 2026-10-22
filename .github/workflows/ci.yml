@@ -16,15 +16,23 @@ jobs:
           lfs: false
 
       # The fonts are in Git LFS. Checkouts count against the LFS bandwidth quota,
-      # so the objects are cached and pulled only when they change.
+      # so the objects are cached and pulled only when they change. Caches are
+      # saved right after they're filled: actions/cache saves only at the end of
+      # a successful job, so a later failure would throw them away.
       - name: List LFS objects
         run: git lfs ls-files --long | ForEach-Object { $_.Split(' ')[0] } | Sort-Object | Out-File -Encoding utf8 .lfs-assets-id
-      - uses: actions/cache@v6.1.0
+      - id: lfs-cache
+        uses: actions/cache/restore@v6.1.0
         with:
           path: .git/lfs
           key: lfs-${{ hashFiles('.lfs-assets-id') }}
       - name: Pull LFS objects
         run: git lfs pull
+      - if: steps.lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: .git/lfs
+          key: ${{ steps.lfs-cache.outputs.cache-primary-key }}
 
       - uses: humbletim/install-vulkan-sdk@v1.2
         with:
@@ -39,16 +47,23 @@ jobs:
           Expand-Archive vulkan-rt.zip -DestinationPath "${{ runner.temp }}/vulkan-rt"
           "${{ runner.temp }}\vulkan-rt\VulkanRT-1.4.309.0-Components\x64" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
-      # The third-party libraries only change with the submodules or their build files.
+      # The third-party libraries only change with the submodules or their build
+      # files. Configure builds them (Debug and Release) when the cache misses.
       - name: Third-party cache key
         run: git submodule status | Out-File -Encoding utf8 .submodules-id
-      - uses: actions/cache@v6.1.0
+      - id: third-party-cache
+        uses: actions/cache/restore@v6.1.0
         with:
           path: build/third_party/install
           key: third-party-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
 
       - name: Configure
         run: cmake -S . -B build -A x64
+      - if: steps.third-party-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: build/third_party/install
+          key: ${{ steps.third-party-cache.outputs.cache-primary-key }}
 
       - name: Build Debug
         run: cmake --build build --config Debug --parallel
