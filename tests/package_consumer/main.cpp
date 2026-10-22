@@ -1,6 +1,6 @@
-// Links the installed package and exercises the public host-integration API.
-// Exit code 0 means the package is usable; it creates no window and needs no GPU
-// beyond what CheckPhysicalDeviceSupport queries.
+// Links the installed package, creates a GUIApplication from the installed
+// resources and renders a few frames in a window. Exit code 0 means the package
+// works. Needs a Vulkan driver (CI uses a software one).
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 
@@ -8,8 +8,27 @@
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 
 #include <cstdio>
-#include <filesystem>
-#include <vector>
+
+namespace
+{
+    class ConsumerApp : public GUI::GUIApplication
+    {
+    public:
+        GUI::ID windowID     = GUI::ID::Invalid();
+        int     framesBuilt  = 0;
+
+        void OnGUI() override
+        {
+            if (BeginWindow(windowID, "Package consumer", GUI::LayoutOverride{}.Size(320, 200)))
+            {
+                Label("IntersticeUI package consumer");
+                EndWindow();
+            }
+            if (++framesBuilt >= 3)
+                applicationQuit = true;
+        }
+    };
+}
 
 int main()
 {
@@ -19,14 +38,19 @@ int main()
         VK_API_VERSION_MINOR(requirements.apiVersion),
         requirements.deviceExtensions.size());
 
-    if (!std::filesystem::exists(std::filesystem::path(CONSUMER_RESOURCE_DIR) / "themes"))
+    // Loads the installed resources, whatever the working directory is.
+    ConsumerApp app;
+    app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
+    if (!app.Initialize())
     {
-        std::printf("resources missing under %s\n", CONSUMER_RESOURCE_DIR);
+        std::printf("GUIApplication::Initialize failed\n");
+        app.Cleanup();
         return 1;
     }
+    app.windowID = app.idManager.CreateStaticID();
+    app.Run();
+    app.Cleanup();
 
-    // Header-only use of the application hook proves gui_controls headers resolve.
-    GUI::GUIApplication* application = nullptr;
-    (void)application;
-    return 0;
+    std::printf("rendered %d frames\n", app.framesBuilt);
+    return app.framesBuilt >= 3 ? 0 : 1;
 }

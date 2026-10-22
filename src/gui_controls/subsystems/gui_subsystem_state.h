@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -62,14 +63,40 @@ namespace GUI
         int        tabWidth = 0; // width of the dragged tab from originalRects
     };
 
+    // The drop-zone overlay shown while a dock tab is dragged; it slides between zones.
+    struct DockDropZoneAnim
+    {
+        bool    hasTarget = false;  // was previous frame showing a drop zone overlay?
+        IntRect currentRect{};      // interpolated rect (what we render)
+        IntRect targetRect{};       // destination rect
+        std::chrono::steady_clock::time_point lastTime{};
+    };
+
     // Used directly by controls_docking.cpp.
     class DockTabDragSubsystem
     {
     public:
-        DockTabDragInfo& Info() { return m_info; }
+        DockTabDragInfo&  Info()         { return m_info; }
+        DockDropZoneAnim& DropZoneAnim() { return m_dropZoneAnim; }
 
     private:
-        DockTabDragInfo m_info{};
+        DockTabDragInfo  m_info{};
+        DockDropZoneAnim m_dropZoneAnim{};
+    };
+
+    struct ToolbarDockState;
+
+    // A floating toolbar window dragged by its thumb; one drag at a time.
+    // currentMousePos is read by the construction-time drop visualization.
+    class ToolbarWindowDragSubsystem
+    {
+    public:
+        bool              active          = false;
+        ID                windowID        = ID::Invalid();
+        int2              startMousePos {};
+        int2              currentMousePos {};
+        IntRect           startRect {};
+        ToolbarDockState* sourceDockState = nullptr;
     };
 
     // Last frame's screen rects of menu triggers and popups, written by AddPostLayout

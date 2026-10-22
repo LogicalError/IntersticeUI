@@ -46,6 +46,10 @@ endif()
 
 function(_interstice_build_third_party_config cfg)
   set(stamp "${INTERSTICE_TP_INSTALL}/.stamp-${cfg}")
+  # A cache built with the tests off has no googletest: rebuild once they're on.
+  if(INTERSTICE_BUILD_TESTS AND NOT EXISTS "${INTERSTICE_TP_INSTALL}/lib/cmake/GTest")
+    file(REMOVE "${stamp}")
+  endif()
   if(EXISTS "${stamp}")
     return()
   endif()
@@ -70,6 +74,7 @@ function(_interstice_build_third_party_config cfg)
       -S "${CMAKE_SOURCE_DIR}/third_party"
       -B "${INTERSTICE_TP_BUILD}"
       "-DCMAKE_INSTALL_PREFIX=${INTERSTICE_TP_INSTALL}"
+      "-DINTERSTICE_BUILD_TESTS=${INTERSTICE_BUILD_TESTS}"
     RESULT_VARIABLE _rc
   )
   if(NOT _rc EQUAL 0)
@@ -120,7 +125,9 @@ find_package(skribidi CONFIG REQUIRED)
 find_package(vma CONFIG REQUIRED)
 find_package(nanosvg CONFIG REQUIRED)
 find_package(vkbootstrap CONFIG REQUIRED)
-find_package(GTest CONFIG REQUIRED)
+if(INTERSTICE_BUILD_TESTS)
+  find_package(GTest CONFIG REQUIRED)
+endif()
 
 # skribidi's install export lives under the `skribidi::` namespace, but
 # src/CMakeLists.txt historically linked the plain `skribidi` target.

@@ -15,15 +15,21 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakeTargets")
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+# On by default only when this is the top-level project.
+option(INTERSTICE_BUILD_DEMO  "Build the demo application" ${PROJECT_IS_TOP_LEVEL})
+option(INTERSTICE_BUILD_TESTS "Build the tests"            ${PROJECT_IS_TOP_LEVEL})
+
 find_package(Vulkan REQUIRED)
 
 include(CompilerOptions)
+include(Submodules)
 include(ThirdPartyCache)
 include(Shaders)
 
 add_subdirectory(src)
 
-add_dependencies(demo Shaders)
+# The libraries load the compiled shaders at runtime.
+add_dependencies(gui_core Shaders)
 
 # ---- Packaging -------------------------------------------------------------
 # `cmake --install <build> --config Debug|Release --prefix <dir>` produces a
@@ -54,7 +60,8 @@ install(DIRECTORY
     workdirectory/fonts
     workdirectory/icons
     workdirectory/shaders_compiled
-  DESTINATION "${INTERSTICE_RESOURCE_INSTALL_DIR}")
+  DESTINATION "${INTERSTICE_RESOURCE_INSTALL_DIR}"
+  PATTERN demo.css EXCLUDE)
 
 if(INTERSTICE_INSTALL_THIRD_PARTY)
   install(DIRECTORY "${INTERSTICE_TP_INSTALL}/"
@@ -86,8 +93,7 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/IntersticeUIConfigVersion.cmake"
   DESTINATION lib/cmake/IntersticeUI)
 
-option(BUILD_TESTING "Build the tests" ON)
-if(BUILD_TESTING)
+if(INTERSTICE_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()

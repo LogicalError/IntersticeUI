@@ -8,6 +8,8 @@
 # Provides:
 #   IntersticeUI::gui_core, IntersticeUI::gui_controls   static libraries
 #   IntersticeUI_RESOURCE_DIR                            themes, fonts, icons, compiled shaders
+#   INTERSTICE_RESOURCE_DIR (compile definition)         the same folder, for
+#                                                        GUIApplication::SetResourceRoot
 #
 # The package is built with MSVC for Windows x64 and links the same toolchain
 # as its consumer; mixing C++ runtimes or standard library versions is not
@@ -39,5 +41,7 @@ if(NOT TARGET IntersticeUI::gui_core)
 endif()
 
 set_and_check(IntersticeUI_RESOURCE_DIR "@PACKAGE_INTERSTICE_RESOURCE_INSTALL_DIR@")
+set_property(TARGET IntersticeUI::gui_controls APPEND PROPERTY
+  INTERFACE_COMPILE_DEFINITIONS "INTERSTICE_RESOURCE_DIR=\"${IntersticeUI_RESOURCE_DIR}\"")
 
 check_required_components(IntersticeUI)

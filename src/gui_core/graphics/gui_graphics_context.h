@@ -10,6 +10,7 @@
 
 #include <source_location>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace GUI
@@ -53,6 +54,9 @@ namespace GUI
         virtual ~GraphicsContext() {}
 
     public:
+        // Where the compiled shaders are (default "shaders_compiled", relative to the
+        // working directory). Call before Initialize.
+        virtual void SetShaderDirectory(std::string_view directory) = 0;
         virtual bool Initialize(IWindowBackend* windowBackend) = 0;
         virtual void Cleanup() = 0;
         virtual void BeginFrame() = 0;

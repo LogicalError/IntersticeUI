@@ -49,7 +49,7 @@ namespace GUI
     void Application::RenderSettingsAppearance()
     {
         // Labels have break-after: avoid, so each stays on one row with its field.
-        Text(idManager.AllocateDynamicID("settingsTitle"), "Appearance", theme.settingsTitleStyleRef);
+        Text(idManager.AllocateDynamicID("settingsTitle"), "Appearance", settingsTitleStyleRef);
 
         BeginLabelGroup(140);
 
@@ -93,7 +93,7 @@ namespace GUI
 
     void Application::RenderSettingsGeneral()
     {
-        Text(idManager.AllocateDynamicID("settingsTitle"), "General", theme.settingsTitleStyleRef);
+        Text(idManager.AllocateDynamicID("settingsTitle"), "General", settingsTitleStyleRef);
         BeginLabelGroup(140);
 
         Label("User name");
@@ -107,7 +107,7 @@ namespace GUI
 
     void Application::RenderSettingsAdvanced()
     {
-        Text(idManager.AllocateDynamicID("settingsTitle"), "Advanced", theme.settingsTitleStyleRef);
+        Text(idManager.AllocateDynamicID("settingsTitle"), "Advanced", settingsTitleStyleRef);
         BeginLabelGroup(140);
 
         Label("Max undo levels");
@@ -119,7 +119,7 @@ namespace GUI
     void Application::RenderSettingsShortcuts()
     {
         // Layout: category tree | sizer | shortcuts table.
-        Text(idManager.AllocateDynamicID("settingsTitle"), "Shortcuts", theme.settingsTitleStyleRef);
+        Text(idManager.AllocateDynamicID("settingsTitle"), "Shortcuts", settingsTitleStyleRef);
 
         const auto& entries      = commandManager.GetCommands();
         const uint32_t modeCount = commandManager.GetEditModeCount();
@@ -237,7 +237,7 @@ namespace GUI
 
         VirtualTreeView(idManager.AllocateDynamicID("shortcutCatTree"),
                         catRows, catVisibleIdx, catTableState,
-                        theme.shortcutCategoryStyleRef,
+                        shortcutCategoryStyleRef,
                         GUI::LayoutOverride::Auto().FixedWidth(styleManager.Px(demo.settingsShortcutsCategoryWidth)).NoGrow(),
                         "Category");
 
@@ -435,7 +435,7 @@ namespace GUI
                      std::span<VirtualTableColumn>(active.data(), colCount),
                      int(visRows.size()),
                      /*rowHeight*/0,
-                     theme.shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
+                     shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
                      GUI::LayoutOverride{}.FlexGrow(1));
 
         EndHorizontal();  // shortcutGridCol
@@ -444,7 +444,7 @@ namespace GUI
 
     void Application::RenderSettingsAbout()
     {
-        Text(idManager.AllocateDynamicID("settingsTitle"), "About", theme.settingsTitleStyleRef);
+        Text(idManager.AllocateDynamicID("settingsTitle"), "About", settingsTitleStyleRef);
         Text("IntersticeUI — Vulkan-based GUI framework demo.");
         Text("These are placeholder settings pages.");
     }

@@ -465,7 +465,7 @@ namespace GUI
                 for (int v = 0; v < 3; ++v)
                 {
                     AddBox(idManager.AllocateDynamicID(),
-                           theme.iconVAlignDemoStyleRefs[s][v],
+                           iconVAlignDemoStyleRefs[s][v],
                            kSideIcon[s],
                            kLabel[s][v]);
                 }

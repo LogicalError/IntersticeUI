@@ -184,7 +184,7 @@ namespace GUI
             sp.AddPage(app.idManager.CreateStaticID(), "Shortcuts", [&]
             {
                 app.Text(app.idManager.AllocateDynamicID("title"), "Shortcuts",
-                         app.theme.settingsTitleStyleRef);
+                         app.theme.textStyleRef);
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("searchRow"),
                                     app.theme.searchRowStyleRef,

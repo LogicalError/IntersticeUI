@@ -310,46 +310,50 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. FILES ${GUI_CONTROLS_FILES})
 target_link_libraries(gui_controls PUBLIC gui_core)
 
 
-# Demo executable - links against gui_controls (which transitively links gui_core)
-list(APPEND DEMO_FILES
-  demo/main.cpp
-  demo/application.h
-  demo/application.cpp
-  demo/panel_reorderable.cpp
-  demo/panel_hierarchy.cpp
-  demo/panel_node_view.cpp
-  demo/panel_view.cpp
-  demo/panel_box_test.cpp
-  demo/panel_inspector.cpp
-  demo/panel_misc.cpp
-  demo/panel_table.cpp
-  demo/panel_split_scroll.cpp
-  demo/panel_console.cpp
-  demo/panel_profiler_tree.cpp
-  demo/panel_files.cpp
-  demo/panel_tree_table.cpp
-  demo/panel_settings.cpp
-
-  # Theme files (palettes + shared styles)
-  "${PROJECT_SOURCE_DIR}/workdirectory/themes/dark.css"
-  "${PROJECT_SOURCE_DIR}/workdirectory/themes/light.css"
-  "${PROJECT_SOURCE_DIR}/workdirectory/themes/styles.css"
-)
-
-add_executable(demo ${DEMO_FILES})
-
-set_target_properties(demo PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory")
-target_include_directories(demo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-
-target_link_libraries(demo PUBLIC gui_controls)
-
 interstice_apply_compile_options(gui_core)
 interstice_apply_compile_options(gui_controls)
-interstice_apply_compile_options(demo)
+set_target_properties(gui_core gui_controls PROPERTIES FOLDER "Core")
 
-set_target_properties(gui_core gui_controls demo PROPERTIES FOLDER "Core")
+if(INTERSTICE_BUILD_DEMO)
+  # Demo executable - links against gui_controls (which transitively links gui_core)
+  list(APPEND DEMO_FILES
+    demo/main.cpp
+    demo/application.h
+    demo/application.cpp
+    demo/panel_reorderable.cpp
+    demo/panel_hierarchy.cpp
+    demo/panel_node_view.cpp
+    demo/panel_view.cpp
+    demo/panel_box_test.cpp
+    demo/panel_inspector.cpp
+    demo/panel_misc.cpp
+    demo/panel_table.cpp
+    demo/panel_split_scroll.cpp
+    demo/panel_console.cpp
+    demo/panel_profiler_tree.cpp
+    demo/panel_files.cpp
+    demo/panel_tree_table.cpp
+    demo/panel_settings.cpp
 
-add_custom_command(TARGET demo POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:demo> $<TARGET_FILE_DIR:demo>
-  COMMAND_EXPAND_LISTS
-)
+    # Theme files (palettes + shared styles)
+    "${PROJECT_SOURCE_DIR}/workdirectory/themes/dark.css"
+    "${PROJECT_SOURCE_DIR}/workdirectory/themes/light.css"
+    "${PROJECT_SOURCE_DIR}/workdirectory/themes/styles.css"
+  )
+
+  add_executable(demo ${DEMO_FILES})
+
+  set_target_properties(demo PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory")
+  target_include_directories(demo PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  target_link_libraries(demo PUBLIC gui_controls)
+
+  interstice_apply_compile_options(demo)
+
+  set_target_properties(demo PROPERTIES FOLDER "Core")
+
+  add_custom_command(TARGET demo POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:demo> $<TARGET_FILE_DIR:demo>
+    COMMAND_EXPAND_LISTS
+  )
+endif()

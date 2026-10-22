@@ -23,6 +23,8 @@ namespace GUI
 
     bool Application::Initialize(const InitializeOptions& options)
     {
+        const std::string_view styleFiles[] = { "styles.css", "demo.css" };
+        SetStyleFiles(styleFiles);
         if (!GUIApplication::Initialize(options))
             return false;
 
@@ -213,7 +215,8 @@ namespace GUI
                 .windowID      = idManager.CreateStaticID(),
                 .spawnPosition = mousePos,
                 .positioned    = false,
-                .title         = item.debugName
+                .title         = item.debugName,
+                .homeSide      = srcSide
             });
         };
                 
@@ -454,6 +457,30 @@ namespace GUI
 
     bool Application::InitializeDemoStyles()
     {
+        hierarchyVizCellStyleRef    = theme.GetStyle("hierarchy-viz-cell");
+        hierarchyVizBgStyleRef      = theme.GetStyle("hierarchy-viz-bg");
+        hierarchyVisibilityStyleRef = theme.GetStyle("hierarchy-visibility");
+        logLevelIconStyleRef        = theme.GetStyle("log-level-icon");
+        logLevelToggleLeftStyleRef  = theme.GetStyle("log-level-toggle-left");
+        logLevelToggleMidStyleRef   = theme.GetStyle("log-level-toggle-mid");
+        logLevelToggleRightStyleRef = theme.GetStyle("log-level-toggle-right");
+        logCollapseToggleStyleRef   = theme.GetStyle("log-collapse-toggle");
+        logMessageStyleRef          = theme.GetStyle("log-message");
+        logCellStyleRef             = theme.GetStyle("log-cell");
+        logCountBadgeStyleRef       = theme.GetStyle("log-count-badge");
+        logDetailPaneStyleRef       = theme.GetStyle("log-detail-pane");
+        logDetailTextStyleRef       = theme.GetStyle("log-detail-text");
+        shortcutCategoryStyleRef    = theme.GetStyle("shortcut-category");
+        shortcutTableStyleRef       = theme.GetStyle("shortcut-table");
+        settingsTitleStyleRef       = theme.GetStyle("settings-title");
+        {
+            const char* kSideTag[4]   = { "left", "right", "top", "bottom" };
+            const char* kVAlignTag[3] = { "top",  "mid",   "bot" };
+            for (int s = 0; s < 4; ++s)
+                for (int v = 0; v < 3; ++v)
+                    iconVAlignDemoStyleRefs[s][v] = theme.GetStyle(std::string("icon-demo-") + kSideTag[s] + "-" + kVAlignTag[v]);
+        }
+
         // -------------------------------------------------------------------------
         // Demo-specific styles below
         // -------------------------------------------------------------------------

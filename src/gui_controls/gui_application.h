@@ -120,6 +120,7 @@ namespace GUI
         std::unique_ptr<RenameSubsystem>           m_renameSub;
         std::unique_ptr<ReorderableSubsystem>      m_reorderable;
         std::unique_ptr<DockTabDragSubsystem>      m_dockTabDragSub;
+        ToolbarWindowDragSubsystem                 m_toolbarWindowDrag{};
         std::unique_ptr<UICacheManager>            m_uiCache;
 
         // Cached scopes being rebuilt (BeginCached misses), innermost last.
@@ -315,6 +316,19 @@ namespace GUI
         // fontScale multiplies every CSS font-size.
         void RequestReloadTheme(std::string_view themePath, float fontScale);
         const std::string& GetThemePath() const { return m_themePath; }
+
+        // The folder the resources load from: compiled shaders, default fonts and
+        // relative theme paths. Empty (the default) is the working directory; a
+        // package user passes INTERSTICE_RESOURCE_DIR, which the package defines.
+        // Call before Initialize.
+        void SetResourceRoot(std::string_view root) { m_resourceRoot = std::string(root); }
+        const std::string& GetResourceRoot() const { return m_resourceRoot; }
+
+        // The CSS rule files loaded after the palette, in order; relative paths are
+        // next to the palette file. Defaults to the library's "styles.css". An app
+        // appends its own and finds their classes with theme.GetStyle. Call before
+        // Initialize, or follow with RequestReloadTheme.
+        void SetStyleFiles(std::span<const std::string_view> files);
         float GetGlobalFontScale() const { return m_globalFontScale; }
 
         // Extra UI zoom on top of the main window's display scale (1 = follow the
@@ -332,7 +346,12 @@ namespace GUI
 
     protected:
         // Change via RequestReloadTheme so the reload happens between frames.
+        std::string m_resourceRoot;
+        MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
+        ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
+        std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot
         std::string m_themePath     { "themes/dark.css" };
+        std::vector<std::string> m_styleFiles { "styles.css" };
         float       m_globalFontScale { 1.0f };
         float       m_uiScale { 1.0f };
         float       m_displayScale { 1.0f };

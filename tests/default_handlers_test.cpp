@@ -121,5 +121,69 @@ namespace GUI
             EXPECT_EQ(bCalls, 1);
         }
 
+        // ===================================================================
+        // Focused text editing passes the keys it doesn't use on (#3)
+        // ===================================================================
+
+        bool TextBoxTakes(KeyCode key, KeyModifier mods = KeyModifier::None)
+        {
+            GUIStateManager sm{};
+            ID id{}; id.value.dynamicParts.hashValue = 1;
+            sm.Interaction().SetFocusID(id);
+            auto handler = MakeTextBoxHandler(sm);
+            InputState s{};
+            s.lastKey   = key;
+            s.modifiers = mods;
+            return handler(MakeEvent(id, EventType::KeyDown, s));
+        }
+
+        TEST(TextBoxHandler, PassesShortcutsItDoesNotUse)
+        {
+            EXPECT_FALSE(TextBoxTakes(KeyCode::KeyS, KeyModifier::Control));
+            EXPECT_FALSE(TextBoxTakes(KeyCode::F5));
+            EXPECT_FALSE(TextBoxTakes(KeyCode::Escape));
+            EXPECT_FALSE(TextBoxTakes(KeyCode::KeyF, KeyModifier::Alt));
+        }
+
+        TEST(TextBoxHandler, TakesTypingAndEditingKeys)
+        {
+            EXPECT_TRUE(TextBoxTakes(KeyCode::KeyW));
+            EXPECT_TRUE(TextBoxTakes(KeyCode::KeyW, KeyModifier::Shift));
+            EXPECT_TRUE(TextBoxTakes(KeyCode::Space));
+            EXPECT_TRUE(TextBoxTakes(KeyCode::Backspace));
+            EXPECT_TRUE(TextBoxTakes(KeyCode::Return));
+            EXPECT_TRUE(TextBoxTakes(KeyCode::Left, KeyModifier::Control | KeyModifier::Shift));
+            for (KeyCode key : { KeyCode::KeyA, KeyCode::KeyC, KeyCode::KeyV, KeyCode::KeyX, KeyCode::KeyZ })
+                EXPECT_TRUE(TextBoxTakes(key, KeyModifier::Control));
+        }
+
+        TEST(TextBoxHandler, TakesTextInput)
+        {
+            GUIStateManager sm{};
+            ID id{}; id.value.dynamicParts.hashValue = 1;
+            sm.Interaction().SetFocusID(id);
+            auto handler = MakeTextBoxHandler(sm);
+            InputState s{};
+            s.textInput = "w";
+            EXPECT_TRUE(handler(MakeEvent(id, EventType::TextInput, s)));
+        }
+
+        TEST(TextEditorUsesKey, ReadOnlyTextTakesOnlySelectionKeys)
+        {
+            InputState s{};
+            auto uses = [&](KeyCode key, KeyModifier mods = KeyModifier::None)
+            {
+                s.lastKey = key; s.modifiers = mods;
+                return TextEditorUsesKey(s, /*readOnly*/ true);
+            };
+            EXPECT_TRUE(uses(KeyCode::KeyC, KeyModifier::Control));
+            EXPECT_TRUE(uses(KeyCode::KeyA, KeyModifier::Control));
+            EXPECT_TRUE(uses(KeyCode::Right, KeyModifier::Shift));
+            EXPECT_FALSE(uses(KeyCode::KeyW));
+            EXPECT_FALSE(uses(KeyCode::Backspace));
+            EXPECT_FALSE(uses(KeyCode::KeyV, KeyModifier::Control));
+            EXPECT_FALSE(uses(KeyCode::KeyS, KeyModifier::Control));
+        }
+
     } // namespace
 } // namespace GUI

@@ -174,7 +174,14 @@ namespace GUI
         return it != m_paletteColors.end() ? it->second : fallback;
     }
 
-    bool GUITheme::LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath, float fontScale)
+    StyleRef GUITheme::GetStyle(std::string_view cssClass) const
+    {
+        const auto it = m_classStyles.find(cssClass);
+        return it != m_classStyles.end() ? it->second : StyleRef{};
+    }
+
+    bool GUITheme::LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath,
+                             std::span<const std::string> styleFiles, float fontScale)
     {
         // -------------------------------------------------------------------------
         // Theme = palette file (dark.css / light.css, only `:root` vars) + a
@@ -189,32 +196,46 @@ namespace GUI
             return false;
         }
 
-        const auto stylesPath = std::filesystem::path(themePath).parent_path() / "styles.css";
-        std::ifstream stylesFile(stylesPath);
-        if (!stylesFile.good())
-        {
-            LOG_ERROR(kLogTheme, "theme styles file not found: {}", stylesPath.string());
-            return false;
-        }
-
-        std::ostringstream paletteText;
-        paletteText << paletteFile.rdbuf();
+        // Palette first, then each style file, so var() references resolve at parse time.
+        // Each part's first line in the concatenated text maps errors back to its file.
+        const std::filesystem::path themeDir = std::filesystem::path(themePath).parent_path();
+        struct Part { std::string name; int firstLine; };
+        std::vector<Part> parts;
         std::ostringstream ss;
-        ss << paletteText.view() << '\n' << stylesFile.rdbuf();
+        int line = 1;
+        auto append = [&](std::string name, std::ifstream& file)
+        {
+            std::ostringstream text;
+            text << file.rdbuf();
+            parts.push_back({ std::move(name), line });
+            ss << text.view() << '\n';
+            line += int(std::count(text.view().begin(), text.view().end(), '\n')) + 1;
+        };
+        append(themePath, paletteFile);
+        for (const std::string& styleFile : styleFiles)
+        {
+            const std::filesystem::path path = std::filesystem::path(styleFile).is_absolute()
+                ? std::filesystem::path(styleFile) : themeDir / styleFile;
+            std::ifstream file(path);
+            if (!file.good())
+            {
+                LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
+                return false;
+            }
+            append(path.string(), file);
+        }
         StyleSheet sheet = ParseStyleSheet(ss.view());
 
-        // Errors carry lines of the concatenated text; report them against the file they came from.
-        const int paletteLines = int(std::count(paletteText.view().begin(), paletteText.view().end(), '\n')) + 1;
-        const std::string stylesName = stylesPath.string();
         for (const auto& err : sheet.errors)
         {
-            const bool inPalette = err.line <= paletteLines;
-            LOG_ERROR(kLogTheme, "{}:{}:{}: {}", inPalette ? themePath : stylesName,
-                      inPalette ? err.line : err.line - paletteLines, err.column, err.message);
+            const Part* part = &parts.front();
+            for (const Part& p : parts)
+                if (err.line >= p.firstLine) part = &p;
+            LOG_ERROR(kLogTheme, "{}:{}:{}: {}", part->name, err.line - part->firstLine + 1, err.column, err.message);
         }
 
         if (textSystem)
-            RegisterFontFaces(*textSystem, sheet.fontFaces, stylesPath.parent_path());
+            RegisterFontFaces(*textSystem, sheet.fontFaces, themeDir);
         LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
 
         m_paletteColors.clear();
@@ -267,6 +288,10 @@ namespace GUI
                 }
                 return styleManager.Register(s);
             };
+
+        m_classStyles.clear();
+        for (const auto& [name, style] : sheet.styles)
+            m_classStyles.emplace(name, registerCSS(name));
 
         // -------------------------------------------------------------------------
         // Named widget styles from CSS
@@ -411,9 +436,6 @@ namespace GUI
         listItemDragKnobVertStyleRef      = registerCSS("list-item-drag-knob-vert");
         listItemBodyStyleRef              = registerCSS("list-item-body");
         treeViewStyleRef                  = registerCSS("tree-view");
-        hierarchyVizCellStyleRef          = registerCSS("hierarchy-viz-cell");
-        hierarchyVizBgStyleRef            = registerCSS("hierarchy-viz-bg");
-        hierarchyVisibilityStyleRef       = registerCSS("hierarchy-visibility");
         gridViewStyleRef                  = registerCSS("grid-view");
         gridViewItemStyleRef              = registerCSS("grid-view-item");
         gridViewScrollStyleRef            = registerCSS("grid-view-scroll");
@@ -426,23 +448,11 @@ namespace GUI
         flexFillRowStyleRef               = registerCSS("flex-fill-row");
         flexFillColStyleRef               = registerCSS("flex-fill-col");
         flatButtonStyleRef                = registerCSS("flat-button");
-        logLevelIconStyleRef              = registerCSS("log-level-icon");
-        logLevelToggleLeftStyleRef        = registerCSS("log-level-toggle-left");
-        logLevelToggleMidStyleRef         = registerCSS("log-level-toggle-mid");
-        logLevelToggleRightStyleRef       = registerCSS("log-level-toggle-right");
-        logCollapseToggleStyleRef         = registerCSS("log-collapse-toggle");
-        logMessageStyleRef                = registerCSS("log-message");
-        logCellStyleRef                   = registerCSS("log-cell");
-        logCountBadgeStyleRef             = registerCSS("log-count-badge");
-        logDetailPaneStyleRef             = registerCSS("log-detail-pane");
-        logDetailTextStyleRef             = registerCSS("log-detail-text");
         searchTextboxStyleRef             = registerCSS("search-textbox");
         searchTextboxIconStyleRef         = registerCSS("search-textbox-icon");
         searchTextboxFieldStyleRef        = registerCSS("search-textbox-field");
                                           
         searchRowStyleRef                 = registerCSS("search-row");
-        shortcutCategoryStyleRef          = registerCSS("shortcut-category");
-		shortcutTableStyleRef             = registerCSS("shortcut-table");
 
         // Keep the whole parsed grid-view-item style (font-scale applied, same
         // as registerCSS) so callers can clone it with a custom iconSize.
@@ -521,17 +531,6 @@ namespace GUI
         tooltipTextStyleRef               = registerCSS("tooltip-text");
         settingsPageSelectionRef          = registerCSS("settings-page-selection");
         settingsPageStyleRef              = registerCSS("settings-page");
-        settingsTitleStyleRef             = registerCSS("settings-title");
-
-        {
-            // Vertical-align demo matrix: IconSide (L/R/T/B) × block alignment (top/mid/bot).
-            const char* kSideTag[4] = { "left", "right", "top", "bottom" };
-            const char* kVAlignTag[3] = { "top",  "mid",   "bot" };
-            for (int s = 0; s < 4; ++s)
-                for (int v = 0; v < 3; ++v)
-                    iconVAlignDemoStyleRefs[s][v] = registerCSS(
-                        std::string("icon-demo-") + kSideTag[s] + "-" + kVAlignTag[v]);
-        }
 
         return true;
     }

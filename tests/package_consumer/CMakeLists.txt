@@ -17,8 +17,6 @@ find_package(IntersticeUI 0.1 CONFIG REQUIRED)
 
 add_executable(package_consumer main.cpp)
 target_link_libraries(package_consumer PRIVATE IntersticeUI::gui_controls)
-target_compile_definitions(package_consumer PRIVATE
-  CONSUMER_RESOURCE_DIR="${IntersticeUI_RESOURCE_DIR}")
 
 add_custom_command(TARGET package_consumer POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different

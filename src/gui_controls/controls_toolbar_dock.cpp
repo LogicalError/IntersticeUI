@@ -67,19 +67,6 @@ namespace GUI
             return -1;
         }
 
-        // Floating-toolbar window drag. Static: only one drag can happen at a time.
-        // currentMousePos is read by the construction-time drop visualization.
-        struct WindowDragState
-        {
-            bool    active = false;
-            ID      windowID  = ID::Invalid();
-            int2    startMousePos {};
-            int2    currentMousePos {};
-            IntRect startRect {};
-            ToolbarDockState* sourceDockState = nullptr;
-        };
-        static WindowDragState s_windowDrag;
-
         // Toolbar drag thumb: at the LEFT of a horizontal item, TOP of a vertical one,
         // stretched along the cross axis. Only the floating window's thumb has a
         // handler (window move); docked thumbs let the reorderable item drive the drag.
@@ -316,7 +303,8 @@ namespace GUI
     }
 
     // One OS window per floating toolbar (like EmitFloatingDockWindows). Closing it
-    // erases the entry and releases its windowID.
+    // docks the item back on its home side through onDockBack (without one, the
+    // entry is erased and its windowID released).
     void GUIApplication::EmitFloatingToolbarWindows(
         std::vector<FloatingToolbarItem>& floatingItems,
         const FloatingToolbarOptions* options)
@@ -327,7 +315,7 @@ namespace GUI
         // The drag ends in the thumb's MouseUp handler. If that never runs (the window was
         // closed mid-drag), drop the drag here — button up and no release still queued —
         // or the drop overlay would keep showing.
-        if (s_windowDrag.active && inputManager
+        if (m_toolbarWindowDrag.active && inputManager
             && (inputManager->GetCurrentButtons() & MouseButtons::Left) == MouseButtons::None)
         {
             bool releasePending = false;
@@ -335,21 +323,21 @@ namespace GUI
                 if (e.type == EventType::MouseUp) { releasePending = true; break; }
             if (!releasePending)
             {
-                if (dockState && s_windowDrag.sourceDockState == dockState)
+                if (dockState && m_toolbarWindowDrag.sourceDockState == dockState)
                 {
                     windowManager->RequestCloseAllowReopen(dockState->ghostWindowID);
                     dockState->dropAnimHasTarget = false;
                 }
-                s_windowDrag = {};
+                m_toolbarWindowDrag = {};
             }
         }
 
         // ---- Drag visualization for floating-window thumb drags ----
         // Over a source-dock side: show the animated drop overlay (shares the dock's ghost window).
-        if (s_windowDrag.active && s_windowDrag.sourceDockState
-            && s_windowDrag.sourceDockState == dockState)
+        if (m_toolbarWindowDrag.active && m_toolbarWindowDrag.sourceDockState
+            && m_toolbarWindowDrag.sourceDockState == dockState)
         {
-            int targetSide = FindToolbarSideAt(*dockState, s_windowDrag.currentMousePos);
+            int targetSide = FindToolbarSideAt(*dockState, m_toolbarWindowDrag.currentMousePos);
             if (targetSide >= 0)
             {
                 IntRect targetRect = GetSideTargetRect(*dockState, targetSide);
@@ -414,32 +402,32 @@ namespace GUI
                 {
                     if (e.type == EventType::MouseDown && e.state.LeftPressed())
                     {
-                        s_windowDrag.active           = true;
-                        s_windowDrag.windowID         = windowIDForHandler;
-                        s_windowDrag.startMousePos    = e.state.screenPos;
-                        s_windowDrag.currentMousePos  = e.state.screenPos;
-                        s_windowDrag.startRect        = windowManager->GetWindowRect(windowIDForHandler);
-                        s_windowDrag.sourceDockState  = dockState;
+                        m_toolbarWindowDrag.active           = true;
+                        m_toolbarWindowDrag.windowID         = windowIDForHandler;
+                        m_toolbarWindowDrag.startMousePos    = e.state.screenPos;
+                        m_toolbarWindowDrag.currentMousePos  = e.state.screenPos;
+                        m_toolbarWindowDrag.startRect        = windowManager->GetWindowRect(windowIDForHandler);
+                        m_toolbarWindowDrag.sourceDockState  = dockState;
                         guiStateManager.Interaction().SetCaptureID(e.id);
                         return true;
                     }
                     if (e.type == EventType::MouseMove
                         && e.state.LeftDown()
-                        && s_windowDrag.active
-                        && s_windowDrag.windowID == windowIDForHandler)
+                        && m_toolbarWindowDrag.active
+                        && m_toolbarWindowDrag.windowID == windowIDForHandler)
                     {
-                        s_windowDrag.currentMousePos = e.state.screenPos;
-                        int2 delta = e.state.screenPos - s_windowDrag.startMousePos;
-                        IntRect newRect = s_windowDrag.startRect;
+                        m_toolbarWindowDrag.currentMousePos = e.state.screenPos;
+                        int2 delta = e.state.screenPos - m_toolbarWindowDrag.startMousePos;
+                        IntRect newRect = m_toolbarWindowDrag.startRect;
                         newRect.x += delta.x;
                         newRect.y += delta.y;
                         windowManager->SetWindowRect(windowIDForHandler, newRect);
                         return true;
                     }
-                    if (e.type == EventType::MouseUp && s_windowDrag.active
-                        && s_windowDrag.windowID == windowIDForHandler)
+                    if (e.type == EventType::MouseUp && m_toolbarWindowDrag.active
+                        && m_toolbarWindowDrag.windowID == windowIDForHandler)
                     {
-                        s_windowDrag.active = false;
+                        m_toolbarWindowDrag.active = false;
                         guiStateManager.Interaction().ReleaseCaptureID();
 
                         // Close the drop overlay and reset its animation.
@@ -448,7 +436,7 @@ namespace GUI
                             windowManager->RequestCloseAllowReopen(dockState->ghostWindowID);
                             dockState->dropAnimHasTarget = false;
                         }
-                        s_windowDrag.sourceDockState = nullptr;
+                        m_toolbarWindowDrag.sourceDockState = nullptr;
 
                         if (dockState && dockBack)
                         {
@@ -464,9 +452,15 @@ namespace GUI
                 EndWindow();
                 ++i;
             }
+            else if (dockBack)
+            {
+                // The window closed (OS close, Alt+F4, its parent closing): the item goes
+                // back to its home side. dockBack erases the entry, so i stays.
+                dockBack(fw.windowID, fw.homeSide);
+            }
             else
             {
-                // Window closed by user — release ID and remove the entry.
+                // Nowhere to put it back: release the ID and drop the entry.
                 idManager.ReleaseStaticID(fw.windowID);
                 floatingItems.erase(floatingItems.begin() + (ptrdiff_t)i);
             }

@@ -1,8 +1,13 @@
 # Compiles GLSL sources under workdirectory/shaders into SPIR-V.
-# Creates a `Shaders` custom target that the engine depends on.
+# Creates a `Shaders` custom target that gui_core depends on.
 
 find_program(GLSL_VALIDATOR glslangValidator
   HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
+if(NOT GLSL_VALIDATOR)
+  message(FATAL_ERROR
+    "glslangValidator not found. Install the Vulkan SDK (and set VULKAN_SDK), "
+    "or point GLSL_VALIDATOR at the executable.")
+endif()
 
 file(GLOB_RECURSE GLSL_SOURCE_FILES
   CONFIGURE_DEPENDS

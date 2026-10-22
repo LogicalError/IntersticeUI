@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          submodules: recursive
+          lfs: false
+
+      # The fonts are in Git LFS. Checkouts count against the LFS bandwidth quota,
+      # so the objects are cached and pulled only when they change.
+      - name: List LFS objects
+        run: git lfs ls-files --long | ForEach-Object { $_.Split(' ')[0] } | Sort-Object | Out-File -Encoding utf8 .lfs-assets-id
+      - uses: actions/cache@v6.1.0
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+      - name: Pull LFS objects
+        run: git lfs pull
+
+      - uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.4.309.0
+          cache: true
+
+      # The third-party libraries only change with the submodules or their build files.
+      - name: Third-party cache key
+        run: git submodule status | Out-File -Encoding utf8 .submodules-id
+      - uses: actions/cache@v6.1.0
+        with:
+          path: build/third_party/install
+          key: third-party-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build Debug
+        run: cmake --build build --config Debug --parallel
+      - name: Build Release
+        run: cmake --build build --config Release --parallel
+
+      # GPU tests need a real device and stay manual.
+      - name: Core tests (Debug)
+        run: bin/Debug/gui_core_tests.exe
+      - name: Core tests (Release)
+        run: bin/Release/gui_core_tests.exe
+
+      - name: Install the package
+        run: |
+          cmake --install build --config Debug   --prefix "${{ runner.temp }}/pkg"
+          cmake --install build --config Release --prefix "${{ runner.temp }}/pkg"
+
+      # A software Vulkan driver, so the consumer can render without a GPU.
+      # 26.2.3 corrupts the heap in vkDestroyDescriptorPool; 26.2.4 is fine.
+      - name: Software Vulkan driver (lavapipe)
+        run: |
+          curl -sSL -o mesa.7z https://github.com/pal1000/mesa-dist-win/releases/download/26.2.4/mesa3d-26.2.4-release-msvc.7z
+          7z x -y mesa.7z x64/lvp_icd.x86_64.json x64/vulkan_lvp.dll "-o${{ runner.temp }}/mesa"
+          "VK_DRIVER_FILES=${{ runner.temp }}\mesa\x64\lvp_icd.x86_64.json" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Package consumer renders a frame
+        run: |
+          cmake -S tests/package_consumer -B "${{ runner.temp }}/consumer" -A x64 "-DCMAKE_PREFIX_PATH=${{ runner.temp }}/pkg"
+          cmake --build "${{ runner.temp }}/consumer" --config Release
+          & "${{ runner.temp }}/consumer/Release/package_consumer.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

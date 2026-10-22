@@ -290,9 +290,9 @@ namespace GUI
                 case GUI::EventType::KeyDown:
                 case GUI::EventType::KeyUp:
                 case GUI::EventType::TextInput:
-                    // Keep keyboard focus while focused so Ctrl+C reaches the editor.
+                    // Takes the selection keys (Ctrl+C, Ctrl+A, arrows) while focused.
                     if (guiStateManager.Interaction().GetFocusedID() == id && !ev.state.consumed)
-                        return true;
+                        return ev.type != GUI::EventType::TextInput && TextEditorUsesKey(ev.state, /*readOnly*/ true);
                     break;
                 default:
                     break;

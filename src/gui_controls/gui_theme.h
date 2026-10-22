@@ -3,6 +3,8 @@
 #include <gui_core/style/gui_style_ref.h>
 #include <gui_core/style/gui_style.h>
 
+#include <map>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -87,7 +89,6 @@ namespace GUI
         // panel_misc vertical-align demo grid. [side][valign] where
         //   side  = 0:Left, 1:Right, 2:Top, 3:Bottom
         //   valign = 0:Top,  1:Middle, 2:Bottom
-        StyleRef iconVAlignDemoStyleRefs[4][3] {};
         StyleRef knobStyleRef {};
         StyleRef sliderFieldTrackStyleRef {};
         StyleRef colorGradientSliderRowStyleRef {}; // outer row of EmitColorGradientSlider (bar + numeric field)
@@ -194,9 +195,6 @@ namespace GUI
         StyleRef listItemDragKnobVertStyleRef {}; // reorderable list item drag handle (vertical list — drag along y)
         StyleRef listItemBodyStyleRef {};     // reorderable list item text/icon body
         StyleRef treeViewStyleRef {};
-        StyleRef hierarchyVizCellStyleRef {};     // eye-toggle column's cell wrapper (zero side padding)
-        StyleRef hierarchyVizBgStyleRef {};       // eye-toggle column's full-height darkening strip
-        StyleRef hierarchyVisibilityStyleRef {};  // eye-toggle element in the hierarchy tree
         StyleRef gridViewStyleRef {};
         StyleRef gridViewItemStyleRef {};
         StyleRef gridViewScrollStyleRef {};   // virtualized grid scroll viewport (column)
@@ -209,19 +207,7 @@ namespace GUI
         StyleRef flexFillRowStyleRef {};      // horizontal flex bounded to its parent (flex-basis:0)
         StyleRef flexFillColStyleRef {};      // vertical flex bounded to its parent (flex-basis:0)
         StyleRef flatButtonStyleRef {};       // button that reads as plain left-aligned text (no chrome)
-        StyleRef shortcutCategoryStyleRef{};   // Shortcuts-page categories
         StyleRef searchRowStyleRef {};         // full-width row hosting a top-of-panel SearchField (bottom spacing)
-        StyleRef shortcutTableStyleRef{};      // Shortcuts-page table
-        StyleRef logLevelIconStyleRef {};      // fixed-size level icon in the console log
-        StyleRef logLevelToggleLeftStyleRef {};    // level-filter toggle (small icon + count) in the console log
-        StyleRef logLevelToggleMidStyleRef {};     // level-filter toggle (small icon + count) in the console log
-        StyleRef logLevelToggleRightStyleRef {};   // level-filter toggle (small icon + count) in the console log
-        StyleRef logCollapseToggleStyleRef {};     // console toolbar's collapse-duplicates toggle
-        StyleRef logMessageStyleRef {};            // message text inside the collapse-aware log message cell
-        StyleRef logCellStyleRef {};               // log table cell: compact, text centred in the row
-        StyleRef logCountBadgeStyleRef {};         // duplicate-count bubble on a collapsed log line
-        StyleRef logDetailPaneStyleRef {};         // console detail pane (bottom half — full text of selected entry)
-        StyleRef logDetailTextStyleRef {};         // rich text inside the detail pane (with clickable file:line links)
         // SearchField: the textbox chrome container, its icon, and the borderless inner field.
         StyleRef searchTextboxStyleRef {};
         StyleRef searchTextboxIconStyleRef {};
@@ -247,7 +233,6 @@ namespace GUI
 
         StyleRef settingsPageSelectionRef {};
         StyleRef settingsPageStyleRef     {};   // settings page body — dock-content layout + left padding off the sizer
-        StyleRef settingsTitleStyleRef    {};
 
         // Arrow icons for tree expand/collapse
         IconID treeArrowRight    = IconID::Invalid;
@@ -299,7 +284,14 @@ namespace GUI
         void InitializeDefaultStyles(StyleManager& styleManager, ITextSystem* textSystem);
         // Registers the theme's @font-face families with textSystem (when given)
         // before any style references them.
-        bool LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath, float fontScale);
+        // themePath: the palette file. styleFiles: the rule files, in order; relative
+        // paths are next to the palette file.
+        bool LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath,
+                       std::span<const std::string> styleFiles, float fontScale);
+
+        // The style of a CSS class from the loaded style files (library or app);
+        // invalid when no file defines it.
+        StyleRef GetStyle(std::string_view cssClass) const;
 
         // A palette color by custom-property name ("--node-tint-input"), or `fallback`
         // when the loaded theme doesn't define it.
@@ -309,6 +301,7 @@ namespace GUI
         void ComputeRowMetrics(StyleManager& styleManager, ITextSystem& textSystem);
     private:
         std::unordered_map<std::string, color4f> m_paletteColors;
+        std::map<std::string, StyleRef, std::less<>> m_classStyles;  // every class in the style files
     };
 
 } // namespace GUI

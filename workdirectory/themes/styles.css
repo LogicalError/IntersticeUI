@@ -391,29 +391,6 @@
 .flat-button:hover  { background-color: var(--bg-hover); }
 .flat-button:active { background-color: var(--bg-hover); }
 
-.shortcut-category {
-    border-width: 0px;
-    margin: 0px 3px 0px 0px;
-    gap: 0px;
-    flex-grow: 1;
-    flex-shrink: 0;
-    display: flex;
-    overflow: auto;
-    flex-direction: column;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    direction: initial;
-    text-wrap: nowrap;
-    text-align: start;
-    vertical-align: middle;
-}
-.shortcut-category:active { border-color: var(--accent); background-color: var(--bg-surface); }
-.shortcut-category:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
-
 /* Search row: a flat full-width row hosting a top-of-panel SearchField, with a
    little breathing room below it before the panel content. Shared by the
    Shortcuts page and the Hierarchy / Inspector / Log / Files panels. */
@@ -430,28 +407,6 @@
     background-color: transparent;
     border-color: transparent;
 }
-
-.shortcut-table {
-    border-width: 0px;
-    border-radius: 0px;
-    margin: 0px 0px 0px 3px;
-    padding: 0px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    vertical-align: baseline;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    background-color: var(--bg-surface);
-    border-color: transparent;
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 0;
-}
-
 
 .first-button {
     border-width: var(--border-first);
@@ -758,23 +713,6 @@
 .table-cell-compact:hover { background-color: var(--bg-hover); }
 .table-cell-compact::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
 
-/* Log rows: compact cells, text centred in the row (the level icon makes rows
-   taller than the text). */
-.log-cell {
-    margin: 0px;
-    padding: 1px 8px;
-    overflow: hidden;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    background-color: transparent;
-}
-.log-cell:hover { background-color: var(--bg-hover); }
-.log-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
-
 /* ---- Table row backdrop ---------------------------------------------------
    One element per data row, placed as a grid item spanning every column and
    painted BEFORE the cells so it sits behind them. In row-selection mode
@@ -941,25 +879,6 @@
 }
 .tree-table-icon::highlight(selected) { color: var(--text-selected); }
 
-/* ---- logLevelIconStyle ---------------------------------------------------- */
-/* Level icon (info / warning / error) in the console log. The icon is drawn
-   to fit the element box, so width/height set its rendered size. */
-.log-level-icon {
-    width: 16px;
-    margin: 0px;
-    padding: 0px;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
-    border-width: 0px;
-    background-color: transparent;
-    border-color: transparent;
-    color: var(--text-primary);
-    align-self: center;
-    flex-grow: 0;
-    flex-shrink: 0;
-}
-.log-level-icon::highlight(selected) { color: var(--text-selected); }
-
 .tree-table-text {
     margin: 0px;
     padding: 0px;
@@ -1033,191 +952,6 @@
 .toggle:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
 .toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
 .toggle:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-
-/* ---- logLevelToggleStyle --------------------------------------------------- */
-/* Log panel level-filter toggle: .toggle with a small inline level icon next
-   to the count (SVGs are 24px natural — scale them down to text size). */
-.log-level-toggle-left {
-    border-width: 1px 0px 1px 1px;
-    border-radius: var(--radius-md-first);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 0px 1px 1px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-left:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-left:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-left:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-left       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.log-level-toggle-left:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-left:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-left:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-
-
-.log-level-toggle-mid {
-    border-width: 1px 0px 1px 0px;
-    border-radius: var(--radius-md-mid);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 0px 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-mid:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-mid:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-mid:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-mid       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.log-level-toggle-mid:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-mid:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-mid:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-
-
-.log-level-toggle-right {
-    border-width: 1px 1px 1px 0px;
-    border-radius: var(--radius-md-last);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 1px 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-right:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-right:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-right:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-level-toggle-right       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.log-level-toggle-right:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-right:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-level-toggle-right:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-
-/* Standalone collapse-duplicates toggle in the console toolbar (collapse-all
-   icon, next to Clear). Mirrors the level toggles but with all four corners
-   rounded; the selected highlight marks "collapsing on". */
-.log-collapse-toggle {
-    border-width: 1px;
-    border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
-    padding: 0px 6px;
-    margin: 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
-    text-align: center;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;   /* icon-only — centre it vertically */
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-collapse-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.log-collapse-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.log-collapse-toggle::highlight(selected)        { border-color: var(--accent);       background-color: var(--accent-light); }
-.log-collapse-toggle:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-
-/* Console message text inside the collapse-aware message cell: fills the cell
-   so the duplicate-count bubble is pushed to the right edge. (The cell's own
-   compact style only styles a single text leaf; a multi-child cell needs the
-   text styled here.) */
-.log-message {
-    margin: 0px;
-    padding: 0px;
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    flex-grow: 1;
-    align-self: center;
-}
-
-/* Duplicate-count bubble on the right of a collapsed log line. The right
-   margin keeps it clear of the table's overlay vertical scrollbar. */
-.log-count-badge {
-    margin: 0px 12px 0px 8px;
-    padding: 0px 6px;
-    border-radius: var(--radius-lg);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    text-align: center;
-    text-wrap: nowrap;
-    flex-grow: 0;
-    flex-shrink: 0;
-    align-self: center;
-}
-
-/* Console detail pane (bottom half): shows the selected entry's full text. Its
-   height is driven by the drag-sizer (LayoutOverride), so it isn't fixed here;
-   the list above takes the remaining height. */
-.log-detail-pane {
-    flex-grow: 0;
-    flex-shrink: 0;
-    margin: 0px;
-    padding: 6px 8px;
-    border-width: 1px 0px 0px 0px;
-    border-color: var(--border-subtle);
-    background-color: var(--bg-surface);
-    overflow: hidden;
-}
-
-/* Full text of the selected entry: multi-line, wraps long lines and honours
-   the explicit newlines in stacktraces. Clickable file:line links are styled
-   per-run by the rich-text system, not here. */
-.log-detail-text {
-    margin: 0px;
-    padding: 0px;
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    text-wrap: wrap;
-    flex-grow: 1;
-    align-self: stretch;
-}
-/* Selection highlight — without this the selection is made but painted with no
-   colour (invisible). Any selectable text style needs a ::selection rule. */
-.log-detail-text::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
-
 
 .first-toggle {
     border-width: var(--border-first);
@@ -1475,42 +1209,6 @@
 .icon-bottom:active { border-color: var(--border-focus); background-color: var(--accent-light); }
 .icon-bottom:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
 .icon-bottom::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-
-/* ---- Vertical-align demo boxes -------------------------------------------
-   12 styles: 4 icon-sides × 3 block vertical alignments. Fixed min-height
-   so the alignment effect is visible in panel_misc's demo grid. Rules are
-   cumulative (the parser's GetOrCreate reuses the same Style object per
-   class name), so the three blocks below stack onto each other without
-   duplicating the shared properties.
-*/
-.icon-demo-left-top, .icon-demo-left-mid, .icon-demo-left-bot,
-.icon-demo-right-top, .icon-demo-right-mid, .icon-demo-right-bot,
-.icon-demo-top-top, .icon-demo-top-mid, .icon-demo-top-bot,
-.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot {
-    border-width: var(--border);
-    border-radius: var(--radius-lg);
-    margin: 0px;
-    padding: 4px;
-    overflow: hidden;
-    text-align: start;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    -interstice-icon-text-gap: 4px;
-    min-height: 80px;
-    color: var(--text-primary);
-    font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
-}
-
-.icon-demo-left-top,   .icon-demo-left-mid,   .icon-demo-left-bot    { -interstice-icon-side: left;   }
-.icon-demo-right-top,  .icon-demo-right-mid,  .icon-demo-right-bot   { -interstice-icon-side: right;  }
-.icon-demo-top-top,    .icon-demo-top-mid,    .icon-demo-top-bot     { -interstice-icon-side: top;    }
-.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot  { -interstice-icon-side: bottom; }
-
-.icon-demo-left-top,   .icon-demo-right-top,  .icon-demo-top-top,    .icon-demo-bottom-top { -interstice-vertical-text-align: top;    }
-.icon-demo-left-mid,   .icon-demo-right-mid,  .icon-demo-top-mid,    .icon-demo-bottom-mid { -interstice-vertical-text-align: middle; }
-.icon-demo-left-bot,   .icon-demo-right-bot,  .icon-demo-top-bot,    .icon-demo-bottom-bot { -interstice-vertical-text-align: bottom; }
 
 /* ---- itemListStyle -------------------------------------------------------- */
 .item-list {
@@ -2284,54 +1982,6 @@
 .tree-view:active { border-color: var(--accent); background-color: var(--bg-surface); }
 .tree-view:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
 
-/* ---- hierarchy eye-toggle (visibility column) ---------------------------- */
-/* The cell wrapper: zero horizontal padding (unlike .table-cell) so the eye
-   element fills the whole narrow column edge-to-edge — no dead side strips
-   that would hover differently from the eye. Vertical metrics mirror
-   .table-cell so the row height stays in step with the tree column. */
-.hierarchy-viz-cell {
-    margin: 0px;
-    padding: 2px 0px;
-    overflow: hidden;
-    /* Transparent: the eye column's darkening comes from the full-height
-       .hierarchy-viz-bg strip behind these cells, so it's uniform across the
-       rows AND the empty area below them (a per-cell wash would stop at the
-       last row). */
-    background-color: transparent;
-    color: var(--text-muted);
-    font-size: var(--font-size);
-}
-
-/* Full-height strip painted behind the eye column (TableColumn::
-   columnBackground). Translucent so it darkens whatever shows through —
-   the zebra rows, the row-hover highlight, the selection — by a constant
-   amount, and carries that same shade on past the last row. */
-.hierarchy-viz-bg {
-    margin: 0px;
-    padding: 0px;
-    border-width: 0px;
-    background-color: rgba(0, 0, 0, 0.22);
-}
-/* The eye element itself: fills the cell in both axes (so even the icon-less
-   "visible" state keeps a full hit area) and centres a 16px icon. No hover
-   background of its own — that would paint a flat colour over the alternating
-   row stripes; the hover affordance is the eye appearing. */
-.hierarchy-visibility {
-    margin: 0px;
-    padding: 0px;
-    flex-grow: 1;
-    align-self: stretch;
-    border-width: 0px;
-    background-color: transparent;
-    border-color: transparent;
-    color: var(--text-muted);
-    text-align: center;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
-    cursor: pointer;
-    overflow: visible;
-}
-
 /* ---- gridViewStyle: flex-wrap container for icon grid --------------------- */
 .grid-view {
     border-width: 0px;
@@ -2794,29 +2444,6 @@
     overflow: hidden;
     flex-shrink: 1;
     flex-grow: 1;
-}
-
-/* ---- Settings page title -------------------------------------------------- */
-/* Header line above each settings page's body — larger font, bold-ish, with
-   a bottom margin so it visually separates from the field rows. */
-.settings-title {
-    border-width: 0px;
-    border-radius: 0px;
-    padding: 4px 0px 8px 6px;
-    overflow: visible;
-    direction: initial;
-    text-wrap: nowrap;
-    text-align: start;
-    vertical-align: middle;
-    color: var(--text-bright);
-    font-size: 18px;
-    line-height: 1.4;
-    background-color: transparent;
-    border-color: transparent;
-    break-after: always;
-    align-self: stretch;
-    flex-grow: 0;
-    flex-shrink: 0;
 }
 
 /* ---- Color picker / gradient editor row containers ----------------------- */

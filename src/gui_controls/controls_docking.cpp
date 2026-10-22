@@ -24,15 +24,6 @@ namespace GUI
         constexpr int kSizerThickness           = 4;   // CSS pixels
         constexpr float kRectAnimationTimeSecs  = 0.02f;
 
-        // ---- Drop zone overlay animation state ----
-        struct DropZoneAnimState {
-            bool    hasTarget = false;  // was previous frame showing a drop zone overlay?
-            IntRect currentRect{};      // interpolated rect (what we render)
-            IntRect targetRect{};       // destination rect
-            std::chrono::steady_clock::time_point lastTime{};
-        };
-        static DropZoneAnimState s_dropZoneAnim;
-
         IntRect LerpRect(IntRect a, IntRect b, float t)
         {
             auto lerp = [](int32_t a, int32_t b, float t) -> int32_t {
@@ -289,7 +280,7 @@ namespace GUI
             // Fires end-of-frame when a tab is released outside the bar bounds.
             auto onDragOut = [&app, layout, node](int tabIndex, GUI::int2 mousePos)
             {
-                s_dropZoneAnim.hasTarget = false;
+                app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
                 app.windowManager->RequestCloseAllowReopen(app.tabDragGhostWindowID);
 
                 if (tabIndex < 0 || tabIndex >= (int)node->panelIds.size()) return;
@@ -364,7 +355,7 @@ namespace GUI
                 DockNode* tabTarget = app.FindDockLeafTabBarCachedAtScreenPos(mousePos);
                 if (tabTarget && tabTarget != node && !tabTarget->cachedTabRects.empty())
                 {
-                    s_dropZoneAnim.hasTarget = false;
+                    app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
                     return;
                 }
 
@@ -378,28 +369,28 @@ namespace GUI
                     if (targetRect.w <= 0 || targetRect.h <= 0) return;
 
                     auto now = std::chrono::steady_clock::now();
-                    if (s_dropZoneAnim.hasTarget)
+                    if (app.m_dockTabDragSub->DropZoneAnim().hasTarget)
                     {
                         // Animate from current position toward target
-                        float dt = std::chrono::duration<float>(now - s_dropZoneAnim.lastTime).count();
+                        float dt = std::chrono::duration<float>(now - app.m_dockTabDragSub->DropZoneAnim().lastTime).count();
                         float t = 1.0f - std::exp(-dt / kRectAnimationTimeSecs);
-                        s_dropZoneAnim.currentRect = LerpRect(s_dropZoneAnim.currentRect, targetRect, t);
+                        app.m_dockTabDragSub->DropZoneAnim().currentRect = LerpRect(app.m_dockTabDragSub->DropZoneAnim().currentRect, targetRect, t);
                     }
                     else
                     {
                         // First frame with a drop zone — snap immediately
-                        s_dropZoneAnim.currentRect = targetRect;
+                        app.m_dockTabDragSub->DropZoneAnim().currentRect = targetRect;
                     }
-                    s_dropZoneAnim.targetRect = targetRect;
-                    s_dropZoneAnim.hasTarget  = true;
-                    s_dropZoneAnim.lastTime   = now;
+                    app.m_dockTabDragSub->DropZoneAnim().targetRect = targetRect;
+                    app.m_dockTabDragSub->DropZoneAnim().hasTarget  = true;
+                    app.m_dockTabDragSub->DropZoneAnim().lastTime   = now;
 
-                    EmitDropZoneOverlayRect(app, s_dropZoneAnim.currentRect);
+                    EmitDropZoneOverlayRect(app, app.m_dockTabDragSub->DropZoneAnim().currentRect);
                 }
                 else
                 {
                     // Center zone or no target → ghost panel (drop makes a floating window)
-                    s_dropZoneAnim.hasTarget = false;
+                    app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
                     EmitGhostTab(app, panelIt->second, mousePos);
                 }
             };

@@ -283,6 +283,10 @@ namespace GUI
 
         // -------------------- Initialization --------------------
 
+        /// Where the default fonts are (default "fonts/Noto-otf", relative to the working
+        /// directory). Call before Initialize.
+        virtual void SetFontDirectory(std::string_view directory) = 0;
+
         virtual bool Initialize(GraphicsContext* graphicsContext, StyleManager* styleManager,
                                 TextAtlasManager* textAtlasManager,
                                 GUIStateManager* guiStateManager, IClipboard* clipboard) = 0;

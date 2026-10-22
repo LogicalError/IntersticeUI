@@ -77,7 +77,9 @@ endif()
 
 add_subdirectory(SDL ${_interstice_tp_exclude})
 add_subdirectory(skribidi ${_interstice_tp_exclude})
-add_subdirectory(googletest ${_interstice_tp_exclude})
+if(NOT DEFINED INTERSTICE_BUILD_TESTS OR INTERSTICE_BUILD_TESTS)
+  add_subdirectory(googletest ${_interstice_tp_exclude})
+endif()
 
 # IDE grouping — sit under "ThirdParty" in VS's solution explorer.
 # Also force MSVC runtime to /MD(d) for everyone: skribidi's CMakeLists

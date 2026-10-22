@@ -68,6 +68,14 @@ namespace GUI
         std::vector<StyleRef> boxStyleRefs;
         StyleRef borderTestStyleRef;
 
+        // Classes from themes/demo.css, looked up after each theme load.
+        StyleRef hierarchyVizCellStyleRef, hierarchyVizBgStyleRef, hierarchyVisibilityStyleRef;
+        StyleRef logLevelIconStyleRef, logLevelToggleLeftStyleRef, logLevelToggleMidStyleRef, logLevelToggleRightStyleRef;
+        StyleRef logCollapseToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
+        StyleRef logDetailPaneStyleRef, logDetailTextStyleRef;
+        StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, settingsTitleStyleRef;
+        StyleRef iconVAlignDemoStyleRefs[4][3];   // [IconSide L/R/T/B][top/mid/bot]
+
         GUI::VisualColorStyleIndex triangleFillStyle;
         GUI::VisualColorStyleIndex triangleFillStyle2;
         GUI::VisualColorStyleIndex quadFillStyle;

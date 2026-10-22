@@ -5,6 +5,9 @@
 
 #include "headless_gui_app.h"
 
+#include <filesystem>
+#include <fstream>
+
 using ::testing::Return;
 
 namespace GUI
@@ -44,13 +47,15 @@ namespace GUI
         EXPECT_EQ(zoomed.theme.scrollbarThickness, 24);
     }
 
-    // The log's cells centre their text in rows the level icon makes taller.
+    // The demo log's cells centre their text in rows the level icon makes taller.
     TEST(ThemeTest, LogCellsCentreTheirText)
     {
         HeadlessGUIApp app;
+        const std::string_view files[] = { "styles.css", "demo.css" };
+        app.SetStyleFiles(files);
         ASSERT_TRUE(app.Initialize());
         const VisualTextStyle* text = app.styleManager.GetVisualTextStyle(
-            app.theme.logCellStyleRef.visualTextStyleIndex, ElementState::None);
+            app.theme.GetStyle("log-cell").visualTextStyleIndex, ElementState::None);
         ASSERT_NE(text, nullptr);
         EXPECT_EQ(text->textLayoutStyle.verticalAlignment, TextAlign::Center);
     }
@@ -95,5 +100,28 @@ namespace GUI
         frame();
         frame();
         EXPECT_EQ(app.GetElementRect(labelID).w, 280) << "a 40 px drag is 20 CSS px, laid out at 2x";
+    }
+
+    // An app adds its own CSS classes with an extra style file and finds any class,
+    // its own or the library's, by name.
+    TEST(ThemeTest, StyleFilesAddClassesFoundByName)
+    {
+        const auto extra = std::filesystem::temp_directory_path() / "interstice_theme_test.css";
+        {
+            std::ofstream out(extra);
+            out << ".app-panel { padding: 7px; }" << std::endl;
+        }
+        HeadlessGUIApp app;
+        const std::string extraPath = extra.string();
+        const std::string_view files[] = { "styles.css", extraPath };
+        app.SetStyleFiles(files);
+        ASSERT_TRUE(app.Initialize());
+
+        const StyleRef own = app.theme.GetStyle("app-panel");
+        ASSERT_NE(own.layoutStyleIndex, LayoutStyleIndex::Invalid);
+        EXPECT_EQ(app.styleManager.GetLayoutStyle(own.layoutStyleIndex)->padding.top, 7);
+        EXPECT_NE(app.theme.GetStyle("button").layoutStyleIndex, LayoutStyleIndex::Invalid);
+        EXPECT_EQ(app.theme.GetStyle("no-such-class").layoutStyleIndex, LayoutStyleIndex::Invalid);
+        std::filesystem::remove(extra);
     }
 }

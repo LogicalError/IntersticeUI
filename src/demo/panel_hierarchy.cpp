@@ -265,7 +265,7 @@ namespace GUI
                 .initialWidth = kVizColWidth, .minWidth = kVizColWidth,
                 .maxWidth = kVizColWidth, .sizing = ColumnSizing::Fixed,
                 .interactiveContent = true,
-                .columnBackground = theme.hierarchyVizBgStyleRef };
+                .columnBackground = hierarchyVizBgStyleRef };
             cols[0].generateCell = [this, &rows, &visibleIdx, &state](int rowIdx)
             {
                 if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
@@ -280,7 +280,7 @@ namespace GUI
                     GUI::Element wrap{};
                     wrap.id       = rowID;
                     wrap.flags    = GUI::ElementFlags::PropagatesDescendantState;
-                    wrap.styleRef = theme.hierarchyVisibilityStyleRef;
+                    wrap.styleRef = hierarchyVisibilityStyleRef;
                     wrap.state    = guiStateManager.GetCurrentState(rowID);
                     auto wRes = elementStorage.Add(std::move(wrap), GUI::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(wRes.status);
@@ -302,7 +302,7 @@ namespace GUI
                     GUI::Element el{};
                     el.id       = vizID;
                     el.state    = st;
-                    el.styleRef = theme.hierarchyVisibilityStyleRef;
+                    el.styleRef = hierarchyVisibilityStyleRef;
                     if (icon != GUI::IconID::Invalid)
                         el.textID = textSystem->RegisterText(vizID, icon, "", el.styleRef, el.state);
                     // Click toggles (hidden→show, otherwise hide); dragging paints that
@@ -360,7 +360,7 @@ namespace GUI
             VirtualTable(id, state, std::span<VirtualTableColumn>(cols, 2),
                          int(visibleIdx.size()), 0, theme.tableFillStyleRef,
                          GUI::LayoutOverride::Auto().FlexGrow(1).MinHeight(0), /*showHeaders*/false,
-                         /*cellStyle*/theme.hierarchyVizCellStyleRef);
+                         /*cellStyle*/hierarchyVizCellStyleRef);
         };
 
         if (searching)

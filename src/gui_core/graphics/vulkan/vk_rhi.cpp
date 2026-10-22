@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstring>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -73,7 +74,7 @@ static VkShaderModule LoadShader(const Vulkan::VulkanDeviceContext& dc, const st
 
 GUI::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const GUI::PrimitiveSpec& spec)
 {
-    const std::string base = std::string("shaders_compiled/") + spec.shaderBaseName;
+    const std::string base = (std::filesystem::path(dc.shaderDirectory) / spec.shaderBaseName).string();
 
     VkShaderModule frag = LoadShader(dc, base + ".frag.spv");
     if (frag == nullptr)

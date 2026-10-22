@@ -84,6 +84,7 @@ namespace GUI
 
         // -------------------- Font Registration --------------------
 
+        void SetFontDirectory(std::string_view directory) override;
         void SetLanguage(std::string_view languageTag) override;
         FontID RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> faceFiles) override;
 
@@ -200,6 +201,7 @@ namespace GUI
         ID m_pendingCursorVisibleEditorId = ID::Invalid();
 
         SkribidiContext* m_skribidiContext;
+        std::string      m_fontDirectory { "fonts/Noto-otf" };
     };
 
 } // namespace GUI

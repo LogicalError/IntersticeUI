@@ -55,6 +55,7 @@ namespace GUI
 		m_skribidiContext = new SkribidiContext();
 		if (m_skribidiContext == nullptr)
 			return false;
+		m_skribidiContext->m_fontFallback.fontDirectory = m_fontDirectory;
 
 		return m_skribidiContext->Initialize(graphicsContext, styleManager, textAtlasManager, guiStateManager, clipboard);
 	}
@@ -336,6 +337,11 @@ namespace GUI
 
 	// -------------------- Font Registration --------------------
 
+	void SkribidiTextSystem::SetFontDirectory(std::string_view directory)
+	{
+		m_fontDirectory = std::string(directory);
+	}
+
 	void SkribidiTextSystem::SetLanguage(std::string_view languageTag)
 	{
 		if (!m_skribidiContext)
@@ -376,7 +382,7 @@ namespace GUI
 		const uint8_t familyId = m_skribidiContext->m_nextFamilyId;
 		if (familyId == UINT8_MAX)
 			return FontID::Invalid;
-		if (!skribidi_add_font_family(m_skribidiContext->font_collection, familyId, faceFiles))
+		if (!skribidi_add_font_family(m_skribidiContext->font_collection, familyId, faceFiles, m_skribidiContext->m_fontFallback.fontDirectory))
 			return FontID::Invalid;
 
 		m_skribidiContext->m_fontIdToFamilyId[key] = familyId;
@@ -410,7 +416,7 @@ namespace GUI
 		for (const auto& [key, files] : ctx.m_fontFamilyFaces)
 		{
 			const std::vector<std::string_view> views(files.begin(), files.end());
-			const bool ok = skribidi_add_font_family(ctx.font_collection, ctx.m_fontIdToFamilyId.at(key), views);
+			const bool ok = skribidi_add_font_family(ctx.font_collection, ctx.m_fontIdToFamilyId.at(key), views, ctx.m_fontFallback.fontDirectory);
 			if (key == static_cast<uint32_t>(fontId))
 				loaded = ok;
 		}

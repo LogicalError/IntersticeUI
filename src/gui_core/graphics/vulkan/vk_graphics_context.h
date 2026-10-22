@@ -34,6 +34,7 @@ namespace Vulkan
     public:
         VulkanGraphicsContext();
 
+        void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
         bool Initialize(GUI::IWindowBackend* windowBackend) override;
         void Cleanup() override;
         void BeginFrame() override;

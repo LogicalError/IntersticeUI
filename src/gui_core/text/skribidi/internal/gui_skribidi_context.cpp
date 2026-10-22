@@ -80,7 +80,7 @@ namespace GUI
 
 		if (!skribidi_load_fonts(font_collection, m_fontFallback))
 		{
-			LOG_ERROR(kLogText, "could not load the default fonts from fonts/Noto-otf/");
+			LOG_ERROR(kLogText, "could not load the default fonts from {}", m_fontFallback.fontDirectory);
 			Shutdown();
 			return false;
 		}

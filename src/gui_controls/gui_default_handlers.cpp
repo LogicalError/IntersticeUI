@@ -10,6 +10,39 @@
 
 namespace GUI
 {
+    bool TextEditorUsesKey(const InputState& state, bool readOnly)
+    {
+        const KeyCode key = state.lastKey;
+        switch (key)
+        {
+            case KeyCode::Left: case KeyCode::Right: case KeyCode::Up: case KeyCode::Down:
+            case KeyCode::Home: case KeyCode::End:
+                return true;   // caret movement and selection, with any modifier
+            default:
+                break;
+        }
+
+        if ((state.modifiers & (KeyModifier::Control | KeyModifier::Command)) != KeyModifier::None)
+        {
+            switch (key)
+            {
+                case KeyCode::KeyA: case KeyCode::KeyC:
+                    return true;
+                case KeyCode::KeyV: case KeyCode::KeyX: case KeyCode::KeyZ:
+                case KeyCode::Backspace: case KeyCode::Delete:
+                    return !readOnly;
+                default:
+                    return false;
+            }
+        }
+        if (readOnly || (state.modifiers & (KeyModifier::Alt | KeyModifier::Option)) != KeyModifier::None)
+            return false;
+
+        // Unmodified keys type text, except the ones that never do.
+        const bool functionKey = (key >= KeyCode::F1 && key <= KeyCode::F12) || (key >= KeyCode::F13 && key <= KeyCode::F24);
+        return key != KeyCode::None && !functionKey && key != KeyCode::Escape && key != KeyCode::Tab;
+    }
+
     EventHandler MakeTextBoxHandler(GUIStateManager& guiStateManager)
     {
         return [&guiStateManager](ElementEvent&& event)->bool
@@ -29,10 +62,8 @@ namespace GUI
                 case EventType::KeyUp:
                 case EventType::TextInput:
                     if (guiStateManager.Interaction().GetFocusedID() == event.id && !event.state.consumed)
-                    {
-                        if (event.state.lastKey != GUI::KeyCode::None || !event.state.textInput.empty())
-                            return true;
-                    }
+                        return event.type == EventType::TextInput ? !event.state.textInput.empty()
+                                                                  : TextEditorUsesKey(event.state, /*readOnly*/ false);
                     break;
 
                 default:

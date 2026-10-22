@@ -35,6 +35,10 @@ namespace GUI
     }
     
     
+    // Whether a focused text editor acts on this key (KeyDown/KeyUp), so its handler
+    // takes it; the rest reach the app's shortcuts. Read-only text only selects and copies.
+    bool TextEditorUsesKey(const InputState& state, bool readOnly);
+
     EventHandler MakeTextBoxHandler(GUIStateManager& guiStateManager);
 
 
@@ -192,10 +196,8 @@ namespace GUI
                 case EventType::KeyUp:
                 case EventType::TextInput:
                     if (guiStateManager.Interaction().GetFocusedID() == event.id && !event.state.consumed)
-                    {
-                        if (event.state.lastKey != GUI::KeyCode::None || !event.state.textInput.empty())
-                            return true;
-                    }
+                        return event.type == EventType::TextInput ? !event.state.textInput.empty()
+                                                                  : TextEditorUsesKey(event.state, /*readOnly*/ false);
                     break;
 
                 case EventType::LabelDragBegin:

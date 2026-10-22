@@ -235,7 +235,7 @@ namespace GUI
                 iconElem.iconID   = icon;
                 iconElem.flags    = GUI::ElementFlags::NoInput;
                 iconElem.state    = guiStateManager.GetCurrentState(iconID);
-                iconElem.styleRef = theme.logLevelIconStyleRef;
+                iconElem.styleRef = logLevelIconStyleRef;
                 auto res = elementStorage.Add(std::move(iconElem),
                                               GUI::LayoutOverride{});
                 VERIFY(res.status);
@@ -258,7 +258,7 @@ namespace GUI
                     el.id       = id;
                     el.flags    = GUI::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
-                    el.styleRef = theme.logMessageStyleRef;
+                    el.styleRef = logMessageStyleRef;
                     el.textID   = textSystem->RegisterText(id, msg, el.styleRef, el.state);
                     auto res = elementStorage.Add(std::move(el), GUI::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(res.status);
@@ -272,7 +272,7 @@ namespace GUI
                     el.id       = id;
                     el.flags    = GUI::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
-                    el.styleRef = theme.logCountBadgeStyleRef;
+                    el.styleRef = logCountBadgeStyleRef;
                     el.textID   = textSystem->RegisterText(id, countText, el.styleRef, el.state);
                     auto res = elementStorage.Add(std::move(el), GUI::LayoutOverride::Auto());
                     VERIFY(res.status);
@@ -328,7 +328,7 @@ namespace GUI
             Toggle(idManager.AllocateDynamicID("logCollapse"),
                    logCollapse, demo.iconCollapseAllIcon,
                    [](bool on) { logCollapse = on; logFilterDirty = true; },
-                   theme.logCollapseToggleStyleRef,
+                   logCollapseToggleStyleRef,
                    GUI::LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Collapse duplicate lines");
 
@@ -349,9 +349,9 @@ namespace GUI
                     Toggle(idManager.AllocateDynamicID("logLevelToggle"),
                         !logShowLevel[lvl], bwIcons[lvl], logCountText[lvl],
                         [lvl](bool on) { logShowLevel[lvl] = !on; logFilterDirty = true; },
-                        (lvl == levelCount) ? theme.logLevelToggleLeftStyleRef :
-                        (lvl == 0) ? theme.logLevelToggleRightStyleRef
-                        : theme.logLevelToggleMidStyleRef,
+                        (lvl == levelCount) ? logLevelToggleLeftStyleRef :
+                        (lvl == 0) ? logLevelToggleRightStyleRef
+                        : logLevelToggleMidStyleRef,
                         GUI::LayoutOverride{}.NoGrow().NoShrink());
                     SetTooltip(levelTip[lvl]);
                 }
@@ -403,7 +403,7 @@ namespace GUI
                      columnSpan, int(logVisible.size()), 0, theme.tableStyleRef,
                      LayoutOverride{}.FlexGrow(1),
                      /*showHeaders*/ false,
-                     /*cellStyle*/ theme.logCellStyleRef,
+                     /*cellStyle*/ logCellStyleRef,
                      /*columnSeparators*/ false);
         EndHorizontal();
 
@@ -424,7 +424,7 @@ namespace GUI
         // Detail pane (bottom): the selected entry's full text, with clickable
         // file:line links. Height is driven by the sizer above.
         BeginVertical(idManager.AllocateDynamicID("logDetailPane"),
-                      theme.logDetailPaneStyleRef,
+                      logDetailPaneStyleRef,
                       GUI::LayoutOverride::Auto().FixedHeight(styleManager.Px(logDetailHeight)).NoGrow().NoShrink());
         {
             const int sel = SelectedLogEntry();
@@ -443,7 +443,7 @@ namespace GUI
                         for (const auto& lk : logDetailLinks)
                             if (lk.id == contentId) { LOG_INFO(kLogDemo, "open {}:{}", lk.file, lk.line); break; }
                     },
-                    theme.logDetailTextStyleRef, GUI::LayoutOverride::Auto().FlexGrow(1));
+                    logDetailTextStyleRef, GUI::LayoutOverride::Auto().FlexGrow(1));
             }
         }
         EndVertical();

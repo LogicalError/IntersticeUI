@@ -177,6 +177,7 @@ namespace Vulkan
         }
 
     public:
+        std::string      shaderDirectory { "shaders_compiled" };  // where the compiled shaders are
         GUIRenderContext renderContext;
 
         VkInstance       instance;

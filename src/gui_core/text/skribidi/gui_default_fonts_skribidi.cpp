@@ -19,10 +19,17 @@
 namespace GUI
 {
 
-static const char* const k_font_dir = "fonts/Noto-otf/";
 static constexpr Diagnostics::LogCategory k_log_text = Diagnostics::MakeLogCategory("text");
 
-// Maps ISO-15924 uint32_t tag -> list of font filenames (relative to k_font_dir).
+static std::string font_path(std::string_view directory, const char* filename)
+{
+	std::string path(directory);
+	if (!path.empty() && path.back() != '/' && path.back() != '\\')
+		path += '/';
+	return path + filename;
+}
+
+// Maps ISO-15924 uint32_t tag -> list of font filenames (in the font directory).
 // Built once on first use. Used by the font fallback callback.
 static const std::unordered_map<uint32_t, std::vector<const char*>>& script_font_map()
 {
@@ -153,7 +160,7 @@ static bool on_font_fallback(skb_font_collection_t* font_collection, const char*
 	bool any_loaded = false;
 	for (const char* filename : files)
 	{
-		const std::string path = std::string(k_font_dir) + filename;
+		const std::string path = font_path(state->fontDirectory, filename);
 		if (add_font(font_collection, path, font_family))
 			any_loaded = true;
 		if (add_bold)
@@ -163,18 +170,19 @@ static bool on_font_fallback(skb_font_collection_t* font_collection, const char*
 }
 
 // Latin/Greek/Cyrillic and common symbols; every text family ends with these.
-static bool add_base_fonts(skb_font_collection_t* font_collection, uint8_t family)
+static bool add_base_fonts(skb_font_collection_t* font_collection, uint8_t family, std::string_view fontDirectory)
 {
 	for (const char* filename : { "NotoSans-Regular.otf", "NotoSansSymbols-Regular.otf", "NotoSansSymbols2-Regular.otf" })
 	{
-		const std::string path = std::string(k_font_dir) + filename;
+		const std::string path = font_path(fontDirectory, filename);
 		if (!add_font(font_collection, path, family))                    return false;
 		if (!add_font(font_collection, path, family, &k_synthetic_bold)) return false;
 	}
 	return true;
 }
 
-bool skribidi_add_font_family(skb_font_collection_t* font_collection, uint8_t family, std::span<const std::string_view> faceFiles)
+bool skribidi_add_font_family(skb_font_collection_t* font_collection, uint8_t family, std::span<const std::string_view> faceFiles,
+                              std::string_view fontDirectory)
 {
 	// Insertion order is match priority: the family's own faces, then synthetic
 	// bolds (a real bold face added earlier still wins), then the base fonts for
@@ -191,18 +199,19 @@ bool skribidi_add_font_family(skb_font_collection_t* font_collection, uint8_t fa
 
 	for (const std::string& path : loaded)
 		add_font(font_collection, path, family, &k_synthetic_bold);
-	return add_base_fonts(font_collection, family);
+	return add_base_fonts(font_collection, family, fontDirectory);
 }
 
 bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackState& fallback)
 {
 	// Everything beyond these loads on demand via on_font_fallback().
-	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_DEFAULT)) return false;
-	if (!add_font(font_collection, std::string(k_font_dir) + "NotoColorEmoji-Regular.ttf", SKB_FONT_FAMILY_EMOJI)) return false;
+	const std::string_view dir = fallback.fontDirectory;
+	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_DEFAULT, dir)) return false;
+	if (!add_font(font_collection, font_path(dir, "NotoColorEmoji-Regular.ttf"), SKB_FONT_FAMILY_EMOJI)) return false;
 
 	// Generic families: their own face, then the base fonts, so text in a generic
 	// family never comes up empty.
-	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_SANS_SERIF)) return false;
+	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_SANS_SERIF, dir)) return false;
 	const struct { uint8_t family; const char* file; } generics[] = {
 		{ SKB_FONT_FAMILY_SERIF,     "NotoSerif-Regular.otf" },
 		{ SKB_FONT_FAMILY_MONOSPACE, "NotoSansMono-Regular.otf" },
@@ -210,9 +219,9 @@ bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackSta
 	};
 	for (const auto& generic : generics)
 	{
-		const std::string path = std::string(k_font_dir) + generic.file;
+		const std::string path = font_path(dir, generic.file);
 		const std::string_view faces[] = { path };
-		if (!skribidi_add_font_family(font_collection, generic.family, faces)) return false;
+		if (!skribidi_add_font_family(font_collection, generic.family, faces, dir)) return false;
 	}
 
 	skb_font_collection_set_on_font_fallback(font_collection, on_font_fallback, &fallback);

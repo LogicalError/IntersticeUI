@@ -87,6 +87,7 @@ namespace GUI
         int2        spawnPosition {};
         bool        positioned    = false;
         std::string title         {};
+        ToolbarSide homeSide      = ToolbarSide::Top;  // where closing the window docks it back
     };
 
     // Render the 5-zone scaffold (top / left | content | right / bottom) with a
@@ -103,8 +104,8 @@ namespace GUI
     {
         // Dock whose cachedSideRects are hit-tested on MouseUp (caller-owned; nullptr disables).
         ToolbarDockState* dockState = nullptr;
-        // Released over `tgtSide`: caller moves the item into that side, releases
-        // the windowID and erases the floating entry.
+        // Released over `tgtSide`, or the window closed (tgtSide = its homeSide): caller
+        // moves the item into that side, releases the windowID and erases the floating entry.
         std::function<void(ID windowID, ToolbarSide tgtSide)> onDockBack;
     };
 

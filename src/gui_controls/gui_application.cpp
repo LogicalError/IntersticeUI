@@ -9,6 +9,7 @@
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h>  // InstallSDLVulkanSurfaceFactory
 
+#include <filesystem>
 #include <chrono>
 #include <fstream>
 #include <sstream>
@@ -151,6 +152,8 @@ namespace GUI
 
         GUI::InstallSDLVulkanSurfaceFactory(graphicsContext);
 
+        graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
+        textSystem->SetFontDirectory(ResourcePath("fonts/Noto-otf"));
         if (configureGraphicsContext)
             configureGraphicsContext(*graphicsContext);
 
@@ -292,7 +295,7 @@ namespace GUI
         styleManager.SetUIScale(m_displayScale * m_uiScale);
         theme.InitializeDefaultStyles(styleManager, textSystem);
         const float fontScale = m_globalFontScale > 0.0f ? m_globalFontScale : 1.0f;
-        if (theme.LoadTheme(styleManager, textSystem, m_themePath, fontScale))
+        if (theme.LoadTheme(styleManager, textSystem, ResourcePath(m_themePath), m_styleFiles, fontScale))
         {
             // After LoadTheme, so .table-cell / .tree-table-cell are resolved.
             if (textSystem) theme.ComputeRowMetrics(styleManager, *textSystem);
@@ -317,6 +320,17 @@ namespace GUI
             .onEnable   = std::move(onEnable),
             .onDisable  = std::move(onDisable),
         };
+    }
+
+    std::string GUIApplication::ResourcePath(std::string_view path) const
+    {
+        const std::filesystem::path p(path);
+        return m_resourceRoot.empty() || p.is_absolute() ? p.string() : (std::filesystem::path(m_resourceRoot) / p).string();
+    }
+
+    void GUIApplication::SetStyleFiles(std::span<const std::string_view> files)
+    {
+        m_styleFiles.assign(files.begin(), files.end());
     }
 
     void GUIApplication::RequestReloadTheme(std::string_view themePath, float fontScale)
@@ -882,16 +896,15 @@ namespace GUI
             // On Windows, with a secondary top-level window open, the click that activates a
             // sibling never reaches SDL; synthesize it from the physical button state.
             // Must run before BeginFrame, whose popup auto-close marks popups as Closing.
-            static MouseButtons lastPhysicalButtons = MouseButtons::None;
             if (inputManager &&
-                (windowManager->HasAliveSecondaryWindows() || lastPhysicalButtons != MouseButtons::None))
+                (windowManager->HasAliveSecondaryWindows() || m_lastPhysicalButtons != MouseButtons::None))
             {
                 GUI::int2 mousePos = windowManager->GetScreenMousePos();
                 GUI::MouseButtons physButtons = windowManager->GetMouseButtons();
-                inputManager->SynthesizeMissingMouseEvents(mousePos, lastPhysicalButtons, physButtons);
-                lastPhysicalButtons = physButtons;
+                inputManager->SynthesizeMissingMouseEvents(mousePos, m_lastPhysicalButtons, physButtons);
+                m_lastPhysicalButtons = physButtons;
             } else
-                lastPhysicalButtons = MouseButtons::None;
+                m_lastPhysicalButtons = MouseButtons::None;
 
             if (!idManager.BeginFrame())
             {
@@ -1018,29 +1031,28 @@ namespace GUI
             GUI::ID effectiveActiveWindowID = (modalWindowID != ID::Invalid()) ? modalWindowID : osActiveWindowID;
             guiStateManager.Interaction().SetActiveWindowID(effectiveActiveWindowID);
 
-            static GUI::ID foundActiveWindowID = ID::Invalid();
             GUI::ID hoverWindowID = ID::Invalid();
 
             if (modalWindowID != ID::Invalid())
             {
-                foundActiveWindowID = modalWindowID;
+                m_interactionWindowID = modalWindowID;
                 hoverWindowID = modalWindowID;
             } else
             {
                 if (guiStateManager.Interaction().GetActiveID() == GUI::ID::Invalid() ||
-                    foundActiveWindowID == GUI::ID::Invalid())
+                    m_interactionWindowID == GUI::ID::Invalid())
                 {
                     hoverWindowID = windowManager->GetWindowUnderMouse();
                     if (guiStateManager.Interaction().GetActiveID() != GUI::ID::Invalid())
                     {
-                        foundActiveWindowID = hoverWindowID;
+                        m_interactionWindowID = hoverWindowID;
                     } else
                     {
-                        foundActiveWindowID = GUI::ID::Invalid();
+                        m_interactionWindowID = GUI::ID::Invalid();
                     }
                 } else
                 {
-                    hoverWindowID = foundActiveWindowID;
+                    hoverWindowID = m_interactionWindowID;
                 }
             }
 
