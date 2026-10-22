@@ -1,0 +1,43 @@
+@PACKAGE_INIT@
+
+# IntersticeUI: C++ GUI library (gui_core, gui_controls).
+#
+#   find_package(IntersticeUI 0.1 CONFIG REQUIRED)
+#   target_link_libraries(my_app PRIVATE IntersticeUI::gui_controls)
+#
+# Provides:
+#   IntersticeUI::gui_core, IntersticeUI::gui_controls   static libraries
+#   IntersticeUI_RESOURCE_DIR                            themes, fonts, icons, compiled shaders
+#
+# The package is built with MSVC for Windows x64 and links the same toolchain
+# as its consumer; mixing C++ runtimes or standard library versions is not
+# supported. Debug and Release are installed side by side; a consumer that uses
+# other configurations maps them itself (CMAKE_MAP_IMPORTED_CONFIG_<CONFIG>).
+
+include(CMakeFindDependencyMacro)
+
+# The install prefix doubles as the prefix of the bundled third-party libraries.
+list(PREPEND CMAKE_PREFIX_PATH "${PACKAGE_PREFIX_DIR}")
+find_dependency(Vulkan)
+find_dependency(SDL3 CONFIG)
+find_dependency(harfbuzz CONFIG)
+find_dependency(SheenBidi CONFIG)
+find_dependency(libunibreak CONFIG)
+find_dependency(budouxc CONFIG)
+find_dependency(skribidi CONFIG)
+find_dependency(vma CONFIG)
+find_dependency(nanosvg CONFIG)
+find_dependency(vkbootstrap CONFIG)
+
+# The libraries link skribidi under its short name.
+if(TARGET skribidi::skribidi AND NOT TARGET skribidi)
+  add_library(skribidi ALIAS skribidi::skribidi)
+endif()
+
+if(NOT TARGET IntersticeUI::gui_core)
+  include("${CMAKE_CURRENT_LIST_DIR}/IntersticeUITargets.cmake")
+endif()
+
+set_and_check(IntersticeUI_RESOURCE_DIR "@PACKAGE_INTERSTICE_RESOURCE_INSTALL_DIR@")
+
+check_required_components(IntersticeUI)

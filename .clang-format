@@ -1,0 +1,60 @@
+# Matches the existing code. Not enforced; format only what you touch.
+# Hand-aligned `=` columns are kept by hand (clang-format can't tell them apart).
+BasedOnStyle: Microsoft
+Language: Cpp
+Standard: c++20
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 0
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+NamespaceIndentation: All
+FixNamespaceComments: false
+IndentCaseLabels: true
+AccessModifierOffset: -4
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignTrailingComments: true
+AlignAfterOpenBracket: Align
+AlignOperands: DontAlign
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+
+SortIncludes: Never
+ReflowComments: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeParens: ControlStatements
+Cpp11BracedListStyle: false
+MaxEmptyLinesToKeep: 2

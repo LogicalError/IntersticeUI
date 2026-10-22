@@ -1,0 +1,916 @@
+#include <functional>
+#include <deque>
+#include <chrono>
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+// Undefine Windows macro that conflicts with our CreateWindow method
+#undef CreateWindow
+#endif
+
+#include <VkBootstrap.h>
+#define VMA_DEBUG_LOG_FORMAT
+#include <vk_mem_alloc.h>
+
+#include <gui_core/gui_base_types.h>
+#include <gui_core/diagnostics/gui_profiler.h>
+
+#include <gui_core/input/gui_platform_input_handler.h>
+
+#include <gui_core/graphics/vulkan/vk_types.h>
+#include <gui_core/graphics/vulkan/vk_initializers.h>
+#include <gui_core/graphics/vulkan/vk_image.h>
+#include <gui_core/graphics/vulkan/vk_images.h>
+#include <gui_core/graphics/vulkan/vk_pipelines.h>
+#include <gui_core/graphics/vulkan/vk_descriptors.h>
+#include <gui_core/graphics/vulkan/vk_device_context.h>
+#include <gui_core/graphics/vulkan/vk_graphics_context.h>
+#include <gui_core/graphics/vulkan/vk_window_context.h>
+#include <gui_core/graphics/vulkan/vk_defaults.h>
+#include <gui_core/graphics/gui_graphics_context.h>
+
+using namespace Vulkan;
+
+
+
+FrameData& VulkanWindowContext::GetCurrentFrame()
+{
+    return state.frames[frameNumber % FRAME_OVERLAP];
+}
+
+FrameData& VulkanWindowContext::GetLastFrame()
+{
+    return state.frames[(frameNumber + FRAME_OVERLAP - 1) % FRAME_OVERLAP];
+}
+
+void VulkanWindowContext::CreateDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage, VkFormat colorFormat)
+{
+    VkExtent3D extent { windowExtent.width, windowExtent.height, 1 };
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    drawImage.imageFormat = colorFormat;
+    drawImage.imageExtent = extent;
+    VkImageUsageFlags drawUsages =
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    VkImageCreateInfo drawInfo = vkinit::image_create_info(colorFormat, drawUsages, extent);
+    vmaCreateImage(deviceContext->allocator, &drawInfo, &allocInfo, &drawImage.image, &drawImage.allocation, nullptr);
+    vmaSetAllocationName(deviceContext->allocator, drawImage.allocation, "Window::DrawImage::CreateImage");
+    VkImageViewCreateInfo drawView = vkinit::imageview_create_info(colorFormat, drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+    VK_CHECK(vkCreateImageView(deviceContext->device, &drawView, nullptr, &drawImage.imageView));
+
+    depthImage.imageFormat = depthImageFormat;
+    depthImage.imageExtent = extent;
+    VkImageCreateInfo depthInfo =
+        vkinit::image_create_info(depthImageFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, extent);
+    vmaCreateImage(deviceContext->allocator, &depthInfo, &allocInfo, &depthImage.image, &depthImage.allocation, nullptr);
+    vmaSetAllocationName(deviceContext->allocator, depthImage.allocation, "Window::DepthImage::CreateImage");
+    VkImageViewCreateInfo depthView = vkinit::imageview_create_info(depthImageFormat, depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+    VK_CHECK(vkCreateImageView(deviceContext->device, &depthView, nullptr, &depthImage.imageView));
+}
+
+void VulkanWindowContext::DestroyDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage)
+{
+    vkDestroyImageView(deviceContext->device, drawImage.imageView, nullptr);
+    vmaDestroyImage(deviceContext->allocator, drawImage.image, drawImage.allocation);
+    drawImage = {};
+
+    vkDestroyImageView(deviceContext->device, depthImage.imageView, nullptr);
+    vmaDestroyImage(deviceContext->allocator, depthImage.image, depthImage.allocation);
+    depthImage = {};
+}
+
+void VulkanWindowContext::CreateSwapchain()
+{
+    uint32_t width = windowExtent.width;
+    uint32_t height = windowExtent.height;
+
+    needsReadback = false;
+    
+    // Layered windows (Windows) have no surface and no swapchain.
+    if (surface == VK_NULL_HANDLE)
+    {
+        needsReadback = true;
+        
+        // Extent is still used for size checks.
+        swapchain.swapchainExtent.width = width;
+        swapchain.swapchainExtent.height = height;
+        
+        // BGRA8 matches the readback buffer, so readback needs no conversion.
+        VkFormat layeredWindowFormat = VK_FORMAT_B8G8R8A8_UNORM;
+        
+        for (auto& frame : state.frames)
+            CreateDrawDepthImages(frame.drawImage, frame.depthImage, layeredWindowFormat);
+
+        VkDeviceSize bufferSize = width * height * 4;
+        
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        
+        VmaAllocationCreateInfo allocInfo = {};
+        allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+        allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+        
+        vmaCreateBuffer(deviceContext->allocator, &bufferInfo, &allocInfo,
+                       &readbackBuffer.buffer, &readbackBuffer.allocation, nullptr);
+        vmaSetAllocationName(deviceContext->allocator, readbackBuffer.allocation, "Window::ReadbackBuffer");
+        
+        cachedBitmap.resize(bufferSize);
+        return;
+    }
+    
+    vkb::SwapchainBuilder swapchainBuilder{ deviceContext->chosenGPU, deviceContext->device, surface };
+
+    // Prefer alpha compositing modes that allow transparent windows.
+    VkSurfaceCapabilitiesKHR surfaceCaps{};
+    VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(deviceContext->chosenGPU, surface, &surfaceCaps) == VK_SUCCESS)
+    {
+        const VkCompositeAlphaFlagsKHR supported = surfaceCaps.supportedCompositeAlpha;
+
+        if ((supported & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR) != 0)
+            compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+        else if ((supported & VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR) != 0)
+            compositeAlpha = VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR;
+        else if ((supported & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) != 0)
+            compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+        else if ((supported & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0)
+            compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+        // Opaque-only surfaces composite transparent windows via CPU readback.
+        const bool isTransparent = (windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None;
+        needsReadback = isTransparent && (compositeAlpha == VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+    }
+
+    swapchain.swapchainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+
+    // Prefer MAILBOX: no tearing, and the newest frame replaces the waiting one,
+    // so present doesn't block. The loop is then NOT paced to the refresh; it
+    // runs as fast as build + render allow. It needs triple buffering. Otherwise
+    // FIFO, double-buffered (the only guaranteed mode, blocking to the refresh)
+    // rather than vk-bootstrap's larger default.
+    VkPresentModeKHR presentMode   = VK_PRESENT_MODE_FIFO_KHR;
+    uint32_t         desiredImages = vkb::SwapchainBuilder::DOUBLE_BUFFERING;
+    {
+        uint32_t modeCount = 0;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(deviceContext->chosenGPU, surface, &modeCount, nullptr);
+        std::vector<VkPresentModeKHR> modes(modeCount);
+        if (modeCount > 0)
+            vkGetPhysicalDeviceSurfacePresentModesKHR(deviceContext->chosenGPU, surface, &modeCount, modes.data());
+        for (VkPresentModeKHR m : modes)
+            if (m == VK_PRESENT_MODE_MAILBOX_KHR)
+            {
+                presentMode   = VK_PRESENT_MODE_MAILBOX_KHR;
+                desiredImages = vkb::SwapchainBuilder::TRIPLE_BUFFERING;
+                break;
+            }
+    }
+
+    vkb::Swapchain vkbSwapchain = swapchainBuilder
+        .set_desired_format(VkSurfaceFormatKHR{ .format = swapchain.swapchainImageFormat, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR })
+        .set_composite_alpha_flags(compositeAlpha)
+        .set_desired_present_mode(presentMode)
+        .set_desired_min_image_count(desiredImages)
+        .set_desired_extent(width, height)
+        .set_old_swapchain(swapchain.swapchain)
+        .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+        .build()
+        .value();
+
+    swapchain.presentMode = vkbSwapchain.present_mode;
+
+    swapchain.swapchainExtent = vkbSwapchain.extent;
+    swapchain.swapchain = vkbSwapchain.swapchain;
+    swapchain.swapchainImages = vkbSwapchain.get_images().value();
+    swapchain.swapchainImageViews = vkbSwapchain.get_image_views().value();
+
+    const VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
+    swapchain.presentSemaphores.resize(swapchain.swapchainImages.size());
+    for (VkSemaphore& semaphore : swapchain.presentSemaphores)
+        VK_CHECK(vkCreateSemaphore(deviceContext->device, &semaphoreCreateInfo, nullptr, &semaphore));
+
+    // Per-slot draw + depth images so the FRAME_OVERLAP in-flight frames don't
+    // share them (frame N's blit-read must not race frame N+1's transition-write).
+    for (auto& frame : state.frames)
+        CreateDrawDepthImages(frame.drawImage, frame.depthImage, drawImageFormat);
+
+    if (needsReadback)
+    {
+        VkDeviceSize bufferSize = windowExtent.width * windowExtent.height * 4; // BGRA
+        
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        
+        VmaAllocationCreateInfo allocInfo = {};
+        allocInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+        allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+        
+        vmaCreateBuffer(deviceContext->allocator, &bufferInfo, &allocInfo,
+                       &readbackBuffer.buffer, &readbackBuffer.allocation, nullptr);
+        vmaSetAllocationName(deviceContext->allocator, readbackBuffer.allocation, "Window::ReadbackBuffer");
+        
+        cachedBitmap.resize(bufferSize);
+    }
+}
+
+void VulkanWindowContext::DestroySwapchain()
+{
+    for (int i = 0; i < swapchain.swapchainImageViews.size(); i++)
+    {
+        vkDestroyImageView(deviceContext->device, swapchain.swapchainImageViews[i], nullptr);
+        swapchain.swapchainImageViews[i] = VK_NULL_HANDLE;
+    }
+    swapchain.swapchainImageViews.clear();
+    swapchain.swapchainImages.clear();
+
+    for (VkSemaphore semaphore : swapchain.presentSemaphores)
+        vkDestroySemaphore(deviceContext->device, semaphore, nullptr);
+    swapchain.presentSemaphores.clear();
+
+    vkDestroySwapchainKHR(deviceContext->device, swapchain.swapchain, nullptr);
+    swapchain.swapchain = VK_NULL_HANDLE;
+
+    for (auto& frame : state.frames)
+        DestroyDrawDepthImages(frame.drawImage, frame.depthImage);
+
+    if (readbackBuffer.buffer != VK_NULL_HANDLE)
+    {
+        vmaDestroyBuffer(deviceContext->allocator, readbackBuffer.buffer, readbackBuffer.allocation);
+        readbackBuffer.buffer = VK_NULL_HANDLE;
+        readbackBuffer.allocation = VK_NULL_HANDLE;
+    }
+    cachedBitmap.clear();
+}
+
+void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
+{
+    WaitForFence(deviceContext->device, deviceContext->immFence);
+
+    for (auto& frame : state.frames)
+    {
+        WaitForFence(deviceContext->device, frame.renderFence);
+        frame.flushQueue.flush();
+    }
+
+    // No fence covers a present's semaphore wait; drain the queue so the old
+    // swapchain's present semaphores can be destroyed below.
+    {
+        auto queueLock = deviceContext->LockQueue();
+        VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
+    }
+
+    VkSwapchainKHR oldSwapchain = swapchain.swapchain;
+    std::vector<VkImageView> oldSwapchainImageViews = std::move(swapchain.swapchainImageViews);
+    for (VkSemaphore semaphore : swapchain.presentSemaphores)
+        vkDestroySemaphore(deviceContext->device, semaphore, nullptr);
+    swapchain.presentSemaphores.clear();
+    std::array<VulkanImage, FRAME_OVERLAP> oldDrawImages;
+    std::array<VulkanImage, FRAME_OVERLAP> oldDepthImages;
+    for (unsigned int i = 0; i < FRAME_OVERLAP; ++i)
+    {
+        oldDrawImages[i]  = state.frames[i].drawImage;
+        oldDepthImages[i] = state.frames[i].depthImage;
+    }
+    AllocatedBuffer oldReadbackBuffer = readbackBuffer;
+
+    if (size.x <= 0 || size.y <= 0)
+    {
+        // Minimize: don't recreate the swapchain, but still queue the old
+        // resources for deletion below. Null the live handles (copied into the
+        // old* locals above) so a later DestroySwapchain doesn't double-free.
+        freeze_rendering = true;
+        swapchain.swapchain = VK_NULL_HANDLE;
+        for (auto& frame : state.frames)
+        {
+            frame.drawImage  = {};
+            frame.depthImage = {};
+        }
+        readbackBuffer   = {};
+    }
+    else
+    {
+        freeze_rendering = false;
+        windowExtent.width = size.x;
+        windowExtent.height = size.y;
+
+        CreateSwapchain();
+    }
+
+    GetCurrentFrame().flushQueue.push_function([
+        device = deviceContext->device,
+        allocator = deviceContext->allocator,
+        oldSwapchain,
+        oldSwapchainImageViews = std::move(oldSwapchainImageViews),
+        oldDrawImages,
+        oldDepthImages,
+        oldReadbackBuffer]()
+        {
+            for (auto imageView : oldSwapchainImageViews)
+            {
+                vkDestroyImageView(device, imageView, nullptr);
+            }
+
+            for (const auto& img : oldDrawImages)
+            {
+                if (img.imageView != VK_NULL_HANDLE)
+                    vkDestroyImageView(device, img.imageView, nullptr);
+                if (img.image != VK_NULL_HANDLE)
+                    vmaDestroyImage(allocator, img.image, img.allocation);
+            }
+            for (const auto& img : oldDepthImages)
+            {
+                if (img.imageView != VK_NULL_HANDLE)
+                    vkDestroyImageView(device, img.imageView, nullptr);
+                if (img.image != VK_NULL_HANDLE)
+                    vmaDestroyImage(allocator, img.image, img.allocation);
+            }
+
+            if (oldReadbackBuffer.buffer != VK_NULL_HANDLE)
+            {
+                vmaDestroyBuffer(allocator, oldReadbackBuffer.buffer, oldReadbackBuffer.allocation);
+            }
+
+            if (oldSwapchain != VK_NULL_HANDLE)
+            {
+                vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
+            }
+        });
+}
+
+void VulkanWindowContext::FlushWindowContext()
+{
+    deviceContext->WaitIdle();
+    WaitForFence(deviceContext->device, deviceContext->immFence);
+
+    for (auto& frame : state.frames)
+    {
+        WaitForFence(deviceContext->device, frame.renderFence);
+        frame.flushQueue.flush();
+    }
+}
+
+
+VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
+{
+    WaitForFence(deviceContext->device, currentFrame.renderFence);
+    currentFrame.flushQueue.flush();
+    currentFrame.primitiveUploadOffset = 0;
+    currentFrame.frameDescriptors.clear_pools(deviceContext->device);
+    
+    if (swapchain.swapchain != VK_NULL_HANDLE)
+    {
+        // The swapchain image is acquired late, in EndWindowFrame; drawExtent
+        // only needs the swapchain extent.
+        drawExtent.height = uint32_t(std::min(swapchain.swapchainExtent.height, currentFrame.drawImage.imageExtent.height) * 1.f);
+        drawExtent.width  = uint32_t(std::min(swapchain.swapchainExtent.width,  currentFrame.drawImage.imageExtent.width) * 1.f);
+    }
+    else
+    {
+        drawExtent.width = currentFrame.drawImage.imageExtent.width;
+        drawExtent.height = currentFrame.drawImage.imageExtent.height;
+    }
+
+    VK_CHECK(vkResetFences(deviceContext->device, 1, &currentFrame.renderFence));
+    VK_CHECK(vkResetCommandBuffer(currentFrame.mainCommandBuffer, 0));
+
+    state.commandBuffer = currentFrame.mainCommandBuffer;
+
+    VkCommandBufferBeginInfo cmdBeginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    VK_CHECK(vkBeginCommandBuffer(state.commandBuffer, &cmdBeginInfo));
+
+    // Queued texture uploads (e.g. glyph atlas pages) run ahead of this frame's drawing.
+    deviceContext->RecordPendingUploads(state.commandBuffer);
+
+    vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+    vkutil::transition_image(state.commandBuffer, currentFrame.depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+    // Layered windows clear to transparent, others to opaque black.
+    float clearAlpha = needsReadback ? 0.0f : 1.0f;
+    VkClearValue clearValue = { .color = { { 0.0f, 0.0f, 0.0f, clearAlpha } } };
+
+    VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(currentFrame.drawImage.imageView, &clearValue, VK_IMAGE_LAYOUT_GENERAL);
+    VkRenderingAttachmentInfo depthAttachment = vkinit::depth_attachment_info(currentFrame.depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+    VkRenderingInfo renderInfo = vkinit::rendering_info(drawExtent, &colorAttachment, &depthAttachment);
+
+    vkCmdBeginRendering(state.commandBuffer, &renderInfo);
+
+
+    return state.commandBuffer;
+}
+
+
+void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
+{
+    // Build time = CPU work since the previous present returned, captured
+    // before this frame blocks on its swapchain image and present.
+    if (havePresentEnd)
+    {
+        double dt = std::chrono::duration<double>(std::chrono::steady_clock::now() - lastPresentEnd).count();
+        lastBuildValid = (dt > 0.0 && dt < 0.25);
+        if (lastBuildValid)
+            lastBuildSeconds = dt;
+    }
+    struct MarkPresentEnd
+    {
+        VulkanWindowContext& context;
+        ~MarkPresentEnd()
+        {
+            context.lastPresentEnd = std::chrono::steady_clock::now();
+            context.havePresentEnd = true;
+        }
+    } markPresentEnd{ *this };
+
+    vkCmdEndRendering(state.commandBuffer);
+
+    if (swapchain.swapchain != VK_NULL_HANDLE)
+    {
+        // Late acquire, after the offscreen frame is recorded: lower display latency.
+        VkResult acq = vkAcquireNextImageKHR(deviceContext->device, swapchain.swapchain, 1000000000, currentFrame.swapchainSemaphore, nullptr, &swapchain.swapchainImageIndex);
+        if (acq == VK_ERROR_OUT_OF_DATE_KHR || acq == VK_TIMEOUT || acq == VK_NOT_READY)
+        {
+            // No image: still submit the offscreen work so renderFence (already
+            // reset by BeginWindowFrame) signals for the next frame's wait.
+            if (acq == VK_ERROR_OUT_OF_DATE_KHR)
+                resize_requested = true;
+            VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
+            VkCommandBufferSubmitInfo abortCmd = vkinit::command_buffer_submit_info(state.commandBuffer);
+            VkSubmitInfo2 abortSubmit = vkinit::submit_info(&abortCmd, nullptr, nullptr);
+            {
+                auto queueLock = deviceContext->LockQueue();
+                VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &abortSubmit, currentFrame.renderFence));
+            }
+            frameNumber++;
+            return;
+        }
+        if (acq == VK_SUBOPTIMAL_KHR)
+            resize_requested = true;
+        else
+            VK_CHECK(acq);
+
+        vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        vkutil::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+        vkutil::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, swapchain.swapchainImages[swapchain.swapchainImageIndex], drawExtent, swapchain.swapchainExtent);
+
+        vkutil::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    }
+    
+    VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
+
+    // Wait on the acquire semaphore, signal the image's present semaphore.
+    VkCommandBufferSubmitInfo cmdinfo = vkinit::command_buffer_submit_info(state.commandBuffer);
+
+    VkSemaphoreSubmitInfo waitInfo{};
+    VkSemaphoreSubmitInfo signalInfo{};
+    VkSubmitInfo2 submit;
+    if (swapchain.swapchain != VK_NULL_HANDLE)
+    {
+        // Wait on the acquire semaphore at ALL_COMMANDS: the swapchain image's
+        // first use this frame is the TRANSFER-stage transition/blit above, not a
+        // color attachment, so waiting at COLOR_ATTACHMENT_OUTPUT lets the
+        // transition race the acquire (sync-validation WRITE_AFTER_READ).
+        waitInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, currentFrame.swapchainSemaphore);
+        signalInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT,
+                                                   swapchain.presentSemaphores[swapchain.swapchainImageIndex]);
+        submit = vkinit::submit_info(&cmdinfo, &signalInfo, &waitInfo);
+    }
+    else
+    {
+        submit = vkinit::submit_info(&cmdinfo, nullptr, nullptr);
+    }
+
+    {
+        auto queueLock = deviceContext->LockQueue();
+        VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, currentFrame.renderFence));
+    }
+
+
+    // Present waits on the image's present semaphore (rendering finished).
+    if (swapchain.swapchain != VK_NULL_HANDLE)
+    {
+        VkPresentInfoKHR presentInfo = vkinit::present_info();
+
+        presentInfo.pSwapchains = &swapchain.swapchain;
+        presentInfo.swapchainCount = 1;
+
+        presentInfo.pWaitSemaphores = &swapchain.presentSemaphores[swapchain.swapchainImageIndex];
+        presentInfo.waitSemaphoreCount = 1;
+
+        presentInfo.pImageIndices = &swapchain.swapchainImageIndex;
+
+        VkResult presentResult;
+        {
+            // Under FIFO present usually blocks until a vsync frees an image (some
+            // drivers stall in the acquire or frame fence instead); MAILBOX doesn't
+            // block. Timed as a wait, not work.
+            PROFILE_SCOPE_WAIT("Present (vsync wait)");
+            auto queueLock = deviceContext->LockQueue();
+            presentResult = vkQueuePresentKHR(deviceContext->graphicsQueue, &presentInfo);
+        }
+        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            resize_requested = true;
+            return;
+        }
+        if (presentResult == VK_SUBOPTIMAL_KHR)
+        {
+            resize_requested = true;
+        }
+        else
+        {
+            VK_CHECK(presentResult);
+        }
+    }
+
+    frameNumber++;
+    
+    if (needsReadback)
+    {
+        WaitForFence(deviceContext->device, currentFrame.renderFence);
+        PerformReadback(currentFrame.drawImage);
+    }
+}
+
+void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
+{
+    VkCommandBuffer cmd = deviceContext->immCommandBuffer;
+    VK_CHECK(vkResetFences(deviceContext->device, 1, &deviceContext->immFence));
+    VK_CHECK(vkResetCommandBuffer(cmd, 0));
+
+    VkCommandBufferBeginInfo beginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    VK_CHECK(vkBeginCommandBuffer(cmd, &beginInfo));
+
+    // With a swapchain, EndWindowFrame already left drawImage in TRANSFER_SRC_OPTIMAL;
+    // layered windows still have it in GENERAL.
+    if (swapchain.swapchain == VK_NULL_HANDLE)
+    {
+        vkutil::transition_image(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    }
+
+    VkBufferImageCopy region = {};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {drawExtent.width, drawExtent.height, 1};
+
+    vkCmdCopyImageToBuffer(cmd, drawImage.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                          readbackBuffer.buffer, 1, &region);
+
+    // Make the copy visible to the host read below (the fence alone doesn't).
+    VkMemoryBarrier2 toHost { .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+    toHost.srcStageMask  = VK_PIPELINE_STAGE_2_COPY_BIT;
+    toHost.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    toHost.dstStageMask  = VK_PIPELINE_STAGE_2_HOST_BIT;
+    toHost.dstAccessMask = VK_ACCESS_2_HOST_READ_BIT;
+    VkDependencyInfo dependency { .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+    dependency.memoryBarrierCount = 1;
+    dependency.pMemoryBarriers    = &toHost;
+    vkCmdPipelineBarrier2(cmd, &dependency);
+
+    VK_CHECK(vkEndCommandBuffer(cmd));
+
+    VkCommandBufferSubmitInfo cmdInfo = vkinit::command_buffer_submit_info(cmd);
+    VkSubmitInfo2 submit = vkinit::submit_info(&cmdInfo, nullptr, nullptr);
+
+    {
+        auto queueLock = deviceContext->LockQueue();
+        VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, deviceContext->immFence));
+    }
+    WaitForFence(deviceContext->device, deviceContext->immFence);
+
+    // Map and copy to CPU cache; invalidate first in case the memory is cached but not coherent.
+    VK_CHECK(vmaInvalidateAllocation(deviceContext->allocator, readbackBuffer.allocation, 0, VK_WHOLE_SIZE));
+    void* mapped;
+    vmaMapMemory(deviceContext->allocator, readbackBuffer.allocation, &mapped);
+    memcpy(cachedBitmap.data(), mapped, cachedBitmap.size());
+    vmaUnmapMemory(deviceContext->allocator, readbackBuffer.allocation);
+}
+
+void VulkanWindowContext::UpdateLayeredWindowFromCache([[maybe_unused]] int screenPosX, [[maybe_unused]] int screenPosY)
+{
+#ifdef _WIN32
+    if (drawExtent.width == 0 || drawExtent.height == 0)
+        return;
+
+    HWND hwnd = (HWND)nativeHandle;
+    if (!hwnd)
+        return;
+    
+    HDC hdcScreen = GetDC(NULL);
+    if (!hdcScreen)
+        return;
+    
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    if (!hdcMem)
+    {
+        ReleaseDC(NULL, hdcScreen);
+        return;
+    }
+    
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = drawExtent.width;
+    bmi.bmiHeader.biHeight = -(int)drawExtent.height; // Top-down DIB
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(hdcMem, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+    if (!hbmp)
+    {
+        DeleteDC(hdcMem);
+        ReleaseDC(NULL, hdcScreen);
+        return;
+    }
+    
+    if (!bits)
+    {
+        DeleteObject(hbmp);
+        DeleteDC(hdcMem);
+        ReleaseDC(NULL, hdcScreen);
+        return;
+    }
+    
+    // RGB is already premultiplied by the shader.
+    uint32_t pixelCount = drawExtent.width * drawExtent.height;
+    uint8_t* src = cachedBitmap.data();
+    uint8_t* dst = (uint8_t*)bits;
+    
+    for (uint32_t i = 0; i < pixelCount; i++)
+    {
+        uint8_t b = src[i * 4 + 0];
+        uint8_t g = src[i * 4 + 1];
+        uint8_t r = src[i * 4 + 2];
+        uint8_t a = src[i * 4 + 3];
+        
+        dst[i * 4 + 0] = b;
+        dst[i * 4 + 1] = g;
+        dst[i * 4 + 2] = r;
+        dst[i * 4 + 3] = a;
+    }
+    
+    HBITMAP hOldBmp = (HBITMAP)SelectObject(hdcMem, hbmp);
+    if (!hOldBmp || hOldBmp == HGDI_ERROR)
+    {
+        DeleteObject(hbmp);
+        DeleteDC(hdcMem);
+        ReleaseDC(NULL, hdcScreen);
+        return;
+    }
+    
+    POINT ptSrc = {0, 0};
+    SIZE szWnd = {(LONG)drawExtent.width, (LONG)drawExtent.height};
+    POINT ptDst = { screenPosX, screenPosY };
+    
+    BLENDFUNCTION blend = {};
+    blend.BlendOp = AC_SRC_OVER;
+    blend.SourceConstantAlpha = 255;
+    blend.AlphaFormat = AC_SRC_ALPHA;
+    
+    UpdateLayeredWindow(hwnd, hdcScreen, &ptDst, &szWnd, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
+    ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+    
+    SelectObject(hdcMem, hOldBmp);
+    DeleteObject(hbmp);
+    DeleteDC(hdcMem);
+    ReleaseDC(NULL, hdcScreen);
+#endif
+}
+
+void VulkanWindowContext::UpdateTransparentWindow(GUI::int2 screenPos)
+{
+    if (needsReadback && !cachedBitmap.empty())
+    {
+        UpdateLayeredWindowFromCache(screenPos.x, screenPos.y);
+    }
+}
+
+void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContext, GUI::IntRect rect, bool resizing)
+{
+    if (onGui && graphicsContext != nullptr)
+    {
+        uint32_t requestedWidth  = rect.size.x > 0 ? static_cast<uint32_t>(rect.size.x) : 0u;
+        uint32_t requestedHeight = rect.size.y > 0 ? static_cast<uint32_t>(rect.size.y) : 0u;
+
+        // All FRAME_OVERLAP draw images share one extent, so any slot's is representative.
+        if (requestedWidth > swapchain.swapchainExtent.width ||
+            requestedHeight > swapchain.swapchainExtent.height ||
+            requestedWidth > GetCurrentFrame().drawImage.imageExtent.width ||
+            requestedHeight > GetCurrentFrame().drawImage.imageExtent.height)
+        {
+            resize_requested = true;
+        }
+
+		Vulkan::VulkanGraphicsContext* vulkanGraphicsContext = dynamic_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
+
+        if (resizing)
+        {
+            bool hasResizeTarget = vulkanGraphicsContext->StartResizing(id);
+
+            // Resize must update layout immediately, even without a resize target.
+            vulkanGraphicsContext->Reset();
+
+            onGui();
+
+            // onGui() may have changed VisualColorStyles; re-upload before rendering.
+            vulkanGraphicsContext->RePrepareFrame();
+
+            if (hasResizeTarget)
+            {
+                vulkanGraphicsContext->StopResizing();
+            }
+        }
+
+        // Resize must also run while frozen: restoring a minimized window is
+        // the operation that recreates its swapchain and unfreezes rendering.
+        if (resize_requested)
+        {
+            PROFILE_SCOPE("ResizeSwapchain");
+            ResizeSwapchain(rect.size);
+            resize_requested = false;
+        }
+
+        // A zero-size resize (minimize) freezes rendering and clears the live
+        // draw/depth images. Do not record this frame against cleared handles.
+        if (!freeze_rendering)
+        {
+            PROFILE_SCOPE("Window render");
+
+            FrameData* currentFrame;
+            {
+                PROFILE_SCOPE("BeginWindowFrame");
+                currentFrame = &GetCurrentFrame();
+            }
+            // BeginWindowFrame sets drawExtent.
+            VkCommandBuffer cmd;
+            {
+                PROFILE_SCOPE("BeginWindowFrame");
+                cmd = BeginWindowFrame(*currentFrame);
+            }
+            // A zero-extent frame still begins the command buffer, so it must still be ended.
+            if (cmd != nullptr)
+            {
+                if (drawExtent.width != 0 && drawExtent.height != 0)
+                {
+                    PROFILE_SCOPE("Record commands");
+                    vulkanGraphicsContext->RenderWindowFrame(cmd, *currentFrame, id, { drawExtent.width, drawExtent.height });
+                }
+                {
+                    PROFILE_SCOPE("EndWindowFrame");
+                    EndWindowFrame(*currentFrame);
+                }
+                if (lastBuildValid)
+                    vulkanGraphicsContext->SetFrameBuildSeconds(static_cast<float>(lastBuildSeconds));
+            }
+        }
+    }
+
+
+    // Layered windows don't redraw on SDL expose events, so update them explicitly.
+    if ((windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None)
+    {
+        UpdateTransparentWindow(rect.position);
+    }
+}
+
+VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle, GUI::OSWindowHandle osHandle, GUI::int2 size, GUI::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, GUI::OnGuiFunc onGUI)
+{
+    if (osHandle == nullptr)
+        return nullptr;
+
+    auto context = new Vulkan::VulkanWindowContext();
+    context->id = id;
+    context->deviceContext = deviceContext;
+    context->onGui = std::move(onGUI);
+    context->windowFlags = windowFlags;
+    context->osHandle = osHandle;
+    context->nativeHandle = nativeHandle;
+
+    // On Windows, layered (WS_EX_LAYERED) windows get no surface and present via
+    // UpdateLayeredWindow; elsewhere transparent windows use surface alpha compositing.
+    bool shouldCreateSurface = true;
+#ifdef _WIN32
+    if (nativeHandle)
+    {
+        HWND hwnd = (HWND)nativeHandle;
+        LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        if (exStyle & WS_EX_LAYERED)
+        {
+            shouldCreateSurface = false;
+            context->needsReadback = true;
+        }
+    }
+#endif
+    
+    if (shouldCreateSurface)
+    {
+        context->surface = context->deviceContext->CreateSurface(context->osHandle);
+    } else
+    {
+        context->surface = VK_NULL_HANDLE;
+    }
+    
+    context->windowExtent = VkExtent2D(size.x, size.y);
+    context->drawExtent = VkExtent2D(size.x, size.y);
+        
+    context->CreateSwapchain();
+
+
+    // Commands
+
+    for (int i = 0; i < Vulkan::FRAME_OVERLAP; i++)
+    {
+        VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, nullptr, &context->state.frames[i].commandPool));
+
+        VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(context->state.frames[i].commandPool, 1);
+
+        VK_CHECK(vkAllocateCommandBuffers(context->deviceContext->device, &cmdAllocInfo, &context->state.frames[i].mainCommandBuffer));
+
+        context->state.frames[i].deletionQueue.push_function([=]()
+                                                    {
+                                                        vkDestroyCommandPool(context->deviceContext->device, context->state.frames[i].commandPool, nullptr);
+                                                    });
+    }
+
+    // Per frame data
+
+    for (int i = 0; i < FRAME_OVERLAP; i++)
+    {
+        auto& frame = context->state.frames[i];
+        std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes =
+        {
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 },
+        };
+
+        frame.frameDescriptors = DescriptorAllocatorGrowable{};
+        frame.frameDescriptors.init(context->deviceContext->device, 1000, frame_sizes);
+
+        VK_CHECK(vkCreateFence(context->deviceContext->device, &context->deviceContext->fenceCreateInfo, nullptr, &frame.renderFence));
+
+        VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
+
+        VK_CHECK(vkCreateSemaphore(context->deviceContext->device, &semaphoreCreateInfo, nullptr, &frame.swapchainSemaphore));
+
+        frame.deletionQueue.push_function([=]()
+                                          {
+                                              vkDestroySemaphore(context->deviceContext->device, frame.swapchainSemaphore, nullptr);
+
+                                              vkDestroyFence(context->deviceContext->device, frame.renderFence, nullptr);
+
+                                              context->state.frames[i].frameDescriptors.clear_pools(context->deviceContext->device);
+                                              context->state.frames[i].frameDescriptors.destroy_pools(context->deviceContext->device);
+                                          });
+    }
+    return context;
+}
+
+void VulkanWindowContext::Destroy()
+{
+    // Frames still in flight use this window's fences, semaphores and command
+    // pools; no fence covers a present's semaphore wait, so drain the queue too.
+    for (auto& frame : state.frames)
+        WaitForFence(deviceContext->device, frame.renderFence);
+    {
+        auto queueLock = deviceContext->LockQueue();
+        VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
+    }
+
+    for (auto& frame : state.frames)
+    {
+        frame.flushQueue.flush();
+        if (frame.primitiveUploadBuffer.buffer != VK_NULL_HANDLE)
+        {
+            vmaDestroyBuffer(deviceContext->allocator,
+                             frame.primitiveUploadBuffer.buffer,
+                             frame.primitiveUploadBuffer.allocation);
+            frame.primitiveUploadBuffer = {};
+            frame.primitiveUploadAddress = 0;
+            frame.primitiveUploadCapacity = 0;
+            frame.primitiveUploadOffset = 0;
+        }
+        frame.deletionQueue.flush();
+    }
+
+    DestroySwapchain();
+
+    vkDestroySurfaceKHR(deviceContext->instance, surface, nullptr);
+}

@@ -1,0 +1,23 @@
+# Submodules are pinned to release tags (the superproject records the exact
+# commit). Update deliberately: check out the new tag inside the submodule,
+# build + run gui_core_tests/gui_gpu_tests, then commit the gitlink bump.
+#   SDL          — release-3.4.6
+#   googletest   — v1.15.0
+#   skribidi     — pinned commit (own project, no release tags yet)
+#   vma          — v3.1.0
+#   vkbootstrap  — v1.3.287
+[submodule "third_party/SDL"]
+	path = third_party/SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "third_party/skribidi"]
+	path = third_party/skribidi
+	url = https://github.com/LogicalError/Skribidi
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+[submodule "third_party/vma"]
+	path = third_party/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "third_party/vkbootstrap"]
+	path = third_party/vkbootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap.git

@@ -1,0 +1,56 @@
+# Build output
+/build
+/bin
+build
+build-*/
+/third_party/install
+/workdirectory/shaders_compiled
+/shaders/*.spv
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+Testing/
+
+# Compiler and linker output
+*.d
+*.o
+*.obj
+*.slo
+*.lo
+*.gch
+*.pch
+*.ilk
+*.pdb
+*.dwo
+*.so
+*.so.*
+*.dylib
+*.dll
+*.a
+*.la
+*.lai
+*.lib
+*.exe
+*.out
+*.app
+
+# Editors and tools
+.vs/
+*.user
+.cache/
+vcpkg_installed/
+/.claude
+/*.ini
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+
+# Local assets
+/assets

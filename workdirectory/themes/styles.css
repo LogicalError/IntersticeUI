@@ -1,0 +1,3321 @@
+/* =============================================================================
+   Style rules for IntersticeUI. Reads CSS custom properties (--accent,
+   --bg-content, etc.) that are defined by a palette file (dark.css or
+   light.css). Always load a palette file BEFORE this file — var() lookups
+   are resolved at parse time against whatever has been defined so far.
+   ============================================================================= */
+
+:root {
+    /* ---- Dimensions: shared across all palettes -------------------------- */
+    --border:            1px;
+    --border-first:      1px 1px 1px 1px;
+    --border-mid:        1px 1px 1px 0px;
+    --border-last:       1px 1px 1px 0px;
+    --border-thin:       1px;
+    --border-toolbar:    1px;
+    --radius-sm:         4px;
+    --radius-md:         6px;
+    --radius-lg:         8px;
+    --radius-toolbar:    0px;
+    --radius-md-first:   4px 0px 0px 4px;
+    --radius-md-mid:     0px 0px 0px 0px;
+    --radius-md-last:    0px 4px 4px 0px;
+    --radius-node-top:   5px 5px 0px 0px; /* --radius-md minus --border: follows the node border's inner curve */
+    --font-size:         13px;
+    --font-size-sm:      11px;
+    --font-size-tooltip: 12px;
+}
+
+/* ---- Fonts ------------------------------------------------------------------
+   Inter for Latin, Greek and Cyrillic; everything Inter lacks falls back to
+   Noto. Paths are relative to this file. */
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Regular.ttf"); }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-SemiBold.ttf"); }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Bold.ttf"); }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Italic.ttf"); }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-BoldItalic.ttf"); }
+
+* {
+    font-family: "Inter";
+    line-height: 1.3;
+}
+
+/* ---- staticTextStyle ------------------------------------------------------ */
+.static-text {
+    border-width: 0px;
+    border-radius: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    overflow: auto;
+    direction: initial;
+    text-wrap: wrap;
+    text-align: start;
+    padding: 4px 2px;
+    vertical-align: middle;
+    font-size: var(--font-size);
+}
+
+/* ---- textStyle ------------------------------------------------------------ */
+.text-style {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    overflow: auto;
+    direction: initial;
+    text-wrap: wrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+.text-style:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.text-style:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.text-style:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.text-style::highlight(selected) { color: var(--text-on-highlight); border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- labelStyle ----------------------------------------------------------- */
+.label {
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 0px 8px;
+    overflow: hidden;
+    direction: initial;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-label);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: transparent;
+    break-after: avoid;
+}
+.label:hover  { color: var(--text-label-hover); }
+.label:active { color: var(--text-label-active); }
+.label:focus  { color: var(--text-label-active); }
+.label::highlight(selected) { color: var(--text-label-active); }
+
+/* ---- iconLabelStyle ------------------------------------------------------- */
+/* Inline icon + text, icon on the left with a gap, both vertically centered.
+   For table cells / rows that show an optional leading icon next to a label
+   (e.g. the Command column of the Shortcuts page). When no icon is supplied
+   the icon properties are inert and it renders as plain centered text. */
+.icon-label {
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-size: 16px;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: transparent;
+}
+.icon-label::highlight(selected) { color: var(--text-selected); }
+
+/* ---- iconLabelNoIconStyle ------------------------------------------------- */
+/* Same as .icon-label but with no icon: a left pad equal to the icon column
+   (16px icon + 6px gap) keeps icon-less labels aligned with icon'd ones in
+   the same column (e.g. commands without an icon in the Shortcuts page). */
+.icon-label-no-icon {
+    margin: 0px;
+    padding: 0px 0px 0px 22px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: transparent;
+}
+.icon-label-no-icon::highlight(selected) { color: var(--text-selected); }
+
+/* ---- dragLabelStyle ------------------------------------------------------- */
+.drag-label {
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 0px 8px;
+    overflow: hidden;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-label);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: var(--accent);
+    break-after: avoid;
+    cursor: col-resize;
+}
+.drag-label:hover  { color: var(--text-label-hover); }
+.drag-label:active { color: var(--text-label-active); }
+.drag-label:focus  { color: var(--text-label-active); }
+.drag-label::highlight(selected) { color: var(--text-label-active); }
+
+/* ---- grouped label variants (overflow visible for edge dragger rendering) - */
+.group-label {
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 4px 8px;
+    margin: 1px;
+    overflow: visible;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-label);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: var(--accent);
+    break-after: avoid;
+    align-self: stretch;
+}
+.group-label:hover  { color: var(--text-label-hover); }
+.group-label:active { color: var(--text-label-active); }
+.group-label:focus  { color: var(--text-label-active); }
+.group-label::highlight(selected) { color: var(--text-label-active); }
+
+.group-drag-label {
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 0px 8px;
+    overflow: visible;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-label);
+    font-size: var(--font-size);
+    background-color: transparent;
+    border-color: var(--accent);
+    break-after: avoid;
+    align-self: stretch;
+    cursor: col-resize;
+}
+.group-drag-label:hover  { color: var(--text-label-hover); }
+.group-drag-label:active { color: var(--text-label-active); }
+.group-drag-label:focus  { color: var(--text-label-active); }
+.group-drag-label::highlight(selected) { color: var(--text-label-active); }
+
+/* ---- textboxStyle --------------------------------------------------------- */
+.textbox {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent2-dark);
+    color: var(--text-primary);
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    cursor: text;
+    text-overflow: clip;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.textbox:hover  { border-color: var(--border-focus); background-color: var(--accent2-dark); }
+.textbox:active { border-color: var(--border-focus); background-color: var(--accent2-dark); }
+.textbox:focus  { border-color: var(--border-focus); background-color: var(--accent2-dark); }
+.textbox::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+/* ---- searchTextbox -------------------------------------------------------- */
+/* Search field: a textbox-looking container with a leading icon inside the
+   border, then the editable text. The container carries the chrome (border,
+   background, padding) and is flagged PropagatesDescendantState so its border
+   lights up on the inner field's hover/focus. The inner .search-textbox-field
+   is a transparent borderless textbox that fills the remaining width. */
+.search-textbox {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent2-dark);
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: hidden;
+    cursor: text;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.search-textbox:hover  { border-color: var(--border-focus); }
+.search-textbox:active { border-color: var(--border-focus); }
+.search-textbox:focus  { border-color: var(--border-focus); }
+
+/* Leading icon, drawn to fit its box; dimmed so it reads as a hint. */
+.search-textbox-icon {
+    width: 14px;
+    height: 14px;
+    margin: 2px 0px 0px 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    color: var(--text-muted);
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* Editable text, blended into the container (no chrome of its own). */
+.search-textbox-field {
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    color: var(--text-primary);
+    overflow: auto;
+    cursor: text;
+    text-overflow: clip;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.search-textbox-field::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+/* ---- buttonStyle ---------------------------------------------------------- */
+.button {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.button::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- iconButtonStyle: compact icon-only action button (list/dict add & delete).
+   Flat by default — transparent background, no border — so it reads as just the
+   glyph until hovered. Centres the glyph on both axes and pins its render size so
+   the button can be stretched to a row's height without the icon drifting up. */
+.icon-button {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    margin: 1px;
+    padding: 3px 0px;
+    overflow: hidden;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.icon-button:hover  { background-color: var(--bg-drag-knob-hover); }
+.icon-button:active { background-color: var(--accent-light); }
+.icon-button:focus  { background-color: var(--bg-drag-knob-hover); }
+
+/* .icon-button-end: same flat icon button, pinned to the end of the cross axis
+   so the trailing add button sits at the bottom-right of the list / dictionary
+   area rather than the bottom-left. */
+.icon-button-end {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    margin: 1px;
+    padding: 3px 0px;
+    overflow: hidden;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: flex-end;
+    cursor: pointer;
+}
+.icon-button-end:hover  { background-color: var(--bg-drag-knob-hover); }
+.icon-button-end:active { background-color: var(--accent-light); }
+.icon-button-end:focus  { background-color: var(--bg-drag-knob-hover); }
+
+/* Flat button: looks like plain left-aligned text (no border/background), but
+   stays clickable with a cursor + subtle hover. Used where a button shouldn't
+   read as a button — e.g. the shortcut-rebind cell in the Shortcuts settings. */
+.flat-button {
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    margin: 0px;
+    /* No left padding: the enclosing table cell already supplies it, so the
+       text lines up with the other (plain-text) columns instead of being
+       indented past them. */
+    padding: 4px 8px 4px 0px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.flat-button:hover  { background-color: var(--bg-hover); }
+.flat-button:active { background-color: var(--bg-hover); }
+
+.shortcut-category {
+    border-width: 0px;
+    margin: 0px 3px 0px 0px;
+    gap: 0px;
+    flex-grow: 1;
+    flex-shrink: 0;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.shortcut-category:active { border-color: var(--accent); background-color: var(--bg-surface); }
+.shortcut-category:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+
+/* Search row: a flat full-width row hosting a top-of-panel SearchField, with a
+   little breathing room below it before the panel content. Shared by the
+   Shortcuts page and the Hierarchy / Inspector / Log / Files panels. */
+.search-row {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px 0px 2px 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.shortcut-table {
+    border-width: 0px;
+    border-radius: 0px;
+    margin: 0px 0px 0px 3px;
+    padding: 0px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--bg-surface);
+    border-color: transparent;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+}
+
+
+.first-button {
+    border-width: var(--border-first);
+    border-radius: var(--radius-md-first);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 0px 1px 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.first-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
+.first-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+
+.mid-button {
+    border-width: var(--border-mid);
+    border-radius: var(--radius-md-mid);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 0px 1px 0px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.mid-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.mid-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.mid-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
+.mid-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+
+.last-button {
+    border-width: var(--border-last);
+    border-radius: var(--radius-md-last);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 1px 1px 0px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.last-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.last-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.last-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
+.last-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+/* ---- menuTriggerStyle ----------------------------------------------------- */
+/* Dropdown / menu trigger. Visually matches .button, but its label is left-
+   aligned (text-align: start) because dropdowns display a current value that
+   should read from the left edge — a centered label looks like a plain button. */
+.menu-trigger {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    text-align: start;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.menu-trigger:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.menu-trigger:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.menu-trigger:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.menu-trigger::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+
+/* ---- dashedStyle ---------------------------------------------------------- */
+.dashed {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+    border-style: dashed;
+}
+.dashed:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.dashed:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.dashed:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.dashed::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- Table (row × column data grid) --------------------------------------
+   Outer wrapper: flex column hosting the header + body sections. Does NOT
+   scroll — both axes are owned by the body section (.table-scrollable-body);
+   the header section mirrors the body's X scroll each frame so header + body
+   slide together. */
+.table {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* Stretch header + body on the cross axis (width) so they both fill
+       the outer's full content width. */
+    align-items: stretch;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+}
+
+/* Table that fills its flex container instead of sizing to its columns.
+   flex-basis:0 + grow:1 bounds the table to the available width/height, so
+   when columns are wider than the viewport the body scrolls horizontally
+   inside a fixed-size table (and the vertical scrollbar stays at the visible
+   right edge) rather than the table growing and pushing the bar off-screen.
+   Use for a VirtualTable laid out with FlexGrow that may overflow. */
+.table-fill {
+    border-width: 0px;
+    border-radius: 0px;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--bg-surface);
+    border-color: transparent;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+}
+
+/* Header section grid — sibling of the body section so header rows don't
+   scroll with data rows. */
+.table-header-section {
+    display: grid;
+    column-gap: 0px;
+    row-gap: 0px;
+    overflow: hidden;
+    background-color: var(--bg-surface);
+}
+
+.table-bodies-row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex-basis: 0;
+    flex-grow: 1;
+    overflow: hidden;
+    background-color: var(--bg-surface);
+}
+
+/* Middle-scrollable body — MASTER scroll source for both axes. Single grid
+   level so cells (direct children) shift correctly with X-scroll.
+   flex-basis:auto: sections start from their column widths and shrink in
+   proportion, so a narrow frozen section stays narrow (basis 0 would split
+   the row equally between sections). */
+.table-scrollable-body {
+    display: grid;
+    column-gap: 0px;
+    row-gap: 0px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+    background-color: var(--bg-surface);
+}
+
+/* Fit-content section body — pinned to the sum of its column widths
+   via a Width override in VirtualTable's section loop. No flex grow/shrink
+   so it doesn't fight other sections for space. overflow-x:hidden because
+   it's sized to exactly fit; overflow-y:auto matches .table-scrollable-body
+   so the rightmost section can still host the shared V-scrollbar even when
+   it's the fit-content one. */
+.table-fit-content-body {
+    display: grid;
+    column-gap: 0px;
+    row-gap: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: var(--bg-surface);
+}
+
+.table-header {
+    margin: 0px;
+    padding: 2px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-bright);
+    font-size: var(--font-size);
+    font-weight: 600;
+    background-color: var(--bg-content);
+    -interstice-icon-side: right;
+    -interstice-icon-text-gap: 4px;
+}
+.table-header:hover { background-color: var(--table-header-hover-bg); cursor: pointer; }
+
+/* Locked-column header variant. Same look as .table-header but with a
+   default arrow cursor (not pointer) since the column can't be dragged.
+   Sort still toggles on click for sortable locked columns — the hover
+   background highlight stays so the click affordance isn't lost. */
+.table-header-locked {
+    margin: 0px;
+    padding: 2px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-bright);
+    font-size: var(--font-size);
+    font-weight: 600;
+    background-color: var(--bg-content);
+    -interstice-icon-side: right;
+    -interstice-icon-text-gap: 4px;
+    cursor: default;
+}
+.table-header-locked:hover { background-color: var(--table-header-hover-bg); cursor: default; }
+
+.table-cell {
+    margin: 0px;
+    padding: 2px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    /* Transparent so the row backdrop (a sibling grid item spanning all
+       columns, painted behind the cells) shows through — that's where
+       the row hover / selection / alternating bg actually lives. In cell
+       mode the cell's own :hover/::highlight(selected) rules below take
+       over per-cell. */
+    background-color: transparent;
+}
+.table-cell:hover { background-color: var(--bg-hover); }
+.table-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* Compact cell — like .table-cell with tighter vertical padding, for dense
+   tables such as the console log. Opt in per table via VirtualTable's cellStyle
+   (or per cell via Cell(text, style)); the row height tracks it automatically. */
+.table-cell-compact {
+    margin: 0px;
+    padding: 1px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.table-cell-compact:hover { background-color: var(--bg-hover); }
+.table-cell-compact::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* Log rows: compact cells, text centred in the row (the level icon makes rows
+   taller than the text). */
+.log-cell {
+    margin: 0px;
+    padding: 1px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.log-cell:hover { background-color: var(--bg-hover); }
+.log-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* ---- Table row backdrop ---------------------------------------------------
+   One element per data row, placed as a grid item spanning every column and
+   painted BEFORE the cells so it sits behind them. In row-selection mode
+   it owns the row's hover, selected and focused states — the framework's
+   transition system animates the background colour naturally because the
+   backdrop's ID becomes m_hoveredID whenever the mouse is over any NoInput
+   cell above it. The -alt variant is swapped in on every other row for a
+   zebra-striped look. */
+.table-row {
+    margin: 0px;
+    padding: 0px;
+    overflow: visible;
+    background-color: var(--table-row-bg);
+}
+.table-row:hover { background-color: var(--table-row-hover); }
+.table-row::highlight(selected) { background-color: var(--selection-bg); }
+
+.table-row-alt {
+    margin: 0px;
+    padding: 0px;
+    overflow: visible;
+    background-color: var(--table-row-alt-bg);
+}
+.table-row-alt:hover { background-color: var(--table-row-hover); }
+.table-row-alt::highlight(selected) { background-color: var(--selection-bg); }
+
+.table-sizer {
+    margin: 0px;
+    padding: 0px;
+    background-color: var(--bg-drag-knob);
+    border-color: transparent;
+    cursor: col-resize;
+}
+.table-sizer:hover  { background-color: var(--accent-blue); cursor: col-resize; }
+.table-sizer:active { background-color: var(--accent-blue); cursor: col-resize; }
+
+/* Section divider — 1px grey strip between body sections.
+   Non-interactive — no cursor change, no event handler. */
+.table-separator {
+    margin: 0px;
+    width: 2px;
+    padding: 0px;
+    background-color: var(--bg-drag-knob);
+    border-color: transparent;
+}
+
+/* ---- TreeTable widgets (hierarchical first column inside a Table) --------
+   The tree-cell is a flex-row container holding [indent][arrow][icon][text].
+   Subclass of .table-cell — same padding, typography and hover/selection
+   rules. overflow:hidden clips children to the cell's padding-box so
+   icons/text don't bleed into the next column when the column is narrowed;
+   guide-line custom-draws render in border-box space and are unaffected. */
+.tree-table-cell {
+    margin: 0px;
+    /* Vertical padding shrunk 1px each (4 → 3) to absorb the 1px
+       transparent border on the inner .tree-table-text element. Keeps
+       the tree-cell's outer height equal to .table-cell's, so plain
+       and tree rows mix in the same VirtualTable without spacer drift
+       — see the matching note on .tree-table-text. */
+    padding: 1px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    /* Transparent — the row backdrop sibling provides the row-level
+       hover/selected/alternating background. */
+    background-color: transparent;
+    gap: 0px;
+}
+.tree-table-cell:hover { background-color: var(--bg-hover); }
+.tree-table-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* Row-mode variant: identical layout to .tree-table-cell but transparent
+   on hover/selected so the row backdrop behind (which shares the rowID
+   with the cell) owns those visuals. The cell still paints its text
+   (inheriting the selected colour via ::highlight(selected) on .text). */
+.tree-table-cell-row-mode {
+    margin: 0px;
+    /* Same padding as .tree-table-cell so row-mode + cell-mode tree
+       rows stay the same height — see that style for why it's 3 not 4. */
+    padding: 0px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+    gap: 0px;
+}
+.tree-table-cell-row-mode:hover { background-color: transparent; }
+.tree-table-cell-row-mode::highlight(selected) { background-color: transparent; color: var(--text-selected); }
+
+/* Inner elements — each defined in ONE rule only so no accidental duplicate
+   selector chains where the parser would merge conflicting declarations.
+   All four carry transparent background + border so the row's hover/selected
+   background (from .tree-table-cell) shows through cleanly. */
+/* width = ONE indent level; a row at depth N gets an N-level spacer, and the
+   tree guide lines are drawn on the same pitch. */
+.tree-table-indent {
+    width: 16px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* width = the expander column (arrow on branches, an empty spacer on leaves,
+   so text lines up on both). */
+.tree-table-arrow {
+    width: 20px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    /* Hit-test wrapper: stretched to full row height for a generous
+       click target, flex-centred so the inner .tree-table-arrow-glyph
+       (which owns the actual 10x10 icon RichText) sits in the middle
+       both horizontally and vertically. align-items:center overrides
+       the default Stretch so the inner keeps its intrinsic size. */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    overflow: visible;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.tree-table-arrow-glyph {
+    -interstice-icon-size: 10px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    overflow: visible;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.tree-table-icon {
+    -interstice-icon-size: 16px;
+    margin: 0px;
+    padding: 2px 4px 0px 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-align: center;
+    vertical-align: middle;
+    align-self: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.tree-table-icon::highlight(selected) { color: var(--text-selected); }
+
+/* ---- logLevelIconStyle ---------------------------------------------------- */
+/* Level icon (info / warning / error) in the console log. The icon is drawn
+   to fit the element box, so width/height set its rendered size. */
+.log-level-icon {
+    width: 16px;
+    margin: 0px;
+    padding: 0px;
+    -interstice-icon-size: 16px;
+    -interstice-vertical-text-align: middle;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    align-self: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.log-level-icon::highlight(selected) { color: var(--text-selected); }
+
+.tree-table-text {
+    margin: 0px;
+    padding: 0px;
+    /* Transparent 1px border so the element's outer size matches
+       .tree-table-text-edit (which has a visible 1px border). Keeps
+       the text at the same pixel position whether or not the row is
+       being renamed — cell padding is shrunk 1px vertically to absorb
+       this. */
+    border-width: 1px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: baseline;
+    align-self: center;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.tree-table-text::highlight(selected) { color: var(--text-selected); }
+
+/* Inline-rename editor variant: same box as .tree-table-text so the
+   text stays at the exact same pixel position, but with a visible
+   border to mark the field as editable. Background stays transparent
+   so the row's selection / zebra colour shows through; the border
+   colour comes from a per-theme var. */
+.tree-table-text-edit {
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    background-color: transparent;
+    border-color: var(--tree-table-edit-border);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: baseline;
+    align-self: center;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.tree-table-text-edit::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+/* ---- toggleStyle ---------------------------------------------------------- */
+.toggle {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    padding: 2px 4px 2px 4px;
+    margin: 1px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.toggle       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.toggle:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.toggle:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+/* ---- logLevelToggleStyle --------------------------------------------------- */
+/* Log panel level-filter toggle: .toggle with a small inline level icon next
+   to the count (SVGs are 24px natural — scale them down to text size). */
+.log-level-toggle-left {
+    border-width: 1px 0px 1px 1px;
+    border-radius: var(--radius-md-first);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    padding: 2px 4px 2px 4px;
+    margin: 1px 0px 1px 1px;
+    overflow: auto;
+    vertical-align: baseline;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    -interstice-icon-side: left;
+    -interstice-icon-size: 16px;
+    -interstice-icon-text-gap: 4px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-level-toggle-left:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-left:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-left:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-left       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.log-level-toggle-left:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-left:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-left:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+
+.log-level-toggle-mid {
+    border-width: 1px 0px 1px 0px;
+    border-radius: var(--radius-md-mid);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    padding: 2px 4px 2px 4px;
+    margin: 1px 0px 1px 0px;
+    overflow: auto;
+    vertical-align: baseline;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    -interstice-icon-side: left;
+    -interstice-icon-size: 16px;
+    -interstice-icon-text-gap: 4px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-level-toggle-mid:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-mid:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-mid:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-mid       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.log-level-toggle-mid:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-mid:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-mid:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+
+.log-level-toggle-right {
+    border-width: 1px 1px 1px 0px;
+    border-radius: var(--radius-md-last);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    padding: 2px 4px 2px 4px;
+    margin: 1px 1px 1px 0px;
+    overflow: auto;
+    vertical-align: baseline;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    -interstice-icon-side: left;
+    -interstice-icon-size: 16px;
+    -interstice-icon-text-gap: 4px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-level-toggle-right:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-right:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-right:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-level-toggle-right       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.log-level-toggle-right:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-right:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-level-toggle-right:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+/* Standalone collapse-duplicates toggle in the console toolbar (collapse-all
+   icon, next to Clear). Mirrors the level toggles but with all four corners
+   rounded; the selected highlight marks "collapsing on". */
+.log-collapse-toggle {
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    padding: 0px 6px;
+    margin: 1px 0px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    font-size: var(--font-size);
+    -interstice-icon-side: left;
+    -interstice-icon-size: 16px;
+    -interstice-vertical-text-align: middle;   /* icon-only — centre it vertically */
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-collapse-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.log-collapse-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.log-collapse-toggle::highlight(selected)        { border-color: var(--accent);       background-color: var(--accent-light); }
+.log-collapse-toggle:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+/* Console message text inside the collapse-aware message cell: fills the cell
+   so the duplicate-count bubble is pushed to the right edge. (The cell's own
+   compact style only styles a single text leaf; a multi-child cell needs the
+   text styled here.) */
+.log-message {
+    margin: 0px;
+    padding: 0px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex-grow: 1;
+    align-self: center;
+}
+
+/* Duplicate-count bubble on the right of a collapsed log line. The right
+   margin keeps it clear of the table's overlay vertical scrollbar. */
+.log-count-badge {
+    margin: 0px 12px 0px 8px;
+    padding: 0px 6px;
+    border-radius: var(--radius-lg);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* Console detail pane (bottom half): shows the selected entry's full text. Its
+   height is driven by the drag-sizer (LayoutOverride), so it isn't fixed here;
+   the list above takes the remaining height. */
+.log-detail-pane {
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin: 0px;
+    padding: 6px 8px;
+    border-width: 1px 0px 0px 0px;
+    border-color: var(--border-subtle);
+    background-color: var(--bg-surface);
+    overflow: hidden;
+}
+
+/* Full text of the selected entry: multi-line, wraps long lines and honours
+   the explicit newlines in stacktraces. Clickable file:line links are styled
+   per-run by the rich-text system, not here. */
+.log-detail-text {
+    margin: 0px;
+    padding: 0px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: wrap;
+    flex-grow: 1;
+    align-self: stretch;
+}
+/* Selection highlight — without this the selection is made but painted with no
+   colour (invisible). Any selectable text style needs a ::selection rule. */
+.log-detail-text::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+
+.first-toggle {
+    border-width: var(--border-first);
+    border-radius: var(--radius-md-first);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 0px 1px 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.first-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.first-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+.mid-toggle {
+    border-width: var(--border-mid);
+    border-radius: var(--radius-md-mid);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 0px 1px 0px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.mid-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.mid-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.mid-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.mid-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+.last-toggle {
+    border-width: var(--border-last);
+    border-radius: var(--radius-md-last);
+    border-color: var(--accent);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 1px 1px 1px 0px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    cursor: pointer;
+}
+.last-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.last-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.last-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.last-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+
+/* ---- button-group / toggle-group containers ------------------------------ */
+/* Horizontal flex row with no gap. Children (.first-/.mid-/.last-button or
+   -toggle) carry the orientation-aware borders/radii so they butt up against
+   each other and form one tight grouped control. */
+.button-group, .toggle-group {
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0px;
+    flex-grow: 1;
+    overflow: visible;
+}
+
+/* ---- ghostWindowStyle / ghostIconStyle ------------------------------------ */
+.ghost-icon {
+    border-width: 0px;
+    border-radius: 0px;
+    overflow: hidden;
+    padding: 0px;
+    margin: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+.ghost-window {
+    border-width: 0px;
+    border-radius: 0px;
+    overflow: hidden;
+    padding: 0px;
+    margin: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+.panel-drop-visualization {
+    border-width: var(--border);
+    border-radius: 0px;
+    overflow: hidden;
+    padding: 0px;
+    margin: 0px;
+    background-color: var(--drop-target-bg);
+    border-color: var(--accent-blue);
+    color: transparent;
+}
+
+/* ---- knobStyle ------------------------------------------------------------ */
+.knob {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0px;
+    overflow: auto;
+    cursor: col-resize;
+    vertical-align: baseline;
+    text-wrap: wrap;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+.knob:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.knob:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.knob:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.knob::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- firstIconStyle ------------------------------------------------------- */
+.first-icon {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 2px 4px;
+    overflow: auto;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+    break-after: left;
+}
+.first-icon:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-icon:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-icon:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.first-icon::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- iconLeftStyle -------------------------------------------------------- */
+.icon-left {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 4px;
+    overflow: auto;
+    text-align: end;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 4px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+.icon-left:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-left:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.icon-left:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-left::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- iconRightStyle ------------------------------------------------------- */
+.icon-right {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 4px;
+    overflow: auto;
+    text-align: end;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    -interstice-icon-side: right;
+    -interstice-icon-text-gap: 4px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+.icon-right:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-right:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.icon-right:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-right::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- iconTopStyle --------------------------------------------------------- */
+.icon-top {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 4px;
+    overflow: auto;
+    text-align: end;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    -interstice-icon-side: top;
+    -interstice-icon-text-gap: 4px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+.icon-top:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-top:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.icon-top:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-top::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- iconBottomStyle ------------------------------------------------------ */
+.icon-bottom {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 4px;
+    overflow: auto;
+    text-align: end;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    -interstice-icon-side: bottom;
+    -interstice-icon-text-gap: 4px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+.icon-bottom:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-bottom:active { border-color: var(--border-focus); background-color: var(--accent-light); }
+.icon-bottom:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
+.icon-bottom::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+
+/* ---- Vertical-align demo boxes -------------------------------------------
+   12 styles: 4 icon-sides × 3 block vertical alignments. Fixed min-height
+   so the alignment effect is visible in panel_misc's demo grid. Rules are
+   cumulative (the parser's GetOrCreate reuses the same Style object per
+   class name), so the three blocks below stack onto each other without
+   duplicating the shared properties.
+*/
+.icon-demo-left-top, .icon-demo-left-mid, .icon-demo-left-bot,
+.icon-demo-right-top, .icon-demo-right-mid, .icon-demo-right-bot,
+.icon-demo-top-top, .icon-demo-top-mid, .icon-demo-top-bot,
+.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0px;
+    padding: 4px;
+    overflow: hidden;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    -interstice-icon-text-gap: 4px;
+    min-height: 80px;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent-dark);
+    border-color: var(--accent);
+}
+
+.icon-demo-left-top,   .icon-demo-left-mid,   .icon-demo-left-bot    { -interstice-icon-side: left;   }
+.icon-demo-right-top,  .icon-demo-right-mid,  .icon-demo-right-bot   { -interstice-icon-side: right;  }
+.icon-demo-top-top,    .icon-demo-top-mid,    .icon-demo-top-bot     { -interstice-icon-side: top;    }
+.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot  { -interstice-icon-side: bottom; }
+
+.icon-demo-left-top,   .icon-demo-right-top,  .icon-demo-top-top,    .icon-demo-bottom-top { -interstice-vertical-text-align: top;    }
+.icon-demo-left-mid,   .icon-demo-right-mid,  .icon-demo-top-mid,    .icon-demo-bottom-mid { -interstice-vertical-text-align: middle; }
+.icon-demo-left-bot,   .icon-demo-right-bot,  .icon-demo-top-bot,    .icon-demo-bottom-bot { -interstice-vertical-text-align: bottom; }
+
+/* ---- itemListStyle -------------------------------------------------------- */
+.item-list {
+    border-width: var(--border);
+    padding: 4px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 10px;
+    background-color: var(--bg-content);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: wrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.item-list:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.item-list:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- nodeViewStyle -------------------------------------------------------- */
+.node-view {
+    border-width: var(--border);
+    padding: 4px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-grow: 1;
+    flex-shrink: 0;
+    align-items: stretch;
+    gap: 0px;
+    background-color: var(--bg-view);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: wrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-clamp-scroll: false;
+}
+
+/* ---- viewBackground: solid backdrop for the View panel's toolbar dock ----- */
+/* Column flex like the default BeginVertical container, but paints --bg-view. */
+.view-background {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0px;
+    overflow: auto;
+    background-color: var(--bg-view);
+    border-color: transparent;
+}
+
+/* ---- node (single node container in the node-view) ----------------------- */
+.node {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--bg-content);
+    padding: 0px 0px 4px 0px;
+    margin: 0px;
+    /* No inter-row gap: rows are two grid cells tall and must stack at exactly
+       that pitch, so socket centres stay on grid lines down the whole node. */
+    gap: 0px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: visible;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+/* Hover = neutral light-grey border; active/focus/selected = accent blue.
+   The background never changes in any state — only the border. */
+.node:hover  { border-color: var(--node-border-hover); }
+.node:active { border-color: var(--accent-blue); }
+.node:focus  { border-color: var(--accent-blue); }
+.node::highlight(selected) { border-color: var(--accent-blue); }
+
+/* ---- node-header (title bar at the top of a node) ------------------------ */
+/* A static title bar: its background is the per-node-type tint (set from C++  */
+/* via Element.colorStyleIndex) over this default, and it never reacts to      */
+/* state — the node's own border carries all hover/select feedback.           */
+.node-header {
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--accent);
+    border-radius: var(--radius-node-top);
+    background-color: var(--accent-dark);
+    padding: 0px 0px;
+    margin: 0px;
+    gap: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    font-style: normal;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ---- node-row (one property: socket | body | socket) --------------------- */
+.node-row {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px 0px;
+    margin: 0px;
+    gap: 4px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    /* Sockets are shifted onto the node border (half outside the row), so the
+       row must not clip them to its content box. */
+    overflow: visible;
+    color: var(--text-primary);
+}
+
+/* ---- node-body-center: full-body content (image previews) ---------------- */
+/* Multi-pitch rows centre their body so a square, aspect-locked image sits with
+   even padding instead of left-aligned with the grid round-up gap on one side. */
+.node-body-center {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* ---- node-socket (the dot hit-target) ------------------------------------ */
+/* overflow:visible so the dot — and especially its larger hover halo — is not
+   scissored to the socket's own 12px box (an element's custom-draw is clipped
+   to its border box when its own overflow isn't visible). */
+.node-socket {
+    width: 12px;
+    height: 12px;
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    overflow: visible;
+}
+
+/* ---- node-text (text-only property body) --------------------------------- */
+/* Base for the left/centre/right variants the node view registers from this
+   one rule (they differ only in text-align). flex-grow is applied in code. */
+.node-text {
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    padding: 0px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+}
+
+/* ---- itemStyle ------------------------------------------------------------ */
+.item {
+    border-width: var(--border);
+    padding: 4px;
+    background-color: var(--bg-content);
+    border-color: var(--border-focus);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: wrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.item:hover  { border-color: var(--accent); background-color: var(--bg-content); }
+.item:active { border-color: var(--accent); background-color: var(--bg-content); }
+.item:focus  { border-color: var(--accent); background-color: var(--bg-content); }
+.item::highlight(selected) { border-color: var(--accent); background-color: var(--accent-dark); }
+
+/* ---- listAreaStyle -------------------------------------------------------- */
+.list-area {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    gap: 0px;
+
+    display: flex;
+    overflow: auto;
+
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* ---- collectionAreaStyle: card-like well shared by the reorderable list and
+   dictionary Field() helpers. A distinct surface + dark recessed-well border sets
+   the collection apart from the panel; the rows, drag knob and add/delete buttons
+   sit transparent on top of it. */
+.collection-area {
+    border-width: var(--border-thin);
+    border-radius: var(--radius-md);
+    border-color: var(--bg-surface);
+    background-color: var(--bg-surface);
+    padding: 4px;
+    margin: 1px;
+    gap: 0px;
+
+    display: flex;
+    overflow: auto;
+
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+
+/* ---- windowStyle ---------------------------------------------------------- */
+.window {
+    padding: 10px;
+    margin: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+}
+
+.main-window {
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+    align-items: stretch;
+}
+
+/* Floating dock window: like a window but no internal padding, so the
+   docking container fills it edge-to-edge (matching docked panels). */
+.dock-window {
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+    align-items: stretch;
+}
+
+/* ---- menuStyle ------------------------------------------------------------ */
+.menu {
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0px;
+    padding: 0px;
+    margin: 0px;
+    border-width: var(--border-thin);
+    background-color: var(--accent);
+    border-color: var(--border-subtle);
+}
+
+/* ---- menuScrollButtonStyle ------------------------------------------------ */
+.menu-scroll-button {
+    display: flex;
+    overflow: visible;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2px 4px;
+    margin: 0px;
+    border-width: 0px;
+    text-wrap: nowrap;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent);
+}
+.menu-scroll-button:hover { background-color: var(--accent-dark); }
+
+/* ---- menuItemStyle -------------------------------------------------------- */
+.menu-item {
+    border-width: var(--border-thin);
+    border-radius: 0px;
+    margin: 0px;
+    padding: 2px 4px;
+    overflow: auto;
+    flex-shrink: 0;
+    flex-grow: 0;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: var(--accent);
+    border-color: transparent;
+}
+.menu-item:hover  { background-color: var(--accent-dark); }
+.menu-item:active { background-color: var(--accent-light); }
+.menu-item:focus  { background-color: var(--accent-dark); }
+.menu-item::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* ---- menuItemRowStyle ----------------------------------------------------- */
+/* Reusable interactive row for dropdown / context-menu / submenu items: an
+   optional fixed icon slot, a grow:1 label, and an optional trailing shortcut
+   or submenu arrow. The row owns the hover/focus/selected highlight; its
+   children are non-interactive so the whole row highlights as one unit. */
+.menu-item-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    border-width: var(--border-thin);
+    border-radius: 0px;
+    border-color: transparent;
+    margin: 0px;
+    padding: 2px 6px;
+    overflow: visible;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: var(--accent);
+}
+/* "selected" (current/checked) items are marked with a checkmark in the icon
+   column (see MenuItemRow), not a background — so the hover/focus highlight is
+   never ambiguous with the current-item cue. */
+.menu-item-row:hover  { background-color: var(--accent-dark); }
+.menu-item-row:active { background-color: var(--accent-light); }
+.menu-item-row:focus  { background-color: var(--accent-dark); }
+
+/* Fixed icon column; reserved for every item in a menu that uses icons so the
+   labels line up whether or not a given item supplies an icon. Width is the
+   alignment-critical dimension (it sets the column); the extra height gives the
+   glyph vertical room so its bottom isn't clipped after centering. -interstice-icon-
+   size renders the glyph to fit (0 would draw at natural size and clip).
+   Centering uses the text-system alignment properties (text-align +
+   -interstice-vertical-text-align), not flex — the icon is drawn by the text system,
+   not laid out as a child. */
+.menu-item-icon {
+    width: 16px;
+    height: 18px;
+    -interstice-icon-size: 16px;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 0px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    flex-shrink: 0;
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    color: var(--text-primary);
+}
+
+/* The label fills the row, pushing any trailing shortcut/arrow to the edge. */
+.menu-item-label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align: middle;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+
+/* Trailing keyboard shortcut: dimmed, pinned to the right edge. */
+.menu-item-shortcut {
+    flex-grow: 0;
+    flex-shrink: 0;
+    border-width: 0px;
+    margin: 0px 0px 0px 12px;
+    padding: 0px;
+    vertical-align: middle;
+    text-align: end;
+    text-wrap: nowrap;
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+
+/* Submenu arrow: dimmed, pinned to the right edge (used instead of a shortcut
+   for items that open a child menu). */
+.menu-item-arrow {
+    flex-grow: 0;
+    flex-shrink: 0;
+    border-width: 0px;
+    margin: 0px 0px 0px 12px;
+    padding: 0px;
+    vertical-align: middle;
+    text-align: end;
+    text-wrap: nowrap;
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+
+/* ---- main menu bar -------------------------------------------------------- */
+/* Horizontal strip docked at the top of the main window. Sits above the dock
+   container (which flex-grows to fill the rest). */
+.menu-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 4px;
+    margin: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: visible;
+    background-color: var(--bg-toolbar-side);
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--accent);
+}
+
+/* Flat top-level trigger — no border/background until hover, so the bar reads
+   as a strip of labels rather than a row of buttons. */
+.menu-bar-trigger {
+    border-width: var(--border-thin);
+    border-radius: var(--radius-sm);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-primary);
+    margin: 0px;
+    padding: 2px 8px;
+    overflow: auto;
+    vertical-align: middle;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.menu-bar-trigger:hover  { background-color: var(--accent-dark); }
+.menu-bar-trigger:active { background-color: var(--accent-light); }
+.menu-bar-trigger:focus  { background-color: var(--accent-dark); }
+.menu-bar-trigger::highlight(selected) { background-color: var(--accent-light); }
+
+/* Thin divider between groups of items inside a dropdown. Height comes from
+   MenuSeparator(); this just paints the line and insets it. */
+.menu-separator {
+    margin: 4px 8px;
+    height: 1px;
+    padding: 0px;
+    background-color: var(--text-primary);
+    border-color: transparent;
+}
+
+/* ---- tooltipStyle --------------------------------------------------------- */
+.tooltip {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    margin: 0px;
+    border-width: var(--border-thin);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+}
+
+/* ---- tooltipTextStyle ----------------------------------------------------- */
+.tooltip-text {
+    padding: 0px;
+    margin: 0px;
+    border-width: 0px;
+    text-wrap: nowrap;
+    color: var(--text-bright);
+    font-size: var(--font-size-tooltip);
+}
+
+/* ---- collectionStyle ------------------------------------------------------ */
+.collection {
+    border-width: var(--border);
+    padding: 4px;
+    display: flex;
+    overflow: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+    background-color: var(--bg-content);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+}
+.collection:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.collection:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- reorderableItemStyle: invisible wrapper, passes through content size - */
+/* flex-wrap: nowrap so an item's internal children (e.g. a tab's text + close
+   button, or a list row's widgets) always stay on one line. The PARENT
+   reorderable group can still wrap items between themselves via its own
+   flex-wrap setting. */
+.reorderableItem {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    gap: 0px;
+    display: flex;
+    overflow: visible;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* ---- horzReorderableGroupStyle -------------------------------------------- */
+.horzReorderableGroup {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    gap: 0px;
+
+    display: flex;
+    overflow: auto;
+
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+
+    background-color: transparent;
+    border-color: transparent;
+}
+.horzReorderableGroup:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.horzReorderableGroup:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- vertReorderableGroupStyle -------------------------------------------- */
+.vertReorderableGroup {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.vertReorderableGroup:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.vertReorderableGroup:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- horzReorderableGroupWrapStyle ---------------------------------------- */
+.horzReorderableGroupWrap {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.horzReorderableGroupWrap:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.horzReorderableGroupWrap:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- vertReorderableGroupWrapStyle ---------------------------------------- */
+.vertReorderableGroupWrap {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.vertReorderableGroupWrap:active { border-color: var(--border-focus); background-color: var(--bg-content); }
+.vertReorderableGroupWrap:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+
+/* ---- listViewStyle -------------------------------------------------------- */
+.list-view {
+    border-width: var(--border);
+    padding: 2px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0px;
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.list-view:active { border-color: var(--accent); background-color: var(--bg-surface); }
+.list-view:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+
+/* ---- listItemStyle -------------------------------------------------------- */
+.list-item {
+    border-width: 0px;
+    padding: 3px 6px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.list-item:hover  { background-color: var(--bg-hover); color: var(--text-bright); }
+.list-item:active { background-color: var(--bg-hover); color: var(--text-bright); }
+.list-item:focus  { background-color: var(--bg-hover); color: var(--text-bright); }
+.list-item::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+
+/* .list-item-row: outer container for a reorderable list item. Holds the
+   drag-knob and the body child in a horizontal flex row; provides the row-
+   level selection highlight so it spans the knob region as well. overflow
+   is visible so the drop indicator line can extend to the row's edges. */
+.list-item-row {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: visible;
+}
+.list-item-row:hover  { background-color: var(--bg-hover); }
+.list-item-row:active { background-color: var(--bg-hover); }
+.list-item-row:focus  { background-color: var(--bg-hover); }
+.list-item-row::highlight(selected) { background-color: var(--selection-bg); }
+
+/* .list-item-drag-knob-horz / -vert: small drag handle for reorderable items.
+   Two orientation variants so the cursor matches the drag axis: -horz drags
+   left/right (cursor ew-resize), -vert drags up/down (cursor ns-resize).
+   Uses ew-/ns-resize rather than col-/row-resize because the knob is moved
+   freely along an axis, not anchored to an edge between rows or columns.
+   Has its own event handler that primes and promotes a drag — clicks on
+   the knob enter a drag, clicks on the body select without dragging. */
+.list-item-drag-knob-horz {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    margin: 1px 0px 1px 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-muted); /* the grip icon is a mask: it takes this colour */
+    cursor: ew-resize;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: stretch;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+}
+.list-item-drag-knob-horz:hover  { background-color: var(--bg-drag-knob-hover); cursor: ew-resize; }
+.list-item-drag-knob-horz:active { background-color: var(--accent-blue);        cursor: ew-resize; }
+
+.list-item-drag-knob-vert {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    margin: 1px 0px 1px 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-muted); /* the grip icon is a mask: it takes this colour */
+    cursor: ns-resize;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: stretch;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+}
+.list-item-drag-knob-vert:hover  { background-color: var(--bg-drag-knob-hover); cursor: ns-resize; }
+.list-item-drag-knob-vert:active { background-color: var(--accent-blue);        cursor: ns-resize; }
+
+/* .list-item-body: inner text/icon child of a reorderable list item. Text
+   styling same as .list-item but background is transparent so the outer
+   .list-item-row's selection highlight shows through. */
+.list-item-body {
+    border-width: 0px;
+    padding: 3px 6px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.list-item-body:hover                { color: var(--text-bright); }
+.list-item-body::highlight(selected) { color: var(--text-selected); }
+
+/* ---- treeViewStyle -------------------------------------------------------- */
+.tree-view {
+    border-width: 0px;
+    padding: 0px;
+    gap: 0px;
+    flex-grow: 1;
+    flex-shrink: 0;
+
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.tree-view:active { border-color: var(--accent); background-color: var(--bg-surface); }
+.tree-view:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+
+/* ---- hierarchy eye-toggle (visibility column) ---------------------------- */
+/* The cell wrapper: zero horizontal padding (unlike .table-cell) so the eye
+   element fills the whole narrow column edge-to-edge — no dead side strips
+   that would hover differently from the eye. Vertical metrics mirror
+   .table-cell so the row height stays in step with the tree column. */
+.hierarchy-viz-cell {
+    margin: 0px;
+    padding: 2px 0px;
+    overflow: hidden;
+    /* Transparent: the eye column's darkening comes from the full-height
+       .hierarchy-viz-bg strip behind these cells, so it's uniform across the
+       rows AND the empty area below them (a per-cell wash would stop at the
+       last row). */
+    background-color: transparent;
+    color: var(--text-muted);
+    font-size: var(--font-size);
+}
+
+/* Full-height strip painted behind the eye column (TableColumn::
+   columnBackground). Translucent so it darkens whatever shows through —
+   the zebra rows, the row-hover highlight, the selection — by a constant
+   amount, and carries that same shade on past the last row. */
+.hierarchy-viz-bg {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: rgba(0, 0, 0, 0.22);
+}
+/* The eye element itself: fills the cell in both axes (so even the icon-less
+   "visible" state keeps a full hit area) and centres a 16px icon. No hover
+   background of its own — that would paint a flat colour over the alternating
+   row stripes; the hover affordance is the eye appearing. */
+.hierarchy-visibility {
+    margin: 0px;
+    padding: 0px;
+    flex-grow: 1;
+    align-self: stretch;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    text-align: center;
+    -interstice-icon-size: 16px;
+    -interstice-vertical-text-align: middle;
+    cursor: pointer;
+    overflow: visible;
+}
+
+/* ---- gridViewStyle: flex-wrap container for icon grid --------------------- */
+.grid-view {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+    overflow: auto;
+    background-color: var(--bg-listview);
+    border-color: var(--border-grid-view);
+    color: var(--text-tab-hover);
+    font-size: var(--font-size);
+    align-items: stretch;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.grid-view:active { border-color: var(--accent); background-color: var(--bg-listview); }
+.grid-view:focus  { border-color: var(--accent); background-color: var(--bg-listview); }
+
+/* ---- gridViewItemStyle: single grid item (icon above text) ---------------- */
+.grid-view-item {
+    border-width: var(--border-thin);
+    padding: 8px 4px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-tab-hover);
+    font-size: var(--font-size);
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -interstice-icon-side: top;
+    -interstice-icon-text-gap: 4px;
+    vertical-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.grid-view-item:hover  { background-color: var(--table-row-hover); border-color: var(--table-row-hover); }
+.grid-view-item:active { background-color: var(--bg-grid-active); border-color: var(--bg-grid-active); }
+.grid-view-item::highlight(selected) { background-color: var(--selection-bg); border-color: var(--selection-bg); color: var(--text-selected); }
+
+/* ---- gridViewListItemStyle: list-mode row (icon left, name right) --------- */
+.grid-view-list-item {
+    border-width: var(--border-thin);
+    padding: 2px 6px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-tab-hover);
+    font-size: var(--font-size);
+    text-align: left;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-size: 16px;
+    vertical-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.grid-view-list-item:hover  { background-color: var(--table-row-hover); border-color: var(--table-row-hover); }
+.grid-view-list-item:active { background-color: var(--bg-grid-active); border-color: var(--bg-grid-active); }
+.grid-view-list-item::highlight(selected) { background-color: var(--selection-bg); border-color: var(--selection-bg); color: var(--text-selected); }
+
+/* ---- gridViewRenameItem: rename-mode grid cell --------------------------- */
+/* Mirrors .grid-view-item's geometry, but as a real flex column of           */
+/* [icon, inline editor] so the icon stays visible while the editor keeps    */
+/* the compact one-line shape the text editor's hit-testing expects.         */
+.grid-view-rename-item {
+    border-width: var(--border-thin);
+    padding: 8px 4px;
+    background-color: transparent;
+    border-color: transparent;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px; /* matches .grid-view-item's -interstice-icon-text-gap */
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* List-mode variant: icon left of the editor, mirrors .grid-view-list-item. */
+.grid-view-rename-list-item {
+    border-width: var(--border-thin);
+    padding: 2px 6px;
+    background-color: transparent;
+    border-color: transparent;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px; /* matches .grid-view-list-item's -interstice-icon-text-gap */
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.grid-view-rename-icon {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    align-self: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* Grid-mode inline editor: full cell width on its own line. The list-mode
+   editor reuses .tree-table-text-edit (icon-beside row, same as tree rename). */
+.grid-view-rename-edit {
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    background-color: transparent;
+    border-color: var(--tree-table-edit-border);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: baseline;
+    align-self: stretch;
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+.grid-view-rename-edit::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+/* ---- gridViewScrollStyle: virtualized grid scroll viewport ---------------- */
+/* Column flex so visible row strips + the top/bottom virtualization spacers   */
+/* stack vertically; overflow:auto drives the wheel + the VerticalScrollbar.   */
+.grid-view-scroll {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0px;
+    overflow: auto;
+    background-color: var(--table-row-bg);
+    border-color: var(--border-grid-view);
+    flex-grow: 1;
+    flex-shrink: 1;
+    /* flex-basis:0 — size from the parent's available space, NOT from the
+       (virtually huge) content. Without this the viewport grows to the full
+       content height and the scroll never kicks in. */
+    flex-basis: 0px;
+}
+
+/* ---- flexFillRow: horizontal flex that fills its parent's main axis -------- */
+/* flex-basis:0 + flex-grow:1 so a row holding a scroll child (e.g. the files   */
+/* panel's tree | sizer | virtual grid) is bounded to the parent's height       */
+/* instead of stretching to the child's content height.                         */
+.flex-fill-row {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0px;
+    overflow: hidden;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0px;
+}
+
+/* ---- flexFillCol: vertical flex that fills its parent's main axis --------- */
+/* Column counterpart of .flex-fill-row: flex-basis:0 + flex-grow:1 so a pane  */
+/* holding a scroll child (e.g. the files panel's grid + slider stack inside   */
+/* the tree|grid split) is bounded to the parent's WIDTH instead of being      */
+/* floored at its content width — without basis:0, content stretched to        */
+/* exactly the viewport wedges the pane and it can never shrink.               */
+.flex-fill-col {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0px;
+    overflow: hidden;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0px;
+}
+
+/* ---- gridViewRowStyle: one horizontal strip of cells in the virtual grid -- */
+.grid-view-row {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow: hidden;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* ---- tabBarStyle: horizontal tab container -------------------------------- */
+/* flex-wrap: wrap lets tabs flow onto a second row when the bar is too
+   narrow to fit them all on one line. flex-shrink: 0 keeps tabs at their
+   natural widths instead of being squashed. */
+.tab-bar {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0px;
+    overflow: visible;
+    background-color: var(--bg-tab-bar);
+    border-color: transparent;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* ---- tabStyle: individual tab --------------------------------------------- */
+.tab {
+    border-radius: 3px 3px 0px 0px;
+    border-width: 2px 0px 0px 0px; /* the selected tab's accent line, on top */
+    padding: 3px 8px 2px 8px;
+    margin: 0px 2px 0px 0px;
+    display: flex;
+    flex-direction: row;
+    vertical-align: middle;
+    align-items: center;
+    gap: 4px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-tab-normal);
+    font-size: var(--font-size);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.tab:hover  { background-color: var(--bg-tab-inactive); color: var(--text-tab-hover); }
+.tab:active { background-color: var(--bg-tab-active); color: var(--text-tab-active); }
+.tab::highlight(selected) { background-color: var(--bg-tab-active); border-color: var(--accent-blue); color: var(--text-tab-selected); }
+
+/* ---- tabContentStyle: icon+text inside a tab ------------------------------ */
+.tab-content {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-tab-normal);
+    font-size: var(--font-size);
+    font-weight: 600;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 4px;
+    -interstice-icon-size: 15px;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-offset-y: -1px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.tab-content:hover  { color: var(--text-tab-hover); }
+.tab-content:active { color: var(--text-tab-active); }
+.tab-content::highlight(selected) { color: var(--text-tab-selected); }
+
+/* ---- tabCloseStyle: small close button in a tab --------------------------- */
+.tab-close {
+    border-width: 0px;
+    padding: 2px 0px 0px 0px;
+    margin: 0px 0px 0px 4px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 4px;
+    -interstice-icon-size: 16px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.tab-close:hover  { color: var(--text-selected); background-color: var(--bg-tab-close-hover); }
+.tab-close:active { color: var(--text-selected); background-color: var(--bg-tab-close-active); }
+
+/* ---- Docking container ---------------------------------------------------- */
+/* Fills its parent (the main window) via flex-grow:1, and shrinks back down
+   via flex-shrink:1 when panel content would otherwise push the tree past the
+   window. Without flex-shrink, natural heights accumulate up the chain and
+   the whole docking tree overflows the window (the wheel would then find
+   nothing inner to scroll and bubble up to the main-window). */
+.dock-container {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* Splits fill their parent (container or parent split) on both axes. */
+.dock-split-horz {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.dock-split-vert {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.dock-sizer-horz {
+    border-width: 0px;
+    padding: 0px;
+    background-color: var(--bg-drag-knob);
+    border-color: transparent;
+    cursor: col-resize;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.dock-sizer-horz:hover  { background-color: var(--accent-blue); cursor: col-resize; }
+.dock-sizer-horz:active { background-color: var(--accent-blue); cursor: col-resize; }
+
+.dock-sizer-vert {
+    border-width: 0px;
+    padding: 0px;
+    background-color: var(--bg-drag-knob);
+    border-color: transparent;
+    cursor: row-resize;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.dock-sizer-vert:hover  { background-color: var(--accent-blue); cursor: row-resize; }
+.dock-sizer-vert:active { background-color: var(--accent-blue); cursor: row-resize; }
+
+/* Leaves fill their split parent. */
+.dock-leaf {
+    border-width: var(--border-thin);
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    background-color: var(--bg-tab-bar);
+    border-color: var(--border-dock-leaf);
+    overflow: hidden;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+/* Dock-content fills the leaf's remaining vertical space (after the tab bar)
+   via flex-grow: 1, and shrinks (default flex-shrink: 1) when the panel's
+   natural content overflows — which is what gives it a bounded innerRect
+   so vertical scrolling works.
+   align-content: stretch + align-items: stretch let panel children that
+   have no fixed cross-axis size (e.g. a single TreeView with flex-grow:1)
+   fill the panel's full height. For multi-row panels (Inspector etc.) the
+   rows' total natural height usually exceeds the panel so there's no
+   extra space to distribute — this setting only kicks in when it should. */
+.dock-content {
+    border-width: 0px;
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    align-content: stretch;
+    gap: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+    overflow: auto;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+.settings-page-selection {
+    border-width: 0px;
+    margin: 0px 3px 0px 0px;
+    gap: 0px;
+    flex-grow: 1;
+    flex-shrink: 0;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+}
+.settings-page-selection:active { border-color: var(--accent); background-color: var(--bg-surface); }
+.settings-page-selection:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+
+/* Settings page content: like .dock-content but with extra left padding so the
+   page body isn't flush against the tree/page-selection sizer. (top right bottom left) */
+.settings-page {
+    border-width: 0px;
+    padding: 0px 0px 0px 3px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    align-content: stretch;
+    gap: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+    /* NOT a scroll container: it's a fixed-height pane and each page manages
+       its own overflow (the Shortcuts grid scrolls internally). If this were
+       overflow:auto it would absorb the grid's overflow itself — the page
+       would scroll and the table would never bound to show its own scrollbar. */
+    overflow: hidden;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+/* ---- Settings page title -------------------------------------------------- */
+/* Header line above each settings page's body — larger font, bold-ish, with
+   a bottom margin so it visually separates from the field rows. */
+.settings-title {
+    border-width: 0px;
+    border-radius: 0px;
+    padding: 4px 0px 8px 6px;
+    overflow: visible;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    color: var(--text-bright);
+    font-size: 18px;
+    line-height: 1.4;
+    background-color: transparent;
+    border-color: transparent;
+    break-after: always;
+    align-self: stretch;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* ---- Color picker / gradient editor row containers ----------------------- */
+/* Horizontal flex rows used inside ColorPicker / GradientEditor popups and the
+   color-gradient-slider control. Same default geometry; split selectors so any
+   one can diverge without touching the others. */
+.color-gradient-slider-row,
+.color-picker-tab-row,
+.color-picker-previews,
+.gradient-editor-tab-row {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    overflow: visible;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* ---- Slider field --------------------------------------------------------- */
+/* Single bar with a colored split fill drawn in SliderField's AddCustomDraw.
+   The track itself is the click/drag hit region and parents the value/label
+   text overlays (or a Field child while in text-edit mode). */
+.slider-field-track {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    padding: 2px 4px 2px 4px;
+    background-color: transparent;
+    margin: 1px;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.slider-field-track:hover  { border-color: var(--border-focus); }
+.slider-field-track:active { border-color: var(--border-focus); }
+.slider-field-track:focus  { border-color: var(--border-focus); }
+
+/* Inner halves painted by the slider's custom-draw. Border-radius = track radius
+   (--radius-md) minus track border (--border) so the curve hugs the inside of
+   the border. border-width stays 0 — these are pure fills. */
+.slider-field-bg {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--slider-bg);
+}
+.slider-field-bg:hover  { border-color: var(--border-focus); }
+.slider-field-bg:active { border-color: var(--border-focus); }
+.slider-field-bg:focus  { border-color: var(--border-focus); }
+
+.slider-field-fill {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--slider-fill);
+}
+.slider-field-fill:hover  { border-color: var(--border-focus); }
+.slider-field-fill:active { border-color: var(--border-focus); }
+.slider-field-fill:focus  { border-color: var(--border-focus); }
+
+/* ---- slider: thin groove line + knob, no value text. Shorter than the
+   SliderField fill-bar; groove + knob are painted by the slider's custom-draw. */
+.slider {
+    border-width: 0px;
+    padding: 5px 4px 0px 4px;   /* top padding gives the line + knob breathing room */
+    background-color: transparent;
+    border-color: transparent;
+    cursor: pointer;
+    overflow: visible;
+}
+.slider-groove {
+    border-width: 0px;
+    border-radius: 2px;
+    background-color: var(--slider-bg);
+    border-color: transparent;
+}
+.slider-knob {
+    border-width: 0px;
+    border-radius: var(--radius-lg);   /* rounder than the old radius-md knob */
+    background-color: var(--slider-fill);
+    border-color: transparent;
+}
+.slider-knob:hover  { background-color: var(--accent-blue); }
+.slider-knob:active { background-color: var(--accent-blue); }
+
+
+.slider-field-text {
+    border-width: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+}
+
+/* ---- Scrollbars ----------------------------------------------------------
+   Vertical/horizontal scrollbars emitted via VerticalScrollbar /
+   HorizontalScrollbar inside a scrollable container. The track element
+   anchors to the right (vertical) or bottom (horizontal) edge of the
+   container; the thumb is painted by a custom draw callback on top. */
+.scrollbar-vertical {
+    border-width: 0px;
+    width: 12px;
+    padding: 0px;
+    background-color: var(--bg-scrollbar);
+    border-color: transparent;
+    cursor: default;
+    overflow: hidden;
+}
+.scrollbar-horizontal {
+    border-width: 0px;
+    height: 12px;
+    padding: 0px;
+    background-color: var(--bg-scrollbar);
+    border-color: transparent;
+    cursor: default;
+    overflow: hidden;
+}
+
+.scrollbar-vertical-thumb,
+.scrollbar-horizontal-thumb {
+    border-width: 0px;
+    border-radius: 4px;
+    padding: 0px;
+    background-color: var(--slider-knob);
+    border-color: transparent;
+}
+
+/* ---- Color picker --------------------------------------------------------- */
+.color-swatch {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: #ffffffff;
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    overflow: auto;
+    min-width: 24px;
+    min-height: 24px;
+    cursor: pointer;
+    flex-grow: 1;
+}
+.color-swatch:hover { border-color: var(--border-focus); }
+
+.color-picker {
+    padding: 8px;
+    gap: 4px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: start;
+}
+
+.color-picker-wheel {
+    width: 220px;
+    height: 220px;
+    background-color: transparent;
+    border-width: 0px;
+    cursor: crosshair;
+}
+
+.color-gradient-slider {
+    height: 24px;
+    background-color: transparent;
+    border-width: var(--border-thin);
+    border-color: var(--border-picker);
+    border-radius: var(--radius-sm);
+    padding: 0px;
+    cursor: pointer;
+    overflow: visible;
+}
+
+.color-picker-new {
+    width: 24px;
+    height: 24px;
+    padding: 0px;
+    border-width: var(--border-thin);
+    border-color: var(--line-gray);
+    background-color: var(--accent-dark);
+    overflow: hidden;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+    text-wrap: nowrap;
+    text-overflow: clip;
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    align-content: center;
+}
+
+.color-picker-preview {
+    width: 24px;
+    height: 24px;
+    border-width: var(--border-thin);
+    border-color: var(--line-gray);
+    background-color: #ffffffff;
+}
+
+/* ---- Gradient editor ------------------------------------------------------ */
+.gradient-swatch {
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: transparent;
+    margin: 1px;
+    padding: 2px 4px 2px 4px;
+    min-width: 60px;
+    min-height: 24px;
+    cursor: pointer;
+    flex-grow: 1;
+    align-self: stretch;
+    overflow: visible;
+}
+.gradient-swatch:hover { border-color: var(--border-focus); }
+
+.gradient-editor {
+    padding: 8px;
+    gap: 4px;
+    width: 280px;
+    flex-direction: column;
+}
+
+.gradient-editor-bar {
+    height: 30px;
+    background-color: transparent;
+    border-width: var(--border-thin);
+    border-color: var(--border-picker);
+    border-radius: var(--radius-sm);
+    padding: 0px;
+    cursor: pointer;
+    overflow: visible;
+    align-self: stretch;
+}
+
+/* ---- View-panel toolbars -------------------------------------------------- */
+/* Each side is a reorderable group; toolbars wrap to extra rows/cols when */
+/* the side runs out of main-axis space. Top/bottom sides are horizontal     */
+/* with horizontal wrap; left/right sides are vertical with vertical wrap.   */
+.toolbar-side-horz {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 2px 4px;
+    background-color: var(--bg-toolbar-side);
+    border-width: 0px;
+    /* Keep an empty side hit-testable for cross-side drops. */
+    min-height: 24px;
+}
+.toolbar-side-vert {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 4px 2px;
+    background-color: var(--bg-toolbar-side);
+    border-width: 0px;
+    min-width: 24px;
+}
+
+
+
+/* Empty-and-no-drag variants. Same flex structure so layout slot is */
+/* preserved, but zero min thickness, no background, no border —     */
+/* effectively invisible until the dock swaps back to the normal     */
+/* style during a drag.                                              */
+.toolbar-side-horz-empty {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    border-width: 0px;
+    min-height: 0px;
+}
+.toolbar-side-vert-empty {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    border-width: 0px;
+    min-width: 0px;
+}
+
+.toolbar-item-horz {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-radius: var(--radius-toolbar);
+    border-width: var(--border);
+    border-style: dashed;
+    border-color: transparent;
+}
+.toolbar-item-horz:hover { border-color: var(--accent); }
+.toolbar-item-horz:active { border-color: var(--accent); }
+
+/* Vertical toolbar item — used by Left/Right sides. Flex-column so the */
+/* drag thumb sits ABOVE the buttons instead of to the left.            */
+.toolbar-item-vert {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-radius: var(--radius-toolbar);
+    border-width: var(--border);
+    border-style: dashed;
+    border-color: transparent;
+}
+.toolbar-item-vert:hover { border-color: var(--accent); }
+.toolbar-item-vert:active { border-color: var(--accent); }
+
+/* Drag thumb (no gripper dots) — reads as a button at rest, turns the         */
+/* selected-tab accent (--accent-blue) on hover. Horizontal sides round the    */
+/* left (leading) edge.                                                        */
+.toolbar-thumb-horz {
+    border-width: 0px;
+    width: 5px;
+    min-height: 10px;
+    border-radius: var(--radius-sm) 0px 0px var(--radius-sm);
+    padding: 1px;
+    margin: 0px;
+    background-color: var(--accent-dark);
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: stretch;
+    cursor: move;
+}
+.toolbar-thumb-horz:hover  { background-color: var(--accent-blue); }
+.toolbar-thumb-horz:active { background-color: var(--accent-blue); }
+
+/* Vertical sides round the top (leading) edge.                                */
+.toolbar-thumb-vert {
+    border-width: 0px;
+    height: 5px;
+    min-width: 10px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0px 0px;
+    padding: 1px;
+    margin: 0px;
+    background-color: var(--accent-dark);
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: stretch;
+    cursor: move;
+}
+.toolbar-thumb-vert:hover  { background-color: var(--accent-blue); }
+.toolbar-thumb-vert:active { background-color: var(--accent-blue); }
+
+/* ---- toolbar buttonStyle -------------------------------------------------- */
+.toolbar-button {
+    border-width: var(--border-toolbar);
+    border-radius: var(--radius-toolbar);
+    border-color: var(--accent-dark);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 0px;
+    padding: 1px;
+    overflow: auto;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    cursor: pointer;
+}
+.toolbar-button:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
+.toolbar-button:active { border-color: var(--bg-drag-knob); border-style: dotted; background-color: var(--accent-blue); }
+.toolbar-button:focus  { border-color: var(--accent3-dark); border-style: dotted; }
+.toolbar-button::highlight(selected) { background-color: var(--accent-blue); }
+
+/* ---- toolbar toggleStyle -------------------------------------------------- */
+/* Same compact visuals as .toolbar-button; the ::highlight(selected) state    */
+/* paints the "on" appearance via the accent-blue fill.                        */
+.toolbar-toggle {
+    border-width: var(--border-toolbar);
+    border-radius: var(--radius-toolbar);
+    border-color: var(--accent-dark);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 0px;
+    padding: 1px;
+    overflow: auto;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    cursor: pointer;
+}
+.toolbar-toggle:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
+.toolbar-toggle:active { border-color: var(--bg-drag-knob); border-style: dotted; background-color: var(--accent-blue); }
+.toolbar-toggle:focus  { border-color: var(--accent3-dark); border-style: dotted; }
+.toolbar-toggle       ::highlight(selected) { background-color: var(--accent-blue); }
+.toolbar-toggle:hover ::highlight(selected) { background-color: var(--accent-blue); }
+.toolbar-toggle:active::highlight(selected) { background-color: var(--accent-blue); }
+.toolbar-toggle:focus ::highlight(selected) { background-color: var(--accent-blue); }
+
+/* ---- toolbar textboxStyle ------------------------------------------------- */
+/* Compact inline text input. Uses --accent2-dark (the regular textbox field   */
+/* fill) so the input area still reads as editable inside a toolbar.           */
+.toolbar-textbox {
+    border-width: var(--border-toolbar);
+    border-radius: var(--radius-toolbar);
+    border-color: var(--accent-dark);
+    background-color: var(--accent2-dark);
+    color: var(--text-primary);
+    margin: 0px;
+    padding: 1px 4px;
+    overflow: auto;
+    cursor: text;
+    text-overflow: clip;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 0;
+}
+.toolbar-textbox:hover  { border-color: var(--border-focus); border-style: dotted; border-color: var(--border-focus); }
+.toolbar-textbox:active { border-color: var(--bg-drag-knob); border-style: dotted; border-color: var(--border-focus); }
+.toolbar-textbox:focus  { border-color: var(--accent-blue); border-style: dotted; }
+.toolbar-textbox::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+
+/* ---- toolbar menuTriggerStyle --------------------------------------------- */
+/* Like .toolbar-button but text-aligned to start — menu triggers usually     */
+/* show a current value that should read from the left edge.                   */
+.toolbar-menu-trigger {
+    border-width: var(--border-toolbar);
+    border-radius: var(--radius-toolbar);
+    border-color: var(--accent-dark);
+    background-color: var(--accent-dark);
+    color: var(--text-primary);
+    margin: 0px;
+    padding: 1px 4px;
+    overflow: auto;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    cursor: pointer;
+}
+.toolbar-menu-trigger:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
+.toolbar-menu-trigger:active { border-color: var(--bg-drag-knob); background-color: var(--accent-blue); }
+.toolbar-menu-trigger:focus  { border-color: var(--accent-blue); }
+
+
+/* Container style used inside floating tear-off toolbar windows. Zero  */
+/* padding so the toolbar hugs the window edges; flex-row so the drag  */
+/* thumb sits to the left of the buttons (dragged toolbars are always  */
+/* horizontal).                                                         */
+.toolbar-floating-window {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    padding: 0px;
+    margin: 0px;
+    background-color: var(--bg-content);
+    border-color: transparent;
+}
+
+
+.view-content {
+    display: flex;
+    flex-grow: 1;
+    background-color: var(--accent2-dark);
+    overflow: auto;
+}

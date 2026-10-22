@@ -1,0 +1,600 @@
+#include <gui_core/gui_base_types.h>
+#include <gui_core/diagnostics/gui_logging.h>
+
+#include <gui_core/style/gui_style_ref.h>
+#include <gui_core/style/gui_style_text.h>
+#include <gui_core/style/gui_style.h>
+#include <gui_core/style/gui_style_sheet.h>
+#include <gui_core/style/gui_style_manager.h>
+
+#include <gui_core/text/gui_text_system.h>
+
+#include <gui_controls/gui_theme.h>
+
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+namespace GUI
+{
+    namespace
+    {
+        constexpr Diagnostics::LogCategory kLogTheme = Diagnostics::MakeLogCategory("theme");
+    }
+
+    void GUITheme::InitializeDefaultStyles(StyleManager& styleManager, ITextSystem* textSystem)
+    {
+        BoxEdges   noBorder = { 0, 0, 0, 0 };
+        BoxCorners noRadius = { 0, 0, 0, 0 };
+
+        // Used for boxes rendered with an invalid style index.
+        {
+            Style invalidStyle{};
+            invalidStyle.textLayoutStyle = GUI::TextLayoutStyle
+            {
+                .textDirection = GUI::TextDirection::Auto,
+                .textWrapping = GUI::TextWrap::WordChar,
+                .horizontalAlignment = GUI::TextAlign::Start,
+                .baseline = GUI::TextBaseline::Middle
+            };
+            invalidStyle.borderWidths = noBorder;
+            invalidStyle.borderRadius = noRadius;
+            invalidStyle.margin = BoxEdges(2);
+            invalidStyle.SetOverflow(GUI::Overflow::Hidden);
+            invalidStyle.padding = GUI::BoxEdges(10);
+            auto normal_border_color_style = ColorStyle::Create(color4b(121, 153, 169, 255));
+            auto normal_background_color_style = ColorStyle::Create(color4b(101, 133, 149, 255));
+            for (int i = 0; i < Style::kStateCount; i++)
+            {
+                invalidStyle.states[i].SetBorderColor({});
+                invalidStyle.states[i].backgroundColor = normal_border_color_style;
+            }
+            invalidStyle.states[Style::kNormal].SetBorderColor(normal_border_color_style);
+            invalidStyle.states[Style::kNormal].backgroundColor = normal_background_color_style;
+            styleManager.Register(invalidStyle);
+        }
+
+        {
+            Style newStyle{};
+            newStyle.textLayoutStyle = {};
+            newStyle.borderWidths = noBorder;
+            newStyle.borderRadius = noRadius;
+            newStyle.SetOverflow(GUI::Overflow::Visible);
+            newStyle.display = GUI::Display::Flex;
+            newStyle.layoutData.flex.direction = GUI::FlexDirection::Row;
+            newStyle.layoutData.flex.wrap = GUI::FlexWrap::Wrap;
+            newStyle.layoutData.flex.alignItems = GUI::AlignItems::Stretch;
+            newStyle.layoutData.flex.justifyContent = GUI::JustifyContent::FlexStart;
+            newStyle.layoutData.flex.flexGrow = 1;
+            newStyle.layoutData.flex.gap = 0;
+            newStyle.padding = GUI::BoxEdges(0);
+            for (int i = 0; i < Style::kStateCount; i++)
+            {
+                newStyle.states[i].SetBorderColor({});
+                newStyle.states[i].backgroundColor = {};
+            }
+            fieldElementGroupStyleRef = styleManager.Register(newStyle);
+        }
+
+        // Built-in icons
+        {
+
+            // Tree expand/collapse arrows (using <path> — <polygon> may not be supported by SVG parser)
+            const char* arrowRightSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M2,1 L7,4 L2,7 Z" fill="#909090"/></svg>)";
+            treeArrowRight = textSystem->RegisterIconFromSVG("tree-arrow-right", arrowRightSvg, strlen(arrowRightSvg));
+
+            const char* arrowDownSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,2 L7,2 L4,7 Z" fill="#909090"/></svg>)";
+            treeArrowDown = textSystem->RegisterIconFromSVG("tree-arrow-down", arrowDownSvg, strlen(arrowDownSvg));
+
+            // Table header sort indicators; bright so they read on the header in both themes.
+            const char* sortArrowUpSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,6 L4,1 L7,6 Z" fill="#e0e0e0"/></svg>)";
+            sortArrowUpIcon = textSystem->RegisterIconFromSVG("sort-arrow-up", sortArrowUpSvg, strlen(sortArrowUpSvg));
+
+            const char* sortArrowDownSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,2 L7,2 L4,7 Z" fill="#e0e0e0"/></svg>)";
+            sortArrowDownIcon = textSystem->RegisterIconFromSVG("sort-arrow-down", sortArrowDownSvg, strlen(sortArrowDownSvg));
+
+            // Tab close "X".
+            const char* tabCloseSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4,5 L5,4 L8,7 L11,4 L12,5 L9,8 L12,11 L11,12 L8,9 L5,12 L4,11 L7,8 Z" fill="#909090"/></svg>)";
+            tabCloseIcon = textSystem->RegisterIconFromSVG("tab-close", tabCloseSvg, strlen(tabCloseSvg));
+
+            // Menu checkmark for the checked item (filled path, like the other chrome icons).
+            const char* menuCheckSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M6,10.78 L3.22,8 L2.27,8.94 L6,12.67 L14,4.67 L13.06,3.73 Z" fill="#c0c0c0"/></svg>)";
+            menuCheckIcon = textSystem->RegisterIconFromSVG("menu-check", menuCheckSvg, strlen(menuCheckSvg));
+
+            // Add / remove buttons of the list & dictionary Field() rows.
+            const char* addSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M7,3 L9,3 L9,7 L13,7 L13,9 L9,9 L9,13 L7,13 L7,9 L3,9 L3,7 L7,7 Z" fill="#909090"/></svg>)";
+            addIcon = textSystem->RegisterIconFromSVG("list-add", addSvg, strlen(addSvg));
+
+            const char* removeSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3,7 L13,7 L13,9 L3,9 Z" fill="#909090"/></svg>)";
+            removeIcon = textSystem->RegisterIconFromSVG("list-remove", removeSvg, strlen(removeSvg));
+
+            // Drag-handle grip for reorderable / tree-list thumbs; sized by -interstice-icon-size.
+            const char* dragHandleSvg = R"(<svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M144-264v-72h672v72H144Zm0-180v-72h672v72H144Zm0-180v-72h672v72H144Z" fill="#666666"/></svg>)";
+            dragHandleIcon = textSystem->RegisterIconFromSVG("drag-handle", dragHandleSvg, strlen(dragHandleSvg));
+        }
+
+        {
+            // Undecorated flex containers: the BeginHorizontal / BeginVertical defaults.
+            auto makeEmptyFlexStyle = [&](GUI::FlexDirection dir, GUI::FlexWrap wrap) -> StyleRef
+            {
+                Style newStyle{};
+                newStyle.textLayoutStyle = {};
+                newStyle.borderWidths = noBorder;
+                newStyle.borderRadius = noRadius;
+                newStyle.SetOverflow(GUI::Overflow::Auto);
+                newStyle.display = GUI::Display::Flex;
+                newStyle.layoutData.flex.direction = dir;
+                newStyle.layoutData.flex.wrap = wrap;
+                newStyle.layoutData.flex.alignItems = GUI::AlignItems::Stretch;
+                newStyle.layoutData.flex.justifyContent = GUI::JustifyContent::FlexStart;
+                newStyle.padding = GUI::BoxEdges(0);
+                for (int i = 0; i < Style::kStateCount; i++)
+                {
+                    newStyle.states[i].SetBorderColor({});
+                    newStyle.states[i].backgroundColor = {};
+                }
+                return styleManager.Register(newStyle);
+            };
+            emptyHorzStyleRef     = makeEmptyFlexStyle(GUI::FlexDirection::Row, GUI::FlexWrap::NoWrap);
+            emptyHorzWrapStyleRef = makeEmptyFlexStyle(GUI::FlexDirection::Row, GUI::FlexWrap::Wrap);
+            emptyVertStyleRef     = makeEmptyFlexStyle(GUI::FlexDirection::Column, GUI::FlexWrap::NoWrap);
+            emptyVertWrapStyleRef = makeEmptyFlexStyle(GUI::FlexDirection::Column, GUI::FlexWrap::Wrap);
+        }
+    }
+
+    // Faces sharing a family name register as one family, in source order.
+    // On a theme reload, families whose faces changed pick up the new files.
+    static void RegisterFontFaces(ITextSystem& textSystem, const std::vector<FontFace>& faces,
+                                  const std::filesystem::path& baseDir)
+    {
+        std::vector<FontID> done;
+        for (const FontFace& first : faces)
+        {
+            const FontID id = FontIDFromName(first.family);
+            if (std::find(done.begin(), done.end(), id) != done.end())
+                continue;
+            done.push_back(id);
+
+            std::vector<std::string> paths;
+            for (const FontFace& face : faces)
+                if (FontIDFromName(face.family) == id)
+                    paths.push_back((baseDir / face.src).lexically_normal().string());
+            const std::vector<std::string_view> views(paths.begin(), paths.end());
+            if (textSystem.RegisterFontFamily(first.family, views) == FontID::Invalid)
+                LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
+        }
+    }
+
+    color4f GUITheme::GetColor(std::string_view varName, color4f fallback) const
+    {
+        const auto it = m_paletteColors.find(std::string(varName));
+        return it != m_paletteColors.end() ? it->second : fallback;
+    }
+
+    bool GUITheme::LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath, float fontScale)
+    {
+        // -------------------------------------------------------------------------
+        // Theme = palette file (dark.css / light.css, only `:root` vars) + a
+        // shared styles file (styles.css next to it) consuming those vars. We
+        // concatenate palette-then-styles before parsing so var() references
+        // resolve at parse time.
+        // -------------------------------------------------------------------------
+        std::ifstream paletteFile(themePath);
+        if (!paletteFile.good())
+        {
+            LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
+            return false;
+        }
+
+        const auto stylesPath = std::filesystem::path(themePath).parent_path() / "styles.css";
+        std::ifstream stylesFile(stylesPath);
+        if (!stylesFile.good())
+        {
+            LOG_ERROR(kLogTheme, "theme styles file not found: {}", stylesPath.string());
+            return false;
+        }
+
+        std::ostringstream paletteText;
+        paletteText << paletteFile.rdbuf();
+        std::ostringstream ss;
+        ss << paletteText.view() << '\n' << stylesFile.rdbuf();
+        StyleSheet sheet = ParseStyleSheet(ss.view());
+
+        // Errors carry lines of the concatenated text; report them against the file they came from.
+        const int paletteLines = int(std::count(paletteText.view().begin(), paletteText.view().end(), '\n')) + 1;
+        const std::string stylesName = stylesPath.string();
+        for (const auto& err : sheet.errors)
+        {
+            const bool inPalette = err.line <= paletteLines;
+            LOG_ERROR(kLogTheme, "{}:{}:{}: {}", inPalette ? themePath : stylesName,
+                      inPalette ? err.line : err.line - paletteLines, err.column, err.message);
+        }
+
+        if (textSystem)
+            RegisterFontFaces(*textSystem, sheet.fontFaces, stylesPath.parent_path());
+        LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
+
+        m_paletteColors.clear();
+        for (const auto& [name, prop] : sheet.customProperties)
+            if (prop.hasColor)
+                m_paletteColors[name] = { prop.color.r / 255.0f, prop.color.g / 255.0f, prop.color.b / 255.0f, prop.color.a / 255.0f };
+
+        // Line color styles from CSS custom properties (with fallbacks)
+        auto lineColorFromCSS = [&](const char* varName, color4f fallback) -> GUI::VisualColorStyleIndex
+            {
+                const auto* prop = sheet.GetCustomProperty(varName);
+                if (prop && prop->hasColor)
+                    return styleManager.RegisterColorStyle(ColorStyle::Create(prop->color));
+                return styleManager.RegisterColorStyle(ColorStyle::Create(fallback));
+            };
+
+        lineGrayStyle      = lineColorFromCSS("--line-gray", color4f{ 0.4f, 0.4f, 0.4f, 1.0f });
+        lineYellowStyle    = lineColorFromCSS("--line-yellow", color4f{ 1.0f, 0.8f, 0.2f, 1.0f });
+        lineWhiteStyle     = lineColorFromCSS("--line-white", color4f{ 1.0f, 1.0f, 1.0f, 1.0f });
+        lineDarkStyle      = lineColorFromCSS("--line-dark", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
+        gridLineStyle      = lineColorFromCSS("--line-grid", color4f{ 0.28f, 0.28f, 0.28f, 1.0f });
+        treeGuideLineStyle = lineColorFromCSS("--tree-guide-line", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
+        treeDropIndicatorStyle = lineColorFromCSS("--accent-blue", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
+
+        {
+            // Distance-from-edge gradient (the quad shader feeds the rounded-box
+            // SDF in): transparent at the edge → black just inside, giving the
+            // offset shadow a soft edge. Early dark stop keeps the ramp a few px
+            // wide rather than spanning half the box.
+            Gradient shadowGradient = Gradient::Linear(0.0f);
+            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.0f }, 0.00f);
+            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.5f }, 0.12f);
+            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.5f }, 1.00f);
+            shadowColorStyle = styleManager.RegisterColorStyle(
+                ColorStyle::Create(shadowGradient, ColorType::SDFGradient));
+        }
+
+        marqueeFillColorStyle = styleManager.RegisterColorStyle(
+            ColorStyle::Create(color4f{ 0.3f, 0.6f, 1.0f, 0.15f }));
+
+        // Registers a parsed style by name, with the global font scale applied.
+        auto registerCSS = [&](std::string_view name) -> StyleRef
+            {
+                const Style* p = sheet.GetStyle(name);
+                Style s = p ? *p : sheet.baseStyle;
+                if (fontScale != 1.0f)
+                {
+                    for (int i = 0; i < Style::kStateCount; i++)
+                        s.states[i].textStyle.fontSize *= fontScale;
+                }
+                return styleManager.Register(s);
+            };
+
+        // -------------------------------------------------------------------------
+        // Named widget styles from CSS
+        // -------------------------------------------------------------------------
+        regularControls.button       = registerCSS("button");
+        regularControls.toggle       = registerCSS("toggle");
+        regularControls.textbox      = registerCSS("textbox");
+        regularControls.menuTrigger  = registerCSS("menu-trigger");
+
+        toolbarControls.button       = registerCSS("toolbar-button");
+        toolbarControls.toggle       = registerCSS("toolbar-toggle");
+        toolbarControls.textbox      = registerCSS("toolbar-textbox");
+        toolbarControls.menuTrigger  = registerCSS("toolbar-menu-trigger");
+
+        labelStyleRef                     = registerCSS("label");
+        iconLabelStyleRef                 = registerCSS("icon-label");
+        iconLabelNoIconStyleRef           = registerCSS("icon-label-no-icon");
+        dragLabelStyleRef                 = registerCSS("drag-label");
+        staticTextStyleRef                = registerCSS("static-text");
+        textStyleRef                      = registerCSS("text-style");
+
+        // Image() default box. Built in code: the shader only samples textures for
+        // texture-typed colour styles (StretchedTexture), which CSS can't express.
+        {
+            Style imageStyle{};
+            imageStyle.borderWidths = GUI::BoxEdges(1);
+            imageStyle.padding      = GUI::BoxEdges(0);
+            imageStyle.margin       = GUI::BoxEdges(8);
+            imageStyle.SetOverflow(GUI::Overflow::Hidden);
+            for (int i = 0; i < Style::kStateCount; i++)
+            {
+                imageStyle.states[i].backgroundColor = ColorStyle::Create(
+                    color4b(255, 255, 255, 255), color4b(255, 255, 255, 255), ColorType::StretchedTexture);
+                imageStyle.states[i].SetBorderColor(ColorStyle::Create(color4b(85, 85, 85, 255)));
+            }
+            imageStyleRef = styleManager.Register(imageStyle);
+        }
+
+        groupLabelStyleRef                = registerCSS("group-label");
+        groupDragLabelStyleRef            = registerCSS("group-drag-label");
+
+        dashedStyleRef                    = registerCSS("dashed");
+
+        buttonGroupStyleRef               = registerCSS("button-group");
+
+        toolbarSideHorzStyleRef           = registerCSS("toolbar-side-horz");
+        toolbarSideVertStyleRef           = registerCSS("toolbar-side-vert");
+        toolbarSideHorzEmptyStyleRef      = registerCSS("toolbar-side-horz-empty");
+        toolbarSideVertEmptyStyleRef      = registerCSS("toolbar-side-vert-empty");
+
+        toolbarItemHorzStyleRef           = registerCSS("toolbar-item-horz");
+        toolbarItemVertStyleRef           = registerCSS("toolbar-item-vert");    
+
+        toolbarThumbHorzStyleRef          = registerCSS("toolbar-thumb-horz");
+        toolbarThumbVertStyleRef          = registerCSS("toolbar-thumb-vert");
+
+        toolbarFloatingWindowStyleRef     = registerCSS("toolbar-floating-window");
+        viewContentStyleRef               = registerCSS("view-content");
+        firstButtonStyleRef               = registerCSS("first-button");
+        midButtonStyleRef                 = registerCSS("mid-button");
+        lastButtonStyleRef                = registerCSS("last-button");
+        toggleGroupStyleRef               = registerCSS("toggle-group");
+        firstToggleStyleRef               = registerCSS("first-toggle");
+        midToggleStyleRef                 = registerCSS("mid-toggle");
+        lastToggleStyleRef                = registerCSS("last-toggle");
+        panelDropVisualizationStyleRef    = registerCSS("panel-drop-visualization");
+        ghostWindowStyleRef               = registerCSS("ghost-window");
+        ghostIconStyleRef                 = registerCSS("ghost-icon");
+        knobStyleRef                      = registerCSS("knob");
+
+        sliderFieldTrackStyleRef          = registerCSS("slider-field-track");
+        colorGradientSliderRowStyleRef    = registerCSS("color-gradient-slider-row");
+        colorPickerTabRowStyleRef         = registerCSS("color-picker-tab-row");
+        colorPickerPreviewsStyleRef       = registerCSS("color-picker-previews");
+        gradientEditorTabRowStyleRef      = registerCSS("gradient-editor-tab-row");
+        sliderFieldBgStyleRef             = registerCSS("slider-field-bg");
+        sliderFieldFillStyleRef           = registerCSS("slider-field-fill");
+        sliderFieldTextStyleRef           = registerCSS("slider-field-text");
+        sliderStyleRef                    = registerCSS("slider");
+        sliderGrooveStyleRef              = registerCSS("slider-groove");
+        sliderKnobStyleRef                = registerCSS("slider-knob");
+        scrollbarVerticalTrackStyleRef    = registerCSS("scrollbar-vertical");
+        scrollbarVerticalThumbStyleRef    = registerCSS("scrollbar-vertical-thumb");
+        scrollbarHorizontalTrackStyleRef  = registerCSS("scrollbar-horizontal");
+        if (const LayoutStyle* p = styleManager.GetLayoutStyle(scrollbarVerticalTrackStyleRef.layoutStyleIndex); p && p->layoutData.width > 0)
+            scrollbarThickness = p->layoutData.width;
+        scrollbarHorizontalThumbStyleRef  = registerCSS("scrollbar-horizontal-thumb");
+        colorSwatchStyleRef               = registerCSS("color-swatch");
+        colorPickerStyleRef               = registerCSS("color-picker");
+        colorPickerWheelStyleRef          = registerCSS("color-picker-wheel");
+        colorPickerPreviewStyleRef        = registerCSS("color-picker-preview");
+        colorPickerNewStyleRef            = registerCSS("color-picker-new");
+        colorGradientSliderStyleRef       = registerCSS("color-gradient-slider");
+        gradientSwatchStyleRef            = registerCSS("gradient-swatch");
+        gradientEditorStyleRef            = registerCSS("gradient-editor");
+        gradientEditorBarStyleRef         = registerCSS("gradient-editor-bar");
+        itemListStyleRef                  = registerCSS("item-list");
+
+        nodeViewStyleRef                  = registerCSS("node-view");
+        viewBackgroundStyleRef            = registerCSS("view-background");
+        nodeStyleRef                      = registerCSS("node");
+        nodeHeaderStyleRef                = registerCSS("node-header");
+        nodeRowStyleRef                   = registerCSS("node-row");
+        nodeBodyCenterStyleRef            = registerCSS("node-body-center");
+        nodeSocketStyleRef                = registerCSS("node-socket");
+        if (const LayoutStyle* p = styleManager.GetLayoutStyle(nodeSocketStyleRef.layoutStyleIndex); p && p->layoutData.width > 0)
+            socketSize = p->layoutData.width;
+
+        // Text-only node properties: one CSS rule, registered per alignment (follows the sockets).
+        {
+            const Style* base = sheet.GetStyle("node-text");
+            auto registerAligned = [&](TextAlign align) -> StyleRef
+            {
+                Style s = base ? *base : sheet.baseStyle;
+                if (fontScale != 1.0f)
+                    for (int i = 0; i < Style::kStateCount; i++)
+                        s.states[i].textStyle.fontSize *= fontScale;
+                s.textLayoutStyle.horizontalAlignment = align;
+                return styleManager.Register(s);
+            };
+            nodeTextLeftStyleRef   = registerAligned(TextAlign::Start);
+            nodeTextCenterStyleRef = registerAligned(TextAlign::Center);
+            nodeTextRightStyleRef  = registerAligned(TextAlign::End);
+        }
+        itemStyleRef                      = registerCSS("item");
+        collectionStyleRef                = registerCSS("collection");
+
+        reorderableItemStyleRef           = registerCSS("reorderableItem");
+        horzReorderableGroupStyleRef      = registerCSS("horzReorderableGroup");
+        vertReorderableGroupStyleRef      = registerCSS("vertReorderableGroup");
+        horzReorderableGroupWrapStyleRef  = registerCSS("horzReorderableGroupWrap");
+        vertReorderableGroupWrapStyleRef  = registerCSS("vertReorderableGroupWrap");
+        listAreaStyleRef                  = registerCSS("list-area");
+        collectionAreaStyleRef            = registerCSS("collection-area");
+        iconButtonStyleRef                = registerCSS("icon-button");
+        iconButtonEndStyleRef             = registerCSS("icon-button-end");
+
+        listViewStyleRef                  = registerCSS("list-view");
+        listItemStyleRef                  = registerCSS("list-item");
+        listItemRowStyleRef               = registerCSS("list-item-row");
+        listItemDragKnobHorzStyleRef      = registerCSS("list-item-drag-knob-horz");
+        listItemDragKnobVertStyleRef      = registerCSS("list-item-drag-knob-vert");
+        listItemBodyStyleRef              = registerCSS("list-item-body");
+        treeViewStyleRef                  = registerCSS("tree-view");
+        hierarchyVizCellStyleRef          = registerCSS("hierarchy-viz-cell");
+        hierarchyVizBgStyleRef            = registerCSS("hierarchy-viz-bg");
+        hierarchyVisibilityStyleRef       = registerCSS("hierarchy-visibility");
+        gridViewStyleRef                  = registerCSS("grid-view");
+        gridViewItemStyleRef              = registerCSS("grid-view-item");
+        gridViewScrollStyleRef            = registerCSS("grid-view-scroll");
+        gridViewRowStyleRef               = registerCSS("grid-view-row");
+        gridViewListItemStyleRef          = registerCSS("grid-view-list-item");
+        gridViewRenameItemStyleRef        = registerCSS("grid-view-rename-item");
+        gridViewRenameListItemStyleRef    = registerCSS("grid-view-rename-list-item");
+        gridViewRenameIconStyleRef        = registerCSS("grid-view-rename-icon");
+        gridViewRenameEditStyleRef        = registerCSS("grid-view-rename-edit");
+        flexFillRowStyleRef               = registerCSS("flex-fill-row");
+        flexFillColStyleRef               = registerCSS("flex-fill-col");
+        flatButtonStyleRef                = registerCSS("flat-button");
+        logLevelIconStyleRef              = registerCSS("log-level-icon");
+        logLevelToggleLeftStyleRef        = registerCSS("log-level-toggle-left");
+        logLevelToggleMidStyleRef         = registerCSS("log-level-toggle-mid");
+        logLevelToggleRightStyleRef       = registerCSS("log-level-toggle-right");
+        logCollapseToggleStyleRef         = registerCSS("log-collapse-toggle");
+        logMessageStyleRef                = registerCSS("log-message");
+        logCellStyleRef                   = registerCSS("log-cell");
+        logCountBadgeStyleRef             = registerCSS("log-count-badge");
+        logDetailPaneStyleRef             = registerCSS("log-detail-pane");
+        logDetailTextStyleRef             = registerCSS("log-detail-text");
+        searchTextboxStyleRef             = registerCSS("search-textbox");
+        searchTextboxIconStyleRef         = registerCSS("search-textbox-icon");
+        searchTextboxFieldStyleRef        = registerCSS("search-textbox-field");
+                                          
+        searchRowStyleRef                 = registerCSS("search-row");
+        shortcutCategoryStyleRef          = registerCSS("shortcut-category");
+		shortcutTableStyleRef             = registerCSS("shortcut-table");
+
+        // Keep the whole parsed grid-view-item style (font-scale applied, same
+        // as registerCSS) so callers can clone it with a custom iconSize.
+        if (const Style* p = sheet.GetStyle("grid-view-item"))
+        {
+            gridViewItemBaseStyle = *p;
+            if (fontScale != 1.0f)
+                for (int i = 0; i < Style::kStateCount; i++)
+                    gridViewItemBaseStyle.states[i].textStyle.fontSize *= fontScale;
+        }
+        tabBarStyleRef                    = registerCSS("tab-bar");
+        tabStyleRef                       = registerCSS("tab");
+        tabContentStyleRef                = registerCSS("tab-content");
+        tabCloseStyleRef                  = registerCSS("tab-close");
+
+        // Docking container styles
+        dockContainerStyleRef             = registerCSS("dock-container");
+        dockSplitHorzStyleRef             = registerCSS("dock-split-horz");
+        dockSplitVertStyleRef             = registerCSS("dock-split-vert");
+        dockSizerHorzStyleRef             = registerCSS("dock-sizer-horz");
+        dockSizerVertStyleRef             = registerCSS("dock-sizer-vert");
+        dockLeafStyleRef                  = registerCSS("dock-leaf");
+        dockContentStyleRef               = registerCSS("dock-content");
+
+        firstIconStyleRef                 = registerCSS("first-icon");
+        iconLeftStyleRef                  = registerCSS("icon-left");
+        iconRightStyleRef                 = registerCSS("icon-right");
+        iconTopStyleRef                   = registerCSS("icon-top");
+        iconBottomStyleRef                = registerCSS("icon-bottom");
+        
+
+        // -------------------------------------------------------------------------
+        // Table styles (row × column data grid)
+        // -------------------------------------------------------------------------
+        tableStyleRef                     = registerCSS("table");
+        tableFillStyleRef                 = registerCSS("table-fill");
+        tableHeaderSectionStyleRef        = registerCSS("table-header-section");
+        tableBodiesRowStyleRef            = registerCSS("table-bodies-row");
+        tableScrollableBodyStyleRef       = registerCSS("table-scrollable-body");
+        tableFitContentBodyStyleRef       = registerCSS("table-fit-content-body");
+        tableRowStyleRef                  = registerCSS("table-row");
+        tableRowAltStyleRef               = registerCSS("table-row-alt");
+        tableHeaderStyleRef               = registerCSS("table-header");
+        tableHeaderLockedStyleRef         = registerCSS("table-header-locked");
+        tableSizerStyleRef                = registerCSS("table-sizer");
+        tableSeparatorStyleRef            = registerCSS("table-separator");
+        tableCellStyleRef                 = registerCSS("table-cell");
+        tableCellCompactStyleRef          = registerCSS("table-cell-compact");
+        treeTableCellStyleRef             = registerCSS("tree-table-cell");
+        treeTableCellRowModeStyleRef      = registerCSS("tree-table-cell-row-mode");
+        treeTableArrowGlyphStyleRef       = registerCSS("tree-table-arrow-glyph");
+        treeTableIndentStyleRef           = registerCSS("tree-table-indent");
+        treeTableArrowStyleRef            = registerCSS("tree-table-arrow");
+        treeTableIconStyleRef             = registerCSS("tree-table-icon");
+        treeTableTextStyleRef             = registerCSS("tree-table-text");
+        treeTableTextEditStyleRef         = registerCSS("tree-table-text-edit");
+
+        // -------------------------------------------------------------------------
+        // Window and menu styles from CSS
+        // -------------------------------------------------------------------------
+        windowStyleRef                    = registerCSS("window");
+        mainWindowStyleRef                = registerCSS("main-window");
+        dockWindowStyleRef                = registerCSS("dock-window");
+        menuStyleRef                      = registerCSS("menu");
+        menuItemStyleRef                  = registerCSS("menu-item");
+        menuScrollButtonStyleRef          = registerCSS("menu-scroll-button");
+        menuBarStyleRef                   = registerCSS("menu-bar");
+        menuBarTriggerStyleRef            = registerCSS("menu-bar-trigger");
+        menuSeparatorStyleRef             = registerCSS("menu-separator");
+        menuItemRowStyleRef               = registerCSS("menu-item-row");
+        menuItemIconStyleRef              = registerCSS("menu-item-icon");
+        menuItemLabelStyleRef             = registerCSS("menu-item-label");
+        menuItemShortcutStyleRef          = registerCSS("menu-item-shortcut");
+        menuItemArrowStyleRef             = registerCSS("menu-item-arrow");
+        tooltipStyleRef                   = registerCSS("tooltip");
+        tooltipTextStyleRef               = registerCSS("tooltip-text");
+        settingsPageSelectionRef          = registerCSS("settings-page-selection");
+        settingsPageStyleRef              = registerCSS("settings-page");
+        settingsTitleStyleRef             = registerCSS("settings-title");
+
+        {
+            // Vertical-align demo matrix: IconSide (L/R/T/B) × block alignment (top/mid/bot).
+            const char* kSideTag[4] = { "left", "right", "top", "bottom" };
+            const char* kVAlignTag[3] = { "top",  "mid",   "bot" };
+            for (int s = 0; s < 4; ++s)
+                for (int v = 0; v < 3; ++v)
+                    iconVAlignDemoStyleRefs[s][v] = registerCSS(
+                        std::string("icon-demo-") + kSideTag[s] + "-" + kVAlignTag[v]);
+        }
+
+        return true;
+    }
+
+    void GUITheme::ComputeRowMetrics(StyleManager& styleManager, ITextSystem& textSystem)
+    {
+        // Measure "Mg" (ascender + descender) in both cell styles; the max gives mixed tables
+        // a uniform row height. Must be real metrics: VirtualTable's spacer math uses it
+        // verbatim, and an estimate makes the max scroll oscillate.
+        auto measure = [&](StyleRef style) -> int32_t {
+            const TextID probeID = textSystem.RegisterText(
+                ID::Invalid(), "Mg", style, ElementState::None);
+            const auto m = textSystem.GetTextMeasurement(probeID);
+            const LayoutStyle* ls = styleManager.GetLayoutStyle(style.layoutStyleIndex);
+            int32_t h = m.minHeight;
+            if (ls) h += ls->padding.Vertical() + ls->borderWidths.Vertical();
+            return std::max<int32_t>(1, h);
+        };
+        tableRowHeight = std::max(measure(tableCellStyleRef),
+                                  measure(treeTableCellStyleRef));
+
+        // Tree-table cell metrics: the stylesheet owns them; a missing value falls back to the
+        // text line height so it still follows the font.
+        {
+            const TextID probeID = textSystem.RegisterText(
+                ID::Invalid(), "Mg", treeTableTextStyleRef, ElementState::None);
+            const int32_t lineHeight = std::max<int32_t>(1, textSystem.GetTextMeasurement(probeID).minHeight);
+            auto cssWidth = [&](StyleRef s) -> int32_t {
+                const LayoutStyle* ls = styleManager.GetLayoutStyle(s.layoutStyleIndex);
+                return (ls && ls->layoutData.width != LayoutData::kAutoSize) ? ls->layoutData.width : lineHeight;
+            };
+            auto cssIconSize = [&](StyleRef s, int32_t fallback) -> int32_t {
+                const LayoutStyle* ls = styleManager.GetLayoutStyle(s.layoutStyleIndex);
+                return (ls && ls->iconSize > 0) ? static_cast<int32_t>(ls->iconSize) : fallback;
+            };
+            treeTableIndent         = cssWidth(treeTableIndentStyleRef);
+            treeTableExpanderWidth  = cssWidth(treeTableArrowStyleRef);
+            treeTableIconSize       = cssIconSize(treeTableIconStyleRef, lineHeight);
+            treeTableArrowGlyphSize = cssIconSize(treeTableArrowGlyphStyleRef, treeTableIconSize);
+        }
+
+        // Same for the files grid (icon-on-top label line, icon-left list row), so names never clip.
+        auto measureText = [&](StyleRef style) -> int32_t {
+            const TextID probeID = textSystem.RegisterText(
+                ID::Invalid(), "Mg", style, ElementState::None);
+            return std::max<int32_t>(1, textSystem.GetTextMeasurement(probeID).minHeight);
+        };
+        gridViewItemLineHeight = measureText(gridViewItemStyleRef);
+        {
+            const int32_t      listText = measureText(gridViewListItemStyleRef);
+            const LayoutStyle* ls       = styleManager.GetLayoutStyle(gridViewListItemStyleRef.layoutStyleIndex);
+            const int32_t      pad       = ls ? (ls->padding.Vertical() + ls->borderWidths.Vertical()) : 0;
+            const int32_t      iconSize  = ls ? static_cast<int32_t>(ls->iconSize) : 0;
+            gridViewListRowHeight = std::max(listText, iconSize) + pad;
+        }
+
+        // The node view's single grid pitch (node/wire snapping and the drawn grid): half a
+        // property row, so row edges and centers (sockets) land on grid lines. The row lays
+        // the field out at its margin box, so the margin is included.
+        float fieldHeight = (float)measure(regularControls.textbox);
+        if (const LayoutStyle* tb = styleManager.GetLayoutStyle(regularControls.textbox.layoutStyleIndex))
+            fieldHeight += tb->margin.Vertical();
+        fieldHeight /= 2.0f;   // one property row = two grid cells
+        nodeGridSize = (int)ceil(fieldHeight);
+    }
+} // namespace GUI

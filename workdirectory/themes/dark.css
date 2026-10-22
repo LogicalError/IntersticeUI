@@ -1,0 +1,80 @@
+/* =============================================================================
+   Dark palette for IntersticeUI. 
+   Mirror of light.css with inverted surfaces and lighter text.
+   ============================================================================= */
+
+:root {
+    /* ---- Line colors (also read from code via GetCustomProperty) --------- */
+    --line-gray: #666666;
+    --line-yellow: #ffcc33;
+    --line-white: #ffffff;
+    --line-dark: #1a1a1a;
+    --line-grid: #363636;
+    --tree-guide-line: #505050;
+    /* ---- Text ------------------------------------------------------------ */
+    --text-primary: #c0c0c0;
+    --text-bright: #e0e0e0;
+    --text-muted: #969696;
+    --text-selected: #ABABAB;
+    --text-on-accent: #d0d0d0; /* text over accent-colored selection */
+    --text-on-highlight: #404040; /* text on .text-style::highlight(selected) */
+    --text-label: #9F9F9F; /* default label text */
+    --text-label-active: #94BDCE;
+    --text-label-hover: #688ABB;
+    --text-tab-normal: #A6A6A6; /* tab normal text */
+    --text-tab-active: #ABABAB; /* tab active text */
+    --text-tab-selected: #ABABAB; /* tab selected text */
+    --text-tab-hover: #ABABAB; /* tab hover text, grid-view base text */
+    /* ---- Accent / widget palette ----------------------------------------- */
+    --accent: #303030; /* default border, filled label bg */
+    --accent-dark: #585858; /* default widget background */
+    --accent-light: #46607C; /* Active background for accent-filled widgets */
+    --accent-blue: #007acc; /* focus indicator, drop target */
+    --accent2-dark: #2A2A2A; /* secondary accent for textboxes etc. */
+    --accent3-dark: #ABABAB; /* default widget background */
+    --selection-bg: #264f78; /* highlight(selected) background */
+    --drop-target-bg: #007acc60; /* panel drop visualization (accent-blue w/ alpha) */
+    --label-dragger-hover-bg: #94BDCE80; /* label-group-dragger hover (label-hover w/ alpha) */
+    /* ---- Surfaces -------------------------------------------------------- */
+    --bg-content: #3C3C3C; /* list / panel / node-view */
+    --bg-toolbar-side: #242424; /* docked toolbar bars — darker than content for a framed look */
+    --bg-view: #202020; /* view background */
+    --bg-surface: #323232; /* tooltip / tree-view / grid-view */
+    --bg-scrollbar: #303030; /* scrollbar */
+    --bg-listview: #333333; /* listview */
+    --bg-hover: #333333; /* list / tree row hover */
+    --bg-tab-bar: #141414;
+    --bg-tab-active: #3C3C3C;
+    --bg-tab-inactive: #2d2d2d;
+    --bg-drag-knob: #242424;
+    --bg-drag-knob-hover: #3f3f45; /* list-item drag-knob hover */
+    --bg-menu: #808080; /* menu background */
+    --bg-grid-hover: #2a2d2e; /* grid-view-item hover */
+    --bg-grid-active: #37373d; /* grid-view-item active */
+    --bg-tab-close-hover: #3c3c3c; /* tab-close button hover */
+    --bg-tab-close-active: #505050; /* tab-close button active */
+    /* ---- Borders --------------------------------------------------------- */
+    --border-focus: #3A79BB; /* hover / active / focus border */
+    --node-border-hover: #999999; /* node-view: hovered-node border (light grey); selected uses --accent-blue */
+    --border-subtle: #555555; /* tooltip / listview border */
+    --border-grid-view: #3c3c3c; /* grid-view container border */
+    --border-dock-leaf: #333333; /* dock-leaf border */
+    --border-picker: #444444; /* color picker / gradient slider frames */
+    /* ---- Table palette --------------------------------------------------- */
+    --table-row-bg: #2C2C2C; /* slightly above --bg-surface so the column-gap separators read against the row */
+    --table-row-alt-bg: #323232; /* lighter than --bg-surface for zebra; stays below --bg-hover */
+    --table-row-hover: #404040; /* hover state for rows; above alt and regular bg, below --bg-hover */
+    --table-header-hover-bg: #4a4a4a; /* one step lighter than --bg-content for header :hover */
+    --tree-table-edit-border: #7FB3E8; /* tree-table inline-rename textbox border */
+    /* ---- Slider knob (used by .list-item-drag-knob-horz / -vert) ---------- */
+    --slider-knob: #b0b0b0;
+    --slider-knob-hover: #d0d0d0;
+    /* ---- Slider field (Blender-style filled bar) ------------------------- */
+    --slider-bg: #2b2b2b;
+    --slider-fill: #5680c2;
+    /* ---- Node-view header tints (per node type, read from code) ----------- */
+    --node-tint-input: #6b4545;
+    --node-tint-converter: #454f66;
+    --node-tint-output: #5c4566;
+    --node-tint-texture: #4d593b;
+}

@@ -1,0 +1,223 @@
+NotoSans
+NotoSansAdlam
+NotoSansAdlamUnjoined
+NotoSansAnatolianHieroglyphs
+NotoSansArabic
+NotoSansArmenian
+NotoSansAvestan
+NotoSansBalinese
+NotoSansBamum
+NotoSansBassaVah
+NotoSansBatak
+NotoSansBengaliUI
+NotoSansBengali
+NotoSansBhaiksuki
+NotoSansBrahmi
+NotoSansBuginese
+NotoSansBuhid
+NotoSansCanadianAboriginal
+NotoSansCarian
+NotoSansCaucasianAlbanian
+NotoSansChakma
+NotoSansCham
+NotoSansCherokee
+NotoSansChorasmian
+NotoSansCoptic
+NotoSansCuneiform
+NotoSansCypriot
+NotoSansCyproMinoan
+NotoSansDeseret
+NotoSansDevanagariUI
+NotoSansDevanagari
+NotoSansDuployan
+NotoSansEgyptianHieroglyphs
+NotoSansElbasan
+NotoSansElymaic
+NotoSansEthiopic
+NotoSansGeorgian
+NotoSansGlagolitic
+NotoSansGothic
+NotoSansGrantha
+NotoSansGujaratiUI
+NotoSansGujarati
+NotoSansGunjalaGondi
+NotoSansGurmukhiUI
+NotoSansGurmukhi
+NotoSansHanifiRohingya
+NotoSansHanunoo
+NotoSansHatran
+NotoSansHebrew
+NotoSansImperialAramaic
+NotoSansIndicSiyaqNumbers
+NotoSansInscriptionalPahlavi
+NotoSansInscriptionalParthian
+NotoSansJavanese
+NotoSansKaithi
+NotoSansKannadaUI
+NotoSansKannada
+NotoSansKawi
+NotoSansKayahLi
+NotoSansKharoshthi
+NotoSansKhmer
+NotoSansKhojki
+NotoSansKhudawadi
+NotoSansLao
+NotoSansLaoLooped
+NotoSansLepcha
+NotoSansLimbu
+NotoSansLinearA
+NotoSansLinearB
+NotoSansLisu
+NotoSansLycian
+NotoSansLydian
+NotoSansMahajani
+NotoSansMalayalamUI
+NotoSansMalayalam
+NotoSansMandaic
+NotoSansManichaean
+NotoSansMarchen
+NotoSansMasaramGondi
+NotoSansMath
+NotoSansMayanNumerals
+NotoSansMedefaidrin
+NotoSansMeeteiMayek
+NotoSansMendeKikakui
+NotoSansMeroitic
+NotoSansMiao
+NotoSansModi
+NotoSansMongolian
+NotoSansMro
+NotoSansMultani
+NotoSansMyanmar
+NotoSansNabataean
+NotoSansNagMundari
+NotoSansNandinagari
+NotoSansNewa
+NotoSansNewTaiLue
+NotoSansNKo
+NotoSansNKoUnjoined
+NotoSansNushu
+NotoSansOgham
+NotoSansOlChiki
+NotoSansOldHungarian
+NotoSansOldItalic
+NotoSansOldNorthArabian
+NotoSansOldPermic
+NotoSansOldPersian
+NotoSansOldSogdian
+NotoSansOldSouthArabian
+NotoSansOldTurkic
+NotoSansOriya
+NotoSansOsage
+NotoSansOsmanya
+NotoSansPahawhHmong
+NotoSansPalmyrene
+NotoSansPauCinHau
+NotoSansPhags-Pa
+NotoSansPhoenician
+NotoSansPsalterPahlavi
+NotoSansRejang
+NotoSansRunic
+NotoSansSamaritan
+NotoSansSaurashtra
+NotoSansSharada
+NotoSansShavian
+NotoSansSiddham
+NotoSansSignWriting
+NotoSansSinhalaUI
+NotoSansSinhala
+NotoSansSogdian
+NotoSansSoraSompeng
+NotoSansSoyombo
+NotoSansSundanese
+NotoSansSylotiNagri
+NotoSansSymbols
+NotoSansSymbols2
+NotoSansSyriac
+NotoSansSyriacEastern
+NotoSansSyriacWestern
+NotoSansTagalog
+NotoSansTagbanwa
+NotoSansTaiLe
+NotoSansTaiTham
+NotoSansTaiViet
+NotoSansTakri
+NotoSansTamilUI
+NotoSansTamil
+NotoSansTamilSupplement
+NotoSansTangsa
+NotoSansTeluguUI
+NotoSansTelugu
+NotoSansThaana
+NotoSansThai
+NotoSansThaiLooped
+NotoSansTifinagh
+NotoSansTifinaghAdrar
+NotoSansTifinaghAgrawImazighen
+NotoSansTifinaghAhaggar
+NotoSansTifinaghAir
+NotoSansTifinaghAPT
+NotoSansTifinaghAzawagh
+NotoSansTifinaghGhat
+NotoSansTifinaghHawad
+NotoSansTifinaghRhissaIxa
+NotoSansTifinaghSIL
+NotoSansTifinaghTawellemmet
+NotoSansTirhuta
+NotoSansUgaritic
+NotoSansVai
+NotoSansVithkuqi
+NotoSansWancho
+NotoSansWarangCiti
+NotoSansYi
+NotoSansZanabazarSquare
+
+NotoSerifAhom
+NotoSerifDivesAkuru
+NotoSerifDogra
+NotoSerifJP
+NotoSerifKhitanSmallScript
+NotoSerifMakasar
+NotoSerifNPHmong
+NotoSerifOldUyghur
+NotoSerifOttomanSiyaq
+NotoSerifTangut
+NotoSerifTibetan
+NotoSerifToto
+NotoSerifYezidi
+
+NotoTraditionalNushu
+NotoFangsongKSSRotated
+NotoFangsongKSSVertical
+NotoLoopedThai
+NotoNaskhArabicUI
+NotoNaskhArabic
+NotoNastaliqUrdu
+NotoRashiHebrew
+NotoMusic
+
+NotoSansTest *
+NotoSerifDisplay *
+NotoSerifArmenian *
+NotoSerifBalinese *
+NotoSerifBengali *
+NotoSerifDevanagari *
+NotoSerifEthiopic *
+NotoSerifGeorgian *
+NotoSerifGrantha *
+NotoSerifGujarati *
+NotoSerifGurmukhi *
+NotoSerifHebrew *
+NotoSerifKannada *
+NotoSerifKhmer *
+NotoSerifKhojki *
+NotoSerifLao *
+NotoSerifMalayalam *
+NotoSerifMyanmar *
+NotoSerifOriya *
+NotoSerifSinhala *
+NotoSerifTamil *
+NotoSerifTelugu *
+NotoSerifThai *
+NotoSerifVithkuqi *
+NotoSerifTest *

@@ -1,0 +1,120 @@
+#include <gui_controls/subsystems/gui_label_group_subsystem.h>
+#include <gui_core/style/gui_style_manager.h>
+
+#include <cassert>
+#include <cmath>
+
+#include <gui_core/frame/gui_frame_pipeline.h>
+#include <gui_controls/gui_theme.h>
+#include <gui_core/elements/gui_element_storage.h>
+#include <gui_core/graphics/gui_custom_draw_context.h>
+#include <gui_core/graphics/gui_renderer.h>
+#include <gui_core/state/gui_state_manager.h>
+
+namespace GUI
+{
+    LabelGroupSubsystem::LabelGroupSubsystem(FramePipeline& frame,
+                                             ElementStorage& elementStorage,
+                                             GUIStateManager& guiStateManager,
+                                             GUITheme& theme)
+        : m_elementStorage(elementStorage)
+        , m_guiStateManager(guiStateManager)
+        , m_theme(theme)
+    {
+        frame.OnPreConstruct ([this](FrameContext&) { OnPreConstruct();  });
+        frame.OnPostConstruct([this](FrameContext&) { OnPostConstruct(); });
+        frame.OnEndFrame     ([this](FrameContext&) { OnEndFrame();      });
+    }
+
+    LabelGroupSubsystem::State* LabelGroupSubsystem::GetActiveGroup()
+    {
+        if (m_stack.empty()) return nullptr;
+        const auto& entry = m_stack.back();
+        // Only apply the group at the same nesting depth it was begun at.
+        if (m_elementStorage.GetCurrentNestingDepth() != entry.nestingDepth) return nullptr;
+        return entry.state;
+    }
+
+    void LabelGroupSubsystem::BeginGroup(GUI::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
+    {
+        // No per-frame reset here (it's in OnPreConstruct): a group may be entered several
+        // times per frame (e.g. once per row), and a reset would drop an earlier hover.
+        auto [it, inserted] = m_states.try_emplace(id, State{ .labelWidth = defaultWidth, .minWidth = minWidth, .maxWidth = maxWidth, .resizable = resizable });
+        it->second.resizable = resizable;
+        m_stack.push_back({ &it->second, m_elementStorage.GetCurrentNestingDepth() });
+    }
+
+    void LabelGroupSubsystem::EndGroup()
+    {
+        assert(!m_stack.empty());
+        m_stack.pop_back();
+    }
+
+    void LabelGroupSubsystem::OnPreConstruct()
+    {
+        for (auto& [id, gs] : m_states)
+        {
+            gs.anyLabelHovered = false;
+            gs.labelTextIDs.clear();
+            gs.maxLabelWidthThisFrame = 0;
+        }
+    }
+
+    void LabelGroupSubsystem::OnPostConstruct()
+    {
+        for (auto& [id, gs] : m_states)
+        {
+            // If no label in the group was hovered this frame and we're not
+            // dragging the edge, the mouse has left the group — clear edge state.
+            if (!gs.anyLabelHovered && !gs.edgeDragging)
+                gs.edgeHovered = false;
+
+            // Non-resizable groups auto-fit to the widest label, picked up next frame.
+            if (!gs.resizable && gs.maxLabelWidthThisFrame > 0)
+                gs.labelWidth = int32_t(std::ceil(float(gs.maxLabelWidthThisFrame) / m_elementStorage.GetStyleManager().GetUIScale()));
+        }
+    }
+
+    void LabelGroupSubsystem::OnEndFrame()
+    {
+        if (!IsBalanced())
+        {
+            assert(false && "LabelGroupSubsystem: unbalanced BeginGroup/EndGroup at end of frame");
+            m_stack.clear();
+        }
+    }
+
+    void LabelGroupSubsystem::AddDragger(GUI::ElementRef labelRef)
+    {
+        auto* groupState = m_stack.back().state;
+
+        // Hover from last frame's hit-test, so edge state persists without a MouseMove.
+        GUI::ID labelID = m_elementStorage.GetElementUnsafe(labelRef).id;
+        GUI::ElementState labelState = m_guiStateManager.GetCurrentState(labelID);
+        if ((labelState & GUI::ElementState::Hover) != GUI::ElementState::None)
+        {
+            groupState->anyLabelHovered = true;
+            if (groupState->edgeHovered || groupState->edgeDragging)
+                m_guiStateManager.Cursor().Request(GUI::MouseCursor::ColResize);
+        }
+
+        auto* state = groupState;
+        auto lineColor = m_theme.treeGuideLineStyle;
+        [[maybe_unused]] auto cdRes = m_elementStorage.AddCustomDraw(labelRef,
+            [state, lineColor, edgeWidth = m_elementStorage.GetStyleManager().Px(4)](GUI::CustomDrawContext& ctx)
+            {
+                if (!state->edgeHovered && !state->edgeDragging)
+                    return;
+                const auto outer = ctx.ElementRect();
+                const auto inner = ctx.ElementInnerRect();
+                const int32_t edgeOffset = (int32_t)floor(edgeWidth / 2.0f);
+                const int32_t xRight = (outer.x + outer.w) - inner.x - edgeOffset;
+                const int32_t yTop   = outer.y - inner.y;
+                const int32_t yBot   = (outer.y + outer.h) - inner.y;
+
+                GUI::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
+                ctx.RenderLine({ xRight, yTop }, { xRight, yBot }, style);
+            });
+        assert(cdRes == ElementStorageResult::Success);
+    }
+}

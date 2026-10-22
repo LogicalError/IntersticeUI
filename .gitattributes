@@ -1,0 +1,13 @@
+# Text is stored with LF and checked out with the platform's line endings.
+* text=auto
+
+# Fonts live in Git LFS.
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+*.ttc filter=lfs diff=lfs merge=lfs -text
+
+# Other binaries.
+*.png binary
+*.jpg binary
+*.ico binary
+*.spv binary
