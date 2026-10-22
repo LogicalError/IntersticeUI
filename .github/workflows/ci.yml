@@ -83,13 +83,20 @@ jobs:
 
       # A software Vulkan driver, so the consumer can render without a GPU.
       # 26.2.3 corrupts the heap in vkDestroyDescriptorPool; 26.2.4 is fine.
+      # Jobs run elevated, and the loader ignores VK_DRIVER_FILES in elevated
+      # processes, so the driver is registered like an installed one.
       - name: Software Vulkan driver (lavapipe)
         run: |
           curl -sSL -o mesa.7z https://github.com/pal1000/mesa-dist-win/releases/download/26.2.4/mesa3d-26.2.4-release-msvc.7z
           7z x -y mesa.7z x64/lvp_icd.x86_64.json x64/vulkan_lvp.dll "-o${{ runner.temp }}/mesa"
-          "VK_DRIVER_FILES=${{ runner.temp }}\mesa\x64\lvp_icd.x86_64.json" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          $icd = "${{ runner.temp }}\mesa\x64\lvp_icd.x86_64.json"
+          if (-not (Test-Path $icd)) { throw "lavapipe not extracted: $icd" }
+          New-Item -Path HKLM:\SOFTWARE\Khronos\Vulkan\Drivers -Force | Out-Null
+          New-ItemProperty -Path HKLM:\SOFTWARE\Khronos\Vulkan\Drivers -Name $icd -Value 0 -PropertyType DWord -Force | Out-Null
 
       - name: Package consumer renders a frame
+        env:
+          VK_LOADER_DEBUG: error,warn
         run: |
           cmake -S tests/package_consumer -B "${{ runner.temp }}/consumer" -A x64 "-DCMAKE_PREFIX_PATH=${{ runner.temp }}/pkg"
           cmake --build "${{ runner.temp }}/consumer" --config Release
