@@ -97,18 +97,18 @@ endif()
 
 include(GoogleTest)
 
-# Copies the runtime DLLs (SDL3) next to a test exe. Post-build steps run in the
-# order they're added, so this goes before gtest_discover_tests launches the exe.
+# Copies the runtime DLLs (SDL3) next to a test exe so it can be launched.
 function(interstice_copy_test_dlls target)
   add_custom_command(TARGET ${target} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
     COMMAND_EXPAND_LISTS)
 endfunction()
 
-# Discovery and ctest run in the build folder (discovery leaves a JSON file behind);
-# main.cpp switches to workdirectory itself.
+# ctest lists the tests when it runs them, not at build time, so building never
+# launches the executables (slow on a cold CI runner). It runs in the build folder
+# (discovery leaves a JSON file behind); main.cpp switches to workdirectory itself.
 interstice_copy_test_dlls(gui_core_tests)
-gtest_discover_tests(gui_core_tests)
+gtest_discover_tests(gui_core_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
 set_target_properties(gui_core_tests PROPERTIES
   FOLDER "Tests"
@@ -148,7 +148,7 @@ if(MSVC)
 endif()
 
 interstice_copy_test_dlls(gui_gpu_tests)
-gtest_discover_tests(gui_gpu_tests)
+gtest_discover_tests(gui_gpu_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
 set_target_properties(gui_gpu_tests PROPERTIES
   FOLDER "Tests"
