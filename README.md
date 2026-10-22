@@ -172,3 +172,9 @@ Under active development. Known issues:
   windows are not part of the saved tree.
 - Text editor undo and redo (Ctrl+Z, Ctrl+Shift+Z) exist; whether they behave correctly across
   focus changes and with application-level undo has not been checked.
+
+## License
+
+IntersticeUI is licensed under the MIT license; see [LICENSE](LICENSE). The
+bundled third-party code, fonts and icons keep their own licenses, listed in
+[THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).

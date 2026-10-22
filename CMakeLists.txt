@@ -53,7 +53,7 @@ install(DIRECTORY src/gui_core src/gui_controls
 install(FILES "${PROJECT_BINARY_DIR}/generated/gui_core/gui_version.h"
   DESTINATION include/gui_core)
 
-install(FILES THIRD_PARTY_NOTICES.txt DESTINATION share/IntersticeUI)
+install(FILES LICENSE THIRD_PARTY_NOTICES.txt DESTINATION share/IntersticeUI)
 
 install(DIRECTORY
     workdirectory/themes
