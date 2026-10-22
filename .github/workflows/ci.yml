@@ -31,6 +31,14 @@ jobs:
           version: 1.4.309.0
           cache: true
 
+      # The SDK has no loader (vulkan-1.dll) and the runner has no GPU driver to
+      # install one; the executables import it, so test discovery needs it too.
+      - name: Vulkan loader
+        run: |
+          curl -sSL -o vulkan-rt.zip https://sdk.lunarg.com/sdk/download/1.4.309.0/windows/VulkanRT-1.4.309.0-Components.zip
+          Expand-Archive vulkan-rt.zip -DestinationPath "${{ runner.temp }}/vulkan-rt"
+          "${{ runner.temp }}\vulkan-rt\VulkanRT-1.4.309.0-Components\x64" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
       # The third-party libraries only change with the submodules or their build files.
       - name: Third-party cache key
         run: git submodule status | Out-File -Encoding utf8 .submodules-id

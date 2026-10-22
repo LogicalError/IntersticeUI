@@ -43,17 +43,41 @@ namespace GUI
 
             void TearDown() override { app.Cleanup(); }
 
+            static constexpr int  kCanvasW = 800;
+            static constexpr int  kCanvasH = 600;
+            static constexpr int  kNodeW   = 180;
+            static constexpr int2 kNegPos  { -340, -60 };
+            static constexpr int2 kPosPos  {  200,  80 };
+
+            // A node at `pos` with a body row holding a clickable field.
+            void BuildNode(ID nodeID, ID fieldID, int2 pos, int& clickCounter)
+            {
+                Element node{};
+                node.id       = nodeID;
+                node.styleRef = app.theme.nodeStyleRef;
+                node.state    = app.guiStateManager.GetCurrentState(nodeID);
+                auto nodeRes = app.elementStorage.Add(std::move(node),
+                    LayoutOverride{}.FixedWidth(kNodeW).Absolute(pos.x, pos.y));
+                ASSERT_EQ(nodeRes.status, ElementStorageResult::Success);
+                ASSERT_EQ(app.windowRegistry.Add(nodeRes.ref), GUI::RegistryResult::Success);
+                ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
+
+                // Body row inside the node — same nesting depth as the
+                // demo (BeginHorizontal → BeginHorizontal → Field).
+                app.BeginHorizontal(LayoutOverride{}.Auto());
+                app.BeginHorizontal(LayoutOverride{}.FlexGrow(1));
+                app.Button(fieldID, "Field", [&clickCounter]() { clickCounter++; });
+                app.EndHorizontal();
+                app.EndHorizontal();
+
+                ASSERT_EQ(app.elementStorage.EndChildren(), ElementStorageResult::Success);
+            }
+
             // Root window → canvas (overflow:auto, centring contentTransform) → nodes at
             // (-340, -60) and (200, 80), each with a body row holding a clickable field.
             // `negClicks` / `posClicks` count handler invocations.
             void BuildScene(int& negClicks, int& posClicks)
             {
-                constexpr int  kCanvasW = 800;
-                constexpr int  kCanvasH = 600;
-                constexpr int  kNodeW   = 180;
-                constexpr int2 kNegPos  { -340, -60 };
-                constexpr int2 kPosPos  {  200,  80 };
-
                 app.BeginRootWindow({ 1920, 1080 });
 
                 // Canvas: full node-view style (overflow:auto, padding 4) plus
@@ -75,31 +99,8 @@ namespace GUI
                 ASSERT_EQ(app.windowRegistry.Add(canvasRes.ref), GUI::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
-                auto buildNode = [&](ID nodeID, ID fieldID, int2 pos, int& clickCounter)
-                {
-                    Element node{};
-                    node.id       = nodeID;
-                    node.styleRef = app.theme.nodeStyleRef;
-                    node.state    = app.guiStateManager.GetCurrentState(nodeID);
-                    auto nodeRes = app.elementStorage.Add(std::move(node),
-                        LayoutOverride{}.FixedWidth(kNodeW).Absolute(pos.x, pos.y));
-                    ASSERT_EQ(nodeRes.status, ElementStorageResult::Success);
-                    ASSERT_EQ(app.windowRegistry.Add(nodeRes.ref), GUI::RegistryResult::Success);
-                    ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
-
-                    // Body row inside the node — same nesting depth as the
-                    // demo (BeginHorizontal → BeginHorizontal → Field).
-                    app.BeginHorizontal(LayoutOverride{}.Auto());
-                    app.BeginHorizontal(LayoutOverride{}.FlexGrow(1));
-                    app.Button(fieldID, "Field", [&clickCounter]() { clickCounter++; });
-                    app.EndHorizontal();
-                    app.EndHorizontal();
-
-                    ASSERT_EQ(app.elementStorage.EndChildren(), ElementStorageResult::Success);
-                };
-
-                buildNode(negNodeID, negFieldID, kNegPos, negClicks);
-                buildNode(posNodeID, posFieldID, kPosPos, posClicks);
+                BuildNode(negNodeID, negFieldID, kNegPos, negClicks);
+                BuildNode(posNodeID, posFieldID, kPosPos, posClicks);
 
                 ASSERT_EQ(app.elementStorage.EndChildren(), ElementStorageResult::Success);
                 app.EndRootWindow();
