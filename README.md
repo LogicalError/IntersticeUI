@@ -1,31 +1,35 @@
 # IntersticeUI
 
-A C++20 GUI library built on Vulkan and SDL3, used as the UI layer of an editor.
-It is a retained-mode element tree with flexbox and grid layout, docking,
-multiple OS windows, a CSS-like theming system, and a toolkit of controls
-(tables, trees, text editing, node graphs, menus, and more).
+A C++20 GUI library, used as the UI layer of an editor. It is a retained-mode
+element tree with flexbox and grid layout, docking, multiple OS windows, a
+CSS-like theming system, and a toolkit of controls (tables, trees, text editing,
+node graphs, menus, and more).
+
+The UI draws through a graphics backend and gets windows and input from a window
+backend, so it isn't tied to one graphics API or platform. The current backends
+are Vulkan and SDL3.
 
 The library is two static libraries:
 
 | Library | Contents |
 | --- | --- |
-| `gui_core` | Windowing, Vulkan rendering, input, layout, text, styles, element storage |
+| `gui_core` | Windowing, rendering backends, input, layout, text, styles, element storage |
 | `gui_controls` | `GUIApplication`, controls, docking, menus, tooltips, transitions |
 
 `demo` is a testbed application. It is not part of the library.
 
 ## Build
 
-Windows x64, MSVC, CMake 3.22 or newer, and the Vulkan SDK.
+Windows x64, MSVC, CMake 3.22 or newer, and the Vulkan SDK (for the Vulkan backend).
 
 ```text
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Debug
 ```
 
-The first configure builds the third-party libraries (SDL3, VMA, vk-bootstrap,
-skribidi, and their dependencies) into `build/third_party/install`. Later
-builds reuse them.
+The first configure builds the third-party libraries (SDL3, skribidi, the
+Vulkan backend's VMA and vk-bootstrap, and their dependencies) into
+`build/third_party/install`. Later builds reuse them.
 
 Tests:
 
@@ -61,7 +65,12 @@ Only the Debug and Release configurations are installed; other configurations
 need `CMAKE_MAP_IMPORTED_CONFIG_<CONFIG>` in the consumer. Set
 `-DINTERSTICE_INSTALL_THIRD_PARTY=OFF` to skip bundling the third-party libraries.
 
-## Hosting on an existing Vulkan device
+## Vulkan backend
+
+When a host application also renders with Vulkan, it can share its device and
+images with the GUI.
+
+### Sharing the host's device
 
 By default the GUI creates and owns its own `VkInstance` and `VkDevice`. A host
 application that already owns a device, such as a game engine hosting this GUI
@@ -108,7 +117,7 @@ locks around its own submissions. Note that presentation can block until vsync
 while the lock is held; a host with a second graphics queue should give the GUI
 its own queue to avoid that.
 
-## Showing a host-rendered image
+### Showing a host-rendered image
 
 A host can render into an image it owns and show it in a GUI element, for example
 a 3D viewport:
@@ -146,14 +155,15 @@ exercises the contract under synchronization validation.
 
 Under active development. Known issues:
 
-- Vulkan validation errors are reported by the running editor; the descriptor
-  related ones are not yet investigated.
-- The Khronos validation layer shipped with Vulkan SDK 1.4.341.1 crashes (a null
-  read on one of its worker threads) in tests that present to a window. This is
+- Vulkan backend: validation errors are reported by the running editor; the
+  descriptor related ones are not yet investigated.
+- Vulkan backend: the Khronos validation layer shipped with Vulkan SDK 1.4.341.1
+  crashes (a null read on one of its worker threads) in tests that present to a
+  window. This is
   not a GUI defect: it reproduces on the unmodified repository and goes away with
   the 1.4.309 layer, with which all GPU tests pass, including synchronization
   validation. Point the loader at an older layer to work around it, for example
-  `set VK_LAYER_PATH=C:\VulkanSDK.4.309.0\Bin`. A debug build of an
+  `set VK_LAYER_PATH=C:\VulkanSDK\1.4.309.0\Bin`. A debug build of an
   application that enables validation layers is affected the same way. Crashes in
   the GPU tests print a symbolized stack trace (`tests/gpu/gpu_crash_trace.cpp`),
   and `INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION=1` runs them with core validation only.
