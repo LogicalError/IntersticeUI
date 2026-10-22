@@ -1,5 +1,6 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/gui_id.h>
+#include <gui_core/diagnostics/gui_logging.h>
 
 #include <gui_core/style/gui_style.h>
 
@@ -21,6 +22,8 @@
 // Undefine Windows macro that conflicts with our CreateWindow method
 #undef CreateWindow
 #endif
+
+static constexpr GUI::Diagnostics::LogCategory kLogSDL = GUI::Diagnostics::MakeLogCategory("sdl");
 
 namespace GUI
 {
@@ -49,7 +52,7 @@ namespace GUI
         {
             if (!SDL_Init(SDL_INIT_VIDEO))
             {
-                // Can't do much here; mark uninitialized.
+                LOG_ERROR(kLogSDL, "SDL_Init failed: {}", SDL_GetError());
                 m_sdlInitialized = false;
                 return;
             }
@@ -162,6 +165,8 @@ namespace GUI
             800, 600,
             SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN
         );
+        if (bootstrapWindow == nullptr)
+            LOG_ERROR(kLogSDL, "SDL_CreateWindow failed: {}", SDL_GetError());
 
         return reinterpret_cast<OSWindowHandle>(bootstrapWindow);
     }
