@@ -1344,7 +1344,6 @@ namespace interstice
         AllocationHooks m_allocationHooks;
         std::unique_ptr<GraphicsContext> m_graphicsBackend;
         MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
-        ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
         std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot
         std::string m_themePath     { "themes/dark.css" };
         std::vector<std::string> m_styleFiles { "styles.css" };

@@ -21,13 +21,13 @@ namespace interstice
 
         void TearDown() override
         {
-            stateManager.EndFrame(ID::Invalid(), MouseButtons::None, idManager);
+            stateManager.EndFrame({}, idManager);
             idManager.EndFrame();
         }
 
         void AdvanceFrame()
         {
-            stateManager.EndFrame(ID::Invalid(), MouseButtons::None, idManager);
+            stateManager.EndFrame({}, idManager);
             EXPECT_TRUE(stateManager.BeginFrame());
             idManager.EndFrame();
             EXPECT_TRUE(idManager.BeginFrame());

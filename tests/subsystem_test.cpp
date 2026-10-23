@@ -620,7 +620,7 @@ namespace interstice
             ASSERT_TRUE(sm.BeginFrame());
             ASSERT_TRUE(idm.BeginFrame());
             sm.Construction().PushDisabled();   // leak — no matching Pop
-            sm.EndFrame(ID::Invalid(), MouseButtons::None, idm);
+            sm.EndFrame({}, idm);
         }, ".*");
     }
 #endif

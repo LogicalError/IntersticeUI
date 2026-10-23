@@ -67,8 +67,53 @@ namespace interstice
         return true;
     }
 
-    void GUIStateManager::EndFrame(ID overID, MouseButtons mouseButtons, IDManager& idManager, ID rawOverID)
+    FrameHover GUIStateManager::EndFrame(const FrameInput& input, IDManager& idManager)
     {
+        FrameHover hover;
+
+        // A modal window blocks interaction with all others and becomes the active window.
+        const ID modalWindowID = input.modalWindowID;
+        m_interaction.SetActiveWindowID(modalWindowID != ID::Invalid() ? modalWindowID : input.activeWindowID);
+
+        // The pointer goes to the window under it, except while an interaction that
+        // started in another window is still going.
+        if (modalWindowID != ID::Invalid())
+        {
+            m_interactionWindowID = modalWindowID;
+            hover.hoverWindowID   = modalWindowID;
+        }
+        else if (m_interaction.GetActiveID() == ID::Invalid() || m_interactionWindowID == ID::Invalid())
+        {
+            hover.hoverWindowID   = input.windowUnderMouse;
+            m_interactionWindowID = m_interaction.GetActiveID() != ID::Invalid() ? hover.hoverWindowID : ID::Invalid();
+        }
+        else
+            hover.hoverWindowID = m_interactionWindowID;
+
+        if (input.hitTest && hover.hoverWindowID != ID::Invalid())
+            hover.overID = input.hitTest(hover.hoverWindowID, input.mousePos);
+
+        // No hover while the application doesn't have OS focus.
+        if (input.activeWindowID == ID::Invalid())
+            hover.hoverID = ID::Invalid();
+        else if (m_interaction.GetCaptureID() != ID::Invalid())
+            hover.hoverID = m_interaction.GetCaptureID();
+        else if (m_interaction.GetActiveID() == ID::Invalid() || m_drag.IsDragging())
+            hover.hoverID = hover.overID;
+        else
+            hover.hoverID = m_interaction.GetActiveID();
+
+        // During a drag only valid drop targets show hover; text drags have their own.
+        ID textDragTarget = ID::Invalid();
+        if (m_drag.IsDragging())
+            hover.hoverID = m_drag.GetValidatedTargetID();
+        else if (input.textDragTarget && input.textDragTarget(hover.hoverWindowID, input.mousePos, textDragTarget))
+            hover.hoverID = textDragTarget;
+
+        const ID           overID       = hover.hoverID;
+        const ID           rawOverID    = hover.overID;
+        const MouseButtons mouseButtons = input.mouseButtons;
+
         // Drag events last one frame.
         m_drag.ClearEvents();
 
@@ -94,5 +139,6 @@ namespace interstice
         m_elementDataStore.EndFrame();
 
         m_scrolling.EndFrame(idManager);
+        return hover;
     }
 }

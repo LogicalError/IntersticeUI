@@ -189,21 +189,23 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     m_frame.RunStage(interstice::FrameStage::PreInput, ctx);
 
-    // -- Hit-test under the current mouse position so dispatch can route
-    // MouseDown/MouseMove to the correct element.
-    interstice::ID overID = interstice::ID::Invalid();
-    if (m_rootWindowID != interstice::ID::Invalid())
+    // -- EndFrame hit-tests the one root window and commits the hover/active
+    // targets for Process(), which runs after it.
+    inputManager->UpdatePreHover(guiStateManager);
+    interstice::FrameInput frameInput
     {
-        interstice::ElementRef windowRef = windowRegistry.GetWindowRef(m_rootWindowID);
-        if (windowRef != interstice::ElementRef::Invalid())
-            overID = elementStorage.GetElementIDAt(windowRef, m_mousePos);
-    }
-
-    // -- EndFrame commits the hover/active targets for Process(), which runs after it.
-    interstice::ID hoverID = (guiStateManager.Interaction().GetCaptureID() != interstice::ID::Invalid())
-        ? guiStateManager.Interaction().GetCaptureID()
-        : overID;
-    guiStateManager.EndFrame(hoverID, m_buttonsHeld, idManager, overID);
+        .activeWindowID   = m_rootWindowID,
+        .windowUnderMouse = m_rootWindowID,
+        .mousePos         = m_mousePos,
+        .mouseButtons     = m_buttonsHeld,
+        .hitTest = [this](interstice::ID window, interstice::int2 pos)
+        {
+            const interstice::ElementRef windowRef = windowRegistry.GetWindowRef(window);
+            return windowRef != interstice::ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, pos)
+                                                                  : interstice::ID::Invalid();
+        },
+    };
+    const interstice::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
 
     InvalidateCachedScopesForInput(overID);
 

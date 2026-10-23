@@ -26,9 +26,35 @@
 
 #include <gui_controls/gui_label_binding.h>
 
+#include <functional>
+
 namespace interstice
 {
     class IDManager;
+
+    // What the window layer reports at the end of a frame's construction;
+    // GUIStateManager::EndFrame turns it into the hovered element and the active window.
+    struct FrameInput
+    {
+        ID           activeWindowID   = ID::Invalid();   // the OS's active window; Invalid while the app has no focus
+        ID           modalWindowID    = ID::Invalid();   // top modal window, which blocks the others
+        ID           windowUnderMouse = ID::Invalid();
+        int2         mousePos {};                        // screen pixels
+        MouseButtons mouseButtons     = MouseButtons::None;
+
+        // The element at pos in window, or Invalid.
+        std::function<ID(ID window, int2 pos)> hitTest;
+        // While text is dragged: the text drop target at pos in window. Optional.
+        std::function<bool(ID window, int2 pos, ID& target)> textDragTarget;
+    };
+
+    // Where the frame's input goes, from GUIStateManager::EndFrame.
+    struct FrameHover
+    {
+        ID overID        = ID::Invalid();   // the element under the cursor
+        ID hoverID       = ID::Invalid();   // what counts as hovered: the capture, the active element, a drop target
+        ID hoverWindowID = ID::Invalid();   // the window the pointer input belongs to
+    };
 
     class GUIStateManager
     {
@@ -45,6 +71,10 @@ namespace interstice
 
         // Transient state changed this frame.
         bool m_modified = false;
+
+        // The window an interaction (a press, a drag) started in; it keeps the
+        // pointer until the interaction ends, wherever the cursor goes.
+        ID m_interactionWindowID = ID::Invalid();
 
     public:
         // -----------------------------------------------------------------
@@ -85,6 +115,8 @@ namespace interstice
         ElementState GetCurrentState(ID id) const;
 
         bool BeginFrame();
-        void EndFrame(ID overID, MouseButtons mouseButtons, IDManager& idManager, ID rawOverID = ID::Invalid());
+        // Resolves the active window, the window and element under the pointer and
+        // the hovered element from `input`, then ends the frame's state.
+        FrameHover EndFrame(const FrameInput& input, IDManager& idManager);
     };
 }

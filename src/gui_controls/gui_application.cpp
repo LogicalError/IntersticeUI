@@ -1119,76 +1119,8 @@ namespace interstice
             
             m_frame.RunStage(FrameStage::PreInput, ctx);
 
-            // A modal window blocks interaction with all others and becomes the active window.
-            interstice::ID modalWindowID = windowManager->GetTopModalWindow();
-
-            interstice::ID osActiveWindowID = windowManager->GetActiveWindow();
-            interstice::ID effectiveActiveWindowID = (modalWindowID != ID::Invalid()) ? modalWindowID : osActiveWindowID;
-            guiStateManager.Interaction().SetActiveWindowID(effectiveActiveWindowID);
-
-            interstice::ID hoverWindowID = ID::Invalid();
-
-            if (modalWindowID != ID::Invalid())
-            {
-                m_interactionWindowID = modalWindowID;
-                hoverWindowID = modalWindowID;
-            } else
-            {
-                if (guiStateManager.Interaction().GetActiveID() == interstice::ID::Invalid() ||
-                    m_interactionWindowID == interstice::ID::Invalid())
-                {
-                    hoverWindowID = windowManager->GetWindowUnderMouse();
-                    if (guiStateManager.Interaction().GetActiveID() != interstice::ID::Invalid())
-                    {
-                        m_interactionWindowID = hoverWindowID;
-                    } else
-                    {
-                        m_interactionWindowID = interstice::ID::Invalid();
-                    }
-                } else
-                {
-                    hoverWindowID = m_interactionWindowID;
-                }
-            }
-
-            interstice::int2 mousePosition = windowManager->GetScreenMousePos();
-
-            ElementRef windowRef = windowRegistry.GetWindowRef(hoverWindowID);
-            interstice::ID overID = windowRef != ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, mousePosition)
-                : interstice::ID::Invalid();
-
             if (inputManager)
                 inputManager->UpdatePreHover(guiStateManager);
-
-            interstice::ID hoverID;
-            // No hover while the application doesn't have OS focus.
-            if (osActiveWindowID == interstice::ID::Invalid())
-            {
-                hoverID = interstice::ID::Invalid();
-            } else if (guiStateManager.Interaction().GetCaptureID() != interstice::ID::Invalid())
-            {
-                hoverID = guiStateManager.Interaction().GetCaptureID();
-            } else if (guiStateManager.Interaction().GetActiveID() == interstice::ID::Invalid() || guiStateManager.Drag().IsDragging())
-            {
-                hoverID = overID;
-            } else
-            {
-                hoverID = guiStateManager.Interaction().GetActiveID();
-            }
-            interstice::MouseButtons mouseButtons = windowManager->GetMouseButtons();
-
-            // During drag/text-drag, only show hover on valid drop targets
-            if (guiStateManager.Drag().IsDragging())
-            {
-                hoverID = guiStateManager.Drag().GetValidatedTargetID();
-            } else if (textSystem)
-            {
-                ID textDragHoverTarget;
-                if (textSystem->TryGetTextDragHoverTarget(hoverWindowID, mousePosition, textDragHoverTarget))
-                {
-                    hoverID = textDragHoverTarget;
-                }
-            }
 
             // Captured before EndFrame to detect state changes.
             const ID prevHoverID   = guiStateManager.Interaction().GetHoveredID();
@@ -1197,7 +1129,28 @@ namespace interstice
             std::vector<ID> prevHoverProp   = guiStateManager.Interaction().GetPropagatedHoverIDs();
             std::vector<ID> prevFocusedProp = guiStateManager.Interaction().GetPropagatedFocusedIDs();
 
-            guiStateManager.EndFrame(hoverID, mouseButtons, idManager, overID);
+            const interstice::int2 mousePosition = windowManager->GetScreenMousePos();
+            FrameInput frameInput
+            {
+                .activeWindowID   = windowManager->GetActiveWindow(),
+                .modalWindowID    = windowManager->GetTopModalWindow(),
+                .windowUnderMouse = windowManager->GetWindowUnderMouse(),
+                .mousePos         = mousePosition,
+                .mouseButtons     = windowManager->GetMouseButtons(),
+                .hitTest = [this](ID window, int2 pos)
+                {
+                    const ElementRef windowRef = windowRegistry.GetWindowRef(window);
+                    return windowRef != ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, pos) : ID::Invalid();
+                },
+            };
+            if (textSystem)
+                frameInput.textDragTarget = [this](ID window, int2 pos, ID& target)
+                { return textSystem->TryGetTextDragHoverTarget(window, pos, target); };
+
+            const FrameHover frameHover   = guiStateManager.EndFrame(frameInput, idManager);
+            const interstice::ID overID        = frameHover.overID;
+            const interstice::ID hoverID       = frameHover.hoverID;
+            const interstice::ID hoverWindowID = frameHover.hoverWindowID;
 
             // Start transitions for state changes. Hover/Focused diff the leaf plus its
             // PropagatesDescendantState ancestors, so moving within such an ancestor doesn't retrigger it.
@@ -1352,7 +1305,7 @@ namespace interstice
             // Keep the IME candidate window next to the caret being typed at.
             if (textSystem)
                 if (const auto caret = textSystem->GetCaretScreenRect())
-                    windowManager->SetTextInputArea(osActiveWindowID, *caret);
+                    windowManager->SetTextInputArea(frameInput.activeWindowID, *caret);
 
             m_frame.RunStage(FrameStage::PostInput, ctx);
 
