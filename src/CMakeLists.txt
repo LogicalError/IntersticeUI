@@ -319,6 +319,8 @@ target_link_libraries(gui_controls PUBLIC gui_core)
 
 interstice_apply_compile_options(gui_core)
 interstice_apply_compile_options(gui_controls)
+interstice_precompile_headers(gui_core <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector>)
+interstice_precompile_headers(gui_controls <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector> <gui_controls/gui_application.h>)
 set_target_properties(gui_core gui_controls PROPERTIES FOLDER "Core")
 
 if(INTERSTICE_BUILD_DEMO)
@@ -356,6 +358,7 @@ if(INTERSTICE_BUILD_DEMO)
   target_link_libraries(demo PUBLIC gui_controls)
 
   interstice_apply_compile_options(demo)
+  interstice_precompile_headers(demo <gui_controls/gui_application.h>)
 
   set_target_properties(demo PROPERTIES FOLDER "Core")
 

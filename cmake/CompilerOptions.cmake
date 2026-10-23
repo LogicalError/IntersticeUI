@@ -1,13 +1,27 @@
 # Compiler/linker options for first-party targets (gui_lib, gui_controls, engine).
 # Third-party targets keep whatever flags their own build systems select.
 #
-# MSVC Release-mode choices aim for debuggable/profileable LTO builds:
-#   /GL + /LTCG   — whole-program optimisation and link-time code generation
-#   /Zi           — emit a PDB for Release (otherwise LTO strips everything)
+# MSVC Release-mode choices aim for debuggable/profileable builds:
+#   /GL + /LTCG   — whole-program optimisation, only with INTERSTICE_LTCG: it makes
+#                   every link redo code generation, and /GL objects in the
+#                   installed libraries force /LTCG and the exact compiler version
+#                   on consumers
+#   /Zi           — emit a PDB for Release
 #   /Zo           — enhanced debug info for optimised code (locals/inlined frames)
 #   /d2Zi+        — richer optimised-code debug info (undocumented; widely used)
 #   /DEBUG        — linker: keep emitting the PDB
 #   /OPT:REF,ICF  — linker: still strip unused and fold duplicate COMDATs despite /DEBUG
+
+option(INTERSTICE_LTCG "Whole-program optimisation (/GL + /LTCG) in Release" OFF)
+option(INTERSTICE_PRECOMPILED_HEADERS "Precompile the headers most sources include" ON)
+
+# Precompiles headers most of the target's sources include. Turn the option off
+# to check that every file includes what it uses.
+function(interstice_precompile_headers target)
+  if(INTERSTICE_PRECOMPILED_HEADERS)
+    target_precompile_headers(${target} PRIVATE ${ARGN})
+  endif()
+endfunction()
 
 function(interstice_apply_compile_options target)
   if(MSVC)
@@ -39,7 +53,7 @@ function(interstice_apply_compile_options target)
       $<$<CONFIG:Debug>:/Ob0>
       $<$<CONFIG:Debug>:/RTC1>
 
-      $<$<CONFIG:Release>:/GL>
+      $<$<AND:$<CONFIG:Release>,$<BOOL:${INTERSTICE_LTCG}>>:/GL>
       $<$<CONFIG:Release>:/Zi>
       $<$<CONFIG:Release>:/Zo>
       $<$<CONFIG:Release>:/d2Zi+>
@@ -59,7 +73,7 @@ function(interstice_apply_compile_options target)
       # binary (scroll keys mismatch -> tables reset). Clean links stay consistent.
       $<$<CONFIG:Debug>:/INCREMENTAL:NO>
 
-      $<$<CONFIG:Release>:/LTCG>
+      $<$<AND:$<CONFIG:Release>,$<BOOL:${INTERSTICE_LTCG}>>:/LTCG>
       $<$<CONFIG:Release>:/DEBUG>
       $<$<CONFIG:Release>:/OPT:REF>
       $<$<CONFIG:Release>:/OPT:ICF>

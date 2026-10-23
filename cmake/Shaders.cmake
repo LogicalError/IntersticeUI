@@ -27,15 +27,19 @@ set(GLSL_INCLUDE_FILES
   "${PROJECT_SOURCE_DIR}/workdirectory/shaders/quad_common.glsl"
 )
 
+# The includes as one argument for CompileShader.cmake.
+string(REPLACE ";" "|" _interstice_shader_includes "${GLSL_INCLUDE_FILES}")
 set(SPIRV_BINARY_FILES "")
 foreach(GLSL ${GLSL_SOURCE_FILES})
   get_filename_component(FILE_NAME ${GLSL} NAME)
   set(SPIRV "${PROJECT_SOURCE_DIR}/workdirectory/shaders_compiled/${FILE_NAME}.spv")
   add_custom_command(
     OUTPUT ${SPIRV}
-    COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
+    COMMAND ${CMAKE_COMMAND} -DVALIDATOR=${GLSL_VALIDATOR} -DSOURCE=${GLSL} -DOUTPUT=${SPIRV}
+            "-DINCLUDES=${_interstice_shader_includes}" -P ${CMAKE_CURRENT_LIST_DIR}/CompileShader.cmake
     DEPENDS ${GLSL} ${GLSL_INCLUDE_FILES}
-    COMMENT "  > > >  BUILDING SHADER > > >  ${GLSL}")
+    COMMENT "  > > >  BUILDING SHADER > > >  ${GLSL}"
+    VERBATIM)
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach()
 
