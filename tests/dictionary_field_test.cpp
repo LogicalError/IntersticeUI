@@ -302,9 +302,14 @@ namespace interstice
             float value = 1.0f;
             ID rowID = app.idManager.CreateStaticID();
 
+            // Room for both textboxes' padding + border and a little more, so they shrink to their chrome.
+            const LayoutStyle* textbox = app.styleManager.GetLayoutStyle(app.theme.controls->textbox.layoutStyleIndex);
+            ASSERT_NE(textbox, nullptr);
+            const int32_t rowWidth = 2 * (textbox->padding.Horizontal() + textbox->borderWidths.Horizontal()) + 8;
+
             app.Frame([&] {
                 app.BeginRootWindow({ 800, 600 });
-                if (app.BeginHorizontal(rowID, LayoutOverride::FixedWidth(28).NoGrow()))
+                if (app.BeginHorizontal(rowID, LayoutOverride::FixedWidth(rowWidth).NoGrow()))
                 {
                     app.Field(key,   LayoutOverride{}.FlexGrow(1).FlexShrink(1));
                     app.Text (":",   LayoutOverride{}.NoGrow());

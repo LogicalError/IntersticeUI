@@ -14,15 +14,15 @@
     --border-thin:       1px;
     --border-toolbar:    1px;
     --radius-sm:         4px;
-    --radius-md:         6px;
-    --radius-lg:         8px;
+    --radius-md:         4px;  /* controls */
+    --radius-lg:         6px;  /* panels, nodes */
     --radius-toolbar:    0px;
     --radius-md-first:   4px 0px 0px 4px;
     --radius-md-mid:     0px 0px 0px 0px;
     --radius-md-last:    0px 4px 4px 0px;
     --radius-node-top:   5px 5px 0px 0px; /* --radius-md minus --border: follows the node border's inner curve */
-    --font-size:         13px;
-    --font-size-sm:      11px;
+    --font-size:         12px;
+    --font-size-sm:      11px; /* captions, column headers */
     --font-size-tooltip: 12px;
 }
 
@@ -37,7 +37,7 @@
 
 * {
     font-family: "Inter";
-    line-height: 1.3;
+    line-height: 1.3333; /* 16px at the 12px UI size */
 }
 
 /* ---- staticTextStyle ------------------------------------------------------ */
@@ -216,7 +216,7 @@
     background-color: var(--bg-input);
     color: var(--text-1);
     margin: 1px;
-    padding: 2px 4px 2px 4px;
+    padding: 4px 8px 4px 8px;
     overflow: auto;
     cursor: text;
     text-overflow: clip;
@@ -246,7 +246,7 @@
     border-color: var(--line-node);
     background-color: var(--bg-input);
     margin: 1px;
-    padding: 2px 4px 2px 4px;
+    padding: 4px 8px 4px 8px;
     overflow: hidden;
     cursor: text;
     display: flex;
@@ -303,7 +303,7 @@
     background-color: var(--bg-control);
     color: var(--text-2);
     margin: 1px;
-    padding: 2px 4px 2px 4px;
+    padding: 4px 8px 4px 8px;
     overflow: auto;
     vertical-align: baseline;
     text-align: center;
@@ -496,7 +496,7 @@
     background-color: var(--bg-control);
     color: var(--text-2);
     margin: 1px;
-    padding: 2px 4px 2px 4px;
+    padding: 4px 8px 4px 8px;
     overflow: auto;
     text-align: start;
     vertical-align: baseline;
@@ -642,14 +642,14 @@
 
 .table-header {
     margin: 0px;
-    padding: 2px 8px;
+    padding: 6px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     color: var(--text-3);
-    font-size: var(--font-size);
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: 400;
     background-color: var(--bg-header);
     -interstice-icon-side: right;
     -interstice-icon-text-gap: 4px;
@@ -679,7 +679,7 @@
 
 .table-cell {
     margin: 0px;
-    padding: 2px 8px;
+    padding: 3px 8px 4px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
@@ -701,7 +701,7 @@
    (or per cell via Cell(text, style)); the row height tracks it automatically. */
 .table-cell-compact {
     margin: 0px;
-    padding: 1px 8px;
+    padding: 2px 8px 3px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
@@ -767,12 +767,12 @@
    guide-line custom-draws render in border-box space and are unaffected. */
 .tree-table-cell {
     margin: 0px;
-    /* Vertical padding shrunk 1px each (4 → 3) to absorb the 1px
+    /* Vertical padding 1px less each than .table-cell, to absorb the 1px
        transparent border on the inner .tree-table-text element. Keeps
        the tree-cell's outer height equal to .table-cell's, so plain
        and tree rows mix in the same VirtualTable without spacer drift
        — see the matching note on .tree-table-text. */
-    padding: 1px 8px;
+    padding: 2px 8px 3px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
@@ -793,8 +793,8 @@
 .tree-table-cell-row-mode {
     margin: 0px;
     /* Same padding as .tree-table-cell so row-mode + cell-mode tree
-       rows stay the same height — see that style for why it's 3 not 4. */
-    padding: 0px 8px;
+       rows stay the same height; see that style for why it's 1px less. */
+    padding: 2px 8px 3px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
@@ -826,7 +826,7 @@
 /* width = the expander column (arrow on branches, an empty spacer on leaves,
    so text lines up on both). */
 .tree-table-arrow {
-    width: 20px;
+    width: 16px;
     margin: 0px;
     padding: 0px;
     border-width: 0px;
@@ -863,7 +863,7 @@
 }
 
 .tree-table-icon {
-    -interstice-icon-size: 16px;
+    -interstice-icon-size: 14px;
     margin: 0px;
     padding: 2px 4px 0px 0px;
     border-width: 0px;
@@ -934,7 +934,7 @@
     border-color: var(--line-strong);
     background-color: var(--bg-control);
     color: var(--text-2);
-    padding: 2px 4px 2px 4px;
+    padding: 4px 8px 4px 8px;
     margin: 1px;
     overflow: auto;
     vertical-align: baseline;
@@ -1274,7 +1274,7 @@
 /* ---- node (single node container in the node-view) ----------------------- */
 .node {
     border-width: var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border-color: var(--line-strong);
     background-color: var(--bg-panel);
     padding: 0px 0px 4px 0px;
@@ -2206,12 +2206,12 @@
    natural widths instead of being squashed. */
 .tab-bar {
     border-width: 0px;
-    padding: 0px;
+    padding: 5px 4px 5px 5px;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 0px;
+    gap: 2px;
     overflow: visible;
     background-color: var(--bg-header);
     border-color: transparent;
@@ -2222,21 +2222,23 @@
 
 /* ---- tabStyle: individual tab --------------------------------------------- */
 .tab {
-    border-radius: 3px 3px 0px 0px;
-    border-width: 2px 0px 0px 0px; /* the selected tab's accent line, on top */
-    padding: 3px 8px 2px 8px;
-    margin: 0px 2px 0px 0px;
+    border-radius: var(--radius-md);
+    border-width: 0px; /* the selected tab's accent line, on top */
+    padding: 4px 10px 4px 10px;
+    margin: 0px;
     display: flex;
     flex-direction: row;
     vertical-align: middle;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     background-color: transparent;
     border-color: transparent;
     color: var(--text-2);
     font-size: var(--font-size);
     flex-grow: 0;
     flex-shrink: 0;
+    -interstice-icon-size: 14px;
+    -interstice-icon-text-gap: 6px;
 }
 .tab:hover  { background-color: var(--bg-header); color: var(--text-1); }
 .tab:active { background-color: var(--bg-active); color: var(--text-1); }
@@ -2374,6 +2376,7 @@
     overflow: hidden;
     flex-shrink: 1;
     flex-grow: 1;
+    border-radius: var(--radius-lg);
 }
 
 /* Dock-content fills the leaf's remaining vertical space (after the tab bar)
@@ -2558,7 +2561,7 @@
 .scrollbar-vertical {
     border-width: 0px;
     width: 12px;
-    padding: 0px;
+    padding: 0px 4px;
     background-color: transparent;
     border-color: transparent;
     cursor: default;
@@ -2567,7 +2570,7 @@
 .scrollbar-horizontal {
     border-width: 0px;
     height: 12px;
-    padding: 0px;
+    padding: 4px 0px;
     background-color: transparent;
     border-color: transparent;
     cursor: default;
@@ -2577,7 +2580,7 @@
 .scrollbar-vertical-thumb,
 .scrollbar-horizontal-thumb {
     border-width: 0px;
-    border-radius: 4px;
+    border-radius: 2px;
     padding: 0px;
     background-color: var(--line-strong);
     border-color: transparent;

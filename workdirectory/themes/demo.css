@@ -309,7 +309,7 @@
    .table-cell so the row height stays in step with the tree column. */
 .hierarchy-viz-cell {
     margin: 0px;
-    padding: 2px 0px;
+    padding: 3px 0px 4px 0px;
     overflow: hidden;
     /* Transparent: the eye column's darkening comes from the full-height
        .hierarchy-viz-bg strip behind these cells, so it's uniform across the
