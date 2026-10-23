@@ -28,7 +28,21 @@ namespace interstice
 {
     namespace
     {
-        constexpr int kPaletteN = 8;
+        // Flame-chart fills, by scope: the palette's --flame-* colors.
+        constexpr int kPaletteN = 5;
+        constexpr const char* kFlameColors[kPaletteN] = {
+            "--flame-frame", "--flame-build", "--flame-render", "--flame-frame-stage", "--flame-window" };
+
+        int FlameColorIndex(std::string_view name, uint64_t key)
+        {
+            auto has = [name](std::string_view part) { return name.find(part) != std::string_view::npos; };
+            if (name == "Frame")                                                    return 0;
+            if (has("Build") || has("Layout"))                                      return 1;
+            if (has("Window"))                                                      return 4;
+            if (has("Render") || has("Record"))                                     return 2;
+            if (has("OnGUI") || has("EndFrame") || has("BeginFrame"))               return 3;
+            return 1 + int(key % (kPaletteN - 1));
+        }
 
         // Flat tree row (TreeUtils::TreeRowLike). Numbers are pre-formatted so the
         // cell lambdas hand VirtualTable stable storage.
@@ -113,7 +127,8 @@ namespace interstice
     static bool                          frameGraphStylesInit = false;
     static StyleRef                      frameGraphBgStyle{};         // container background
     static VisualColorStyleIndex         frameGraphBarUnderStyle{};   // build <= budget (green)
-    static VisualColorStyleIndex         frameGraphBarOverStyle{};    // build  > budget (red)
+    static VisualColorStyleIndex         frameGraphBarOverStyle{};    // build  > budget
+    static VisualColorStyleIndex         frameGraphBudgetStyle{};     // the 60fps budget line
     static constexpr float               kFrameBudgetMs   = 16.67f;
     static constexpr int                 kFrameGraphHeight = 60;
 
@@ -232,10 +247,11 @@ namespace interstice
                 bg.padding = interstice::BoxEdges(0);   // inner height == kFrameGraphHeight
                 bg.margin  = interstice::BoxEdges(2,0,4,0);
                 for (int i = 0; i < Style::kStateCount; ++i)
-                    bg.states[i].backgroundColor = ColorStyle::Create(theme.GetColor("--bg-view", color4f{ 0.12f, 0.12f, 0.13f, 1.0f }));
+                    bg.states[i].backgroundColor = ColorStyle::Create(theme.GetColor("--bg-input", color4f{ 0.12f, 0.12f, 0.13f, 1.0f }));
                 frameGraphBgStyle       = styleManager.Register(bg);
-                frameGraphBarUnderStyle = styleManager.RegisterColorStyle(ColorStyle::Create(color4f{ 0.35f, 0.70f, 0.40f, 1.0f }));
-                frameGraphBarOverStyle  = styleManager.RegisterColorStyle(ColorStyle::Create(color4f{ 0.85f, 0.35f, 0.30f, 1.0f }));
+                frameGraphBarUnderStyle = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--frame-bar")));
+                frameGraphBarOverStyle  = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--frame-bar-over")));
+                frameGraphBudgetStyle   = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--budget-line")));
                 frameGraphStylesInit = true;
             }
 
@@ -322,7 +338,7 @@ namespace interstice
                     {
                         const int y = yOf(g.ms);
                         ctx.RenderLine({ 0, y }, { W, y },
-                                       interstice::LineStyle{ .colorStyleIndex = g.budget ? theme.lineYellowStyle : theme.lineGrayStyle,
+                                       interstice::LineStyle{ .colorStyleIndex = g.budget ? frameGraphBudgetStyle : theme.lineGrayStyle,
                                                        .lineWidth = styleManager.Px(1.0f), .dashSize = styleManager.Px(4.0f) });
                         const int ly = (y - g.h >= 0) ? (y - g.h) : (y + styleManager.Px(1));
                         ctx.RenderText(g.tid, IntRect{ .position = { styleManager.Px(3), ly }, .size = { g.w + styleManager.Px(2), g.h } });
@@ -335,12 +351,6 @@ namespace interstice
         {
             if (!flameStylesInit)
             {
-                const color4f hues[kPaletteN] = {
-                    { 0.27f, 0.51f, 0.71f, 1.0f }, { 0.40f, 0.62f, 0.42f, 1.0f },
-                    { 0.80f, 0.62f, 0.35f, 1.0f }, { 0.65f, 0.42f, 0.62f, 1.0f },
-                    { 0.35f, 0.66f, 0.66f, 1.0f }, { 0.80f, 0.49f, 0.42f, 1.0f },
-                    { 0.50f, 0.55f, 0.72f, 1.0f }, { 0.62f, 0.62f, 0.40f, 1.0f },
-                };
                 auto makeBox = [&](color4f bg) -> StyleRef {
                     Style st;
                     st.SetOverflow(interstice::Overflow::Hidden);
@@ -350,9 +360,9 @@ namespace interstice
                         st.states[i].backgroundColor = ColorStyle::Create(bg);
                     return styleManager.Register(st);
                 };
-                for (int k = 0; k < kPaletteN; ++k) barStyles[k] = makeBox(hues[k]);
-                waitBarStyle = makeBox(color4f{ 0.42f, 0.42f, 0.46f, 1.0f });
-                selBarStyle  = makeBox(color4f{ 0.95f, 0.75f, 0.25f, 1.0f });
+                for (int k = 0; k < kPaletteN; ++k) barStyles[k] = makeBox(theme.GetColor(kFlameColors[k]));
+                waitBarStyle = makeBox(theme.GetColor("--bg-pressed"));
+                selBarStyle  = makeBox(theme.GetColor("--accent"));
 
                 // Container that clips the icicle (overflow:hidden) so shrinking
                 // the area clips the bottom rows rather than scaling them.
@@ -384,7 +394,7 @@ namespace interstice
                 const float x = parent.cursor;
                 parent.cursor += w;
                 barsByDepth[size_t(s.depth)].push_back(
-                    { x, w, s.depth, int(s.key % kPaletteN), s.isWait, s.key, s.name, s.file, s.line });
+                    { x, w, s.depth, FlameColorIndex(s.name, s.key), s.isWait, s.key, s.name, s.file, s.line });
                 stack.push_back({ w, s.totalMs, x });
             }
 

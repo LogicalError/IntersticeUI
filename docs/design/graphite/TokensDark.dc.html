@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Theme tokens and metrics</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0C0F}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1000px; padding: 48px; display: flex; flex-direction: column; gap: 32px; background: #0B0C0F; color: #AEB4C0; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="display: flex; align-items: flex-end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; color: #E8EAEF">Graphite — dark theme</h1>
+<p style="margin: 0; font-size: 13px; color: #AEB4C0">Neutral cool greys, one accent, semantic colors reserved for state and data. 4 px spacing grid.</p>
+</div>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; color: #8A92A2">themes/dark.css</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 24px">
+<sc-for list="{{groups}}" as="grp" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A92A2">{{grp.t}}</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{grp.s}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; border: 1px solid #23272F; border-radius: 6px; overflow: hidden; background: #121418">
+<span style="height: 44px; background: {{s.c}}; border-bottom: 1px solid #23272F"></span>
+<span style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px">
+<span style="color: #E8EAEF; font-weight: 500">{{s.n}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #AEB4C0">{{s.c}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #8A92A2">{{s.v}}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A92A2">Spacing scale</h2>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid #23272F; border-radius: 6px; background: #121418">
+<sc-for list="{{space}}" as="sp" hint-placeholder-count="8">
+<div style="display: grid; grid-template-columns: 72px 48px minmax(0, 1fr); align-items: center; gap: 12px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #E8EAEF">{{sp.n}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">{{sp.v}}px</span>
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: {{sp.v}}px; height: 12px; border-radius: 2px; background: #6B9BFF"></span><span style="color: #8A92A2">{{sp.u}}</span></span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A92A2">Metrics</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #23272F; border-radius: 6px; background: #121418; overflow: hidden">
+<sc-for list="{{metrics}}" as="m" hint-placeholder-count="16">
+<div style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #1C1F25; border-right: 1px solid #1C1F25">
+<span>{{m.n}}</span>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #E8EAEF">{{m.v}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A92A2">Type</h2>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid #23272F; border-radius: 6px; background: #121418">
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="width: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">Title 16 / 600</span><span style="font-size: 16px; font-weight: 600; color: #E8EAEF">Shortcuts</span></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="width: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">UI 12 / 400–500</span><span style="font-size: 12px; color: #E8EAEF">Hierarchy · Inspector · Frame Selected</span></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="width: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">Caption 11 / 500</span><span style="font-size: 11px; font-weight: 500; color: #8A92A2">Total ms · Context · Generator</span></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="width: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">Mono 11.5 / 400</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #E8EAEF">9.273 · 0x00001F · -43</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const groups = [
+      { t: 'Surfaces', s: [
+        { n: 'App / gutter', c: '#0B0C0F', v: '--bg-app' },
+        { n: 'Input / well', c: '#0D0F12', v: '--bg-input' },
+        { n: 'Panel', c: '#121418', v: '--bg-panel' },
+        { n: 'Panel header', c: '#16191E', v: '--bg-header' },
+        { n: 'Raised / node', c: '#181B20', v: '--bg-raised' },
+        { n: 'Control', c: '#1E2128', v: '--bg-control' },
+        { n: 'Active tab / hover', c: '#23272F', v: '--bg-active' },
+        { n: 'Pressed', c: '#2A2F39', v: '--bg-pressed' }
+      ] },
+      { t: 'Lines & text', s: [
+        { n: 'Divider', c: '#23272F', v: '--line-subtle' },
+        { n: 'Control border', c: '#2E333D', v: '--line-strong' },
+        { n: 'Text primary', c: '#E8EAEF', v: '--text-1' },
+        { n: 'Text secondary', c: '#AEB4C0', v: '--text-2' },
+        { n: 'Text muted', c: '#8A92A2', v: '--text-3 (≥4.5:1)' },
+        { n: 'Link', c: '#8FB3FF', v: '--text-link' }
+      ] },
+      { t: 'Accent & state', s: [
+        { n: 'Accent', c: '#6B9BFF', v: '--accent' },
+        { n: 'Accent soft', c: 'rgba(107,155,255,0.16)', v: '--accent-soft' },
+        { n: 'On accent', c: '#0B0C0F', v: '--on-accent' },
+        { n: 'Success', c: '#4FC48A', v: '--ok' },
+        { n: 'Warning', c: '#E5B454', v: '--warn' },
+        { n: 'Error', c: '#EF6A6A', v: '--error' },
+        { n: 'Info', c: '#6B9BFF', v: '--info' },
+        { n: 'Folder', c: '#D9A443', v: '--file-folder' }
+      ] },
+      { t: 'Data types & axes', s: [
+        { n: 'Float pin', c: '#34D1BF', v: '--pin-float' },
+        { n: 'Int pin', c: '#F59E4B', v: '--pin-int' },
+        { n: 'Bool pin', c: '#A98BFF', v: '--pin-bool' },
+        { n: 'Color pin', c: '#F472B6', v: '--pin-color' },
+        { n: 'Axis X', c: '#EF6A6A', v: '--axis-x' },
+        { n: 'Axis Y', c: '#4FC48A', v: '--axis-y' },
+        { n: 'Axis Z', c: '#6B9BFF', v: '--axis-z' }
+      ] }
+    ];
+    const space = [
+      ['space-0.5', 2, 'Segmented control inset'], ['space-1', 4, 'Panel gutter, row gap'], ['space-1.5', 6, 'Icon ↔ label'],
+      ['space-2', 8, 'Panel inner padding'], ['space-3', 12, 'Inspector side padding'], ['space-4', 16, 'Section padding'],
+      ['space-6', 24, 'Dialog padding'], ['space-8', 32, 'Page sections']
+    ].map(function (s) { return { n: s[0], v: s[1], u: s[2] }; });
+    const metrics = [
+      ['Title / menu bar', '36'], ['Status bar', '26'], ['Panel header', '34'], ['Tab', '24 · r4'],
+      ['Tree / table row', '22'], ['Log row', '24'], ['Inspector row', '26'], ['Control height', '24'],
+      ['Toolbar button', '24 × 24'], ['Panel radius', '6'], ['Control radius', '4'], ['Icon', '14 · stroke 2'],
+      ['Tree indent', '16'], ['Node header', '30'], ['Node pin', '10 (ring = unconnected)'], ['Focus ring', '1 + 3 soft']
+    ].map(function (m) { return { n: m[0], v: m[1] }; });
+    return { groups: groups, space: space, metrics: metrics };
+  }
+}
+</script>
+</body>
+</html>

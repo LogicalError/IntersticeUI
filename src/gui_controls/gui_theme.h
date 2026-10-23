@@ -148,7 +148,7 @@ namespace interstice
         StyleRef treeTableIconStyleRef {};
         StyleRef treeTableTextStyleRef {};
         StyleRef nodeViewStyleRef {};
-        StyleRef viewBackgroundStyleRef {}; // solid backdrop (--bg-view) for the View panel's toolbar dock
+        StyleRef viewBackgroundStyleRef {}; // solid backdrop (--bg-app) for the View panel's toolbar dock
         StyleRef nodeStyleRef {};       // single node container (vertical column with border + bg)
         StyleRef nodeHeaderStyleRef {}; // node title bar (distinct background, sits at top of node)
         StyleRef nodeRowStyleRef {};    // node property row (socket | body | socket)

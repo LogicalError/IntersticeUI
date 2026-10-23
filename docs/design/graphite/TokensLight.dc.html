@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Light theme tokens</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#E6E8EC}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1000px; padding: 48px; display: flex; flex-direction: column; gap: 32px; background: #E6E8EC; color: #464C57; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="display: flex; align-items: flex-end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; color: #1A1D23">Graphite — light theme</h1>
+<p style="margin: 0; font-size: 13px; color: #464C57">Same structure, metrics and token names as dark. Panels lift off a grey gutter; inputs and nodes are white. Accent darkened for 4.5:1 with white text.</p>
+</div>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; color: #5F6673">themes/light.css</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 24px">
+<sc-for list="{{groups}}" as="grp" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5F6673">{{grp.t}}</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{grp.s}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; border: 1px solid #DADDE3; border-radius: 6px; overflow: hidden; background: #FBFBFC">
+<span style="height: 44px; background: {{s.c}}; border-bottom: 1px solid #E3E6EB"></span>
+<span style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px">
+<span style="color: #1A1D23; font-weight: 500">{{s.n}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #464C57">{{s.c}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #5F6673">{{s.v}}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 24px">
+<sc-for list="{{groups2}}" as="grp" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5F6673">{{grp.t}}</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{grp.s}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; border: 1px solid #DADDE3; border-radius: 6px; overflow: hidden; background: #FBFBFC">
+<span style="height: 44px; background: {{s.c}}; border-bottom: 1px solid #E3E6EB"></span>
+<span style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px">
+<span style="color: #1A1D23; font-weight: 500">{{s.n}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #464C57">{{s.c}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #5F6673">{{s.v}}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid #DADDE3; border-radius: 6px; background: #FBFBFC">
+<span style="color: #1A1D23; font-weight: 600">Differences from dark</span>
+<span>Elevation by fill + 1px border; nodes and floating toolbars add a soft shadow (0 4 14 rgba(16,24,40,.10)).</span>
+<span>Selected segment = white chip with shadow, instead of a lighter fill.</span>
+<span>Text and icons on accent are white; accent-soft alpha drops to 12%.</span>
+<span>Flame chart uses pastel fills with dark text.</span>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const groups = [
+      { t: 'Surfaces', s: [
+        { n: 'App / gutter', c: '#E6E8EC', v: '--bg-app' },
+        { n: 'Input / well', c: '#FFFFFF', v: '--bg-input' },
+        { n: 'Canvas', c: '#F4F5F7', v: '--bg-canvas' },
+        { n: 'Panel', c: '#FBFBFC', v: '--bg-panel' },
+        { n: 'Panel header', c: '#F3F4F6', v: '--bg-header' },
+        { n: 'Raised / node', c: '#FFFFFF', v: '--bg-raised' },
+        { n: 'Segment well', c: '#EEF0F3', v: '--bg-well' },
+        { n: 'Active tab', c: '#E4E7EC', v: '--bg-active' }
+      ] },
+      { t: 'Lines & text', s: [
+        { n: 'Panel border', c: '#DADDE3', v: '--panel-border' },
+        { n: 'Divider', c: '#E3E6EB', v: '--line-subtle' },
+        { n: 'Input / node border', c: '#D5D9E0', v: '--line-node' },
+        { n: 'Strong / scrollbar', c: '#C9CED6', v: '--line-strong' },
+        { n: 'Text primary', c: '#1A1D23', v: '--text-1' },
+        { n: 'Text secondary', c: '#464C57', v: '--text-2' },
+        { n: 'Text muted', c: '#5F6673', v: '--text-3 (≥4.5:1)' },
+        { n: 'Link', c: '#2459C9', v: '--text-link' }
+      ] }
+    ];
+    const groups2 = [
+      { t: 'Accent & state', s: [
+        { n: 'Accent', c: '#2F6FEB', v: '--accent' },
+        { n: 'Accent soft', c: 'rgba(47,111,235,0.12)', v: '--accent-soft' },
+        { n: 'On accent', c: '#FFFFFF', v: '--on-accent' },
+        { n: 'Success', c: '#1E9E62', v: '--ok' },
+        { n: 'Warning', c: '#D99A2B', v: '--warn (text #9A6512)' },
+        { n: 'Error', c: '#D64545', v: '--error' },
+        { n: 'Info', c: '#2F6FEB', v: '--info' },
+        { n: 'Folder', c: '#E3AE4C', v: '--file-folder' }
+      ] },
+      { t: 'Data types & axes', s: [
+        { n: 'Float pin', c: '#0FA596', v: '--pin-float' },
+        { n: 'Int pin', c: '#D9771A', v: '--pin-int' },
+        { n: 'Bool pin', c: '#7C5CE0', v: '--pin-bool' },
+        { n: 'Color pin', c: '#D63F8C', v: '--pin-color' },
+        { n: 'Axis X', c: '#D64545', v: '--axis-x' },
+        { n: 'Axis Y', c: '#1E9E62', v: '--axis-y' },
+        { n: 'Axis Z', c: '#2F6FEB', v: '--axis-z' },
+        { n: 'Frame bar', c: '#59B88A', v: '--graph-ok' }
+      ] }
+    ];
+    return { groups: groups, groups2: groups2 };
+  }
+}
+</script>
+</body>
+</html>

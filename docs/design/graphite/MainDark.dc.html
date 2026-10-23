@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Editor — NodeView and Profiler</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0C0F}
+*{box-sizing:border-box}
+button,input{font:inherit;color:inherit}
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+a{color:#8FB3FF}a:hover{color:#B5CDFF}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 940px; display: flex; flex-direction: column; background: #0B0C0F; color: #AEB4C0; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<header style="height: 36px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding-left: 10px">
+<div style="width: 18px; height: 18px; border-radius: 4px; background: {{accent}}; display: flex; align-items: center; justify-content: center; color: #0B0C0F; font-weight: 600; font-size: 11px">T</div>
+<nav aria-label="Main menu" style="display: flex; gap: 2px; margin-left: 6px">
+<button style="height: 26px; padding: 0 9px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">File</button>
+<button style="height: 26px; padding: 0 9px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Edit</button>
+<button style="height: 26px; padding: 0 9px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">View</button>
+<button style="height: 26px; padding: 0 9px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Help</button>
+</nav>
+<div style="flex: 1; display: flex; justify-content: center">
+<button style="width: 380px; max-width: 100%; height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; border: 1px solid #23272F; border-radius: 6px; background: #121418; color: #8A92A2">
+<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<span>Search or run a command</span>
+<span style="margin-left: auto; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #1E2128; color: #AEB4C0">Ctrl K</span>
+</button>
+</div>
+<span style="color: #8A92A2; margin-right: 8px">Test</span>
+<button aria-label="Minimize" style="width: 44px; height: 36px; border: 0; background: transparent; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<button aria-label="Maximize" style="width: 44px; height: 36px; border: 0; background: transparent; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg></button>
+<button aria-label="Close" style="width: 44px; height: 36px; border: 0; background: transparent; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</header>
+
+<main style="flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 4px 0 4px; min-height: 0">
+
+<div style="display: flex; flex-wrap: wrap; gap: 4px">
+
+<section aria-label="Hierarchy" style="flex: 1 1 260px; max-width: 100%; height: 600px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4c0 1.1.9 2 2 2h3M3 10v6c0 1.1.9 2 2 2h3"></path></svg>Hierarchy</button>
+<button aria-label="Add object" style="margin-left: auto; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #8A92A2; display: flex; align-items: center; justify-content: center"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg></button>
+<button aria-label="Panel options" style="width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #8A92A2; display: flex; align-items: center; justify-content: center"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></button>
+</div>
+<div style="padding: 8px">
+<label style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid #23272F; border-radius: 4px; background: #0D0F12; color: #8A92A2">
+<svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<input type="text" placeholder="Filter objects" aria-label="Filter objects" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; color: #E8EAEF">
+</label>
+</div>
+<div role="tree" aria-label="Scene objects" style="padding: 0 4px 8px">
+<sc-for list="{{tree}}" as="r" hint-placeholder-count="13">
+<div role="treeitem" style="height: 22px; display: flex; align-items: center; gap: 4px; padding-left: {{r.pad}}px; padding-right: 8px; border-radius: 4px; background: {{r.bg}}; color: {{r.fg}}">
+<sc-if value="{{r.open}}" hint-placeholder-val="{{true}}"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #8A92A2; width: 16px"><path d="m6 9 6 6 6-6"></path></svg></sc-if>
+<sc-if value="{{r.closed}}" hint-placeholder-val="{{false}}"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #8A92A2; width: 16px"><path d="m9 18 6-6-6-6"></path></svg></sc-if>
+<sc-if value="{{r.leaf}}" hint-placeholder-val="{{false}}"><span style="width: 16px"></span></sc-if>
+<span style="display: flex; color: {{r.ic}}">
+<sc-if value="{{r.isScene}}" hint-placeholder-val="{{false}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a13 13 0 0 0 0 18 13 13 0 0 0 0-18M3 12h18"></path></svg></sc-if>
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{false}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.8 2.2a2 2 0 0 0-1.6 0L2.6 6.1a1 1 0 0 0 0 1.8l8.6 3.9a2 2 0 0 0 1.6 0l8.6-3.9a1 1 0 0 0 0-1.8ZM22 12.6l-9.2 4.2a2 2 0 0 1-1.6 0L2 12.6M22 17.6l-9.2 4.2a2 2 0 0 1-1.6 0L2 17.6"></path></svg></sc-if>
+<sc-if value="{{r.isMesh}}" hint-placeholder-val="{{true}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7ZM3.3 7l8.7 5 8.7-5M12 22V12"></path></svg></sc-if>
+<sc-if value="{{r.isCam}}" hint-placeholder-val="{{false}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg></sc-if>
+<sc-if value="{{r.isLight}}" hint-placeholder-val="{{false}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"></path></svg></sc-if>
+<sc-if value="{{r.isFolder}}" hint-placeholder-val="{{false}}"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg></sc-if>
+</span>
+<span style="margin-left: 2px; white-space: nowrap">{{r.label}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-label="NodeView" style="flex: 999 1 480px; min-width: 0; height: 600px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><rect x="3" y="3" width="8" height="8" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect x="13" y="13" width="8" height="8" rx="2"></rect></svg>NodeView</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7ZM3.3 7l8.7 5 8.7-5M12 22V12"></path></svg>Viewport</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</button>
+</div>
+<div style="position: relative; flex: 1; overflow: hidden; background-color: #0E1013; background-image: radial-gradient(#252A33 1px, transparent 1px); background-size: 16px 16px">
+
+<svg aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 900px; height: 566px; pointer-events: none">
+<path d="M244 160 C 322 160 322 250 400 250" fill="none" stroke="#34D1BF" stroke-width="2"></path>
+<path d="M596 332 C 630 332 626 380 660 380" fill="none" stroke="#34D1BF" stroke-width="2"></path>
+<path d="M244 472 C 452 472 452 408 660 408" fill="none" stroke="#F472B6" stroke-width="2"></path>
+</svg>
+
+<div style="position: absolute; left: 12px; top: 12px; height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #23272F; border-radius: 6px; background: #16191E; color: #8A92A2">
+<span>Graphs</span><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg><span style="color: #E8EAEF">Terrain material</span>
+</div>
+
+<div style="position: absolute; left: 60px; top: 110px; width: 184px; background: #181B20; border: 1px solid #2A2F39; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.35)">
+<div style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: #1E2128; border-bottom: 1px solid #2A2F39; border-radius: 5px 5px 0 0">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: #E0716B"></span>
+<span style="color: #E8EAEF; font-weight: 600">Source</span>
+<span style="margin-left: auto; color: #8A92A2; font-size: 11px">Generator</span>
+</div>
+<div style="padding: 6px 0">
+<div style="position: relative; height: 26px; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px">Value<span style="position: absolute; right: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #34D1BF; box-shadow: 0 0 0 2px #181B20"></span></div>
+<div style="position: relative; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span>Seed</span><input type="text" value="7" aria-label="Seed" style="margin-left: auto; width: 72px; height: 22px; padding: 0 8px; border: 1px solid #2A2F39; border-radius: 4px; background: #0D0F12; color: #E8EAEF; font-family: 'JetBrains Mono', monospace; text-align: right"><span style="position: absolute; right: -6px; top: 10px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #F59E4B; background: #181B20"></span></div>
+<div style="position: relative; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span>Enabled</span><button aria-label="Enabled" aria-pressed="true" style="margin-left: auto; position: relative; width: 28px; height: 16px; border: 0; border-radius: 8px; background: {{accent}}"><span style="position: absolute; right: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #0B0C0F"></span></button><span style="position: absolute; right: -6px; top: 10px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #A98BFF; background: #181B20"></span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 400px; top: 200px; width: 196px; background: #181B20; border: 1px solid {{accent}}; border-radius: 6px; box-shadow: 0 0 0 3px {{accentSoft}}, 0 8px 20px rgba(0,0,0,0.35)">
+<div style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: #1E2128; border-bottom: 1px solid #2A2F39; border-radius: 5px 5px 0 0">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: {{accent}}"></span>
+<span style="color: #E8EAEF; font-weight: 600">Mix</span>
+<span style="margin-left: auto; color: #8A92A2; font-size: 11px">Operator</span>
+</div>
+<div style="padding: 6px 0">
+<div style="position: relative; height: 26px; display: flex; align-items: center; padding: 0 14px"><span style="position: absolute; left: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #34D1BF; box-shadow: 0 0 0 2px #181B20"></span>Strength</div>
+<div style="position: relative; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span style="position: absolute; left: -6px; top: 10px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #F59E4B; background: #181B20"></span><span>Gain</span><input type="text" value="1.00" aria-label="Gain" style="margin-left: auto; width: 84px; height: 22px; padding: 0 8px; border: 1px solid #2A2F39; border-radius: 4px; background: #0D0F12; color: #E8EAEF; font-family: 'JetBrains Mono', monospace; text-align: right"></div>
+<div style="position: relative; height: 26px; display: flex; align-items: center; padding: 0 14px"><span style="position: absolute; left: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #A98BFF; background: #181B20"></span>Bypass<span style="position: absolute; right: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #A98BFF; background: #181B20"></span></div>
+<div style="position: relative; height: 26px; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px">Result<span style="position: absolute; right: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #34D1BF; box-shadow: 0 0 0 2px #181B20"></span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 60px; top: 320px; width: 184px; background: #181B20; border: 1px solid #2A2F39; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.35)">
+<div style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: #1E2128; border-bottom: 1px solid #2A2F39; border-radius: 5px 5px 0 0">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: #4FC48A"></span>
+<span style="color: #E8EAEF; font-weight: 600">Texture</span>
+<span style="margin-left: auto; color: #8A92A2; font-size: 11px">Input</span>
+</div>
+<div style="padding: 10px 0 6px">
+<div role="img" aria-label="Texture preview: hue and value gradient" style="margin: 0 10px; height: 92px; border-radius: 4px; border: 1px solid #2A2F39; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, #000 100%), linear-gradient(to right, #ff4d4d, #ffd84d, #4dff88, #4dd2ff, #6b6bff, #ff4dd8)"></div>
+<div style="position: relative; height: 26px; margin-top: 6px; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px">Color<span style="position: absolute; right: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #F472B6; box-shadow: 0 0 0 2px #181B20"></span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 660px; top: 330px; width: 184px; background: #181B20; border: 1px solid #2A2F39; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.35)">
+<div style="height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: #1E2128; border-bottom: 1px solid #2A2F39; border-radius: 5px 5px 0 0">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: #A98BFF"></span>
+<span style="color: #E8EAEF; font-weight: 600">Output</span>
+<span style="margin-left: auto; color: #8A92A2; font-size: 11px">Output</span>
+</div>
+<div style="padding: 6px 0">
+<div style="position: relative; height: 26px; display: flex; align-items: center; padding: 0 14px"><span style="position: absolute; left: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #34D1BF; box-shadow: 0 0 0 2px #181B20"></span>Value</div>
+<div style="position: relative; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 14px"><span style="position: absolute; left: -6px; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: #F472B6; box-shadow: 0 0 0 2px #181B20"></span><span>Tint</span><span style="margin-left: auto; width: 72px; height: 22px; border: 1px solid #2A2F39; border-radius: 4px; background: linear-gradient(to right, #ff4d4d, #6b6bff)"></span></div>
+<div style="position: relative; height: 26px; display: flex; align-items: center; justify-content: flex-end; padding: 0 14px">Level<span style="position: absolute; right: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #F59E4B; background: #181B20"></span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 12px; bottom: 12px; height: 28px; display: flex; align-items: center; gap: 2px; padding: 0 2px; border: 1px solid #23272F; border-radius: 6px; background: #16191E">
+<button aria-label="Zoom out" style="width: 24px; height: 22px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<span style="min-width: 44px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #E8EAEF">100%</span>
+<button aria-label="Zoom in" style="width: 24px; height: 22px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg></button>
+<span style="width: 1px; height: 16px; background: #2A2F39; margin: 0 2px"></span>
+<button style="height: 22px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Fit</button>
+</div>
+
+<div aria-hidden="true" style="position: absolute; right: 12px; bottom: 12px; width: 140px; height: 88px; border: 1px solid #23272F; border-radius: 6px; background: #121418; overflow: hidden">
+<span style="position: absolute; left: 10px; top: 18px; width: 22px; height: 14px; border-radius: 2px; background: #2E333D"></span>
+<span style="position: absolute; left: 62px; top: 32px; width: 24px; height: 18px; border-radius: 2px; background: {{accent}}"></span>
+<span style="position: absolute; left: 10px; top: 50px; width: 22px; height: 22px; border-radius: 2px; background: #2E333D"></span>
+<span style="position: absolute; left: 102px; top: 52px; width: 22px; height: 16px; border-radius: 2px; background: #2E333D"></span>
+<span style="position: absolute; left: 4px; top: 6px; width: 128px; height: 76px; border: 1px solid #8A92A2; border-radius: 3px"></span>
+</div>
+</div>
+</section>
+
+<section aria-label="Profiler" style="flex: 1 1 520px; max-width: 100%; min-width: 0; height: 600px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><path d="M22 12h-2.5a2 2 0 0 0-1.9 1.5l-2.4 8.3a.3.3 0 0 1-.5 0L9.2 2.2a.3.3 0 0 0-.5 0l-2.3 8.3A2 2 0 0 1 4.5 12H2"></path></svg>Profiler</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Inspector</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Reorderable</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Misc</button>
+<button aria-label="4 more tabs" style="height: 24px; display: flex; align-items: center; gap: 4px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #8A92A2">+4<svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px">
+<div style="height: 26px; display: flex; align-items: center; gap: 6px">
+<button aria-pressed="true" style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #2E333D; border-radius: 4px; background: #1E2128; color: #E8EAEF"><span style="width: 8px; height: 8px; border-radius: 50%; background: #EF6A6A"></span>Recording</button>
+<button aria-label="Pause" style="width: 26px; height: 26px; border: 1px solid #2E333D; border-radius: 4px; background: #1E2128; color: #AEB4C0; display: flex; align-items: center; justify-content: center"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg></button>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; color: #E8EAEF">9.27 ms</span>
+<span style="font-family: 'JetBrains Mono', monospace; color: #8A92A2">108 fps</span>
+</div>
+<div style="position: relative; height: 64px; flex-shrink: 0; padding: 0 4px; display: flex; align-items: flex-end; gap: 1px; border-radius: 4px; background: #0D0F12">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="120"><span style="flex: 1; height: {{b.h}}%; background: {{b.c}}; border-radius: 1px 1px 0 0"></span></sc-for>
+<span style="position: absolute; left: 0; right: 0; bottom: 66.8%; border-top: 1px dashed #5A606C"></span>
+<span style="position: absolute; left: 6px; bottom: 66.8%; margin-bottom: 2px; font-size: 10px; line-height: 12px; color: #8A92A2; font-family: 'JetBrains Mono', monospace">16.7 ms</span>
+</div>
+<div style="position: relative; height: 78px; flex-shrink: 0">
+<sc-for list="{{flame}}" as="f" hint-placeholder-count="14"><span style="position: absolute; left: {{f.l}}%; width: {{f.w}}%; top: {{f.t}}px; height: 18px; padding: 0 6px; border-radius: 3px; background: {{f.c}}; color: #E8EAEF; font-size: 11px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04)">{{f.n}}</span></sc-for>
+</div>
+<div role="table" aria-label="Profiler scopes" style="flex: 1; min-height: 0; overflow: hidden; border: 1px solid #23272F; border-radius: 4px">
+<div role="row" style="height: 26px; display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px 96px 44px; align-items: center; padding: 0 8px; gap: 8px; background: #16191E; border-bottom: 1px solid #23272F; color: #8A92A2; font-size: 11px; font-weight: 500">
+<span role="columnheader">Scope</span><span role="columnheader" style="text-align: right">Total ms</span><span role="columnheader" style="text-align: right">Self ms</span><span role="columnheader" style="text-align: right">% frame</span><span role="columnheader" style="text-align: right">Calls</span>
+</div>
+<sc-for list="{{scopes}}" as="s" hint-placeholder-count="15">
+<div role="row" style="height: 22px; display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px 96px 44px; align-items: center; padding: 0 8px; gap: 8px; background: {{s.bg}}; color: {{s.fg}}">
+<span role="cell" style="display: flex; align-items: center; gap: 2px; padding-left: {{s.pad}}px; white-space: nowrap; overflow: hidden">
+<sc-if value="{{s.open}}" hint-placeholder-val="{{false}}"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #8A92A2; width: 14px"><path d="m6 9 6 6 6-6"></path></svg></sc-if>
+<sc-if value="{{s.closed}}" hint-placeholder-val="{{false}}"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #8A92A2; width: 14px"><path d="m9 18 6-6-6-6"></path></svg></sc-if>
+<sc-if value="{{s.leaf}}" hint-placeholder-val="{{true}}"><span style="width: 14px"></span></sc-if>
+{{s.n}}</span>
+<span role="cell" style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.total}}</span>
+<span role="cell" style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.self}}</span>
+<span role="cell" style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px"><span style="width: 36px; height: 4px; border-radius: 2px; background: #23272F; overflow: hidden"><span style="display: block; width: {{s.pct}}%; height: 4px; background: {{accent}}"></span></span>{{s.pct}}%</span>
+<span role="cell" style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.calls}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 4px">
+
+<section aria-label="Files" style="flex: 0 1 560px; max-width: 100%; height: 268px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>Files</button>
+</div>
+<div style="flex: 1; min-height: 0; display: flex">
+<div role="tree" aria-label="Folders" style="width: 168px; flex-shrink: 0; padding: 6px 4px; border-right: 1px solid #23272F">
+<sc-for list="{{folders}}" as="r" hint-placeholder-count="8">
+<div role="treeitem" style="height: 22px; display: flex; align-items: center; gap: 4px; padding-left: {{r.pad}}px; border-radius: 4px; background: {{r.bg}}; color: {{r.fg}}">
+<sc-if value="{{r.open}}" hint-placeholder-val="{{false}}"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="color: #8A92A2; width: 14px"><path d="m6 9 6 6 6-6"></path></svg></sc-if>
+<sc-if value="{{r.leaf}}" hint-placeholder-val="{{true}}"><span style="width: 14px"></span></sc-if>
+<svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: #D9A443"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+<span style="white-space: nowrap">{{r.label}}</span>
+</div>
+</sc-for>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<div style="height: 36px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-bottom: 1px solid #23272F">
+<span style="color: #8A92A2">Home</span>
+<label style="margin-left: auto; width: 150px; height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid #23272F; border-radius: 4px; background: #0D0F12; color: #8A92A2"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="text" placeholder="Search" aria-label="Search files" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none"></label>
+<button aria-label="Grid view" aria-pressed="true" style="width: 24px; height: 24px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></button>
+<button aria-label="List view" style="width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: #8A92A2; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg></button>
+</div>
+<div style="flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 8px; align-content: start">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="8">
+<button style="height: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 6px; background: {{f.bg}}; color: #AEB4C0">
+<sc-if value="{{f.folder}}" hint-placeholder-val="{{true}}"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="#D9A443"></path></svg></sc-if>
+<sc-if value="{{f.model}}" hint-placeholder-val="{{false}}"><svg class="i" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 1.5; color: #8FB3FF"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7ZM3.3 7l8.7 5 8.7-5M12 22V12"></path></svg></sc-if>
+<sc-if value="{{f.image}}" hint-placeholder-val="{{false}}"><svg class="i" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 1.5; color: #4FC48A"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3-3a2 2 0 0 0-2.8 0L6 21"></path></svg></sc-if>
+<sc-if value="{{f.doc}}" hint-placeholder-val="{{false}}"><svg class="i" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 1.5; color: #AEB4C0"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4M9 13h6M9 17h4"></path></svg></sc-if>
+<span style="font-size: 11.5px; white-space: nowrap">{{f.n}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Log" style="flex: 999 1 480px; min-width: 0; height: 268px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><path d="m4 17 6-6-6-6M12 19h8"></path></svg>Log</button>
+</div>
+<div style="height: 38px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-bottom: 1px solid #23272F">
+<button style="height: 24px; padding: 0 10px; border: 1px solid #2E333D; border-radius: 4px; background: #1E2128; color: #E8EAEF">Clear</button>
+<label style="flex: 1; min-width: 120px; height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid #23272F; border-radius: 4px; background: #0D0F12; color: #8A92A2"><svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="text" placeholder="Filter messages" aria-label="Filter messages" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none"></label>
+<div style="display: flex; gap: 2px; padding: 2px; border-radius: 6px; background: #0D0F12; border: 1px solid #23272F">
+<button aria-label="Errors: 0" aria-pressed="true" style="height: 20px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: 4px; background: #1E2128; color: #AEB4C0; font-family: 'JetBrains Mono', monospace; font-size: 11px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #EF6A6A"></span>0</button>
+<button aria-label="Warnings: 0" aria-pressed="true" style="height: 20px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: 4px; background: #1E2128; color: #AEB4C0; font-family: 'JetBrains Mono', monospace; font-size: 11px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #E5B454"></span>0</button>
+<button aria-label="Info: 4" aria-pressed="true" style="height: 20px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: 4px; background: #1E2128; color: #AEB4C0; font-family: 'JetBrains Mono', monospace; font-size: 11px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #6B9BFF"></span>4</button>
+</div>
+<button aria-label="Auto-scroll" aria-pressed="true" style="width: 24px; height: 24px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; display: flex; align-items: center; justify-content: center"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V3M6 11l6 6 6-6M19 21H5"></path></svg></button>
+</div>
+<div role="log" style="flex: 1; min-height: 0; padding: 4px">
+<sc-for list="{{log}}" as="l" hint-placeholder-count="4">
+<div style="height: 24px; display: grid; grid-template-columns: 96px 16px minmax(0, 1fr); gap: 8px; align-items: center; padding: 0 8px; border-radius: 4px; background: {{l.bg}}; color: {{l.fg}}">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8A92A2">{{l.t}}</span>
+<span style="width: 7px; height: 7px; border-radius: 50%; background: #6B9BFF; justify-self: center"></span>
+<span style="white-space: pre; overflow: hidden; text-overflow: ellipsis">{{l.m}}</span>
+</div>
+</sc-for>
+</div>
+<div style="flex-shrink: 0; padding: 10px 16px 12px; border-top: 1px solid #23272F; background: #0F1114; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 18px">
+<div style="color: #E8EAEF"><span style="color: #8FB3FF">info</span> [theme] loaded themes/dark.css: 190 styles, 0 errors</div>
+<div style="color: #8A92A2">at <a href="#">src/gui_controls/gui_theme.cpp:218</a></div>
+</div>
+</section>
+</div>
+</main>
+
+<footer style="height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; color: #8A92A2; font-size: 11px">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border-radius: 50%; background: #4FC48A"></span>Ready</span>
+<span>Vulkan · NVIDIA GeForce RTX 4070 Ti SUPER</span>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace">9.27 ms · 108 fps</span>
+<span>themes/dark.css</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B9BFF","options":["#6B9BFF","#34D1BF","#A98BFF","#F59E4B"]},"$preview":{"width":1700,"height":940}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#6B9BFF';
+    const hx = accent.replace('#', '');
+    const r = parseInt(hx.slice(0, 2), 16), g = parseInt(hx.slice(2, 4), 16), b = parseInt(hx.slice(4, 6), 16);
+    const accentSoft = 'rgba(' + r + ',' + g + ',' + b + ',0.16)';
+
+    const treeSrc = [
+      ['Scene', 0, 'scene', 'open'], ['Meshes', 1, 'group', 'open'], ['Cube', 2, 'mesh'],
+      ['Meshes', 2, 'group', 'open'], ['Cube', 3, 'mesh'], ['Sphere', 3, 'mesh', null, true],
+      ['Plane', 3, 'mesh'], ['Sphere', 2, 'mesh'], ['Plane', 2, 'mesh'], ['Camera', 1, 'camera'],
+      ['Light', 1, 'light'], ['Materials', 0, 'folder', 'closed'], ['Settings', 0, 'folder']
+    ];
+    const tree = treeSrc.map(function (t) {
+      const sel = !!t[4];
+      return {
+        label: t[0], pad: 4 + t[1] * 16, open: t[3] === 'open', closed: t[3] === 'closed', leaf: !t[3],
+        isScene: t[2] === 'scene', isGroup: t[2] === 'group', isMesh: t[2] === 'mesh',
+        isCam: t[2] === 'camera', isLight: t[2] === 'light', isFolder: t[2] === 'folder',
+        bg: sel ? accentSoft : 'transparent', fg: sel ? '#E8EAEF' : '#AEB4C0', ic: sel ? accent : '#8A92A2'
+      };
+    });
+
+    const spikes = { 17: 19.5, 64: 14.2, 103: 21.8 };
+    const bars = [];
+    for (let i = 0; i < 120; i++) {
+      let v = spikes[i] !== undefined ? spikes[i] : 8.9 + 1.1 * Math.sin(i * 0.7) + 0.7 * Math.sin(i * 2.3 + 1);
+      if (i === 119) v = 9.27;
+      bars.push({ h: (v / 25 * 100).toFixed(1), c: i === 119 ? accent : (v > 16.7 ? '#E5B454' : '#3E8F6B') });
+    }
+
+    const flame = [
+      ['Frame', 0, 100, 0, '#2B303B'],
+      ['Build', 0, 63.8, 1, '#5A3B2E'], ['Render', 64, 36, 1, '#3E3560'],
+      ['BeginFrame', 0, 2.6, 2, '#24505A'], ['OnGUI', 2.8, 15.4, 2, '#24505A'], ['EndFrame', 18.4, 24, 2, '#24505A'], ['OnRender', 42.6, 21, 2, '#24505A'], ['Window render', 64.2, 35.6, 2, '#2E4A3A'],
+      ['Layout', 19, 22.4, 3, '#5A3B2E'], ['Upd.', 43, 5, 3, '#5A3B2E'], ['Record commands', 64.4, 25.6, 3, '#3E3560'], ['End', 90.2, 9, 3, '#3E3560']
+    ].map(function (f) { return { n: f[0], l: f[1], w: f[2], t: f[3] * 20, c: f[4] }; });
+
+    const scopeSrc = [
+      ['Frame', 0, 'open', '9.273', '0.003', '100.0', 1], ['Input pump', 1, null, '0.020', '0.020', '0.2', 1],
+      ['Build', 1, 'open', '5.943', '0.035', '64.1', 1], ['PreFrame', 2, null, '0.005', '0.005', '0.1', 1],
+      ['BeginFrame', 2, 'open', '0.233', '0.229', '2.5', 1], ['PreConstruct', 3, null, '0.003', '0.003', '0.0', 1],
+      ['OnGUI', 2, 'open', '1.450', '1.449', '15.6', 1, true], ['MeasureTextInternal', 3, null, '0.001', '0.001', '0.0', 0],
+      ['EndFrame', 2, 'open', '2.234', '0.109', '24.1', 2], ['PostConstruct', 3, null, '0.002', '0.002', '0.0', 1],
+      ['PreLayout', 3, null, '0.000', '0.000', '0.0', 1], ['Layout', 3, 'open', '2.089', '1.486', '22.5', 1],
+      ['MeasureTextInternal', 4, null, '0.011', '0.011', '0.1', 28], ['UpdateLayoutWhenDirty', 4, null, '0.592', '0.592', '6.4', 14],
+      ['Render', 1, 'closed', '3.307', '0.012', '35.7', 1]
+    ];
+    const scopes = scopeSrc.map(function (s) {
+      const sel = !!s[7];
+      return {
+        n: s[0], pad: s[1] * 14, open: s[2] === 'open', closed: s[2] === 'closed', leaf: !s[2],
+        total: s[3], self: s[4], pct: s[5], calls: s[6],
+        bg: sel ? accentSoft : 'transparent', fg: sel ? '#E8EAEF' : '#AEB4C0'
+      };
+    });
+
+    const folders = [
+      ['Home', 0, true, true], ['Documents', 1], ['Images', 1], ['Music', 1], ['Projects', 1, true],
+      ['IntersticeUI', 2], ['Vulkan', 2], ['Downloads', 1]
+    ].map(function (f) {
+      return { label: f[0], pad: 4 + f[1] * 14, open: !!f[2], leaf: !f[2], bg: f[3] ? accentSoft : 'transparent', fg: f[3] ? '#E8EAEF' : '#AEB4C0' };
+    });
+
+    const files = [
+      ['Documents', 'folder'], ['Images', 'folder'], ['Music', 'folder'], ['Projects', 'folder'],
+      ['Downloads', 'folder'], ['character.fbx', 'model', true], ['preview.png', 'image'], ['readme.md', 'doc']
+    ].map(function (f) {
+      return { n: f[0], folder: f[1] === 'folder', model: f[1] === 'model', image: f[1] === 'image', doc: f[1] === 'doc', bg: f[2] ? accentSoft : 'transparent' };
+    });
+
+    const log = [
+      ['00:00:00.341', 'Detected Vulkan GPUs:'],
+      ['00:00:00.375', '  NVIDIA GeForce RTX 4070 Ti SUPER'],
+      ['00:00:00.375', '  AMD Radeon(TM) Graphics'],
+      ['00:00:01.418', '[theme] loaded themes/dark.css: 190 styles, 0 errors', true]
+    ].map(function (l) { return { t: l[0], m: l[1], bg: l[2] ? accentSoft : 'transparent', fg: l[2] ? '#E8EAEF' : '#AEB4C0' }; });
+
+    return { accent: accent, accentSoft: accentSoft, tree: tree, bars: bars, flame: flame, scopes: scopes, folders: folders, files: files, log: log };
+  }
+}
+</script>
+</body>
+</html>

@@ -252,13 +252,13 @@ namespace interstice
                 return styleManager.RegisterColorStyle(ColorStyle::Create(fallback));
             };
 
-        lineGrayStyle      = lineColorFromCSS("--line-gray", color4f{ 0.4f, 0.4f, 0.4f, 1.0f });
-        lineYellowStyle    = lineColorFromCSS("--line-yellow", color4f{ 1.0f, 0.8f, 0.2f, 1.0f });
-        lineWhiteStyle     = lineColorFromCSS("--line-white", color4f{ 1.0f, 1.0f, 1.0f, 1.0f });
-        lineDarkStyle      = lineColorFromCSS("--line-dark", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
-        gridLineStyle      = lineColorFromCSS("--line-grid", color4f{ 0.28f, 0.28f, 0.28f, 1.0f });
-        treeGuideLineStyle = lineColorFromCSS("--tree-guide-line", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
-        treeDropIndicatorStyle = lineColorFromCSS("--accent-blue", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
+        lineGrayStyle      = lineColorFromCSS("--text-3", color4f{ 0.4f, 0.4f, 0.4f, 1.0f });
+        lineYellowStyle    = lineColorFromCSS("--warn", color4f{ 1.0f, 0.8f, 0.2f, 1.0f });
+        lineWhiteStyle     = lineColorFromCSS("--text-1", color4f{ 1.0f, 1.0f, 1.0f, 1.0f });
+        lineDarkStyle      = lineColorFromCSS("--bg-app", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
+        gridLineStyle      = lineColorFromCSS("--canvas-dot", color4f{ 0.28f, 0.28f, 0.28f, 1.0f });
+        treeGuideLineStyle = lineColorFromCSS("--line-node", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
+        treeDropIndicatorStyle = lineColorFromCSS("--accent", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
 
         {
             // Distance-from-edge gradient (the quad shader feeds the rounded-box

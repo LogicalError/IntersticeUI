@@ -46,7 +46,7 @@
     border-radius: 0px;
     border-color: transparent;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     overflow: auto;
     direction: initial;
     text-wrap: wrap;
@@ -65,15 +65,15 @@
     text-wrap: wrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.text-style:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.text-style:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.text-style:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.text-style::highlight(selected) { color: var(--text-on-highlight); border-color: var(--accent); background-color: var(--accent-light); }
+.text-style:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.text-style:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.text-style:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.text-style::highlight(selected) { color: var(--text-1); border-color: var(--accent); background-color: var(--accent-soft); }
 
 /* ---- labelStyle ----------------------------------------------------------- */
 .label {
@@ -86,16 +86,16 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-label);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
     border-color: transparent;
     break-after: avoid;
 }
-.label:hover  { color: var(--text-label-hover); }
-.label:active { color: var(--text-label-active); }
-.label:focus  { color: var(--text-label-active); }
-.label::highlight(selected) { color: var(--text-label-active); }
+.label:hover  { color: var(--text-1); }
+.label:active { color: var(--text-1); }
+.label:focus  { color: var(--text-1); }
+.label::highlight(selected) { color: var(--text-1); }
 
 /* ---- iconLabelStyle ------------------------------------------------------- */
 /* Inline icon + text, icon on the left with a gap, both vertically centered.
@@ -114,12 +114,12 @@
     -interstice-icon-text-gap: 6px;
     -interstice-icon-size: 16px;
     -interstice-vertical-text-align: middle;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
     border-color: transparent;
 }
-.icon-label::highlight(selected) { color: var(--text-selected); }
+.icon-label::highlight(selected) { color: var(--text-1); }
 
 /* ---- iconLabelNoIconStyle ------------------------------------------------- */
 /* Same as .icon-label but with no icon: a left pad equal to the icon column
@@ -134,12 +134,12 @@
     text-align: start;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
     border-color: transparent;
 }
-.icon-label-no-icon::highlight(selected) { color: var(--text-selected); }
+.icon-label-no-icon::highlight(selected) { color: var(--text-1); }
 
 /* ---- dragLabelStyle ------------------------------------------------------- */
 .drag-label {
@@ -151,17 +151,17 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-label);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     break-after: avoid;
     cursor: col-resize;
 }
-.drag-label:hover  { color: var(--text-label-hover); }
-.drag-label:active { color: var(--text-label-active); }
-.drag-label:focus  { color: var(--text-label-active); }
-.drag-label::highlight(selected) { color: var(--text-label-active); }
+.drag-label:hover  { color: var(--text-1); }
+.drag-label:active { color: var(--text-1); }
+.drag-label:focus  { color: var(--text-1); }
+.drag-label::highlight(selected) { color: var(--text-1); }
 
 /* ---- grouped label variants (overflow visible for edge dragger rendering) - */
 .group-label {
@@ -174,17 +174,17 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-label);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     break-after: avoid;
     align-self: stretch;
 }
-.group-label:hover  { color: var(--text-label-hover); }
-.group-label:active { color: var(--text-label-active); }
-.group-label:focus  { color: var(--text-label-active); }
-.group-label::highlight(selected) { color: var(--text-label-active); }
+.group-label:hover  { color: var(--text-1); }
+.group-label:active { color: var(--text-1); }
+.group-label:focus  { color: var(--text-1); }
+.group-label::highlight(selected) { color: var(--text-1); }
 
 .group-drag-label {
     border-width: 0px;
@@ -195,26 +195,26 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-label);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     break-after: avoid;
     align-self: stretch;
     cursor: col-resize;
 }
-.group-drag-label:hover  { color: var(--text-label-hover); }
-.group-drag-label:active { color: var(--text-label-active); }
-.group-drag-label:focus  { color: var(--text-label-active); }
-.group-drag-label::highlight(selected) { color: var(--text-label-active); }
+.group-drag-label:hover  { color: var(--text-1); }
+.group-drag-label:active { color: var(--text-1); }
+.group-drag-label:focus  { color: var(--text-1); }
+.group-drag-label::highlight(selected) { color: var(--text-1); }
 
 /* ---- textboxStyle --------------------------------------------------------- */
 .textbox {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent2-dark);
-    color: var(--text-primary);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    color: var(--text-1);
     margin: 1px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -229,10 +229,10 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.textbox:hover  { border-color: var(--border-focus); background-color: var(--accent2-dark); }
-.textbox:active { border-color: var(--border-focus); background-color: var(--accent2-dark); }
-.textbox:focus  { border-color: var(--border-focus); background-color: var(--accent2-dark); }
-.textbox::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+.textbox:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
+.textbox:active { border-color: var(--accent); background-color: var(--bg-input); }
+.textbox:focus  { border-color: var(--accent); background-color: var(--bg-input); }
+.textbox::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- searchTextbox -------------------------------------------------------- */
 /* Search field: a textbox-looking container with a leading icon inside the
@@ -243,8 +243,8 @@
 .search-textbox {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent2-dark);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
     margin: 1px;
     padding: 2px 4px 2px 4px;
     overflow: hidden;
@@ -256,9 +256,9 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.search-textbox:hover  { border-color: var(--border-focus); }
-.search-textbox:active { border-color: var(--border-focus); }
-.search-textbox:focus  { border-color: var(--border-focus); }
+.search-textbox:hover  { border-color: var(--line-strong); }
+.search-textbox:active { border-color: var(--accent); }
+.search-textbox:focus  { border-color: var(--accent); }
 
 /* Leading icon, drawn to fit its box; dimmed so it reads as a hint. */
 .search-textbox-icon {
@@ -268,7 +268,7 @@
     padding: 0px;
     border-width: 0px;
     background-color: transparent;
-    color: var(--text-muted);
+    color: var(--text-3);
     flex-grow: 0;
     flex-shrink: 0;
     align-self: center;
@@ -280,7 +280,7 @@
     margin: 0px;
     padding: 0px;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     overflow: auto;
     cursor: text;
     text-overflow: clip;
@@ -293,15 +293,15 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.search-textbox-field::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+.search-textbox-field::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- buttonStyle ---------------------------------------------------------- */
 .button {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -313,10 +313,10 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.button::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.button::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconButtonStyle: compact icon-only action button (list/dict add & delete).
    Flat by default — transparent background, no border — so it reads as just the
@@ -327,7 +327,7 @@
     border-radius: var(--radius-md);
     border-color: transparent;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     margin: 1px;
     padding: 3px 0px;
     overflow: hidden;
@@ -338,9 +338,9 @@
     flex-shrink: 0;
     cursor: pointer;
 }
-.icon-button:hover  { background-color: var(--bg-drag-knob-hover); }
-.icon-button:active { background-color: var(--accent-light); }
-.icon-button:focus  { background-color: var(--bg-drag-knob-hover); }
+.icon-button:hover  { background-color: var(--bg-active); }
+.icon-button:active { background-color: var(--bg-pressed); }
+.icon-button:focus  { background-color: var(--bg-active); }
 
 /* .icon-button-end: same flat icon button, pinned to the end of the cross axis
    so the trailing add button sits at the bottom-right of the list / dictionary
@@ -350,7 +350,7 @@
     border-radius: var(--radius-md);
     border-color: transparent;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     margin: 1px;
     padding: 3px 0px;
     overflow: hidden;
@@ -362,9 +362,9 @@
     align-self: flex-end;
     cursor: pointer;
 }
-.icon-button-end:hover  { background-color: var(--bg-drag-knob-hover); }
-.icon-button-end:active { background-color: var(--accent-light); }
-.icon-button-end:focus  { background-color: var(--bg-drag-knob-hover); }
+.icon-button-end:hover  { background-color: var(--bg-active); }
+.icon-button-end:active { background-color: var(--bg-pressed); }
+.icon-button-end:focus  { background-color: var(--bg-active); }
 
 /* Flat button: looks like plain left-aligned text (no border/background), but
    stays clickable with a cursor + subtle hover. Used where a button shouldn't
@@ -373,7 +373,7 @@
     border-width: 0px;
     border-color: transparent;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     margin: 0px;
     /* No left padding: the enclosing table cell already supplies it, so the
        text lines up with the other (plain-text) columns instead of being
@@ -388,8 +388,8 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.flat-button:hover  { background-color: var(--bg-hover); }
-.flat-button:active { background-color: var(--bg-hover); }
+.flat-button:hover  { background-color: var(--bg-header); }
+.flat-button:active { background-color: var(--bg-header); }
 
 /* Search row: a flat full-width row hosting a top-of-panel SearchField, with a
    little breathing room below it before the panel content. Shared by the
@@ -411,9 +411,9 @@
 .first-button {
     border-width: var(--border-first);
     border-radius: var(--radius-md-first);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 0px 1px 1px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -425,21 +425,21 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.first-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
-.first-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.first-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.first-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
+.first-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.first-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 
 .mid-button {
     border-width: var(--border-mid);
     border-radius: var(--radius-md-mid);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 0px 1px 0px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -451,21 +451,21 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.mid-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.mid-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.mid-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
-.mid-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.mid-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.mid-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
+.mid-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.mid-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 
 .last-button {
     border-width: var(--border-last);
     border-radius: var(--radius-md-last);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 1px 1px 0px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -477,13 +477,13 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.last-button:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.last-button:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-button:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.last-button       ::highlight(selected) { border-color: var(--accent);       background-color: var(--accent-light); }
-.last-button:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-button:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-button:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.last-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.last-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
+.last-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.last-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 /* ---- menuTriggerStyle ----------------------------------------------------- */
 /* Dropdown / menu trigger. Visually matches .button, but its label is left-
@@ -492,9 +492,9 @@
 .menu-trigger {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -506,10 +506,10 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.menu-trigger:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.menu-trigger:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.menu-trigger:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.menu-trigger::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.menu-trigger:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.menu-trigger:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.menu-trigger:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.menu-trigger::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 
 /* ---- dashedStyle ---------------------------------------------------------- */
@@ -522,16 +522,16 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
     border-style: dashed;
 }
-.dashed:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.dashed:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.dashed:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.dashed::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.dashed:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.dashed:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.dashed:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.dashed::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- Table (row × column data grid) --------------------------------------
    Outer wrapper: flex column hosting the header + body sections. Does NOT
@@ -552,10 +552,10 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
+    background-color: var(--bg-panel);
+    border-color: var(--line-subtle);
 }
 
 /* Table that fills its flex container instead of sizing to its columns.
@@ -576,9 +576,9 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--bg-surface);
+    background-color: var(--bg-panel);
     border-color: transparent;
     flex-grow: 1;
     flex-shrink: 1;
@@ -592,7 +592,7 @@
     column-gap: 0px;
     row-gap: 0px;
     overflow: hidden;
-    background-color: var(--bg-surface);
+    background-color: var(--bg-panel);
 }
 
 .table-bodies-row {
@@ -602,7 +602,7 @@
     flex-basis: 0;
     flex-grow: 1;
     overflow: hidden;
-    background-color: var(--bg-surface);
+    background-color: var(--bg-panel);
 }
 
 /* Middle-scrollable body — MASTER scroll source for both axes. Single grid
@@ -619,7 +619,7 @@
     flex-basis: auto;
     overflow-x: auto;
     overflow-y: auto;
-    background-color: var(--bg-surface);
+    background-color: var(--bg-panel);
 }
 
 /* Fit-content section body — pinned to the sum of its column widths
@@ -637,7 +637,7 @@
     flex-basis: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: var(--bg-surface);
+    background-color: var(--bg-panel);
 }
 
 .table-header {
@@ -647,14 +647,14 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-bright);
+    color: var(--text-3);
     font-size: var(--font-size);
     font-weight: 600;
-    background-color: var(--bg-content);
+    background-color: var(--bg-header);
     -interstice-icon-side: right;
     -interstice-icon-text-gap: 4px;
 }
-.table-header:hover { background-color: var(--table-header-hover-bg); cursor: pointer; }
+.table-header:hover { background-color: var(--bg-active); cursor: pointer; }
 
 /* Locked-column header variant. Same look as .table-header but with a
    default arrow cursor (not pointer) since the column can't be dragged.
@@ -667,15 +667,15 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-bright);
+    color: var(--text-1);
     font-size: var(--font-size);
     font-weight: 600;
-    background-color: var(--bg-content);
+    background-color: var(--bg-panel);
     -interstice-icon-side: right;
     -interstice-icon-text-gap: 4px;
     cursor: default;
 }
-.table-header-locked:hover { background-color: var(--table-header-hover-bg); cursor: default; }
+.table-header-locked:hover { background-color: var(--bg-active); cursor: default; }
 
 .table-cell {
     margin: 0px;
@@ -684,7 +684,7 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     /* Transparent so the row backdrop (a sibling grid item spanning all
        columns, painted behind the cells) shows through — that's where
@@ -693,8 +693,8 @@
        over per-cell. */
     background-color: transparent;
 }
-.table-cell:hover { background-color: var(--bg-hover); }
-.table-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+.table-cell:hover { background-color: var(--bg-header); }
+.table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* Compact cell — like .table-cell with tighter vertical padding, for dense
    tables such as the console log. Opt in per table via VirtualTable's cellStyle
@@ -706,12 +706,12 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
 }
-.table-cell-compact:hover { background-color: var(--bg-hover); }
-.table-cell-compact::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+.table-cell-compact:hover { background-color: var(--bg-header); }
+.table-cell-compact::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- Table row backdrop ---------------------------------------------------
    One element per data row, placed as a grid item spanning every column and
@@ -725,29 +725,29 @@
     margin: 0px;
     padding: 0px;
     overflow: visible;
-    background-color: var(--table-row-bg);
+    background-color: var(--bg-panel);
 }
-.table-row:hover { background-color: var(--table-row-hover); }
-.table-row::highlight(selected) { background-color: var(--selection-bg); }
+.table-row:hover { background-color: var(--bg-header); }
+.table-row::highlight(selected) { background-color: var(--accent-soft); }
 
 .table-row-alt {
     margin: 0px;
     padding: 0px;
     overflow: visible;
-    background-color: var(--table-row-alt-bg);
+    background-color: var(--row-stripe);
 }
-.table-row-alt:hover { background-color: var(--table-row-hover); }
-.table-row-alt::highlight(selected) { background-color: var(--selection-bg); }
+.table-row-alt:hover { background-color: var(--bg-header); }
+.table-row-alt::highlight(selected) { background-color: var(--accent-soft); }
 
 .table-sizer {
     margin: 0px;
     padding: 0px;
-    background-color: var(--bg-drag-knob);
+    background-color: var(--bg-control);
     border-color: transparent;
     cursor: col-resize;
 }
-.table-sizer:hover  { background-color: var(--accent-blue); cursor: col-resize; }
-.table-sizer:active { background-color: var(--accent-blue); cursor: col-resize; }
+.table-sizer:hover  { background-color: var(--accent-soft); cursor: col-resize; }
+.table-sizer:active { background-color: var(--accent-soft); cursor: col-resize; }
 
 /* Section divider — 1px grey strip between body sections.
    Non-interactive — no cursor change, no event handler. */
@@ -755,7 +755,7 @@
     margin: 0px;
     width: 2px;
     padding: 0px;
-    background-color: var(--bg-drag-knob);
+    background-color: var(--bg-control);
     border-color: transparent;
 }
 
@@ -776,15 +776,15 @@
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     /* Transparent — the row backdrop sibling provides the row-level
        hover/selected/alternating background. */
     background-color: transparent;
     gap: 0px;
 }
-.tree-table-cell:hover { background-color: var(--bg-hover); }
-.tree-table-cell::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+.tree-table-cell:hover { background-color: var(--bg-header); }
+.tree-table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* Row-mode variant: identical layout to .tree-table-cell but transparent
    on hover/selected so the row backdrop behind (which shares the rowID
@@ -798,13 +798,13 @@
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
     gap: 0px;
 }
 .tree-table-cell-row-mode:hover { background-color: transparent; }
-.tree-table-cell-row-mode::highlight(selected) { background-color: transparent; color: var(--text-selected); }
+.tree-table-cell-row-mode::highlight(selected) { background-color: transparent; color: var(--text-1); }
 
 /* Inner elements — each defined in ONE rule only so no accidental duplicate
    selector chains where the parser would merge conflicting declarations.
@@ -832,7 +832,7 @@
     border-width: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     /* Hit-test wrapper: stretched to full row height for a generous
        click target, flex-centred so the inner .tree-table-arrow-glyph
@@ -856,7 +856,7 @@
     border-width: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     overflow: visible;
     flex-grow: 0;
     flex-shrink: 0;
@@ -869,7 +869,7 @@
     border-width: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-align: center;
     vertical-align: middle;
@@ -877,7 +877,7 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.tree-table-icon::highlight(selected) { color: var(--text-selected); }
+.tree-table-icon::highlight(selected) { color: var(--text-1); }
 
 .tree-table-text {
     margin: 0px;
@@ -890,7 +890,7 @@
     border-width: 1px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -901,7 +901,7 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.tree-table-text::highlight(selected) { color: var(--text-selected); }
+.tree-table-text::highlight(selected) { color: var(--text-1); }
 
 /* Inline-rename editor variant: same box as .tree-table-text so the
    text stays at the exact same pixel position, but with a visible
@@ -913,8 +913,8 @@
     padding: 0px;
     border-width: 1px;
     background-color: transparent;
-    border-color: var(--tree-table-edit-border);
-    color: var(--text-primary);
+    border-color: var(--accent);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -925,15 +925,15 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.tree-table-text-edit::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+.tree-table-text-edit::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- toggleStyle ---------------------------------------------------------- */
 .toggle {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     padding: 2px 4px 2px 4px;
     margin: 1px;
     overflow: auto;
@@ -945,20 +945,20 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.toggle       ::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.toggle:hover ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.toggle:focus ::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.toggle       ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.toggle:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.toggle:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .first-toggle {
     border-width: var(--border-first);
     border-radius: var(--radius-md-first);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 0px 1px 1px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -970,20 +970,20 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.first-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.first-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.first-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.first-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.first-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.first-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.first-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .mid-toggle {
     border-width: var(--border-mid);
     border-radius: var(--radius-md-mid);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 0px 1px 0px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -995,20 +995,20 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.mid-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.mid-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.mid-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.mid-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.mid-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.mid-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.mid-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.mid-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.mid-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.mid-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .last-toggle {
     border-width: var(--border-last);
     border-radius: var(--radius-md-last);
-    border-color: var(--accent);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 1px 1px 1px 0px;
     padding: 2px 4px 2px 4px;
     overflow: auto;
@@ -1020,13 +1020,13 @@
     flex-grow: 1;
     cursor: pointer;
 }
-.last-toggle:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.last-toggle:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-toggle:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.last-toggle::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
-.last-toggle:hover::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-toggle:active::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
-.last-toggle:focus::highlight(selected) { border-color: var(--border-focus); background-color: var(--accent-light); }
+.last-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.last-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.last-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.last-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.last-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 /* ---- button-group / toggle-group containers ------------------------------ */
 /* Horizontal flex row with no gap. Children (.first-/.mid-/.last-button or
@@ -1073,8 +1073,8 @@
     overflow: hidden;
     padding: 0px;
     margin: 0px;
-    background-color: var(--drop-target-bg);
-    border-color: var(--accent-blue);
+    background-color: var(--accent-soft);
+    border-color: var(--accent);
     color: transparent;
 }
 
@@ -1087,15 +1087,15 @@
     cursor: col-resize;
     vertical-align: baseline;
     text-wrap: wrap;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.knob:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.knob:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.knob:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.knob::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.knob:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.knob:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.knob:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.knob::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- firstIconStyle ------------------------------------------------------- */
 .first-icon {
@@ -1107,16 +1107,16 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
     break-after: left;
 }
-.first-icon:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-icon:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.first-icon:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.first-icon::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.first-icon:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.first-icon:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-icon:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.first-icon::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconLeftStyle -------------------------------------------------------- */
 .icon-left {
@@ -1131,15 +1131,15 @@
     text-overflow: ellipsis;
     -interstice-icon-side: left;
     -interstice-icon-text-gap: 4px;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.icon-left:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-left:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.icon-left:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-left::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.icon-left:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.icon-left:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.icon-left:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.icon-left::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconRightStyle ------------------------------------------------------- */
 .icon-right {
@@ -1154,15 +1154,15 @@
     text-overflow: ellipsis;
     -interstice-icon-side: right;
     -interstice-icon-text-gap: 4px;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.icon-right:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-right:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.icon-right:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-right::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.icon-right:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.icon-right:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.icon-right:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.icon-right::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconTopStyle --------------------------------------------------------- */
 .icon-top {
@@ -1177,15 +1177,15 @@
     text-overflow: ellipsis;
     -interstice-icon-side: top;
     -interstice-icon-text-gap: 4px;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.icon-top:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-top:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.icon-top:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-top::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.icon-top:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.icon-top:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.icon-top:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.icon-top::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconBottomStyle ------------------------------------------------------ */
 .icon-bottom {
@@ -1200,15 +1200,15 @@
     text-overflow: ellipsis;
     -interstice-icon-side: bottom;
     -interstice-icon-text-gap: 4px;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent-dark);
-    border-color: var(--accent);
+    background-color: var(--bg-control);
+    border-color: var(--line-strong);
 }
-.icon-bottom:hover  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-bottom:active { border-color: var(--border-focus); background-color: var(--accent-light); }
-.icon-bottom:focus  { border-color: var(--border-focus); background-color: var(--accent-dark); }
-.icon-bottom::highlight(selected) { border-color: var(--accent); background-color: var(--accent-light); }
+.icon-bottom:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.icon-bottom:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.icon-bottom:focus  { border-color: var(--accent); background-color: var(--bg-control); }
+.icon-bottom::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- itemListStyle -------------------------------------------------------- */
 .item-list {
@@ -1220,17 +1220,17 @@
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 10px;
-    background-color: var(--bg-content);
-    border-color: var(--accent);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--line-strong);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: wrap;
     text-align: start;
     vertical-align: middle;
 }
-.item-list:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.item-list:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.item-list:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.item-list:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- nodeViewStyle -------------------------------------------------------- */
 .node-view {
@@ -1244,9 +1244,9 @@
     flex-shrink: 0;
     align-items: stretch;
     gap: 0px;
-    background-color: var(--bg-view);
-    border-color: var(--accent);
-    color: var(--text-primary);
+    background-color: var(--bg-app);
+    border-color: var(--line-strong);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: wrap;
@@ -1267,7 +1267,7 @@
     justify-content: flex-start;
     gap: 0px;
     overflow: auto;
-    background-color: var(--bg-view);
+    background-color: var(--bg-app);
     border-color: transparent;
 }
 
@@ -1275,8 +1275,8 @@
 .node {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--bg-content);
+    border-color: var(--line-strong);
+    background-color: var(--bg-panel);
     padding: 0px 0px 4px 0px;
     margin: 0px;
     /* No inter-row gap: rows are two grid cells tall and must stack at exactly
@@ -1288,15 +1288,15 @@
     align-items: stretch;
     justify-content: flex-start;
     overflow: visible;
-    color: var(--text-primary);
+    color: var(--text-2);
     cursor: pointer;
 }
 /* Hover = neutral light-grey border; active/focus/selected = accent blue.
    The background never changes in any state — only the border. */
-.node:hover  { border-color: var(--node-border-hover); }
-.node:active { border-color: var(--accent-blue); }
-.node:focus  { border-color: var(--accent-blue); }
-.node::highlight(selected) { border-color: var(--accent-blue); }
+.node:hover  { border-color: var(--text-3); }
+.node:active { border-color: var(--accent); }
+.node:focus  { border-color: var(--accent); }
+.node::highlight(selected) { border-color: var(--accent); }
 
 /* ---- node-header (title bar at the top of a node) ------------------------ */
 /* A static title bar: its background is the per-node-type tint (set from C++  */
@@ -1304,9 +1304,9 @@
 /* state — the node's own border carries all hover/select feedback.           */
 .node-header {
     border-width: 0px 0px 1px 0px;
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     border-radius: var(--radius-node-top);
-    background-color: var(--accent-dark);
+    background-color: var(--bg-control);
     padding: 0px 0px;
     margin: 0px;
     gap: 0px;
@@ -1315,7 +1315,7 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     font-style: normal;
     text-align: center;
@@ -1338,7 +1338,7 @@
     /* Sockets are shifted onto the node border (half outside the row), so the
        row must not clip them to its content box. */
     overflow: visible;
-    color: var(--text-primary);
+    color: var(--text-2);
 }
 
 /* ---- node-body-center: full-body content (image previews) ---------------- */
@@ -1385,7 +1385,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
 }
 
@@ -1393,19 +1393,19 @@
 .item {
     border-width: var(--border);
     padding: 4px;
-    background-color: var(--bg-content);
-    border-color: var(--border-focus);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--accent);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: wrap;
     text-align: start;
     vertical-align: middle;
 }
-.item:hover  { border-color: var(--accent); background-color: var(--bg-content); }
-.item:active { border-color: var(--accent); background-color: var(--bg-content); }
-.item:focus  { border-color: var(--accent); background-color: var(--bg-content); }
-.item::highlight(selected) { border-color: var(--accent); background-color: var(--accent-dark); }
+.item:hover  { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.item:active { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.item:focus  { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.item::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-control); }
 
 /* ---- listAreaStyle -------------------------------------------------------- */
 .list-area {
@@ -1432,8 +1432,8 @@
 .collection-area {
     border-width: var(--border-thin);
     border-radius: var(--radius-md);
-    border-color: var(--bg-surface);
-    background-color: var(--bg-surface);
+    border-color: var(--panel-border);
+    background-color: var(--bg-panel);
     padding: 4px;
     margin: 1px;
     gap: 0px;
@@ -1456,7 +1456,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-app);
     border-color: transparent;
 }
 
@@ -1468,7 +1468,7 @@
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-app);
     border-color: transparent;
     align-items: stretch;
 }
@@ -1483,7 +1483,7 @@
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-panel);
     border-color: transparent;
     align-items: stretch;
 }
@@ -1499,8 +1499,8 @@
     padding: 0px;
     margin: 0px;
     border-width: var(--border-thin);
-    background-color: var(--accent);
-    border-color: var(--border-subtle);
+    background-color: var(--bg-raised);
+    border-color: var(--line-subtle);
 }
 
 /* ---- menuScrollButtonStyle ------------------------------------------------ */
@@ -1514,11 +1514,11 @@
     margin: 0px;
     border-width: 0px;
     text-wrap: nowrap;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent);
+    background-color: var(--bg-control);
 }
-.menu-scroll-button:hover { background-color: var(--accent-dark); }
+.menu-scroll-button:hover { background-color: var(--bg-active); }
 
 /* ---- menuItemStyle -------------------------------------------------------- */
 .menu-item {
@@ -1532,15 +1532,15 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
-    background-color: var(--accent);
+    background-color: var(--bg-control);
     border-color: transparent;
 }
-.menu-item:hover  { background-color: var(--accent-dark); }
-.menu-item:active { background-color: var(--accent-light); }
-.menu-item:focus  { background-color: var(--accent-dark); }
-.menu-item::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+.menu-item:hover  { background-color: var(--bg-active); }
+.menu-item:active { background-color: var(--bg-pressed); }
+.menu-item:focus  { background-color: var(--bg-control); }
+.menu-item::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- menuItemRowStyle ----------------------------------------------------- */
 /* Reusable interactive row for dropdown / context-menu / submenu items: an
@@ -1561,14 +1561,14 @@
     overflow: visible;
     flex-grow: 0;
     flex-shrink: 0;
-    background-color: var(--accent);
+    background-color: var(--bg-control);
 }
 /* "selected" (current/checked) items are marked with a checkmark in the icon
    column (see MenuItemRow), not a background — so the hover/focus highlight is
    never ambiguous with the current-item cue. */
-.menu-item-row:hover  { background-color: var(--accent-dark); }
-.menu-item-row:active { background-color: var(--accent-light); }
-.menu-item-row:focus  { background-color: var(--accent-dark); }
+.menu-item-row:hover  { background-color: var(--bg-active); }
+.menu-item-row:active { background-color: var(--bg-pressed); }
+.menu-item-row:focus  { background-color: var(--bg-control); }
 
 /* Fixed icon column; reserved for every item in a menu that uses icons so the
    labels line up whether or not a given item supplies an icon. Width is the
@@ -1593,7 +1593,7 @@
     margin: 0px;
     padding: 0px;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
 }
 
 /* The label fills the row, pushing any trailing shortcut/arrow to the edge. */
@@ -1607,7 +1607,7 @@
     text-align: start;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
 }
@@ -1622,7 +1622,7 @@
     vertical-align: middle;
     text-align: end;
     text-wrap: nowrap;
-    color: var(--text-muted);
+    color: var(--text-3);
     font-size: var(--font-size);
     background-color: transparent;
 }
@@ -1638,7 +1638,7 @@
     vertical-align: middle;
     text-align: end;
     text-wrap: nowrap;
-    color: var(--text-muted);
+    color: var(--text-3);
     font-size: var(--font-size);
     background-color: transparent;
 }
@@ -1657,9 +1657,9 @@
     flex-grow: 0;
     flex-shrink: 0;
     overflow: visible;
-    background-color: var(--bg-toolbar-side);
+    background-color: var(--bg-header);
     border-width: 0px 0px 1px 0px;
-    border-color: var(--accent);
+    border-color: var(--line-strong);
 }
 
 /* Flat top-level trigger — no border/background until hover, so the bar reads
@@ -1669,7 +1669,7 @@
     border-radius: var(--radius-sm);
     border-color: transparent;
     background-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     margin: 0px;
     padding: 2px 8px;
     overflow: auto;
@@ -1681,10 +1681,10 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.menu-bar-trigger:hover  { background-color: var(--accent-dark); }
-.menu-bar-trigger:active { background-color: var(--accent-light); }
-.menu-bar-trigger:focus  { background-color: var(--accent-dark); }
-.menu-bar-trigger::highlight(selected) { background-color: var(--accent-light); }
+.menu-bar-trigger:hover  { background-color: var(--bg-active); }
+.menu-bar-trigger:active { background-color: var(--bg-pressed); }
+.menu-bar-trigger:focus  { background-color: var(--bg-control); }
+.menu-bar-trigger::highlight(selected) { background-color: var(--bg-pressed); }
 
 /* Thin divider between groups of items inside a dropdown. Height comes from
    MenuSeparator(); this just paints the line and insets it. */
@@ -1692,7 +1692,7 @@
     margin: 4px 8px;
     height: 1px;
     padding: 0px;
-    background-color: var(--text-primary);
+    background-color: var(--text-2);
     border-color: transparent;
 }
 
@@ -1707,8 +1707,8 @@
     margin: 0px;
     border-width: var(--border-thin);
     border-radius: var(--radius-sm);
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
+    background-color: var(--bg-raised);
+    border-color: var(--line-subtle);
 }
 
 /* ---- tooltipTextStyle ----------------------------------------------------- */
@@ -1717,7 +1717,7 @@
     margin: 0px;
     border-width: 0px;
     text-wrap: nowrap;
-    color: var(--text-bright);
+    color: var(--text-1);
     font-size: var(--font-size-tooltip);
 }
 
@@ -1731,13 +1731,13 @@
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 4px;
-    background-color: var(--bg-content);
-    border-color: var(--accent);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--line-strong);
+    color: var(--text-2);
     font-size: var(--font-size);
 }
-.collection:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.collection:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.collection:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.collection:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- reorderableItemStyle: invisible wrapper, passes through content size - */
 /* flex-wrap: nowrap so an item's internal children (e.g. a tab's text + close
@@ -1775,8 +1775,8 @@
     background-color: transparent;
     border-color: transparent;
 }
-.horzReorderableGroup:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.horzReorderableGroup:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.horzReorderableGroup:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.horzReorderableGroup:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- vertReorderableGroupStyle -------------------------------------------- */
 .vertReorderableGroup {
@@ -1791,8 +1791,8 @@
     background-color: transparent;
     border-color: transparent;
 }
-.vertReorderableGroup:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.vertReorderableGroup:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.vertReorderableGroup:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.vertReorderableGroup:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- horzReorderableGroupWrapStyle ---------------------------------------- */
 .horzReorderableGroupWrap {
@@ -1807,8 +1807,8 @@
     background-color: transparent;
     border-color: transparent;
 }
-.horzReorderableGroupWrap:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.horzReorderableGroupWrap:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.horzReorderableGroupWrap:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.horzReorderableGroupWrap:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- vertReorderableGroupWrapStyle ---------------------------------------- */
 .vertReorderableGroupWrap {
@@ -1823,8 +1823,8 @@
     background-color: transparent;
     border-color: transparent;
 }
-.vertReorderableGroupWrap:active { border-color: var(--border-focus); background-color: var(--bg-content); }
-.vertReorderableGroupWrap:focus  { border-color: var(--border-focus); background-color: var(--bg-content); }
+.vertReorderableGroupWrap:active { border-color: var(--accent); background-color: var(--bg-panel); }
+.vertReorderableGroupWrap:focus  { border-color: var(--accent); background-color: var(--bg-panel); }
 
 /* ---- listViewStyle -------------------------------------------------------- */
 .list-view {
@@ -1836,17 +1836,17 @@
     align-items: stretch;
     flex-wrap: nowrap;
     gap: 0px;
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--line-subtle);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
 }
-.list-view:active { border-color: var(--accent); background-color: var(--bg-surface); }
-.list-view:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+.list-view:active { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.list-view:focus  { border-color: var(--line-strong); background-color: var(--bg-panel); }
 
 /* ---- listItemStyle -------------------------------------------------------- */
 .list-item {
@@ -1854,7 +1854,7 @@
     padding: 3px 6px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: nowrap;
@@ -1864,10 +1864,10 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.list-item:hover  { background-color: var(--bg-hover); color: var(--text-bright); }
-.list-item:active { background-color: var(--bg-hover); color: var(--text-bright); }
-.list-item:focus  { background-color: var(--bg-hover); color: var(--text-bright); }
-.list-item::highlight(selected) { background-color: var(--selection-bg); color: var(--text-selected); }
+.list-item:hover  { background-color: var(--bg-header); color: var(--text-1); }
+.list-item:active { background-color: var(--bg-header); color: var(--text-1); }
+.list-item:focus  { background-color: var(--bg-header); color: var(--text-1); }
+.list-item::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* .list-item-row: outer container for a reorderable list item. Holds the
    drag-knob and the body child in a horizontal flex row; provides the row-
@@ -1886,10 +1886,10 @@
     flex-shrink: 0;
     overflow: visible;
 }
-.list-item-row:hover  { background-color: var(--bg-hover); }
-.list-item-row:active { background-color: var(--bg-hover); }
-.list-item-row:focus  { background-color: var(--bg-hover); }
-.list-item-row::highlight(selected) { background-color: var(--selection-bg); }
+.list-item-row:hover  { background-color: var(--bg-header); }
+.list-item-row:active { background-color: var(--bg-header); }
+.list-item-row:focus  { background-color: var(--bg-header); }
+.list-item-row::highlight(selected) { background-color: var(--accent-soft); }
 
 /* .list-item-drag-knob-horz / -vert: small drag handle for reorderable items.
    Two orientation variants so the cursor matches the drag axis: -horz drags
@@ -1905,7 +1905,7 @@
     padding: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-muted); /* the grip icon is a mask: it takes this colour */
+    color: var(--text-3); /* the grip icon is a mask: it takes this colour */
     cursor: ew-resize;
     flex-grow: 0;
     flex-shrink: 0;
@@ -1914,8 +1914,8 @@
     -interstice-vertical-text-align: middle;
     -interstice-icon-size: 16px;
 }
-.list-item-drag-knob-horz:hover  { background-color: var(--bg-drag-knob-hover); cursor: ew-resize; }
-.list-item-drag-knob-horz:active { background-color: var(--accent-blue);        cursor: ew-resize; }
+.list-item-drag-knob-horz:hover  { background-color: var(--bg-active); cursor: ew-resize; }
+.list-item-drag-knob-horz:active { background-color: var(--accent-soft);        cursor: ew-resize; }
 
 .list-item-drag-knob-vert {
     border-width: 0px;
@@ -1924,7 +1924,7 @@
     padding: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-muted); /* the grip icon is a mask: it takes this colour */
+    color: var(--text-3); /* the grip icon is a mask: it takes this colour */
     cursor: ns-resize;
     flex-grow: 0;
     flex-shrink: 0;
@@ -1933,8 +1933,8 @@
     -interstice-vertical-text-align: middle;
     -interstice-icon-size: 16px;
 }
-.list-item-drag-knob-vert:hover  { background-color: var(--bg-drag-knob-hover); cursor: ns-resize; }
-.list-item-drag-knob-vert:active { background-color: var(--accent-blue);        cursor: ns-resize; }
+.list-item-drag-knob-vert:hover  { background-color: var(--bg-active); cursor: ns-resize; }
+.list-item-drag-knob-vert:active { background-color: var(--accent-soft);        cursor: ns-resize; }
 
 /* .list-item-body: inner text/icon child of a reorderable list item. Text
    styling same as .list-item but background is transparent so the outer
@@ -1944,7 +1944,7 @@
     padding: 3px 6px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: nowrap;
@@ -1954,8 +1954,8 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.list-item-body:hover                { color: var(--text-bright); }
-.list-item-body::highlight(selected) { color: var(--text-selected); }
+.list-item-body:hover                { color: var(--text-1); }
+.list-item-body::highlight(selected) { color: var(--text-1); }
 
 /* ---- treeViewStyle -------------------------------------------------------- */
 .tree-view {
@@ -1970,17 +1970,17 @@
     flex-direction: column;
     align-items: stretch;
     flex-wrap: nowrap;
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--line-subtle);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
 }
-.tree-view:active { border-color: var(--accent); background-color: var(--bg-surface); }
-.tree-view:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+.tree-view:active { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.tree-view:focus  { border-color: var(--line-strong); background-color: var(--bg-panel); }
 
 /* ---- gridViewStyle: flex-wrap container for icon grid --------------------- */
 .grid-view {
@@ -1992,16 +1992,16 @@
     align-items: flex-start;
     gap: 4px;
     overflow: auto;
-    background-color: var(--bg-listview);
-    border-color: var(--border-grid-view);
-    color: var(--text-tab-hover);
+    background-color: var(--bg-panel);
+    border-color: var(--panel-border);
+    color: var(--text-1);
     font-size: var(--font-size);
     align-items: stretch;
     flex-grow: 1;
     flex-shrink: 1;
 }
-.grid-view:active { border-color: var(--accent); background-color: var(--bg-listview); }
-.grid-view:focus  { border-color: var(--accent); background-color: var(--bg-listview); }
+.grid-view:active { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.grid-view:focus  { border-color: var(--line-strong); background-color: var(--bg-panel); }
 
 /* ---- gridViewItemStyle: single grid item (icon above text) ---------------- */
 .grid-view-item {
@@ -2009,7 +2009,7 @@
     padding: 8px 4px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-tab-hover);
+    color: var(--text-1);
     font-size: var(--font-size);
     text-align: center;
     text-wrap: nowrap;
@@ -2021,9 +2021,9 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.grid-view-item:hover  { background-color: var(--table-row-hover); border-color: var(--table-row-hover); }
-.grid-view-item:active { background-color: var(--bg-grid-active); border-color: var(--bg-grid-active); }
-.grid-view-item::highlight(selected) { background-color: var(--selection-bg); border-color: var(--selection-bg); color: var(--text-selected); }
+.grid-view-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
+.grid-view-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
+.grid-view-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
 
 /* ---- gridViewListItemStyle: list-mode row (icon left, name right) --------- */
 .grid-view-list-item {
@@ -2031,7 +2031,7 @@
     padding: 2px 6px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-tab-hover);
+    color: var(--text-1);
     font-size: var(--font-size);
     text-align: left;
     text-wrap: nowrap;
@@ -2044,9 +2044,9 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.grid-view-list-item:hover  { background-color: var(--table-row-hover); border-color: var(--table-row-hover); }
-.grid-view-list-item:active { background-color: var(--bg-grid-active); border-color: var(--bg-grid-active); }
-.grid-view-list-item::highlight(selected) { background-color: var(--selection-bg); border-color: var(--selection-bg); color: var(--text-selected); }
+.grid-view-list-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
+.grid-view-list-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
+.grid-view-list-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
 
 /* ---- gridViewRenameItem: rename-mode grid cell --------------------------- */
 /* Mirrors .grid-view-item's geometry, but as a real flex column of           */
@@ -2103,8 +2103,8 @@
     padding: 0px;
     border-width: 1px;
     background-color: transparent;
-    border-color: var(--tree-table-edit-border);
-    color: var(--text-primary);
+    border-color: var(--accent);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -2115,7 +2115,7 @@
     flex-grow: 0;
     flex-shrink: 1;
 }
-.grid-view-rename-edit::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+.grid-view-rename-edit::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- gridViewScrollStyle: virtualized grid scroll viewport ---------------- */
 /* Column flex so visible row strips + the top/bottom virtualization spacers   */
@@ -2129,8 +2129,8 @@
     align-items: stretch;
     gap: 0px;
     overflow: auto;
-    background-color: var(--table-row-bg);
-    border-color: var(--border-grid-view);
+    background-color: var(--bg-panel);
+    border-color: var(--panel-border);
     flex-grow: 1;
     flex-shrink: 1;
     /* flex-basis:0 — size from the parent's available space, NOT from the
@@ -2213,7 +2213,7 @@
     align-items: stretch;
     gap: 0px;
     overflow: visible;
-    background-color: var(--bg-tab-bar);
+    background-color: var(--bg-header);
     border-color: transparent;
     font-size: var(--font-size);
     flex-grow: 0;
@@ -2233,14 +2233,14 @@
     gap: 4px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-tab-normal);
+    color: var(--text-2);
     font-size: var(--font-size);
     flex-grow: 0;
     flex-shrink: 0;
 }
-.tab:hover  { background-color: var(--bg-tab-inactive); color: var(--text-tab-hover); }
-.tab:active { background-color: var(--bg-tab-active); color: var(--text-tab-active); }
-.tab::highlight(selected) { background-color: var(--bg-tab-active); border-color: var(--accent-blue); color: var(--text-tab-selected); }
+.tab:hover  { background-color: var(--bg-header); color: var(--text-1); }
+.tab:active { background-color: var(--bg-active); color: var(--text-1); }
+.tab::highlight(selected) { background-color: var(--bg-active); border-color: transparent; color: var(--text-1); }
 
 /* ---- tabContentStyle: icon+text inside a tab ------------------------------ */
 .tab-content {
@@ -2249,7 +2249,7 @@
     margin: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-tab-normal);
+    color: var(--text-2);
     font-size: var(--font-size);
     font-weight: 600;
     text-wrap: nowrap;
@@ -2263,9 +2263,9 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.tab-content:hover  { color: var(--text-tab-hover); }
-.tab-content:active { color: var(--text-tab-active); }
-.tab-content::highlight(selected) { color: var(--text-tab-selected); }
+.tab-content:hover  { color: var(--text-1); }
+.tab-content:active { color: var(--text-1); }
+.tab-content::highlight(selected) { color: var(--text-1); }
 
 /* ---- tabCloseStyle: small close button in a tab --------------------------- */
 .tab-close {
@@ -2274,7 +2274,7 @@
     margin: 0px 0px 0px 4px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-muted);
+    color: var(--text-3);
     font-size: var(--font-size-sm);
     text-align: center;
     -interstice-vertical-text-align: middle;
@@ -2284,8 +2284,8 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.tab-close:hover  { color: var(--text-selected); background-color: var(--bg-tab-close-hover); }
-.tab-close:active { color: var(--text-selected); background-color: var(--bg-tab-close-active); }
+.tab-close:hover  { color: var(--text-1); background-color: var(--bg-active); }
+.tab-close:active { color: var(--text-1); background-color: var(--bg-pressed); }
 
 /* ---- Docking container ---------------------------------------------------- */
 /* Fills its parent (the main window) via flex-grow:1, and shrinks back down
@@ -2340,26 +2340,26 @@
 .dock-sizer-horz {
     border-width: 0px;
     padding: 0px;
-    background-color: var(--bg-drag-knob);
+    background-color: var(--bg-control);
     border-color: transparent;
     cursor: col-resize;
     flex-grow: 0;
     flex-shrink: 0;
 }
-.dock-sizer-horz:hover  { background-color: var(--accent-blue); cursor: col-resize; }
-.dock-sizer-horz:active { background-color: var(--accent-blue); cursor: col-resize; }
+.dock-sizer-horz:hover  { background-color: var(--accent-soft); cursor: col-resize; }
+.dock-sizer-horz:active { background-color: var(--accent-soft); cursor: col-resize; }
 
 .dock-sizer-vert {
     border-width: 0px;
     padding: 0px;
-    background-color: var(--bg-drag-knob);
+    background-color: var(--bg-control);
     border-color: transparent;
     cursor: row-resize;
     flex-grow: 0;
     flex-shrink: 0;
 }
-.dock-sizer-vert:hover  { background-color: var(--accent-blue); cursor: row-resize; }
-.dock-sizer-vert:active { background-color: var(--accent-blue); cursor: row-resize; }
+.dock-sizer-vert:hover  { background-color: var(--accent-soft); cursor: row-resize; }
+.dock-sizer-vert:active { background-color: var(--accent-soft); cursor: row-resize; }
 
 /* Leaves fill their split parent. */
 .dock-leaf {
@@ -2369,8 +2369,8 @@
     flex-direction: column;
     align-items: stretch;
     gap: 0px;
-    background-color: var(--bg-tab-bar);
-    border-color: var(--border-dock-leaf);
+    background-color: var(--bg-panel);
+    border-color: var(--panel-border);
     overflow: hidden;
     flex-shrink: 1;
     flex-grow: 1;
@@ -2394,7 +2394,7 @@
     align-items: stretch;
     align-content: stretch;
     gap: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-panel);
     border-color: transparent;
     overflow: auto;
     flex-shrink: 1;
@@ -2412,17 +2412,17 @@
     flex-direction: column;
     align-items: stretch;
     flex-wrap: nowrap;
-    background-color: var(--bg-surface);
-    border-color: var(--border-subtle);
-    color: var(--text-primary);
+    background-color: var(--bg-panel);
+    border-color: var(--line-subtle);
+    color: var(--text-2);
     font-size: var(--font-size);
     direction: initial;
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
 }
-.settings-page-selection:active { border-color: var(--accent); background-color: var(--bg-surface); }
-.settings-page-selection:focus  { border-color: var(--accent); background-color: var(--bg-surface); }
+.settings-page-selection:active { border-color: var(--line-strong); background-color: var(--bg-panel); }
+.settings-page-selection:focus  { border-color: var(--line-strong); background-color: var(--bg-panel); }
 
 /* Settings page content: like .dock-content but with extra left padding so the
    page body isn't flush against the tree/page-selection sizer. (top right bottom left) */
@@ -2435,7 +2435,7 @@
     align-items: stretch;
     align-content: stretch;
     gap: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-panel);
     border-color: transparent;
     /* NOT a scroll container: it's a fixed-height pane and each page manages
        its own overflow (the Shortcuts grid scrolls internally). If this were
@@ -2473,7 +2473,7 @@
 .slider-field-track {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     padding: 2px 4px 2px 4px;
     background-color: transparent;
     margin: 1px;
@@ -2485,9 +2485,9 @@
     justify-content: center;
     gap: 4px;
 }
-.slider-field-track:hover  { border-color: var(--border-focus); }
-.slider-field-track:active { border-color: var(--border-focus); }
-.slider-field-track:focus  { border-color: var(--border-focus); }
+.slider-field-track:hover  { border-color: var(--line-strong); }
+.slider-field-track:active { border-color: var(--accent); }
+.slider-field-track:focus  { border-color: var(--accent); }
 
 /* Inner halves painted by the slider's custom-draw. Border-radius = track radius
    (--radius-md) minus track border (--border) so the curve hugs the inside of
@@ -2495,22 +2495,22 @@
 .slider-field-bg {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--slider-bg);
+    border-color: var(--line-strong);
+    background-color: var(--bg-pressed);
 }
-.slider-field-bg:hover  { border-color: var(--border-focus); }
-.slider-field-bg:active { border-color: var(--border-focus); }
-.slider-field-bg:focus  { border-color: var(--border-focus); }
+.slider-field-bg:hover  { border-color: var(--line-strong); }
+.slider-field-bg:active { border-color: var(--accent); }
+.slider-field-bg:focus  { border-color: var(--accent); }
 
 .slider-field-fill {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
-    background-color: var(--slider-fill);
+    border-color: var(--line-strong);
+    background-color: var(--accent);
 }
-.slider-field-fill:hover  { border-color: var(--border-focus); }
-.slider-field-fill:active { border-color: var(--border-focus); }
-.slider-field-fill:focus  { border-color: var(--border-focus); }
+.slider-field-fill:hover  { border-color: var(--line-strong); }
+.slider-field-fill:active { border-color: var(--accent); }
+.slider-field-fill:focus  { border-color: var(--accent); }
 
 /* ---- slider: thin groove line + knob, no value text. Shorter than the
    SliderField fill-bar; groove + knob are painted by the slider's custom-draw. */
@@ -2525,17 +2525,17 @@
 .slider-groove {
     border-width: 0px;
     border-radius: 2px;
-    background-color: var(--slider-bg);
+    background-color: var(--bg-pressed);
     border-color: transparent;
 }
 .slider-knob {
     border-width: 0px;
     border-radius: var(--radius-lg);   /* rounder than the old radius-md knob */
-    background-color: var(--slider-fill);
+    background-color: var(--accent);
     border-color: transparent;
 }
-.slider-knob:hover  { background-color: var(--accent-blue); }
-.slider-knob:active { background-color: var(--accent-blue); }
+.slider-knob:hover  { background-color: var(--accent-soft); }
+.slider-knob:active { background-color: var(--accent-soft); }
 
 
 .slider-field-text {
@@ -2543,7 +2543,7 @@
     padding: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-wrap: nowrap;
     text-align: start;
@@ -2559,7 +2559,7 @@
     border-width: 0px;
     width: 12px;
     padding: 0px;
-    background-color: var(--bg-scrollbar);
+    background-color: transparent;
     border-color: transparent;
     cursor: default;
     overflow: hidden;
@@ -2568,7 +2568,7 @@
     border-width: 0px;
     height: 12px;
     padding: 0px;
-    background-color: var(--bg-scrollbar);
+    background-color: transparent;
     border-color: transparent;
     cursor: default;
     overflow: hidden;
@@ -2579,7 +2579,7 @@
     border-width: 0px;
     border-radius: 4px;
     padding: 0px;
-    background-color: var(--slider-knob);
+    background-color: var(--line-strong);
     border-color: transparent;
 }
 
@@ -2587,7 +2587,7 @@
 .color-swatch {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     background-color: #ffffffff;
     margin: 1px;
     padding: 2px 4px 2px 4px;
@@ -2597,7 +2597,7 @@
     cursor: pointer;
     flex-grow: 1;
 }
-.color-swatch:hover { border-color: var(--border-focus); }
+.color-swatch:hover { border-color: var(--line-strong); }
 
 .color-picker {
     padding: 8px;
@@ -2619,7 +2619,7 @@
     height: 24px;
     background-color: transparent;
     border-width: var(--border-thin);
-    border-color: var(--border-picker);
+    border-color: var(--line-node);
     border-radius: var(--radius-sm);
     padding: 0px;
     cursor: pointer;
@@ -2631,8 +2631,8 @@
     height: 24px;
     padding: 0px;
     border-width: var(--border-thin);
-    border-color: var(--line-gray);
-    background-color: var(--accent-dark);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
@@ -2640,7 +2640,7 @@
     -interstice-icon-size: 16px;
     text-wrap: nowrap;
     text-overflow: clip;
-    color: var(--text-primary);
+    color: var(--text-2);
     font-size: var(--font-size);
     align-content: center;
 }
@@ -2649,7 +2649,7 @@
     width: 24px;
     height: 24px;
     border-width: var(--border-thin);
-    border-color: var(--line-gray);
+    border-color: var(--line-strong);
     background-color: #ffffffff;
 }
 
@@ -2657,7 +2657,7 @@
 .gradient-swatch {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--accent);
+    border-color: var(--line-strong);
     background-color: transparent;
     margin: 1px;
     padding: 2px 4px 2px 4px;
@@ -2668,7 +2668,7 @@
     align-self: stretch;
     overflow: visible;
 }
-.gradient-swatch:hover { border-color: var(--border-focus); }
+.gradient-swatch:hover { border-color: var(--line-strong); }
 
 .gradient-editor {
     padding: 8px;
@@ -2681,7 +2681,7 @@
     height: 30px;
     background-color: transparent;
     border-width: var(--border-thin);
-    border-color: var(--border-picker);
+    border-color: var(--line-node);
     border-radius: var(--radius-sm);
     padding: 0px;
     cursor: pointer;
@@ -2700,7 +2700,7 @@
     align-items: flex-start;
     gap: 4px;
     padding: 2px 4px;
-    background-color: var(--bg-toolbar-side);
+    background-color: var(--bg-header);
     border-width: 0px;
     /* Keep an empty side hit-testable for cross-side drops. */
     min-height: 24px;
@@ -2712,7 +2712,7 @@
     align-items: flex-start;
     gap: 4px;
     padding: 4px 2px;
-    background-color: var(--bg-toolbar-side);
+    background-color: var(--bg-header);
     border-width: 0px;
     min-width: 24px;
 }
@@ -2760,8 +2760,8 @@
     border-style: dashed;
     border-color: transparent;
 }
-.toolbar-item-horz:hover { border-color: var(--accent); }
-.toolbar-item-horz:active { border-color: var(--accent); }
+.toolbar-item-horz:hover { border-color: var(--line-strong); }
+.toolbar-item-horz:active { border-color: var(--line-strong); }
 
 /* Vertical toolbar item — used by Left/Right sides. Flex-column so the */
 /* drag thumb sits ABOVE the buttons instead of to the left.            */
@@ -2777,8 +2777,8 @@
     border-style: dashed;
     border-color: transparent;
 }
-.toolbar-item-vert:hover { border-color: var(--accent); }
-.toolbar-item-vert:active { border-color: var(--accent); }
+.toolbar-item-vert:hover { border-color: var(--line-strong); }
+.toolbar-item-vert:active { border-color: var(--line-strong); }
 
 /* Drag thumb (no gripper dots) — reads as a button at rest, turns the         */
 /* selected-tab accent (--accent-blue) on hover. Horizontal sides round the    */
@@ -2790,15 +2790,15 @@
     border-radius: var(--radius-sm) 0px 0px var(--radius-sm);
     padding: 1px;
     margin: 0px;
-    background-color: var(--accent-dark);
+    background-color: var(--bg-control);
     border-color: transparent;
     flex-grow: 0;
     flex-shrink: 0;
     align-self: stretch;
     cursor: move;
 }
-.toolbar-thumb-horz:hover  { background-color: var(--accent-blue); }
-.toolbar-thumb-horz:active { background-color: var(--accent-blue); }
+.toolbar-thumb-horz:hover  { background-color: var(--accent-soft); }
+.toolbar-thumb-horz:active { background-color: var(--accent-soft); }
 
 /* Vertical sides round the top (leading) edge.                                */
 .toolbar-thumb-vert {
@@ -2808,23 +2808,23 @@
     border-radius: var(--radius-sm) var(--radius-sm) 0px 0px;
     padding: 1px;
     margin: 0px;
-    background-color: var(--accent-dark);
+    background-color: var(--bg-control);
     border-color: transparent;
     flex-grow: 0;
     flex-shrink: 0;
     align-self: stretch;
     cursor: move;
 }
-.toolbar-thumb-vert:hover  { background-color: var(--accent-blue); }
-.toolbar-thumb-vert:active { background-color: var(--accent-blue); }
+.toolbar-thumb-vert:hover  { background-color: var(--accent-soft); }
+.toolbar-thumb-vert:active { background-color: var(--accent-soft); }
 
 /* ---- toolbar buttonStyle -------------------------------------------------- */
 .toolbar-button {
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
-    border-color: var(--accent-dark);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 0px;
     padding: 1px;
     overflow: auto;
@@ -2837,10 +2837,10 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-button:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
-.toolbar-button:active { border-color: var(--bg-drag-knob); border-style: dotted; background-color: var(--accent-blue); }
-.toolbar-button:focus  { border-color: var(--accent3-dark); border-style: dotted; }
-.toolbar-button::highlight(selected) { background-color: var(--accent-blue); }
+.toolbar-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.toolbar-button:active { border-color: var(--line-strong); border-style: dotted; background-color: var(--accent-soft); }
+.toolbar-button:focus  { border-color: var(--line-strong); border-style: dotted; }
+.toolbar-button::highlight(selected) { background-color: var(--accent-soft); }
 
 /* ---- toolbar toggleStyle -------------------------------------------------- */
 /* Same compact visuals as .toolbar-button; the ::highlight(selected) state    */
@@ -2848,9 +2848,9 @@
 .toolbar-toggle {
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
-    border-color: var(--accent-dark);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 0px;
     padding: 1px;
     overflow: auto;
@@ -2863,13 +2863,13 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-toggle:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
-.toolbar-toggle:active { border-color: var(--bg-drag-knob); border-style: dotted; background-color: var(--accent-blue); }
-.toolbar-toggle:focus  { border-color: var(--accent3-dark); border-style: dotted; }
-.toolbar-toggle       ::highlight(selected) { background-color: var(--accent-blue); }
-.toolbar-toggle:hover ::highlight(selected) { background-color: var(--accent-blue); }
-.toolbar-toggle:active::highlight(selected) { background-color: var(--accent-blue); }
-.toolbar-toggle:focus ::highlight(selected) { background-color: var(--accent-blue); }
+.toolbar-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.toolbar-toggle:active { border-color: var(--line-strong); border-style: dotted; background-color: var(--accent-soft); }
+.toolbar-toggle:focus  { border-color: var(--line-strong); border-style: dotted; }
+.toolbar-toggle       ::highlight(selected) { background-color: var(--accent-soft); }
+.toolbar-toggle:hover ::highlight(selected) { background-color: var(--accent-soft); }
+.toolbar-toggle:active::highlight(selected) { background-color: var(--accent-soft); }
+.toolbar-toggle:focus ::highlight(selected) { background-color: var(--accent-soft); }
 
 /* ---- toolbar textboxStyle ------------------------------------------------- */
 /* Compact inline text input. Uses --accent2-dark (the regular textbox field   */
@@ -2877,9 +2877,9 @@
 .toolbar-textbox {
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
-    border-color: var(--accent-dark);
-    background-color: var(--accent2-dark);
-    color: var(--text-primary);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    color: var(--text-1);
     margin: 0px;
     padding: 1px 4px;
     overflow: auto;
@@ -2893,10 +2893,10 @@
     font-size: var(--font-size);
     flex-grow: 0;
 }
-.toolbar-textbox:hover  { border-color: var(--border-focus); border-style: dotted; border-color: var(--border-focus); }
-.toolbar-textbox:active { border-color: var(--bg-drag-knob); border-style: dotted; border-color: var(--border-focus); }
-.toolbar-textbox:focus  { border-color: var(--accent-blue); border-style: dotted; }
-.toolbar-textbox::selection { color: var(--text-on-accent); background-color: var(--accent-light); }
+.toolbar-textbox:hover  { border-color: var(--line-strong); border-style: dotted; border-color: var(--line-strong); }
+.toolbar-textbox:active { border-color: var(--line-strong); border-style: dotted; border-color: var(--accent); }
+.toolbar-textbox:focus  { border-color: var(--accent); border-style: dotted; }
+.toolbar-textbox::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- toolbar menuTriggerStyle --------------------------------------------- */
 /* Like .toolbar-button but text-aligned to start — menu triggers usually     */
@@ -2904,9 +2904,9 @@
 .toolbar-menu-trigger {
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
-    border-color: var(--accent-dark);
-    background-color: var(--accent-dark);
-    color: var(--text-primary);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
     margin: 0px;
     padding: 1px 4px;
     overflow: auto;
@@ -2919,9 +2919,9 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-menu-trigger:hover  { border-color: var(--bg-drag-knob-hover); background-color: var(--bg-drag-knob-hover); }
-.toolbar-menu-trigger:active { border-color: var(--bg-drag-knob); background-color: var(--accent-blue); }
-.toolbar-menu-trigger:focus  { border-color: var(--accent-blue); }
+.toolbar-menu-trigger:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
+.toolbar-menu-trigger:active { border-color: var(--line-strong); background-color: var(--accent-soft); }
+.toolbar-menu-trigger:focus  { border-color: var(--accent); }
 
 
 /* Container style used inside floating tear-off toolbar windows. Zero  */
@@ -2935,7 +2935,7 @@
     gap: 2px;
     padding: 0px;
     margin: 0px;
-    background-color: var(--bg-content);
+    background-color: var(--bg-panel);
     border-color: transparent;
 }
 
@@ -2943,6 +2943,6 @@
 .view-content {
     display: flex;
     flex-grow: 1;
-    background-color: var(--accent2-dark);
+    background-color: var(--bg-input);
     overflow: auto;
 }

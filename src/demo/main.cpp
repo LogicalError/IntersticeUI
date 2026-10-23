@@ -16,9 +16,14 @@ int main(int argc, char* argv[])
     interstice::Application* application = new interstice::Application();
 
     // --ui-scale <factor>: zoom the UI on top of the OS display scale (e.g. 1.5).
+    // --theme <palette>: start with another palette, e.g. themes/light.css.
     for (int i = 1; i + 1 < argc; ++i)
+    {
         if (std::string_view(argv[i]) == "--ui-scale")
             application->SetUIScale(std::strtof(argv[i + 1], nullptr));
+        else if (std::string_view(argv[i]) == "--theme")
+            application->RequestReloadTheme(argv[i + 1], application->GetGlobalFontScale());
+    }
 
     int returnCode = EXIT_FAILURE;
     try

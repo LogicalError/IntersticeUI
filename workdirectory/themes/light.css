@@ -1,81 +1,73 @@
 /* =============================================================================
-   Light palette for IntersticeUI.
-   Mirror of dark.css, entry for entry: each value keeps the dark theme's
-   relationship to its neighbours (raised widgets sit just off the panel, inset
-   fields are lighter, borders a step darker than what they frame, hovers a
-   soft blue) rather than being a straight inversion.
+   Graphite light palette for IntersticeUI. Same names as dark.css; values from
+   docs/design/graphite/graphite-theme-spec.md.
    ============================================================================= */
 
 :root {
-    /* ---- Line colors (also read from code via GetCustomProperty) --------- */
-    --line-gray: #8a8a8a;
-    --line-yellow: #b37f00;
-    --line-white: #000000; /* highest-contrast line on the view (white in dark) */
-    --line-dark: #ffffff; /* outline behind --line-white (dark in dark) */
-    --line-grid: #e2e2e2;
-    --tree-guide-line: #b4b4b4;
-    /* ---- Text ------------------------------------------------------------ */
-    --text-primary: #1e1e1e;
-    --text-bright: #000000;
-    --text-muted: #6a6a6a;
-    --text-selected: #000000;
-    --text-on-accent: #1e1e1e; /* text in focused edit fields (white here) */
-    --text-on-highlight: #303030; /* text on .text-style::highlight(selected) */
-    --text-label: #505050; /* default label text */
-    --text-label-active: #1f5b78;
-    --text-label-hover: #2a5c90;
-    --text-tab-normal: #505050; /* tab normal text */
-    --text-tab-active: #000000; /* tab active text */
-    --text-tab-selected: #000000; /* tab selected text */
-    --text-tab-hover: #303030; /* tab hover text, grid-view base text */
-    /* ---- Accent / widget palette ----------------------------------------- */
-    --accent: #c4c4c4; /* default border, filled label bg */
-    --accent-dark: #e6e6e6; /* default widget background */
-    --accent-light: #cddcea; /* Active background for accent-filled widgets */
-    --accent-blue: #0066b8; /* focus indicator, drop target */
-    --accent2-dark: #ffffff; /* secondary accent for textboxes etc. (inset fields) */
-    --accent3-dark: #545454; /* toolbar focus outline */
-    --selection-bg: #b5d5f0; /* highlight(selected) background */
-    --drop-target-bg: #0066b860; /* panel drop visualization (accent-blue w/ alpha) */
-    --label-dragger-hover-bg: #2a5c9040; /* label-group-dragger hover (label-hover w/ alpha) */
-    /* ---- Surfaces -------------------------------------------------------- */
-    --bg-content: #f5f5f5; /* list / panel / node-view */
-    --bg-toolbar-side: #e3e3e3; /* docked toolbar bars — darker than content for a framed look */
-    --bg-view: #ffffff; /* view background */
-    --bg-surface: #ffffff; /* tooltip / tree-view / grid-view */
-    --bg-scrollbar: #ececec; /* scrollbar */
-    --bg-listview: #ffffff; /* listview */
-    --bg-hover: #e5eaf0; /* list / tree row hover */
-    --bg-tab-bar: #e0e0e0;
-    --bg-tab-active: #f5f5f5;
-    --bg-tab-inactive: #d8d8d8;
-    --bg-drag-knob: #d0d0d2;
-    --bg-drag-knob-hover: #a8a8ac; /* list-item drag-knob hover */
-    --bg-menu: #f0f0f0; /* menu background */
-    --bg-grid-hover: #e8eaec; /* grid-view-item hover */
-    --bg-grid-active: #d6dce3; /* grid-view-item active */
-    --bg-tab-close-hover: #d0d0d0; /* tab-close button hover */
-    --bg-tab-close-active: #b8b8b8; /* tab-close button active */
-    /* ---- Borders --------------------------------------------------------- */
-    --border-focus: #3A79BB; /* hover / active / focus border */
-    --node-border-hover: #808080; /* node-view: hovered-node border (mid grey); selected uses --accent-blue */
-    --border-subtle: #c0c0c0; /* tooltip / listview border */
-    --border-grid-view: #c4c4c4; /* grid-view container border */
-    --border-dock-leaf: #d4d4d4; /* dock-leaf border */
-    --border-picker: #b4b4b4; /* color picker / gradient slider frames */
-    /* ---- Table palette --------------------------------------------------- */
-    --table-row-bg: transparent; /* show --bg-surface through; only dark needs a row tint vs gap */
-    --table-row-alt-bg: #f2f2f2; /* a step off --bg-surface for zebra; stays below --bg-hover */
-    --table-row-hover: #e5eaf0; /* hover state for rows; matches --bg-hover */
-    --table-header-hover-bg: #e6e6e6; /* one step darker than --bg-content for header :hover */
-    --tree-table-edit-border: #3A79BB; /* tree-table inline-rename textbox border */
-    /* ---- Slider knob (used by .list-item-drag-knob-horz / -vert) ---------- */
-    --slider-knob: #707070;
-    --slider-knob-hover: #404040;
-    /* ---- Slider field (Blender-style filled bar) ------------------------- */
-    --slider-bg: #dadada;
-    --slider-fill: #6a92cc;
-    /* ---- Node-view header tints (per node type, read from code) ----------- */
+    /* ---- Surfaces --------------------------------------------------------- */
+    --bg-app: #E6E8EC;
+    --bg-input: #FFFFFF;
+    --bg-canvas: #F4F5F7;
+    --bg-panel: #FBFBFC;
+    --bg-header: #F3F4F6;
+    --bg-raised: #FFFFFF;
+    --bg-control: #FFFFFF;
+    --bg-active: #E4E7EC;
+    --bg-pressed: #EEF0F3;
+    --bg-keycap: #FFFFFF;
+    --row-stripe: #F6F7F9;
+    --canvas-dot: #CDD2DA;
+    /* ---- Lines ------------------------------------------------------------ */
+    --panel-border: #DADDE3;
+    --line-subtle: #E3E6EB;
+    --line-node: #D5D9E0;
+    --line-strong: #C9CED6;
+    --line-section: #E9EBEF;
+    /* ---- Text ------------------------------------------------------------- */
+    --text-1: #1A1D23;
+    --text-2: #464C57;
+    --text-3: #5F6673;
+    --text-link: #2459C9;
+    --text-link-hover: #1A4296;
+    /* ---- Accent ----------------------------------------------------------- */
+    --accent: #2F6FEB;
+    --accent-soft: #E2EAFA;   /* accent at 12% over --bg-panel, opaque like dark.css */
+    --on-accent: #FFFFFF;
+    /* ---- Semantic --------------------------------------------------------- */
+    --ok: #1E9E62;
+    --warn: #D99A2B;
+    --warn-text: #9A6512;
+    --error: #D64545;
+    --info: #2F6FEB;
+    --folder: #E3AE4C;
+    /* ---- Data: pin types, axes, node categories --------------------------- */
+    --pin-float: #0FA596;
+    --pin-int: #D9771A;
+    --pin-bool: #7C5CE0;
+    --pin-color: #D63F8C;
+    --axis-x: #D64545;
+    --axis-y: #1E9E62;
+    --axis-z: #2F6FEB;
+    --axis-x-text: #B83232;
+    --axis-y-text: #157A4A;
+    --axis-z-text: #2459C9;
+    --axis-x-bg: #D645451F;   /* axis color at 12% */
+    --axis-y-bg: #1E9E621F;
+    --axis-z-bg: #2F6FEB1F;
+    --node-generator: #D9534F;
+    --node-input: #1E9E62;
+    --node-output: #7C5CE0;
+    /* ---- Profiler --------------------------------------------------------- */
+    --flame-frame: #E3E6EB;
+    --flame-build: #F4DCCF;
+    --flame-render: #E2DCF5;
+    --flame-frame-stage: #D3ECEF;
+    --flame-window: #D7EBDD;
+    --flame-text: #1A1D23;
+    --frame-bar: #59B88A;
+    --frame-bar-over: #E0A23A;
+    --budget-line: #9AA1AD;
+    /* ---- Node view header tints (per node type, read from code) ----------- */
     --node-tint-input: #e8c6c6;
     --node-tint-converter: #c6d0e6;
     --node-tint-output: #dac6e6;
