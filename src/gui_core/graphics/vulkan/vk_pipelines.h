@@ -18,7 +18,7 @@ public:
 
     void clear();
 
-    VkPipeline build_pipeline(VkDevice device);
+    VkPipeline build_pipeline(VkDevice device, const VkAllocationCallbacks* callbacks);
 
     void set_shaders(VkShaderModule vertexShader, VkShaderModule fragmentShader);
     void set_input_topology(VkPrimitiveTopology topology);
@@ -39,5 +39,5 @@ public:
 
 namespace vkutil 
 {
-    bool load_shader_module(const char* filePath, VkDevice device, VkShaderModule* outShaderModule);
+    bool load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule);
 }

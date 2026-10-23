@@ -13,7 +13,7 @@ namespace Vulkan
 
         void add_binding(uint32_t binding, VkDescriptorType type);
         void clear();
-        VkDescriptorSetLayout build(VkDevice device, VkShaderStageFlags shaderStages, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags flags = 0);
+        VkDescriptorSetLayout build(VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderStageFlags shaderStages, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags flags = 0);
     };
 
     struct DescriptorWriter 
@@ -38,8 +38,9 @@ namespace Vulkan
         };
 
         VkDescriptorPool pool;
+        const VkAllocationCallbacks* callbacks = nullptr;
 
-        void init_pool(VkDevice device, uint32_t maxSets, ::std::span<PoolSizeRatio> poolRatios);
+        void init_pool(VkDevice device, uint32_t maxSets, ::std::span<PoolSizeRatio> poolRatios, const VkAllocationCallbacks* callbacks);
         void clear_descriptors(VkDevice device);
         void destroy_pool(VkDevice device);
 
@@ -55,7 +56,7 @@ namespace Vulkan
             float ratio;
         };
 
-        void init(VkDevice device, uint32_t initialSets, ::std::span<PoolSizeRatio> poolRatios);
+        void init(VkDevice device, uint32_t initialSets, ::std::span<PoolSizeRatio> poolRatios, const VkAllocationCallbacks* callbacks);
         void clear_pools(VkDevice device);
         void destroy_pools(VkDevice device);
 
@@ -69,5 +70,6 @@ namespace Vulkan
         ::std::vector<VkDescriptorPool> fullPools;
         ::std::vector<VkDescriptorPool> readyPools;
         uint32_t setsPerPool;
+        const VkAllocationCallbacks* callbacks = nullptr;
     };
 }

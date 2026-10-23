@@ -16,13 +16,13 @@
 
 namespace GUI
 {
-    static VkSurfaceKHR CreateSDLVulkanSurface(VkInstance instance, OSWindowHandle windowHandle)
+    static VkSurfaceKHR CreateSDLVulkanSurface(VkInstance instance, const VkAllocationCallbacks* callbacks, OSWindowHandle windowHandle)
     {
         if (instance == VK_NULL_HANDLE || windowHandle == nullptr)
             return VK_NULL_HANDLE;
 
         VkSurfaceKHR surface = VK_NULL_HANDLE;
-        if (!SDL_Vulkan_CreateSurface(SDLWindowBackend::ToSDL(windowHandle), instance, nullptr, &surface))
+        if (!SDL_Vulkan_CreateSurface(SDLWindowBackend::ToSDL(windowHandle), instance, callbacks, &surface))
             return VK_NULL_HANDLE;
         return surface;
     }

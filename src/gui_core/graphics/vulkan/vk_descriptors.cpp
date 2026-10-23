@@ -19,7 +19,7 @@ void DescriptorLayoutBuilder::clear()
     bindings.clear();
 }
 
-VkDescriptorSetLayout DescriptorLayoutBuilder::build(VkDevice device, VkShaderStageFlags shaderStages, void* pNext, VkDescriptorSetLayoutCreateFlags flags)
+VkDescriptorSetLayout DescriptorLayoutBuilder::build(VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderStageFlags shaderStages, void* pNext, VkDescriptorSetLayoutCreateFlags flags)
 {
     for (auto& b : bindings) 
     {
@@ -34,13 +34,14 @@ VkDescriptorSetLayout DescriptorLayoutBuilder::build(VkDevice device, VkShaderSt
     info.flags = flags;
 
     VkDescriptorSetLayout set = VK_NULL_HANDLE;
-    if (vkCreateDescriptorSetLayout(device, &info, nullptr, &set) != VK_SUCCESS)
+    if (vkCreateDescriptorSetLayout(device, &info, callbacks, &set) != VK_SUCCESS)
         return VK_NULL_HANDLE;
     return set;
 }
 
-void DescriptorAllocator::init_pool(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+void DescriptorAllocator::init_pool(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios, const VkAllocationCallbacks* allocationCallbacks)
 {
+    callbacks = allocationCallbacks;
     std::vector<VkDescriptorPoolSize> poolSizes;
     for (PoolSizeRatio ratio : poolRatios) 
     {
@@ -57,7 +58,7 @@ void DescriptorAllocator::init_pool(VkDevice device, uint32_t maxSets, std::span
 	pool_info.poolSizeCount = (uint32_t)poolSizes.size();
 	pool_info.pPoolSizes = poolSizes.data();
 
-	vkCreateDescriptorPool(device, &pool_info, nullptr, &pool);
+	vkCreateDescriptorPool(device, &pool_info, callbacks, &pool);
 }
 
 void DescriptorAllocator::clear_descriptors(VkDevice device)
@@ -67,7 +68,7 @@ void DescriptorAllocator::clear_descriptors(VkDevice device)
 
 void DescriptorAllocator::destroy_pool(VkDevice device)
 {
-    vkDestroyDescriptorPool(device,pool,nullptr);
+    vkDestroyDescriptorPool(device, pool, callbacks);
 }
 
 VkDescriptorSet DescriptorAllocator::allocate(VkDevice device, VkDescriptorSetLayout layout)
@@ -142,8 +143,9 @@ void DescriptorWriter::update_set(VkDevice device, VkDescriptorSet set)
     vkUpdateDescriptorSets(device, (uint32_t)writes.size(), writes.data(), 0, nullptr);
 }
 
-void DescriptorAllocatorGrowable::init(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+void DescriptorAllocatorGrowable::init(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios, const VkAllocationCallbacks* allocationCallbacks)
 {
+    callbacks = allocationCallbacks;
     ratios.clear();
     
     for (auto r : poolRatios) 
@@ -176,13 +178,13 @@ void DescriptorAllocatorGrowable::destroy_pools(VkDevice device)
 {
 	for (auto p : readyPools) 
     {
-		vkDestroyDescriptorPool(device, p, nullptr);
+		vkDestroyDescriptorPool(device, p, callbacks);
 	}    
     readyPools.clear();
 
 	for (auto p : fullPools) 
     {
-		vkDestroyDescriptorPool(device,p,nullptr);
+		vkDestroyDescriptorPool(device, p, callbacks);
     }
     fullPools.clear();
 }
@@ -230,7 +232,7 @@ VkDescriptorPool DescriptorAllocatorGrowable::create_pool(VkDevice device, uint3
     };
 
 	VkDescriptorPool newPool;
-	vkCreateDescriptorPool(device, &pool_info, nullptr, &newPool);
+	vkCreateDescriptorPool(device, &pool_info, callbacks, &newPool);
     return newPool;
 }
 

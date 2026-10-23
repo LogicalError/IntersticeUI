@@ -312,7 +312,7 @@ bool VulkanGraphicsContext::Initialize(GUI::IWindowBackend* windowBackend)
         deviceContext.GetDeletionQueue(GUI::DeviceScope::Application).
             push_function([dc, bootstrapSurface]()
             {
-                vkDestroySurfaceKHR(dc->instance, bootstrapSurface, nullptr);
+                vkDestroySurfaceKHR(dc->instance, bootstrapSurface, dc->AllocationCallbacks());
             });
     }
 
@@ -498,7 +498,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
 
     if (initialized)
     {
-        return m_surfaceFactory(instance, windowHandle);
+        return m_surfaceFactory(instance, AllocationCallbacks(), windowHandle);
     }
 
     if (m_externalDevice)
@@ -512,7 +512,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
             return VK_NULL_HANDLE;
         }
         initialized = true;
-        return m_surfaceFactory(instance, windowHandle);
+        return m_surfaceFactory(instance, AllocationCallbacks(), windowHandle);
     }
 
     vkb::InstanceBuilder instance_builder;
@@ -526,7 +526,8 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
     auto& system_info = system_info_ret.value();
 
     instance_builder.set_app_name("GUI")
-        .require_api_version(1, 3, 0);
+        .require_api_version(1, 3, 0)
+        .set_allocation_callbacks(const_cast<VkAllocationCallbacks*>(AllocationCallbacks()));
 
     // The GPU test harness installs a recording debug callback (and optionally
     // synchronization validation) so validation errors fail tests. Otherwise:
@@ -572,7 +573,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
     auto fail = [&](VkSurfaceKHR surfaceToDestroy) -> VkSurfaceKHR
         {
             if (surfaceToDestroy != VK_NULL_HANDLE)
-                vkDestroySurfaceKHR(vkb_inst.instance, surfaceToDestroy, nullptr);
+                vkDestroySurfaceKHR(vkb_inst.instance, surfaceToDestroy, AllocationCallbacks());
             vkb::destroy_instance(vkb_inst);
             instance        = VK_NULL_HANDLE;
             debug_messenger = VK_NULL_HANDLE;
@@ -605,7 +606,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
     VkPhysicalDeviceVulkan11Features features11 = requirements.features11;
     VkPhysicalDeviceFeatures         features   = requirements.features;
 
-    VkSurfaceKHR surface = m_surfaceFactory(instance, windowHandle);
+    VkSurfaceKHR surface = m_surfaceFactory(instance, AllocationCallbacks(), windowHandle);
     if (surface == VK_NULL_HANDLE)
     {
         LOG_ERROR(kLogVulkan, "failed to create surface");
@@ -629,6 +630,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
     vkb::PhysicalDevice physicalDevice = physicalDeviceOpt.value();
 
     vkb::DeviceBuilder deviceBuilder { physicalDevice };
+    deviceBuilder.set_allocation_callbacks(const_cast<VkAllocationCallbacks*>(AllocationCallbacks()));
 
     auto deviceRet = deviceBuilder.build();
     if (!deviceRet)
@@ -656,6 +658,7 @@ VkSurfaceKHR Vulkan::VulkanDeviceContext::CreateSurface(GUI::OSWindowHandle wind
     allocatorInfo.device = device;
     allocatorInfo.instance = instance;
     allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    allocatorInfo.pAllocationCallbacks = AllocationCallbacks();
     if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
     {
         LOG_ERROR(kLogVulkan, "failed to create the GUI allocator");
@@ -722,6 +725,7 @@ bool Vulkan::VulkanDeviceContext::AdoptExternalDevice()
         allocatorInfo.device = device;
         allocatorInfo.instance = instance;
         allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+        allocatorInfo.pAllocationCallbacks = AllocationCallbacks();
         if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
         {
             LOG_ERROR(kLogVulkan, "Failed to create the GUI allocator on the external device");
@@ -730,6 +734,33 @@ bool Vulkan::VulkanDeviceContext::AdoptExternalDevice()
         m_ownsAllocator = true;
     }
     return true;
+}
+
+void Vulkan::VulkanDeviceContext::SetAllocationHooks(const GUI::AllocationHooks& hooks)
+{
+    m_hooks = hooks;
+    m_allocationCallbacks = {};
+    m_allocationCallbacks.pUserData = &m_hooks;
+    m_allocationCallbacks.pfnAllocation = [](void* user, size_t size, size_t alignment, VkSystemAllocationScope) -> void*
+    {
+        const auto& h = *static_cast<const GUI::AllocationHooks*>(user);
+        return h.allocate(size, alignment, h.user);
+    };
+    m_allocationCallbacks.pfnReallocation = [](void* user, void* original, size_t size, size_t alignment, VkSystemAllocationScope) -> void*
+    {
+        const auto& h = *static_cast<const GUI::AllocationHooks*>(user);
+        if (size == 0)   // Vulkan's realloc to 0 frees
+        {
+            h.free(original, h.user);
+            return nullptr;
+        }
+        return h.reallocate(original, size, alignment, h.user);
+    };
+    m_allocationCallbacks.pfnFree = [](void* user, void* memory)
+    {
+        const auto& h = *static_cast<const GUI::AllocationHooks*>(user);
+        h.free(memory, h.user);
+    };
 }
 
 Vulkan::VulkanDeviceContext::DeviceRequirements Vulkan::VulkanDeviceContext::GetDeviceRequirements()
@@ -830,10 +861,10 @@ bool Vulkan::VulkanDeviceContext::InitializeSharedResources()
 
     // Command pool + buffer for immediate submits; individual buffers can be reset.
     commandPoolInfo = vkinit::command_pool_create_info(graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-    if (vkCreateCommandPool(device, &commandPoolInfo, nullptr, &immCommandPool) != VK_SUCCESS)
+    if (vkCreateCommandPool(device, &commandPoolInfo, AllocationCallbacks(), &immCommandPool) != VK_SUCCESS)
         return failed("immediate command pool");
     GetDeletionQueue(GUI::DeviceScope::Application)
-        .push_function([=]() { vkDestroyCommandPool(device, immCommandPool, nullptr); });
+        .push_function([=]() { vkDestroyCommandPool(device, immCommandPool, AllocationCallbacks()); });
 
     VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(immCommandPool, 1);
     if (vkAllocateCommandBuffers(device, &cmdAllocInfo, &immCommandBuffer) != VK_SUCCESS)
@@ -841,10 +872,10 @@ bool Vulkan::VulkanDeviceContext::InitializeSharedResources()
 
     // Starts signalled so the first wait on it returns at once.
     fenceCreateInfo = vkinit::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
-    if (vkCreateFence(device, &fenceCreateInfo, nullptr, &immFence) != VK_SUCCESS)
+    if (vkCreateFence(device, &fenceCreateInfo, AllocationCallbacks(), &immFence) != VK_SUCCESS)
         return failed("immediate fence");
     GetDeletionQueue(GUI::DeviceScope::Application)
-        .push_function([=]() { vkDestroyFence(device, immFence, nullptr); });
+        .push_function([=]() { vkDestroyFence(device, immFence, AllocationCallbacks()); });
 
     {
         DescriptorLayoutBuilder builder;
@@ -861,12 +892,12 @@ bool Vulkan::VulkanDeviceContext::InitializeSharedResources()
             .bindingCount  = 1,
             .pBindingFlags = &bindingFlags,
         };
-        singleImageDescriptorLayout = builder.build(device, VK_SHADER_STAGE_FRAGMENT_BIT, &bindingFlagsInfo);
+        singleImageDescriptorLayout = builder.build(device, AllocationCallbacks(), VK_SHADER_STAGE_FRAGMENT_BIT, &bindingFlagsInfo);
         if (singleImageDescriptorLayout == VK_NULL_HANDLE)
             return failed("texture descriptor set layout");
     }
     GetDeletionQueue(GUI::DeviceScope::Application)
-        .push_function([&]() { vkDestroyDescriptorSetLayout(device, singleImageDescriptorLayout, nullptr); });
+        .push_function([&]() { vkDestroyDescriptorSetLayout(device, singleImageDescriptorLayout, AllocationCallbacks()); });
 
     // Samplers
     const VkSamplerCreateInfo nearestSampler =
@@ -898,10 +929,10 @@ bool Vulkan::VulkanDeviceContext::InitializeSharedResources()
     };
     for (const auto& [info, sampler] : samplers)
     {
-        if (vkCreateSampler(device, info, nullptr, sampler) != VK_SUCCESS)
+        if (vkCreateSampler(device, info, AllocationCallbacks(), sampler) != VK_SUCCESS)
             return failed("default samplers");
         GetDeletionQueue(GUI::DeviceScope::Application)
-            .push_function([this, sampler]() { vkDestroySampler(device, *sampler, nullptr); });
+            .push_function([this, sampler]() { vkDestroySampler(device, *sampler, AllocationCallbacks()); });
     }
     return true;
 }
@@ -941,11 +972,11 @@ void Vulkan::VulkanDeviceContext::Destroy()
     // Only destroy what the GUI created. A host-provided instance, device and
     // allocator belong to the host.
     if (m_ownsAllocator) vmaDestroyAllocator(allocator);
-    if (m_ownsDevice) vkDestroyDevice(device, nullptr);
+    if (m_ownsDevice) vkDestroyDevice(device, AllocationCallbacks());
     if (m_ownsInstance)
     {
-        vkb::destroy_debug_utils_messenger(instance, debug_messenger);
-        vkDestroyInstance(instance, nullptr);
+        vkb::destroy_debug_utils_messenger(instance, debug_messenger, const_cast<VkAllocationCallbacks*>(AllocationCallbacks()));
+        vkDestroyInstance(instance, AllocationCallbacks());
     }
 }
 
@@ -1155,7 +1186,7 @@ void Vulkan::VulkanDeviceContext::DestroyImage(const VulkanImage& img)
         DestroyBuffer(upload.staging);
         return true;
     });
-    vkDestroyImageView(device, img.imageView, nullptr);
+    vkDestroyImageView(device, img.imageView, AllocationCallbacks());
     vmaDestroyImage(allocator, img.image, img.allocation);
 }
 
@@ -1209,7 +1240,7 @@ Vulkan::VulkanImage Vulkan::VulkanDeviceContext::CreateImage(VkExtent3D size, Vk
     VkImageViewCreateInfo view_info = vkinit::imageview_create_info(format, newImage.image, aspectFlag);
     view_info.subresourceRange.levelCount = img_info.mipLevels;
 
-    VK_CHECK(vkCreateImageView(device, &view_info, nullptr, &newImage.imageView));
+    VK_CHECK(vkCreateImageView(device, &view_info, AllocationCallbacks(), &newImage.imageView));
     return newImage;
 }
 
@@ -1256,7 +1287,7 @@ VkShaderModule Vulkan::VulkanDeviceContext::CreateShader(std::span<uint32_t> spi
     createInfo.pCode = spirvBuffer.data();
 
     VkShaderModule shaderModule = {};
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    if (vkCreateShaderModule(device, &createInfo, AllocationCallbacks(), &shaderModule) != VK_SUCCESS)
     {
         return nullptr;
     }
@@ -1265,7 +1296,7 @@ VkShaderModule Vulkan::VulkanDeviceContext::CreateShader(std::span<uint32_t> spi
 
 void Vulkan::VulkanDeviceContext::DestroyShader(const VkShaderModule& shader) const
 {
-    vkDestroyShaderModule(device, shader, nullptr);
+    vkDestroyShaderModule(device, shader, AllocationCallbacks());
 }
 
 void* vmaGetMappedData(VmaAllocation allocation)

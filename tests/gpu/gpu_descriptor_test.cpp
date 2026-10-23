@@ -41,7 +41,7 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
     std::vector<Vulkan::DescriptorAllocatorGrowable::PoolSizeRatio> ratios = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256.0f }
     };
-    alloc.init(dc.device, 4, ratios);
+    alloc.init(dc.device, 4, ratios, dc.AllocationCallbacks());
 
     VkDescriptorSet set = alloc.allocate(dc.device, dc.singleImageDescriptorLayout);
 

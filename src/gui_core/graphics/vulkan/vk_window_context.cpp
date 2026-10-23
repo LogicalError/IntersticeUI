@@ -62,7 +62,7 @@ void VulkanWindowContext::CreateDrawDepthImages(VulkanImage& drawImage, VulkanIm
     vmaCreateImage(deviceContext->allocator, &drawInfo, &allocInfo, &drawImage.image, &drawImage.allocation, nullptr);
     vmaSetAllocationName(deviceContext->allocator, drawImage.allocation, "Window::DrawImage::CreateImage");
     VkImageViewCreateInfo drawView = vkinit::imageview_create_info(colorFormat, drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
-    VK_CHECK(vkCreateImageView(deviceContext->device, &drawView, nullptr, &drawImage.imageView));
+    VK_CHECK(vkCreateImageView(deviceContext->device, &drawView, deviceContext->AllocationCallbacks(), &drawImage.imageView));
 
     depthImage.imageFormat = depthImageFormat;
     depthImage.imageExtent = extent;
@@ -71,16 +71,16 @@ void VulkanWindowContext::CreateDrawDepthImages(VulkanImage& drawImage, VulkanIm
     vmaCreateImage(deviceContext->allocator, &depthInfo, &allocInfo, &depthImage.image, &depthImage.allocation, nullptr);
     vmaSetAllocationName(deviceContext->allocator, depthImage.allocation, "Window::DepthImage::CreateImage");
     VkImageViewCreateInfo depthView = vkinit::imageview_create_info(depthImageFormat, depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
-    VK_CHECK(vkCreateImageView(deviceContext->device, &depthView, nullptr, &depthImage.imageView));
+    VK_CHECK(vkCreateImageView(deviceContext->device, &depthView, deviceContext->AllocationCallbacks(), &depthImage.imageView));
 }
 
 void VulkanWindowContext::DestroyDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage)
 {
-    vkDestroyImageView(deviceContext->device, drawImage.imageView, nullptr);
+    vkDestroyImageView(deviceContext->device, drawImage.imageView, deviceContext->AllocationCallbacks());
     vmaDestroyImage(deviceContext->allocator, drawImage.image, drawImage.allocation);
     drawImage = {};
 
-    vkDestroyImageView(deviceContext->device, depthImage.imageView, nullptr);
+    vkDestroyImageView(deviceContext->device, depthImage.imageView, deviceContext->AllocationCallbacks());
     vmaDestroyImage(deviceContext->allocator, depthImage.image, depthImage.allocation);
     depthImage = {};
 }
@@ -127,6 +127,7 @@ void VulkanWindowContext::CreateSwapchain()
     }
     
     vkb::SwapchainBuilder swapchainBuilder{ deviceContext->chosenGPU, deviceContext->device, surface };
+    swapchainBuilder.set_allocation_callbacks(const_cast<VkAllocationCallbacks*>(deviceContext->AllocationCallbacks()));
 
     // Prefer alpha compositing modes that allow transparent windows.
     VkSurfaceCapabilitiesKHR surfaceCaps{};
@@ -194,7 +195,7 @@ void VulkanWindowContext::CreateSwapchain()
     const VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
     swapchain.presentSemaphores.resize(swapchain.swapchainImages.size());
     for (VkSemaphore& semaphore : swapchain.presentSemaphores)
-        VK_CHECK(vkCreateSemaphore(deviceContext->device, &semaphoreCreateInfo, nullptr, &semaphore));
+        VK_CHECK(vkCreateSemaphore(deviceContext->device, &semaphoreCreateInfo, deviceContext->AllocationCallbacks(), &semaphore));
 
     // Per-slot draw + depth images so the FRAME_OVERLAP in-flight frames don't
     // share them (frame N's blit-read must not race frame N+1's transition-write).
@@ -226,17 +227,17 @@ void VulkanWindowContext::DestroySwapchain()
 {
     for (int i = 0; i < swapchain.swapchainImageViews.size(); i++)
     {
-        vkDestroyImageView(deviceContext->device, swapchain.swapchainImageViews[i], nullptr);
+        vkDestroyImageView(deviceContext->device, swapchain.swapchainImageViews[i], deviceContext->AllocationCallbacks());
         swapchain.swapchainImageViews[i] = VK_NULL_HANDLE;
     }
     swapchain.swapchainImageViews.clear();
     swapchain.swapchainImages.clear();
 
     for (VkSemaphore semaphore : swapchain.presentSemaphores)
-        vkDestroySemaphore(deviceContext->device, semaphore, nullptr);
+        vkDestroySemaphore(deviceContext->device, semaphore, deviceContext->AllocationCallbacks());
     swapchain.presentSemaphores.clear();
 
-    vkDestroySwapchainKHR(deviceContext->device, swapchain.swapchain, nullptr);
+    vkDestroySwapchainKHR(deviceContext->device, swapchain.swapchain, deviceContext->AllocationCallbacks());
     swapchain.swapchain = VK_NULL_HANDLE;
 
     for (auto& frame : state.frames)
@@ -271,7 +272,7 @@ void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
     VkSwapchainKHR oldSwapchain = swapchain.swapchain;
     std::vector<VkImageView> oldSwapchainImageViews = std::move(swapchain.swapchainImageViews);
     for (VkSemaphore semaphore : swapchain.presentSemaphores)
-        vkDestroySemaphore(deviceContext->device, semaphore, nullptr);
+        vkDestroySemaphore(deviceContext->device, semaphore, deviceContext->AllocationCallbacks());
     swapchain.presentSemaphores.clear();
     std::array<VulkanImage, FRAME_OVERLAP> oldDrawImages;
     std::array<VulkanImage, FRAME_OVERLAP> oldDepthImages;
@@ -307,6 +308,7 @@ void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
 
     GetCurrentFrame().flushQueue.push_function([
         device = deviceContext->device,
+        callbacks = deviceContext->AllocationCallbacks(),
         allocator = deviceContext->allocator,
         oldSwapchain,
         oldSwapchainImageViews = std::move(oldSwapchainImageViews),
@@ -316,20 +318,20 @@ void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
         {
             for (auto imageView : oldSwapchainImageViews)
             {
-                vkDestroyImageView(device, imageView, nullptr);
+                vkDestroyImageView(device, imageView, callbacks);
             }
 
             for (const auto& img : oldDrawImages)
             {
                 if (img.imageView != VK_NULL_HANDLE)
-                    vkDestroyImageView(device, img.imageView, nullptr);
+                    vkDestroyImageView(device, img.imageView, callbacks);
                 if (img.image != VK_NULL_HANDLE)
                     vmaDestroyImage(allocator, img.image, img.allocation);
             }
             for (const auto& img : oldDepthImages)
             {
                 if (img.imageView != VK_NULL_HANDLE)
-                    vkDestroyImageView(device, img.imageView, nullptr);
+                    vkDestroyImageView(device, img.imageView, callbacks);
                 if (img.image != VK_NULL_HANDLE)
                     vmaDestroyImage(allocator, img.image, img.allocation);
             }
@@ -341,7 +343,7 @@ void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
 
             if (oldSwapchain != VK_NULL_HANDLE)
             {
-                vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
+                vkDestroySwapchainKHR(device, oldSwapchain, callbacks);
             }
         });
 }
@@ -836,7 +838,7 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
 
     for (int i = 0; i < Vulkan::FRAME_OVERLAP; i++)
     {
-        VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, nullptr, &context->state.frames[i].commandPool));
+        VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, context->deviceContext->AllocationCallbacks(), &context->state.frames[i].commandPool));
 
         VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(context->state.frames[i].commandPool, 1);
 
@@ -844,7 +846,7 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
 
         context->state.frames[i].deletionQueue.push_function([=]()
                                                     {
-                                                        vkDestroyCommandPool(context->deviceContext->device, context->state.frames[i].commandPool, nullptr);
+                                                        vkDestroyCommandPool(context->deviceContext->device, context->state.frames[i].commandPool, context->deviceContext->AllocationCallbacks());
                                                     });
     }
 
@@ -862,19 +864,19 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
         };
 
         frame.frameDescriptors = DescriptorAllocatorGrowable{};
-        frame.frameDescriptors.init(context->deviceContext->device, 1000, frame_sizes);
+        frame.frameDescriptors.init(context->deviceContext->device, 1000, frame_sizes, context->deviceContext->AllocationCallbacks());
 
-        VK_CHECK(vkCreateFence(context->deviceContext->device, &context->deviceContext->fenceCreateInfo, nullptr, &frame.renderFence));
+        VK_CHECK(vkCreateFence(context->deviceContext->device, &context->deviceContext->fenceCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.renderFence));
 
         VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
 
-        VK_CHECK(vkCreateSemaphore(context->deviceContext->device, &semaphoreCreateInfo, nullptr, &frame.swapchainSemaphore));
+        VK_CHECK(vkCreateSemaphore(context->deviceContext->device, &semaphoreCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.swapchainSemaphore));
 
         frame.deletionQueue.push_function([=]()
                                           {
-                                              vkDestroySemaphore(context->deviceContext->device, frame.swapchainSemaphore, nullptr);
+                                              vkDestroySemaphore(context->deviceContext->device, frame.swapchainSemaphore, context->deviceContext->AllocationCallbacks());
 
-                                              vkDestroyFence(context->deviceContext->device, frame.renderFence, nullptr);
+                                              vkDestroyFence(context->deviceContext->device, frame.renderFence, context->deviceContext->AllocationCallbacks());
 
                                               context->state.frames[i].frameDescriptors.clear_pools(context->deviceContext->device);
                                               context->state.frames[i].frameDescriptors.destroy_pools(context->deviceContext->device);
@@ -912,5 +914,5 @@ void VulkanWindowContext::Destroy()
 
     DestroySwapchain();
 
-    vkDestroySurfaceKHR(deviceContext->instance, surface, nullptr);
+    vkDestroySurfaceKHR(deviceContext->instance, surface, deviceContext->AllocationCallbacks());
 }

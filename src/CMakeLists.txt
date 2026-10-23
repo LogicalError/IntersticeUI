@@ -27,6 +27,11 @@ list(APPEND GUI_FILES
   gui_core/diagnostics/gui_logging.h
   gui_core/diagnostics/gui_logging.cpp
 
+  # Memory
+  gui_core/memory/gui_allocation_hooks.h
+  gui_core/memory/gui_tracking_allocator.h
+  gui_core/memory/gui_tracking_allocator.cpp
+
 
   # State
   gui_core/state/gui_tab_chain_manager.cpp

@@ -76,6 +76,9 @@ else()
 endif()
 
 add_subdirectory(SDL ${_interstice_tp_exclude})
+# SDL counts its live allocations, so the GUI can tell when it is safe to
+# route SDL's memory through a host's allocation hooks.
+target_compile_definitions(SDL3-shared PRIVATE SDL_TRACK_ALLOCATION_COUNT)
 add_subdirectory(skribidi ${_interstice_tp_exclude})
 if(NOT DEFINED INTERSTICE_BUILD_TESTS OR INTERSTICE_BUILD_TESTS)
   add_subdirectory(googletest ${_interstice_tp_exclude})

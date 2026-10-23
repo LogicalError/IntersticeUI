@@ -476,7 +476,7 @@ TEST(GpuInitFailure, MissingSurfaceReturnsFalseInsteadOfTerminating)
     GUI::GraphicsContext* graphicsContext = GUI::GraphicsContext::CreateContext();
     auto* windowBackend = new GUI::SDLWindowBackend(graphicsContext);
     auto* vk = static_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
-    vk->deviceContext.SetSurfaceFactory([](VkInstance, GUI::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
+    vk->deviceContext.SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, GUI::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
 
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend));
     graphicsContext->Cleanup(); // shutdown paths run it even after a failed start

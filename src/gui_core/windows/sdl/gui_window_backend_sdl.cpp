@@ -12,6 +12,8 @@
 
 #include <SDL3/SDL.h>
 #include <cassert>
+#include <cstddef>
+#include <cstring>
 #include <string>
 
 #ifdef _WIN32
@@ -27,6 +29,33 @@ static constexpr GUI::Diagnostics::LogCategory kLogSDL = GUI::Diagnostics::MakeL
 
 namespace GUI
 {
+    namespace
+    {
+        // SDL's memory functions take no user data and are process-wide.
+        AllocationHooks  s_sdlHooks;
+        constexpr size_t kSDLAlignment = alignof(std::max_align_t);
+
+        void* SDLCALL SDLMalloc(size_t size)
+        {
+            return s_sdlHooks.allocate(size != 0 ? size : 1, kSDLAlignment, s_sdlHooks.user);
+        }
+        void* SDLCALL SDLCalloc(size_t count, size_t size)
+        {
+            if (size != 0 && count > SIZE_MAX / size) return nullptr;
+            const size_t bytes = count * size != 0 ? count * size : 1;
+            void* ptr = s_sdlHooks.allocate(bytes, kSDLAlignment, s_sdlHooks.user);
+            if (ptr != nullptr) std::memset(ptr, 0, bytes);
+            return ptr;
+        }
+        void* SDLCALL SDLRealloc(void* ptr, size_t size)
+        {
+            return s_sdlHooks.reallocate(ptr, size != 0 ? size : 1, kSDLAlignment, s_sdlHooks.user);
+        }
+        void SDLCALL SDLFree(void* ptr)
+        {
+            s_sdlHooks.free(ptr, s_sdlHooks.user);
+        }
+    }
 
     static MouseButtons ToMouseButtons(Uint32 sdlbuttons)
     {
@@ -41,9 +70,21 @@ namespace GUI
         return buttons;
     }
 
-    SDLWindowBackend::SDLWindowBackend(GUI::GraphicsContext* graphicsContext)
+    SDLWindowBackend::SDLWindowBackend(GUI::GraphicsContext* graphicsContext, const AllocationHooks* hooks)
         : graphicsContext(graphicsContext)
     {
+        // Replacing SDL's allocator is only safe before SDL holds any memory.
+        if (hooks != nullptr && hooks->IsSet())
+        {
+            if (!SDL_WasInit(0) && SDL_GetNumAllocations() == 0)
+            {
+                s_sdlHooks = *hooks;
+                m_routesSDLMemory = SDL_SetMemoryFunctions(&SDLMalloc, &SDLCalloc, &SDLRealloc, &SDLFree);
+            }
+            if (!m_routesSDLMemory)
+                LOG_WARNING(kLogSDL, "SDL is already in use, so its memory doesn't go through the allocation hooks");
+        }
+
         // Text editors draw the IME composition themselves (OnTextComposition);
         // the OS still draws the candidate list, placed via SetTextInputArea.
         SDL_SetHint(SDL_HINT_IME_IMPLEMENTED_UI, "composition");
@@ -153,6 +194,20 @@ namespace GUI
         if (m_ownsSDL)
             SDL_Quit();
         m_sdlInitialized = false;
+
+        // Back to SDL's own allocator, unless SDL still holds memory from the hooks.
+        if (m_routesSDLMemory)
+        {
+            if (const int live = SDL_GetNumAllocations(); live == 0)
+            {
+                SDL_malloc_func m; SDL_calloc_func c; SDL_realloc_func r; SDL_free_func f;
+                SDL_GetOriginalMemoryFunctions(&m, &c, &r, &f);
+                SDL_SetMemoryFunctions(m, c, r, f);
+                s_sdlHooks = {};
+            }
+            else
+                LOG_WARNING(kLogSDL, "SDL still holds {} allocations after SDL_Quit and keeps using the allocation hooks", live);
+        }
     }
 
     OSWindowHandle SDLWindowBackend::CreateBootstrapWindow()

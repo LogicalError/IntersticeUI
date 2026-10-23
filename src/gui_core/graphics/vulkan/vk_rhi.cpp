@@ -32,20 +32,20 @@ bool GUIRenderContext::Create(Vulkan::VulkanDeviceContext& deviceContext)
         {
             for (size_t j = 0; j < k; j++)
                 vkDestroyPipeline(deviceContext.device,
-                                  reinterpret_cast<VkPipeline>(pipelines[j].pipeline), nullptr);
+                                  reinterpret_cast<VkPipeline>(pipelines[j].pipeline), deviceContext.AllocationCallbacks());
             device.DestroySharedLayout();
             return false;
         }
     }
 
     deviceContext.mainDeletionQueue.push_function(
-        [vkDevice = deviceContext.device, pipelines = pipelines]()
+        [vkDevice = deviceContext.device, callbacks = deviceContext.AllocationCallbacks(), pipelines = pipelines]()
         {
             for (const auto& p : pipelines)
-                vkDestroyPipeline(vkDevice, reinterpret_cast<VkPipeline>(p.pipeline), nullptr);
+                vkDestroyPipeline(vkDevice, reinterpret_cast<VkPipeline>(p.pipeline), callbacks);
             // All pipelines share one layout; destroy it once.
             vkDestroyPipelineLayout(vkDevice,
-                                    reinterpret_cast<VkPipelineLayout>(pipelines[0].layout), nullptr);
+                                    reinterpret_cast<VkPipelineLayout>(pipelines[0].layout), callbacks);
         });
 
     return true;
@@ -86,7 +86,7 @@ GUI::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const GUI::Pri
     if (vert == nullptr)
     {
         LOG_ERROR(kLogVulkan, "Error when building the {} vertex shader module", spec.shaderBaseName);
-        vkDestroyShaderModule(dc.device, frag, nullptr);
+        vkDestroyShaderModule(dc.device, frag, dc.AllocationCallbacks());
         return {};
     }
 
@@ -102,7 +102,7 @@ GUI::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const GUI::Pri
         layoutInfo.setLayoutCount = 1;
         layoutInfo.pPushConstantRanges = &bufferRange;
         layoutInfo.pushConstantRangeCount = 1;
-        VK_CHECK(vkCreatePipelineLayout(dc.device, &layoutInfo, nullptr, &sharedGuiLayout));
+        VK_CHECK(vkCreatePipelineLayout(dc.device, &layoutInfo, dc.AllocationCallbacks(), &sharedGuiLayout));
     }
 
     // The fixed GUI pipeline state, identical for every primitive kind.
@@ -118,10 +118,10 @@ GUI::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const GUI::Pri
     builder.set_color_attachment_format(Vulkan::drawImageFormat);
     builder.set_depth_format(Vulkan::depthImageFormat);
 
-    VkPipeline pipeline = builder.build_pipeline(dc.device);
+    VkPipeline pipeline = builder.build_pipeline(dc.device, dc.AllocationCallbacks());
 
-    vkDestroyShaderModule(dc.device, frag, nullptr);
-    vkDestroyShaderModule(dc.device, vert, nullptr);
+    vkDestroyShaderModule(dc.device, frag, dc.AllocationCallbacks());
+    vkDestroyShaderModule(dc.device, vert, dc.AllocationCallbacks());
 
     return { reinterpret_cast<uint64_t>(pipeline), reinterpret_cast<uint64_t>(sharedGuiLayout) };
 }
@@ -130,7 +130,7 @@ void VulkanRenderDevice::DestroySharedLayout()
 {
     if (sharedGuiLayout != VK_NULL_HANDLE)
     {
-        vkDestroyPipelineLayout(dc.device, sharedGuiLayout, nullptr);
+        vkDestroyPipelineLayout(dc.device, sharedGuiLayout, dc.AllocationCallbacks());
         sharedGuiLayout = VK_NULL_HANDLE;
     }
 }

@@ -11,6 +11,7 @@ list(APPEND GUI_CORE_TEST_FILES
   controls_tooltip_test.cpp
   controls_tree_list_test.cpp
   default_handlers_test.cpp
+  tracking_allocator_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp

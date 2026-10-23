@@ -5,6 +5,10 @@
 
 #include <gui_controls/gui_application.h>
 #include <gui_controls/controls_toolbar_dock.h>
+#include <gui_core/memory/gui_tracking_allocator.h>
+
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_stdinc.h>
 
 #include <filesystem>
 
@@ -70,6 +74,54 @@ namespace
         EXPECT_TRUE(initialized);
         EXPECT_GT(app.styleManager.LayoutStyleCount(), 0u) << "the theme is loaded";
         app.Cleanup();
+    }
+
+    class OneWindowApp : public GUI::GUIApplication
+    {
+    public:
+        GUI::ID windowID = GUI::ID::Invalid();
+
+        void OnGUI() override
+        {
+            if (BeginWindow(windowID, "Allocations", GUI::LayoutOverride{}.Size(200, 100)))
+            {
+                Label("Counting allocations");
+                EndWindow();
+            }
+        }
+    };
+
+    // Everything allocated through the host's hooks (Vulkan objects, vk-bootstrap,
+    // VMA, SDL) is freed again by Cleanup.
+    TEST(GpuApplicationInit, AllocationHooksSeeEverythingFreedByCleanup)
+    {
+        GUI::TrackingAllocator tracker;
+        // SDL's Windows hotplug thread can leave allocations behind across SDL_Quit;
+        // then SDL rightly stays on its own allocator. Only a fresh SDL is routed.
+        const bool sdlRoutable = SDL_WasInit(0) == 0 && SDL_GetNumAllocations() == 0;
+        {
+            OneWindowApp app;
+            app.SetAllocationHooks(tracker.Hooks());
+            if (!app.Initialize())
+            {
+                app.Cleanup();
+                GTEST_SKIP() << "no Vulkan device or window system available";
+            }
+            SDL_malloc_func current = nullptr, original = nullptr;
+            SDL_GetMemoryFunctions(&current, nullptr, nullptr, nullptr);
+            SDL_GetOriginalMemoryFunctions(&original, nullptr, nullptr, nullptr);
+            if (sdlRoutable)
+                EXPECT_NE(current, original) << "SDL allocates through the hooks";
+
+            app.windowID = app.idManager.CreateStaticID();
+            for (int i = 0; i < 3; ++i)
+                app.OnFrame();
+            EXPECT_GT(tracker.LiveAllocations(), 0u);
+            app.Cleanup();
+        }
+        EXPECT_GT(tracker.TotalAllocations(), 0u);
+        EXPECT_EQ(tracker.LiveAllocations(), 0u) << tracker.LiveBytes() << " bytes still live";
+        tracker.ReportLeaks();
     }
 
     class FloatingToolbarApp : public GUI::GUIApplication

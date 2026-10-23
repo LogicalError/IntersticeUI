@@ -145,7 +145,8 @@ namespace GUI
         inputManager     = std::make_unique<GUI::InputManager>();
         inputBroadcaster = GUI::InputHandlerBroadcaster({ inputManager.get(), textSystem });
         graphicsContext  = GUI::GraphicsContext::CreateContext();
-        windowBackend    = new GUI::SDLWindowBackend(graphicsContext);
+        graphicsContext->SetAllocationHooks(m_allocationHooks);
+        windowBackend    = new GUI::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
         guiRenderer      = graphicsContext->guiRenderer;
         layoutEngine     = std::make_unique<GUI::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
         windowManager    = std::make_unique<GUI::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);

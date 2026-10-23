@@ -3,6 +3,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/windows/gui_window_backend.h>
 #include <gui_core/input/gui_input_enums.h>
+#include <gui_core/memory/gui_allocation_hooks.h>
 
 #include <vector>
 #include <unordered_set>
@@ -19,7 +20,9 @@ namespace GUI
     class SDLWindowBackend : public IWindowBackend
     {
     public:
-        SDLWindowBackend(GUI::GraphicsContext* graphicsContext);
+        // hooks: SDL's memory functions too, which are process-wide. Used only when
+        // this backend starts SDL and SDL holds no memory yet.
+        explicit SDLWindowBackend(GUI::GraphicsContext* graphicsContext, const AllocationHooks* hooks = nullptr);
         ~SDLWindowBackend() override;
 
         // Bootstrap window for Vulkan initialization
@@ -99,6 +102,7 @@ namespace GUI
         std::unordered_set<SDL_Window*> m_pendingDestroy;
         bool m_sdlInitialized = false;
         bool m_ownsSDL        = false; // we started SDL, so we shut it down
+        bool m_routesSDLMemory = false; // SDL allocates through the allocation hooks
 		bool m_cursorVisible = true;
         // One SDL cursor per system shape, created on first use; indexed by SDL_SystemCursor.
         static constexpr int kSystemCursorSlots = 32;

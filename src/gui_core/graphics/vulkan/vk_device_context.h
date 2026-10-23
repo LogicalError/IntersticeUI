@@ -9,6 +9,7 @@
 #include <gui_core/graphics/vulkan/vk_meshes.h>
 #include <gui_core/graphics/vulkan/vk_rhi.h>
 #include <gui_core/graphics/vulkan/vk_descriptors.h>
+#include <gui_core/memory/gui_allocation_hooks.h>
 
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
@@ -63,8 +64,14 @@ namespace Vulkan
     class VulkanDeviceContext
     {
     public:
-        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, GUI::OSWindowHandle)>;
+        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, const VkAllocationCallbacks*, GUI::OSWindowHandle)>;
         void SetSurfaceFactory(SurfaceFactory factory) { m_surfaceFactory = std::move(factory); }
+
+        // Host memory functions for every Vulkan object, vk-bootstrap and VMA.
+        // Call before initialization.
+        void SetAllocationHooks(const GUI::AllocationHooks& hooks);
+        // What the vkCreate*/vkDestroy* calls pass; null when no hooks are set.
+        const VkAllocationCallbacks* AllocationCallbacks() const { return m_hooks.IsSet() ? &m_allocationCallbacks : nullptr; }
 
         // Diagnostic hook for the GPU test harness. When set BEFORE device init,
         // the instance is built with this debug callback (instead of the default
@@ -232,6 +239,8 @@ namespace Vulkan
         bool AdoptExternalDevice();
 
         SurfaceFactory m_surfaceFactory;
+        GUI::AllocationHooks  m_hooks;
+        VkAllocationCallbacks m_allocationCallbacks{};
         InstanceDebugConfig m_instanceDebugConfig;
         std::optional<ExternalDevice> m_externalDevice;
         bool m_ownsInstance  = true;

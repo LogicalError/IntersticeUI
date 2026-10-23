@@ -19,7 +19,7 @@ void PipelineBuilder::clear()
     _shaderStages.clear();
 }
 
-VkPipeline PipelineBuilder::build_pipeline(VkDevice device)
+VkPipeline PipelineBuilder::build_pipeline(VkDevice device, const VkAllocationCallbacks* callbacks)
 {
     // make viewport state from our stored viewport and scissor.
     // at the moment we wont support multiple viewports or scissors
@@ -80,7 +80,7 @@ VkPipeline PipelineBuilder::build_pipeline(VkDevice device)
 
     VkPipeline newPipeline;
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo,
-            nullptr, &newPipeline)
+            callbacks, &newPipeline)
         != VK_SUCCESS) 
     {
         LOG_ERROR(kLogVulkan, "failed to create pipeline");
@@ -216,7 +216,7 @@ void PipelineBuilder::enable_depthtest(bool depthWriteEnable, VkCompareOp op)
     _depthStencil.maxDepthBounds = 1.f;
 }
 
-bool vkutil::load_shader_module(const char* filePath, VkDevice device, VkShaderModule* outShaderModule)
+bool vkutil::load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule)
 {
     // Opened at the end so tellg() gives the size.
     std::ifstream file(filePath, std::ios::ate | std::ios::binary);
@@ -244,7 +244,7 @@ bool vkutil::load_shader_module(const char* filePath, VkDevice device, VkShaderM
     createInfo.pCode = buffer.data();
 
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+    if (vkCreateShaderModule(device, &createInfo, callbacks, &shaderModule) != VK_SUCCESS) {
         return false;
     }
 

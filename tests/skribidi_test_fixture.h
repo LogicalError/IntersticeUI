@@ -89,6 +89,7 @@ namespace GUITest
         StubGraphicsContext() { guiRenderer = &renderer; }
         StubGUIRenderer& Renderer() { return renderer; }
         void SetShaderDirectory(std::string_view) override {}
+        void SetAllocationHooks(const GUI::AllocationHooks&) override {}
         bool Initialize(GUI::IWindowBackend*) override { return true; }
         void Cleanup() override {}
         void BeginFrame() override {}

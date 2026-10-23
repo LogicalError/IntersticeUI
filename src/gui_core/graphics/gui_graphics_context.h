@@ -3,6 +3,7 @@
 #include <gui_core/gui_base_types.h>
 
 #include <gui_core/graphics/gui_image.h>
+#include <gui_core/memory/gui_allocation_hooks.h>
 
 #include <gui_core/style/gui_style.h>
 
@@ -57,6 +58,8 @@ namespace GUI
         // Where the compiled shaders are (default "shaders_compiled", relative to the
         // working directory). Call before Initialize.
         virtual void SetShaderDirectory(std::string_view directory) = 0;
+        // Host memory functions for the graphics API's allocations. Call before Initialize.
+        virtual void SetAllocationHooks(const AllocationHooks& hooks) = 0;
         virtual bool Initialize(IWindowBackend* windowBackend) = 0;
         virtual void Cleanup() = 0;
         virtual void BeginFrame() = 0;

@@ -324,6 +324,11 @@ namespace GUI
         void SetResourceRoot(std::string_view root) { m_resourceRoot = std::string(root); }
         const std::string& GetResourceRoot() const { return m_resourceRoot; }
 
+        // Host memory functions for what can be routed: Vulkan objects, VMA,
+        // vk-bootstrap and SDL (only when the GUI starts SDL). See AllocationHooks
+        // for how long they must live. Call before Initialize.
+        void SetAllocationHooks(const AllocationHooks& hooks) { m_allocationHooks = hooks; }
+
         // The CSS rule files loaded after the palette, in order; relative paths are
         // next to the palette file. Defaults to the library's "styles.css". An app
         // appends its own and finds their classes with theme.GetStyle. Call before
@@ -347,6 +352,7 @@ namespace GUI
     protected:
         // Change via RequestReloadTheme so the reload happens between frames.
         std::string m_resourceRoot;
+        AllocationHooks m_allocationHooks;
         MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
         ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
         std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot

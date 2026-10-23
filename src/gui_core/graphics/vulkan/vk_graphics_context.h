@@ -35,6 +35,7 @@ namespace Vulkan
         VulkanGraphicsContext();
 
         void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
+        void SetAllocationHooks(const GUI::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
         bool Initialize(GUI::IWindowBackend* windowBackend) override;
         void Cleanup() override;
         void BeginFrame() override;
