@@ -324,6 +324,15 @@ list(APPEND GUI_CONTROLS_FILES
 
 add_library(gui_controls STATIC ${GUI_CONTROLS_FILES})
 
+# The same names as the installed package, for a host that adds this project.
+add_library(IntersticeUI::gui_core ALIAS gui_core)
+add_library(IntersticeUI::gui_controls ALIAS gui_controls)
+
+# Where GUIApplication::SetResourceRoot finds the resources in this build; the
+# installed package defines it for its own folder.
+target_compile_definitions(gui_controls INTERFACE
+  $<BUILD_INTERFACE:INTERSTICE_RESOURCE_DIR="${INTERSTICE_BUILD_RESOURCE_DIR}">)
+
 target_include_directories(gui_controls PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include>)

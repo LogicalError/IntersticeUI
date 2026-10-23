@@ -21,3 +21,19 @@
 [submodule "third_party/vkbootstrap"]
 	path = third_party/vkbootstrap
 	url = https://github.com/charles-lunarg/vk-bootstrap.git
+[submodule "third_party/harfbuzz"]
+	path = third_party/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz.git
+	shallow = true
+[submodule "third_party/SheenBidi"]
+	path = third_party/SheenBidi
+	url = https://github.com/Tehreer/SheenBidi.git
+	shallow = true
+[submodule "third_party/libunibreak"]
+	path = third_party/libunibreak
+	url = https://github.com/adah1972/libunibreak.git
+	shallow = true
+[submodule "third_party/budouxc"]
+	path = third_party/budouxc
+	url = https://github.com/memononen/budouxc.git
+	shallow = true

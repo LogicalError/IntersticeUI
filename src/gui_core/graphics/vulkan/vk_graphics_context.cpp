@@ -36,7 +36,15 @@
 #define VMA_IMPLEMENTATION
 #endif
 #define VMA_DEBUG_LOG_FORMAT
+// VMA's implementation is third-party code; a host's own VMA target doesn't mark
+// its headers as external, so their warnings would show here.
+#if defined(_MSC_VER)
+#pragma warning(push, 0)
+#endif
 #include <vk_mem_alloc.h>
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 #include <VkBootstrap.h>
 
 #include <fstream>

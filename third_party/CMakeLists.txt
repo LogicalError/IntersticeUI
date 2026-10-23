@@ -61,11 +61,13 @@ target_link_libraries(vkbootstrap PUBLIC Vulkan::Vulkan $<$<BOOL:UNIX>:${CMAKE_D
 set_property(TARGET vkbootstrap PROPERTY CXX_STANDARD 20)
 
 # ---- vma (header-only) ----
-add_library(vma INTERFACE)
-target_include_directories(vma INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vma/include>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/vma>
-)
+if(NOT INTERSTICE_SYSTEM_VMA)
+  add_library(vma INTERFACE)
+  target_include_directories(vma INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vma/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/vma>
+  )
+endif()
 
 # ---- nanosvg (header-only) ----
 add_subdirectory(nanosvg)
@@ -80,11 +82,26 @@ else()
   set(_interstice_tp_exclude EXCLUDE_FROM_ALL)
 endif()
 
-if(NOT DEFINED INTERSTICE_SDL OR INTERSTICE_SDL)
+if((NOT DEFINED INTERSTICE_SDL OR INTERSTICE_SDL) AND NOT INTERSTICE_SYSTEM_SDL)
   add_subdirectory(SDL ${_interstice_tp_exclude})
   # SDL counts its live allocations, so the GUI can tell when it is safe to
   # route SDL's memory through a host's allocation hooks.
   target_compile_definitions(SDL3-shared PRIVATE SDL_TRACK_ALLOCATION_COUNT)
+endif()
+# skribidi fetches these at configure time; the vendored submodules stand in for
+# the downloads, and with the fetches disconnected configure needs no network.
+include(FetchContent)
+set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+set(FETCHCONTENT_SOURCE_DIR_HARFBUZZ    "${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz")
+set(FETCHCONTENT_SOURCE_DIR_SHEENBIDI   "${CMAKE_CURRENT_SOURCE_DIR}/SheenBidi")
+set(FETCHCONTENT_SOURCE_DIR_LIBUNIBREAK "${CMAKE_CURRENT_SOURCE_DIR}/libunibreak")
+set(FETCHCONTENT_SOURCE_DIR_BUDOUXC     "${CMAKE_CURRENT_SOURCE_DIR}/budouxc")
+if(INTERSTICE_SYSTEM_HARFBUZZ)
+  # The host's harfbuzz, under the plain name skribidi links; its fetch gets an empty project.
+  find_package(harfbuzz CONFIG REQUIRED)
+  set_target_properties(harfbuzz::harfbuzz PROPERTIES IMPORTED_GLOBAL TRUE)
+  add_library(harfbuzz ALIAS harfbuzz::harfbuzz)
+  set(FETCHCONTENT_SOURCE_DIR_HARFBUZZ "${CMAKE_CURRENT_SOURCE_DIR}/host_harfbuzz")
 endif()
 add_subdirectory(skribidi ${_interstice_tp_exclude})
 if(NOT DEFINED INTERSTICE_BUILD_TESTS OR INTERSTICE_BUILD_TESTS)
@@ -104,7 +121,12 @@ set(_interstice_third_party_targets
 )
 set(_interstice_msvc_rt "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 foreach(_tgt IN LISTS _interstice_third_party_targets)
+  # The host's libraries (aliases of imported targets) are left as they are.
+  set(_tgt_aliased "")
   if(TARGET ${_tgt})
+    get_target_property(_tgt_aliased ${_tgt} ALIASED_TARGET)
+  endif()
+  if(TARGET ${_tgt} AND NOT _tgt_aliased)
     set_target_properties(${_tgt} PROPERTIES FOLDER "ThirdParty")
     get_target_property(_tgt_type ${_tgt} TYPE)
     if(NOT _tgt_type STREQUAL "INTERFACE_LIBRARY")
@@ -132,12 +154,14 @@ endforeach()
 # ---- Install rules (standalone mode only) ----
 if(_interstice_tp_standalone)
   # vma — header-only
-  install(TARGETS vma EXPORT vmaTargets)
-  install(FILES vma/include/vk_mem_alloc.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vma)
-  install(EXPORT vmaTargets
-    FILE vmaConfig.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vma)
+  if(NOT INTERSTICE_SYSTEM_VMA)
+    install(TARGETS vma EXPORT vmaTargets)
+    install(FILES vma/include/vk_mem_alloc.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vma)
+    install(EXPORT vmaTargets
+      FILE vmaConfig.cmake
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vma)
+  endif()
 
   # vkbootstrap — static
   install(TARGETS vkbootstrap EXPORT vkbootstrapTargets

@@ -60,7 +60,10 @@ The first configure builds the third-party libraries once into
 | `INTERSTICE_BUILD_DEMO` | on when top-level | The demo application |
 | `INTERSTICE_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
 | `INTERSTICE_BUILD_TESTS` | on when top-level | The unit and GPU tests |
+| `INTERSTICE_INSTALL` | on when top-level | The install rules and the CMake package |
 | `INTERSTICE_INSTALL_THIRD_PARTY` | on | Bundle the third-party libraries into the install |
+| `INTERSTICE_SDL` | on | The SDL window backend; off builds without SDL |
+| `INTERSTICE_SYSTEM_SDL`, `_HARFBUZZ`, `_VMA` | off | Use the host's copy of that library |
 
 As a subproject (`add_subdirectory`), only the libraries are built by default.
 
@@ -192,6 +195,16 @@ minimal consumer that checks this against an installed prefix.
 The consumer must use the same toolchain as the package. Only the Debug and
 Release configurations are installed; other configurations need
 `CMAKE_MAP_IMPORTED_CONFIG_<CONFIG>` in the consumer.
+
+## Use as a subproject
+
+`add_subdirectory(<IntersticeUI>)` works too, with the same target names and
+`INTERSTICE_RESOURCE_DIR`. Nothing is written to the IntersticeUI source tree:
+the compiled shaders and copies of the fonts and themes go into the build tree.
+`INTERSTICE_SYSTEM_SDL`, `INTERSTICE_SYSTEM_HARFBUZZ` and `INTERSTICE_SYSTEM_VMA`
+use the host's copy of that library instead of the bundled one, either a target
+the host already defined or one `find_package` finds. `tests/subproject_consumer`
+is a minimal host.
 
 ## Vulkan backend
 
@@ -329,8 +342,7 @@ Handled by the build:
 
 | Dependency | How |
 | --- | --- |
-| SDL3, skribidi, googletest, VMA, vk-bootstrap | Git submodules |
-| HarfBuzz, SheenBidi, libunibreak, budouxc | Downloaded by skribidi on the first configure |
+| SDL3, skribidi, googletest, VMA, vk-bootstrap, HarfBuzz, SheenBidi, libunibreak, budouxc | Git submodules; configure needs no network |
 | nanosvg | Included in the repository |
 
 ## Status

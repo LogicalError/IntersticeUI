@@ -1,11 +1,10 @@
-# Small standalone programs, one file each. They load the resources from
-# workdirectory/ through SetResourceRoot, so they run from any folder.
+# Small standalone programs, one file each. They load the resources through
+# SetResourceRoot(INTERSTICE_RESOURCE_DIR), so they run from any folder.
 
 function(interstice_add_example name)
   add_executable(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE gui_controls ${ARGN})
   target_compile_definitions(${name} PRIVATE
-    INTERSTICE_RESOURCE_DIR="${PROJECT_SOURCE_DIR}/workdirectory"
     INTERSTICE_EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
   interstice_apply_compile_options(${name})
   set_target_properties(${name} PROPERTIES FOLDER "Examples")
