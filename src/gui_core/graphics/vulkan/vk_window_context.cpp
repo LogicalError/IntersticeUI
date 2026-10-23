@@ -92,10 +92,10 @@ void VulkanWindowContext::CreateSwapchain()
 
     needsReadback = false;
     
-    // Layered windows (Windows) have no surface and no swapchain.
+    // Layered windows (Windows) and render-to-image windows have no surface and no swapchain.
     if (surface == VK_NULL_HANDLE)
     {
-        needsReadback = true;
+        needsReadback = !renderToImage;   // layered windows read back every frame
         
         // Extent is still used for size checks.
         swapchain.swapchainExtent.width = width;
@@ -395,8 +395,8 @@ VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
     vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
     vkutil::transition_image(state.commandBuffer, currentFrame.depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-    // Layered windows clear to transparent, others to opaque black.
-    float clearAlpha = needsReadback ? 0.0f : 1.0f;
+    // Layered and render-to-image windows clear to transparent, others to opaque black.
+    float clearAlpha = (needsReadback || renderToImage) ? 0.0f : 1.0f;
     VkClearValue clearValue = { .color = { { 0.0f, 0.0f, 0.0f, clearAlpha } } };
 
     VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(currentFrame.drawImage.imageView, &clearValue, VK_IMAGE_LAYOUT_GENERAL);
@@ -465,6 +465,25 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         vkutil::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, swapchain.swapchainImages[swapchain.swapchainImageIndex], drawExtent, swapchain.swapchainExtent);
 
         vkutil::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    }
+    else if (renderToImage)
+    {
+        // Ready to read back, and the source of the copy into the host's image.
+        vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        if (targetImage != VK_NULL_HANDLE)
+        {
+            // The host reads the image in its fragment shaders after this submission,
+            // and moves it out of SHADER_READ_ONLY only after those reads.
+            TransitionTarget(state.commandBuffer, targetWritten ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, 0,
+                             VK_PIPELINE_STAGE_2_BLIT_BIT, VK_ACCESS_2_TRANSFER_WRITE_BIT);
+            vkutil::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, targetImage, drawExtent, targetExtent);
+            TransitionTarget(state.commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                             VK_PIPELINE_STAGE_2_BLIT_BIT, VK_ACCESS_2_TRANSFER_WRITE_BIT,
+                             VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+            targetWritten = true;
+        }
     }
     
     VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
@@ -552,9 +571,9 @@ void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
     VkCommandBufferBeginInfo beginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     VK_CHECK(vkBeginCommandBuffer(cmd, &beginInfo));
 
-    // With a swapchain, EndWindowFrame already left drawImage in TRANSFER_SRC_OPTIMAL;
-    // layered windows still have it in GENERAL.
-    if (swapchain.swapchain == VK_NULL_HANDLE)
+    // With a swapchain or as a render-to-image window, EndWindowFrame already left
+    // drawImage in TRANSFER_SRC_OPTIMAL; layered windows still have it in GENERAL.
+    if (swapchain.swapchain == VK_NULL_HANDLE && !renderToImage)
     {
         vkutil::transition_image(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     }
@@ -601,6 +620,46 @@ void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
     vmaMapMemory(deviceContext->allocator, readbackBuffer.allocation, &mapped);
     memcpy(cachedBitmap.data(), mapped, cachedBitmap.size());
     vmaUnmapMemory(deviceContext->allocator, readbackBuffer.allocation);
+}
+
+bool VulkanWindowContext::ReadPixels(std::span<uint8_t> bgra)
+{
+    if (!renderToImage || frameNumber == 0 || freeze_rendering)
+        return false;
+    FrameData& last = GetLastFrame();
+    if (bgra.size() < size_t(drawExtent.width) * drawExtent.height * 4 || readbackBuffer.buffer == VK_NULL_HANDLE)
+        return false;
+    WaitForFence(deviceContext->device, last.renderFence);
+    PerformReadback(last.drawImage);
+    std::memcpy(bgra.data(), cachedBitmap.data(), size_t(drawExtent.width) * drawExtent.height * 4);
+    return true;
+}
+
+void VulkanWindowContext::SetImageTarget(VkImage image, VkExtent2D extent)
+{
+    targetImage   = image;
+    targetExtent  = extent;
+    targetWritten = false;
+}
+
+void VulkanWindowContext::TransitionTarget(VkCommandBuffer cmd, VkImageLayout from, VkImageLayout to,
+                                           VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
+                                           VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess)
+{
+    VkImageMemoryBarrier2 barrier{ .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+    barrier.srcStageMask        = srcStage;
+    barrier.srcAccessMask       = srcAccess;
+    barrier.dstStageMask        = dstStage;
+    barrier.dstAccessMask       = dstAccess;
+    barrier.oldLayout           = from;
+    barrier.newLayout           = to;
+    barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image               = targetImage;
+    barrier.subresourceRange    = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+    VkDependencyInfo dependency{ .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+    dependency.imageMemoryBarrierCount = 1;
+    dependency.pImageMemoryBarriers    = &barrier;
+    vkCmdPipelineBarrier2(cmd, &dependency);
 }
 
 void VulkanWindowContext::UpdateLayeredWindowFromCache([[maybe_unused]] int screenPosX, [[maybe_unused]] int screenPosY)
@@ -793,7 +852,8 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
 
 VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle, GUI::OSWindowHandle osHandle, GUI::int2 size, GUI::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, GUI::OnGuiFunc onGUI)
 {
-    if (osHandle == nullptr)
+    const bool renderToImage = (windowFlags & GUI::WindowFlags::RenderToImage) != GUI::WindowFlags::None;
+    if (osHandle == nullptr && !renderToImage)
         return nullptr;
 
     auto context = new Vulkan::VulkanWindowContext();
@@ -803,10 +863,11 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
     context->windowFlags = windowFlags;
     context->osHandle = osHandle;
     context->nativeHandle = nativeHandle;
+    context->renderToImage = renderToImage;
 
     // On Windows, layered (WS_EX_LAYERED) windows get no surface and present via
     // UpdateLayeredWindow; elsewhere transparent windows use surface alpha compositing.
-    bool shouldCreateSurface = true;
+    bool shouldCreateSurface = !context->renderToImage;
 #ifdef _WIN32
     if (nativeHandle)
     {

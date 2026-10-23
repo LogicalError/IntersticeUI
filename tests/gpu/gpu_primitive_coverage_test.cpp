@@ -65,9 +65,9 @@ namespace
 
     TEST_F(GpuPrimitiveTest, AllSixPrimitiveKindsRenderValidationClean)
     {
-        auto* ctx = CreateHiddenWindowContext({ 320, 240 }, GUI::WindowFlags::None);
+        auto* ctx = CreateImageWindowContext({ 320, 240 });
         if (ctx == nullptr)
-            GTEST_SKIP() << "no window/swapchain available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
 
         RegisterColorStyles();
         sink.Clear();
@@ -81,9 +81,9 @@ namespace
     // for EVERY buffer kind, not just dots.
     TEST_F(GpuPrimitiveTest, AllSixPrimitiveKindsAcrossThreeFramesValidationClean)
     {
-        auto* ctx = CreateHiddenWindowContext({ 320, 240 }, GUI::WindowFlags::None);
+        auto* ctx = CreateImageWindowContext({ 320, 240 });
         if (ctx == nullptr)
-            GTEST_SKIP() << "no window/swapchain available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
 
         RegisterColorStyles();
         sink.Clear();
@@ -112,9 +112,9 @@ namespace
         const int kCycles = 4;
         for (int i = 0; i < kCycles; ++i)
         {
-            auto* ctx = CreateHiddenWindowContext({ 320, 240 }, GUI::WindowFlags::None);
+            auto* ctx = CreateImageWindowContext({ 320, 240 });
             if (ctx == nullptr)
-                GTEST_SKIP() << "no window/swapchain available in this environment";
+                GTEST_SKIP() << "no Vulkan device available";
             RenderOneFrameAllKinds(ctx, { 320, 240 });
 
             graphicsContext->DestroyWindowContext(ctx);

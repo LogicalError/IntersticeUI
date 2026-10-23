@@ -11,6 +11,8 @@
 #include <SDL3/SDL_stdinc.h>
 
 #include <filesystem>
+#include <functional>
+#include <vector>
 
 namespace
 {
@@ -122,6 +124,101 @@ namespace
         EXPECT_GT(tracker.TotalAllocations(), 0u);
         EXPECT_EQ(tracker.LiveAllocations(), 0u) << tracker.LiveBytes() << " bytes still live";
         tracker.ReportLeaks();
+    }
+
+    // A render-to-image window with a button. Run() drives real frames (OnFrame
+    // only builds); `script` runs at the start of each frame's OnGUI.
+    class ImageWindowApp : public GUI::GUIApplication
+    {
+    public:
+        GUI::ID windowID = GUI::ID::Invalid();
+        GUI::ID buttonID = GUI::ID::Invalid();
+        int     clicks   = 0;
+        int     frame    = 0;
+        int     frames   = 3;
+        GUI::int2 buttonCenter{ 0, 0 };   // after last frame's layout
+        std::function<void(int)> script;
+
+        void OnGUI() override
+        {
+            if (script) script(frame);
+            if (BeginWindow(windowID, "Image", GUI::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+                            GUI::ElementFlags::WindowRenderToImage))
+            {
+                BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+                Button(buttonID, "Click", [this] { ++clicks; });
+                EndVertical();
+                EndWindow();
+            }
+            if (++frame >= frames)
+                applicationQuit = true;
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            windowID = idManager.CreateStaticID();
+            buttonID = idManager.CreateStaticID();
+            m_frame.OnPostLayout([this](GUI::FrameContext&)
+            {
+                const GUI::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
+                if (!ref.IsValid()) return;
+                const GUI::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
+                buttonCenter = { r.x + r.w / 2, r.y + r.h / 2 };
+            });
+            return true;
+        }
+    };
+
+    // A render-to-image window has no OS window, renders, and can be read back.
+    TEST(GpuApplicationInit, RenderToImageWindowDrawsWithoutAnOSWindow)
+    {
+        ImageWindowApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        app.Run();
+        const GUI::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
+        ASSERT_NE(handle, nullptr) << "the window exists";
+        EXPECT_EQ(app.windowBackend->GetNativeHandle(handle), nullptr) << "no OS window behind it";
+
+        const GUI::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
+        ASSERT_GT(rect.w, 0);
+        std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
+        ASSERT_TRUE(app.ReadWindowPixels(app.windowID, pixels));
+        const size_t center = (size_t(rect.h / 2) * rect.w + size_t(rect.w / 2)) * 4;
+        EXPECT_EQ(pixels[center + 3], 255) << "the window's background covers its image";
+        app.Cleanup();
+    }
+
+    // Input injected into a render-to-image window reaches its controls.
+    TEST(GpuApplicationInit, InjectedClickReachesAButtonInARenderToImageWindow)
+    {
+        ImageWindowApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        app.frames = 7;
+        app.script = [&](int frame)
+        {
+            const GUI::int2 center = app.buttonCenter;
+            switch (frame)
+            {
+                case 2: app.InjectMouseMove(app.windowID, center); break;
+                case 3: app.InjectMouseButton(app.windowID, center, GUI::MouseButtons::Left, true); break;
+                case 4: app.InjectMouseButton(app.windowID, center, GUI::MouseButtons::Left, false); break;
+                case 5: app.InjectMouseLeave(app.windowID); break;
+                default: break;
+            }
+        };
+        app.Run();
+        EXPECT_EQ(app.clicks, 1);
+        app.Cleanup();
     }
 
     class FloatingToolbarApp : public GUI::GUIApplication

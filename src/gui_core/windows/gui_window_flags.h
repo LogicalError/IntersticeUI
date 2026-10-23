@@ -32,6 +32,10 @@ namespace GUI
         // Window cannot receive keyboard focus (e.g. tooltips)
         NotFocusable    = 4096,
 
+        // No OS window: the window renders into an image the host reads or provides,
+        // and the host passes in its input (GUIApplication::Inject*).
+        RenderToImage   = 8192,
+
 
 		DefaultFlags = AllowHighDPI
     };

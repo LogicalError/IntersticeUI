@@ -24,6 +24,7 @@
 #include <gui_core/windows/gui_os_window_manager.h>
 #include <gui_core/windows/gui_window_registry.h>
 #include <gui_core/windows/gui_window_backend.h>
+#include <gui_core/windows/gui_image_window_backend.h>
 
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_gradient_manager.h>
@@ -91,7 +92,7 @@ namespace GUI
         std::unique_ptr<IClipboard>       clipboard;
 
         ITextSystem*        textSystem      { nullptr };
-        IWindowBackend*     windowBackend   { nullptr };
+        IWindowBackend*     windowBackend   { nullptr };   // the OS windows plus render-to-image windows
         GraphicsContext*    graphicsContext { nullptr };
 
         // Optional; called between creating and initializing the graphics context. A host that
@@ -324,6 +325,22 @@ namespace GUI
         void SetResourceRoot(std::string_view root) { m_resourceRoot = std::string(root); }
         const std::string& GetResourceRoot() const { return m_resourceRoot; }
 
+        // Input for render-to-image windows (WindowFlags::RenderToImage), which get
+        // none from the OS. Positions are in the window's pixels. The window is under
+        // the pointer from a mouse event until InjectMouseLeave, and has keyboard
+        // focus from any injected input until InjectFocus(windowID, false).
+        void InjectMouseMove(ID windowID, int2 pos, KeyModifier mods = KeyModifier::None);
+        void InjectMouseButton(ID windowID, int2 pos, MouseButtons button, bool down, KeyModifier mods = KeyModifier::None);
+        void InjectMouseScroll(ID windowID, int2 pos, float2 offset, KeyModifier mods = KeyModifier::None);
+        void InjectMouseLeave(ID windowID);
+        void InjectFocus(ID windowID, bool focused);
+        void InjectKey(ID windowID, KeyCode key, KeyAction action, KeyModifier mods = KeyModifier::None);
+        void InjectText(ID windowID, std::string_view utf8);
+
+        // The last rendered frame of a render-to-image window: BGRA8, tightly packed
+        // rows, bgra holding width × height × 4 bytes of its pixel size.
+        bool ReadWindowPixels(ID windowID, std::span<uint8_t> bgra);
+
         // Host memory functions for what can be routed: Vulkan objects, VMA,
         // vk-bootstrap and SDL (only when the GUI starts SDL). See AllocationHooks
         // for how long they must live. Call before Initialize.
@@ -352,6 +369,10 @@ namespace GUI
     protected:
         // Change via RequestReloadTheme so the reload happens between frames.
         std::string m_resourceRoot;
+        IWindowBackend*      m_osWindowBackend { nullptr };    // wrapped by windowBackend
+        ImageWindowBackend*  m_imageWindows    { nullptr };    // == windowBackend
+        MouseButtons         m_injectedButtons { MouseButtons::None };
+        int2 InjectedScreenPos(ID windowID, int2 pos);
         AllocationHooks m_allocationHooks;
         MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
         ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction

@@ -105,6 +105,8 @@ list(APPEND GUI_FILES
   gui_core/windows/gui_window_flags.h
   gui_core/windows/gui_window_backend.h
   gui_core/windows/gui_os_window_manager.cpp
+  gui_core/windows/gui_image_window_backend.h
+  gui_core/windows/gui_image_window_backend.cpp
   gui_core/windows/gui_os_window_manager.h
   
   

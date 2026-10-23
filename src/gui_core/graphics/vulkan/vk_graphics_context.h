@@ -21,6 +21,7 @@ namespace Vulkan
 {
     struct FrameData;
     class VulkanImageSet;
+    class VulkanWindowContext;
 
     class VulkanGraphicsContext : public GUI::GraphicsContext
     {
@@ -93,8 +94,25 @@ namespace Vulkan
         // host must make sure no in-flight GUI frame still samples the old view.
         void UpdateExternalImage(GUI::ImageIndex index, VkImageView view, VkSampler sampler);
 
+        // The host image a render-to-image window (WindowFlags::RenderToImage) is
+        // copied into after each of its frames; VK_NULL_HANDLE stops the copies. May
+        // be set before the window exists. The image needs TRANSFER_DST usage; the
+        // window's pixels are scaled to `extent`. The GUI's frame (one submission on
+        // the shared queue) moves it from SHADER_READ_ONLY_OPTIMAL (UNDEFINED the
+        // first time) to TRANSFER_DST, copies, and leaves it in SHADER_READ_ONLY_OPTIMAL
+        // for the fragment stage. The host reads it in work submitted after the GUI's
+        // frame and must leave it in SHADER_READ_ONLY_OPTIMAL.
+        void SetWindowImageTarget(GUI::ID window, VkImage image, VkExtent2D extent);
+
         bool StartResizing(GUI::ID id) { return guiRenderer->StartResizing(id); }
         void StopResizing() { guiRenderer->StopResizing(); }
+
+    private:
+        struct ImageTarget { VkImage image; VkExtent2D extent; };
+        std::unordered_map<GUI::ID, ImageTarget>                  m_imageTargets;
+        std::unordered_map<GUI::ID, Vulkan::VulkanWindowContext*> m_windowContexts;
+
+    public:
         void Reset() { guiRenderer->Reset(); }
 
         GUI::Buffer* PrepareVisualBoxStylesBuffer(GUI::StyleManager& styleManager);

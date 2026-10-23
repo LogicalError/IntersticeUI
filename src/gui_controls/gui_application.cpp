@@ -146,7 +146,9 @@ namespace GUI
         inputBroadcaster = GUI::InputHandlerBroadcaster({ inputManager.get(), textSystem });
         graphicsContext  = GUI::GraphicsContext::CreateContext();
         graphicsContext->SetAllocationHooks(m_allocationHooks);
-        windowBackend    = new GUI::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
+        m_osWindowBackend = new GUI::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
+        m_imageWindows   = new GUI::ImageWindowBackend(*m_osWindowBackend);
+        windowBackend    = m_imageWindows;
         guiRenderer      = graphicsContext->guiRenderer;
         layoutEngine     = std::make_unique<GUI::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
         windowManager    = std::make_unique<GUI::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
@@ -220,7 +222,7 @@ namespace GUI
 
         // Fires inside the OS modal drag/resize loop, before the next frame.
         if (options.closeMenusOnWindowMove)
-            windowBackend->SetWindowMovedCallback([this]() {
+            m_osWindowBackend->SetWindowMovedCallback([this]() {
                 if (menuManager.IsOpen())
                     menuManager.CloseAll(guiStateManager, *windowManager);
             });
@@ -287,7 +289,8 @@ namespace GUI
         graphicsContext->Cleanup();
         textAtlasManager.reset();
         delete graphicsContext; graphicsContext = nullptr;
-        delete windowBackend; windowBackend = nullptr;
+        delete windowBackend; windowBackend = nullptr; m_imageWindows = nullptr;
+        delete m_osWindowBackend; m_osWindowBackend = nullptr;
     }
 
     bool GUIApplication::InitializeStyles()
@@ -321,6 +324,77 @@ namespace GUI
             .onEnable   = std::move(onEnable),
             .onDisable  = std::move(onDisable),
         };
+    }
+
+    int2 GUIApplication::InjectedScreenPos(ID windowID, int2 pos)
+    {
+        const int2 screenPos = windowManager->GetWindowRect(windowID).position + pos;
+        const OSWindowHandle window = windowManager->GetWindowHandle(windowID);
+        m_imageWindows->SetPointer(window, screenPos, m_injectedButtons);
+        m_imageWindows->SetFocus(window);
+        return screenPos;
+    }
+
+    void GUIApplication::InjectMouseMove(ID windowID, int2 pos, KeyModifier mods)
+    {
+        inputBroadcaster.OnMouseMove(windowID, InjectedScreenPos(windowID, pos), m_injectedButtons, mods);
+    }
+
+    void GUIApplication::InjectMouseButton(ID windowID, int2 pos, MouseButtons button, bool down, KeyModifier mods)
+    {
+        m_injectedButtons = down ? (m_injectedButtons | button) : (m_injectedButtons & ~button);
+        inputBroadcaster.OnMouseButton(windowID, InjectedScreenPos(windowID, pos), m_injectedButtons, mods,
+                                       down ? MouseAction::MouseDown : MouseAction::MouseUp);
+    }
+
+    void GUIApplication::InjectMouseScroll(ID windowID, int2 pos, float2 offset, KeyModifier mods)
+    {
+        inputBroadcaster.OnMouseScroll(windowID, InjectedScreenPos(windowID, pos), offset, mods);
+    }
+
+    void GUIApplication::InjectMouseLeave(ID windowID)
+    {
+        if (windowManager->GetWindowHandle(windowID) == windowBackend->GetWindowUnderMouse())
+            m_imageWindows->SetPointer(nullptr, {}, MouseButtons::None);
+    }
+
+    void GUIApplication::InjectFocus(ID windowID, bool focused)
+    {
+        const OSWindowHandle window = windowManager->GetWindowHandle(windowID);
+        if (focused)
+            m_imageWindows->SetFocus(window);
+        else if (window == windowBackend->GetActiveWindow())
+            m_imageWindows->SetFocus(nullptr);
+    }
+
+    void GUIApplication::InjectKey(ID windowID, KeyCode key, KeyAction action, KeyModifier mods)
+    {
+        m_imageWindows->SetFocus(windowManager->GetWindowHandle(windowID));
+        inputBroadcaster.OnKeyboard(windowID, key, 0, mods, action);
+    }
+
+    void GUIApplication::InjectText(ID windowID, std::string_view utf8)
+    {
+        // One KeyChar per codepoint, as the OS backend sends typed text.
+        m_imageWindows->SetFocus(windowManager->GetWindowHandle(windowID));
+        for (size_t i = 0; i < utf8.size(); )
+        {
+            const auto lead = static_cast<unsigned char>(utf8[i]);
+            const int length = lead < 0x80 ? 1 : (lead >> 5) == 0x6 ? 2 : (lead >> 4) == 0xE ? 3 : (lead >> 3) == 0x1E ? 4 : 0;
+            if (length == 0 || i + length > utf8.size())
+                return;   // malformed: stop rather than send garbage
+            uint32_t codepoint = length == 1 ? lead : lead & (0x7Fu >> length);
+            for (int k = 1; k < length; ++k)
+                codepoint = (codepoint << 6) | (static_cast<unsigned char>(utf8[i + k]) & 0x3Fu);
+            inputBroadcaster.OnKeyboard(windowID, static_cast<KeyCode>(codepoint), 0, KeyModifier::None, KeyAction::KeyChar);
+            i += size_t(length);
+        }
+    }
+
+    bool GUIApplication::ReadWindowPixels(ID windowID, std::span<uint8_t> bgra)
+    {
+        IWindowContext* context = windowManager ? windowManager->GetWindowContext(windowID) : nullptr;
+        return context != nullptr && context->ReadPixels(bgra);
     }
 
     std::string GUIApplication::ResourcePath(std::string_view path) const
@@ -900,8 +974,8 @@ namespace GUI
             if (inputManager &&
                 (windowManager->HasAliveSecondaryWindows() || m_lastPhysicalButtons != MouseButtons::None))
             {
-                GUI::int2 mousePos = windowManager->GetScreenMousePos();
-                GUI::MouseButtons physButtons = windowManager->GetMouseButtons();
+                GUI::int2 mousePos = m_osWindowBackend->GetScreenMousePos();
+                GUI::MouseButtons physButtons = m_osWindowBackend->GetMouseButtons();
                 inputManager->SynthesizeMissingMouseEvents(mousePos, m_lastPhysicalButtons, physButtons);
                 m_lastPhysicalButtons = physButtons;
             } else

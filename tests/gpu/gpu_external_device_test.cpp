@@ -143,15 +143,13 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
     EXPECT_EQ(vk->deviceContext.instance, host.instance.instance);
     EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
-    // Render one frame through the production offscreen (readback) path.
+    // Render one frame into a render-to-image window.
     const GUI::int2 size{ 64, 64 };
-    GUI::OSWindowHandle os = windowBackend->CreateWindow("external", size, GUI::WindowFlags::Transparent, nullptr);
-    ASSERT_NE(os, nullptr);
     GUI::ID id{};
     id.value.dynamicParts.mode      = GUI::IDMode::Static;
     id.value.dynamicParts.hashValue = 9100;
     auto* window = Vulkan::VulkanWindowContext::Create(
-        id, windowBackend->GetNativeHandle(os), os, size, GUI::WindowFlags::Transparent,
+        id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage,
         &vk->deviceContext, [] {});
     ASSERT_NE(window, nullptr);
 
@@ -169,7 +167,6 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
 
     window->Destroy();
     delete window;
-    windowBackend->DestroyWindow(os);
     gradientManager.ReleaseAll(graphicsContext);
     graphicsContext->Cleanup();
 
@@ -283,16 +280,12 @@ TEST_F(GpuExternalDeviceTest, SamplesHostRenderedImageInGuiPrimitive)
     ASSERT_NE(hostImageIndex, GUI::ImageIndex::Invalid);
 
     const GUI::int2 size{ 64, 64 };
-    GUI::OSWindowHandle os = windowBackend->CreateWindow("host-image", size, GUI::WindowFlags::Transparent, nullptr);
-    ASSERT_NE(os, nullptr);
     GUI::ID id{};
     id.value.dynamicParts.mode      = GUI::IDMode::Static;
     id.value.dynamicParts.hashValue = 9200;
     auto* window = Vulkan::VulkanWindowContext::Create(
-        id, windowBackend->GetNativeHandle(os), os, size, GUI::WindowFlags::Transparent,
-        &dc, [] {});
+        id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage, &dc, [] {});
     ASSERT_NE(window, nullptr);
-    ASSERT_TRUE(window->needsReadback) << "needs the offscreen readback window path";
 
     // Only texture-typed color styles sample the image passed to a primitive.
     const auto white = styleManager.RegisterColorStyle(GUI::ColorStyle::Create(
@@ -308,11 +301,12 @@ TEST_F(GpuExternalDeviceTest, SamplesHostRenderedImageInGuiPrimitive)
     }
     window->RenderWindowFrame(graphicsContext, full, false);
     EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
+    std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4);
+    ASSERT_TRUE(window->ReadPixels(pixels));
 
     const auto pixel = [&](int x, int y) {
         const size_t offset = (size_t(y) * size.x + size_t(x)) * 4;   // BGRA8
-        return std::array<uint8_t, 4>{ window->cachedBitmap[offset + 2], window->cachedBitmap[offset + 1],
-                                       window->cachedBitmap[offset + 0], window->cachedBitmap[offset + 3] };
+        return std::array<uint8_t, 4>{ pixels[offset + 2], pixels[offset + 1], pixels[offset + 0], pixels[offset + 3] };
     };
     const auto inside = pixel(size.x / 4, size.y / 2);
     const auto outside = pixel(size.x * 3 / 4, size.y / 2);
@@ -323,7 +317,6 @@ TEST_F(GpuExternalDeviceTest, SamplesHostRenderedImageInGuiPrimitive)
 
     window->Destroy();
     delete window;
-    windowBackend->DestroyWindow(os);
     gradientManager.ReleaseAll(graphicsContext);
 
     // The host image lives in the GUI's allocator (the host passed none), so it

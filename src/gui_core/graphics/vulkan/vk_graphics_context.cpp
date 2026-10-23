@@ -268,7 +268,24 @@ GUI::Buffer* VulkanGraphicsContext::PrepareVisualBoxStylesBuffer(GUI::StyleManag
 GUI::IWindowContext* VulkanGraphicsContext::CreateWindowContext(void* nativeHandle, GUI::OSWindowHandle osHandle, 
     GUI::ID id, GUI::int2 size, GUI::WindowFlags windowFlags, GUI::OnGuiFunc onGui)
 {
-    return Vulkan::VulkanWindowContext::Create(id, nativeHandle, osHandle, size, windowFlags, &deviceContext, std::move(onGui));
+    auto* context = Vulkan::VulkanWindowContext::Create(id, nativeHandle, osHandle, size, windowFlags, &deviceContext, std::move(onGui));
+    if (context != nullptr)
+    {
+        m_windowContexts[id] = context;
+        if (const auto it = m_imageTargets.find(id); it != m_imageTargets.end())
+            context->SetImageTarget(it->second.image, it->second.extent);
+    }
+    return context;
+}
+
+void VulkanGraphicsContext::SetWindowImageTarget(GUI::ID window, VkImage image, VkExtent2D extent)
+{
+    if (image == VK_NULL_HANDLE)
+        m_imageTargets.erase(window);
+    else
+        m_imageTargets[window] = { image, extent };
+    if (const auto it = m_windowContexts.find(window); it != m_windowContexts.end())
+        it->second->SetImageTarget(image, extent);
 }
 
 void VulkanGraphicsContext::DestroyWindowContext(GUI::IWindowContext* context)
@@ -283,6 +300,7 @@ void VulkanGraphicsContext::DestroyWindowContext(GUI::IWindowContext* context)
     if (guiRenderer != nullptr)
         static_cast<GUI::PrimitiveRenderer*>(guiRenderer)->ReleaseTarget(vulkanContext->GetID());
 
+    m_windowContexts.erase(vulkanContext->GetID());
     vulkanContext->Destroy();
     delete vulkanContext;
 }

@@ -24,6 +24,7 @@ namespace GUI
         const bool isResizable   = (elementFlags & ElementFlags::WindowCanResize) != ElementFlags::None;
         const bool hasShadow     = (elementFlags & ElementFlags::Shadows) != ElementFlags::None;
         const bool notFocusable  = (elementFlags & ElementFlags::WindowNotFocusable) != ElementFlags::None;
+        const bool renderToImage = (elementFlags & ElementFlags::WindowRenderToImage) != ElementFlags::None;
 
         if (isResizable)   windowFlags |= WindowFlags::Resizable;
         if (isMoveable)    windowFlags |= WindowFlags::Moveable;
@@ -31,6 +32,7 @@ namespace GUI
         if (isModal)       windowFlags |= WindowFlags::Modal;
         if (hasShadow)     windowFlags |= WindowFlags::Shadow;
         if (notFocusable)  windowFlags |= WindowFlags::NotFocusable;
+        if (renderToImage) windowFlags |= WindowFlags::RenderToImage;
 
         if (noCaption)
         {

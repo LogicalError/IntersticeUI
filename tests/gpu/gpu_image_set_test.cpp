@@ -56,9 +56,9 @@ TEST(VulkanImageSet, RemovedSlotsAreReused)
 // set: its view is gone, and a null view needs the nullDescriptor feature.
 TEST_F(GpuTest, UnregisteredImageSlotIsNotBoundNextFrame)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, GUI::WindowFlags::None);
+    auto* ctx = CreateImageWindowContext({ 320, 240 });
     if (ctx == nullptr)
-        GTEST_SKIP() << "no window/swapchain available in this environment";
+        GTEST_SKIP() << "no Vulkan device available";
 
     auto& dc = vk->deviceContext;
     uint32_t pixel = 0xffffffffu;

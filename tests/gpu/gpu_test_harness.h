@@ -167,6 +167,21 @@ namespace GpuTestHarness
             return ctx;
         }
 
+        // A render-to-image window context: no OS window and no swapchain; ReadPixels
+        // returns its frames. For tests that need pixels, not a presented window.
+        Vulkan::VulkanWindowContext* CreateImageWindowContext(GUI::int2 size = { 320, 240 })
+        {
+            GUI::ID id{};
+            id.value.dynamicParts.mode      = GUI::IDMode::Static;
+            id.value.dynamicParts.hashValue = m_nextWindowId++;
+
+            auto* ctx = Vulkan::VulkanWindowContext::Create(
+                id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage, &vk->deviceContext, [] {});
+            if (ctx == nullptr) return nullptr;
+            m_windowContexts.push_back({ ctx, nullptr });
+            return ctx;
+        }
+
         // Drive one full window frame that emits a single dot, running the real
         // upload + draw + present path. This allocates the window's per-target
         // GPU buffers, so window-destroy buffer reclamation can be observed.

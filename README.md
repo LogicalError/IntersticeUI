@@ -279,6 +279,46 @@ After a resize the host must make sure no in-flight GUI frame still samples the 
 view; the simplest way is `vkDeviceWaitIdle`. `tests/gpu/gpu_external_device_test.cpp`
 exercises the contract under synchronization validation.
 
+### Rendering the UI into an image
+
+A window opened with `ElementFlags::WindowRenderToImage` has no OS window: it lays
+out and draws like any other window, into an image instead of onto the screen.
+Use it to put the UI inside an engine viewport, composite it into the host's
+frame, or render it without anything appearing on screen, as the GPU tests do.
+
+```cpp
+if (BeginWindow(windowID, "Panel", GUI::LayoutOverride{}.Size(400, 300), theme.windowStyleRef,
+                GUI::ElementFlags::WindowRenderToImage))
+{
+    // controls as usual
+    EndWindow();
+}
+
+// Each frame of the window is copied into the host's image (may be set before the window exists):
+vk.SetWindowImageTarget(windowID, hostImage, VkExtent2D{ 400, 300 });
+
+// Or read the last frame back (BGRA8):
+app.ReadWindowPixels(windowID, pixels);
+```
+
+The window gets no input from the OS, so the host passes it in, with positions in
+the window's pixels: `InjectMouseMove`, `InjectMouseButton`, `InjectMouseScroll`,
+`InjectMouseLeave`, `InjectKey`, `InjectText` and `InjectFocus` on `GUIApplication`.
+
+Synchronization contract for the target image (on the queue given to
+`SetExternalDevice`):
+
+1. The image needs `TRANSFER_DST` usage. The GUI's frame moves it from
+   `SHADER_READ_ONLY_OPTIMAL` (`UNDEFINED` the first time) to `TRANSFER_DST_OPTIMAL`
+   after the host's fragment-stage reads, copies the window into it (scaled to the
+   given extent), and leaves it in `SHADER_READ_ONLY_OPTIMAL`, visible to the
+   fragment stage.
+2. The host reads it in work submitted after the GUI's frame and leaves it in
+   `SHADER_READ_ONLY_OPTIMAL`.
+
+Draw commands can't yet be recorded straight into the host's command buffer; that
+needs the host to drive the frame loop (#55).
+
 ## Dependencies
 
 Install yourself: the Vulkan SDK, Visual Studio 2026 or 2022, CMake, Git and Git LFS

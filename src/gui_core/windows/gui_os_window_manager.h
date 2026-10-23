@@ -321,6 +321,18 @@ namespace GUI
         float MainRefreshRate() const;
 
         // Client rect in pixels.
+        // Null when the window doesn't exist.
+        IWindowContext* GetWindowContext(ID id) const
+        {
+            const int32_t index = IndexOf(id);
+            return index == -1 ? nullptr : windows[index].context;
+        }
+        OSWindowHandle GetWindowHandle(ID id) const
+        {
+            const int32_t index = IndexOf(id);
+            return index == -1 ? nullptr : windows[index].GetWindowHandle();
+        }
+
         IntRect GetWindowRect(ID id) const
         {
             int32_t index = IndexOf(id);

@@ -1,7 +1,6 @@
-// Pixel-level smoke tests via the production layered-window readback path:
-// a Transparent window on Windows gets no Vulkan surface, so RenderWindowFrame
-// renders offscreen (BGRA8) and PerformReadback copies the frame into
-// cachedBitmap. Assertions are structural only — a pixel inside a primitive
+// Pixel-level smoke tests on render-to-image windows: RenderWindowFrame renders
+// offscreen (BGRA8) and ReadPixels copies the frame back, with no OS window.
+// Assertions are structural only — a pixel inside a primitive
 // must differ from one outside it, sampled from the same frame — never
 // golden-image comparisons, so they hold across drivers and formats.
 
@@ -30,16 +29,9 @@ namespace
         GUI::VisualColorStyleIndex solidColor{};
         GUI::VisualColorStyleIndex gradientColor{};
 
-        // Layered (readback) window: Transparent on Windows skips the Vulkan
-        // surface and renders offscreen into the readback cache.
-        Vulkan::VulkanWindowContext* CreateReadbackWindow()
-        {
-            auto* ctx = CreateHiddenWindowContext(kSize, GUI::WindowFlags::Transparent);
-            if (ctx == nullptr || !ctx->needsReadback ||
-                ctx->cachedBitmap.size() != size_t(kSize.x) * kSize.y * 4)
-                return nullptr;
-            return ctx;
-        }
+        std::vector<uint8_t> framePixels = std::vector<uint8_t>(size_t(kSize.x) * kSize.y * 4);
+
+        Vulkan::VulkanWindowContext* CreateReadbackWindow() { return CreateImageWindowContext(kSize); }
 
         void RegisterColorStyles()
         {
@@ -54,7 +46,7 @@ namespace
         }
 
         // Render one frame whose primitives are emitted by `emit`, then leave
-        // the result in ctx->cachedBitmap.
+        // the result in framePixels.
         template <typename EmitFn>
         void RenderFrame(Vulkan::VulkanWindowContext* ctx, EmitFn&& emit)
         {
@@ -67,14 +59,15 @@ namespace
                 r->EndWindow();
             }
             ctx->RenderWindowFrame(graphicsContext, GUI::IntRect{ 0, 0, kSize.x, kSize.y }, false);
+            ASSERT_TRUE(ctx->ReadPixels(framePixels));
         }
 
-        // Raw 32-bit pixel from the readback cache (BGRA8, tightly packed).
-        static uint32_t PixelAt(const Vulkan::VulkanWindowContext* ctx, int x, int y)
+        // Raw 32-bit pixel of the last read frame (BGRA8, tightly packed).
+        uint32_t PixelAt(const Vulkan::VulkanWindowContext*, int x, int y) const
         {
             const size_t off = (size_t(y) * kSize.x + size_t(x)) * 4;
             uint32_t v = 0;
-            std::memcpy(&v, ctx->cachedBitmap.data() + off, 4);
+            std::memcpy(&v, framePixels.data() + off, 4);
             return v;
         }
 
@@ -85,7 +78,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
         // Solid quad over the left half; the right half stays background.
@@ -103,7 +96,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
         RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
@@ -120,7 +113,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
         // Full-frame 4-corner interpolated quad: left third and right third
@@ -139,7 +132,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
         GUI::GUIRenderer* r = graphicsContext->guiRenderer;
@@ -170,7 +163,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
         // Thick horizontal line at y=40; a pixel on the path differs from one
@@ -249,7 +242,7 @@ namespace
         RegisterColorStyles();
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
 
         const GUI::uint2 size{ 64, 64 };
         const auto black = Filled(size, 0);
@@ -306,7 +299,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
 
         const GUI::uint2 size{ 64, 64 };
         std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4, 255);
@@ -342,7 +335,7 @@ namespace
     {
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
-            GTEST_SKIP() << "no layered/readback window available in this environment";
+            GTEST_SKIP() << "no Vulkan device available";
 
         // Shaped like a node: rounded box with a 1-unit border, and a header just
         // inside it with a rounded top and a bottom separator.
@@ -426,5 +419,116 @@ namespace
             EXPECT_EQ(topBorderRows, expected) << "top border, scale " << kScale << " pan " << pan << column;
             EXPECT_EQ(sideBorderCols, expected) << "side border, scale " << kScale << " pan " << pan;
         }
+    }
+
+    // A host image set as a render-to-image window's target receives its frames:
+    // the copy and its barriers are sync-validation clean, and the image ends up
+    // holding the window's pixels.
+    TEST_F(GpuReadbackTest, ImageTargetReceivesTheWindowsFrames)
+    {
+        auto& dc = vk->deviceContext;
+        GUI::ID id{};
+        id.value.dynamicParts.mode      = GUI::IDMode::Static;
+        id.value.dynamicParts.hashValue = 9300;
+        auto* ctx = static_cast<Vulkan::VulkanWindowContext*>(graphicsContext->CreateWindowContext(
+            nullptr, nullptr, id, kSize, GUI::WindowFlags::RenderToImage, [] {}));
+        if (ctx == nullptr)
+            GTEST_SKIP() << "no Vulkan device available";
+
+        // The host's image is RGBA, so the copy also converts from the GUI's BGRA.
+        VkImageCreateInfo imageInfo{ .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+        imageInfo.imageType   = VK_IMAGE_TYPE_2D;
+        imageInfo.format      = VK_FORMAT_R8G8B8A8_UNORM;
+        imageInfo.extent      = { uint32_t(kSize.x), uint32_t(kSize.y), 1 };
+        imageInfo.mipLevels   = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.samples     = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.usage       = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        VkImage target = VK_NULL_HANDLE;
+        VmaAllocation targetAllocation = nullptr;
+        ASSERT_EQ(vmaCreateImage(dc.allocator, &imageInfo, &allocInfo, &target, &targetAllocation, nullptr), VK_SUCCESS);
+        vk->SetWindowImageTarget(id, target, VkExtent2D{ uint32_t(kSize.x), uint32_t(kSize.y) });
+
+        RegisterColorStyles();
+        sink.Clear();
+        for (int i = 0; i < 3; ++i)
+            RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
+                r->RenderQuad(GUI::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor, 0.0f);
+            });
+        EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
+
+        // Read the target back as a host would: after the GUI's frame, out of
+        // SHADER_READ_ONLY and back into it.
+        const size_t bytes = size_t(kSize.x) * kSize.y * 4;
+        Vulkan::Buffer readback = dc.CreateBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
+        VkCommandBuffer cmd = dc.immCommandBuffer;
+        ASSERT_EQ(vkResetFences(dc.device, 1, &dc.immFence), VK_SUCCESS);
+        ASSERT_EQ(vkResetCommandBuffer(cmd, 0), VK_SUCCESS);
+        VkCommandBufferBeginInfo begin{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+        begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(cmd, &begin);
+        const auto transition = [&](VkImageLayout from, VkImageLayout to, VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
+                                    VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess)
+        {
+            VkImageMemoryBarrier2 barrier{ .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+            barrier.srcStageMask = srcStage; barrier.srcAccessMask = srcAccess;
+            barrier.dstStageMask = dstStage; barrier.dstAccessMask = dstAccess;
+            barrier.oldLayout = from; barrier.newLayout = to;
+            barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = target;
+            barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            VkDependencyInfo dependency{ .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+            dependency.imageMemoryBarrierCount = 1;
+            dependency.pImageMemoryBarriers = &barrier;
+            vkCmdPipelineBarrier2(cmd, &dependency);
+        };
+        transition(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, 0, VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_2_TRANSFER_READ_BIT);
+        VkBufferImageCopy region{};
+        region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+        region.imageExtent = imageInfo.extent;
+        vkCmdCopyImageToBuffer(cmd, target, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, readback.buffer, 1, &region);
+        transition(VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                   VK_PIPELINE_STAGE_2_COPY_BIT, 0, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+        VkMemoryBarrier2 toHost{ .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+        toHost.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT;   toHost.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT;
+        toHost.dstStageMask = VK_PIPELINE_STAGE_2_HOST_BIT;   toHost.dstAccessMask = VK_ACCESS_2_HOST_READ_BIT;
+        VkDependencyInfo hostDependency{ .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+        hostDependency.memoryBarrierCount = 1;
+        hostDependency.pMemoryBarriers = &toHost;
+        vkCmdPipelineBarrier2(cmd, &hostDependency);
+        vkEndCommandBuffer(cmd);
+        VkCommandBufferSubmitInfo cmdInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+        cmdInfo.commandBuffer = cmd;
+        VkSubmitInfo2 submit{ .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+        submit.commandBufferInfoCount = 1;
+        submit.pCommandBufferInfos = &cmdInfo;
+        {
+            auto lock = dc.LockQueue();
+            ASSERT_EQ(vkQueueSubmit2(dc.graphicsQueue, 1, &submit, dc.immFence), VK_SUCCESS);
+        }
+        Vulkan::WaitForFence(dc.device, dc.immFence);
+        EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
+
+        vmaInvalidateAllocation(dc.allocator, readback.allocation, 0, VK_WHOLE_SIZE);
+        void* mapped = nullptr;
+        vmaMapMemory(dc.allocator, readback.allocation, &mapped);
+        const auto* rgba = static_cast<const uint8_t*>(mapped);
+        for (const GUI::int2 p : { GUI::int2{ kSize.x / 4, kSize.y / 2 }, GUI::int2{ kSize.x * 3 / 4, kSize.y / 2 } })
+        {
+            const size_t off = (size_t(p.y) * kSize.x + size_t(p.x)) * 4;
+            EXPECT_EQ(rgba[off + 0], framePixels[off + 2]) << "red at " << p.x;
+            EXPECT_EQ(rgba[off + 1], framePixels[off + 1]) << "green at " << p.x;
+            EXPECT_EQ(rgba[off + 2], framePixels[off + 0]) << "blue at " << p.x;
+            EXPECT_EQ(rgba[off + 3], framePixels[off + 3]) << "alpha at " << p.x;
+        }
+        vmaUnmapMemory(dc.allocator, readback.allocation);
+
+        dc.DestroyBuffer(readback);
+        graphicsContext->DestroyWindowContext(ctx);
+        dc.WaitIdle();
+        vmaDestroyImage(dc.allocator, target, targetAllocation);
     }
 }

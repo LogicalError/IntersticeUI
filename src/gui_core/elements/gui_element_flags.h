@@ -32,6 +32,7 @@ namespace GUI
             WindowIsPopup         = 1u << 12,
             WindowCloseWithParent = 1u << 13,
             WindowNotFocusable    = 1u << 14,
+            WindowRenderToImage   = 1u << 18, // no OS window; see WindowFlags::RenderToImage
 
         Shadows                   = 1u << 15, // Window or element casts a shadow on elements behind it
         PropagatesDescendantState = 1u << 16, // Hover/Focused when any descendant is

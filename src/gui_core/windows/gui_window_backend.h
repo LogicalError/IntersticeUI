@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 #include <functional>
+#include <span>
 
 
 namespace GUI
@@ -50,6 +51,10 @@ namespace GUI
         virtual bool IsTransparent() const = 0;
         virtual void RenderWindowFrame(GUI::GraphicsContext* graphicsContext, GUI::IntRect rect, bool resizing) = 0;
         virtual void UpdateTransparentWindow(int2 /*screenPos*/) {}
+
+        // The last rendered frame, BGRA8 with tightly packed rows; bgra holds width ×
+        // height × 4 bytes of the window's pixel size. False when it can't be read.
+        virtual bool ReadPixels(std::span<uint8_t> /*bgra*/) { return false; }
 
     };
 

@@ -5,6 +5,7 @@
 #include <gui_core/windows/gui_window_backend.h>
 #include <gui_core/windows/gui_os_window_manager.h>
 
+#include <gui_core/graphics/vulkan/vk_types.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 
 namespace GUI
@@ -104,6 +105,10 @@ namespace Vulkan
 
         // Transparent window support (Windows layered window readback)
         bool                     needsReadback{ false };
+        bool                     renderToImage{ false };      // WindowFlags::RenderToImage: no surface
+        VkImage                  targetImage{ VK_NULL_HANDLE }; // host image each frame is copied into
+        VkExtent2D               targetExtent{};
+        bool                     targetWritten{ false };       // targetImage holds a previous frame
         Vulkan::AllocatedBuffer  readbackBuffer = {};
         std::vector<uint8_t>     cachedBitmap;
 
@@ -126,6 +131,12 @@ namespace Vulkan
         void EndWindowFrame(FrameData& currentFrame);
 
         void PerformReadback(const VulkanImage& drawImage);
+        bool ReadPixels(std::span<uint8_t> bgra) override;
+        // Host image each frame is copied into (render-to-image windows); null stops.
+        void SetImageTarget(VkImage image, VkExtent2D extent);
+        void TransitionTarget(VkCommandBuffer cmd, VkImageLayout from, VkImageLayout to,
+                              VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,
+                              VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess);
         void UpdateLayeredWindowFromCache(int screenX, int screenY);
 
         static VulkanWindowContext* Create(GUI::ID id, void* nativeHandle, GUI::OSWindowHandle osHandle, GUI::int2 size, GUI::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, GUI::OnGuiFunc onGUI);
