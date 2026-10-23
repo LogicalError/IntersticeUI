@@ -45,16 +45,22 @@ namespace interstice
         boxStyleRefs.clear();
         animatedHueStyle = interstice::VisualColorStyleIndex::Invalid;
         InitializeDemoStyles();
-        ApplyNodeHeaderTints();
+        ApplyNodeCategories();
     }
 
-    void Application::ApplyNodeHeaderTints()
+    void Application::ApplyNodeCategories()
     {
-        // Per-type header tints are palette colors, so each theme picks ones its
-        // header text reads on. Order matches the nodes seeded in Initialize.
-        static const char* const tints[] = { "--node-tint-input", "--node-tint-converter", "--node-tint-output", "--node-tint-texture" };
-        for (size_t i = 0; i < demo.nodeView.nodes.size() && i < std::size(tints); ++i)
-            demo.nodeView.nodes[i].headerColor = theme.GetColor(tints[i]);
+        // Category names and colors; the colors are palette colors, so they follow the
+        // theme. Order matches the nodes seeded in Initialize.
+        struct Category { const char* name; const char* color; };
+        static const Category categories[] = {
+            { "Generator", "--node-generator" }, { "Operator", "--accent" },
+            { "Output",    "--node-output" },    { "Input",    "--node-input" } };
+        for (size_t i = 0; i < demo.nodeView.nodes.size() && i < std::size(categories); ++i)
+        {
+            demo.nodeView.nodes[i].category      = categories[i].name;
+            demo.nodeView.nodes[i].categoryColor = theme.GetColor(categories[i].color);
+        }
     }
 
     void Application::Cleanup()
@@ -436,7 +442,7 @@ namespace interstice
             // Stable IDs keep per-node state keyed when view.ordering reshuffles.
             for (auto& node : demo.nodeView.nodes)
                 node.stableID = idManager.CreateStaticID();
-            ApplyNodeHeaderTints();
+            ApplyNodeCategories();
 
             // Connection rule (delegate): only sockets of the same colour may
             // connect. Endpoints are bounds-checked before this is called.

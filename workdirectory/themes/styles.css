@@ -1244,7 +1244,7 @@
     flex-shrink: 0;
     align-items: stretch;
     gap: 0px;
-    background-color: var(--bg-app);
+    background-color: var(--bg-canvas);
     border-color: var(--line-strong);
     color: var(--text-2);
     font-size: var(--font-size);
@@ -1275,8 +1275,8 @@
 .node {
     border-width: var(--border);
     border-radius: var(--radius-lg);
-    border-color: var(--line-strong);
-    background-color: var(--bg-panel);
+    border-color: var(--line-node);
+    background-color: var(--bg-raised);
     padding: 0px 0px 4px 0px;
     margin: 0px;
     /* No inter-row gap: rows are two grid cells tall and must stack at exactly
@@ -1299,28 +1299,64 @@
 .node::highlight(selected) { border-color: var(--accent); }
 
 /* ---- node-header (title bar at the top of a node) ------------------------ */
-/* A static title bar: its background is the per-node-type tint (set from C++  */
-/* via Element.colorStyleIndex) over this default, and it never reacts to      */
-/* state — the node's own border carries all hover/select feedback.           */
+/* A static title bar: category square, title, and the category name on the   */
+/* right. It never reacts to state; the node's border carries all feedback.   */
 .node-header {
     border-width: 0px 0px 1px 0px;
-    border-color: var(--line-strong);
+    border-color: var(--line-node);
     border-radius: var(--radius-node-top);
     background-color: var(--bg-control);
-    padding: 0px 0px;
+    padding: 0px 10px;
     margin: 0px;
-    gap: 0px;
+    gap: 8px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: center;
-    color: var(--text-2);
+    justify-content: flex-start;
+    color: var(--text-1);
     font-size: var(--font-size);
-    font-style: normal;
-    text-align: center;
+}
+/* The node's category color comes from C++ (Element.colorStyleIndex). */
+.node-category {
+    width: 8px;
+    height: 8px;
+    border-width: 0px;
+    border-radius: 2px;
+    margin: 0px;
+    padding: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: var(--accent);
+}
+.node-title {
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
     text-wrap: nowrap;
     text-overflow: ellipsis;
+    text-align: start;
+    vertical-align: middle;
+    background-color: transparent;
+    color: var(--text-1);
+    font-size: var(--font-size);
+    font-weight: 600;
+}
+.node-caption {
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    text-wrap: nowrap;
+    text-align: end;
+    vertical-align: middle;
+    background-color: transparent;
+    color: var(--text-3);
+    font-size: var(--font-size-sm);
 }
 
 /* ---- node-row (one property: socket | body | socket) --------------------- */

@@ -498,19 +498,28 @@ namespace interstice
                     || (!readonly && connected && hovered && !view.pendingConnection.active);
             }
 
-            // Filled dot; the hit region is the full element rect.
+            // A pin on the node's edge: filled when connected, a ring when not, with an
+            // outline in the node's color. The hit region is the full element rect.
+            const auto& socketProp = view.nodes[n].properties[propIdx];
+            const auto& endpoint   = isOutput ? socketProp.output : socketProp.input;
+            const bool  connected  = endpoint.has_value() && endpoint->valid();
             VERIFY(elementStorage.AddCustomDraw(res.ref,
-                [dotColor, highlight, kSocketSize, inset = styleManager.Px(2.0f), halo = styleManager.Px(6.0f),
+                [dotColor, highlight, connected, kSocketSize, nodeColor = theme.GetColor("--bg-raised"),
+                 inset = styleManager.Px(2.0f), ring = styleManager.Px(2.0f), halo = styleManager.Px(6.0f),
                  grow = styleManager.Px(1.0f)](interstice::CustomDrawContext& ctx)
                 {
                     const auto inner = ctx.ElementInnerRect();
                     // Socket centre. Rows are two grid cells tall and the socket is
                     // centred in the row, so this lands on the mid-row grid line.
                     const interstice::float2 center{ inner.w * 0.5f, inner.h * 0.5f };
-                    const float r = (float)kSocketSize - inset;
-                    if (highlight)   // soft white halo behind the dot
-                        ctx.RenderDot(center, r + halo, interstice::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
-                    ctx.RenderDot(center, highlight ? r + grow : r, dotColor);
+                    const float pin = (highlight ? grow : 0.0f) + (float)kSocketSize - inset;
+                    if (highlight)   // soft white halo behind the pin
+                        ctx.RenderDot(center, pin + halo, interstice::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
+                    else
+                        ctx.RenderDot(center, pin + 2.0f * ring, nodeColor);
+                    ctx.RenderDot(center, pin, dotColor);
+                    if (!connected)
+                        ctx.RenderDot(center, pin - 2.0f * ring, nodeColor);
                 }));
 
             return res.ref;
@@ -754,8 +763,8 @@ namespace interstice
             // an ID parent), so they don't change when z-order reshuffles the nodes.
             [[maybe_unused]] bool pushed = idManager.PushParent(node.stableID);
 
-            // ---- Header: own row, its own background via .node-header ----
-            // Static title bar: NoInput so clicks reach the node.
+            // ---- Header: [category square] title ... category ----
+            // Static title bar: NoInput throughout so clicks reach the node.
             ID headerID = idManager.AllocateDynamicID("node-header");
             Element header
             {
@@ -764,10 +773,6 @@ namespace interstice
                 .flags    = ElementFlags::NoInput,
                 .state    = outerState
             };
-            header.textID = textSystem->RegisterText(headerID, node.title, header.styleRef, header.state);
-            // Per-node-type header tint (Blender-style); alpha 0 keeps the CSS default.
-            if (node.headerColor.a > 0.0f)
-                header.colorStyleIndex = styleManager.RegisterColorStyle(interstice::ColorStyle::Create(node.headerColor));
             // Top chrome + header == one row pitch (2*grid), so rows start on a grid line.
             const int32_t rowPitch = 2 * grid;
             LayoutOverride headerLayout = LayoutOverride{}.Auto();
@@ -776,6 +781,30 @@ namespace interstice
             auto headerRes = elementStorage.Add(std::move(header), std::move(headerLayout));
             VERIFY(headerRes.status);
             VERIFY(windowRegistry.Add(headerRes.ref));
+            VERIFY(elementStorage.BeginChildren());
+            {
+                auto addHeaderPart = [&](const char* name, StyleRef style, std::string_view text,
+                                         interstice::VisualColorStyleIndex color)
+                {
+                    const ID partID = idManager.AllocateDynamicID(name);
+                    Element part{ .id = partID, .styleRef = style, .flags = ElementFlags::NoInput, .state = outerState };
+                    if (!text.empty())
+                        part.textID = textSystem->RegisterText(partID, text, style, part.state);
+                    part.colorStyleIndex = color;
+                    auto res = elementStorage.Add(std::move(part), LayoutOverride{}.Auto());
+                    VERIFY(res.status);
+                    VERIFY(windowRegistry.Add(res.ref));
+                };
+                // Alpha 0 keeps the CSS default (the accent).
+                const interstice::VisualColorStyleIndex categoryColor = node.categoryColor.a > 0.0f
+                    ? styleManager.RegisterColorStyle(interstice::ColorStyle::Create(node.categoryColor))
+                    : interstice::VisualColorStyleIndex{};
+                addHeaderPart("node-category", theme.nodeCategoryStyleRef, {}, categoryColor);
+                addHeaderPart("node-title", theme.nodeTitleStyleRef, node.title, {});
+                if (!node.category.empty())
+                    addHeaderPart("node-caption", theme.nodeCaptionStyleRef, node.category, {});
+            }
+            VERIFY(elementStorage.EndChildren());
 
             if (!node.collapsed)
             {
@@ -941,8 +970,8 @@ namespace interstice
                     std::max(cc0.x, cc1.x) - std::min(cc0.x, cc1.x),
                     std::max(cc0.y, cc1.y) - std::min(cc0.y, cc1.y) };
 
-                const interstice::LineStyle gridStyle{ .colorStyleIndex = theme.gridLineStyle, .lineWidth = styleManager.Px(1.f) };
-                RenderCanvasGrid(ctx, theme.nodeGridSize, gridStyle, gridOrigin, content);
+                RenderCanvasGrid(ctx, theme.nodeGridSize, theme.GetColor("--canvas-dot"),
+                                 styleManager.Px(2.0f), gridOrigin, content);
 
                 // Socket rects are laid out even for culled nodes. Local space = CANVAS_LAY.
                 auto socketCenter = [&](const ElementRef& ref) -> interstice::int2
@@ -1013,7 +1042,7 @@ namespace interstice
                         if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
                             wireColorIdx = cit->second;
                         const interstice::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f) };
-                        ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle);
+                        ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle, 0.5f * float(theme.nodeGridSize));
 
                         // Cache draggable segments in node.pos space (subtract
                         // gridOrigin) so next frame's grab elements align with

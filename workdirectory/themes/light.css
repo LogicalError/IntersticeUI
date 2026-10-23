@@ -67,9 +67,4 @@
     --frame-bar: #59B88A;
     --frame-bar-over: #E0A23A;
     --budget-line: #9AA1AD;
-    /* ---- Node view header tints (per node type, read from code) ----------- */
-    --node-tint-input: #e8c6c6;
-    --node-tint-converter: #c6d0e6;
-    --node-tint-output: #dac6e6;
-    --node-tint-texture: #d0debb;
 }

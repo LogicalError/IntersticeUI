@@ -9,7 +9,7 @@
 namespace interstice
 {
     void RenderCanvasGrid(CustomDrawContext& ctx, int32_t baseGridSize,
-                          const LineStyle& style, int2 originOffset, IntRect clipCurrent)
+                          color4f dotColor, float dotSize, int2 originOffset, IntRect clipCurrent)
     {
         if (baseGridSize <= 0) return;
 
@@ -31,8 +31,8 @@ namespace interstice
         int minY = std::min({ c0.y, c1.y, c2.y, c3.y });
         int maxY = std::max({ c0.y, c1.y, c2.y, c3.y });
 
-        // Clamp the line span to the content box (the screen scissor is the wider
-        // border box, so lines would otherwise bleed into the padding).
+        // Clamp to the content box (the screen scissor is the wider border box, so dots
+        // would otherwise bleed into the padding).
         if (clipCurrent.w > 0 && clipCurrent.h > 0)
         {
             minX = std::max(minX, clipCurrent.x);
@@ -65,23 +65,16 @@ namespace interstice
             return origin + q * step;
         };
 
-        // Emit in window-local space, snapped to whole pixels: transformed canvas coords land
-        // on sub-pixels, and a 1px line would straddle the (pixel-aligned) node edges.
+        // Emit in window-local space, snapped to pixel centres: transformed canvas coords land
+        // on sub-pixels, and a 1px dot would smear across two.
         ctx.SetSpaceRaw(float3x2::Identity());
-        for (int x = firstLine(minX, originOffset.x); x <= maxX; x += step)
-        {
-            const float2 a = currentToWL.TransformPoint({ (float)x, (float)minY });
-            const float2 b = currentToWL.TransformPoint({ (float)x, (float)maxY });
-            const int px = (int)std::lround(a.x);
-            ctx.RenderLine({ px, (int)std::lround(a.y) }, { px, (int)std::lround(b.y) }, style);
-        }
+        const int firstX = firstLine(minX, originOffset.x);
         for (int y = firstLine(minY, originOffset.y); y <= maxY; y += step)
-        {
-            const float2 a = currentToWL.TransformPoint({ (float)minX, (float)y });
-            const float2 b = currentToWL.TransformPoint({ (float)maxX, (float)y });
-            const int py = (int)std::lround(a.y);
-            ctx.RenderLine({ (int)std::lround(a.x), py }, { (int)std::lround(b.x), py }, style);
-        }
+            for (int x = firstX; x <= maxX; x += step)
+            {
+                const float2 p = currentToWL.TransformPoint({ (float)x, (float)y });
+                ctx.RenderDot({ std::floor(p.x) + 0.5f, std::floor(p.y) + 0.5f }, dotSize, dotColor);
+            }
         ctx.SetSpace(DrawSpace::Local);
     }
 

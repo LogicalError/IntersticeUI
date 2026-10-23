@@ -55,7 +55,10 @@ namespace interstice
         interstice::ID                    stableID     = interstice::ID::Invalid();
 
         std::string                title;
-        interstice::color4f               headerColor  = {};   // Blender-style per-type header tint; alpha 0 = theme default
+        // Category name, shown right-aligned in the header, and the color of the
+        // header's category square (alpha 0 = the accent).
+        std::string                category;
+        interstice::color4f               categoryColor = {};
         interstice::int2                  pos          = {};
         interstice::int2                  startPos     = {};
         interstice::int2                  startScreen  = {};

@@ -155,9 +155,10 @@ namespace interstice
                                  VisualColorStyleIndex colorStyleIndex,
                                  ImageIndex textureIndex = ImageIndex::Invalid) const;
 
-        // Outlined polyline.
+        // Outlined polyline. cornerRadius > 0 (open polylines) turns each bend into a short
+        // arc between the straight runs, up to half of either neighbouring run.
         void RenderPolyline(std::span<const int2> points, bool closed,
-                            const LineStyle& style) const;
+                            const LineStyle& style, float cornerRadius = 0.0f) const;
 
         // Draw a previously-registered text (textSystem->RegisterText) within `rect`,
         // expressed in the CURRENT space like every other Render* coord. The glyph

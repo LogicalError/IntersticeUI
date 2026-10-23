@@ -406,7 +406,7 @@ namespace interstice
 
         // Re-registers demo-owned styles after a theme reload.
         void OnStylesReloaded() override;
-        void ApplyNodeHeaderTints();
+        void ApplyNodeCategories();
 
         void Cleanup() override;
 

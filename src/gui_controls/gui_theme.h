@@ -151,6 +151,9 @@ namespace interstice
         StyleRef viewBackgroundStyleRef {}; // solid backdrop (--bg-app) for the View panel's toolbar dock
         StyleRef nodeStyleRef {};       // single node container (vertical column with border + bg)
         StyleRef nodeHeaderStyleRef {}; // node title bar (distinct background, sits at top of node)
+        StyleRef nodeCategoryStyleRef {}; // the category square in a node header
+        StyleRef nodeTitleStyleRef {};    // a node header's title
+        StyleRef nodeCaptionStyleRef {};  // a node header's category name, right-aligned
         StyleRef nodeRowStyleRef {};    // node property row (socket | body | socket)
         StyleRef nodeBodyCenterStyleRef {}; // centred body for full-body content (image previews)
         StyleRef nodeSocketStyleRef {}; // socket hit-target; overflow:visible so the dot + hover halo aren't clipped to its box
@@ -258,7 +261,6 @@ namespace interstice
         interstice::VisualColorStyleIndex lineYellowStyle;
         interstice::VisualColorStyleIndex lineWhiteStyle;
         interstice::VisualColorStyleIndex lineDarkStyle;
-        interstice::VisualColorStyleIndex gridLineStyle;      // node-view background grid
         interstice::VisualColorStyleIndex treeGuideLineStyle;
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
@@ -293,7 +295,7 @@ namespace interstice
         // invalid when no file defines it.
         StyleRef GetStyle(std::string_view cssClass) const;
 
-        // A palette color by custom-property name ("--node-tint-input"), or `fallback`
+        // A palette color by custom-property name ("--node-input"), or `fallback`
         // when the loaded theme doesn't define it.
         color4f GetColor(std::string_view varName, color4f fallback = {}) const;
 

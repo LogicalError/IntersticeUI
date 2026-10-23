@@ -256,7 +256,6 @@ namespace interstice
         lineYellowStyle    = lineColorFromCSS("--warn", color4f{ 1.0f, 0.8f, 0.2f, 1.0f });
         lineWhiteStyle     = lineColorFromCSS("--text-1", color4f{ 1.0f, 1.0f, 1.0f, 1.0f });
         lineDarkStyle      = lineColorFromCSS("--bg-app", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
-        gridLineStyle      = lineColorFromCSS("--canvas-dot", color4f{ 0.28f, 0.28f, 0.28f, 1.0f });
         treeGuideLineStyle = lineColorFromCSS("--line-node", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
         treeDropIndicatorStyle = lineColorFromCSS("--accent", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
 
@@ -394,6 +393,9 @@ namespace interstice
         viewBackgroundStyleRef            = registerCSS("view-background");
         nodeStyleRef                      = registerCSS("node");
         nodeHeaderStyleRef                = registerCSS("node-header");
+        nodeCategoryStyleRef              = registerCSS("node-category");
+        nodeTitleStyleRef                 = registerCSS("node-title");
+        nodeCaptionStyleRef               = registerCSS("node-caption");
         nodeRowStyleRef                   = registerCSS("node-row");
         nodeBodyCenterStyleRef            = registerCSS("node-body-center");
         nodeSocketStyleRef                = registerCSS("node-socket");

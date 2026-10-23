@@ -14,9 +14,10 @@ namespace interstice
     class CustomDrawContext;
     struct LineStyle;
 
-    // Infinite background grid for a pan/zoom canvas, drawn from a CustomDrawContext
-    // callback in the canvas's input space (CANVAS_LAY). The pitch doubles per zoom-out
-    // octave, so on-screen density stays roughly constant.
+    // Infinite background dot grid for a pan/zoom canvas, drawn from a CustomDrawContext
+    // callback in the canvas's input space (CANVAS_LAY): a dot on every grid point.
+    // dotSize is the dot's diameter; 2 on a pixel centre gives one crisp pixel. The pitch doubles per zoom-out octave, so on-screen density stays
+    // roughly constant.
     //
     //   baseGridSize : pitch in CANVAS_LAY pixels at 1:1 zoom. <= 0 draws nothing.
     //   originOffset : a point the lattice passes through. Pass
@@ -25,7 +26,7 @@ namespace interstice
     //   clipCurrent  : optional extra clip in the CURRENT space. The scissor is the
     //                  border box, so pass ElementInnerRect() to keep out of the padding.
     void RenderCanvasGrid(CustomDrawContext& ctx, int32_t baseGridSize,
-                          const LineStyle& style, int2 originOffset = {},
+                          color4f dotColor, float dotSize, int2 originOffset = {},
                           IntRect clipCurrent = {});
 
     // --- Canvas grid lattice ----------------------------------------------

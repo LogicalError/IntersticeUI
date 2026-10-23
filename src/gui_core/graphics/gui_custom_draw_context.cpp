@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace interstice
 {
@@ -148,13 +149,55 @@ namespace interstice
     }
 
     void CustomDrawContext::RenderPolyline(std::span<const int2> points, bool closed,
-                                           const LineStyle& style) const
+                                           const LineStyle& style, float cornerRadius) const
     {
         if (points.size() < 2) return;
-        for (size_t i = 0; i + 1 < points.size(); i++)
-            m_renderer->RenderLine(points[i], points[i + 1], m_clipRect, style);
-        if (closed)
-            m_renderer->RenderLine(points.back(), points[0], m_clipRect, style);
+        if (cornerRadius <= 0.0f || closed || points.size() < 3)
+        {
+            for (size_t i = 0; i + 1 < points.size(); i++)
+                m_renderer->RenderLine(points[i], points[i + 1], m_clipRect, style);
+            if (closed)
+                m_renderer->RenderLine(points.back(), points[0], m_clipRect, style);
+            return;
+        }
+
+        struct Dir { float x, y, len; };
+        auto dir = [&](size_t from, size_t to) -> Dir {
+            const float dx = float(points[to].x - points[from].x), dy = float(points[to].y - points[from].y);
+            const float len = std::sqrt(dx * dx + dy * dy);
+            return len > 0.0f ? Dir{ dx / len, dy / len, len } : Dir{ 0.0f, 0.0f, 0.0f };
+        };
+        auto at = [](int2 p, Dir d, float t) {
+            return int2{ (int)std::lround(float(p.x) + d.x * t), (int)std::lround(float(p.y) + d.y * t) };
+        };
+
+        // How far each corner's curve reaches along its runs.
+        const size_t n = points.size();
+        std::vector<float> reach(n, 0.0f);
+        for (size_t i = 1; i + 1 < n; ++i)
+            reach[i] = std::min({ cornerRadius, dir(i - 1, i).len * 0.5f, dir(i, i + 1).len * 0.5f });
+
+        for (size_t i = 0; i + 1 < n; ++i)
+        {
+            const Dir d = dir(i, i + 1);
+            if (d.len - reach[i] - reach[i + 1] > 0.5f)
+                m_renderer->RenderLine(at(points[i], d, reach[i]), at(points[i + 1], d, -reach[i + 1]), m_clipRect, style);
+        }
+
+        for (size_t i = 1; i + 1 < n; ++i)
+        {
+            const Dir in = dir(i - 1, i), out = dir(i, i + 1);
+            const float turn = std::acos(std::clamp(in.x * out.x + in.y * out.y, -1.0f, 1.0f));
+            if (reach[i] < 1.0f || turn < 0.01f)
+                continue;
+            // A circular arc tangent to both runs: its radius from the reach, and cubic
+            // handles of 4/3 tan(turn/4) of the radius along each tangent.
+            const float radius = reach[i] / std::tan(turn * 0.5f);
+            const float handle = radius * (4.0f / 3.0f) * std::tan(turn * 0.25f);
+            m_renderer->RenderLine(at(points[i], in, -reach[i]), at(points[i], in, handle - reach[i]),
+                                   at(points[i], out, reach[i] - handle), at(points[i], out, reach[i]),
+                                   m_clipRect, style);
+        }
     }
 
     void CustomDrawContext::RenderText(TextID textId, IntRect rect, float extraScale) const
