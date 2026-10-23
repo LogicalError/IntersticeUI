@@ -29,8 +29,7 @@ namespace interstice
 
     void InstallSDLVulkanSurfaceFactory(GraphicsContext* graphicsContext)
     {
-        if (graphicsContext == nullptr) return;
-        auto* vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
-        vk->deviceContext.SetSurfaceFactory(&CreateSDLVulkanSurface);
+        if (auto* vk = dynamic_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext))
+            vk->SetSurfaceFactory(&CreateSDLVulkanSurface);
     }
 } // namespace interstice

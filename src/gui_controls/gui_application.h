@@ -93,11 +93,7 @@ namespace interstice
 
         ITextSystem*        textSystem      { nullptr };
         IWindowBackend*     windowBackend   { nullptr };   // the OS windows plus render-to-image windows
-        GraphicsContext*    graphicsContext { nullptr };
-
-        // Optional; called between creating and initializing the graphics context. A host that
-        // owns the GPU device hands it over here (Vulkan: deviceContext.SetExternalDevice).
-        std::function<void(GraphicsContext&)> configureGraphicsContext;
+        GraphicsContext*    graphicsContext { nullptr };   // the backend from SetGraphicsBackend
         GUIRenderer*        guiRenderer     { nullptr };
 
         IDManager           idManager{};
@@ -252,6 +248,12 @@ namespace interstice
         // The last rendered frame of a render-to-image window: BGRA8, tightly packed
         // rows, bgra holding width × height × 4 bytes of its pixel size.
         bool ReadWindowPixels(ID windowID, std::span<uint8_t> bgra);
+
+        // The graphics backend Initialize uses; without one it creates a
+        // vulkan::VulkanGraphicsContext. Set it up through its own API first, for
+        // example SetExternalDevice to render on the host's device. Owned until
+        // Cleanup. Call before Initialize.
+        void SetGraphicsBackend(std::unique_ptr<GraphicsContext> backend) { m_graphicsBackend = std::move(backend); }
 
         // Host memory functions for what can be routed: Vulkan objects, VMA,
         // vk-bootstrap and SDL (only when the GUI starts SDL). See AllocationHooks
@@ -1332,6 +1334,7 @@ namespace interstice
         MouseButtons         m_injectedButtons { MouseButtons::None };
         int2 InjectedScreenPos(ID windowID, int2 pos);
         AllocationHooks m_allocationHooks;
+        std::unique_ptr<GraphicsContext> m_graphicsBackend;
         MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
         ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
         std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot

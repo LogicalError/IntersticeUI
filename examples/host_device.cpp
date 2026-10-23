@@ -4,6 +4,7 @@
 #include <gui_controls/gui_application.h>
 #include <gui_core/graphics/vulkan/vk_graphics_context.h>
 
+#include <SDL3/SDL_init.h>
 #include <SDL3/SDL_vulkan.h>
 #include <VkBootstrap.h>
 
@@ -210,17 +211,14 @@ class HostedApp : public interstice::GUIApplication
 public:
     explicit HostedApp(Host& host) : host(host)
     {
-        // Runs inside Initialize, after the window backend is up (SDL names the
-        // instance extensions) and before the GUI creates its own device.
-        configureGraphicsContext = [this](interstice::GraphicsContext& context)
-        {
-            if (!this->host.CreateDevice())
-            {
-                std::printf("no Vulkan 1.3 device with the features the GUI needs\n");
-                return;   // the GUI then creates its own device and the example quits
-            }
-            static_cast<interstice::vulkan::VulkanGraphicsContext&>(context).deviceContext.SetExternalDevice(this->host.Describe());
-        };
+        // The GUI renders on the host's device; without one it creates its own and the example quits.
+        auto backend = std::make_unique<interstice::vulkan::VulkanGraphicsContext>();
+        if (this->host.CreateDevice())
+            backend->SetExternalDevice(this->host.Describe());
+        else
+            std::printf("no Vulkan 1.3 device with the features the GUI needs\n");
+        vk = backend.get();
+        SetGraphicsBackend(std::move(backend));
     }
 
     bool Initialize(const InitializeOptions& options = {}) override
@@ -228,8 +226,7 @@ public:
         if (!GUIApplication::Initialize(options) || host.device.device == VK_NULL_HANDLE || !host.CreateImage())
             return false;
         // The GUI samples the host's view and sampler; the host keeps owning them.
-        auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(*graphicsContext);
-        hostImage = vk.RegisterExternalImage(host.view, host.sampler);
+        hostImage = vk->RegisterExternalImage(host.view, host.sampler);
         windowID  = idManager.CreateStaticID();
         return true;
     }
@@ -252,6 +249,7 @@ public:
 
 private:
     Host&                                 host;
+    interstice::vulkan::VulkanGraphicsContext*  vk        = nullptr;   // owned by the app
     interstice::ImageIndex                       hostImage = interstice::ImageIndex::Invalid;
     interstice::ID                               windowID  = interstice::ID::Invalid();
     std::chrono::steady_clock::time_point start     = std::chrono::steady_clock::now();
@@ -259,6 +257,9 @@ private:
 
 int main()
 {
+    // The host's instance needs SDL's surface extensions, so SDL runs before the GUI starts.
+    if (!SDL_Init(SDL_INIT_VIDEO))
+        return 1;
     Host host;
     {
         HostedApp app(host);
@@ -268,5 +269,6 @@ int main()
         app.Cleanup();   // the GUI destroys only what it created; the device stays
     }
     host.Destroy();
+    SDL_Quit();
     return 0;
 }

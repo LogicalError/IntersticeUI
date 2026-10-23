@@ -8,7 +8,9 @@
 #include <gui_core/input/gui_platform_input_handler.h>
 
 #include <gui_core/windows/gui_window_flags.h>
+#include <gui_core/graphics/gui_graphics_context.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
+#include <gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h>
 
 #include <SDL3/SDL.h>
 #include <cassert>
@@ -73,6 +75,8 @@ namespace interstice
     SDLWindowBackend::SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks)
         : graphicsContext(graphicsContext)
     {
+        InstallSDLVulkanSurfaceFactory(graphicsContext);
+
         // Replacing SDL's allocator is only safe before SDL holds any memory.
         if (hooks != nullptr && hooks->IsSet())
         {
@@ -210,29 +214,6 @@ namespace interstice
         }
     }
 
-    OSWindowHandle SDLWindowBackend::CreateBootstrapWindow()
-    {
-        if (!m_sdlInitialized) return nullptr;
-
-        // Create a hidden window for Vulkan initialization
-        SDL_Window* bootstrapWindow = SDL_CreateWindow(
-            "Vulkan Bootstrap Window",
-            800, 600,
-            SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN
-        );
-        if (bootstrapWindow == nullptr)
-            INTERSTICE_LOG_ERROR(kLogSDL, "SDL_CreateWindow failed: {}", SDL_GetError());
-
-        return reinterpret_cast<OSWindowHandle>(bootstrapWindow);
-    }
-
-    void SDLWindowBackend::DestroyBootstrapWindow(OSWindowHandle bootstrapWindow)
-    {
-        if (bootstrapWindow != nullptr)
-        {
-            SDL_DestroyWindow(reinterpret_cast<SDL_Window*>(bootstrapWindow));
-        }
-    }
 
     OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle)
     {
@@ -636,8 +617,8 @@ namespace interstice
         bool isModal = (windowFlags & interstice::WindowFlags::Modal) != interstice::WindowFlags::None;
 
 
-        Uint64 api_flags = 0;
-        api_flags = SDL_WINDOW_VULKAN;
+        const Uint64 api_flags = graphicsContext != nullptr && graphicsContext->GetAPI() == GraphicsAPI::Vulkan
+            ? SDL_WINDOW_VULKAN : 0;
         
         Uint64 sd_window_flags = api_flags;
         

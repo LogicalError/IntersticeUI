@@ -204,24 +204,24 @@ as its editor, can hand its handles to the GUI so both render on the same
 device:
 
 ```cpp
-interstice::GUIApplication app;
-app.configureGraphicsContext = [&](interstice::GraphicsContext& context)
-{
-    auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(context);
-    interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
-    external.instance            = hostInstance;
-    external.physicalDevice      = hostPhysicalDevice;
-    external.device              = hostDevice;
-    external.graphicsQueue       = hostGraphicsQueue;
-    external.graphicsQueueFamily = hostGraphicsQueueFamily;
-    external.queueMutex          = &hostQueueMutex;   // optional, see below
-    vk.deviceContext.SetExternalDevice(external);
-};
+auto backend = std::make_unique<interstice::vulkan::VulkanGraphicsContext>();
+interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
+external.instance            = hostInstance;
+external.physicalDevice      = hostPhysicalDevice;
+external.device              = hostDevice;
+external.graphicsQueue       = hostGraphicsQueue;
+external.graphicsQueueFamily = hostGraphicsQueueFamily;
+external.queueMutex          = &hostQueueMutex;   // optional, see below
+backend->SetExternalDevice(external);
+
+auto* vk = backend.get();   // for RegisterExternalImage below
+app.SetGraphicsBackend(std::move(backend));
 app.Initialize();
 ```
 
-`configureGraphicsContext` runs inside `Initialize`, after the window backend is
-up and before the GUI creates a device of its own.
+`SetGraphicsBackend` hands the app the graphics backend to use; without it,
+`Initialize` creates a `VulkanGraphicsContext`. Another backend implements
+`interstice::GraphicsContext`; `NullGraphicsContext` draws nothing and needs no GPU.
 
 Requirements on the host device:
 
@@ -252,9 +252,8 @@ A host can render into an image it owns and show it in the UI, for example a
 3D viewport:
 
 ```cpp
-auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(*graphicsContext);
-interstice::ImageIndex index = vk.RegisterExternalImage(view, sampler);   // once
-vk.UpdateExternalImage(index, newView, sampler);                   // after a resize
+interstice::ImageIndex index = vk->RegisterExternalImage(view, sampler);   // once
+vk->UpdateExternalImage(index, newView, sampler);                   // after a resize
 
 Image(index, interstice::uint2{ width, height });   // in OnGUI
 ```

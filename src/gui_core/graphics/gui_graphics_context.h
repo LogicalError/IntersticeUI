@@ -41,13 +41,18 @@ namespace interstice
         Application
     };
 
+    // The graphics API a backend presents with; window backends create their
+    // windows to match (SDL: SDL_WINDOW_VULKAN).
+    enum class GraphicsAPI : uint8_t
+    {
+        None,       // nothing is presented (NullGraphicsContext)
+        Vulkan,
+    };
+
     class GraphicsContext
     {
     public:
         GUIRenderer* guiRenderer = nullptr;
-
-    public:
-        static GraphicsContext* CreateContext();
 
     public:
         GraphicsContext() = default;
@@ -55,6 +60,8 @@ namespace interstice
         virtual ~GraphicsContext() {}
 
     public:
+        virtual GraphicsAPI GetAPI() const = 0;
+
         // Where the compiled shaders are (default "shaders_compiled", relative to the
         // working directory). Call before Initialize.
         virtual void SetShaderDirectory(std::string_view directory) = 0;

@@ -16,8 +16,6 @@ class MockWindowBackend : public interstice::IWindowBackend
 public:
     MockWindowBackend() {}
 
-    MOCK_METHOD(interstice::OSWindowHandle, CreateBootstrapWindow, (), (override));
-    MOCK_METHOD(void, DestroyBootstrapWindow, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(interstice::OSWindowHandle, CreateWindow,
         (std::string_view title, interstice::int2 size, interstice::WindowFlags flags, interstice::OSWindowHandle parentOSHandle),
         (override));

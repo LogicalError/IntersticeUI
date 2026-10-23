@@ -29,6 +29,7 @@
 #include <gui_core/style/gui_gradient_manager.h>
 
 #include <gui_core/windows/gui_window_backend.h>
+#include <gui_core/windows/gui_window_flags.h>
 
 // A host that links its own VMA builds with INTERSTICE_VMA_IMPLEMENTATION off.
 #if INTERSTICE_VMA_IMPLEMENTATION
@@ -76,16 +77,6 @@ static size_t BytesPerPixel(VkFormat format)
     }
 }
 
-
-// Backend selection point. A second graphics API plugs in by implementing
-// GraphicsContext plus the two RHI classes (RHI::RenderDevice and
-// RHI::RenderCommandList — see gui_rhi.h), compiling the shader pairs named
-// by kPrimitiveSpecs to its own format, and being returned here. The GUI
-// render loop itself (interstice::PrimitiveRenderer) is backend-agnostic.
-interstice::GraphicsContext* interstice::GraphicsContext::CreateContext()
-{
-    return new interstice::vulkan::VulkanGraphicsContext();
-}
 
 void interstice::vulkan::VulkanGraphicsContext::RePrepareFrame()
 {
@@ -310,7 +301,9 @@ void VulkanGraphicsContext::DestroyWindowContext(interstice::IWindowContext* con
 
 bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend)
 {
-    interstice::OSWindowHandle bootstrapWindow = windowBackend->CreateBootstrapWindow();
+    // A hidden window whose surface picks a GPU that can present to the GUI's windows.
+    interstice::OSWindowHandle bootstrapWindow = windowBackend->CreateWindow(
+        "Vulkan bootstrap", interstice::int2{ 64, 64 }, interstice::WindowFlags::Hidden, nullptr);
     if (bootstrapWindow == nullptr)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to create bootstrap window for Vulkan initialization");
@@ -321,7 +314,7 @@ bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend
     if (!deviceContext.Initialize())
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to initialize device context");
-        windowBackend->DestroyBootstrapWindow(bootstrapWindow);
+        windowBackend->DestroyWindow(bootstrapWindow);
         return false;
     }
 
@@ -337,7 +330,7 @@ bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend
             });
     }
 
-    windowBackend->DestroyBootstrapWindow(bootstrapWindow);
+    windowBackend->DestroyWindow(bootstrapWindow);
     return true;
 }
 

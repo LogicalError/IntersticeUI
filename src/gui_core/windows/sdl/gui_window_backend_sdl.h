@@ -20,14 +20,12 @@ namespace interstice
     class SDLWindowBackend : public IWindowBackend
     {
     public:
+        // Windows are created for graphicsContext->GetAPI(); for a VulkanGraphicsContext
+        // this also installs its SDL surface factory.
         // hooks: SDL's memory functions too, which are process-wide. Used only when
         // this backend starts SDL and SDL holds no memory yet.
         explicit SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks = nullptr);
         ~SDLWindowBackend() override;
-
-        // Bootstrap window for Vulkan initialization
-        OSWindowHandle CreateBootstrapWindow() override;
-        void DestroyBootstrapWindow(OSWindowHandle bootstrapWindow) override;
 
         // IWindowBackend
         OSWindowHandle CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;

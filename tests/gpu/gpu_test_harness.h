@@ -20,7 +20,6 @@
 #include <gui_core/style/gui_style_manager.h>
 #include <gui_core/style/gui_gradient_manager.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
-#include <gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h>
 
 #include <gtest/gtest.h>
 
@@ -95,11 +94,9 @@ namespace GpuTestHarness
 
         void SetUp() override
         {
-            graphicsContext = interstice::GraphicsContext::CreateContext();
+            vk              = new interstice::vulkan::VulkanGraphicsContext();
+            graphicsContext = vk;
             windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
-            interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
-
-            vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
 
             interstice::vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
             cfg.callback             = &ValidationCallback;

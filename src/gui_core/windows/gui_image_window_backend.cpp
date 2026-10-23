@@ -49,8 +49,6 @@ namespace interstice
 
     void ImageWindowBackend::SetFocus(OSWindowHandle window) { m_state->focusWindow = Find(window); }
 
-    OSWindowHandle ImageWindowBackend::CreateBootstrapWindow() { return m_os.CreateBootstrapWindow(); }
-    void ImageWindowBackend::DestroyBootstrapWindow(OSWindowHandle bootstrapWindow) { m_os.DestroyBootstrapWindow(bootstrapWindow); }
 
     OSWindowHandle ImageWindowBackend::CreateWindow(std::string_view title, int2 size, WindowFlags windowFlags, OSWindowHandle parentOSHandle)
     {

@@ -35,6 +35,14 @@ namespace interstice::vulkan
     public:
         VulkanGraphicsContext();
 
+        interstice::GraphicsAPI GetAPI() const override { return interstice::GraphicsAPI::Vulkan; }
+
+        // ---- Setup, before GUIApplication::Initialize (see VulkanDeviceContext) ----
+        // Render on the host's device instead of creating one.
+        void SetExternalDevice(const VulkanDeviceContext::ExternalDevice& external) { deviceContext.SetExternalDevice(external); }
+        // How surfaces are made for the window backend's windows; SDLWindowBackend installs its own.
+        void SetSurfaceFactory(VulkanDeviceContext::SurfaceFactory factory) { deviceContext.SetSurfaceFactory(std::move(factory)); }
+
         void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
         void SetAllocationHooks(const interstice::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
         bool Initialize(interstice::IWindowBackend* windowBackend) override;

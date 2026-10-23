@@ -65,12 +65,6 @@ namespace interstice
         
         virtual ~IWindowBackend() {}
 
-        // Bootstrap window for Vulkan initialization (internal use only)
-        // Returns an opaque handle to a temporary hidden window
-        // Must be destroyed via DestroyBootstrapWindow
-        virtual OSWindowHandle CreateBootstrapWindow() = 0;
-        virtual void DestroyBootstrapWindow(OSWindowHandle bootstrapWindow) = 0;
-
         // Sizes and rects in pixels; the client area, not the frame.
         virtual OSWindowHandle CreateWindow(std::string_view title, int2 size, WindowFlags windowFlags, OSWindowHandle parentOSHandle) = 0;
         virtual OSWindowHandle CreateWindow(std::string_view title, IntRect rect, WindowFlags windowFlags, OSWindowHandle parentOSHandle) = 0;

@@ -7,7 +7,7 @@
 #include <gui_core/text/skribidi/gui_text_system_skribidi.h>
 #include <gui_core/windows/sdl/gui_sdl_clipboard.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
-#include <gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h>  // InstallSDLVulkanSurfaceFactory
+#include <gui_core/graphics/vulkan/vk_graphics_context.h>
 
 #include <filesystem>
 #include <chrono>
@@ -144,7 +144,9 @@ namespace interstice
         textSystem       = new interstice::SkribidiTextSystem();
         inputManager     = std::make_unique<interstice::InputManager>();
         inputBroadcaster = interstice::InputHandlerBroadcaster({ inputManager.get(), textSystem });
-        graphicsContext  = interstice::GraphicsContext::CreateContext();
+        if (!m_graphicsBackend)
+            m_graphicsBackend = std::make_unique<vulkan::VulkanGraphicsContext>();
+        graphicsContext  = m_graphicsBackend.get();
         graphicsContext->SetAllocationHooks(m_allocationHooks);
         m_osWindowBackend = new interstice::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
         m_imageWindows   = new interstice::ImageWindowBackend(*m_osWindowBackend);
@@ -153,12 +155,8 @@ namespace interstice
         layoutEngine     = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
         windowManager    = std::make_unique<interstice::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
 
-        interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
-
         graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
         textSystem->SetFontDirectory(ResourcePath("fonts/Noto-otf"));
-        if (configureGraphicsContext)
-            configureGraphicsContext(*graphicsContext);
 
         if (!graphicsContext->Initialize(windowBackend))
         {
@@ -288,7 +286,7 @@ namespace interstice
         // The atlas registered a cleanup lambda on the device's deletion queue, so it must outlive Cleanup().
         graphicsContext->Cleanup();
         textAtlasManager.reset();
-        delete graphicsContext; graphicsContext = nullptr;
+        m_graphicsBackend.reset(); graphicsContext = nullptr;
         delete windowBackend; windowBackend = nullptr; m_imageWindows = nullptr;
         delete m_osWindowBackend; m_osWindowBackend = nullptr;
     }

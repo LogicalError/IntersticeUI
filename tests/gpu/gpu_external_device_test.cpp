@@ -105,10 +105,9 @@ namespace
 
         void SetUp() override
         {
-            graphicsContext = interstice::GraphicsContext::CreateContext();
+            vk              = new interstice::vulkan::VulkanGraphicsContext();
+            graphicsContext = vk;
             windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
-            interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
-            vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
             styleManager.Register(interstice::Style{});
         }
 

@@ -473,10 +473,10 @@ TEST_F(GpuTest, BackendReportsDisplayScales)
 // false instead of terminating the process.
 TEST(GpuInitFailure, MissingSurfaceReturnsFalseInsteadOfTerminating)
 {
-    interstice::GraphicsContext* graphicsContext = interstice::GraphicsContext::CreateContext();
+    auto* vk = new interstice::vulkan::VulkanGraphicsContext();
+    interstice::GraphicsContext* graphicsContext = vk;
     auto* windowBackend = new interstice::SDLWindowBackend(graphicsContext);
-    auto* vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
-    vk->deviceContext.SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
+    vk->SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
 
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend));
     graphicsContext->Cleanup(); // shutdown paths run it even after a failed start
