@@ -29,7 +29,7 @@ namespace interstice
     //
     // TableColumn describes a column; callers pass an array each frame.
     // TableState is user-owned and persists widths and selection/sort state;
-    // underscore-prefixed members are internal.
+    // its `internal` member is not part of the API.
     //
     // How a column's track is sized and whether it has a sizer at its right edge.
     enum class ColumnSizing : uint8_t {
@@ -85,19 +85,23 @@ namespace interstice
         // Read from the section's first column only.
         SectionSizing    sectionSizing    = SectionSizing::Scrollable;
 
-        // Widest cell content seen (text + tree prefix), for double-click-to-fit.
-        int32_t          _maxContentWidth = 0;
-        interstice::ID          _bodyID          = interstice::ID::Invalid();
-        // Shared by the header and body copies of the boundary after this column, so their
-        // hover state syncs. Unused for the last column.
-        interstice::ID          _sizerID         = interstice::ID::Invalid();
-        // Ranged, so it doesn't change when the dragged column is emitted last.
-        interstice::ID          _headerCellID    = interstice::ID::Invalid();
-        interstice::ElementRef  _headerRef       = interstice::ElementRef::Invalid();
-        // Applied to every element of this column during a reorder drag.
-        int16_t          _dragOffsetX     = 0;
-        // Resolved once per frame.
-        GridTrack        _columnTrack{};
+        // Written by the table each frame; not part of the API.
+        struct Internal
+        {
+            // Widest cell content seen (text + tree prefix), for double-click-to-fit.
+            int32_t                maxContentWidth = 0;
+            interstice::ID         bodyID          = interstice::ID::Invalid();
+            // Shared by the header and body copies of the boundary after this column, so their
+            // hover state syncs. Unused for the last column.
+            interstice::ID         sizerID         = interstice::ID::Invalid();
+            // Ranged, so it doesn't change when the dragged column is emitted last.
+            interstice::ID         headerCellID    = interstice::ID::Invalid();
+            interstice::ElementRef headerRef       = interstice::ElementRef::Invalid();
+            // Applied to every element of this column during a reorder drag.
+            int16_t                dragOffsetX     = 0;
+            // Resolved once per frame.
+            GridTrack              columnTrack{};
+        } internal;
     };
 
     // Whether clicks, hover and keyboard navigation work on rows or on cells.
@@ -174,143 +178,157 @@ namespace interstice
         // Stick to the bottom: start at (and select) the last row, and follow new rows while
         // at the bottom. Scrolling up detaches; scrolling back down re-attaches.
         bool                  followTail       = false;
-        interstice::ID               _bodyID          = interstice::ID::Invalid();   // canonical scroll-Y
-        interstice::ID               _horzScrollbarID = interstice::ID::Invalid();
-        interstice::ID               _vertScrollbarID = interstice::ID::Invalid();
-        int32_t               _lastViewportH   = 0;               // sampled by render-time draw
-        int32_t               _lastViewportW   = 0;
-        // Written by VirtualTable each frame, so keyboard navigation can address and
-        // scroll to rows outside the virtualized window.
-        interstice::ID               _rowsRangeID     = interstice::ID::Invalid();
-        int                   _totalRowCount   = 0;
-        int32_t               _actualRowHeight = 0;
-        // Set at render time when any section overflows; next frame emits a scrollbar only
-        // for an overflowing axis (a hidden bar would still eat clicks). _anyHorzOverflow
-        // also adds a bottom pad so the H bar doesn't cover the last row.
-        bool                  _anyHorzOverflow = false;
-        bool                  _anyVertOverflow = false;
-        // VirtualTable's showHeaders, for keyboard scroll-into-view.
-        bool                  _hasHeaders      = true;
-        // followTail bookkeeping.
-        bool                  _followInit         = false;
-        bool                  _followPinned       = true;
-        int                   _prevFollowRowCount = 0;
         int                   selectedColumn   = 0;               // cell-mode only, ignored in row mode
         int                   sortColumn       = -1;              // -1 = unset; auto-resolved by VirtualTable
         TableSelectionMode    selectionMode    = TableSelectionMode::Row;
         bool                  sortDescending   = false;
 
-        // ---- COLD: mode-specific, lazy-allocated --------------------
-        std::unique_ptr<TreeRowMap>    _treeRowInfo;               // populated by TreeCell()
-        std::vector<int>               _treeVisibleIdx;            // VirtualTreeView: last frame's visible → flat rows
-        std::unique_ptr<CellLookupMap> _cellLookup;                // populated in cell mode
         LazyReorderFn                  onReorderColumns;           // headers become drag-to-reorder when set
         // Replaces the default double-click branch toggle (the chevron still toggles).
         std::function<void(interstice::ID rowID)> onRowDoubleClick;
 
-        // Per-table gesture state, so tables don't share click detection.
-        DoubleClickTracker _rowClickTracker;
-        DoubleClickTracker _treeCellClickTracker;
-        PendingRowClick    _pendingRowClick;
+        // Written by the table each frame; not part of the API.
+        struct Internal
+        {
+            interstice::ID bodyID          = interstice::ID::Invalid();   // canonical scroll-Y
+            interstice::ID horzScrollbarID = interstice::ID::Invalid();
+            interstice::ID vertScrollbarID = interstice::ID::Invalid();
+            int32_t        lastViewportH   = 0;               // sampled by render-time draw
+            int32_t        lastViewportW   = 0;
+            // Written by VirtualTable each frame, so keyboard navigation can address and
+            // scroll to rows outside the virtualized window.
+            interstice::ID rowsRangeID     = interstice::ID::Invalid();
+            int            totalRowCount   = 0;
+            int32_t        actualRowHeight = 0;
+            // Set at render time when any section overflows; next frame emits a scrollbar only
+            // for an overflowing axis (a hidden bar would still eat clicks). anyHorzOverflow
+            // also adds a bottom pad so the H bar doesn't cover the last row.
+            bool           anyHorzOverflow = false;
+            bool           anyVertOverflow = false;
+            // VirtualTable's showHeaders, for keyboard scroll-into-view.
+            bool           hasHeaders      = true;
+            // followTail bookkeeping.
+            bool           followInit         = false;
+            bool           followPinned       = true;
+            int            prevFollowRowCount = 0;
 
-        // Visual → dataset row permutation while sorted, else null. Rebuilt only when the
-        // sort state or row count changes (or _rowOrderDirty).
-        std::unique_ptr<std::vector<int>> _rowOrder;
-        int                               _sortedColumn     = -2;     // -2 = unbuilt; -1 = built-as-identity
-        bool                              _sortedDescending = false;
-        int                               _sortedRowCount   = -1;
-        // Set via InvalidateRowOrder().
-        bool                              _rowOrderDirty    = false;
+            // Mode-specific, lazy-allocated.
+            std::unique_ptr<TreeRowMap>    treeRowInfo;               // populated by TreeCell()
+            std::vector<int>               treeVisibleIdx;            // VirtualTreeView: last frame's visible → flat rows
+            std::unique_ptr<CellLookupMap> cellLookup;                // populated in cell mode
 
-        // The first section body inline, others on the heap.
-        interstice::ID                                                          _firstSectionBodyID = interstice::ID::Invalid();
-        std::unique_ptr<std::array<interstice::ID, kMaxTableSections - 1>>      _extraSectionBodyIDs;
-        int8_t                                                           _sectionCount = 0;
-        // Header cell refs of the current frame, by column. Column-reorder handlers read these
-        // when they run, after the caller's column array may be gone.
-        std::vector<interstice::ElementRef>                                     _headerRefs;
+            // Per-table gesture state, so tables don't share click detection.
+            DoubleClickTracker rowClickTracker;
+            DoubleClickTracker treeCellClickTracker;
+            PendingRowClick    pendingRowClick;
+
+            // Visual → dataset row permutation while sorted, else null. Rebuilt only when the
+            // sort state or row count changes (or rowOrderDirty).
+            std::unique_ptr<std::vector<int>> rowOrder;
+            int                               sortedColumn     = -2;     // -2 = unbuilt; -1 = built-as-identity
+            bool                              sortedDescending = false;
+            int                               sortedRowCount   = -1;
+            // Set via InvalidateRowOrder().
+            bool                              rowOrderDirty    = false;
+
+            // The first section body inline, others on the heap.
+            interstice::ID                                                     firstSectionBodyID = interstice::ID::Invalid();
+            std::unique_ptr<std::array<interstice::ID, kMaxTableSections - 1>> extraSectionBodyIDs;
+            int8_t                                                             sectionCount = 0;
+            // Header cell refs of the current frame, by column. Column-reorder handlers read these
+            // when they run, after the caller's column array may be gone.
+            std::vector<interstice::ElementRef>                                headerRefs;
+        } internal;
 
         // ---- Accessors ----------------------------------------------
         // Invalid when out of range.
         interstice::ID SectionBodyID(int i) const noexcept
         {
-            if (i == 0) return _firstSectionBodyID;
-            if (i < 1 || i >= kMaxTableSections || !_extraSectionBodyIDs) return interstice::ID::Invalid();
-            return (*_extraSectionBodyIDs)[size_t(i - 1)];
+            if (i == 0) return internal.firstSectionBodyID;
+            if (i < 1 || i >= kMaxTableSections || !internal.extraSectionBodyIDs) return interstice::ID::Invalid();
+            return (*internal.extraSectionBodyIDs)[size_t(i - 1)];
         }
         void SetSectionBodyID(int i, interstice::ID id)
         {
             assert(i >= 0 && i < kMaxTableSections);
-            if (i == 0) { _firstSectionBodyID = id; return; }
-            if (!_extraSectionBodyIDs)
-                _extraSectionBodyIDs = std::make_unique<std::array<interstice::ID, kMaxTableSections - 1>>();
-            (*_extraSectionBodyIDs)[size_t(i - 1)] = id;
+            if (i == 0) { internal.firstSectionBodyID = id; return; }
+            if (!internal.extraSectionBodyIDs)
+                internal.extraSectionBodyIDs = std::make_unique<std::array<interstice::ID, kMaxTableSections - 1>>();
+            (*internal.extraSectionBodyIDs)[size_t(i - 1)] = id;
         }
 
         // Allocate on write; reads use the Find* helpers.
         TreeRowMap&    EnsureTreeRowInfo()
         {
-            if (!_treeRowInfo) _treeRowInfo = std::make_unique<TreeRowMap>();
-            return *_treeRowInfo;
+            if (!internal.treeRowInfo) internal.treeRowInfo = std::make_unique<TreeRowMap>();
+            return *internal.treeRowInfo;
         }
         CellLookupMap& EnsureCellLookup()
         {
-            if (!_cellLookup) _cellLookup = std::make_unique<CellLookupMap>();
-            return *_cellLookup;
+            if (!internal.cellLookup) internal.cellLookup = std::make_unique<CellLookupMap>();
+            return *internal.cellLookup;
         }
 
         // A row's sub-range ID, usable outside a frame (unlike IDManager::GetSubID).
         // Invalid when out of range.
         interstice::ID RowIDForIndex(int rowIdx) const noexcept
         {
-            if (rowIdx >= _totalRowCount) return interstice::ID::Invalid();
+            if (rowIdx >= internal.totalRowCount) return interstice::ID::Invalid();
             return RowIDInRange(rowIdx);
         }
 
         // As RowIDForIndex, without the bound on last frame's row count.
         interstice::ID RowIDInRange(int rowIdx) const noexcept
         {
-            if (_rowsRangeID == interstice::ID::Invalid() || rowIdx < 0) return interstice::ID::Invalid();
+            if (internal.rowsRangeID == interstice::ID::Invalid() || rowIdx < 0) return interstice::ID::Invalid();
             interstice::ID id{};
             id.value.subRangeParts.mode = interstice::IDMode::SubRange;
             id.value.subRangeParts.index = static_cast<uint64_t>(rowIdx);
-            id.value.subRangeParts.parentHashValue = _rowsRangeID.value.rangedParts.hashValue;
+            id.value.subRangeParts.parentHashValue = internal.rowsRangeID.value.rangedParts.hashValue;
             return id;
         }
 
         // Identity when not sorted.
         int VisualToDataset(int visualIdx) const noexcept
         {
-            if (!_rowOrder || visualIdx < 0 || visualIdx >= int(_rowOrder->size()))
+            if (!internal.rowOrder || visualIdx < 0 || visualIdx >= int(internal.rowOrder->size()))
                 return visualIdx;
-            return (*_rowOrder)[visualIdx];
+            return (*internal.rowOrder)[visualIdx];
         }
 
         // O(N) when sorted.
         int DatasetToVisual(int datasetIdx) const noexcept
         {
-            if (!_rowOrder) return datasetIdx;
-            const auto& v = *_rowOrder;
+            if (!internal.rowOrder) return datasetIdx;
+            const auto& v = *internal.rowOrder;
             for (size_t i = 0; i < v.size(); ++i)
                 if (v[i] == datasetIdx) return int(i);
             return -1;
         }
 
         // Rebuild the sort permutation next frame; call after changing sorted data.
-        void InvalidateRowOrder() noexcept { _rowOrderDirty = true; }
+        void InvalidateRowOrder() noexcept { internal.rowOrderDirty = true; }
+
+        // With followTail: scroll to (and select) the last row again next frame, as on first show.
+        void RestartFollowTail() noexcept
+        {
+            internal.followInit         = false;
+            internal.followPinned       = true;
+            internal.prevFollowRowCount = 0;
+        }
 
         // nullptr when not found.
         const TreeRowInfo* FindTreeRow(interstice::ID id) const noexcept
         {
-            if (!_treeRowInfo) return nullptr;
-            auto it = _treeRowInfo->find(id);
-            return (it == _treeRowInfo->end()) ? nullptr : &it->second;
+            if (!internal.treeRowInfo) return nullptr;
+            auto it = internal.treeRowInfo->find(id);
+            return (it == internal.treeRowInfo->end()) ? nullptr : &it->second;
         }
         const CellLookupEntry* FindCell(interstice::ID id) const noexcept
         {
-            if (!_cellLookup) return nullptr;
-            auto it = _cellLookup->find(id);
-            return (it == _cellLookup->end()) ? nullptr : &it->second;
+            if (!internal.cellLookup) return nullptr;
+            auto it = internal.cellLookup->find(id);
+            return (it == internal.cellLookup->end()) ? nullptr : &it->second;
         }
     };
 
@@ -361,7 +379,7 @@ namespace interstice
         int32_t lastColDragFixedWidth = 0;
         // Reorder-dragged column, or -1; emitted last so it paints on top.
         int     draggedCol            = -1;
-        // Copied from TableState::_anyHorzOverflow / _anyVertOverflow (last frame).
+        // Copied from TableState::internal.anyHorzOverflow / anyVertOverflow (last frame).
         bool    anyHorzOverflow      = false;
         bool    anyVertOverflow      = false;
         bool    showHeaders          = true;

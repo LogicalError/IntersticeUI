@@ -528,29 +528,29 @@ namespace interstice
         // Only on change, so the table's own scroll is never fought.
         if (s_selectedKey != prevSelectedKey)
         {
-            if (s_selectedKey != 0 && tableState._rowsRangeID != interstice::ID::Invalid())
+            if (s_selectedKey != 0 && tableState.RowIDInRange(0) != interstice::ID::Invalid())
             {
                 int vis = -1;
                 for (size_t i = 0; i < visibleIdx.size(); ++i)
                     if (rows[visibleIdx[i]].key == s_selectedKey) { vis = int(i); break; }
                 if (vis >= 0)
                 {
-                    tableState.selectedRowID = idManager.GetSubID(tableState._rowsRangeID, uint32_t(vis));
+                    tableState.selectedRowID = tableState.RowIDInRange(vis);
 
-                    const int rh     = tableState._actualRowHeight;
-                    const int innerH = tableState._lastViewportH;
+                    const int rh     = tableState.internal.actualRowHeight;
+                    const int innerH = tableState.internal.lastViewportH;
                     if (s_flameSelectPending && rh > 0 && innerH > 0)
                     {
                         // The rows actually scroll via the per-section bodies;
-                        // _bodyID is only the synced wrapper. Drive every section
+                        // internal.bodyID is only the synced wrapper. Drive every section
                         // (mirrors the table's own keyboard scroll-into-view).
-                        const int headerH       = tableState._hasHeaders ? rh : 0;
+                        const int headerH       = tableState.internal.hasHeaders ? rh : 0;
                         const int rowTopContent = headerH + vis * rh;
                         const int rowBotContent = rowTopContent + rh;
                         auto&     scroll        = guiStateManager.GetScrollManagement();
                         int  writtenY  = 0;
                         bool anyChange = false;
-                        for (int sIdx = 0; sIdx < int(tableState._sectionCount); ++sIdx)
+                        for (int sIdx = 0; sIdx < int(tableState.internal.sectionCount); ++sIdx)
                         {
                             const interstice::ID sid = tableState.SectionBodyID(sIdx);
                             if (sid == interstice::ID::Invalid()) continue;
@@ -562,9 +562,9 @@ namespace interstice
                             if (newY != cur.y) { scroll.SetScrollOffset(handle, int2{ cur.x, newY }); anyChange = true; }
                             writtenY = newY;
                         }
-                        if (anyChange && tableState._bodyID != interstice::ID::Invalid())
+                        if (anyChange && tableState.internal.bodyID != interstice::ID::Invalid())
                         {
-                            auto bh = scroll.GetOrCreateScrollOffsetHandle(tableState._bodyID);
+                            auto bh = scroll.GetOrCreateScrollOffsetHandle(tableState.internal.bodyID);
                             if (scroll.GetScrollOffset(bh).y != writtenY)
                                 scroll.SetScrollOffset(bh, int2{ 0, writtenY });
                         }

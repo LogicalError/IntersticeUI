@@ -1,6 +1,6 @@
 #include "controls_toolbar_dock.h"
 
-#include <gui_controls/gui_application.h>
+#include <gui_controls/gui_application_internal.h>
 
 #include <algorithm>
 #include <chrono>
@@ -217,7 +217,7 @@ namespace interstice
 
             // Same outside-the-group test as EndReorderableGroup: while the ghost preview
             // shows, hide the in-place body so it isn't duplicated.
-            const auto& drag = app.m_reorderable->Drag();
+            const auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
             const ID groupID = state.groupIDs[sideIdx];
             const bool draggingThisGroup =
                 drag.isDragging && drag.dragActivated && drag.groupID == groupID;
@@ -492,7 +492,7 @@ namespace interstice
                            std::function<void()>          renderContent)
     {
         // Registered so SyncToolbarDockRects can cache rects after layout.
-        app.m_toolbarDocksThisFrame.push_back(&state);
+        GUIApplicationInternals::ToolbarDocksThisFrame(app).push_back(&state);
 
         // 5-zone scaffold: top / (left | content | right) / bottom. The container's
         // rect is cached for phantom-side hit-testing.

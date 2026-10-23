@@ -201,9 +201,7 @@ namespace interstice
         // Follow the newest entry until the user scrolls up; resetting the follow
         // state re-runs the initial scroll-to-bottom on reopen.
         logTableState.followTail          = true;
-        logTableState._followInit         = false;
-        logTableState._followPinned       = true;
-        logTableState._prevFollowRowCount = 0;
+        logTableState.RestartFollowTail();
         logTableState.selectedRowID       = interstice::ID::Invalid();
         logDetailSel                      = -1;
         logFilterDirty = true;

@@ -52,8 +52,12 @@ namespace interstice
         std::function<void()> onEnable;
         std::function<void()> onDisable;
 
-        // onEnable fired without a matching onDisable.
-        bool                  _enabled = false;
+        // Kept by the docking; not part of the API.
+        struct Internal
+        {
+            // onEnable fired without a matching onDisable.
+            bool enabled = false;
+        } internal;
 
         // Kept here so a hidden tab keeps its scroll position (ScrollManagement prunes
         // handles of elements not in the tree).

@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <gui_controls/gui_application.h>
+#include <gui_controls/gui_application_internal.h>
 
 #include "gui_text_system_stub.h"
 #include "mock_window_backend.h"
@@ -43,7 +43,7 @@
 namespace GUITest
 {
 
-class HeadlessGUIApp : public interstice::GUIApplication
+class HeadlessGUIApp : public interstice::GUIApplicationInternals
 {
 public:
     // CSS path; defaults to the engine's theme. Relative to workdirectory/, the

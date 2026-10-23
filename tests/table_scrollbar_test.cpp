@@ -100,7 +100,7 @@ namespace interstice
                 app.EndRootWindow();
             }
 
-            interstice::IntRect BarRect() const { return app.GetElementRect(state._vertScrollbarID); }
+            interstice::IntRect BarRect() const { return app.GetElementRect(state.internal.vertScrollbarID); }
 
             // A table whose columns (sum 500) far exceed the host width, using
             // the given outer style. The container is fixed at 300 wide.
@@ -135,7 +135,7 @@ namespace interstice
             Frame([&] { BuildFixedSize(); });   // frame 2: overflow flags consumed → bar emitted
             Frame([&] { BuildFixedSize(); });   // frame 3: bar laid out with sampled viewport
 
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID))
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID))
                 << "200 rows in a 300px table must emit the vertical scrollbar";
             const auto r = BarRect();
             EXPECT_GT(r.h, 50) << "bar should span ~the body height, got " << r.h;
@@ -147,7 +147,7 @@ namespace interstice
             Frame([&] { BuildFlexGrow(); });
             Frame([&] { BuildFlexGrow(); });
 
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID))
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID))
                 << "200 rows in a 300px flex-grow pane must emit the vertical scrollbar";
             const auto r = BarRect();
             EXPECT_GT(r.h, 50) << "bar should span ~the body height, got " << r.h;
@@ -256,7 +256,7 @@ namespace interstice
             Frame(build);
             Frame(build);
 
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID))
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID))
                 << "the shortcuts-shaped page must emit the table's vertical scrollbar";
             const auto bar = BarRect();
             EXPECT_GT(bar.h, 50) << "bar should span ~the body height, got " << bar.h;
@@ -275,7 +275,7 @@ namespace interstice
             Frame([&] { BuildWideColumns(app.theme.tableFillStyleRef); });
             Frame([&] { BuildWideColumns(app.theme.tableFillStyleRef); });
 
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID));
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID));
             const auto bar  = BarRect();
             const auto body = app.GetElementRect(state.SectionBodyID(0));
             EXPECT_GT(bar.h, 50);

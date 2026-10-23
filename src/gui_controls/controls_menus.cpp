@@ -1,4 +1,4 @@
-#include <gui_controls/gui_application.h>
+#include <gui_controls/gui_application_internal.h>
 
 #include <array>
 #include <cerrno>
@@ -130,7 +130,7 @@ namespace interstice
         auto triggerRef = application.elementStorage.FindElementRefByID(menuID);
         if (triggerRef.IsValid())
         {
-            auto& triggerRects = application.m_menuRects->TriggerRects();
+            auto& triggerRects = GUIApplicationInternals::MenuRects(application).TriggerRects();
 		    [[maybe_unused]]
             auto result =
             application.elementStorage.AddPostLayout(triggerRef,

@@ -80,14 +80,19 @@ namespace interstice
         int32_t lastViewportH = 0;
         // Cell width that makes the columns exactly fill the viewport; use it for fill-width items.
         int32_t cellStretchedW = 0;
-        // Slow-re-click rename state, and the items range ID so F2 can map selectedIndex to an ID.
-        DoubleClickTracker _itemClickTracker;
-        interstice::ID            _pendingRenameClick = interstice::ID::Invalid();
-        interstice::ID            _itemsRangeID       = interstice::ID::Invalid();
-        // For keyboard navigation, which runs after layout.
-        int32_t            _cols      = 1;
-        int32_t            _rowStride = 1;
-        int32_t            _cellH     = 1;
+
+        // Written by the grid view each frame; not part of the API.
+        struct Internal
+        {
+            // Slow-re-click rename state, and the items range ID so F2 can map selectedIndex to an ID.
+            DoubleClickTracker itemClickTracker;
+            interstice::ID     pendingRenameClick = interstice::ID::Invalid();
+            interstice::ID     itemsRangeID       = interstice::ID::Invalid();
+            // For keyboard navigation, which runs after layout.
+            int32_t            cols      = 1;
+            int32_t            rowStride = 1;
+            int32_t            cellH     = 1;
+        } internal;
     };
 
 }

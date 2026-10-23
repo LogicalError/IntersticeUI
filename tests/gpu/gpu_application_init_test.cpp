@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include <gui_controls/gui_application.h>
+#include <gui_controls/gui_application_internal.h>
 #include <gui_controls/controls_toolbar_dock.h>
 #include <gui_core/memory/gui_tracking_allocator.h>
 
@@ -16,7 +16,7 @@
 
 namespace
 {
-    class EmptyApp : public interstice::GUIApplication
+    class EmptyApp : public interstice::GUIApplicationInternals
     {
     public:
         void OnGUI() override {}
@@ -78,7 +78,7 @@ namespace
         app.Cleanup();
     }
 
-    class OneWindowApp : public interstice::GUIApplication
+    class OneWindowApp : public interstice::GUIApplicationInternals
     {
     public:
         interstice::ID windowID = interstice::ID::Invalid();
@@ -128,7 +128,7 @@ namespace
 
     // A render-to-image window with a button. Run() drives real frames (OnFrame
     // only builds); `script` runs at the start of each frame's OnGUI.
-    class ImageWindowApp : public interstice::GUIApplication
+    class ImageWindowApp : public interstice::GUIApplicationInternals
     {
     public:
         interstice::ID windowID = interstice::ID::Invalid();
@@ -221,7 +221,7 @@ namespace
         app.Cleanup();
     }
 
-    class FloatingToolbarApp : public interstice::GUIApplication
+    class FloatingToolbarApp : public interstice::GUIApplicationInternals
     {
     public:
         std::vector<interstice::FloatingToolbarItem> floating;

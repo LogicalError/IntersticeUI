@@ -51,9 +51,12 @@ install(TARGETS gui_core gui_controls
   EXPORT IntersticeUITargets
   ARCHIVE DESTINATION "lib/$<CONFIG>")
 
+# Public headers only: *_internal.h and internal/ folders are the library's own.
 install(DIRECTORY src/gui_core src/gui_controls
   DESTINATION include
-  FILES_MATCHING PATTERN "*.h")
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN "*_internal.h" EXCLUDE
+  PATTERN "internal" EXCLUDE)
 install(FILES "${PROJECT_BINARY_DIR}/generated/gui_core/gui_version.h"
   DESTINATION include/gui_core)
 

@@ -173,12 +173,12 @@ namespace interstice
             // Second frame registers the measured text width the snap reads.
             app.Frame(build);
 
-            ASSERT_NE(cols[0]._sizerID, interstice::ID::Invalid());
-            const interstice::ID sizerID = cols[0]._sizerID;
+            ASSERT_NE(cols[0].internal.sizerID, interstice::ID::Invalid());
+            const interstice::ID sizerID = cols[0].internal.sizerID;
             ASSERT_TRUE(app.HasElement(sizerID));
             // The sizer is clipped by its parent; use its X but the body's Y.
             const auto sizerRect = app.GetElementRect(sizerID);
-            const auto bodyRect  = app.GetElementRect(state._bodyID);
+            const auto bodyRect  = app.GetElementRect(state.internal.bodyID);
             const int2 hit{ sizerRect.x + sizerRect.w / 2,
                             bodyRect.y + bodyRect.h / 2 };
 
@@ -271,7 +271,7 @@ namespace interstice
                 app.EndRootWindow();
             };
             app.Frame(build);
-            ASSERT_EQ(state._totalRowCount, 1);
+            ASSERT_EQ(state.internal.totalRowCount, 1);
             const interstice::ID rowID = state.RowIDForIndex(0);
 
             const auto before = SnapshotTreeCellByRow(app, state, rowID);
@@ -341,7 +341,7 @@ namespace interstice
                 app.EndRootWindow();
             };
             app.Frame(build);
-            ASSERT_GE(state._totalRowCount, 5);
+            ASSERT_GE(state.internal.totalRowCount, 5);
             // Row 3 stays on-screen after a ~30px scroll (row 0 might not).
             const interstice::ID rowID = state.RowIDForIndex(3);
 
@@ -350,7 +350,7 @@ namespace interstice
             ASSERT_FALSE(before.rects.empty());
 
             // Wheel-scroll at the body's center.
-            const auto bodyCenter = app.CenterOf(state._bodyID);
+            const auto bodyCenter = app.CenterOf(state.internal.bodyID);
             app.InjectMouseMove(bodyCenter);
             app.InjectMouseScroll(bodyCenter, int2{ 0, -1 }); // scroll down 1 tick (~30px)
             app.Frame(build);
@@ -406,7 +406,7 @@ namespace interstice
             };
             app.Frame(build);
 
-            ASSERT_EQ(state._totalRowCount, 2);
+            ASSERT_EQ(state.internal.totalRowCount, 2);
             const interstice::ID branchID = state.RowIDForIndex(0);
             const interstice::ID leafID   = state.RowIDForIndex(1);
 
@@ -450,7 +450,7 @@ namespace interstice
             };
             app.Frame(build);
 
-            ASSERT_EQ(state._totalRowCount, 1);
+            ASSERT_EQ(state.internal.totalRowCount, 1);
             const interstice::ID branchID = state.RowIDForIndex(0);
 
             // Row backdrops carry the rowID — derive the click point from it.
@@ -493,7 +493,7 @@ namespace interstice
             };
             app.Frame(build);
 
-            ASSERT_EQ(state._totalRowCount, 1);
+            ASSERT_EQ(state.internal.totalRowCount, 1);
             const interstice::ID rowID = state.RowIDForIndex(0);
 
             // Middle column: 120px columns, no gaps, so column 1 spans [120, 240).
@@ -536,7 +536,7 @@ namespace interstice
             };
             app.Frame(build);
 
-            ASSERT_EQ(state._totalRowCount, 3);
+            ASSERT_EQ(state.internal.totalRowCount, 3);
             const interstice::ID row0ID = state.RowIDForIndex(0);
             const interstice::ID row2ID = state.RowIDForIndex(2);
 
@@ -600,7 +600,7 @@ namespace interstice
             };
             app.Frame(build);
 
-            ASSERT_EQ(state._totalRowCount, 4);
+            ASSERT_EQ(state.internal.totalRowCount, 4);
             const interstice::ID r0 = state.RowIDForIndex(0);
             const interstice::ID r1 = state.RowIDForIndex(1);
             const interstice::ID r2 = state.RowIDForIndex(2);
@@ -714,7 +714,7 @@ namespace interstice
             };
             app.Frame(build);
             const auto headerXBefore = app.elementStorage.GetElementRectUnsafe(
-                wideCols[0]._headerRef).rect.x;
+                wideCols[0].internal.headerRef).rect.x;
 
             // Scroll the table horizontally (wheel routes X to the section
             // grid under the cursor).
@@ -733,7 +733,7 @@ namespace interstice
             // The header cell lives inside the same grid, so its laid-out X
             // shifts left with the scroll.
             const auto headerXAfter = app.elementStorage.GetElementRectUnsafe(
-                wideCols[0]._headerRef).rect.x;
+                wideCols[0].internal.headerRef).rect.x;
             EXPECT_LT(headerXAfter, headerXBefore)
                 << "Header cell must shift with the section's X scroll.";
         }
@@ -753,9 +753,9 @@ namespace interstice
             // Headless skips render, so force the overflow flags and viewport each
             // build (the prologue resets them every frame).
             auto build = [&] {
-                state._lastViewportW = 300;
-                state._lastViewportH = 200;
-                state._anyHorzOverflow = state._anyVertOverflow = true;
+                state.internal.lastViewportW = 300;
+                state.internal.lastViewportH = 200;
+                state.internal.anyHorzOverflow = state.internal.anyVertOverflow = true;
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, wideCols, state,
                                    LayoutOverride{}.Size(300, 200)))
@@ -768,9 +768,9 @@ namespace interstice
             };
             app.Frame(build);
             app.Frame(build);
-            ASSERT_TRUE(app.HasElement(state._horzScrollbarID));
+            ASSERT_TRUE(app.HasElement(state.internal.horzScrollbarID));
 
-            const auto sbRect   = app.GetElementRect(state._horzScrollbarID);
+            const auto sbRect   = app.GetElementRect(state.internal.horzScrollbarID);
             const auto bodyRect = app.GetElementRect(state.SectionBodyID(0));
             const int trackLeft  = std::max(sbRect.x, bodyRect.x) + 5;
             const int trackRight = std::min(sbRect.x + sbRect.w, bodyRect.x + bodyRect.w) - 5;
@@ -796,9 +796,9 @@ namespace interstice
         {
             interstice::TableState state{};
             auto build = [&] {
-                state._lastViewportW = 400;
-                state._lastViewportH = 100;
-                state._anyHorzOverflow = state._anyVertOverflow = true;
+                state.internal.lastViewportW = 400;
+                state.internal.lastViewportH = 100;
+                state.internal.anyHorzOverflow = state.internal.anyVertOverflow = true;
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, kColumns, state,
                                    LayoutOverride{}.Size(400, 100)))
@@ -814,9 +814,9 @@ namespace interstice
             };
             app.Frame(build);
             app.Frame(build);
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID));
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID));
 
-            const auto sbRect   = app.GetElementRect(state._vertScrollbarID);
+            const auto sbRect   = app.GetElementRect(state.internal.vertScrollbarID);
             const auto bodyRect = app.GetElementRect(state.SectionBodyID(0));
             const int trackTop    = std::max(sbRect.y, bodyRect.y) + 5;
             const int trackBottom = std::min(sbRect.y + sbRect.h, bodyRect.y + bodyRect.h) - 5;
@@ -859,23 +859,23 @@ namespace interstice
             };
             // First frame: layout body so we can read its actual size.
             app.Frame(build);
-            const auto bodyRect0 = app.GetElementRect(state._bodyID);
+            const auto bodyRect0 = app.GetElementRect(state.internal.bodyID);
             ASSERT_GT(bodyRect0.h, 12) << "body must be taller than corner thickness";
 
             // Headless skips render: force the overflow flags and use the real body
             // size so the scrollbars shorten to fit.
             app.Frame([&] {
-                state._lastViewportW = bodyRect0.w;
-                state._lastViewportH = bodyRect0.h;
-                state._anyHorzOverflow = state._anyVertOverflow = true;
+                state.internal.lastViewportW = bodyRect0.w;
+                state.internal.lastViewportH = bodyRect0.h;
+                state.internal.anyHorzOverflow = state.internal.anyVertOverflow = true;
                 build();
             });
 
-            ASSERT_TRUE(app.HasElement(state._vertScrollbarID));
-            ASSERT_TRUE(app.HasElement(state._horzScrollbarID));
-            const auto bodyRect = app.GetElementRect(state._bodyID);
-            const auto vRect    = app.GetElementRect(state._vertScrollbarID);
-            const auto hRect    = app.GetElementRect(state._horzScrollbarID);
+            ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID));
+            ASSERT_TRUE(app.HasElement(state.internal.horzScrollbarID));
+            const auto bodyRect = app.GetElementRect(state.internal.bodyID);
+            const auto vRect    = app.GetElementRect(state.internal.vertScrollbarID);
+            const auto hRect    = app.GetElementRect(state.internal.horzScrollbarID);
             constexpr int kThick = 12;
             EXPECT_LE(vRect.y + vRect.h, bodyRect.y + bodyRect.h - kThick + 1)
                 << "Vertical scrollbar should end at the top of the corner.";
@@ -913,11 +913,11 @@ namespace interstice
             };
             app.Frame(build);
 
-            const auto sizerID = cols[0]._sizerID;
+            const auto sizerID = cols[0].internal.sizerID;
             ASSERT_TRUE(app.HasElement(sizerID));
             const auto sizerRect = app.GetElementRect(sizerID);
             const auto headerRect = app.elementStorage.GetElementRectUnsafe(
-                cols[0]._headerRef).rect;
+                cols[0].internal.headerRef).rect;
             EXPECT_NEAR(sizerRect.x, headerRect.x + headerRect.w, 1)
                 << "Sizer 0 must sit at right edge of header cell 0 "
                 << "(sizer.x=" << sizerRect.x
@@ -948,15 +948,15 @@ namespace interstice
             app.Frame(build);
 
             // Scroll the body horizontally.
-            const auto bodyCenter = app.CenterOf(state._bodyID);
+            const auto bodyCenter = app.CenterOf(state.internal.bodyID);
             app.InjectMouseMove(bodyCenter);
             app.InjectMouseScroll(bodyCenter, int2{ -3, 0 });
             app.Frame(build);
             app.Frame(build); // settle the scroll
 
-            const auto sizerRect  = app.GetElementRect(wideCols[0]._sizerID);
+            const auto sizerRect  = app.GetElementRect(wideCols[0].internal.sizerID);
             const auto headerRect = app.elementStorage.GetElementRectUnsafe(
-                wideCols[0]._headerRef).rect;
+                wideCols[0].internal.headerRef).rect;
             EXPECT_NEAR(sizerRect.x, headerRect.x + headerRect.w, 1)
                 << "After scrolling, sizer must still track header cell right edge";
         }
@@ -985,15 +985,15 @@ namespace interstice
             app.Frame(build);
 
             // Sizer 0 tracks Stretch column A's right edge, including its 1fr share.
-            const auto sizerRect  = app.GetElementRect(cols[0]._sizerID);
+            const auto sizerRect  = app.GetElementRect(cols[0].internal.sizerID);
             const auto headerRect = app.elementStorage.GetElementRectUnsafe(
-                cols[0]._headerRef).rect;
+                cols[0].internal.headerRef).rect;
             EXPECT_NEAR(sizerRect.x, headerRect.x + headerRect.w, 1);
         }
 
         // ---------------------------------------------------------------------
         // Standard-mode body section has a post-layout callback attached: it
-        // samples ElementInnerRect into TableState::_lastViewportH/W and the
+        // samples ElementInnerRect into TableState::internal.lastViewportH/W and the
         // overflow flags, which VirtualTable consumes on the next frame.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardBodyHasViewportSamplingPostLayout)

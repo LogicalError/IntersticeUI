@@ -403,8 +403,8 @@ namespace interstice
         m_gridViewState.selectedIndex      = selectedIndex;
         m_gridViewState.multiSelect        = multiSelect;
         m_gridViewState.dragDrop           = dragDrop;
-        m_gridViewState.clickTracker       = &vstate._itemClickTracker;
-        m_gridViewState.pendingRenameClick = &vstate._pendingRenameClick;
+        m_gridViewState.clickTracker       = &vstate.internal.itemClickTracker;
+        m_gridViewState.pendingRenameClick = &vstate.internal.pendingRenameClick;
         if (multiSelect)
             multiSelect->orderedItemIDs.clear();
 
@@ -443,9 +443,9 @@ namespace interstice
         auto colBound = [contentW, cols](int k)
         { return static_cast<int>((int64_t)k * contentW / cols); };
         vstate.cellStretchedW = std::max(cellW, contentW / cols);
-        vstate._cols          = cols;
-        vstate._rowStride     = rowStride;
-        vstate._cellH         = cellH;
+        vstate.internal.cols          = cols;
+        vstate.internal.rowStride     = rowStride;
+        vstate.internal.cellH         = cellH;
 
         int scrollY = 0;
         {
@@ -483,8 +483,8 @@ namespace interstice
                             if (multiSelect)
                                 target = multiSelect->lastClickedID;
                             else if (selectedIndex && *selectedIndex >= 0
-                                     && vsPtr->_itemsRangeID != interstice::ID::Invalid())
-                                target = idManager.GetSubID(vsPtr->_itemsRangeID,
+                                     && vsPtr->internal.itemsRangeID != interstice::ID::Invalid())
+                                target = idManager.GetSubID(vsPtr->internal.itemsRangeID,
                                                             static_cast<uint32_t>(*selectedIndex));
                             auto it = m_gridItemRenameByID.find(target);
                             if (it != m_gridItemRenameByID.end() && it->second.renameBuf)
@@ -495,7 +495,7 @@ namespace interstice
                             break;
                         }
                         if (!selectedIndex || itemCount <= 0) break;
-                        const int navCols = std::max(1, vsPtr->_cols);
+                        const int navCols = std::max(1, vsPtr->internal.cols);
                         const int cur  = std::clamp(*selectedIndex, 0, itemCount - 1);
                         int       next = cur;
                         switch (event.state.lastKey)
@@ -514,8 +514,8 @@ namespace interstice
                         auto& sm = guiStateManager.GetScrollManagement();
                         const auto handle = sm.GetOrCreateScrollOffsetHandle(event.id);
                         const int2 offset = sm.GetScrollOffset(handle);
-                        const int  top    = (next / navCols) * vsPtr->_rowStride;
-                        const int  bottom = top + vsPtr->_cellH;
+                        const int  top    = (next / navCols) * vsPtr->internal.rowStride;
+                        const int  bottom = top + vsPtr->internal.cellH;
                         int scrollY = -offset.y;
                         if (top < scrollY)                                 scrollY = top;
                         else if (bottom > scrollY + vsPtr->lastViewportH)  scrollY = bottom - vsPtr->lastViewportH;
@@ -566,7 +566,7 @@ namespace interstice
         const interstice::ID itemsRangeID = (itemCount > 0)
             ? idManager.AllocateRangedID(static_cast<uint32_t>(itemCount), "_grid_items")
             : interstice::ID::Invalid();
-        vstate._itemsRangeID = itemsRangeID; // read by the container's F2 handler
+        vstate.internal.itemsRangeID = itemsRangeID; // read by the container's F2 handler
 
         VERIFY(elementStorage.BeginChildren());
 

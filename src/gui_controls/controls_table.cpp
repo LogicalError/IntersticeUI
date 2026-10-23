@@ -48,16 +48,16 @@ namespace interstice
             state.selectedColumn = std::clamp(state.selectedColumn, 0, int(columnCount) - 1);
 
         // Reset per-column scratch on the user-owned VirtualTableColumn array.
-        // Cell()/TreeCell() grow _maxContentWidth during replay.
+        // Cell()/TreeCell() grow internal.maxContentWidth during replay.
         for (size_t c = 0; c < columnCount; c++)
         {
-            columns[c]._maxContentWidth = 0;
-            columns[c]._headerRef       = interstice::ElementRef::Invalid();
-            columns[c]._dragOffsetX     = 0;
+            columns[c].internal.maxContentWidth = 0;
+            columns[c].internal.headerRef       = interstice::ElementRef::Invalid();
+            columns[c].internal.dragOffsetX     = 0;
         }
 
         // Reset per-frame maps for TreeCell; clear() keeps the buckets allocated.
-        if (state._treeRowInfo) state._treeRowInfo->clear();
+        if (state.internal.treeRowInfo) state.internal.treeRowInfo->clear();
 
         return true;
     }

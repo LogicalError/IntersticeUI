@@ -218,17 +218,16 @@ namespace interstice
         if (selection.selectedIDs.empty())
             selection.selectedIDs.insert(allCatID);
 
-        // Forward sync (selection → catInternal). GetSubID needs the range ID the
-        // table allocates on its first run.
-        if (catTableState._rowsRangeID != interstice::ID::Invalid())
+        // Forward sync (selection → catInternal). Row IDs exist once the table
+        // has run once.
+        if (catTableState.RowIDInRange(0) != interstice::ID::Invalid())
         {
             catInternal.selectedIDs.clear();
             for (size_t i = 0; i < catRows.size(); ++i)
             {
                 if (selection.selectedIDs.count(catRows[i].id))
                 {
-                    catInternal.selectedIDs.insert(idManager.GetSubID(
-                        catTableState._rowsRangeID, static_cast<uint32_t>(i)));
+                    catInternal.selectedIDs.insert(catTableState.RowIDInRange(static_cast<int>(i)));
                 }
             }
         }
@@ -411,7 +410,7 @@ namespace interstice
         }
 
         // Active columns, in a persisted vector so the sizer double-click's
-        // _maxContentWidth pointer outlives the frame.
+        // internal.maxContentWidth pointer outlives the frame.
         auto& active = demo.settingsShortcutsActiveColumns;
         active.clear();
         active.push_back(cols[0]);                       // Command

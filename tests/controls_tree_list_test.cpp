@@ -260,7 +260,7 @@ namespace interstice
                 app.Frame(render);
                 EXPECT_EQ(state.selectedRowID, row0) << "first click selects";
 
-                state._rowClickTracker.lastTimeNanos -= 1'000'000'000;   // the re-click comes a second later
+                state.internal.rowClickTracker.lastTimeNanos -= 1'000'000'000;   // the re-click comes a second later
                 app.ClickAt(pt);
                 app.Frame(render);
                 app.Frame(render);

@@ -169,7 +169,7 @@ namespace interstice
             RebuildTreeViewIndex(treeRows);
             RebuildHierarchyIdToFlat();
             // Deferred: the matching sub-range rowID needs next frame's
-            // TableState._rowsRangeID.
+            // row IDs.
             pendingSelectFlat = newFlatIdx;
             filterDirty = true;
             treeViewState.selectedRowID        = interstice::ID::Invalid();
@@ -270,8 +270,7 @@ namespace interstice
             {
                 if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
                 const interstice::ID nodeId = rows[visibleIdx[rowIdx]].id;
-                const interstice::ID rowID  = idManager.GetSubID(state._rowsRangeID,
-                                                          static_cast<uint32_t>(rowIdx));
+                const interstice::ID rowID  = state.RowIDInRange(rowIdx);
                 const VizAgg agg = HierComputeAgg(nodeId);
                 Cell([this, nodeId, rowID, agg]()
                 {
@@ -377,9 +376,9 @@ namespace interstice
                    treeRows, treeVisibleIdx, treeViewState);
 
         // Resolve a deferred post-drop selection now that VirtualTable has
-        // (re)allocated TableState._rowsRangeID for this frame's row count.
+        // (re)allocated the row IDs for this frame's row count.
         if (pendingSelectFlat >= 0
-            && treeViewState._rowsRangeID != interstice::ID::Invalid())
+            && treeViewState.RowIDInRange(0) != interstice::ID::Invalid())
         {
             const int targetFlat = pendingSelectFlat;
             int newVisIdx = -1;
@@ -387,9 +386,7 @@ namespace interstice
                 if (treeVisibleIdx[i] == targetFlat) { newVisIdx = int(i); break; }
             if (newVisIdx >= 0)
             {
-                const interstice::ID newRowID = idManager.GetSubID(
-                    treeViewState._rowsRangeID,
-                    static_cast<uint32_t>(newVisIdx));
+                const interstice::ID newRowID = treeViewState.RowIDForIndex(newVisIdx);
                 treeViewState.selectedRowID = newRowID;
                 treeMultiSelect.selectedIDs.clear();
                 treeMultiSelect.selectedIDs.insert(newRowID);

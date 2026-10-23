@@ -67,15 +67,15 @@ namespace interstice
                 return sm.GetScrollOffset(h);
             }
 
-            // Headless skips render, so pin _lastViewportH/W and the overflow flags
+            // Headless skips render, so pin internal.lastViewportH/W and the overflow flags
             // that its custom-draw would set.
             void PinViewport(interstice::TableState& state,
                              bool xOverflow = true, bool yOverflow = true)
             {
-                state._lastViewportH = 298;
-                state._lastViewportW = 398;
-                state._anyHorzOverflow = xOverflow;
-                state._anyVertOverflow = yOverflow;
+                state.internal.lastViewportH = 298;
+                state.internal.lastViewportW = 398;
+                state.internal.anyHorzOverflow = xOverflow;
+                state.internal.anyVertOverflow = yOverflow;
             }
         };
 
@@ -131,11 +131,11 @@ namespace interstice
 
             const interstice::ID sectionID = state.SectionBodyID(0);
             ASSERT_NE(sectionID, interstice::ID::Invalid());
-            ASSERT_GT(state._actualRowHeight, 0);
+            ASSERT_GT(state.internal.actualRowHeight, 0);
 
             // Jump the section body to row 100, as a thumb drag does.
             constexpr int targetRow = 100;
-            const int32_t jumpY = targetRow * state._actualRowHeight;
+            const int32_t jumpY = targetRow * state.internal.actualRowHeight;
             auto& sm = app.guiStateManager.GetScrollManagement();
             sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(sectionID), int2{ 0, -jumpY });
 
@@ -177,7 +177,7 @@ namespace interstice
             }
 
             // After scrolling to the bottom, the last dataset row is emitted.
-            const interstice::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
+            const interstice::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
             ASSERT_NE(lastRowID, interstice::ID::Invalid());
             ASSERT_TRUE(app.HasElement(lastRowID));
 
@@ -257,7 +257,7 @@ namespace interstice
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
-            ASSERT_GT(state._totalRowCount, 0);
+            ASSERT_GT(state.internal.totalRowCount, 0);
             const int32_t plainH = app.GetElementRect(state.RowIDForIndex(0)).h;
 
             // Tree-cell variant.
@@ -277,7 +277,7 @@ namespace interstice
             pin2();
             app.Frame([&]{ Emit(state2); pin2(); });
             app.Frame([&]{ Emit(state2); pin2(); });
-            ASSERT_GT(state2._totalRowCount, 0);
+            ASSERT_GT(state2.internal.totalRowCount, 0);
             const int32_t treeH = app.GetElementRect(state2.RowIDForIndex(0)).h;
 
             EXPECT_EQ(plainH, treeH)
@@ -308,7 +308,7 @@ namespace interstice
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
             app.Frame([&]{ Emit(stateA); pinA(); });
-            EXPECT_FALSE(app.HasElement(stateA._vertScrollbarID))
+            EXPECT_FALSE(app.HasElement(stateA.internal.vertScrollbarID))
                 << "V-scrollbar must not be emitted when content fits vertically";
 
             // Y-overflow: pin yOverflow=true. Bar must exist.
@@ -317,7 +317,7 @@ namespace interstice
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
             app.Frame([&]{ Emit(stateB); pinB(); });
-            EXPECT_TRUE(app.HasElement(stateB._vertScrollbarID))
+            EXPECT_TRUE(app.HasElement(stateB.internal.vertScrollbarID))
                 << "V-scrollbar must be emitted when content overflows Y";
         }
 
@@ -331,7 +331,7 @@ namespace interstice
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
             app.Frame([&]{ Emit(stateA); pinA(); });
-            EXPECT_FALSE(app.HasElement(stateA._horzScrollbarID))
+            EXPECT_FALSE(app.HasElement(stateA.internal.horzScrollbarID))
                 << "H-scrollbar must not be emitted when no section overflows X";
 
             // Overflow: pin xOverflow=true. Bar must exist.
@@ -340,7 +340,7 @@ namespace interstice
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
             app.Frame([&]{ Emit(stateB); pinB(); });
-            EXPECT_TRUE(app.HasElement(stateB._horzScrollbarID))
+            EXPECT_TRUE(app.HasElement(stateB.internal.horzScrollbarID))
                 << "H-scrollbar must be emitted when at least one section overflows X";
         }
 
@@ -388,7 +388,7 @@ namespace interstice
             const interstice::ID sectionID = state.SectionBodyID(0);
             ASSERT_NE(sectionID, interstice::ID::Invalid());
 
-            ASSERT_GT(state._totalRowCount, 0);
+            ASSERT_GT(state.internal.totalRowCount, 0);
             const interstice::ID firstRowID = state.RowIDForIndex(0);
             ASSERT_TRUE(app.HasElement(firstRowID));
             const auto rowRef = app.elementStorage.FindElementRefByID(firstRowID);
@@ -398,9 +398,9 @@ namespace interstice
             ASSERT_TRUE(sectionRef.IsValid());
 
             ASSERT_FALSE(columns.empty());
-            ASSERT_NE(columns[0]._headerRef, interstice::ElementRef::Invalid())
+            ASSERT_NE(columns[0].internal.headerRef, interstice::ElementRef::Invalid())
                 << "header ref must be captured in BeginTable for this check";
-            const interstice::ElementRef headerRef = columns[0]._headerRef;
+            const interstice::ElementRef headerRef = columns[0].internal.headerRef;
 
             // For siblings, HashCode (depth high, index low) orders by emission.
             EXPECT_GT(headerRef.HashCode(), rowRef.HashCode())
@@ -422,7 +422,7 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_GT(state._totalRowCount, 0);
+            ASSERT_GT(state.internal.totalRowCount, 0);
             const auto rowRect = app.GetElementRect(state.RowIDForIndex(0));
 
             EXPECT_GT(app.theme.tableRowHeight, 0)
@@ -454,8 +454,8 @@ namespace interstice
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
             ASSERT_GE(int(columns.size()), 4);
-            const auto col1Ref = columns[1]._headerRef;
-            const auto col3Ref = columns[3]._headerRef;
+            const auto col1Ref = columns[1].internal.headerRef;
+            const auto col3Ref = columns[3].internal.headerRef;
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const auto col3Rect = app.elementStorage.GetElementRectUnsafe(col3Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
@@ -522,7 +522,7 @@ namespace interstice
 
             // Start a drag on col1, one event per Frame (one hit-test per frame).
             ASSERT_GE(int(columns.size()), 2);
-            const auto col1Ref = columns[1]._headerRef;
+            const auto col1Ref = columns[1].internal.headerRef;
             ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2,
@@ -567,7 +567,7 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             // Start a drag on column 1 and commit (>4 px).
-            const auto col1Ref = columns[1]._headerRef;
+            const auto col1Ref = columns[1].internal.headerRef;
             ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
@@ -581,11 +581,11 @@ namespace interstice
 
             // Re-fetch the header ref; the dragged column is re-emitted on top.
             const auto draggedHdrRef = app.elementStorage.FindElementRefByID(
-                columns[1]._headerCellID);
+                columns[1].internal.headerCellID);
             ASSERT_TRUE(draggedHdrRef.IsValid());
 
             // Sizer 0 (non-dragged) must be emitted before the dragged column's header.
-            const auto sizer0Ref = app.elementStorage.FindElementRefByID(columns[0]._sizerID);
+            const auto sizer0Ref = app.elementStorage.FindElementRefByID(columns[0].internal.sizerID);
             ASSERT_TRUE(sizer0Ref.IsValid());
 
             EXPECT_LT(sizer0Ref.HashCode(), draggedHdrRef.HashCode())
@@ -618,7 +618,7 @@ namespace interstice
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
             // Start a drag on column 1.
-            const auto col1Ref = columns[1]._headerRef;
+            const auto col1Ref = columns[1].internal.headerRef;
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
             app.InjectMouseMove(col1Center);
@@ -682,9 +682,9 @@ namespace interstice
             app.InjectMouseUp(center);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_GT(state._totalRowCount, 0)
+            ASSERT_GT(state.internal.totalRowCount, 0)
                 << "VirtualTable must publish dataset row count";
-            ASSERT_NE(state._rowsRangeID, interstice::ID::Invalid())
+            ASSERT_NE(state.internal.rowsRangeID, interstice::ID::Invalid())
                 << "VirtualTable must publish the rows-range ID";
 
             // Scroll so row 0 is outside the virtualized window.
@@ -709,7 +709,7 @@ namespace interstice
 
             ASSERT_EQ(state.selectedRowID.GetMode(), interstice::IDMode::SubRange);
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index),
-                      state._totalRowCount - 1)
+                      state.internal.totalRowCount - 1)
                 << "End must select dataset row N-1, not the bottommost visible row";
         }
 
@@ -739,7 +739,7 @@ namespace interstice
             }
 
             // Select a row outside the window and press Up: selection steps to index - 1.
-            ASSERT_GT(state._totalRowCount, 50);
+            ASSERT_GT(state.internal.totalRowCount, 50);
             const int startIdx = 50;
             state.selectedRowID = state.RowIDForIndex(startIdx);
 
@@ -767,8 +767,8 @@ namespace interstice
             // Sanity: every column-boundary sizer exists at the top.
             for (size_t c = 0; c + 1 < columns.size(); ++c)
             {
-                ASSERT_NE(columns[c]._sizerID, interstice::ID::Invalid()) << "col " << c;
-                EXPECT_TRUE(app.HasElement(columns[c]._sizerID))
+                ASSERT_NE(columns[c].internal.sizerID, interstice::ID::Invalid()) << "col " << c;
+                EXPECT_TRUE(app.HasElement(columns[c].internal.sizerID))
                     << "sizer at boundary " << c << " missing at top of scroll";
             }
 
@@ -784,7 +784,7 @@ namespace interstice
 
             // After scrolling, sizers MUST still be present.
             for (size_t c = 0; c + 1 < columns.size(); ++c)
-                EXPECT_TRUE(app.HasElement(columns[c]._sizerID))
+                EXPECT_TRUE(app.HasElement(columns[c].internal.sizerID))
                     << "sizer at boundary " << c
                     << " missing after scrolling deep into the table";
         }
@@ -817,7 +817,7 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             // The last row must clear the 12-px H-scrollbar strip.
-            const interstice::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
+            const interstice::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
             ASSERT_TRUE(app.HasElement(lastRowID))
                 << "End must bring the last dataset row into view";
 
@@ -885,7 +885,7 @@ namespace interstice
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
 
             // The header's bottom (gridRow 0) is where body rows start.
-            const int32_t headerBottom = sectionRect.innerRect.y + state._actualRowHeight;
+            const int32_t headerBottom = sectionRect.innerRect.y + state.internal.actualRowHeight;
             EXPECT_GE(selRect.y, headerBottom)
                 << "Up-navigated selected row's top (" << selRect.y
                 << ") must be at or below the sticky header bottom ("
@@ -979,15 +979,15 @@ namespace interstice
 
         // ---------------------------------------------------------------
         // The keyboard handler must derive H overflow from layout, not from
-        // _anyHorzOverflow: that flag is set at render, after input dispatch.
+        // internal.anyHorzOverflow: that flag is set at render, after input dispatch.
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardPageDownClearsHScrollbarWithoutPinningOverflowFlag)
         {
             interstice::TableState state{};
             // Pin only the viewport size; the overflow flag stays false as at dispatch.
             auto pin = [&]{
-                state._lastViewportH = 298;
-                state._lastViewportW = 398;
+                state.internal.lastViewportH = 298;
+                state.internal.lastViewportW = 398;
             };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -1001,7 +1001,7 @@ namespace interstice
             app.InjectMouseUp(center);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_FALSE(state._anyHorzOverflow)
+            ASSERT_FALSE(state.internal.anyHorzOverflow)
                 << "test setup must NOT pin the flag — that's what makes "
                 << "this faithful to production input-dispatch timing";
 
@@ -1026,7 +1026,7 @@ namespace interstice
             const int32_t selRowBottom = selRect.y + selRect.h;
             EXPECT_LE(selRowBottom, sectionInnerBottom - kScrollbarThickness)
                 << "PageDown must land on a row clear of the H-scrollbar "
-                << "even when state._anyHorzOverflow is stale (production "
+                << "even when state.internal.anyHorzOverflow is stale (production "
                 << "input-dispatch order). Row bot=" << selRowBottom
                 << " section inner bot=" << sectionInnerBottom;
         }
@@ -1061,8 +1061,8 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             ASSERT_GE(int(columns.size()), 4);
-            const auto col1Ref = columns[1]._headerRef;
-            const auto col3Ref = columns[3]._headerRef;
+            const auto col1Ref = columns[1].internal.headerRef;
+            const auto col3Ref = columns[3].internal.headerRef;
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const auto col3Rect = app.elementStorage.GetElementRectUnsafe(col3Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
@@ -1110,8 +1110,8 @@ namespace interstice
             const std::vector<int> before(state.columnWidths.begin(), state.columnWidths.end());
             app.Frame([&]{ Emit(state); pin(); });
 
-            const auto col1Rect = app.elementStorage.GetElementRectUnsafe(columns[1]._headerRef).rect;
-            const auto col3Rect = app.elementStorage.GetElementRectUnsafe(columns[3]._headerRef).rect;
+            const auto col1Rect = app.elementStorage.GetElementRectUnsafe(columns[1].internal.headerRef).rect;
+            const auto col3Rect = app.elementStorage.GetElementRectUnsafe(columns[3].internal.headerRef).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
             const int2 col3Center{ col3Rect.x + col3Rect.w / 2, col3Rect.y + col3Rect.h / 2 };
 
@@ -1175,7 +1175,7 @@ namespace interstice
             frame();
             frame();
 
-            ASSERT_TRUE(state._rowOrder);
+            ASSERT_TRUE(state.internal.rowOrder);
             ASSERT_EQ(state.VisualToDataset(kRows - 1), 0) << "test setup: bottom row is dataset 0";
             const interstice::ID bottom = state.RowIDForIndex(0);
             EXPECT_EQ(state.selectedRowID, bottom);
@@ -1211,7 +1211,7 @@ namespace interstice
                                     std::vector<interstice::VirtualTableColumn>& columns, int col,
                                     const std::function<void()>& emit)
         {
-            const auto r = app.elementStorage.GetElementRectUnsafe(columns[size_t(col)]._headerRef).rect;
+            const auto r = app.elementStorage.GetElementRectUnsafe(columns[size_t(col)].internal.headerRef).rect;
             const int2 c{ r.x + r.w / 2, r.y + r.h / 2 };
             app.InjectMouseMove(c);
             app.InjectMouseDown(c);
@@ -1285,7 +1285,7 @@ namespace interstice
 
             // Frame 1: no sort. Permutation should stay null.
             app.Frame([&]{ emitSorted(); });
-            EXPECT_FALSE(state._rowOrder)
+            EXPECT_FALSE(state.internal.rowOrder)
                 << "no active sort -> no permutation allocated";
             EXPECT_EQ(state.VisualToDataset(2), 2) << "identity translation when unsorted";
             EXPECT_EQ(state.DatasetToVisual(2), 2);
@@ -1299,11 +1299,11 @@ namespace interstice
             state.sortColumn = 0;
             state.sortDescending = false;
             app.Frame([&]{ emitSorted(); });
-            ASSERT_TRUE(state._rowOrder) << "sort active -> permutation built";
-            ASSERT_EQ(state._rowOrder->size(), data.size());
+            ASSERT_TRUE(state.internal.rowOrder) << "sort active -> permutation built";
+            ASSERT_EQ(state.internal.rowOrder->size(), data.size());
 
             const std::vector<int> expectedAsc = { 1, 3, 0, 4, 2 };
-            EXPECT_EQ(*state._rowOrder, expectedAsc)
+            EXPECT_EQ(*state.internal.rowOrder, expectedAsc)
                 << "stable ascending sort by value";
 
             // Selection identity must follow the data row.
@@ -1316,19 +1316,19 @@ namespace interstice
             state.sortDescending = true;
             app.Frame([&]{ emitSorted(); });
             const std::vector<int> expectedDesc = { 2, 4, 0, 3, 1 };
-            EXPECT_EQ(*state._rowOrder, expectedDesc) << "descending = swap args";
+            EXPECT_EQ(*state.internal.rowOrder, expectedDesc) << "descending = swap args";
             EXPECT_EQ(state.DatasetToVisual(2), 0)
                 << "row 2 (value 50, the largest) is now at visual position 0";
 
             // Drop the sort — permutation goes away.
             state.sortColumn = -1;
             app.Frame([&]{ emitSorted(); });
-            EXPECT_FALSE(state._rowOrder) << "no active sort -> permutation released";
+            EXPECT_FALSE(state.internal.rowOrder) << "no active sort -> permutation released";
         }
 
         // ---------------------------------------------------------------
         // A sortable column without a sortAscending lambda builds no permutation
-        // (the caller sorts externally); _rowOrder stays null.
+        // (the caller sorts externally); internal.rowOrder stays null.
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnWithoutSortLambdaDoesNotBuildPermutation)
         {
@@ -1352,7 +1352,7 @@ namespace interstice
                 app.EndRootWindow();
             });
 
-            EXPECT_FALSE(state._rowOrder)
+            EXPECT_FALSE(state.internal.rowOrder)
                 << "sortable=true alone (without sortAscending) doesn't build a perm";
             EXPECT_EQ(state.VisualToDataset(7), 7) << "identity translation";
         }

@@ -217,7 +217,7 @@ namespace interstice
             // Visible row -> flat row index, rebuilt each frame.
             std::vector<int>          treeTableVisibleIdx;
             // Moved row's new flat index, applied to the selection after the next
-            // VirtualTable call (TableState._rowsRangeID is reallocated inside it).
+            // VirtualTable call (which reallocates the row IDs).
             int                       treeTablePendingSelectFlatIdx = -1;
 
             // Icon IDs
@@ -388,7 +388,7 @@ namespace interstice
             MultiSelectState         settingsShortcutsCatInternalMulti;
 
             // Must persist across frames: the column-sizer double-click handler
-            // holds &column._maxContentWidth and fires after OnGUI returns.
+            // holds &column.internal.maxContentWidth and fires after OnGUI returns.
             struct ShortcutVisRow { uint32_t mode; uint32_t entryIdx; };
             std::vector<VirtualTableColumn> settingsShortcutsColumns;        // persistent column template (built once)
             std::vector<VirtualTableColumn> settingsShortcutsActiveColumns;  // per-frame active subset (Context dropped in single-category view)

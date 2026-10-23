@@ -1,4 +1,4 @@
-#include <gui_controls/gui_application.h>
+#include <gui_controls/gui_application_internal.h>
 
 #include <gui_controls/gui_dock_node.h>
 
@@ -169,7 +169,7 @@ namespace interstice
         {
             // Smaller than the real 400x300 spawn so it doesn't swamp the cursor.
             const interstice::int2 kGhostSize { app.styleManager.Px(220), app.styleManager.Px(150) };
-            if (app.BeginCursorGhostWindow(app.tabDragGhostWindowID, mousePos, kGhostSize,
+            if (app.BeginCursorGhostWindow(GUIApplicationInternals::TabDragGhostWindowID(app), mousePos, kGhostSize,
                                            app.theme.dockLeafStyleRef))
             {
                 // Tab bar across the top, holding the single dragged tab.
@@ -226,7 +226,7 @@ namespace interstice
         void EmitDropZoneOverlayRect(GUIApplication& app, IntRect overlay)
         {
             if (overlay.w <= 0 || overlay.h <= 0) return;
-            if (app.BeginGhostWindow(app.tabDragGhostWindowID,
+            if (app.BeginGhostWindow(GUIApplicationInternals::TabDragGhostWindowID(app),
                                      { overlay.x, overlay.y },
                                      { overlay.w, overlay.h }, app.theme.panelDropVisualizationStyleRef))
             {
@@ -252,17 +252,17 @@ namespace interstice
             };
 
             // Snapshot the selection to restore on drag-out (MouseDown selected the dragged tab).
-            if (!app.m_reorderable->Drag().isDragging || app.m_reorderable->Drag().groupID != node->tabBarID)
+            if (!GUIApplicationInternals::Reorderable(app).Drag().isDragging || GUIApplicationInternals::Reorderable(app).Drag().groupID != node->tabBarID)
                 node->selectedTabBeforeDrag = node->selectedTab;
 
             // Publish cross-container drag info when this leaf is the drag source
             // (reset in BeginDockingFrame when no drag is active).
             {
-                auto& drag = app.m_reorderable->Drag();
+                auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
                 if (drag.isDragging && drag.dragActivated && drag.groupID == node->tabBarID
                     && drag.draggedIndex >= 0 && drag.draggedIndex < (int)node->panelIds.size())
                 {
-                    auto& info = app.m_dockTabDragSub->Info();
+                    auto& info = GUIApplicationInternals::DockTabDrag(app).Info();
                     interstice::ID pid = node->panelIds[drag.draggedIndex];
                     auto panelIt = layout->panels.find(pid);
                     if (panelIt != layout->panels.end())
@@ -280,8 +280,8 @@ namespace interstice
             // Fires end-of-frame when a tab is released outside the bar bounds.
             auto onDragOut = [&app, layout, node](int tabIndex, interstice::int2 mousePos)
             {
-                app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
-                app.windowManager->RequestCloseAllowReopen(app.tabDragGhostWindowID);
+                GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget = false;
+                app.windowManager->RequestCloseAllowReopen(GUIApplicationInternals::TabDragGhostWindowID(app));
 
                 if (tabIndex < 0 || tabIndex >= (int)node->panelIds.size()) return;
 
@@ -338,7 +338,7 @@ namespace interstice
                     fw->layout.panels[panelID] = std::move(panelIt->second);
                     layout->panels.erase(panelIt);
                 }
-                app.m_floatingDockWindows.push_back(std::move(fw));
+                GUIApplicationInternals::FloatingDockWindows(app).push_back(std::move(fw));
             };
 
             // ----- dragVisualizer: drop-zone overlay OR ghost tab -----
@@ -352,10 +352,10 @@ namespace interstice
                 if (panelIt == layout->panels.end()) return;
 
                 // 1. Tab-bar hover → the target bar's phantom tab is the visual.
-                DockNode* tabTarget = app.FindDockLeafTabBarCachedAtScreenPos(mousePos);
+                DockNode* tabTarget = GUIApplicationInternals::FindDockLeafTabBarCachedAtScreenPos(app, mousePos);
                 if (tabTarget && tabTarget != node && !tabTarget->cachedTabRects.empty())
                 {
-                    app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
+                    GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget = false;
                     return;
                 }
 
@@ -369,28 +369,28 @@ namespace interstice
                     if (targetRect.w <= 0 || targetRect.h <= 0) return;
 
                     auto now = std::chrono::steady_clock::now();
-                    if (app.m_dockTabDragSub->DropZoneAnim().hasTarget)
+                    if (GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget)
                     {
                         // Animate from current position toward target
-                        float dt = std::chrono::duration<float>(now - app.m_dockTabDragSub->DropZoneAnim().lastTime).count();
+                        float dt = std::chrono::duration<float>(now - GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().lastTime).count();
                         float t = 1.0f - std::exp(-dt / kRectAnimationTimeSecs);
-                        app.m_dockTabDragSub->DropZoneAnim().currentRect = LerpRect(app.m_dockTabDragSub->DropZoneAnim().currentRect, targetRect, t);
+                        GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().currentRect = LerpRect(GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().currentRect, targetRect, t);
                     }
                     else
                     {
                         // First frame with a drop zone — snap immediately
-                        app.m_dockTabDragSub->DropZoneAnim().currentRect = targetRect;
+                        GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().currentRect = targetRect;
                     }
-                    app.m_dockTabDragSub->DropZoneAnim().targetRect = targetRect;
-                    app.m_dockTabDragSub->DropZoneAnim().hasTarget  = true;
-                    app.m_dockTabDragSub->DropZoneAnim().lastTime   = now;
+                    GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().targetRect = targetRect;
+                    GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget  = true;
+                    GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().lastTime   = now;
 
-                    EmitDropZoneOverlayRect(app, app.m_dockTabDragSub->DropZoneAnim().currentRect);
+                    EmitDropZoneOverlayRect(app, GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().currentRect);
                 }
                 else
                 {
                     // Center zone or no target → ghost panel (drop makes a floating window)
-                    app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
+                    GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget = false;
                     EmitGhostTab(app, panelIt->second, mousePos);
                 }
             };
@@ -407,8 +407,8 @@ namespace interstice
                 // ----- Cross-container phantom tab detection -----
                 // A tab dragged from another bar over this one gets a phantom at the
                 // insertion point so the real tabs shift apart, like within-bar reorder.
-                auto& drag = app.m_reorderable->Drag();
-                const auto& dragInfo = app.m_dockTabDragSub->Info();
+                auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
+                const auto& dragInfo = GUIApplicationInternals::DockTabDrag(app).Info();
                 interstice::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
                 bool emitPhantom = false;
                 int phantomIdx = 0;
@@ -466,7 +466,7 @@ namespace interstice
                 node->lastContentID      = contentID;
                 node->lastContentPanelID = selectedPanelID;
                 // Record panel→content so InvalidatePanel(panelId) can resolve it.
-                app.NotePanelContentID(selectedPanelID, contentID);
+                GUIApplicationInternals::NotePanelContentID(app, selectedPanelID, contentID);
 
                 auto panelIt = layout->panels.find(selectedPanelID);
                 if (panelIt != layout->panels.end())
@@ -646,9 +646,9 @@ namespace interstice
     {
         for (auto& [id, panel] : layout.panels)
         {
-            if (!panel._enabled) continue;
+            if (!panel.internal.enabled) continue;
             if (panel.onDisable) panel.onDisable();
-            panel._enabled = false;
+            panel.internal.enabled = false;
         }
     }
 
@@ -662,10 +662,10 @@ namespace interstice
         // Disable panels that are enabled but no longer visible.
         for (auto& [id, panel] : layout.panels)
         {
-            if (panel._enabled && !visible.count(id))
+            if (panel.internal.enabled && !visible.count(id))
             {
                 if (panel.onDisable) panel.onDisable();
-                panel._enabled = false;
+                panel.internal.enabled = false;
             }
         }
 
@@ -675,9 +675,9 @@ namespace interstice
             auto it = layout.panels.find(pid);
             if (it == layout.panels.end()) continue;
             Panel& panel = it->second;
-            if (panel._enabled) continue;
+            if (panel.internal.enabled) continue;
             if (panel.onEnable) panel.onEnable();
-            panel._enabled = true;
+            panel.internal.enabled = true;
         }
     }
 
@@ -864,7 +864,7 @@ namespace interstice
         // panel can be created later), after its onDisable if it was shown.
         auto it = layout.panels.find(panelID);
         if (it == layout.panels.end()) return;
-        if (it->second._enabled && it->second.onDisable) it->second.onDisable();
+        if (it->second.internal.enabled && it->second.onDisable) it->second.onDisable();
         layout.panels.erase(it);
     }
 

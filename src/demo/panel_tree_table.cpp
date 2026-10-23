@@ -108,7 +108,7 @@ namespace interstice
                 if (newFlatIdx < 0) return;
                 TreeUtils::RebuildTreeIndex(rows);
                 // Deferred: the matching sub-range rowID needs the
-                // _rowsRangeID VirtualTable allocates next frame.
+                // row IDs VirtualTable allocates next frame.
                 demo.treeTablePendingSelectFlatIdx       = newFlatIdx;
                 demo.treeTableState.selectedRowID        = interstice::ID::Invalid();
                 demo.treeTableMultiSelect.selectedIDs.clear();
@@ -192,9 +192,9 @@ namespace interstice
                      LayoutOverride{}.Width(styleManager.Px(520)).Height(styleManager.Px(400)).BreakBefore());
 
         // Apply a pending post-drop selection now that VirtualTable has set
-        // this frame's _rowsRangeID.
+        // this frame's row IDs.
         if (demo.treeTablePendingSelectFlatIdx >= 0
-            && demo.treeTableState._rowsRangeID != interstice::ID::Invalid())
+            && demo.treeTableState.RowIDInRange(0) != interstice::ID::Invalid())
         {
             const int targetFlat = demo.treeTablePendingSelectFlatIdx;
             int newVisIdx = -1;
@@ -202,8 +202,7 @@ namespace interstice
                 if (visibleIdx[i] == targetFlat) { newVisIdx = int(i); break; }
             if (newVisIdx >= 0)
             {
-                const interstice::ID newRowID = idManager.GetSubID(
-                    demo.treeTableState._rowsRangeID, static_cast<uint32_t>(newVisIdx));
+                const interstice::ID newRowID = demo.treeTableState.RowIDForIndex(newVisIdx);
                 demo.treeTableState.selectedRowID = newRowID;
                 demo.treeTableMultiSelect.selectedIDs.clear();
                 demo.treeTableMultiSelect.selectedIDs.insert(newRowID);

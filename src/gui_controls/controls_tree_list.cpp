@@ -562,7 +562,7 @@ namespace interstice
                                    const std::vector<int>& visibleIdx,
                                    TableState& state)
     {
-        const std::vector<int>& prevVisible = state._treeVisibleIdx;
+        const std::vector<int>& prevVisible = state.internal.treeVisibleIdx;
         std::vector<int> flatToVisible(rows.size(), -1);
         for (size_t v = 0; v < visibleIdx.size(); ++v)
             flatToVisible[size_t(visibleIdx[v])] = int(v);
@@ -582,7 +582,7 @@ namespace interstice
         auto remap = [&](interstice::ID id, bool toAncestor) -> interstice::ID
         {
             if (id.GetMode() != interstice::IDMode::SubRange ||
-                id.value.subRangeParts.parentHashValue != state._rowsRangeID.value.rangedParts.hashValue)
+                id.value.subRangeParts.parentHashValue != state.internal.rowsRangeID.value.rangedParts.hashValue)
                 return id;
             const size_t prevVis = size_t(id.value.subRangeParts.index);
             if (prevVis >= prevVisible.size()) return interstice::ID::Invalid();
@@ -614,9 +614,9 @@ namespace interstice
     {
         // Rebuild the visible-row list each frame from the expand/collapse state.
         WalkTreeViewVisibility(rows, visibleIdx);
-        if (state._rowsRangeID != interstice::ID::Invalid() && visibleIdx != state._treeVisibleIdx)
+        if (state.internal.rowsRangeID != interstice::ID::Invalid() && visibleIdx != state.internal.treeVisibleIdx)
             RemapTreeSelection(rows, visibleIdx, state);
-        state._treeVisibleIdx = visibleIdx;
+        state.internal.treeVisibleIdx = visibleIdx;
 
         // Reserve the arrow column only when some row can expand (avoids a stray indent on flat trees).
         bool anyExpandable = false;

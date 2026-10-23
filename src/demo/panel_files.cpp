@@ -503,12 +503,10 @@ namespace interstice
                 row.renameBuffer = &row.name;
             }
             if (guiStateManager.Drag().IsDragging()
-                && m_treeDropState.targetRowID != interstice::ID::Invalid()
-                && folderTreeState._rowsRangeID != interstice::ID::Invalid())
+                && TreeDropTargetRow() != interstice::ID::Invalid())
             {
                 for (size_t vi = 0; vi < folderVisibleIdx.size(); ++vi)
-                    if (idManager.GetSubID(folderTreeState._rowsRangeID, static_cast<uint32_t>(vi))
-                        == m_treeDropState.targetRowID)
+                    if (folderTreeState.RowIDForIndex(static_cast<int>(vi)) == TreeDropTargetRow())
                     {
                         folderRows[folderVisibleIdx[vi]].icon = demo.folderOpenIcon;
                         break;
@@ -528,14 +526,12 @@ namespace interstice
             }
             // First frame: highlight the initial folder (the sub-ID needs the
             // range the table just allocated).
-            else if (folderTreeState.selectedRowID == interstice::ID::Invalid()
-                     && folderTreeState._rowsRangeID != interstice::ID::Invalid())
+            else if (folderTreeState.selectedRowID == interstice::ID::Invalid())
             {
                 for (size_t i = 0; i < folderVisibleIdx.size(); ++i)
                     if (folderVisibleIdx[i] == currentFolder)
                     {
-                        folderTreeState.selectedRowID = idManager.GetSubID(
-                            folderTreeState._rowsRangeID, static_cast<uint32_t>(i));
+                        folderTreeState.selectedRowID = folderTreeState.RowIDForIndex(static_cast<int>(i));
                         break;
                     }
             }

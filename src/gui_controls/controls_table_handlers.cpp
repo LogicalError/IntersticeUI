@@ -37,7 +37,7 @@ namespace interstice
                     // Find which section's body the cursor is over and route
                     // the wheel there. X scrolls that section directly; Y
                     // gets mirrored across all sections by MirrorTableScroll.
-                    const int n = statePtr->_sectionCount;
+                    const int n = statePtr->internal.sectionCount;
                     if (n <= 0) break;
                     const float step = styleManager.Px(kWheelScrollStep);
                     const int2 delta {
@@ -85,8 +85,8 @@ namespace interstice
 
                 case interstice::EventType::KeyDown:
                 {
-                    if (statePtr->_totalRowCount <= 0
-                        || statePtr->_rowsRangeID == interstice::ID::Invalid()) break;
+                    if (statePtr->internal.totalRowCount <= 0
+                        || statePtr->internal.rowsRangeID == interstice::ID::Invalid()) break;
 
                     // The cursor is selectedRowID (every click and navigation
                     // moves it). MultiSelectState::lastClickedID is only the
@@ -101,7 +101,7 @@ namespace interstice
                         if (id.GetMode() != interstice::IDMode::SubRange) return -1;
                         return static_cast<int>(id.value.subRangeParts.index);
                     };
-                    const int totalRows = statePtr->_totalRowCount;
+                    const int totalRows = statePtr->internal.totalRowCount;
                     const int idx = rowIndexOf(cursorID);
 
                     const int colCount = int(statePtr->columnWidths.size());
@@ -109,15 +109,15 @@ namespace interstice
 
                     // Fully visible rows per page: viewport minus the sticky header and,
                     // when shown, the H-scrollbar, so nav never lands on an occluded row.
-                    const int32_t rh     = std::max<int32_t>(1, statePtr->_actualRowHeight);
+                    const int32_t rh     = std::max<int32_t>(1, statePtr->internal.actualRowHeight);
                     // One row's worth before the first render has sampled the viewport.
-                    const int32_t innerH = statePtr->_lastViewportH > 0
-                        ? statePtr->_lastViewportH : rh;
-                    // H-overflow from current layout: _anyHorzOverflow is set at render,
+                    const int32_t innerH = statePtr->internal.lastViewportH > 0
+                        ? statePtr->internal.lastViewportH : rh;
+                    // H-overflow from current layout: internal.anyHorzOverflow is set at render,
                     // which runs after input dispatch.
                     bool hOverflow = false;
                     {
-                        const int n = statePtr->_sectionCount;
+                        const int n = statePtr->internal.sectionCount;
                         for (int i = 0; i < n; i++)
                         {
                             const interstice::ID sid = statePtr->SectionBodyID(i);
@@ -134,13 +134,13 @@ namespace interstice
                     }
                     const int32_t hPadKb = hOverflow
                         ? theme.scrollbarThickness : 0;
-                    const int32_t headerRowH = statePtr->_hasHeaders ? rh : 0;
+                    const int32_t headerRowH = statePtr->internal.hasHeaders ? rh : 0;
                     const int     rowsPerPage = std::max(1, (innerH - headerRowH - hPadKb) / rh);
                     // First fully visible row, from the body's scroll-Y.
                     int firstFullVis = 0;
                     {
                         auto& sm = guiStateManager.GetScrollManagement();
-                        const auto h = sm.GetScrollOffsetHandle(statePtr->_bodyID);
+                        const auto h = sm.GetScrollOffsetHandle(statePtr->internal.bodyID);
                         if (sm.IsScrollOffsetHandleValid(h))
                             firstFullVis = std::max(0, -sm.GetScrollOffset(h).y / rh);
                     }
@@ -217,7 +217,7 @@ namespace interstice
                                     for (int i = idx - 1; i >= 0; --i)
                                     {
                                         const interstice::ID prevID = idManager.GetSubID(
-                                            statePtr->_rowsRangeID, static_cast<uint32_t>(i));
+                                            statePtr->internal.rowsRangeID, static_cast<uint32_t>(i));
                                         const auto* sib = statePtr->FindTreeRow(prevID);
                                         if (!sib) break;  // outside emit window
                                         if (sib->depth < myDepth) { next = i; break; }
@@ -236,7 +236,7 @@ namespace interstice
                                     if (idx + 1 < totalRows)
                                     {
                                         const interstice::ID childID = idManager.GetSubID(
-                                            statePtr->_rowsRangeID, static_cast<uint32_t>(idx + 1));
+                                            statePtr->internal.rowsRangeID, static_cast<uint32_t>(idx + 1));
                                         const auto* child = statePtr->FindTreeRow(childID);
                                         if (child && child->depth == info->depth + 1)
                                             { next = idx + 1; break; }
@@ -255,7 +255,7 @@ namespace interstice
                     interstice::ID newID = interstice::ID::Invalid();
                     if (next != idx && next >= 0 && next < totalRows)
                     {
-                        newID = idManager.GetSubID(statePtr->_rowsRangeID,
+                        newID = idManager.GetSubID(statePtr->internal.rowsRangeID,
                                                    static_cast<uint32_t>(next));
                     }
                     if (newID != interstice::ID::Invalid() && newID != statePtr->selectedRowID)
@@ -283,8 +283,8 @@ namespace interstice
 
                         // Scroll the row clear of the sticky header (top) and the
                         // H-scrollbar overlay (bottom, when shown).
-                        const int32_t headerH = statePtr->_hasHeaders
-                            ? std::max<int32_t>(1, statePtr->_actualRowHeight)
+                        const int32_t headerH = statePtr->internal.hasHeaders
+                            ? std::max<int32_t>(1, statePtr->internal.actualRowHeight)
                             : 0;
                         const int32_t hPad    = hOverflow
                             ? theme.scrollbarThickness : 0;
@@ -298,9 +298,9 @@ namespace interstice
                             scrollManagement.MakeRectVisibleHierarchically(
                                 elementStorage, target, rowRef);
                         }
-                        else if (statePtr->_rowsRangeID != interstice::ID::Invalid()
-                                 && statePtr->_actualRowHeight > 0
-                                 && statePtr->_bodyID != interstice::ID::Invalid())
+                        else if (statePtr->internal.rowsRangeID != interstice::ID::Invalid()
+                                 && statePtr->internal.actualRowHeight > 0
+                                 && statePtr->internal.bodyID != interstice::ID::Invalid())
                         {
                             // Row not emitted: scroll by its VISUAL position (sorting
                             // makes dataset index differ from scroll row).
@@ -312,12 +312,12 @@ namespace interstice
                             const int32_t rowTopContent = headerH + rowIdx * rh;
                             const int32_t rowBotContent = rowTopContent + rh;
                             // Apply to every section body (frozen tables stay in sync) and
-                            // to _bodyID, VirtualTable's canonical scroll-Y, so it takes
+                            // to internal.bodyID, VirtualTable's canonical scroll-Y, so it takes
                             // effect this frame. Clamp against real layout rects: arithmetic
                             // alone misses accumulated row gaps.
                             int32_t writtenY = 0;
                             bool anyChange = false;
-                            const int n = statePtr->_sectionCount;
+                            const int n = statePtr->internal.sectionCount;
                             for (int i = 0; i < n; i++)
                             {
                                 const interstice::ID sid = statePtr->SectionBodyID(i);
@@ -347,9 +347,9 @@ namespace interstice
                                 }
                                 writtenY = clamped.y;
                             }
-                            if (anyChange && statePtr->_bodyID != interstice::ID::Invalid())
+                            if (anyChange && statePtr->internal.bodyID != interstice::ID::Invalid())
                             {
-                                auto bh = scrollManagement.GetOrCreateScrollOffsetHandle(statePtr->_bodyID);
+                                auto bh = scrollManagement.GetOrCreateScrollOffsetHandle(statePtr->internal.bodyID);
                                 const int2 bcur = scrollManagement.GetScrollOffset(bh);
                                 if (bcur.y != writtenY)
                                     scrollManagement.SetScrollOffset(bh, int2{ 0, writtenY });
@@ -379,7 +379,7 @@ namespace interstice
             const bool dragDropEnabled = (dd && dd->payloadType != 0);
 
             // With drag-and-drop, selection is deferred to MouseUp
-            // (TableState::_pendingRowClick) and dropped if a drag starts.
+            // (TableState::internal.pendingRowClick) and dropped if a drag starts.
 
             // Selection shared by the immediate (MouseDown) and deferred (MouseUp) paths.
             auto applyClickSelection = [&](interstice::ID id, interstice::KeyModifier mods) {
@@ -393,7 +393,7 @@ namespace interstice
                         const bool anchorRanged  = ms.lastClickedID.GetMode() == interstice::IDMode::SubRange;
                         const bool currentRanged = id.GetMode() == interstice::IDMode::SubRange;
                         if (anchorRanged && currentRanged
-                            && state->_rowsRangeID != interstice::ID::Invalid())
+                            && state->internal.rowsRangeID != interstice::ID::Invalid())
                         {
                             const int anchorDs = static_cast<int>(ms.lastClickedID.value.subRangeParts.index);
                             const int currDs   = static_cast<int>(id.value.subRangeParts.index);
@@ -408,7 +408,7 @@ namespace interstice
                                 {
                                     const int ds = state->VisualToDataset(v);
                                     ms.selectedIDs.insert(idManager.GetSubID(
-                                        state->_rowsRangeID, static_cast<uint32_t>(ds)));
+                                        state->internal.rowsRangeID, static_cast<uint32_t>(ds)));
                                 }
                             }
                         }
@@ -437,13 +437,13 @@ namespace interstice
             if (event.type == interstice::EventType::MouseUp && event.state.LeftReleased())
             {
                 if (dragDropEnabled
-                    && state->_pendingRowClick.rowID == rowID
-                    && !state->_pendingRowClick.dragPromoted)
+                    && state->internal.pendingRowClick.rowID == rowID
+                    && !state->internal.pendingRowClick.dragPromoted)
                 {
-                    applyClickSelection(rowID, state->_pendingRowClick.mods);
+                    applyClickSelection(rowID, state->internal.pendingRowClick.mods);
                 }
                 // Always clear on any LeftReleased — the click is over.
-                state->_pendingRowClick = {};
+                state->internal.pendingRowClick = {};
                 return false;
             }
 
@@ -481,7 +481,7 @@ namespace interstice
                 // Auto-scroll near the body's top/bottom edge during a drag. Edge zones
                 // start below the sticky header and above the H-scrollbar.
                 auto autoScrollY = [&]() {
-                    if (state->_sectionCount <= 0) return;
+                    if (state->internal.sectionCount <= 0) return;
                     const interstice::ID body0 = state->SectionBodyID(0);
                     if (body0 == interstice::ID::Invalid()) return;
                     auto bodyRef = elementStorage.FindElementRefByID(body0);
@@ -489,9 +489,9 @@ namespace interstice
                     const auto& bodyRect = elementStorage.GetElementRectUnsafe(bodyRef);
                     const int kEdgeZoneHeight     = styleManager.Px(30);
                     const int kAutoScrollPerEvent = styleManager.Px(12);
-                    const int32_t headerH = state->_hasHeaders
-                        ? std::max<int32_t>(0, state->_actualRowHeight) : 0;
-                    const int32_t hPad    = state->_anyHorzOverflow
+                    const int32_t headerH = state->internal.hasHeaders
+                        ? std::max<int32_t>(0, state->internal.actualRowHeight) : 0;
+                    const int32_t hPad    = state->internal.anyHorzOverflow
                         ? theme.scrollbarThickness : 0;
                     // bodyRect.innerRect is layout-space — convert cursor too.
                     const int32_t mouseY    = event.LocalCursor(elementStorage).y;
@@ -505,7 +505,7 @@ namespace interstice
                     if (scrollDelta == 0) return;
 
                     auto& sm = guiStateManager.GetScrollManagement();
-                    const int n = state->_sectionCount;
+                    const int n = state->internal.sectionCount;
                     for (int i = 0; i < n; i++)
                     {
                         const interstice::ID sid = state->SectionBodyID(i);
@@ -529,7 +529,7 @@ namespace interstice
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         // A real drag cancels the deferred click selection.
                         if (guiStateManager.Drag().GetDraggedID() == rowID)
-                            state->_pendingRowClick.dragPromoted = true;
+                            state->internal.pendingRowClick.dragPromoted = true;
                         return guiStateManager.Drag().GetDraggedID() == rowID;
                     }
                     case interstice::EventType::DragEnter:
@@ -585,7 +585,7 @@ namespace interstice
 
             // One tracker for double-click (<300ms: toggle branch; in row mode the tree
             // cell shares rowID, so it lands here) and slow re-click (500-3000ms: rename).
-            const auto clickInfo = state->_rowClickTracker.Update(rowID);
+            const auto clickInfo = state->internal.rowClickTracker.Update(rowID);
             const bool  sameDbl = clickInfo.sameAsPrevious;
             const float dblMs   = clickInfo.elapsedMs;
             const bool wasSelected = (state->selectedRowID == rowID)
@@ -603,7 +603,7 @@ namespace interstice
             if (hasRename && ctrlShift)
             {
                 (*m_renameSub).Start(rowID, info->renameBuf, info->renameSeed);
-                state->_rowClickTracker.Reset();
+                state->internal.rowClickTracker.Reset();
                 return true;
             }
 
@@ -613,14 +613,14 @@ namespace interstice
                 if (state->onRowDoubleClick)
                 {
                     state->onRowDoubleClick(rowID);
-                    state->_rowClickTracker.Reset();
+                    state->internal.rowClickTracker.Reset();
                     if (!(*m_renameSub).firstFrame) (*m_renameSub).Cancel();
                     return true;
                 }
                 if (info && info->isOpen)
                 {
                     *info->isOpen = !*info->isOpen;
-                    state->_rowClickTracker.Reset();
+                    state->internal.rowClickTracker.Reset();
                     if (!(*m_renameSub).firstFrame) (*m_renameSub).Cancel();
                     return true;
                 }
@@ -634,7 +634,7 @@ namespace interstice
                 && !dragDropEnabled)
             {
                 (*m_renameSub).Start(rowID, info->renameBuf, info->renameSeed);
-                state->_rowClickTracker.Reset();
+                state->internal.rowClickTracker.Reset();
                 return true;
             }
 
@@ -648,9 +648,9 @@ namespace interstice
             if (dragDropEnabled)
             {
                 // Defer selection to MouseUp so a drag doesn't select the source row.
-                state->_pendingRowClick.rowID        = rowID;
-                state->_pendingRowClick.mods         = event.state.modifiers;
-                state->_pendingRowClick.dragPromoted = false;
+                state->internal.pendingRowClick.rowID        = rowID;
+                state->internal.pendingRowClick.mods         = event.state.modifiers;
+                state->internal.pendingRowClick.dragPromoted = false;
 
                 // Prime a drag (inlined: Chain stops at our `return true`).
                 uintptr_t payloadValue = dd->getPayload ? dd->getPayload(rowID) : 0;

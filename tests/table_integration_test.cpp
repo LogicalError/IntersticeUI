@@ -119,7 +119,7 @@ namespace interstice
                 app.EndRootWindow();
             });
             EXPECT_TRUE(app.HasElement(tableID));
-            EXPECT_EQ(state._totalRowCount, 0);
+            EXPECT_EQ(state.internal.totalRowCount, 0);
         }
 
         // No BeginRow calls: header still emits, body has no backdrops, and
@@ -134,8 +134,8 @@ namespace interstice
                 app.EndRootWindow();
             });
             EXPECT_TRUE(app.HasElement(tableID));
-            EXPECT_EQ(state._totalRowCount, 0);
-            EXPECT_TRUE(kColumns[0]._headerRef.IsValid());
+            EXPECT_EQ(state.internal.totalRowCount, 0);
+            EXPECT_TRUE(kColumns[0].internal.headerRef.IsValid());
         }
 
         TEST_F(TableIntegrationTest, ColumnWidthsLazyInitFromDefaults)
@@ -156,7 +156,7 @@ namespace interstice
             app.Frame([&] { EmitSimpleTable(state); });
             app.Frame([&] { EmitSimpleTable(state); });
             auto headerWidth = [&] {
-                return app.GetElementRect(app.elementStorage.GetElementUnsafe(kColumns[0]._headerRef).id).w;
+                return app.GetElementRect(app.elementStorage.GetElementUnsafe(kColumns[0].internal.headerRef).id).w;
             };
             const int w1 = headerWidth();
             ASSERT_GT(w1, 0);
@@ -255,7 +255,7 @@ namespace interstice
             EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
 
             // Row IDs are positional sub-range IDs; unsorted, visual == dataset.
-            ASSERT_EQ(state._totalRowCount, 3);
+            ASSERT_EQ(state.internal.totalRowCount, 3);
             const interstice::ID row1ID = state.RowIDForIndex(1);
 
             // Derive the hit position from the row backdrop's actual rect — row
@@ -337,9 +337,9 @@ namespace interstice
             state.onReorderColumns = [](int, int) {};  // enable reorder path
 
             app.Frame([&] { EmitSimpleTable(state); });
-            ASSERT_TRUE(kColumns[1]._headerRef.IsValid());
+            ASSERT_TRUE(kColumns[1].internal.headerRef.IsValid());
             const auto col1HeaderID_before = app.elementStorage.GetElementUnsafe(
-                kColumns[1]._headerRef).id;
+                kColumns[1].internal.headerRef).id;
             const auto col1X_before = app.GetElementRect(col1HeaderID_before).x;
 
             // Start drag on column 0.
@@ -358,7 +358,7 @@ namespace interstice
             app.Frame([&] { EmitSimpleTable(state); });
 
             const auto col1HeaderID = app.elementStorage.GetElementUnsafe(
-                kColumns[1]._headerRef).id;
+                kColumns[1].internal.headerRef).id;
             const int32_t col1X_during = app.GetElementRect(col1HeaderID).x;
 
             EXPECT_LT(col1X_during, col1X_before)
@@ -565,7 +565,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // VirtualTable — the virtual row slice is driven by state._lastViewportH and
+        // VirtualTable — the virtual row slice is driven by state.internal.lastViewportH and
         // the persistent scroll offset. Without any scroll, only leading rows render.
         // ---------------------------------------------------------------------------
 
@@ -602,7 +602,7 @@ namespace interstice
             // spacer). With flex-basis honoured its rect stays the same across frames
             // instead of oscillating with the sampled viewport height.
             interstice::TableState state{};
-            state._lastViewportH = 400;
+            state.internal.lastViewportH = 400;
 
             interstice::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
@@ -620,11 +620,11 @@ namespace interstice
                 };
 
             app.Frame(build);
-            const auto bodyRect1 = app.GetElementRect(state._bodyID);
+            const auto bodyRect1 = app.GetElementRect(state.internal.bodyID);
             app.Frame(build);
-            const auto bodyRect2 = app.GetElementRect(state._bodyID);
+            const auto bodyRect2 = app.GetElementRect(state.internal.bodyID);
             app.Frame(build);
-            const auto bodyRect3 = app.GetElementRect(state._bodyID);
+            const auto bodyRect3 = app.GetElementRect(state.internal.bodyID);
 
             // Height must be stable (not drifting with viewport-sampling feedback).
             EXPECT_EQ(bodyRect1.h, bodyRect2.h);
@@ -663,9 +663,9 @@ namespace interstice
                 app.EndRootWindow();
                 });
 
-            ASSERT_TRUE(cols[2]._headerRef.IsValid());
+            ASSERT_TRUE(cols[2].internal.headerRef.IsValid());
             const auto lastHeaderID = app.elementStorage.GetElementUnsafe(
-                cols[2]._headerRef).id;
+                cols[2].internal.headerRef).id;
             const auto lastHeaderRect = app.GetElementRect(lastHeaderID);
 
             // The last column should be at least its configured initialWidth
@@ -701,9 +701,9 @@ namespace interstice
                 app.EndRootWindow();
                 });
 
-            ASSERT_TRUE(cols[2]._headerRef.IsValid());
+            ASSERT_TRUE(cols[2].internal.headerRef.IsValid());
             const auto lastHeaderID = app.elementStorage.GetElementUnsafe(
-                cols[2]._headerRef).id;
+                cols[2].internal.headerRef).id;
             const auto lastHeaderRect = app.GetElementRect(lastHeaderID);
             EXPECT_GE(lastHeaderRect.w, 200)
                 << "Last column should not shrink below its configured width "
@@ -715,7 +715,7 @@ namespace interstice
             // The header section must not shrink: the body's huge intrinsic height
             // (50 000 spacer rows) would otherwise squeeze the header to ~0px.
             interstice::TableState state{};
-            state._lastViewportH = 400;
+            state.internal.lastViewportH = 400;
 
             interstice::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
@@ -734,9 +734,9 @@ namespace interstice
 
             app.Frame(build);
 
-            ASSERT_TRUE(vcols[0]._headerRef.IsValid());
+            ASSERT_TRUE(vcols[0].internal.headerRef.IsValid());
             const auto headerID = app.elementStorage.GetElementUnsafe(
-                vcols[0]._headerRef).id;
+                vcols[0].internal.headerRef).id;
             const auto headerRect = app.GetElementRect(headerID);
             EXPECT_GT(headerRect.h, 8)
                 << "Header collapsed under flex-shrink pressure from the "
@@ -749,7 +749,7 @@ namespace interstice
             // Header and body are sibling grids, so scrolling the body leaves the
             // header's Y unchanged.
             interstice::TableState state{};
-            state._lastViewportH = 400;
+            state.internal.lastViewportH = 400;
 
             interstice::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
@@ -769,23 +769,23 @@ namespace interstice
             // Frame 1: lay out at scroll 0 so the body id exists.
             app.Frame(build);
 
-            const auto headerAID0 = !vcols[0]._headerRef.IsValid()
+            const auto headerAID0 = !vcols[0].internal.headerRef.IsValid()
                 ? interstice::ID::Invalid()
-                : app.elementStorage.GetElementUnsafe(vcols[0]._headerRef).id;
+                : app.elementStorage.GetElementUnsafe(vcols[0].internal.headerRef).id;
             ASSERT_NE(headerAID0, interstice::ID::Invalid());
-            ASSERT_NE(state._bodyID, interstice::ID::Invalid());
+            ASSERT_NE(state.internal.bodyID, interstice::ID::Invalid());
             const auto headerY_unscrolled = app.GetElementRect(headerAID0).y;
 
             // Scroll the body, which holds overflow:auto (not the outer wrapper).
-            auto handle = app.guiStateManager.GetScrollManagement().GetOrCreateScrollOffsetHandle(state._bodyID);
+            auto handle = app.guiStateManager.GetScrollManagement().GetOrCreateScrollOffsetHandle(state.internal.bodyID);
             app.guiStateManager.GetScrollManagement().SetScrollOffset(handle, interstice::int2{ 0, -100 });
 
             // Frame 2: body rows shift up; header stays.
             app.Frame(build);
 
-            const auto headerAID = !vcols[0]._headerRef.IsValid()
+            const auto headerAID = !vcols[0].internal.headerRef.IsValid()
                 ? interstice::ID::Invalid()
-                : app.elementStorage.GetElementUnsafe(vcols[0]._headerRef).id;
+                : app.elementStorage.GetElementUnsafe(vcols[0].internal.headerRef).id;
             ASSERT_NE(headerAID, interstice::ID::Invalid());
             const auto headerY_scrolled = app.GetElementRect(headerAID).y;
 
@@ -818,11 +818,11 @@ namespace interstice
             };
             app.Frame(build);
             app.Frame(build);
-            ASSERT_NE(state._bodyID, interstice::ID::Invalid());
+            ASSERT_NE(state.internal.bodyID, interstice::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
             sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(state.SectionBodyID(0)), interstice::int2{ 0, -100 });
             app.Frame(build);
-            ASSERT_EQ(sm.GetScrollOffset(sm.GetScrollOffsetHandle(state._bodyID)).y, -100) << "scrolled before the squeeze";
+            ASSERT_EQ(sm.GetScrollOffset(sm.GetScrollOffsetHandle(state.internal.bodyID)).y, -100) << "scrolled before the squeeze";
 
             siblingHeight = 400;
             app.Frame(build);
@@ -831,7 +831,7 @@ namespace interstice
             app.Frame(build);
             app.Frame(build);
 
-            const auto handle = sm.GetScrollOffsetHandle(state._bodyID);
+            const auto handle = sm.GetScrollOffsetHandle(state.internal.bodyID);
             ASSERT_TRUE(sm.IsScrollOffsetHandleValid(handle));
             EXPECT_EQ(sm.GetScrollOffset(handle).y, -100);
         }
@@ -855,7 +855,7 @@ namespace interstice
                 app.VirtualTable(tableID, state, vcols, 10, /*rowHeight*/0, StyleRef{}, LayoutOverride{}.Size(400, 200));
                 app.EndRootWindow();
             });
-            EXPECT_EQ(state._actualRowHeight, expected);
+            EXPECT_EQ(state.internal.actualRowHeight, expected);
         }
 
         TEST_F(TableIntegrationTest, VirtualTableSliceExpandsWhenViewportHeightKnown)
@@ -887,7 +887,7 @@ namespace interstice
             const int frame1Cells = cellsEmitted;
 
             // Simulate the custom-draw hook sampling the container's viewport.
-            state._lastViewportH = 400;
+            state.internal.lastViewportH = 400;
 
             // Frame 2 now has a viewport → should emit far more rows.
             cellsEmitted = 0;
@@ -907,7 +907,7 @@ namespace interstice
         {
             interstice::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
-            ASSERT_EQ(state._totalRowCount, 3);
+            ASSERT_EQ(state.internal.totalRowCount, 3);
 
             // Click row 0 to establish selection + focus on the table container.
             // Hit position comes from the row backdrop's actual rect — row
@@ -939,7 +939,7 @@ namespace interstice
         {
             interstice::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
-            ASSERT_EQ(state._totalRowCount, 3);
+            ASSERT_EQ(state.internal.totalRowCount, 3);
 
             // Click to focus the table.
             auto row1Pos = app.CenterOf(state.RowIDForIndex(1));
@@ -950,7 +950,7 @@ namespace interstice
 
             app.InjectKey(KeyCode::End);
             app.Frame([&] { EmitSimpleTable(state); });
-            EXPECT_EQ(state.selectedRowID, state.RowIDForIndex(state._totalRowCount - 1));
+            EXPECT_EQ(state.selectedRowID, state.RowIDForIndex(state.internal.totalRowCount - 1));
 
             app.InjectKey(KeyCode::Home);
             app.Frame([&] { EmitSimpleTable(state); });
@@ -999,7 +999,7 @@ namespace interstice
             app.Frame(build);
             // Headless never renders, so simulate the render-time viewport
             // sampling that drives rows-per-page (same as the slice tests).
-            state._lastViewportH = 200;
+            state.internal.lastViewportH = 200;
 
             // Click row 0 to focus the container.
             const interstice::ID firstID = state.RowIDForIndex(0);
@@ -1015,7 +1015,7 @@ namespace interstice
             app.Frame(build);
 
             int afterIdx = -1;
-            for (int i = 0; i < state._totalRowCount; i++)
+            for (int i = 0; i < state.internal.totalRowCount; i++)
                 if (state.RowIDForIndex(i) == state.selectedRowID) { afterIdx = i; break; }
             EXPECT_GT(afterIdx, beforeIdx)
                 << "PageDown should advance the cursor at least one row.";
@@ -1027,7 +1027,7 @@ namespace interstice
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
-            state._lastViewportH = 200;   // simulate render-time sampling
+            state.internal.lastViewportH = 200;   // simulate render-time sampling
 
             // Click row 0 to give the container focus. Rows past the viewport
             // aren't hit-testable; set cursor state directly to "near the
@@ -1038,14 +1038,14 @@ namespace interstice
             app.InjectMouseDown(firstCenter);
             app.InjectMouseUp(firstCenter);
             app.Frame(build);
-            const int beforeIdx = state._totalRowCount - 1;
+            const int beforeIdx = state.internal.totalRowCount - 1;
             state.selectedRowID = state.RowIDForIndex(beforeIdx);
 
             app.InjectKey(KeyCode::PageUp);
             app.Frame(build);
 
             int afterIdx = -1;
-            for (int i = 0; i < state._totalRowCount; i++)
+            for (int i = 0; i < state.internal.totalRowCount; i++)
                 if (state.RowIDForIndex(i) == state.selectedRowID) { afterIdx = i; break; }
             EXPECT_LT(afterIdx, beforeIdx)
                 << "PageUp should retreat the cursor at least one row.";
@@ -1057,7 +1057,7 @@ namespace interstice
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
-            state._lastViewportH = 200;   // simulate render-time sampling
+            state.internal.lastViewportH = 200;   // simulate render-time sampling
 
             // Click first row to focus the container, then point the cursor
             // at the last row by hand — the last row is offscreen so a click
@@ -1068,7 +1068,7 @@ namespace interstice
             app.InjectMouseDown(firstCenter);
             app.InjectMouseUp(firstCenter);
             app.Frame(build);
-            const interstice::ID lastID = state.RowIDForIndex(state._totalRowCount - 1);
+            const interstice::ID lastID = state.RowIDForIndex(state.internal.totalRowCount - 1);
             state.selectedRowID = lastID;
 
             app.InjectKey(KeyCode::PageDown);
@@ -1082,7 +1082,7 @@ namespace interstice
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
-            state._lastViewportH = 200;   // simulate render-time sampling
+            state.internal.lastViewportH = 200;   // simulate render-time sampling
 
             const interstice::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);

@@ -14,13 +14,13 @@ namespace interstice
                         theme.flexFillRowStyleRef,
                         interstice::LayoutOverride::Auto().FlexGrow(1));
 
-        // Left: flat page tree. Selection lives on _tableState as sub-range row IDs and is
+        // Left: flat page tree. Selection lives on internal.tableState as sub-range row IDs and is
         // translated to/from state.selectedID. Consume a click into selectedID before
         // seeding selectedRowID from it, or the seed overwrites the click.
         {
             // Sync page list → flat rows. depth=0 throughout.
-            state._rows.clear();
-            state._rows.reserve(state.pages.size());
+            state.internal.rows.clear();
+            state.internal.rows.reserve(state.pages.size());
             for (size_t i = 0; i < state.pages.size(); ++i)
             {
                 TreeViewRow r{};
@@ -28,15 +28,15 @@ namespace interstice
                 r.name  = state.pages[i].name;
                 r.depth = 0;
                 r.icon  = interstice::IconID::Invalid;
-                state._rows.push_back(std::move(r));
+                state.internal.rows.push_back(std::move(r));
             }
-            RebuildTreeViewIndex(state._rows);
+            RebuildTreeViewIndex(state.internal.rows);
 
             // 1. Consume any pending click; for a flat list the sub-range index is the page index.
-            if (state._tableState.selectedRowID.GetMode() == interstice::IDMode::SubRange)
+            if (state.internal.tableState.selectedRowID.GetMode() == interstice::IDMode::SubRange)
             {
                 const int idx =
-                    static_cast<int>(state._tableState.selectedRowID.value.subRangeParts.index);
+                    static_cast<int>(state.internal.tableState.selectedRowID.value.subRangeParts.index);
                 if (idx >= 0 && idx < int(state.pages.size()))
                     state.selectedID = state.pages[idx].id;
             }
@@ -46,18 +46,18 @@ namespace interstice
             for (size_t i = 0; i < state.pages.size(); ++i)
                 if (state.pages[i].id == state.selectedID) { selFlat = int(i); break; }
             if (selFlat >= 0
-                && state._tableState._rowsRangeID != interstice::ID::Invalid())
+                && state.internal.tableState.internal.rowsRangeID != interstice::ID::Invalid())
             {
                 const interstice::ID expected = idManager.GetSubID(
-                    state._tableState._rowsRangeID,
+                    state.internal.tableState.internal.rowsRangeID,
                     static_cast<uint32_t>(selFlat));
-                if (state._tableState.selectedRowID != expected)
-                    state._tableState.selectedRowID = expected;
+                if (state.internal.tableState.selectedRowID != expected)
+                    state.internal.tableState.selectedRowID = expected;
             }
 
             const interstice::ID treeID = idManager.AllocateDynamicID();
-            VirtualTreeView(treeID, state._rows, state._visibleIdx,
-                            state._tableState, theme.settingsPageSelectionRef,
+            VirtualTreeView(treeID, state.internal.rows, state.internal.visibleIdx,
+                            state.internal.tableState, theme.settingsPageSelectionRef,
                             interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(state.treeWidth)).NoGrow());
         }
 

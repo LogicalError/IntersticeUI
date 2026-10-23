@@ -195,8 +195,8 @@ namespace interstice
             cellID, text, styleRef, cellState);
 
         const int32_t cellW = textSystem->GetTextMeasurement(textID).maxWidth;
-        emit.columns[c]._maxContentWidth =
-            std::max(emit.columns[c]._maxContentWidth, cellW);
+        emit.columns[c].internal.maxContentWidth =
+            std::max(emit.columns[c].internal.maxContentWidth, cellW);
 
         interstice::EventHandler cellHandler;
         if (cellMode)
@@ -311,7 +311,7 @@ namespace interstice
             cellHandler = emit.currentRowHandler;
         }
         if (isOpen)
-            cellHandler = MakeTreeCellDoubleClickToggle(&state->_treeCellClickTracker, isOpen, std::move(cellHandler));
+            cellHandler = MakeTreeCellDoubleClickToggle(&state->internal.treeCellClickTracker, isOpen, std::move(cellHandler));
 
         const StyleRef textStyle = theme.treeTableTextStyleRef;
         const interstice::ElementState textState = guiStateManager.GetCurrentState(bodyID);
@@ -326,8 +326,8 @@ namespace interstice
         if (const interstice::LayoutStyle* ts = styleManager.GetLayoutStyle(textStyle.layoutStyleIndex))
             prefix += ts->padding.Horizontal() + ts->borderWidths.Horizontal();
         const int32_t treeRowW = textSystem->GetTextMeasurement(bodyTextID).maxWidth + prefix;
-        emit.columns[c]._maxContentWidth =
-            std::max(emit.columns[c]._maxContentWidth, treeRowW);
+        emit.columns[c].internal.maxContentWidth =
+            std::max(emit.columns[c].internal.maxContentWidth, treeRowW);
 
         const StyleRef cellStyleRef = cellMode ? theme.treeTableCellStyleRef
                                                : theme.treeTableCellRowModeStyleRef;
@@ -349,7 +349,7 @@ namespace interstice
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
-        const GridTrack& track = column._columnTrack;
+        const GridTrack& track = column.internal.columnTrack;
 
         interstice::Element cell{};
         cell.id           = cellID;
@@ -378,7 +378,7 @@ namespace interstice
                                               int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
-        const GridTrack& track = column._columnTrack;
+        const GridTrack& track = column.internal.columnTrack;
 
         interstice::Element cell{};
         cell.id           = cellID;
@@ -416,7 +416,7 @@ namespace interstice
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
-        const GridTrack& track = column._columnTrack;
+        const GridTrack& track = column.internal.columnTrack;
 
         interstice::Element cell{};
         cell.id           = cellID;
@@ -489,7 +489,7 @@ namespace interstice
         // the tree reserves an expander column (false for flat trees).
         if (reserveExpander || treeIsOpen != nullptr)
             EmitTreeCellArrowOrLeafSpacer(*this, treeIsOpen);
-        EmitTreeCellIcon(*this, treeIcon, treeIsOpen, &emit.userState->_treeCellClickTracker);
+        EmitTreeCellIcon(*this, treeIcon, treeIsOpen, &emit.userState->internal.treeCellClickTracker);
 
         if (treeRenameActive)
         {

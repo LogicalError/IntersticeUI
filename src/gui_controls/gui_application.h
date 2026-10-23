@@ -108,6 +108,7 @@ namespace interstice
         MenuManager         menuManager{};
         TooltipManager      tooltipManager{};
 
+    private:
         // Per-frame stage pipeline. Declared before the subsystems, which register
         // callbacks in it, so they are destroyed first.
         FramePipeline       m_frame{};
@@ -124,21 +125,7 @@ namespace interstice
         ToolbarWindowDragSubsystem                 m_toolbarWindowDrag{};
         std::unique_ptr<UICacheManager>            m_uiCache;
 
-        // Cached scopes being rebuilt (BeginCached misses), innermost last.
-        std::vector<ID>                            m_cacheRecordStack;
-
-        // This frame's input as seen by cached scopes; refreshed lazily once per frame.
-        bool     m_keyboardPending = false;
-        bool     m_tabPending      = false;
-        uint64_t m_inputFlagsFrame = 0;
-        void     RefreshCachedInputFlags();
-
-        // Registers a swatch claim with the enclosing cached scopes so hit frames can keep it alive.
-        void NoteSwatchClaim(ID swatchID);
-
-        // Panel id → its dock content (cached scope) id, for InvalidatePanel.
-        std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
-
+    public:
         GradientManager     gradientManager{};
         StyleManager        styleManager { gradientManager };
 
@@ -153,14 +140,6 @@ namespace interstice
 
         GUITheme theme{};
 
-        // Save-stack for nested BeginToolbar/EndToolbar.
-        std::vector<const ControlStyles*> controlStylesStack;
-
-        ID tooltipWindowID     { ID::Invalid() };
-        ID contextMenuWindowID { ID::Invalid() };
-        ID contextMenuTargetID { ID::Invalid() }; // element the context menu is attached to
-        ID tabDragGhostWindowID{ ID::Invalid() }; // ghost window for dragged dock tab / drop overlay
-
 
         bool applicationQuit = false;
         float frameTime = 0.0f;
@@ -170,44 +149,10 @@ namespace interstice
         // Rolling per-frame timing history in ms, recorded only while profiling is enabled.
         struct FrameTimingSample { float buildMs = 0.0f; float totalMs = 0.0f; };
         static constexpr int kFrameHistoryCount = 240;   // ~4s @ 60fps
-        FrameTimingSample frameTimingHistory[kFrameHistoryCount] = {};
-        int               frameTimingHead = 0;           // next write slot
 
         // Copies the ring chronologically (oldest first) into out.
         void GetFrameTimingHistory(std::span<FrameTimingSample> out) const;
 
-
-        // Table drag state that persists across frames (defs in gui_table_types.h).
-        ColumnDragState m_columnDrag{};
-        TreeDropState   m_treeDropState{};
-
-        // ---- ListView ID->index map (shared by every list view; cleared once per frame) ----
-        // Filled by ListItem when dragDrop is on; valid in end-of-frame handlers via FindListItemIndex().
-        std::unordered_map<interstice::ID, int> m_listItemIndexByID;
-
-
-        // Transient construction state (defs in gui_tree_grid_types.h), valid only between
-        // Begin*/End*. Handlers run later, so they must capture pointers, never read these.
-        TreeViewState m_treeState{};
-        GridViewState m_gridViewState;
-
-        // GridView rename lookup, shared by every grid view; cleared before construction.
-        std::unordered_map<interstice::ID, GridItemRenameInfo> m_gridItemRenameByID;
-
-
-        // Transient state of the VirtualTable being emitted (def in gui_table_types.h).
-        std::optional<TableEmit> m_tableEmit;
-        // Emit states of outer tables while a table is built inside a cell, innermost last.
-        std::vector<std::optional<TableEmit>> m_outerTableEmits;
-
-        int CurrentCellCol() const
-        {
-            const int c = m_tableEmit->currentCol;
-            assert(c < int(m_tableEmit->columnCount));
-            return c;
-        }
-
-        TabBarState m_tabBarState;
 
         void CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
                          std::function<void()> onPanelGUI,
@@ -229,29 +174,10 @@ namespace interstice
 
 
         // Panel lifecycle. A panel is enabled iff it is the selectedTab of a leaf reachable
-        // from layout.root. BeginDockingContainer calls EnableVisiblePanels each frame;
+        // from layout.root; the docking enables the visible ones each frame.
         // DisableAllPanels brackets disruptive operations (theme reload, preset swap).
         void DisableAllPanels(DockingLayout& layout);
-        void EnableVisiblePanels(DockingLayout& layout);
 
-        // Transient, valid only between BeginDockingContainer / EndDockingContainer
-        // (def in gui_docking_types.h); handlers must capture pointers, not read this.
-        DockingConstructionState m_dockingState;
-
-        // Docking layouts emitted this frame (cleared at frame start); used by
-        // SyncDockingScrollOffsets and cross-dock drop hit-testing.
-        std::vector<DockingLayout*> m_dockingLayoutsThisFrame{};
-
-        // Toolbar docks emitted this frame, walked by SyncToolbarDockRects (type in controls_toolbar_dock.h).
-        std::vector<struct ToolbarDockState*> m_toolbarDocksThisFrame{};
-
-        // After input dispatch: stores each selected panel's scroll offset so it survives a tab switch.
-        void SyncDockingScrollOffsets();
-
-        // Snapshots each toolbar dock side's screen rect for next frame's drag hit-testing.
-        void SyncToolbarDockRects();
-
-    public:
         // One OS window per floating toolbar. Closed windows are erased and their IDs released.
         void EmitFloatingToolbarWindows(std::vector<struct FloatingToolbarItem>& floatingItems,
                                         const struct FloatingToolbarOptions* options = nullptr);
@@ -260,13 +186,8 @@ namespace interstice
         // TransferPanel for cross-layout drops). {nullptr, nullptr} on miss.
         DockLeafResult FindDockLeafAtScreenPos(interstice::int2 screenPos);
 
-        // Uses last frame's tab-bar rects, so it works during construction.
-        interstice::DockNode* FindDockLeafTabBarCachedAtScreenPos(interstice::int2 screenPos);
-
         // Hit-tests leaf content areas; falls back to tab bars with zone=Center.
         DockDropResult FindDockDropTargetAtScreenPos(interstice::int2 screenPos);
-
-        std::vector<std::unique_ptr<FloatingDockWindow>> m_floatingDockWindows;
 
         // Call from OnGUI after the main docking container. Empty windows are closed.
         void EmitFloatingDockWindows();
@@ -282,13 +203,7 @@ namespace interstice
                                   DockingLayout* sourceLayout,
                                   DockingLayout* targetLayout);
 
-        
-    protected:
-        // Debug asserts for Begin*/End* stacks left unbalanced at frame end. Also used by the headless tests.
-        void RegisterFrameBalanceChecks();
-
-    public:
-        virtual ~GUIApplication() = default;
+                virtual ~GUIApplication() = default;
 
         // What Initialize sets up besides the core systems. All on by default; a host
         // that does one itself turns it off.
@@ -305,9 +220,6 @@ namespace interstice
 
         // Loads m_themePath at m_globalFontScale. False when the theme can't be opened.
         bool InitializeStyles();
-        // Rebuilds the styles when a reload is pending or the main window's
-        // display scale changed. Runs before the managers begin their frame.
-        void ApplyPendingStyleReload();
 
         // Called after every successful theme/font reload (and by subclasses at startup) to
         // re-register styles/icons the reload wiped. Reset any bookkeeping of stale StyleRefs.
@@ -361,31 +273,8 @@ namespace interstice
         // Builds the UI; called each frame.
         virtual void OnGUI() = 0;
 
-        void OnRender(float elapsedTimeSecs);
-        void OnFrame();
-
         bool Run();
 
-    protected:
-        // Change via RequestReloadTheme so the reload happens between frames.
-        std::string m_resourceRoot;
-        IWindowBackend*      m_osWindowBackend { nullptr };    // wrapped by windowBackend
-        ImageWindowBackend*  m_imageWindows    { nullptr };    // == windowBackend
-        MouseButtons         m_injectedButtons { MouseButtons::None };
-        int2 InjectedScreenPos(ID windowID, int2 pos);
-        AllocationHooks m_allocationHooks;
-        MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
-        ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
-        std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot
-        std::string m_themePath     { "themes/dark.css" };
-        std::vector<std::string> m_styleFiles { "styles.css" };
-        float       m_globalFontScale { 1.0f };
-        float       m_uiScale { 1.0f };
-        float       m_displayScale { 1.0f };
-        FrameClock  m_frameClock;   // animation time, vsync-paced
-        bool        m_themeReloadPending { false };
-
-    public:
         // ---- Event handler factories ----
         //
         // Event handlers run at END OF FRAME (input dispatch), not during OnGUI. Captures must
@@ -396,7 +285,6 @@ namespace interstice
         interstice::EventHandler MakeButtonHandler(std::function<void()> onClick);
         interstice::EventHandler MakeLabelHandler();
 
-        interstice::ElementRef RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState = true);
         interstice::ElementRef RegisterElement(interstice::Element&& element, LayoutOverride&& constraints);
         interstice::ElementRef RegisterElement(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints);
 
@@ -545,17 +433,11 @@ namespace interstice
         // Rebuild id's cached scope (and enclosing ones) next time. Safe from event handlers.
         void        Invalidate(ID id);
 
-        // Invalidates the scopes under the cursor and, on key input, the focused one.
-        // Call after hit-testing, before dispatch.
-        void        InvalidateCachedScopesForInput(ID overID);
-
         // Enables the retained-render cache (on by default). When off, every scope rebuilds.
         void        SetDrawCacheEnabled(bool enabled) { if (m_uiCache) m_uiCache->SetDrawCacheEnabled(enabled); }
 
         // Invalidates a docked panel's cached content by panel id. Safe from event handlers.
         void        InvalidatePanel(ID panelId);
-        // Internal: called by the docking each frame.
-        void        NotePanelContentID(ID panelId, ID contentID) { m_panelContentIDs[panelId] = contentID; }
 
         // Undecorated flex containers; the Wrap variants wrap onto further lines/columns.
         bool        BeginHorizontal(ID id, StyleRef style, LayoutOverride&& constraints = {});
@@ -674,6 +556,9 @@ namespace interstice
                              LayoutOverride&& constraints = {},
                              std::string_view header = {});
 
+        // The tree row a drag is over (drives the drop indicator), or Invalid.
+        ID TreeDropTargetRow() const { return m_treeDropState.targetRowID; }
+
         // Items emitted in between render as selected.
         void BeginSelected() { guiStateManager.Construction().PushSelected(); }
         void EndSelected()   { guiStateManager.Construction().PopSelected(); }
@@ -786,13 +671,6 @@ namespace interstice
         // both ⇒ centre. Call inside NodeProperty::renderBody.
         void NodeText(std::string_view text);
 
-        // Set by RenderNodeView around each renderBody; Start elsewhere.
-        TextAlign nodeRowTextAlign = TextAlign::Start;
-
-        // When > 0, a Field() in a node row grows to fill the body with this minimum width.
-        // Set by RenderNodeView around each renderBody; 0 elsewhere.
-        int32_t nodeRowFieldMinWidth = 0;
-
         // ---- TabBar: reorderable tabs ----
         bool BeginTabBar(ID id, int* selectedIndex,
                          std::function<void(int, int)> onReorder,
@@ -808,137 +686,8 @@ namespace interstice
             { return Tab(idManager.AllocateDynamicID(), text, icon, std::move(constraints)); }
 
         // ---- DockingContainer ----
-        void BeginDockingFrame();
-        void EndDockingFrame();
-
         void BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {});
         void EndDockingContainer();
-
-    private:
-        // Popup content for ColorField / GradientField.
-        void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);
-        void EmitGradientEditor(interstice::Gradient& outGradient);
-        // Horizontal gradient bar with a triangle indicator.
-        void GradientSlider(interstice::ID id, float& value, float minVal, float maxVal,
-                            std::string_view label,
-                            interstice::VisualColorStyleIndex gradientStyle,
-                            interstice::VisualColorStyleIndex triangleStyle,
-                            LayoutOverride&& constraints = {});
-
-        // Column-boundary sizers for [colStart, colEnd), anchored to each header cell's right edge.
-        // skipDragged leaves out the dragged column's sizer; EmitDraggedColumnOnTop emits it last.
-        void EmitColumnSizers(TableEmit& emit, int colStart, int colEnd,
-                              bool skipDragged = false);
-        // 1px column dividers for headerless tables, which have no sizers.
-        void EmitColumnSeparators(TableEmit& emit, int colStart, int colEnd);
-        // Full-height strips for columns with columnBackground: above the row backdrops, below the cells.
-        void EmitColumnBackgrounds(TableEmit& emit, int colStart, int colEnd);
-
-        // followTail, run from the body section's post-layout hook (final viewport/content height).
-        void UpdateTableFollowTail(TableState& state, int32_t viewportH, int32_t contentH);
-        void ScrollTableSectionsToBottom(TableState& state);
-        // 1px separator between adjacent frozen sections.
-        void EmitTableSectionSeparator();
-
-        // Adds column c's reorder-drag X offset while a drag is live.
-        interstice::LayoutOverride ApplyColumnDragOffsetX(interstice::LayoutOverride lo,
-                                                   const TableEmit& emit, int c) const
-        {
-            if (emit.dragActive)
-                lo = std::move(lo).PositionX(interstice::PositionConstraintAxis::Relative(emit.columns[c]._dragOffsetX));
-            return lo;
-        }
-        // Mirrors Y across the left/mid/right bodies and X to the mid header; absent sections have invalid IDs.
-        void MirrorTableScroll(TableState* state);
-        // `gridCol` is section-local. `sectionMin/Max` are the inclusive global columns
-        // the reorder drag may move this header within.
-        void EmitTableHeaderCell(TableEmit& emit, interstice::ID tableID, int c, int16_t gridCol,
-                                 bool isStretchTrack, int sectionMin, int sectionMax,
-                                 int effectiveSortCol, IconID sortIcon);
-        // Header cells go into row 0 of the section's body grid, StickyY-pinned to the top.
-        void EmitTableHeaderSection(TableEmit& emit, interstice::ID tableID,
-                                    int colStart, int colEnd, bool lastColIsStretch,
-                                    int effectiveSortCol, IconID sortIcon);
-        // Stretch for Stretch columns and the middle section's last column; fitContent
-        // forces Fixed (fit-content sections have no leftover space to absorb).
-        GridTrack ComputeSectionColumnTrack(const TableEmit& emit, int c, int colEnd,
-                                            bool isMiddle, bool fitContent = false) const;
-        // Follow with the row loop and CloseTableBodySection. `sampleViewport` records the
-        // viewport size for next frame (primary section only).
-        void OpenTableBodySection(TableEmit& emit, interstice::ID sectionID, interstice::StyleRef sectionStyle,
-                                  interstice::LayoutOverride&& layout, bool sampleViewport);
-        // Emits sizers and the section's H scrollbar (the rightmost section also gets the
-        // shared V scrollbar). suppressHorzScrollbar is for fit-content sections.
-        void CloseTableBodySection(TableEmit& emit,
-                                   interstice::ID sectionBodyID, bool emitVerticalScrollbar,
-                                   bool suppressHorzScrollbar = false);
-        // Row loop for an open body section: spacers for off-screen rows, backdrop + cells for visible ones.
-        void EmitVirtualBodyRows(TableEmit& emit,
-                                 int colStart, int colEnd,
-                                 int totalRowCount, int32_t actualRowHeight,
-                                 int firstVisible, int lastVisible,
-                                 interstice::ID rowsRangeID,
-                                 bool isLastSection);
-
-        // Emits the dragged column (cells, header, sizer) last so it paints on top.
-        // Only when emit.dragActive and draggedCol is in [colStart, colEnd).
-        void EmitDraggedColumnOnTop(TableEmit& emit, interstice::ID tableID,
-                                    int colStart, int colEnd,
-                                    int firstVisible, int lastVisible,
-                                    interstice::ID rowsRangeID,
-                                    bool lastColIsStretch,
-                                    int effectiveSortCol, IconID sortIcon);
-        // Cell emitters for Cell() / TreeCell(), into the open body section.
-        void EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
-                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
-                                interstice::TextID textID,
-                                int colIdx, int colStart, int16_t gridRow);
-        void EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
-                                  interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                  interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
-                                  bool cellSelected,
-                                  std::function<void()> emit_fn,
-                                  int colIdx, int colStart, int16_t gridRow);
-        void EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
-                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
-                                bool cellSelected,
-                                interstice::TextID textID,
-                                int treeDepth, bool* treeIsOpen, IconID treeIcon,
-                                uint32_t treeAncestorMask, bool treeIsLastSibling,
-                                std::string* treeRenameBuffer, bool treeRenameActive,
-                                interstice::ID treeBodyID, bool reserveExpander,
-                                int colIdx, int colStart, int16_t gridRow);
-        // One element spanning [colStart, colEnd) at gridRow.
-        void EmitDirectRowBackdrop(interstice::ID rowID, int16_t gridRow,
-                                   int colStart, int colEnd,
-                                   interstice::ElementState backdropState,
-                                   interstice::ElementFlags backdropFlags,
-                                   interstice::StyleRef rowStyle,
-                                   interstice::EventHandler backdropHandler,
-                                   TableState* tableState,
-                                   bool isLastSection);
-        // Invisible row of `height` pixels at gridRow.
-        void EmitDirectRowSpacer(int16_t gridRow,
-                                 int colStart, int colEnd, int32_t height);
-        // Row-mode backdrop MouseDown handler, shared by all rows (the row comes from the event id):
-        // selection, double-click toggle, rename start.
-        interstice::EventHandler BuildRowBackdropHandler(TableState* state,
-                                                  interstice::ID containerID);
-        // Focus on click, scroll routing to the middle body, keyboard navigation.
-        interstice::EventHandler BuildTableContainerHandler(TableState* state,
-                                                     interstice::ID containerID);
-
-        // Tree/list item construction helpers (OnGUI only, not from handlers).
-        bool IsTreeItemSelected(interstice::ID id, int itemIndex) const;
-        interstice::TextID TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state);
-        void TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID);
-        interstice::EventHandler MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
-        bool TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
-
-        struct TreeClickState { interstice::ID lastClickID = interstice::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
-    public:
 
         bool        Field(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Field(       bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, text, style, std::move(constraints)); }
@@ -1269,10 +1018,6 @@ namespace interstice
             EndWindow();
         }
 
-    protected:
-        ID activeWindowID { ID::Invalid() };
-        std::vector<bool> m_windowIdScopeStack;
-
         bool BeginWindow(ID windowLayoutID, std::string_view title, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
             return BeginWindow(windowLayoutID, title, LayoutOverride{}, theme.windowStyleRef, flags, monitorIndex);
@@ -1461,10 +1206,13 @@ namespace interstice
             interstice::ID           selectedID = interstice::ID::Invalid();
             int               treeWidth  = 200; // CSS pixels
 
-            // ---- internal: tree-view backing state (rebuilt per frame) ----
-            std::vector<TreeViewRow> _rows;
-            std::vector<int>         _visibleIdx;
-            TableState               _tableState;
+            // Tree-view backing state, rebuilt per frame; not part of the API.
+            struct Internal
+            {
+                std::vector<TreeViewRow> rows;
+                std::vector<int>         visibleIdx;
+                TableState               tableState;
+            } internal;
 
             // `id` must be stable. The first page added is selected initially.
             interstice::ID AddPage(interstice::ID id, std::string_view name, 
@@ -1478,6 +1226,268 @@ namespace interstice
 
         // Renders into the current container; the caller provides the outer panel.
         void RenderSettingsPanel(SettingsPanelState& state);
+
+    private:
+        // GUIApplicationInternals (gui_application_internal.h) re-exposes these to
+        // the library's own code and the tests.
+        friend class GUIApplicationInternals;
+
+        // Cached scopes being rebuilt (BeginCached misses), innermost last.
+        std::vector<ID>                            m_cacheRecordStack;
+
+        // This frame's input as seen by cached scopes; refreshed lazily once per frame.
+        bool     m_keyboardPending = false;
+        bool     m_tabPending      = false;
+        uint64_t m_inputFlagsFrame = 0;
+        void     RefreshCachedInputFlags();
+
+        // Registers a swatch claim with the enclosing cached scopes so hit frames can keep it alive.
+        void NoteSwatchClaim(ID swatchID);
+
+        // Panel id → its dock content (cached scope) id, for InvalidatePanel.
+        std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
+
+        // Save-stack for nested BeginToolbar/EndToolbar.
+        std::vector<const ControlStyles*> controlStylesStack;
+
+        ID tooltipWindowID     { ID::Invalid() };
+        ID contextMenuWindowID { ID::Invalid() };
+        ID contextMenuTargetID { ID::Invalid() }; // element the context menu is attached to
+        ID tabDragGhostWindowID{ ID::Invalid() }; // ghost window for dragged dock tab / drop overlay
+
+        FrameTimingSample frameTimingHistory[kFrameHistoryCount] = {};
+        int               frameTimingHead = 0;           // next write slot
+
+        // Table drag state that persists across frames (defs in gui_table_types.h).
+        ColumnDragState m_columnDrag{};
+        TreeDropState   m_treeDropState{};
+
+        // ---- ListView ID->index map (shared by every list view; cleared once per frame) ----
+        // Filled by ListItem when dragDrop is on; valid in end-of-frame handlers via FindListItemIndex().
+        std::unordered_map<interstice::ID, int> m_listItemIndexByID;
+
+
+        // Transient construction state (defs in gui_tree_grid_types.h), valid only between
+        // Begin*/End*. Handlers run later, so they must capture pointers, never read these.
+        TreeViewState m_treeState{};
+        GridViewState m_gridViewState;
+
+        // GridView rename lookup, shared by every grid view; cleared before construction.
+        std::unordered_map<interstice::ID, GridItemRenameInfo> m_gridItemRenameByID;
+
+
+        // Transient state of the VirtualTable being emitted (def in gui_table_types.h).
+        std::optional<TableEmit> m_tableEmit;
+        // Emit states of outer tables while a table is built inside a cell, innermost last.
+        std::vector<std::optional<TableEmit>> m_outerTableEmits;
+
+        int CurrentCellCol() const
+        {
+            const int c = m_tableEmit->currentCol;
+            assert(c < int(m_tableEmit->columnCount));
+            return c;
+        }
+
+        TabBarState m_tabBarState;
+
+        // Enables the panels reachable from layout.root; called by BeginDockingContainer each frame.
+        void EnableVisiblePanels(DockingLayout& layout);
+
+        // Transient, valid only between BeginDockingContainer / EndDockingContainer
+        // (def in gui_docking_types.h); handlers must capture pointers, not read this.
+        DockingConstructionState m_dockingState;
+
+        // Docking layouts emitted this frame (cleared at frame start); used by
+        // SyncDockingScrollOffsets and cross-dock drop hit-testing.
+        std::vector<DockingLayout*> m_dockingLayoutsThisFrame{};
+
+        // Toolbar docks emitted this frame, walked by SyncToolbarDockRects (type in controls_toolbar_dock.h).
+        std::vector<struct ToolbarDockState*> m_toolbarDocksThisFrame{};
+
+        // After input dispatch: stores each selected panel's scroll offset so it survives a tab switch.
+        void SyncDockingScrollOffsets();
+
+        // Snapshots each toolbar dock side's screen rect for next frame's drag hit-testing.
+        void SyncToolbarDockRects();
+
+        // Uses last frame's tab-bar rects, so it works during construction.
+        interstice::DockNode* FindDockLeafTabBarCachedAtScreenPos(interstice::int2 screenPos);
+
+        std::vector<std::unique_ptr<FloatingDockWindow>> m_floatingDockWindows;
+
+        // Debug asserts for Begin*/End* stacks left unbalanced at frame end. Also used by the headless tests.
+        void RegisterFrameBalanceChecks();
+
+        // Rebuilds the styles when a reload is pending or the main window's
+        // display scale changed. Runs before the managers begin their frame.
+        void ApplyPendingStyleReload();
+
+        void OnRender(float elapsedTimeSecs);
+        void OnFrame();
+
+        // Change via RequestReloadTheme so the reload happens between frames.
+        std::string m_resourceRoot;
+        IWindowBackend*      m_osWindowBackend { nullptr };    // wrapped by windowBackend
+        ImageWindowBackend*  m_imageWindows    { nullptr };    // == windowBackend
+        MouseButtons         m_injectedButtons { MouseButtons::None };
+        int2 InjectedScreenPos(ID windowID, int2 pos);
+        AllocationHooks m_allocationHooks;
+        MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
+        ID           m_interactionWindowID { ID::Invalid() };       // window that owns the active interaction
+        std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot
+        std::string m_themePath     { "themes/dark.css" };
+        std::vector<std::string> m_styleFiles { "styles.css" };
+        float       m_globalFontScale { 1.0f };
+        float       m_uiScale { 1.0f };
+        float       m_displayScale { 1.0f };
+        FrameClock  m_frameClock;   // animation time, vsync-paced
+        bool        m_themeReloadPending { false };
+
+        interstice::ElementRef RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState = true);
+
+        // Invalidates the scopes under the cursor and, on key input, the focused one.
+        // Call after hit-testing, before dispatch.
+        void        InvalidateCachedScopesForInput(ID overID);
+
+        // Internal: called by the docking each frame.
+        void        NotePanelContentID(ID panelId, ID contentID) { m_panelContentIDs[panelId] = contentID; }
+
+        // Set by RenderNodeView around each renderBody; Start elsewhere.
+        TextAlign nodeRowTextAlign = TextAlign::Start;
+
+        // When > 0, a Field() in a node row grows to fill the body with this minimum width.
+        // Set by RenderNodeView around each renderBody; 0 elsewhere.
+        int32_t nodeRowFieldMinWidth = 0;
+
+        void BeginDockingFrame();
+        void EndDockingFrame();
+
+        ID activeWindowID { ID::Invalid() };
+        std::vector<bool> m_windowIdScopeStack;
+
+        // Popup content for ColorField / GradientField.
+        void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);
+        void EmitGradientEditor(interstice::Gradient& outGradient);
+        // Horizontal gradient bar with a triangle indicator.
+        void GradientSlider(interstice::ID id, float& value, float minVal, float maxVal,
+                            std::string_view label,
+                            interstice::VisualColorStyleIndex gradientStyle,
+                            interstice::VisualColorStyleIndex triangleStyle,
+                            LayoutOverride&& constraints = {});
+
+        // Column-boundary sizers for [colStart, colEnd), anchored to each header cell's right edge.
+        // skipDragged leaves out the dragged column's sizer; EmitDraggedColumnOnTop emits it last.
+        void EmitColumnSizers(TableEmit& emit, int colStart, int colEnd,
+                              bool skipDragged = false);
+        // 1px column dividers for headerless tables, which have no sizers.
+        void EmitColumnSeparators(TableEmit& emit, int colStart, int colEnd);
+        // Full-height strips for columns with columnBackground: above the row backdrops, below the cells.
+        void EmitColumnBackgrounds(TableEmit& emit, int colStart, int colEnd);
+
+        // followTail, run from the body section's post-layout hook (final viewport/content height).
+        void UpdateTableFollowTail(TableState& state, int32_t viewportH, int32_t contentH);
+        void ScrollTableSectionsToBottom(TableState& state);
+        // 1px separator between adjacent frozen sections.
+        void EmitTableSectionSeparator();
+
+        // Adds column c's reorder-drag X offset while a drag is live.
+        interstice::LayoutOverride ApplyColumnDragOffsetX(interstice::LayoutOverride lo,
+                                                   const TableEmit& emit, int c) const
+        {
+            if (emit.dragActive)
+                lo = std::move(lo).PositionX(interstice::PositionConstraintAxis::Relative(emit.columns[c].internal.dragOffsetX));
+            return lo;
+        }
+        // Mirrors Y across the left/mid/right bodies and X to the mid header; absent sections have invalid IDs.
+        void MirrorTableScroll(TableState* state);
+        // `gridCol` is section-local. `sectionMin/Max` are the inclusive global columns
+        // the reorder drag may move this header within.
+        void EmitTableHeaderCell(TableEmit& emit, interstice::ID tableID, int c, int16_t gridCol,
+                                 bool isStretchTrack, int sectionMin, int sectionMax,
+                                 int effectiveSortCol, IconID sortIcon);
+        // Header cells go into row 0 of the section's body grid, StickyY-pinned to the top.
+        void EmitTableHeaderSection(TableEmit& emit, interstice::ID tableID,
+                                    int colStart, int colEnd, bool lastColIsStretch,
+                                    int effectiveSortCol, IconID sortIcon);
+        // Stretch for Stretch columns and the middle section's last column; fitContent
+        // forces Fixed (fit-content sections have no leftover space to absorb).
+        GridTrack ComputeSectionColumnTrack(const TableEmit& emit, int c, int colEnd,
+                                            bool isMiddle, bool fitContent = false) const;
+        // Follow with the row loop and CloseTableBodySection. `sampleViewport` records the
+        // viewport size for next frame (primary section only).
+        void OpenTableBodySection(TableEmit& emit, interstice::ID sectionID, interstice::StyleRef sectionStyle,
+                                  interstice::LayoutOverride&& layout, bool sampleViewport);
+        // Emits sizers and the section's H scrollbar (the rightmost section also gets the
+        // shared V scrollbar). suppressHorzScrollbar is for fit-content sections.
+        void CloseTableBodySection(TableEmit& emit,
+                                   interstice::ID sectionBodyID, bool emitVerticalScrollbar,
+                                   bool suppressHorzScrollbar = false);
+        // Row loop for an open body section: spacers for off-screen rows, backdrop + cells for visible ones.
+        void EmitVirtualBodyRows(TableEmit& emit,
+                                 int colStart, int colEnd,
+                                 int totalRowCount, int32_t actualRowHeight,
+                                 int firstVisible, int lastVisible,
+                                 interstice::ID rowsRangeID,
+                                 bool isLastSection);
+
+        // Emits the dragged column (cells, header, sizer) last so it paints on top.
+        // Only when emit.dragActive and draggedCol is in [colStart, colEnd).
+        void EmitDraggedColumnOnTop(TableEmit& emit, interstice::ID tableID,
+                                    int colStart, int colEnd,
+                                    int firstVisible, int lastVisible,
+                                    interstice::ID rowsRangeID,
+                                    bool lastColIsStretch,
+                                    int effectiveSortCol, IconID sortIcon);
+        // Cell emitters for Cell() / TreeCell(), into the open body section.
+        void EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
+                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                interstice::TextID textID,
+                                int colIdx, int colStart, int16_t gridRow);
+        void EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
+                                  interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                  interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                  bool cellSelected,
+                                  std::function<void()> emit_fn,
+                                  int colIdx, int colStart, int16_t gridRow);
+        void EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
+                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                bool cellSelected,
+                                interstice::TextID textID,
+                                int treeDepth, bool* treeIsOpen, IconID treeIcon,
+                                uint32_t treeAncestorMask, bool treeIsLastSibling,
+                                std::string* treeRenameBuffer, bool treeRenameActive,
+                                interstice::ID treeBodyID, bool reserveExpander,
+                                int colIdx, int colStart, int16_t gridRow);
+        // One element spanning [colStart, colEnd) at gridRow.
+        void EmitDirectRowBackdrop(interstice::ID rowID, int16_t gridRow,
+                                   int colStart, int colEnd,
+                                   interstice::ElementState backdropState,
+                                   interstice::ElementFlags backdropFlags,
+                                   interstice::StyleRef rowStyle,
+                                   interstice::EventHandler backdropHandler,
+                                   TableState* tableState,
+                                   bool isLastSection);
+        // Invisible row of `height` pixels at gridRow.
+        void EmitDirectRowSpacer(int16_t gridRow,
+                                 int colStart, int colEnd, int32_t height);
+        // Row-mode backdrop MouseDown handler, shared by all rows (the row comes from the event id):
+        // selection, double-click toggle, rename start.
+        interstice::EventHandler BuildRowBackdropHandler(TableState* state,
+                                                  interstice::ID containerID);
+        // Focus on click, scroll routing to the middle body, keyboard navigation.
+        interstice::EventHandler BuildTableContainerHandler(TableState* state,
+                                                     interstice::ID containerID);
+
+        // Tree/list item construction helpers (OnGUI only, not from handlers).
+        bool IsTreeItemSelected(interstice::ID id, int itemIndex) const;
+        interstice::TextID TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state);
+        void TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID);
+        interstice::EventHandler MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
+        bool TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
+
+        struct TreeClickState { interstice::ID lastClickID = interstice::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
 
     };
 
