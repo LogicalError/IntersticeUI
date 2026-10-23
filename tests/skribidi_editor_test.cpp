@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::SkribidiHeadlessTest;
 

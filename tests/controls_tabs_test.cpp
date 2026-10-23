@@ -9,7 +9,7 @@
 #include <gui_core/gui_id_manager.h>
 #include <gui_core/state/gui_state_manager.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -292,4 +292,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

@@ -5,7 +5,7 @@
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/input/gui_input_manager.h>
 
-namespace GUI
+namespace interstice
 {
     ReorderableSubsystem::ReorderableSubsystem(FramePipeline& frame)
     {

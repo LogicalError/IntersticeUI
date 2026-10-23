@@ -12,38 +12,38 @@
 // RebuildTreeViewIndex to refresh the derived fields.
 //
 
-namespace GUI
+namespace interstice
 {
 
     namespace {
 
     // Panel data — built by EnableHierarchyPanel, torn down by DisableHierarchyPanel.
-    std::vector<GUI::TreeViewRow> treeRows;
+    std::vector<interstice::TreeViewRow> treeRows;
     std::vector<int>                         treeVisibleIdx;
-    GUI::TableState               treeViewState;
-    GUI::MultiSelectState         treeMultiSelect;
+    interstice::TableState               treeViewState;
+    interstice::MultiSelectState         treeMultiSelect;
     std::string                              renameBuffer; // TreeCell rename scratch
 
     // Search: a filtered copy of treeRows (matches plus ancestors, forced open),
     // rebuilt when the query changes. Rendered with its own state, no drag-drop
     // or rename.
-    std::vector<GUI::TreeViewRow> filteredRows;
+    std::vector<interstice::TreeViewRow> filteredRows;
     std::vector<int>                         filteredVisibleIdx;
-    GUI::TableState               filteredState;
-    GUI::MultiSelectState         filteredMultiSelect;
+    interstice::TableState               filteredState;
+    interstice::MultiSelectState         filteredMultiSelect;
     std::string                              hierarchySearch;
     bool                                     filterDirty = true;
 
     constexpr uint32_t kHierarchyPayloadType = 0x54524545; // 'TREE'
-    GUI::ItemDragDropConfig hierDnD;
+    interstice::ItemDragDropConfig hierDnD;
     int pendingSelectFlat = -1;
 
     // ---- Per-node visibility ("eye") state -----------------------------------
     // Only leaves store state (in hiddenLeaves == invisible); a branch's state
     // derives from its leaves. Keyed by static row ID so it survives reorders.
     // idToFlat maps into the master treeRows, so it also works while filtered.
-    std::unordered_set<GUI::ID>      hiddenLeaves;
-    std::unordered_map<GUI::ID, int> idToFlat;
+    std::unordered_set<interstice::ID>      hiddenLeaves;
+    std::unordered_map<interstice::ID, int> idToFlat;
 
     constexpr int      kVizColWidth     = 24;
     constexpr uint32_t kVizPayloadType  = 0x56495A21; // 'VIZ!' — paint-drag, not item reorder
@@ -61,7 +61,7 @@ namespace GUI
     // Aggregate visibility of the subtree rooted at `id`, over its leaf
     // descendants (a leaf is its own subtree). All visible → On, all
     // invisible → Off, otherwise → Mixed. Unknown / empty → On.
-    VizAgg HierComputeAgg(GUI::ID id)
+    VizAgg HierComputeAgg(interstice::ID id)
     {
         auto it = idToFlat.find(id);
         if (it == idToFlat.end()) return VizAgg::On;
@@ -80,7 +80,7 @@ namespace GUI
     }
 
     // Apply a visibility to every leaf in the subtree rooted at `id`.
-    void HierApplyViz(GUI::ID id, bool makeVisible)
+    void HierApplyViz(interstice::ID id, bool makeVisible)
     {
         auto it = idToFlat.find(id);
         if (it == idToFlat.end()) return;
@@ -136,14 +136,14 @@ namespace GUI
         // The lambdas are referenced by handlers that fire end-of-frame; the
         // captured pointers must outlive construction (file statics do).
         hierDnD.payloadType = kHierarchyPayloadType;
-        hierDnD.getPayload  = [](GUI::ID rowID) -> uintptr_t {
-            if (rowID.GetMode() != GUI::IDMode::SubRange) return UINTPTR_MAX;
+        hierDnD.getPayload  = [](interstice::ID rowID) -> uintptr_t {
+            if (rowID.GetMode() != interstice::IDMode::SubRange) return UINTPTR_MAX;
             const int visIdx = static_cast<int>(rowID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= int(treeVisibleIdx.size())) return UINTPTR_MAX;
             return static_cast<uintptr_t>(treeVisibleIdx[visIdx]);
         };
-        hierDnD.visualizer = [this](const GUI::DragVisualContext& visual) {
-            if (visual.sourceID.GetMode() != GUI::IDMode::SubRange) return;
+        hierDnD.visualizer = [this](const interstice::DragVisualContext& visual) {
+            if (visual.sourceID.GetMode() != interstice::IDMode::SubRange) return;
             const int visIdx = static_cast<int>(visual.sourceID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= int(treeVisibleIdx.size())) return;
             const int flatIdx = treeVisibleIdx[visIdx];
@@ -156,9 +156,9 @@ namespace GUI
                 EndGhostWindow();
             }
         };
-        hierDnD.onReorder = [this](uintptr_t srcPayload, GUI::ID targetID,
+        hierDnD.onReorder = [this](uintptr_t srcPayload, interstice::ID targetID,
                                    TreeDropPosition pos) {
-            if (targetID.GetMode() != GUI::IDMode::SubRange) return;
+            if (targetID.GetMode() != interstice::IDMode::SubRange) return;
             if (srcPayload == UINTPTR_MAX) return;
             const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
             if (targetVis < 0 || targetVis >= int(treeVisibleIdx.size())) return;
@@ -172,10 +172,10 @@ namespace GUI
             // TableState._rowsRangeID.
             pendingSelectFlat = newFlatIdx;
             filterDirty = true;
-            treeViewState.selectedRowID        = GUI::ID::Invalid();
+            treeViewState.selectedRowID        = interstice::ID::Invalid();
             treeMultiSelect.selectedIDs.clear();
-            treeMultiSelect.lastClickedID       = GUI::ID::Invalid();
-            guiStateManager.Interaction().SetFocusID(GUI::ID::Invalid());
+            treeMultiSelect.lastClickedID       = interstice::ID::Invalid();
+            guiStateManager.Interaction().SetFocusID(interstice::ID::Invalid());
             guiStateManager.TextEditorFocus().Clear();
             transitionManager.Clear();
         };
@@ -202,9 +202,9 @@ namespace GUI
     {
         // ---- Search box (top of panel) -----------------------------------
         BeginHorizontal(idManager.AllocateDynamicID("hierarchySearchRow"),
-                        theme.searchRowStyleRef, GUI::LayoutOverride::Auto().NoShrink());
+                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
         if (SearchField(hierarchySearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
-                        GUI::LayoutOverride{}.FlexGrow(1)))
+                        interstice::LayoutOverride{}.FlexGrow(1)))
             filterDirty = true;
         EndHorizontal();
 
@@ -243,7 +243,7 @@ namespace GUI
         // A visibility "eye" column, then the tree. Built on VirtualTable directly
         // to add the leading column. Neither column has a sizer, so the on-stack
         // `cols` array needn't outlive the VirtualTable call.
-        auto renderTree = [&](GUI::ID id,
+        auto renderTree = [&](interstice::ID id,
                               std::vector<TreeViewRow>& rows,
                               std::vector<int>& visibleIdx,
                               TableState& state)
@@ -269,49 +269,49 @@ namespace GUI
             cols[0].generateCell = [this, &rows, &visibleIdx, &state](int rowIdx)
             {
                 if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
-                const GUI::ID nodeId = rows[visibleIdx[rowIdx]].id;
-                const GUI::ID rowID  = idManager.GetSubID(state._rowsRangeID,
+                const interstice::ID nodeId = rows[visibleIdx[rowIdx]].id;
+                const interstice::ID rowID  = idManager.GetSubID(state._rowsRangeID,
                                                           static_cast<uint32_t>(rowIdx));
                 const VizAgg agg = HierComputeAgg(nodeId);
                 Cell([this, nodeId, rowID, agg]()
                 {
                     // Wrapper uses the row's id so hovering the eye highlights the row;
                     // the eye keeps its own id so clicks reach its toggle handler.
-                    GUI::Element wrap{};
+                    interstice::Element wrap{};
                     wrap.id       = rowID;
-                    wrap.flags    = GUI::ElementFlags::PropagatesDescendantState;
+                    wrap.flags    = interstice::ElementFlags::PropagatesDescendantState;
                     wrap.styleRef = hierarchyVisibilityStyleRef;
                     wrap.state    = guiStateManager.GetCurrentState(rowID);
-                    auto wRes = elementStorage.Add(std::move(wrap), GUI::LayoutOverride::Auto().FlexGrow(1));
+                    auto wRes = elementStorage.Add(std::move(wrap), interstice::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(wRes.status);
                     VERIFY(windowRegistry.Add(wRes.ref));
                     VERIFY(elementStorage.BeginChildren());
 
                     // Stable parent so the eye's id can't drift with the visible row count.
                     (void)idManager.PushParent(rowID);
-                    const GUI::ID vizID = idManager.AllocateDynamicID("hierViz");
-                    const GUI::ElementState st = guiStateManager.GetCurrentState(vizID);
-                    const bool hovered = (st & GUI::ElementState::Hover) != GUI::ElementState::None;
-                    GUI::IconID icon = GUI::IconID::Invalid;
+                    const interstice::ID vizID = idManager.AllocateDynamicID("hierViz");
+                    const interstice::ElementState st = guiStateManager.GetCurrentState(vizID);
+                    const bool hovered = (st & interstice::ElementState::Hover) != interstice::ElementState::None;
+                    interstice::IconID icon = interstice::IconID::Invalid;
                     switch (agg)
                     {
-                        case VizAgg::On:    icon = hovered ? demo.visibilityOnIcon : GUI::IconID::Invalid; break;
+                        case VizAgg::On:    icon = hovered ? demo.visibilityOnIcon : interstice::IconID::Invalid; break;
                         case VizAgg::Off:   icon = demo.visibilityOffIcon;   break;
                         case VizAgg::Mixed: icon = demo.visibilityMixedIcon; break;
                     }
-                    GUI::Element el{};
+                    interstice::Element el{};
                     el.id       = vizID;
                     el.state    = st;
                     el.styleRef = hierarchyVisibilityStyleRef;
-                    if (icon != GUI::IconID::Invalid)
+                    if (icon != interstice::IconID::Invalid)
                         el.textID = textSystem->RegisterText(vizID, icon, "", el.styleRef, el.state);
                     // Click toggles (hidden→show, otherwise hide); dragging paints that
                     // value over every row crossed (a VIZ-payload drag, not a reorder).
-                    el.eventHandler = [this, nodeId](GUI::ElementEvent&& ev) -> bool
+                    el.eventHandler = [this, nodeId](interstice::ElementEvent&& ev) -> bool
                     {
                         switch (ev.type)
                         {
-                            case GUI::EventType::MouseDown:
+                            case interstice::EventType::MouseDown:
                                 if (!ev.state.LeftPressed()) break;
                                 {
                                     const bool makeVisible = (HierComputeAgg(nodeId) == VizAgg::Off);
@@ -320,12 +320,12 @@ namespace GUI
                                         makeVisible ? 1u : 0u, ev.state.screenPos);
                                 }
                                 return true;
-                            case GUI::EventType::MouseMove:
-                                if ((ev.state.buttons & GUI::MouseButtons::Left) == GUI::MouseButtons::None) break;
+                            case interstice::EventType::MouseMove:
+                                if ((ev.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
                                 guiStateManager.Drag().UpdateFromInput(ev.state);
                                 return guiStateManager.Drag().GetDraggedID() == ev.id;
-                            case GUI::EventType::DragEnter:
-                            case GUI::EventType::DragOver:
+                            case interstice::EventType::DragEnter:
+                            case interstice::EventType::DragOver:
                                 if (ev.state.dragPayloadType != kVizPayloadType) return false;
                                 HierApplyViz(nodeId, ev.state.dragPayloadValue != 0);
                                 return true;
@@ -333,7 +333,7 @@ namespace GUI
                         }
                         return false;
                     };
-                    auto res = elementStorage.Add(std::move(el), GUI::LayoutOverride::Auto().FlexGrow(1));
+                    auto res = elementStorage.Add(std::move(el), interstice::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(res.status);
                     VERIFY(windowRegistry.Add(res.ref));
 
@@ -359,7 +359,7 @@ namespace GUI
             // every row and never scroll.
             VirtualTable(id, state, std::span<VirtualTableColumn>(cols, 2),
                          int(visibleIdx.size()), 0, theme.tableFillStyleRef,
-                         GUI::LayoutOverride::Auto().FlexGrow(1).MinHeight(0), /*showHeaders*/false,
+                         interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0), /*showHeaders*/false,
                          /*cellStyle*/hierarchyVizCellStyleRef);
         };
 
@@ -379,7 +379,7 @@ namespace GUI
         // Resolve a deferred post-drop selection now that VirtualTable has
         // (re)allocated TableState._rowsRangeID for this frame's row count.
         if (pendingSelectFlat >= 0
-            && treeViewState._rowsRangeID != GUI::ID::Invalid())
+            && treeViewState._rowsRangeID != interstice::ID::Invalid())
         {
             const int targetFlat = pendingSelectFlat;
             int newVisIdx = -1;
@@ -387,7 +387,7 @@ namespace GUI
                 if (treeVisibleIdx[i] == targetFlat) { newVisIdx = int(i); break; }
             if (newVisIdx >= 0)
             {
-                const GUI::ID newRowID = idManager.GetSubID(
+                const interstice::ID newRowID = idManager.GetSubID(
                     treeViewState._rowsRangeID,
                     static_cast<uint32_t>(newVisIdx));
                 treeViewState.selectedRowID = newRowID;

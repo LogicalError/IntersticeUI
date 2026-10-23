@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace GUI
+namespace interstice
 {
     // Forward declarations
     class WindowRegistry;

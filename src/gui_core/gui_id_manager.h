@@ -7,11 +7,11 @@
 #include <string_view>
 
 // Uncomment to enable debug ID tracking
-//#define GUI_ID_DEBUG
+//#define INTERSTICE_ID_DEBUG
 
 // ID System
 // Provides static, dynamic, and ranged-based unique identifiers for GUI elements.
-namespace GUI 
+namespace interstice 
 {
     struct ID;
     class IDManager 
@@ -72,7 +72,7 @@ namespace GUI
 
         private: [[nodiscard]] ID AllocateDynamicID(uint64_t hash);
 
-#ifdef SUPPORT_CPP20
+#ifdef INTERSTICE_SUPPORT_CPP20
         // Allocate a dynamic ID automatically using the source location.
         // Will return a different ID for each call site. Will be affected by parent stack.
         public: inline [[nodiscard]] ID AllocateDynamicID(const std::source_location location = std::source_location::current())
@@ -98,7 +98,7 @@ namespace GUI
 
         private: [[nodiscard]] ID AllocateRangedID(uint32_t size, uint64_t hash);
 
-#ifdef SUPPORT_CPP20
+#ifdef INTERSTICE_SUPPORT_CPP20
         // Allocate a ranged ID automatically using the source location.
         // Will return a different ID for each call site. Will be affected by parent stack.
         public: inline [[nodiscard]] ID AllocateRangedID(uint32_t size, const std::source_location location = std::source_location::current())
@@ -172,10 +172,10 @@ namespace GUI
         // Ranged ID tracking
         size_t m_ranged_count = 0;
 
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         std::vector<ID> m_debug_dynamic_ids;
         std::vector<ID> m_debug_ranges;
 #endif
     };
 
-} // namespace GUI
+} // namespace interstice

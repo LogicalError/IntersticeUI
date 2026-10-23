@@ -2,7 +2,7 @@
 
 #include <gui_core/diagnostics/gui_logging.h>
 
-static constexpr GUI::Diagnostics::LogCategory kLogDemo = GUI::Diagnostics::MakeLogCategory("demo");
+static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
 
 //
 // This file is for testing and prototyping various GUI features related to inspector-like panels, such as field layouts, context menus, etc.
@@ -11,7 +11,7 @@ static constexpr GUI::Diagnostics::LogCategory kLogDemo = GUI::Diagnostics::Make
 // the visible list is rebuilt only when the query changes.
 //
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -36,7 +36,7 @@ namespace GUI
         // Menu / Popup example. The trigger sizes to its text — no grow/shrink.
         add("Small Menu", [this]() {
             if (BeginMenu(demo.smallMenuID, "Small Menu",
-                          GUI::LayoutOverride{}.NoGrow().NoShrink()))
+                          interstice::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 ID item1ID = idManager.AllocateDynamicID();
                 ID item2ID = idManager.AllocateDynamicID();
@@ -48,18 +48,18 @@ namespace GUI
                 ID subItem3ID = idManager.AllocateDynamicID();
                 ID subItem4ID = idManager.AllocateDynamicID();
 
-                MenuItem(item1ID, "Item 1", []() { LOG_INFO(kLogDemo, "Item 1 selected"); });
-                MenuItem(item2ID, "Item 2", []() { LOG_INFO(kLogDemo, "Item 2 selected"); });
+                MenuItem(item1ID, "Item 1", []() { INTERSTICE_LOG_INFO(kLogDemo, "Item 1 selected"); });
+                MenuItem(item2ID, "Item 2", []() { INTERSTICE_LOG_INFO(kLogDemo, "Item 2 selected"); });
                 if (BeginMenu(more1ID, "More 1..."))
                 {
-                    MenuItem(subItem1ID, "Sub 1", []() { LOG_INFO(kLogDemo, "Sub 1"); });
-                    MenuItem(subItem2ID, "Sub 2", []() { LOG_INFO(kLogDemo, "Sub 2"); });
+                    MenuItem(subItem1ID, "Sub 1", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 1"); });
+                    MenuItem(subItem2ID, "Sub 2", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 2"); });
                     EndMenu();
                 }
                 if (BeginMenu(more2ID, "More 2..."))
                 {
-                    MenuItem(subItem3ID, "Sub 3", []() { LOG_INFO(kLogDemo, "Sub 3"); });
-                    MenuItem(subItem4ID, "Sub 4", []() { LOG_INFO(kLogDemo, "Sub 4"); });
+                    MenuItem(subItem3ID, "Sub 3", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 3"); });
+                    MenuItem(subItem4ID, "Sub 4", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 4"); });
                     EndMenu();
                 }
                 EndMenu();
@@ -69,14 +69,14 @@ namespace GUI
         // Scroll test: menu with 100 items
         add("Big Menu", [this]() {
             if (BeginMenu(demo.bigMenuID, "Big Menu",
-                          GUI::LayoutOverride{}.NoGrow().NoShrink()))
+                          interstice::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 for (int i = 0; i < 100; i++)
                 {
                     char label[32];
                     snprintf(label, sizeof(label), "Item %d", i + 1);
                     int idx = i;
-                    MenuItem(label, [idx]() { LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
+                    MenuItem(label, [idx]() { INTERSTICE_LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
                 }
                 EndMenu();
             }
@@ -104,7 +104,7 @@ namespace GUI
             Label("Toggle");
             if (Field(demo.toggleValue, demo.toggleValue ? "ON" : "OFF"))
             {
-                LOG_INFO(kLogDemo, "toggle");
+                INTERSTICE_LOG_INFO(kLogDemo, "toggle");
             }
             SetTooltip("Toggle between ON and OFF");
         });
@@ -145,10 +145,10 @@ namespace GUI
             SetTooltip("Single-line text field");
             if (BeginContextMenu())
             {
-                MenuItem("Cut",        "Ctrl+X", []() { LOG_INFO(kLogDemo, "Cut"); });
-                MenuItem("Copy",       "Ctrl+C", []() { LOG_INFO(kLogDemo, "Copy"); });
-                MenuItem("Paste",      "Ctrl+V", []() { LOG_INFO(kLogDemo, "Paste"); });
-                MenuItem("Select All", "Ctrl+A", []() { LOG_INFO(kLogDemo, "Select All"); });
+                MenuItem("Cut",        "Ctrl+X", []() { INTERSTICE_LOG_INFO(kLogDemo, "Cut"); });
+                MenuItem("Copy",       "Ctrl+C", []() { INTERSTICE_LOG_INFO(kLogDemo, "Copy"); });
+                MenuItem("Paste",      "Ctrl+V", []() { INTERSTICE_LOG_INFO(kLogDemo, "Paste"); });
+                MenuItem("Select All", "Ctrl+A", []() { INTERSTICE_LOG_INFO(kLogDemo, "Select All"); });
                 EndContextMenu();
             }
         });
@@ -203,15 +203,15 @@ namespace GUI
 
         add("String List", [this]() {
             Label("String List");
-            Field(demo.reorderStringListID, demo.stringList, GUI::LayoutOverride{}.FlexGrow(1));
+            Field(demo.reorderStringListID, demo.stringList, interstice::LayoutOverride{}.FlexGrow(1));
         });
         add("Float List", [this]() {
             Label("Float List");
-            Field(demo.reorderFloatListID, demo.floatList, GUI::LayoutOverride{}.FlexGrow(1));
+            Field(demo.reorderFloatListID, demo.floatList, interstice::LayoutOverride{}.FlexGrow(1));
         });
         add("Dictionary", [this]() {
             Label("Dictionary");
-            Field(demo.dictionary, GUI::LayoutOverride{}.FlexGrow(1));
+            Field(demo.dictionary, interstice::LayoutOverride{}.FlexGrow(1));
         });
 
         inspectorFilterDirty = true;
@@ -227,9 +227,9 @@ namespace GUI
     {
         // Search box (top of panel).
         BeginHorizontal(idManager.AllocateDynamicID("inspectorSearchRow"),
-                        theme.searchRowStyleRef, GUI::LayoutOverride::Auto().NoShrink());
+                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
         if (SearchField(inspectorSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
-                        GUI::LayoutOverride{}.FlexGrow(1)))
+                        interstice::LayoutOverride{}.FlexGrow(1)))
             inspectorFilterDirty = true;
         EndHorizontal();
 

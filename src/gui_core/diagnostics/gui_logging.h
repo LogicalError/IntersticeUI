@@ -20,7 +20,7 @@
 
 #include <gui_core/gui_hash.h>
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     enum class LogSeverity : uint8_t { Trace = 0, Debug, Info, Warning, Error, Critical };
 
@@ -157,9 +157,9 @@ namespace GUI::Diagnostics
     }
 }
 
-#define LOG_TRACE(category, ...)    ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Trace,    __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_DEBUG(category, ...)    ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Debug,    __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_INFO(category, ...)     ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Info,     __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_WARNING(category, ...)  ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Warning,  __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_ERROR(category, ...)    ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Error,    __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_CRITICAL(category, ...) ::GUI::Diagnostics::Log(category, ::GUI::Diagnostics::LogSeverity::Critical, __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_TRACE(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Trace,    __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_DEBUG(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Debug,    __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_INFO(category, ...)     ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Info,     __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_WARNING(category, ...)  ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Warning,  __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_ERROR(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Error,    __FILE__, __LINE__, __VA_ARGS__)
+#define INTERSTICE_LOG_CRITICAL(category, ...) ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Critical, __FILE__, __LINE__, __VA_ARGS__)

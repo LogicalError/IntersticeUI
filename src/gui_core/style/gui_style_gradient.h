@@ -6,7 +6,7 @@
 #include <cmath>
 #include <array>
 
-namespace GUI
+namespace interstice
 {
     // ------------------------------------------------------------------------
     // Color and Gradient Types
@@ -243,4 +243,4 @@ namespace GUI
         }
     };
 
-}//namespace GUI
+}//namespace interstice

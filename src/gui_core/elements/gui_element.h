@@ -16,7 +16,7 @@
 #include <functional>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class GUIRenderer;
     class ElementStorage;
@@ -190,4 +190,4 @@ namespace GUI
         IntRect            afterDrawSnappedRect        = {};  // snapped pixel rect; custom-draw boxes snap to it
     };
 
-} // namespace GUI
+} // namespace interstice

@@ -8,7 +8,7 @@
 #include <chrono>
 #include <memory>
 
-namespace GUI
+namespace interstice
 {
     bool TextEditorUsesKey(const InputState& state, bool readOnly)
     {
@@ -343,7 +343,7 @@ namespace GUI
                     break;
 
                 case EventType::MouseMove:
-                    if ((event.state.buttons & GUI::MouseButtons::Left) != GUI::MouseButtons::None)
+                    if ((event.state.buttons & interstice::MouseButtons::Left) != interstice::MouseButtons::None)
                     {
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         return guiStateManager.Drag().GetDraggedID() == event.id;

@@ -8,7 +8,7 @@
 #include <gui_core/windows/gui_window_registry.h>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 
     class ElementStorageTest : public ::testing::Test

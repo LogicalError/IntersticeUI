@@ -21,7 +21,7 @@
 #include <string_view>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class GUIApplication;
 
@@ -112,4 +112,4 @@ namespace GUI
     // EmitFloatingToolbarWindows is a GUIApplication member (it needs the protected
     // BeginWindow / EndWindow): `app.EmitFloatingToolbarWindows(items, opts)`.
 
-} // namespace GUI
+} // namespace interstice

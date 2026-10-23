@@ -13,7 +13,7 @@
 #include <optional>
 #include <algorithm>
 
-namespace GUI
+namespace interstice
 {
     // ---------------------------------------------------------------------------
     // Label/control resolution helpers
@@ -202,7 +202,7 @@ namespace GUI
         else                   { out += char(0xF0 | (cp >> 18)); out += char(0x80 | ((cp >> 12) & 0x3F)); out += char(0x80 | ((cp >> 6) & 0x3F)); out += char(0x80 | (cp & 0x3F)); }
     }
 
-    void InputManager::OnKeyboard(GUI::ID /*windowId*/, KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
+    void InputManager::OnKeyboard(interstice::ID /*windowId*/, KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
     {
         // KeyChar carries a Unicode codepoint in `key`, not a KeyCode.
         if (action == KeyAction::KeyChar)
@@ -225,7 +225,7 @@ namespace GUI
         m_recordedEvents.push_back({ type, std::move(state) });
     }
 
-    void InputManager::OnMouseMove(GUI::ID /*windowId*/, GUI::int2 screenPos, GUI::MouseButtons /*buttons*/, KeyModifier modifiers)
+    void InputManager::OnMouseMove(interstice::ID /*windowId*/, interstice::int2 screenPos, interstice::MouseButtons /*buttons*/, KeyModifier modifiers)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -239,7 +239,7 @@ namespace GUI
         m_recordedEvents.push_back({ EventType::MouseMove, std::move(state) });
     }
 
-    void InputManager::OnMouseButton(GUI::ID /*windowId*/, GUI::int2 screenPos, GUI::MouseButtons buttons, KeyModifier modifiers, MouseAction action)
+    void InputManager::OnMouseButton(interstice::ID /*windowId*/, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -255,7 +255,7 @@ namespace GUI
         m_recordedEvents.push_back({ type, std::move(state) });
     }
 
-    void InputManager::OnMouseScroll(GUI::ID windowId, GUI::int2 screenPos, GUI::float2 scrollOffset, KeyModifier modifiers)
+    void InputManager::OnMouseScroll(interstice::ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -667,4 +667,4 @@ namespace GUI
         m_recordedEvents.clear();
     }
 
-} // namespace GUI
+} // namespace interstice

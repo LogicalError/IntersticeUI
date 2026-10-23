@@ -19,12 +19,12 @@
 #include <stdio.h>
 
 //
-// Hierarchical profiler panel: the per-frame GUI::Diagnostics timing tree as a
+// Hierarchical profiler panel: the per-frame interstice::Diagnostics timing tree as a
 // tree table plus an aggregated flame graph. Both share one selection (the
 // scope's call-path hash). Double-clicking a scope jumps to its source line.
 //
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -92,12 +92,12 @@ namespace GUI
     static std::vector<ProfRow>               rows;
     static std::unordered_map<uint64_t, bool> openState;
     static std::vector<int>                   visibleIdx;
-    static GUI::TableState                    tableState;
-    static GUI::ID                            prevSelectedRow = GUI::ID::Invalid();
+    static interstice::TableState                    tableState;
+    static interstice::ID                            prevSelectedRow = interstice::ID::Invalid();
     static uint64_t                           prevSelectedKey = 0;
-	static GUI::ID                            profilerTableID = GUI::ID::Invalid();
-    static GUI::ID                            flameRootID = GUI::ID::Invalid();
-	static GUI::ID                            flameSizerID = GUI::ID::Invalid();
+	static interstice::ID                            profilerTableID = interstice::ID::Invalid();
+    static interstice::ID                            flameRootID = interstice::ID::Invalid();
+	static interstice::ID                            flameSizerID = interstice::ID::Invalid();
 
     // Flame-bar styles (background-colored boxes). Registered on first use after
     // the panel is enabled; a theme reload clears every style and re-enables it.
@@ -109,7 +109,7 @@ namespace GUI
     static int                           flameHeight = 150;   // resizable (CSS px); content clipped, not scaled
 
     // Frame-graph (per-frame CPU build-time history) state.
-    static GUI::ID                       frameGraphID = GUI::ID::Invalid();
+    static interstice::ID                       frameGraphID = interstice::ID::Invalid();
     static bool                          frameGraphStylesInit = false;
     static StyleRef                      frameGraphBgStyle{};         // container background
     static VisualColorStyleIndex         frameGraphBarUnderStyle{};   // build <= budget (green)
@@ -126,7 +126,7 @@ namespace GUI
         { 100.00f, "100 ms"  }, { 200.00f, "200 ms" },
     };
     static constexpr int kFrameRefCount = int(sizeof(kFrameRefs) / sizeof(kFrameRefs[0]));
-    static GUI::ID frameGraphLabelIDs[kFrameRefCount] = {};
+    static interstice::ID frameGraphLabelIDs[kFrameRefCount] = {};
 
     void Application::EnableProfilerTreePanel()
     {
@@ -149,8 +149,8 @@ namespace GUI
         // Double-clicking a row jumps to the scope's source line. (The chevron
         // still toggles open/close on single click.)
         if (!tableState.onRowDoubleClick)
-            tableState.onRowDoubleClick = [](GUI::ID rowID) {
-                if (rowID.GetMode() != GUI::IDMode::SubRange) return;
+            tableState.onRowDoubleClick = [](interstice::ID rowID) {
+                if (rowID.GetMode() != interstice::IDMode::SubRange) return;
                 const int vis = int(rowID.value.subRangeParts.index);
                 if (vis < 0 || vis >= int(visibleIdx.size())) return;
                 const ProfRow& r = rows[size_t(visibleIdx[size_t(vis)])];
@@ -200,7 +200,7 @@ namespace GUI
         // changed since we last forced it, the user clicked a row — adopt it as
         // the shared selection. (Flame clicks set s_selectedKey directly.)
         if (tableState.selectedRowID != prevSelectedRow
-            && tableState.selectedRowID.GetMode() == GUI::IDMode::SubRange)
+            && tableState.selectedRowID.GetMode() == interstice::IDMode::SubRange)
         {
             const int vis = int(tableState.selectedRowID.value.subRangeParts.index);
             if (vis >= 0 && vis < int(visibleIdx.size()))
@@ -228,9 +228,9 @@ namespace GUI
             if (!frameGraphStylesInit)
             {
                 Style bg;
-                bg.SetOverflow(GUI::Overflow::Hidden);
-                bg.padding = GUI::BoxEdges(0);   // inner height == kFrameGraphHeight
-                bg.margin  = GUI::BoxEdges(2,0,4,0);
+                bg.SetOverflow(interstice::Overflow::Hidden);
+                bg.padding = interstice::BoxEdges(0);   // inner height == kFrameGraphHeight
+                bg.margin  = interstice::BoxEdges(2,0,4,0);
                 for (int i = 0; i < Style::kStateCount; ++i)
                     bg.states[i].backgroundColor = ColorStyle::Create(theme.GetColor("--bg-view", color4f{ 0.12f, 0.12f, 0.13f, 1.0f }));
                 frameGraphBgStyle       = styleManager.Register(bg);
@@ -265,7 +265,7 @@ namespace GUI
 
             // Keep reference lines that fit, top-down, dropping any that would
             // crowd the previous one so labels stay legible at every scale.
-            struct Grid { float ms; bool budget; GUI::TextID tid; int w; int h; };
+            struct Grid { float ms; bool budget; interstice::TextID tid; int w; int h; };
             std::vector<Grid> grids;
             const int minGap = styleManager.Px(13);
             int lastY = -minGap;
@@ -274,21 +274,21 @@ namespace GUI
                 if (kFrameRefs[i].ms > scaleMax + 0.01f) continue;
                 const int y = yAt(kFrameRefs[i].ms);
                 if (!grids.empty() && (y - lastY) < minGap) continue;
-                const GUI::TextID tid = textSystem->RegisterText(frameGraphLabelIDs[i], kFrameRefs[i].label,
-                                                                 theme.staticTextStyleRef, GUI::ElementState::None);
+                const interstice::TextID tid = textSystem->RegisterText(frameGraphLabelIDs[i], kFrameRefs[i].label,
+                                                                 theme.staticTextStyleRef, interstice::ElementState::None);
                 const auto m = textSystem->GetTextMeasurement(tid);
                 grids.push_back({ kFrameRefs[i].ms, kFrameRefs[i].ms == kFrameBudgetMs, tid, m.maxWidth, m.minHeight });
                 lastY = y;
             }
 
-            GUI::Element graphEl{};
+            interstice::Element graphEl{};
             graphEl.id       = frameGraphID;
             graphEl.styleRef = frameGraphBgStyle;
             const auto graphRef = RegisterElement(std::move(graphEl),
                                                   LayoutOverride{}.Height(styleManager.Px(kFrameGraphHeight)).NoShrink());
 
             VERIFY(elementStorage.AddCustomDraw(graphRef,
-                [this, hist, grids, scaleMax](GUI::CustomDrawContext& ctx)
+                [this, hist, grids, scaleMax](interstice::CustomDrawContext& ctx)
                 {
                     const IntRect inner = ctx.ElementInnerRect();   // local space, origin (0,0) top-left
                     const int W = inner.w, H = inner.h;
@@ -315,14 +315,14 @@ namespace GUI
                     for (int i = 0; i < N; ++i)
                         pts[size_t(i)] = { int((float(i) + 0.5f) / float(N) * float(W) + 0.5f), yOf(hist[size_t(i)].totalMs) };
                     ctx.RenderPolyline(std::span<const int2>(pts.data(), pts.size()), false,
-                                       GUI::LineStyle{ .colorStyleIndex = theme.lineGrayStyle, .lineWidth = styleManager.Px(1.0f) });
+                                       interstice::LineStyle{ .colorStyleIndex = theme.lineGrayStyle, .lineWidth = styleManager.Px(1.0f) });
 
                     // Reference lines + ms labels; the 60fps budget line is brighter.
                     for (const auto& g : grids)
                     {
                         const int y = yOf(g.ms);
                         ctx.RenderLine({ 0, y }, { W, y },
-                                       GUI::LineStyle{ .colorStyleIndex = g.budget ? theme.lineYellowStyle : theme.lineGrayStyle,
+                                       interstice::LineStyle{ .colorStyleIndex = g.budget ? theme.lineYellowStyle : theme.lineGrayStyle,
                                                        .lineWidth = styleManager.Px(1.0f), .dashSize = styleManager.Px(4.0f) });
                         const int ly = (y - g.h >= 0) ? (y - g.h) : (y + styleManager.Px(1));
                         ctx.RenderText(g.tid, IntRect{ .position = { styleManager.Px(3), ly }, .size = { g.w + styleManager.Px(2), g.h } });
@@ -343,9 +343,9 @@ namespace GUI
                 };
                 auto makeBox = [&](color4f bg) -> StyleRef {
                     Style st;
-                    st.SetOverflow(GUI::Overflow::Hidden);
-                    st.padding = GUI::BoxEdges(2);
-                    st.margin  = GUI::BoxEdges(0);
+                    st.SetOverflow(interstice::Overflow::Hidden);
+                    st.padding = interstice::BoxEdges(2);
+                    st.margin  = interstice::BoxEdges(0);
                     for (int i = 0; i < Style::kStateCount; ++i)
                         st.states[i].backgroundColor = ColorStyle::Create(bg);
                     return styleManager.Register(st);
@@ -357,8 +357,8 @@ namespace GUI
                 // Container that clips the icicle (overflow:hidden) so shrinking
                 // the area clips the bottom rows rather than scaling them.
                 Style clip;
-                clip.SetOverflow(GUI::Overflow::Hidden);
-                clip.layoutData.flex.direction = GUI::FlexDirection::Column;
+                clip.SetOverflow(interstice::Overflow::Hidden);
+                clip.layoutData.flex.direction = interstice::FlexDirection::Column;
                 flameClipStyle = styleManager.Register(clip);
 
                 flameStylesInit = true;
@@ -390,13 +390,13 @@ namespace GUI
 
             // A vertical canvas of per-depth rows; its custom draw captures the
             // inner width for next frame's pixel layout.
-            GUI::Element flameRoot{};
+            interstice::Element flameRoot{};
             flameRoot.id       = flameRootID;
             flameRoot.styleRef = flameClipStyle;   // column + overflow:hidden → clips the bottom, no scaling
             const auto flameRef = RegisterElement(std::move(flameRoot),
                                                   LayoutOverride{}.Height(styleManager.Px(flameHeight)).FlexShrink(1));
             VERIFY(elementStorage.AddCustomDraw(flameRef,
-                [](GUI::CustomDrawContext& ctx) { s_flameWidth = ctx.ElementInnerRect().w; }));
+                [](interstice::CustomDrawContext& ctx) { s_flameWidth = ctx.ElementInnerRect().w; }));
 
             VERIFY(elementStorage.BeginChildren());
             // Variable bar/label count: isolate the flame's internal ids so the
@@ -416,7 +416,7 @@ namespace GUI
 
                     if (leftPx > cursorPx)
                     {
-                        GUI::Element spacer{};
+                        interstice::Element spacer{};
                         spacer.id       = idManager.AllocateDynamicID();
                         spacer.styleRef = theme.emptyHorzStyleRef;
                         RegisterElement(std::move(spacer),
@@ -426,10 +426,10 @@ namespace GUI
                     const uint64_t key  = b.key;
                     const char*    file = b.file;
                     const int      line = b.line;
-                    GUI::Element box{};
+                    interstice::Element box{};
                     box.id           = idManager.AllocateDynamicID();
-                    box.eventHandler = [key, file, line](GUI::ElementEvent&& e) -> bool {
-                        if (e.type == GUI::EventType::MouseDown && e.state.LeftPressed())
+                    box.eventHandler = [key, file, line](interstice::ElementEvent&& e) -> bool {
+                        if (e.type == interstice::EventType::MouseDown && e.state.LeftPressed())
                         {
                             if (s_selectedKey == key) OpenSourceFile(file, line);             // re-click → jump
                             else { s_selectedKey = key; s_flameSelectPending = true; }    // first click → select
@@ -456,13 +456,13 @@ namespace GUI
 
             // Draggable divider below the flame: drag it to resize the flame's
             // height. The icicle is clipped (overflow:hidden), not scaled.
-            GUI::Element flameSizer{};
+            interstice::Element flameSizer{};
             flameSizer.id           = flameSizerID;
             flameSizer.styleRef     = theme.dockSizerVertStyleRef;
             flameSizer.state        = guiStateManager.GetCurrentState(flameSizer.id);
             const float uiScale = styleManager.GetUIScale();
             const int   rowUnits = int(std::ceil(float(rowH) / uiScale));   // rowH is pixels; flameHeight CSS px
-            flameSizer.eventHandler = GUI::MakeVerticalSizerHandler(guiStateManager, flameHeight, rowUnits, 40 * rowUnits,
+            flameSizer.eventHandler = interstice::MakeVerticalSizerHandler(guiStateManager, flameHeight, rowUnits, 40 * rowUnits,
                                                                     nullptr, nullptr, false, uiScale);
             RegisterElement(std::move(flameSizer), LayoutOverride::FixedHeight(styleManager.Px(5)));
         }
@@ -528,7 +528,7 @@ namespace GUI
         // Only on change, so the table's own scroll is never fought.
         if (s_selectedKey != prevSelectedKey)
         {
-            if (s_selectedKey != 0 && tableState._rowsRangeID != GUI::ID::Invalid())
+            if (s_selectedKey != 0 && tableState._rowsRangeID != interstice::ID::Invalid())
             {
                 int vis = -1;
                 for (size_t i = 0; i < visibleIdx.size(); ++i)
@@ -552,8 +552,8 @@ namespace GUI
                         bool anyChange = false;
                         for (int sIdx = 0; sIdx < int(tableState._sectionCount); ++sIdx)
                         {
-                            const GUI::ID sid = tableState.SectionBodyID(sIdx);
-                            if (sid == GUI::ID::Invalid()) continue;
+                            const interstice::ID sid = tableState.SectionBodyID(sIdx);
+                            if (sid == interstice::ID::Invalid()) continue;
                             auto       handle = scroll.GetOrCreateScrollOffsetHandle(sid);
                             const int2 cur    = scroll.GetScrollOffset(handle);
                             int newY = cur.y;
@@ -562,7 +562,7 @@ namespace GUI
                             if (newY != cur.y) { scroll.SetScrollOffset(handle, int2{ cur.x, newY }); anyChange = true; }
                             writtenY = newY;
                         }
-                        if (anyChange && tableState._bodyID != GUI::ID::Invalid())
+                        if (anyChange && tableState._bodyID != interstice::ID::Invalid())
                         {
                             auto bh = scroll.GetOrCreateScrollOffsetHandle(tableState._bodyID);
                             if (scroll.GetScrollOffset(bh).y != writtenY)

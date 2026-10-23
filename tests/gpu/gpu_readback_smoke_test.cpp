@@ -24,46 +24,46 @@ namespace
     class GpuReadbackTest : public GpuTest
     {
     protected:
-        static constexpr GUI::int2 kSize{ 320, 240 };
+        static constexpr interstice::int2 kSize{ 320, 240 };
 
-        GUI::VisualColorStyleIndex solidColor{};
-        GUI::VisualColorStyleIndex gradientColor{};
+        interstice::VisualColorStyleIndex solidColor{};
+        interstice::VisualColorStyleIndex gradientColor{};
 
         std::vector<uint8_t> framePixels = std::vector<uint8_t>(size_t(kSize.x) * kSize.y * 4);
 
-        Vulkan::VulkanWindowContext* CreateReadbackWindow() { return CreateImageWindowContext(kSize); }
+        interstice::vulkan::VulkanWindowContext* CreateReadbackWindow() { return CreateImageWindowContext(kSize); }
 
         void RegisterColorStyles()
         {
             solidColor = styleManager.RegisterColorStyle(
-                GUI::ColorStyle::Create(GUI::color4b{ 255, 255, 255, 255 }));
+                interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
             gradientColor = styleManager.RegisterColorStyle(
-                GUI::ColorStyle::Create(GUI::color4b{ 255, 0, 0, 255 },
-                                        GUI::color4b{ 0, 255, 0, 255 },
-                                        GUI::color4b{ 0, 0, 255, 255 },
-                                        GUI::color4b{ 255, 0, 255, 255 },
-                                        GUI::ColorType::InterpolatedBox));
+                interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 },
+                                        interstice::color4b{ 0, 255, 0, 255 },
+                                        interstice::color4b{ 0, 0, 255, 255 },
+                                        interstice::color4b{ 255, 0, 255, 255 },
+                                        interstice::ColorType::InterpolatedBox));
         }
 
         // Render one frame whose primitives are emitted by `emit`, then leave
         // the result in framePixels.
         template <typename EmitFn>
-        void RenderFrame(Vulkan::VulkanWindowContext* ctx, EmitFn&& emit)
+        void RenderFrame(interstice::vulkan::VulkanWindowContext* ctx, EmitFn&& emit)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            GUI::GUIRenderer* r = graphicsContext->guiRenderer;
+            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
                 emit(r);
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, GUI::IntRect{ 0, 0, kSize.x, kSize.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, kSize.x, kSize.y }, false);
             ASSERT_TRUE(ctx->ReadPixels(framePixels));
         }
 
         // Raw 32-bit pixel of the last read frame (BGRA8, tightly packed).
-        uint32_t PixelAt(const Vulkan::VulkanWindowContext*, int x, int y) const
+        uint32_t PixelAt(const interstice::vulkan::VulkanWindowContext*, int x, int y) const
         {
             const size_t off = (size_t(y) * kSize.x + size_t(x)) * 4;
             uint32_t v = 0;
@@ -71,7 +71,7 @@ namespace
             return v;
         }
 
-        static constexpr GUI::IntRect kFullClip{ 0, 0, kSize.x, kSize.y };
+        static constexpr interstice::IntRect kFullClip{ 0, 0, kSize.x, kSize.y };
     };
 
     TEST_F(GpuReadbackTest, QuadFillChangesCoveredPixels)
@@ -82,8 +82,8 @@ namespace
         RegisterColorStyles();
 
         // Solid quad over the left half; the right half stays background.
-        RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-            r->RenderQuad(GUI::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor);
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor);
         });
 
         const uint32_t inside  = PixelAt(ctx, kSize.x / 4,     kSize.y / 2);
@@ -99,8 +99,8 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
-        RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-            r->RenderDot(GUI::float2{ 16, 16 }, kFullClip, 8.0f, GUI::color4f{ 1, 1, 1, 1 });
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderDot(interstice::float2{ 16, 16 }, kFullClip, 8.0f, interstice::color4f{ 1, 1, 1, 1 });
         });
 
         const uint32_t atDot     = PixelAt(ctx, 16, 16);
@@ -118,8 +118,8 @@ namespace
 
         // Full-frame 4-corner interpolated quad: left third and right third
         // sample different ends of the gradient.
-        RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-            r->RenderQuad(GUI::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, gradientColor);
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, gradientColor);
         });
 
         const uint32_t left  = PixelAt(ctx, kSize.x / 6,     kSize.y / 2);
@@ -135,16 +135,16 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
-        GUI::GUIRenderer* r = graphicsContext->guiRenderer;
+        interstice::GUIRenderer* r = graphicsContext->guiRenderer;
         r->ClearScopeCaptures();
-        const GUI::ID scope = GUI::ID::Invalid(); // any key for the capture map
+        const interstice::ID scope = interstice::ID::Invalid(); // any key for the capture map
 
         // Frame 1: capture a quad at the left edge (x = 0..40); EndScopeCapture
         // also draws it into the window this frame.
-        RenderFrame(ctx, [&](GUI::GUIRenderer* rr) {
+        RenderFrame(ctx, [&](interstice::GUIRenderer* rr) {
             rr->BeginScopeCapture(scope);
-            rr->SetTransform(GUI::float3x2::Identity());
-            rr->RenderQuad(GUI::IntRect{ 0, 0, 40, kSize.y }, kFullClip, solidColor);
+            rr->SetTransform(interstice::float3x2::Identity());
+            rr->RenderQuad(interstice::IntRect{ 0, 0, 40, kSize.y }, kFullClip, solidColor);
             rr->EndScopeCapture(scope);
         });
         const uint32_t bg = PixelAt(ctx, kSize.x - 20, kSize.y / 2);
@@ -152,8 +152,8 @@ namespace
 
         // Frame 2: replay the cached quad translated right by 200px. It must now
         // cover x ~200..240 and have left the original left edge as background.
-        RenderFrame(ctx, [&](GUI::GUIRenderer* rr) {
-            EXPECT_TRUE(rr->ReplayScopeCapture(scope, GUI::int2{ 200, 0 }));
+        RenderFrame(ctx, [&](interstice::GUIRenderer* rr) {
+            EXPECT_TRUE(rr->ReplayScopeCapture(scope, interstice::int2{ 200, 0 }));
         });
         EXPECT_NE(PixelAt(ctx, 220, kSize.y / 2), bg) << "replayed quad appears at the translated position";
         EXPECT_EQ(PixelAt(ctx, 20,  kSize.y / 2), bg) << "the original position is background again";
@@ -168,9 +168,9 @@ namespace
 
         // Thick horizontal line at y=40; a pixel on the path differs from one
         // well below it.
-        RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-            r->RenderLine(GUI::int2{ 16, 40 }, GUI::int2{ kSize.x - 16, 40 }, kFullClip,
-                          GUI::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 4.0f });
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderLine(interstice::int2{ 16, 40 }, interstice::int2{ kSize.x - 16, 40 }, kFullClip,
+                          interstice::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 4.0f });
         });
 
         const uint32_t onLine  = PixelAt(ctx, kSize.x / 2, 40);
@@ -184,7 +184,7 @@ namespace
     class GpuTextAtlasTest : public GpuReadbackTest
     {
     protected:
-        Vulkan::VulkanTextAtlasManager atlas;
+        interstice::vulkan::VulkanTextAtlasManager atlas;
 
         void SetUp() override
         {
@@ -193,7 +193,7 @@ namespace
             ASSERT_TRUE(atlas.Initialize(graphicsContext, graphicsContext->GetImageSet()));
         }
 
-        static std::vector<uint8_t> Filled(GUI::uint2 size, uint8_t value)
+        static std::vector<uint8_t> Filled(interstice::uint2 size, uint8_t value)
         {
             return std::vector<uint8_t>(size_t(size.x) * size.y * 4, value);
         }
@@ -203,12 +203,12 @@ namespace
     // read level 0, so atlas pages carry no mip chain.
     TEST_F(GpuTextAtlasTest, PagesHaveNoMipChain)
     {
-        const GUI::uint2 size{ 1024, 1024 };
+        const interstice::uint2 size{ 1024, 1024 };
         const auto pixels = Filled(size, 255);
-        const GUI::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
-        ASSERT_NE(page, GUI::TextureIndex::Invalid);
+        const interstice::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
+        ASSERT_NE(page, interstice::TextureIndex::Invalid);
 
-        auto* image = static_cast<Vulkan::VulkanImage*>(atlas.fontTextures[uint32_t(page) - 1].image);
+        auto* image = static_cast<interstice::vulkan::VulkanImage*>(atlas.fontTextures[uint32_t(page) - 1].image);
         VmaAllocationInfo info{};
         vmaGetAllocationInfo(vk->deviceContext.allocator, image->allocation, &info);
         EXPECT_LT(info.size, VkDeviceSize(size.x) * size.y * 4 * 6 / 5)
@@ -219,10 +219,10 @@ namespace
     // next frame. Holding the queue lock proves it doesn't submit on its own.
     TEST_F(GpuTextAtlasTest, UpdatesDoNotWaitForTheGpu)
     {
-        const GUI::uint2 size{ 256, 256 };
+        const interstice::uint2 size{ 256, 256 };
         const auto pixels = Filled(size, 255);
-        const GUI::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
-        ASSERT_NE(page, GUI::TextureIndex::Invalid);
+        const interstice::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
+        ASSERT_NE(page, interstice::TextureIndex::Invalid);
 
         std::atomic<bool> updated = false;
         std::thread updater;
@@ -244,23 +244,23 @@ namespace
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
-        const GUI::uint2 size{ 64, 64 };
+        const interstice::uint2 size{ 64, 64 };
         const auto black = Filled(size, 0);
         const auto white = Filled(size, 255);
-        const GUI::TextureIndex page = atlas.CreateTexture(black.data(), size, 4);
+        const interstice::TextureIndex page = atlas.CreateTexture(black.data(), size, 4);
         atlas.UpdateTexture(page, white.data(), size);
-        const GUI::ImageIndex imageIndex = atlas.GetImageIndex(page);
+        const interstice::ImageIndex imageIndex = atlas.GetImageIndex(page);
         atlas.SyncTextureIndices();
-        const GUI::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
-            GUI::ColorStyle::Create(GUI::color4b{ 255, 255, 255, 255 }, GUI::color4b{ 255, 255, 255, 255 },
-                                    GUI::ColorType::StretchedTexture));
+        const interstice::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
+            interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 },
+                                    interstice::ColorType::StretchedTexture));
         sink.Clear();
 
         for (int frame = 0; frame < 2; ++frame)
         {
             graphicsContext->BeginFrame();
-            RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-                r->RenderQuad(GUI::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
+            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+                r->RenderQuad(interstice::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
             });
         }
 
@@ -274,16 +274,16 @@ namespace
     // upload (and its mipmaps) is recorded into the next frame.
     TEST_F(GpuReadbackTest, ImageUploadsDoNotWaitForTheGpu)
     {
-        const GUI::uint2 size{ 256, 256 };
+        const interstice::uint2 size{ 256, 256 };
         std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4, 255);
 
-        std::atomic<GUI::Image*> image = nullptr;
+        std::atomic<interstice::Image*> image = nullptr;
         std::thread creator;
         {
             auto queueLock = vk->deviceContext.LockQueue();
             creator = std::thread([&] {
-                image = graphicsContext->CreateImage(pixels.data(), size, GUI::ImageFormat::R8G8B8A8,
-                                                     GUI::Sampler::LinearRepeat, true);
+                image = graphicsContext->CreateImage(pixels.data(), size, interstice::ImageFormat::R8G8B8A8,
+                                                     interstice::Sampler::LinearRepeat, true);
             });
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
             EXPECT_NE(image.load(), nullptr) << "creating the image waited on the queue";
@@ -301,29 +301,29 @@ namespace
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
-        const GUI::uint2 size{ 64, 64 };
+        const interstice::uint2 size{ 64, 64 };
         std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4, 255);
-        GUI::Image* image = graphicsContext->CreateImage(pixels.data(), size, GUI::ImageFormat::R8G8B8A8,
-                                                         GUI::Sampler::LinearRepeat, true);
+        interstice::Image* image = graphicsContext->CreateImage(pixels.data(), size, interstice::ImageFormat::R8G8B8A8,
+                                                         interstice::Sampler::LinearRepeat, true);
         ASSERT_NE(image, nullptr);
-        const GUI::ImageIndex imageIndex = graphicsContext->RegisterImage(image);
-        const GUI::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
-            GUI::ColorStyle::Create(GUI::color4b{ 255, 255, 255, 255 }, GUI::color4b{ 255, 255, 255, 255 },
-                                    GUI::ColorType::StretchedTexture));
+        const interstice::ImageIndex imageIndex = graphicsContext->RegisterImage(image);
+        const interstice::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
+            interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 },
+                                    interstice::ColorType::StretchedTexture));
         sink.Clear();
 
         for (int frame = 0; frame < 2; ++frame)
         {
             graphicsContext->BeginFrame();
-            RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-                r->RenderQuad(GUI::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
+            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+                r->RenderQuad(interstice::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
             });
         }
 
         EXPECT_NE(PixelAt(ctx, 80, 80), PixelAt(ctx, 200, 200)) << "the image's pixels never reached the screen";
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
         graphicsContext->UnregisterImage(imageIndex);
-        vk->deviceContext.DestroyImageAtEnd(image, GUI::DeviceScope::Frame);
+        vk->deviceContext.DestroyImageAtEnd(image, interstice::DeviceScope::Frame);
     }
 
     // ---- Borders under a fractional scale (HiDPI, node-view zoom) ----
@@ -339,22 +339,22 @@ namespace
 
         // Shaped like a node: rounded box with a 1-unit border, and a header just
         // inside it with a rounded top and a bottom separator.
-        GUI::Style nodeStyle{};
-        nodeStyle.borderWidths = GUI::BoxEdges(1);
-        nodeStyle.borderRadius = GUI::BoxCorners(6);
-        GUI::Style headerStyle{};
-        headerStyle.borderWidths = GUI::BoxEdges(0);
+        interstice::Style nodeStyle{};
+        nodeStyle.borderWidths = interstice::BoxEdges(1);
+        nodeStyle.borderRadius = interstice::BoxCorners(6);
+        interstice::Style headerStyle{};
+        headerStyle.borderWidths = interstice::BoxEdges(0);
         headerStyle.borderWidths.bottom = 1;
-        headerStyle.borderRadius = GUI::BoxCorners(5, 5, 0, 0);
-        for (int i = 0; i < GUI::Style::kStateCount; ++i)
+        headerStyle.borderRadius = interstice::BoxCorners(5, 5, 0, 0);
+        for (int i = 0; i < interstice::Style::kStateCount; ++i)
         {
-            nodeStyle.states[i].backgroundColor = GUI::ColorStyle::Create(GUI::color4b{ 0, 0, 0, 255 });
-            nodeStyle.states[i].SetBorderColor(GUI::ColorStyle::Create(GUI::color4b{ 255, 255, 255, 255 }));
-            headerStyle.states[i].backgroundColor = GUI::ColorStyle::Create(GUI::color4b{ 255, 0, 0, 255 });
-            headerStyle.states[i].SetBorderColor(GUI::ColorStyle::Create(GUI::color4b{ 0, 0, 255, 255 }));
+            nodeStyle.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 0, 0, 0, 255 });
+            nodeStyle.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
+            headerStyle.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 });
+            headerStyle.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 0, 0, 255, 255 }));
         }
-        const GUI::VisualBoxStyleIndex node   = styleManager.Register(nodeStyle).visualBoxStyleIndex;
-        const GUI::VisualBoxStyleIndex header = styleManager.Register(headerStyle).visualBoxStyleIndex;
+        const interstice::VisualBoxStyleIndex node   = styleManager.Register(nodeStyle).visualBoxStyleIndex;
+        const interstice::VisualBoxStyleIndex header = styleManager.Register(headerStyle).visualBoxStyleIndex;
 
         // Pan offsets in fractions of a unit put the edges at every sub-pixel phase.
         constexpr int kCases = 6;
@@ -364,17 +364,17 @@ namespace
         {
             const float pan = float(c) / float(kCases);
             // Snapped the way the render pass does: the node absolutely, the header to the node.
-            auto toPx = [&](GUI::IntRect r) {
-                return GUI::float4{ (r.x + pan) * kScale, (r.y + pan) * kScale,
+            auto toPx = [&](interstice::IntRect r) {
+                return interstice::float4{ (r.x + pan) * kScale, (r.y + pan) * kScale,
                                     (r.x + r.w + pan) * kScale, (r.y + r.h + pan) * kScale };
             };
-            const GUI::IntRect nodeRect{ kX, kY, kW, kH }, headerRect{ kX + 1, kY + 1, kW - 2, 14 };
-            const GUI::IntRect nodeSnapped   = GUI::SnapAbsolute(toPx(nodeRect));
-            const GUI::IntRect headerSnapped = GUI::SnapToParent(toPx(nodeRect), nodeSnapped, toPx(headerRect));
-            RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-                r->SetTransform(GUI::float3x2::Scale(kScale) * GUI::float3x2::Translate(pan, pan));
-                r->RenderBox(nodeRect,   kFullClip, node,   GUI::VisualColorStyleIndex{}, GUI::ImageIndex::Invalid, nodeSnapped);
-                r->RenderBox(headerRect, kFullClip, header, GUI::VisualColorStyleIndex{}, GUI::ImageIndex::Invalid, headerSnapped);
+            const interstice::IntRect nodeRect{ kX, kY, kW, kH }, headerRect{ kX + 1, kY + 1, kW - 2, 14 };
+            const interstice::IntRect nodeSnapped   = interstice::SnapAbsolute(toPx(nodeRect));
+            const interstice::IntRect headerSnapped = interstice::SnapToParent(toPx(nodeRect), nodeSnapped, toPx(headerRect));
+            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+                r->SetTransform(interstice::float3x2::Scale(kScale) * interstice::float3x2::Translate(pan, pan));
+                r->RenderBox(nodeRect,   kFullClip, node,   interstice::VisualColorStyleIndex{}, interstice::ImageIndex::Invalid, nodeSnapped);
+                r->RenderBox(headerRect, kFullClip, header, interstice::VisualColorStyleIndex{}, interstice::ImageIndex::Invalid, headerSnapped);
             });
 
             auto isBorder = [](uint32_t p) { return ((p >> 16) & 0xFF) > 150 && ((p >> 8) & 0xFF) > 150; };
@@ -415,7 +415,7 @@ namespace
             EXPECT_TRUE(reachedHeader) << "scale " << kScale << " pan " << pan << column;
             EXPECT_FALSE(sawGap) << "background between the top border and the header, scale " << kScale << " pan " << pan << column;
             // A 1-unit border is the same whole number of pixels everywhere.
-            const int expected = std::max(1, GUI::SnapPx(kScale));
+            const int expected = std::max(1, interstice::SnapPx(kScale));
             EXPECT_EQ(topBorderRows, expected) << "top border, scale " << kScale << " pan " << pan << column;
             EXPECT_EQ(sideBorderCols, expected) << "side border, scale " << kScale << " pan " << pan;
         }
@@ -427,11 +427,11 @@ namespace
     TEST_F(GpuReadbackTest, ImageTargetReceivesTheWindowsFrames)
     {
         auto& dc = vk->deviceContext;
-        GUI::ID id{};
-        id.value.dynamicParts.mode      = GUI::IDMode::Static;
+        interstice::ID id{};
+        id.value.dynamicParts.mode      = interstice::IDMode::Static;
         id.value.dynamicParts.hashValue = 9300;
-        auto* ctx = static_cast<Vulkan::VulkanWindowContext*>(graphicsContext->CreateWindowContext(
-            nullptr, nullptr, id, kSize, GUI::WindowFlags::RenderToImage, [] {}));
+        auto* ctx = static_cast<interstice::vulkan::VulkanWindowContext*>(graphicsContext->CreateWindowContext(
+            nullptr, nullptr, id, kSize, interstice::WindowFlags::RenderToImage, [] {}));
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
@@ -454,15 +454,15 @@ namespace
         RegisterColorStyles();
         sink.Clear();
         for (int i = 0; i < 3; ++i)
-            RenderFrame(ctx, [&](GUI::GUIRenderer* r) {
-                r->RenderQuad(GUI::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor, 0.0f);
+            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+                r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor, 0.0f);
             });
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
         // Read the target back as a host would: after the GUI's frame, out of
         // SHADER_READ_ONLY and back into it.
         const size_t bytes = size_t(kSize.x) * kSize.y * 4;
-        Vulkan::Buffer readback = dc.CreateBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
+        interstice::vulkan::Buffer readback = dc.CreateBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
         VkCommandBuffer cmd = dc.immCommandBuffer;
         ASSERT_EQ(vkResetFences(dc.device, 1, &dc.immFence), VK_SUCCESS);
         ASSERT_EQ(vkResetCommandBuffer(cmd, 0), VK_SUCCESS);
@@ -509,14 +509,14 @@ namespace
             auto lock = dc.LockQueue();
             ASSERT_EQ(vkQueueSubmit2(dc.graphicsQueue, 1, &submit, dc.immFence), VK_SUCCESS);
         }
-        Vulkan::WaitForFence(dc.device, dc.immFence);
+        interstice::vulkan::WaitForFence(dc.device, dc.immFence);
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
         vmaInvalidateAllocation(dc.allocator, readback.allocation, 0, VK_WHOLE_SIZE);
         void* mapped = nullptr;
         vmaMapMemory(dc.allocator, readback.allocation, &mapped);
         const auto* rgba = static_cast<const uint8_t*>(mapped);
-        for (const GUI::int2 p : { GUI::int2{ kSize.x / 4, kSize.y / 2 }, GUI::int2{ kSize.x * 3 / 4, kSize.y / 2 } })
+        for (const interstice::int2 p : { interstice::int2{ kSize.x / 4, kSize.y / 2 }, interstice::int2{ kSize.x * 3 / 4, kSize.y / 2 } })
         {
             const size_t off = (size_t(p.y) * kSize.x + size_t(p.x)) * 4;
             EXPECT_EQ(rgba[off + 0], framePixels[off + 2]) << "red at " << p.x;

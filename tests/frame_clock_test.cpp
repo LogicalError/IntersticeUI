@@ -12,7 +12,7 @@
 
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

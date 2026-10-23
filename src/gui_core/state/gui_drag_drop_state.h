@@ -12,13 +12,13 @@
 #include <functional>
 #include <stdint.h>
 
-namespace GUI
+namespace interstice
 {
     struct InputState;
 
     struct DragVisualContext
     {
-        GUI::int2 screenPos{ 0, 0 };
+        interstice::int2 screenPos{ 0, 0 };
         ID sourceID = ID::Invalid();
         ID targetID = ID::Invalid();
         bool isDropValid = false;

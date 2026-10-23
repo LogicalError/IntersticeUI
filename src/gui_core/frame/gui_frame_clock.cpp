@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
     void FrameClock::Tick(int64_t nowNanos, float refreshHz)
     {

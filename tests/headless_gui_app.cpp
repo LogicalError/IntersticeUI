@@ -16,7 +16,7 @@ namespace GUITest
 HeadlessGUIApp::HeadlessGUIApp(std::string themePath)
     : m_themePath(std::move(themePath))
 {
-    m_rootWindowID.value.dynamicParts.mode      = GUI::IDMode::Static;
+    m_rootWindowID.value.dynamicParts.mode      = interstice::IDMode::Static;
     m_rootWindowID.value.dynamicParts.hashValue = 0xBEEF;
 }
 
@@ -31,39 +31,39 @@ bool HeadlessGUIApp::Initialize(const InitializeOptions& options)
 
     // One fake 1920x1080 monitor; layout queries GetMonitorArea for absolute
     // elements and auto-centered windows.
-    GUI::MonitorInfo monitor{};
-    monitor.workArea   = GUI::IntRect{ 0, 0, 1920, 1080 };
+    interstice::MonitorInfo monitor{};
+    monitor.workArea   = interstice::IntRect{ 0, 0, 1920, 1080 };
     monitor.isPrimary  = true;
-    std::vector<GUI::MonitorInfo> monitors{ monitor };
+    std::vector<interstice::MonitorInfo> monitors{ monitor };
     ON_CALL(mockBackend, GetMonitors()).WillByDefault(Return(monitors));
     ON_CALL(mockBackend, GetMonitorAt(_)).WillByDefault(Return(0));
     ON_CALL(mockBackend, GetMonitorFromWindow(_)).WillByDefault(Return(0));
-    ON_CALL(mockBackend, GetScreenMousePos()).WillByDefault(Return(GUI::int2{0,0}));
-    ON_CALL(mockBackend, GetMouseButtons()).WillByDefault(Return(GUI::MouseButtons::None));
+    ON_CALL(mockBackend, GetScreenMousePos()).WillByDefault(Return(interstice::int2{0,0}));
+    ON_CALL(mockBackend, GetMouseButtons()).WillByDefault(Return(interstice::MouseButtons::None));
     // Popup/tooltip window creation returns a stable non-null sentinel so
     // OSWindowManager registers the window; GetWindowRect returns the monitor
     // area so layout doesn't collapse popups.
     static int dummyHandleStorage = 0;
-    GUI::OSWindowHandle fakeHandle = &dummyHandleStorage;
-    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<GUI::int2>(), _, _))
+    interstice::OSWindowHandle fakeHandle = &dummyHandleStorage;
+    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<interstice::int2>(), _, _))
         .WillByDefault(Return(fakeHandle));
-    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<GUI::IntRect>(), _, _))
+    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<interstice::IntRect>(), _, _))
         .WillByDefault(Return(fakeHandle));
     ON_CALL(mockBackend, IsWindow(_)).WillByDefault(Return(true));
     ON_CALL(mockBackend, GetWindowRect(_))
-        .WillByDefault(Return(GUI::IntRect{ 0, 0, 200, 300 }));
-    ON_CALL(mockBackend, GetWindowPos(_)).WillByDefault(Return(GUI::int2{ 0, 0 }));
-    ON_CALL(mockBackend, GetWindowSize(_)).WillByDefault(Return(GUI::int2{ 200, 300 }));
+        .WillByDefault(Return(interstice::IntRect{ 0, 0, 200, 300 }));
+    ON_CALL(mockBackend, GetWindowPos(_)).WillByDefault(Return(interstice::int2{ 0, 0 }));
+    ON_CALL(mockBackend, GetWindowSize(_)).WillByDefault(Return(interstice::int2{ 200, 300 }));
     ON_CALL(mockBackend, GetTicks()).WillByDefault(Return(0u));
 
     // Slots GUIApplication's Initialize() normally fills. StubTextSystem measures
     // text by character count; no font backend.
     textSystem    = &ownedTextSystem;
     windowBackend = &mockBackend;
-    inputManager  = std::make_unique<GUI::InputManager>();
-    layoutEngine  = std::make_unique<GUI::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
+    inputManager  = std::make_unique<interstice::InputManager>();
+    layoutEngine  = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
     // Menus, tooltips and popups reach the mock-backed OSWindowManager through this.
-    windowManager = std::make_unique<GUI::OSWindowManager>(nullptr, &mockBackend);
+    windowManager = std::make_unique<interstice::OSWindowManager>(nullptr, &mockBackend);
 
     // Static window IDs Initialize() reserves for tooltip / context-menu /
     // tab-drag-ghost popups; widgets using them assert otherwise.
@@ -73,16 +73,16 @@ bool HeadlessGUIApp::Initialize(const InitializeOptions& options)
 
     // Subsystems, as Initialize() creates them after the manager wiring; widgets
     // dereference these.
-    m_sliderFieldTrack  = std::make_unique<GUI::SliderFieldTrackSubsystem>();
-    m_menuRects         = std::make_unique<GUI::MenuRectsSubsystem>();
-    m_labelGroup        = std::make_unique<GUI::LabelGroupSubsystem>(m_frame, elementStorage, guiStateManager, theme);
-    m_buttonGroup       = std::make_unique<GUI::ButtonGroupSubsystem>(m_frame, elementStorage, styleManager);
-    m_colorPickerSub    = std::make_unique<GUI::ColorPickerSubsystem>(m_frame);
-    m_gradientEditorSub = std::make_unique<GUI::GradientEditorSubsystem>(m_frame);
-    m_renameSub         = std::make_unique<GUI::RenameSubsystem>();
-    m_reorderable       = std::make_unique<GUI::ReorderableSubsystem>(m_frame);
-    m_dockTabDragSub    = std::make_unique<GUI::DockTabDragSubsystem>();
-    m_uiCache           = std::make_unique<GUI::UICacheManager>(m_frame, elementStorage, guiStateManager);
+    m_sliderFieldTrack  = std::make_unique<interstice::SliderFieldTrackSubsystem>();
+    m_menuRects         = std::make_unique<interstice::MenuRectsSubsystem>();
+    m_labelGroup        = std::make_unique<interstice::LabelGroupSubsystem>(m_frame, elementStorage, guiStateManager, theme);
+    m_buttonGroup       = std::make_unique<interstice::ButtonGroupSubsystem>(m_frame, elementStorage, styleManager);
+    m_colorPickerSub    = std::make_unique<interstice::ColorPickerSubsystem>(m_frame);
+    m_gradientEditorSub = std::make_unique<interstice::GradientEditorSubsystem>(m_frame);
+    m_renameSub         = std::make_unique<interstice::RenameSubsystem>();
+    m_reorderable       = std::make_unique<interstice::ReorderableSubsystem>(m_frame);
+    m_dockTabDragSub    = std::make_unique<interstice::DockTabDragSubsystem>();
+    m_uiCache           = std::make_unique<interstice::UICacheManager>(m_frame, elementStorage, guiStateManager);
 
     RegisterFrameBalanceChecks();
 
@@ -111,7 +111,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 {
     // Rebuilt each frame; the stage points mirror production's OnFrame so
     // subsystem hooks fire under test.
-    GUI::FrameContext ctx{
+    interstice::FrameContext ctx{
         .app               = *this,
         .idManager         = idManager,
         .guiStateManager   = guiStateManager,
@@ -130,7 +130,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
         .elapsedTimeSecs   = static_cast<float>(m_timeMs) / 1000.0f,
     };
 
-    m_frame.RunStage(GUI::FrameStage::PreFrame, ctx);
+    m_frame.RunStage(interstice::FrameStage::PreFrame, ctx);
     ApplyPendingStyleReload();
 
     // -- BeginFrame on every manager that matters for construction/dispatch.
@@ -149,10 +149,10 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     {
         for (const auto& e : inputManager->GetRecordedEvents())
         {
-            if (e.type == GUI::EventType::MouseMove)   hasMouseMove = true;
-            if (e.type == GUI::EventType::MouseDown)   hasMousePress = true;
-            if (e.type == GUI::EventType::KeyDown)     hasKeyboard = true;
-            if (e.type == GUI::EventType::MouseScroll) hasScroll = true;
+            if (e.type == interstice::EventType::MouseMove)   hasMouseMove = true;
+            if (e.type == interstice::EventType::MouseDown)   hasMousePress = true;
+            if (e.type == interstice::EventType::KeyDown)     hasKeyboard = true;
+            if (e.type == interstice::EventType::MouseScroll) hasScroll = true;
         }
     }
     tooltipManager.BeginFrame(guiStateManager.Interaction().GetHoveredID(),
@@ -165,42 +165,42 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     VERIFY(elementStorage.BeginConstruction());
     windowRegistry.Clear();
 
-    m_frame.RunStage(GUI::FrameStage::PreConstruct, ctx);
+    m_frame.RunStage(interstice::FrameStage::PreConstruct, ctx);
 
     // -- User construction.
     if (onGuiFn) onGuiFn();
 
-    m_frame.RunStage(GUI::FrameStage::PostConstruct, ctx);
+    m_frame.RunStage(interstice::FrameStage::PostConstruct, ctx);
 
     VERIFY(elementStorage.EndConstruction());
 
     textSystem->Update();
 
-    m_frame.RunStage(GUI::FrameStage::PreLayout, ctx);
+    m_frame.RunStage(interstice::FrameStage::PreLayout, ctx);
 
     // -- Layout. PreLayoutSync is skipped (no live OS windows).
     layoutEngine->Layout(*windowManager, elementStorage);
 
     // Per-element AddPostLayout callbacks are skipped (they need a
     // PostLayoutContext the stub doesn't model); subsystem OnPostLayout runs.
-    m_frame.RunStage(GUI::FrameStage::PostLayout, ctx);
+    m_frame.RunStage(interstice::FrameStage::PostLayout, ctx);
 
     windowRegistry.BuildRenderSkipLinks();
 
-    m_frame.RunStage(GUI::FrameStage::PreInput, ctx);
+    m_frame.RunStage(interstice::FrameStage::PreInput, ctx);
 
     // -- Hit-test under the current mouse position so dispatch can route
     // MouseDown/MouseMove to the correct element.
-    GUI::ID overID = GUI::ID::Invalid();
-    if (m_rootWindowID != GUI::ID::Invalid())
+    interstice::ID overID = interstice::ID::Invalid();
+    if (m_rootWindowID != interstice::ID::Invalid())
     {
-        GUI::ElementRef windowRef = windowRegistry.GetWindowRef(m_rootWindowID);
-        if (windowRef != GUI::ElementRef::Invalid())
+        interstice::ElementRef windowRef = windowRegistry.GetWindowRef(m_rootWindowID);
+        if (windowRef != interstice::ElementRef::Invalid())
             overID = elementStorage.GetElementIDAt(windowRef, m_mousePos);
     }
 
     // -- EndFrame commits the hover/active targets for Process(), which runs after it.
-    GUI::ID hoverID = (guiStateManager.Interaction().GetCaptureID() != GUI::ID::Invalid())
+    interstice::ID hoverID = (guiStateManager.Interaction().GetCaptureID() != interstice::ID::Invalid())
         ? guiStateManager.Interaction().GetCaptureID()
         : overID;
     guiStateManager.EndFrame(hoverID, m_buttonsHeld, idManager, overID);
@@ -210,13 +210,13 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     // -- Dispatch the queued input events to element handlers.
     inputManager->Process(guiStateManager, elementStorage, tabChainManager, textSystem, overID);
 
-    m_frame.RunStage(GUI::FrameStage::PostInput, ctx);
+    m_frame.RunStage(interstice::FrameStage::PostInput, ctx);
 
     EndDockingFrame();
 
     // No render pass, but fire PreRender/PostRender for subsystems that hook them.
-    m_frame.RunStage(GUI::FrameStage::PreRender,  ctx);
-    m_frame.RunStage(GUI::FrameStage::PostRender, ctx);
+    m_frame.RunStage(interstice::FrameStage::PreRender,  ctx);
+    m_frame.RunStage(interstice::FrameStage::PostRender, ctx);
 
     guiStateManager.GetScrollManagement().EndFrame(idManager);
     tabChainManager.EndFrame();
@@ -224,7 +224,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     menuManager.EndFrame(elementStorage, guiStateManager);
     [[maybe_unused]] bool wmEnd = windowManager->EndFrame();
 
-    m_frame.RunStage(GUI::FrameStage::EndFrame, ctx);
+    m_frame.RunStage(interstice::FrameStage::EndFrame, ctx);
 
     idManager.EndFrame();
 }
@@ -233,20 +233,20 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 // Root window
 // ---------------------------------------------------------------------------
 
-bool HeadlessGUIApp::BeginRootWindow(GUI::int2 size)
+bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size)
 {
     // Stand-in for BeginWindow() without an OS window: an IsWindow + NotFocusable
     // content root.
-    GUI::Element root{};
+    interstice::Element root{};
     root.id    = m_rootWindowID;
-    root.flags = GUI::ElementFlags::IsWindow
-               | GUI::ElementFlags::WindowNoCaption
-               | GUI::ElementFlags::WindowNotFocusable;
+    root.flags = interstice::ElementFlags::IsWindow
+               | interstice::ElementFlags::WindowNoCaption
+               | interstice::ElementFlags::WindowNotFocusable;
     // Production window style, for its padding + Display::Flex defaults.
     root.styleRef = theme.windowStyleRef;
     root.state    = guiStateManager.GetCurrentState(m_rootWindowID);
 
-    GUI::LayoutOverride lo = GUI::LayoutOverride{}
+    interstice::LayoutOverride lo = interstice::LayoutOverride{}
         .Size(size.x, size.y)
         .Position(0, 0);
 
@@ -274,36 +274,36 @@ void HeadlessGUIApp::EndRootWindow()
 // Input injection
 // ---------------------------------------------------------------------------
 
-void HeadlessGUIApp::InjectMouseMove(GUI::int2 pos, GUI::MouseButtons buttonsHeld,
-                                      GUI::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseMove(interstice::int2 pos, interstice::MouseButtons buttonsHeld,
+                                      interstice::KeyModifier mods)
 {
     m_mousePos    = pos;
     m_buttonsHeld = buttonsHeld;
     inputManager->OnMouseMove(m_rootWindowID, pos, buttonsHeld, mods);
 }
 
-void HeadlessGUIApp::InjectMouseDown(GUI::int2 pos, GUI::MouseButtons button,
-                                      GUI::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseDown(interstice::int2 pos, interstice::MouseButtons button,
+                                      interstice::KeyModifier mods)
 {
     m_mousePos = pos;
     m_buttonsHeld = m_buttonsHeld | button;
     // A MouseDown needs a preceding MouseMove to establish the element under the
     // cursor.
     inputManager->OnMouseButton(m_rootWindowID, pos, m_buttonsHeld, mods,
-                                 GUI::MouseAction::MouseDown);
+                                 interstice::MouseAction::MouseDown);
 }
 
-void HeadlessGUIApp::InjectMouseUp(GUI::int2 pos, GUI::MouseButtons button,
-                                    GUI::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseUp(interstice::int2 pos, interstice::MouseButtons button,
+                                    interstice::KeyModifier mods)
 {
     m_mousePos = pos;
     m_buttonsHeld = m_buttonsHeld & ~button;
     inputManager->OnMouseButton(m_rootWindowID, pos, m_buttonsHeld, mods,
-                                 GUI::MouseAction::MouseUp);
+                                 interstice::MouseAction::MouseUp);
 }
 
-void HeadlessGUIApp::InjectKey(GUI::KeyCode key, GUI::KeyAction action,
-                                GUI::KeyModifier mods)
+void HeadlessGUIApp::InjectKey(interstice::KeyCode key, interstice::KeyAction action,
+                                interstice::KeyModifier mods)
 {
     inputManager->OnKeyboard(m_rootWindowID, key, /*repeat*/0, mods, action);
     // Like the SDL backend, keyboard events also go to the text system.
@@ -311,24 +311,24 @@ void HeadlessGUIApp::InjectKey(GUI::KeyCode key, GUI::KeyAction action,
         textSystem->OnKeyboard(m_rootWindowID, key, /*repeat*/0, mods, action);
 }
 
-void HeadlessGUIApp::InjectMouseScroll(GUI::int2 pos, GUI::int2 scrollOffset,
-                                        GUI::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseScroll(interstice::int2 pos, interstice::int2 scrollOffset,
+                                        interstice::KeyModifier mods)
 {
     m_mousePos = pos;
     inputManager->OnMouseScroll(m_rootWindowID, pos,
-                                GUI::float2{ float(scrollOffset.x), float(scrollOffset.y) }, mods);
+                                interstice::float2{ float(scrollOffset.x), float(scrollOffset.y) }, mods);
 }
 
-void HeadlessGUIApp::ClickAt(GUI::int2 pos, GUI::MouseButtons button,
-                              GUI::KeyModifier mods)
+void HeadlessGUIApp::ClickAt(interstice::int2 pos, interstice::MouseButtons button,
+                              interstice::KeyModifier mods)
 {
     InjectMouseMove(pos, m_buttonsHeld, mods);
     InjectMouseDown(pos, button, mods);
     InjectMouseUp(pos, button, mods);
 }
 
-void HeadlessGUIApp::DragFrom(GUI::int2 from, GUI::int2 to,
-                               GUI::MouseButtons button, GUI::KeyModifier mods)
+void HeadlessGUIApp::DragFrom(interstice::int2 from, interstice::int2 to,
+                               interstice::MouseButtons button, interstice::KeyModifier mods)
 {
     // The move at `to` carries the held button: drag handlers only see drags
     // through such moves.
@@ -344,8 +344,8 @@ void HeadlessGUIApp::InjectText(std::string_view text)
     {
         // Map ASCII to KeyCode payload exactly the way SDL does
         // (gui_window_backend_sdl.cpp: cast text byte → KeyCode).
-        InjectKey(static_cast<GUI::KeyCode>(static_cast<unsigned char>(c)),
-                  GUI::KeyAction::KeyChar);
+        InjectKey(static_cast<interstice::KeyCode>(static_cast<unsigned char>(c)),
+                  interstice::KeyAction::KeyChar);
     }
 }
 
@@ -358,23 +358,23 @@ void HeadlessGUIApp::AdvanceTime(uint32_t deltaMs)
 // Inspection helpers
 // ---------------------------------------------------------------------------
 
-GUI::IntRect HeadlessGUIApp::GetElementRect(GUI::ID id) const
+interstice::IntRect HeadlessGUIApp::GetElementRect(interstice::ID id) const
 {
     auto ref = elementStorage.FindElementRefByID(id);
-    if (ref == GUI::ElementRef::Invalid()) return GUI::IntRect{};
+    if (ref == interstice::ElementRef::Invalid()) return interstice::IntRect{};
     auto* rp = elementStorage.GetElementRectPtr(ref);
-    return rp ? rp->rect : GUI::IntRect{};
+    return rp ? rp->rect : interstice::IntRect{};
 }
 
-bool HeadlessGUIApp::HasElement(GUI::ID id) const
+bool HeadlessGUIApp::HasElement(interstice::ID id) const
 {
-    return elementStorage.FindElementRefByID(id) != GUI::ElementRef::Invalid();
+    return elementStorage.FindElementRefByID(id) != interstice::ElementRef::Invalid();
 }
 
-GUI::int2 HeadlessGUIApp::CenterOf(GUI::ID id) const
+interstice::int2 HeadlessGUIApp::CenterOf(interstice::ID id) const
 {
     auto r = GetElementRect(id);
-    return GUI::int2{ r.x + r.w / 2, r.y + r.h / 2 };
+    return interstice::int2{ r.x + r.w / 2, r.y + r.h / 2 };
 }
 
 } // namespace GUITest

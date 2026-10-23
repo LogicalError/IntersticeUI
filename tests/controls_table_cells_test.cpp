@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -24,13 +24,13 @@ namespace GUI
             HeadlessGUIApp app;
 
             // Three plain columns, wide enough that a click lands in exactly one.
-            GUI::VirtualTableColumn kColumns[3] = {
+            interstice::VirtualTableColumn kColumns[3] = {
                 { { .header = "A", .initialWidth = 120, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "B", .initialWidth = 120, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "C", .initialWidth = 120, .minWidth = 40, .maxWidth = 400 } },
             };
 
-            GUI::ID tableID{};
+            interstice::ID tableID{};
 
             void SetUp() override
             {
@@ -51,8 +51,8 @@ namespace GUI
         TEST_F(TableCellsTest, CellLambdaEmitsLabelAsChildAndCellIsHittable)
         {
             // The label emitted by Cell(lambda) must lie inside the cell's rect.
-            GUI::TableState state{};
-            const GUI::ID labelID = app.idManager.CreateStaticID();
+            interstice::TableState state{};
+            const interstice::ID labelID = app.idManager.CreateStaticID();
 
             auto build = [&] {
                 app.BeginRootWindow();
@@ -89,7 +89,7 @@ namespace GUI
         // reads them back from the styles' widths / icon sizes.
         TEST_F(TableCellsTest, TreeCellMetricsComeFromTheStylesheet)
         {
-            auto layoutOf = [&](GUI::StyleRef s) { return app.styleManager.GetLayoutStyle(s.layoutStyleIndex); };
+            auto layoutOf = [&](interstice::StyleRef s) { return app.styleManager.GetLayoutStyle(s.layoutStyleIndex); };
             const auto* indent = layoutOf(app.theme.treeTableIndentStyleRef);
             const auto* arrow  = layoutOf(app.theme.treeTableArrowStyleRef);
             const auto* icon   = layoutOf(app.theme.treeTableIconStyleRef);
@@ -108,10 +108,10 @@ namespace GUI
         // the cells emitted after it still land in the outer table.
         TEST_F(TableCellsTest, TableInsideACellDoesNotClobberTheOuterTable)
         {
-            GUI::TableState outer{}, inner{};
-            const GUI::ID innerTableID = app.idManager.CreateStaticID();
-            const GUI::ID afterID      = app.idManager.CreateStaticID();
-            GUI::VirtualTableColumn innerCols[1] = {
+            interstice::TableState outer{}, inner{};
+            const interstice::ID innerTableID = app.idManager.CreateStaticID();
+            const interstice::ID afterID      = app.idManager.CreateStaticID();
+            interstice::VirtualTableColumn innerCols[1] = {
                 { { .header = "I", .initialWidth = 80, .minWidth = 40, .maxWidth = 200 } },
             };
 
@@ -149,11 +149,11 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, SizerDoubleClickSnapsColumnToMaxContentWidth)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             // The stub text system measures 8px per char: 30 chars = 240 wide.
-            GUI::VirtualTableColumn cols[3] = {
+            interstice::VirtualTableColumn cols[3] = {
                 { { .header = "A", .initialWidth = 80, .minWidth = 40, .maxWidth = 600,
-                    .sizing = GUI::ColumnSizing::Resizable } },
+                    .sizing = interstice::ColumnSizing::Resizable } },
                 { { .header = "B", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "C", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
             };
@@ -173,8 +173,8 @@ namespace GUI
             // Second frame registers the measured text width the snap reads.
             app.Frame(build);
 
-            ASSERT_NE(cols[0]._sizerID, GUI::ID::Invalid());
-            const GUI::ID sizerID = cols[0]._sizerID;
+            ASSERT_NE(cols[0]._sizerID, interstice::ID::Invalid());
+            const interstice::ID sizerID = cols[0]._sizerID;
             ASSERT_TRUE(app.HasElement(sizerID));
             // The sizer is clipped by its parent; use its X but the body's Y.
             const auto sizerRect = app.GetElementRect(sizerID);
@@ -209,15 +209,15 @@ namespace GUI
         namespace {
             struct ChildRectSnapshot
             {
-                GUI::IntRect              cell{};
-                std::vector<GUI::IntRect> rects;
+                interstice::IntRect              cell{};
+                std::vector<interstice::IntRect> rects;
             };
 
             // Rows live in the section grid. The tree cell shares rowID with the row
             // backdrop; only the tree cell has children, so filter on that.
             ChildRectSnapshot SnapshotTreeCellByRow(HeadlessGUIApp& app,
-                                                    const GUI::TableState& state,
-                                                    GUI::ID rowID)
+                                                    const interstice::TableState& state,
+                                                    interstice::ID rowID)
             {
                 ChildRectSnapshot s{};
                 const auto bodyRef = app.elementStorage.FindElementRefByID(state.SectionBodyID(0));
@@ -229,7 +229,7 @@ namespace GUI
                 {
                     const auto& elem = children[i];
                     if (elem.id != rowID) continue;
-                    const GUI::ElementRef ref{ bodyRef.depth + 1,
+                    const interstice::ElementRef ref{ bodyRef.depth + 1,
                                                static_cast<uint32_t>(range.begin + i) };
                     const auto childRange = app.elementStorage.GetChildRange(ref);
                     if (childRange.Empty()) continue; // backdrop has no children, skip
@@ -248,9 +248,9 @@ namespace GUI
 
         TEST_F(TableCellsTest, TreeCellInnerContentShiftsWithBodyHorizontalScroll)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             // Wide columns so the table overflows X inside the 300px viewport.
-            GUI::VirtualTableColumn wideCols[3] = {
+            interstice::VirtualTableColumn wideCols[3] = {
                 { { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 } },
                 { { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "Type", .initialWidth = 200, .minWidth = 40, .maxWidth = 400 } },
@@ -272,7 +272,7 @@ namespace GUI
             };
             app.Frame(build);
             ASSERT_EQ(state._totalRowCount, 1);
-            const GUI::ID rowID = state.RowIDForIndex(0);
+            const interstice::ID rowID = state.RowIDForIndex(0);
 
             const auto before = SnapshotTreeCellByRow(app, state, rowID);
             ASSERT_GT(before.cell.w, 0);
@@ -314,8 +314,8 @@ namespace GUI
         TEST_F(TableCellsTest, TreeCellInnerContentShiftsWithBodyVerticalScroll)
         {
             // Many rows so the body overflows Y inside the 100px viewport.
-            GUI::TableState state{};
-            GUI::VirtualTableColumn cols[3] = {
+            interstice::TableState state{};
+            interstice::VirtualTableColumn cols[3] = {
                 { { .header = "Name", .initialWidth = 120, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "Type", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
@@ -343,7 +343,7 @@ namespace GUI
             app.Frame(build);
             ASSERT_GE(state._totalRowCount, 5);
             // Row 3 stays on-screen after a ~30px scroll (row 0 might not).
-            const GUI::ID rowID = state.RowIDForIndex(3);
+            const interstice::ID rowID = state.RowIDForIndex(3);
 
             const auto before = SnapshotTreeCellByRow(app, state, rowID);
             ASSERT_GT(before.cell.h, 0);
@@ -384,7 +384,7 @@ namespace GUI
 
         TEST_F(TableCellsTest, TreeCellRegistersDepthAndIsOpenByRow)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             bool branchOpen = true;
 
             auto build = [&] {
@@ -407,8 +407,8 @@ namespace GUI
             app.Frame(build);
 
             ASSERT_EQ(state._totalRowCount, 2);
-            const GUI::ID branchID = state.RowIDForIndex(0);
-            const GUI::ID leafID   = state.RowIDForIndex(1);
+            const interstice::ID branchID = state.RowIDForIndex(0);
+            const interstice::ID leafID   = state.RowIDForIndex(1);
 
             // Branch row is registered with its isOpen pointer + depth.
             const auto* branchInfo = state.FindTreeRow(branchID);
@@ -431,7 +431,7 @@ namespace GUI
 
         TEST_F(TableCellsTest, TreeCellDoubleClickTogglesIsOpenInRowMode)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             // Row mode is the default; keep selectionMode untouched.
             bool branchOpen = false;
 
@@ -451,7 +451,7 @@ namespace GUI
             app.Frame(build);
 
             ASSERT_EQ(state._totalRowCount, 1);
-            const GUI::ID branchID = state.RowIDForIndex(0);
+            const interstice::ID branchID = state.RowIDForIndex(0);
 
             // Row backdrops carry the rowID — derive the click point from it.
             ASSERT_TRUE(app.HasElement(branchID));
@@ -476,8 +476,8 @@ namespace GUI
 
         TEST_F(TableCellsTest, CellModeClickingCellSelectsRowAndColumn)
         {
-            GUI::TableState state{};
-            state.selectionMode = GUI::TableSelectionMode::Cell;
+            interstice::TableState state{};
+            state.selectionMode = interstice::TableSelectionMode::Cell;
 
             auto build = [&] {
                 app.BeginRootWindow();
@@ -494,12 +494,12 @@ namespace GUI
             app.Frame(build);
 
             ASSERT_EQ(state._totalRowCount, 1);
-            const GUI::ID rowID = state.RowIDForIndex(0);
+            const interstice::ID rowID = state.RowIDForIndex(0);
 
             // Middle column: 120px columns, no gaps, so column 1 spans [120, 240).
             const auto rowRect = app.GetElementRect(rowID);
             ASSERT_GT(rowRect.h, 0);
-            const GUI::int2 col1Center{ rowRect.x + 120 + 60, rowRect.y + rowRect.h / 2 };
+            const interstice::int2 col1Center{ rowRect.x + 120 + 60, rowRect.y + rowRect.h / 2 };
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.InjectMouseUp(col1Center);
@@ -515,8 +515,8 @@ namespace GUI
 
         TEST_F(TableCellsTest, MultiSelectCtrlClickTogglesIndividualRows)
         {
-            GUI::TableState state{};
-            GUI::MultiSelectState ms{};
+            interstice::TableState state{};
+            interstice::MultiSelectState ms{};
             state.multiSelect = &ms;
 
             auto build = [&] {
@@ -537,8 +537,8 @@ namespace GUI
             app.Frame(build);
 
             ASSERT_EQ(state._totalRowCount, 3);
-            const GUI::ID row0ID = state.RowIDForIndex(0);
-            const GUI::ID row2ID = state.RowIDForIndex(2);
+            const interstice::ID row0ID = state.RowIDForIndex(0);
+            const interstice::ID row2ID = state.RowIDForIndex(2);
 
             // Ctrl-click row 0 → selectedIDs = {row0}
             const auto r0c = app.CenterOf(row0ID);
@@ -577,8 +577,8 @@ namespace GUI
 
         TEST_F(TableCellsTest, MultiSelectShiftClickSelectsRange)
         {
-            GUI::TableState state{};
-            GUI::MultiSelectState ms{};
+            interstice::TableState state{};
+            interstice::MultiSelectState ms{};
             state.multiSelect = &ms;
 
             auto build = [&] {
@@ -601,10 +601,10 @@ namespace GUI
             app.Frame(build);
 
             ASSERT_EQ(state._totalRowCount, 4);
-            const GUI::ID r0 = state.RowIDForIndex(0);
-            const GUI::ID r1 = state.RowIDForIndex(1);
-            const GUI::ID r2 = state.RowIDForIndex(2);
-            const GUI::ID r3 = state.RowIDForIndex(3);
+            const interstice::ID r0 = state.RowIDForIndex(0);
+            const interstice::ID r1 = state.RowIDForIndex(1);
+            const interstice::ID r2 = state.RowIDForIndex(2);
+            const interstice::ID r3 = state.RowIDForIndex(3);
 
             // Plain click row 1 establishes the anchor.
             const auto r1c = app.CenterOf(r1);
@@ -633,8 +633,8 @@ namespace GUI
         // the row last clicked (the end of the range), not from the anchor.
         TEST_F(TableCellsTest, ArrowAfterShiftClickMovesFromRangeEnd)
         {
-            GUI::TableState state{};
-            GUI::MultiSelectState ms{};
+            interstice::TableState state{};
+            interstice::MultiSelectState ms{};
             state.multiSelect = &ms;
 
             auto build = [&] {
@@ -653,10 +653,10 @@ namespace GUI
                 app.EndRootWindow();
             };
             app.Frame(build);
-            const GUI::ID r0 = state.RowIDForIndex(0);
-            const GUI::ID r1 = state.RowIDForIndex(1);
-            const GUI::ID r3 = state.RowIDForIndex(3);
-            const GUI::ID r4 = state.RowIDForIndex(4);
+            const interstice::ID r0 = state.RowIDForIndex(0);
+            const interstice::ID r1 = state.RowIDForIndex(1);
+            const interstice::ID r3 = state.RowIDForIndex(3);
+            const interstice::ID r4 = state.RowIDForIndex(4);
 
             const auto r1c = app.CenterOf(r1);
             app.InjectMouseMove(r1c);
@@ -672,7 +672,7 @@ namespace GUI
             ASSERT_EQ(ms.selectedIDs.size(), 3u);
             EXPECT_EQ(ms.lastClickedID, r1) << "the anchor stays at the range start";
 
-            app.InjectKey(GUI::KeyCode::Down);
+            app.InjectKey(interstice::KeyCode::Down);
             app.Frame(build);
             EXPECT_EQ(state.selectedRowID, r4);
             EXPECT_EQ(ms.selectedIDs.size(), 1u);
@@ -694,8 +694,8 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableHeaderScrollsWithBodyX)
         {
-            GUI::TableState state{};
-            GUI::VirtualTableColumn wideCols[3] = {
+            interstice::TableState state{};
+            interstice::VirtualTableColumn wideCols[3] = {
                 { { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 } },
                 { { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "Type", .initialWidth = 200, .minWidth = 40, .maxWidth = 400 } },
@@ -743,8 +743,8 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableHScrollbarDragWritesXOffset)
         {
-            GUI::TableState state{};
-            GUI::VirtualTableColumn wideCols[3] = {
+            interstice::TableState state{};
+            interstice::VirtualTableColumn wideCols[3] = {
                 { { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 } },
                 { { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 400 } },
                 { { .header = "Type", .initialWidth = 200, .minWidth = 40, .maxWidth = 400 } },
@@ -794,7 +794,7 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableVScrollbarDragWritesYOffset)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto build = [&] {
                 state._lastViewportW = 400;
                 state._lastViewportH = 100;
@@ -841,7 +841,7 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableBothScrollbarsEmitCornerCap)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
 
             auto build = [&] {
                 app.BeginRootWindow();
@@ -889,14 +889,14 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, SizerXAlignsWithHeaderCellRightEdgeStandard)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             // The last column always stretches in standard mode, so only sizers before
             // it can be pinned: with 3 columns, just sizer 0.
-            GUI::VirtualTableColumn cols[3] = {
+            interstice::VirtualTableColumn cols[3] = {
                 { { .header = "A", .initialWidth = 100, .minWidth = 40,
-                    .sizing = GUI::ColumnSizing::Resizable } },
+                    .sizing = interstice::ColumnSizing::Resizable } },
                 { { .header = "B", .initialWidth = 100, .minWidth = 40,
-                    .sizing = GUI::ColumnSizing::Resizable } },
+                    .sizing = interstice::ColumnSizing::Resizable } },
                 { { .header = "C", .initialWidth = 100, .minWidth = 40 } },
             };
             auto build = [&] {
@@ -927,12 +927,12 @@ namespace GUI
         // The sizer is anchored to a header cell and must track its post-scroll rect.
         TEST_F(TableCellsTest, SizerXFollowsHorizontalScroll)
         {
-            GUI::TableState state{};
-            GUI::VirtualTableColumn wideCols[3] = {
+            interstice::TableState state{};
+            interstice::VirtualTableColumn wideCols[3] = {
                 { { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600,
-                    .sizing = GUI::ColumnSizing::Resizable } },
+                    .sizing = interstice::ColumnSizing::Resizable } },
                 { { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 400,
-                    .sizing = GUI::ColumnSizing::Resizable } },
+                    .sizing = interstice::ColumnSizing::Resizable } },
                 { { .header = "Type", .initialWidth = 200, .minWidth = 40, .maxWidth = 400 } },
             };
             auto build = [&] {
@@ -964,10 +964,10 @@ namespace GUI
         // Same invariant with a Stretch column left of the boundary.
         TEST_F(TableCellsTest, SizerXAlignsAfterStretchColumn)
         {
-            GUI::TableState state{};
-            GUI::VirtualTableColumn cols[3] = {
+            interstice::TableState state{};
+            interstice::VirtualTableColumn cols[3] = {
                 { { .header = "A", .initialWidth = 100, .minWidth = 40,
-                    .sizing = GUI::ColumnSizing::Stretch } },
+                    .sizing = interstice::ColumnSizing::Stretch } },
                 { { .header = "B", .initialWidth = 100, .minWidth = 40 } },
                 { { .header = "C", .initialWidth = 100, .minWidth = 40 } },
             };
@@ -998,7 +998,7 @@ namespace GUI
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardBodyHasViewportSamplingPostLayout)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto build = [&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, kColumns, state, LayoutOverride{}.Size(400, 200)))
@@ -1021,4 +1021,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

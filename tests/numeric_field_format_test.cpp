@@ -2,7 +2,7 @@
 
 #include <gui_core/text/skribidi/internal/gui_skribidi_context.h>
 
-namespace GUI
+namespace interstice
 {
     // =========================================================================
     // A numeric field shows the same string for a value with or without focus:

@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using TableHelpers::VirtualRowRange;
 

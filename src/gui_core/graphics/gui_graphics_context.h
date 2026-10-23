@@ -14,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     enum class WindowFlags : uint32_t;
     enum class VisualColorStyleIndex : uint16_t;

@@ -1,6 +1,6 @@
 #include <gui_core/layout/gui_constraints.h>
 
-namespace GUI
+namespace interstice
 {
     AnchorPlacement FlipHorizontal(AnchorPlacement p)
     {
@@ -79,4 +79,4 @@ namespace GUI
         }
     }
 
-} // namespace GUI
+} // namespace interstice

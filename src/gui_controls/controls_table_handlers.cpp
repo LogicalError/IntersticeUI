@@ -14,25 +14,25 @@
 #include <algorithm>
 #include <chrono>
 
-namespace GUI
+namespace interstice
 {
-    using namespace GUI::TableInternal;
+    using namespace interstice::TableInternal;
 
-    GUI::EventHandler GUIApplication::BuildTableContainerHandler(TableState* state,
-                                                                 GUI::ID containerID)
+    interstice::EventHandler GUIApplication::BuildTableContainerHandler(TableState* state,
+                                                                 interstice::ID containerID)
     {
         TableState* statePtr = state;
         return [this, statePtr, containerID](ElementEvent&& event) -> bool
         {
             switch (event.type)
             {
-                case GUI::EventType::MouseDown:
+                case interstice::EventType::MouseDown:
                     if (!event.state.LeftPressed()) break;
                     guiStateManager.Interaction().SetFocusID(event.id);
                     guiStateManager.TextEditorFocus().Clear();
                     return true;
 
-                case GUI::EventType::MouseScroll:
+                case interstice::EventType::MouseScroll:
                 {
                     // Find which section's body the cursor is over and route
                     // the wheel there. X scrolls that section directly; Y
@@ -46,13 +46,13 @@ namespace GUI
                     };
                     if (delta.x == 0 && delta.y == 0) return false;
 
-                    GUI::ID targetBodyID = GUI::ID::Invalid();
+                    interstice::ID targetBodyID = interstice::ID::Invalid();
                     // Compare against rect coords in layout space — convert the
                     // screen cursor through any ancestor contentTransform first.
                     const int2 localCursor = event.LocalCursor(elementStorage);
                     for (int i = 0; i < n; i++)
                     {
-                        const GUI::ID id = statePtr->SectionBodyID(i);
+                        const interstice::ID id = statePtr->SectionBodyID(i);
                         auto ref = elementStorage.FindElementRefByID(id);
                         if (!ref.IsValid()) continue;
                         const auto& r = elementStorage.GetElementRectUnsafe(ref).rect;
@@ -63,7 +63,7 @@ namespace GUI
                             break;
                         }
                     }
-                    if (targetBodyID == GUI::ID::Invalid())
+                    if (targetBodyID == interstice::ID::Invalid())
                         targetBodyID = statePtr->SectionBodyID(0);
 
                     auto bodyRef = elementStorage.FindElementRefByID(targetBodyID);
@@ -83,22 +83,22 @@ namespace GUI
                     return true;
                 }
 
-                case GUI::EventType::KeyDown:
+                case interstice::EventType::KeyDown:
                 {
                     if (statePtr->_totalRowCount <= 0
-                        || statePtr->_rowsRangeID == GUI::ID::Invalid()) break;
+                        || statePtr->_rowsRangeID == interstice::ID::Invalid()) break;
 
                     // The cursor is selectedRowID (every click and navigation
                     // moves it). MultiSelectState::lastClickedID is only the
                     // Shift-range anchor, which a Shift-click leaves in place.
-                    GUI::ID cursorID = (statePtr->selectedRowID == GUI::ID::Invalid() && statePtr->multiSelect)
+                    interstice::ID cursorID = (statePtr->selectedRowID == interstice::ID::Invalid() && statePtr->multiSelect)
                         ? statePtr->multiSelect->lastClickedID
                         : statePtr->selectedRowID;
 
                     // Navigation uses dataset row indices from the sub-range ID, so it
                     // can move outside the virtualization window.
-                    auto rowIndexOf = [](GUI::ID id) -> int {
-                        if (id.GetMode() != GUI::IDMode::SubRange) return -1;
+                    auto rowIndexOf = [](interstice::ID id) -> int {
+                        if (id.GetMode() != interstice::IDMode::SubRange) return -1;
                         return static_cast<int>(id.value.subRangeParts.index);
                     };
                     const int totalRows = statePtr->_totalRowCount;
@@ -120,8 +120,8 @@ namespace GUI
                         const int n = statePtr->_sectionCount;
                         for (int i = 0; i < n; i++)
                         {
-                            const GUI::ID sid = statePtr->SectionBodyID(i);
-                            if (sid == GUI::ID::Invalid()) continue;
+                            const interstice::ID sid = statePtr->SectionBodyID(i);
+                            if (sid == interstice::ID::Invalid()) continue;
                             auto sref = elementStorage.FindElementRefByID(sid);
                             if (!sref.IsValid()) continue;
                             const auto& sr = elementStorage.GetElementRectUnsafe(sref);
@@ -155,32 +155,32 @@ namespace GUI
                     int nextCol = statePtr->selectedColumn;
                     switch (event.state.lastKey)
                     {
-                        case GUI::KeyCode::Down:
+                        case interstice::KeyCode::Down:
                             nextVis = (visIdx < 0) ? 0 : std::min(visIdx + 1, totalRows - 1);
                             break;
-                        case GUI::KeyCode::Up:
+                        case interstice::KeyCode::Up:
                             nextVis = (visIdx < 0) ? totalRows - 1 : std::max(visIdx - 1, 0);
                             break;
-                        case GUI::KeyCode::Home:
+                        case interstice::KeyCode::Home:
                             if (cellMode) nextCol = 0;
                             else          nextVis = 0;
                             break;
-                        case GUI::KeyCode::End:
+                        case interstice::KeyCode::End:
                             if (cellMode) nextCol = std::max(0, colCount - 1);
                             else          nextVis = totalRows - 1;
                             break;
-                        case GUI::KeyCode::PageUp:
+                        case interstice::KeyCode::PageUp:
                             if (visIdx < 0) nextVis = firstFullVis;
                             else if (visIdx > firstFullVis) nextVis = firstFullVis;
                             else nextVis = std::max(0, visIdx - (rowsPerPage - 1));
                             break;
-                        case GUI::KeyCode::PageDown:
+                        case interstice::KeyCode::PageDown:
                             if (visIdx < 0) nextVis = lastFullVis;
                             else if (visIdx < lastFullVis) nextVis = lastFullVis;
                             else nextVis = std::min(totalRows - 1, visIdx + (rowsPerPage - 1));
                             break;
-                        case GUI::KeyCode::Space:
-                        case GUI::KeyCode::Return:
+                        case interstice::KeyCode::Space:
+                        case interstice::KeyCode::Return:
                             if (idx >= 0)
                             {
                                 const auto* info = statePtr->FindTreeRow(statePtr->selectedRowID);
@@ -188,7 +188,7 @@ namespace GUI
                                     { *info->isOpen = !*info->isOpen; guiStateManager.Interaction().SuppressHover(); return true; }
                             }
                             return false;
-                        case GUI::KeyCode::F2:
+                        case interstice::KeyCode::F2:
                             if (idx >= 0)
                             {
                                 const auto* info = statePtr->FindTreeRow(statePtr->selectedRowID);
@@ -202,7 +202,7 @@ namespace GUI
                                 }
                             }
                             return false;
-                        case GUI::KeyCode::Left:
+                        case interstice::KeyCode::Left:
                             if (cellMode) { nextCol = std::max(0, nextCol - 1); break; }
                             if (idx >= 0)
                             {
@@ -216,7 +216,7 @@ namespace GUI
                                     const int myDepth = info->depth;
                                     for (int i = idx - 1; i >= 0; --i)
                                     {
-                                        const GUI::ID prevID = idManager.GetSubID(
+                                        const interstice::ID prevID = idManager.GetSubID(
                                             statePtr->_rowsRangeID, static_cast<uint32_t>(i));
                                         const auto* sib = statePtr->FindTreeRow(prevID);
                                         if (!sib) break;  // outside emit window
@@ -225,7 +225,7 @@ namespace GUI
                                 }
                             }
                             break;
-                        case GUI::KeyCode::Right:
+                        case interstice::KeyCode::Right:
                             if (cellMode) { nextCol = std::min(std::max(0, colCount - 1), nextCol + 1); break; }
                             if (idx >= 0)
                             {
@@ -235,7 +235,7 @@ namespace GUI
                                     if (!*info->isOpen) { *info->isOpen = true; guiStateManager.Interaction().SuppressHover(); return true; }
                                     if (idx + 1 < totalRows)
                                     {
-                                        const GUI::ID childID = idManager.GetSubID(
+                                        const interstice::ID childID = idManager.GetSubID(
                                             statePtr->_rowsRangeID, static_cast<uint32_t>(idx + 1));
                                         const auto* child = statePtr->FindTreeRow(childID);
                                         if (child && child->depth == info->depth + 1)
@@ -252,13 +252,13 @@ namespace GUI
                         next = statePtr->VisualToDataset(nextVis);
 
                     bool changed = false;
-                    GUI::ID newID = GUI::ID::Invalid();
+                    interstice::ID newID = interstice::ID::Invalid();
                     if (next != idx && next >= 0 && next < totalRows)
                     {
                         newID = idManager.GetSubID(statePtr->_rowsRangeID,
                                                    static_cast<uint32_t>(next));
                     }
-                    if (newID != GUI::ID::Invalid() && newID != statePtr->selectedRowID)
+                    if (newID != interstice::ID::Invalid() && newID != statePtr->selectedRowID)
                     {
                         statePtr->selectedRowID = newID;
                         if (statePtr->multiSelect)
@@ -278,7 +278,7 @@ namespace GUI
                     if (changed)
                     {
                         guiStateManager.Interaction().SuppressHover();
-                        GUI::ElementRef rowRef = elementStorage.FindElementRefByID(statePtr->selectedRowID);
+                        interstice::ElementRef rowRef = elementStorage.FindElementRefByID(statePtr->selectedRowID);
                         auto& scrollManagement = guiStateManager.GetScrollManagement();
 
                         // Scroll the row clear of the sticky header (top) and the
@@ -288,23 +288,23 @@ namespace GUI
                             : 0;
                         const int32_t hPad    = hOverflow
                             ? theme.scrollbarThickness : 0;
-                        if (rowRef != GUI::ElementRef::Invalid())
+                        if (rowRef != interstice::ElementRef::Invalid())
                         {
                             // Inflate the target by the header (top) and scrollbar (bottom).
                             const auto& rrect = elementStorage.GetElementRectUnsafe(rowRef).rect;
-                            GUI::IntRect target = rrect;
+                            interstice::IntRect target = rrect;
                             target.y -= headerH;
                             target.h += headerH + hPad;
                             scrollManagement.MakeRectVisibleHierarchically(
                                 elementStorage, target, rowRef);
                         }
-                        else if (statePtr->_rowsRangeID != GUI::ID::Invalid()
+                        else if (statePtr->_rowsRangeID != interstice::ID::Invalid()
                                  && statePtr->_actualRowHeight > 0
-                                 && statePtr->_bodyID != GUI::ID::Invalid())
+                                 && statePtr->_bodyID != interstice::ID::Invalid())
                         {
                             // Row not emitted: scroll by its VISUAL position (sorting
                             // makes dataset index differ from scroll row).
-                            const int datasetIdx = (newID.GetMode() == GUI::IDMode::SubRange)
+                            const int datasetIdx = (newID.GetMode() == interstice::IDMode::SubRange)
                                 ? static_cast<int>(newID.value.subRangeParts.index) : 0;
                             const int rowIdx = statePtr->DatasetToVisual(datasetIdx);
                             if (rowIdx < 0) return true;  // not in dataset; nothing to scroll to
@@ -320,8 +320,8 @@ namespace GUI
                             const int n = statePtr->_sectionCount;
                             for (int i = 0; i < n; i++)
                             {
-                                const GUI::ID sid = statePtr->SectionBodyID(i);
-                                if (sid == GUI::ID::Invalid()) continue;
+                                const interstice::ID sid = statePtr->SectionBodyID(i);
+                                if (sid == interstice::ID::Invalid()) continue;
                                 auto sref = elementStorage.FindElementRefByID(sid);
                                 if (!sref.IsValid()) continue;
                                 const auto& srect = elementStorage.GetElementRectUnsafe(sref);
@@ -347,7 +347,7 @@ namespace GUI
                                 }
                                 writtenY = clamped.y;
                             }
-                            if (anyChange && statePtr->_bodyID != GUI::ID::Invalid())
+                            if (anyChange && statePtr->_bodyID != interstice::ID::Invalid())
                             {
                                 auto bh = scrollManagement.GetOrCreateScrollOffsetHandle(statePtr->_bodyID);
                                 const int2 bcur = scrollManagement.GetScrollOffset(bh);
@@ -369,12 +369,12 @@ namespace GUI
     // One row-backdrop handler shared by every row; the row ID is the event's
     // element ID. With state->rowDragDrop set it also handles drag-and-drop with
     // Before/Inside/After zones (same contract as MakeTreeRowDragDropHandler).
-    GUI::EventHandler GUIApplication::BuildRowBackdropHandler(TableState* state,
-                                                              GUI::ID containerID)
+    interstice::EventHandler GUIApplication::BuildRowBackdropHandler(TableState* state,
+                                                              interstice::ID containerID)
     {
         return [this, state, containerID](ElementEvent&& event) -> bool
         {
-            const GUI::ID rowID = event.id;
+            const interstice::ID rowID = event.id;
             ItemDragDropConfig* dd = state->rowDragDrop;
             const bool dragDropEnabled = (dd && dd->payloadType != 0);
 
@@ -382,18 +382,18 @@ namespace GUI
             // (TableState::_pendingRowClick) and dropped if a drag starts.
 
             // Selection shared by the immediate (MouseDown) and deferred (MouseUp) paths.
-            auto applyClickSelection = [&](GUI::ID id, GUI::KeyModifier mods) {
-                const bool ctrlSel  = (mods & GUI::KeyModifier::Control) != GUI::KeyModifier::None;
-                const bool shiftSel = (mods & GUI::KeyModifier::Shift)   != GUI::KeyModifier::None;
+            auto applyClickSelection = [&](interstice::ID id, interstice::KeyModifier mods) {
+                const bool ctrlSel  = (mods & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
+                const bool shiftSel = (mods & interstice::KeyModifier::Shift)   != interstice::KeyModifier::None;
                 if (state->multiSelect)
                 {
                     auto& ms = *state->multiSelect;
-                    if (shiftSel && ms.lastClickedID != GUI::ID::Invalid())
+                    if (shiftSel && ms.lastClickedID != interstice::ID::Invalid())
                     {
-                        const bool anchorRanged  = ms.lastClickedID.GetMode() == GUI::IDMode::SubRange;
-                        const bool currentRanged = id.GetMode() == GUI::IDMode::SubRange;
+                        const bool anchorRanged  = ms.lastClickedID.GetMode() == interstice::IDMode::SubRange;
+                        const bool currentRanged = id.GetMode() == interstice::IDMode::SubRange;
                         if (anchorRanged && currentRanged
-                            && state->_rowsRangeID != GUI::ID::Invalid())
+                            && state->_rowsRangeID != interstice::ID::Invalid())
                         {
                             const int anchorDs = static_cast<int>(ms.lastClickedID.value.subRangeParts.index);
                             const int currDs   = static_cast<int>(id.value.subRangeParts.index);
@@ -434,7 +434,7 @@ namespace GUI
             };
 
             // ---- MouseUp: resolve a deferred click selection, if any ----
-            if (event.type == GUI::EventType::MouseUp && event.state.LeftReleased())
+            if (event.type == interstice::EventType::MouseUp && event.state.LeftReleased())
             {
                 if (dragDropEnabled
                     && state->_pendingRowClick.rowID == rowID
@@ -449,9 +449,9 @@ namespace GUI
 
             // ---- Drag-and-drop event branches (only when enabled) ----
             // MouseDown (selection + drag prime) is handled below.
-            if (dragDropEnabled && event.type != GUI::EventType::MouseDown)
+            if (dragDropEnabled && event.type != interstice::EventType::MouseDown)
             {
-                auto computeZone = [&](const GUI::IntRect& rect) -> TreeDropPosition
+                auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
                 {
                     if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
                     // rect is in layout space — convert cursor through any
@@ -482,8 +482,8 @@ namespace GUI
                 // start below the sticky header and above the H-scrollbar.
                 auto autoScrollY = [&]() {
                     if (state->_sectionCount <= 0) return;
-                    const GUI::ID body0 = state->SectionBodyID(0);
-                    if (body0 == GUI::ID::Invalid()) return;
+                    const interstice::ID body0 = state->SectionBodyID(0);
+                    if (body0 == interstice::ID::Invalid()) return;
                     auto bodyRef = elementStorage.FindElementRefByID(body0);
                     if (!bodyRef.IsValid()) return;
                     const auto& bodyRect = elementStorage.GetElementRectUnsafe(bodyRef);
@@ -508,8 +508,8 @@ namespace GUI
                     const int n = state->_sectionCount;
                     for (int i = 0; i < n; i++)
                     {
-                        const GUI::ID sid = state->SectionBodyID(i);
-                        if (sid == GUI::ID::Invalid()) continue;
+                        const interstice::ID sid = state->SectionBodyID(i);
+                        if (sid == interstice::ID::Invalid()) continue;
                         auto sref = elementStorage.FindElementRefByID(sid);
                         if (!sref.IsValid()) continue;
                         const auto& srect = elementStorage.GetElementRectUnsafe(sref);
@@ -523,17 +523,17 @@ namespace GUI
 
                 switch (event.type)
                 {
-                    case GUI::EventType::MouseMove:
+                    case interstice::EventType::MouseMove:
                     {
-                        if ((event.state.buttons & GUI::MouseButtons::Left) == GUI::MouseButtons::None) break;
+                        if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         // A real drag cancels the deferred click selection.
                         if (guiStateManager.Drag().GetDraggedID() == rowID)
                             state->_pendingRowClick.dragPromoted = true;
                         return guiStateManager.Drag().GetDraggedID() == rowID;
                     }
-                    case GUI::EventType::DragEnter:
-                    case GUI::EventType::DragOver:
+                    case interstice::EventType::DragEnter:
+                    case interstice::EventType::DragOver:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (!event.rect) return true;
@@ -552,13 +552,13 @@ namespace GUI
                         m_treeDropState.targetDepth  = info ? info->depth : 0;
                         return true;
                     }
-                    case GUI::EventType::DragOut:
+                    case interstice::EventType::DragOut:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (m_treeDropState.targetRowID == rowID) m_treeDropState = {};
                         return true;
                     }
-                    case GUI::EventType::Drop:
+                    case interstice::EventType::Drop:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (event.state.dragSourceID == rowID) { m_treeDropState = {}; return true; }
@@ -580,7 +580,7 @@ namespace GUI
                 return false;
             }
 
-            if (event.type != GUI::EventType::MouseDown) return false;
+            if (event.type != interstice::EventType::MouseDown) return false;
             if (!event.state.LeftPressed()) return false;
 
             // One tracker for double-click (<300ms: toggle branch; in row mode the tree
@@ -591,8 +591,8 @@ namespace GUI
             const bool wasSelected = (state->selectedRowID == rowID)
                 || (state->multiSelect && state->multiSelect->selectedIDs.count(rowID) > 0);
 
-            const bool ctrl  = (event.state.modifiers & GUI::KeyModifier::Control) != GUI::KeyModifier::None;
-            const bool shift = (event.state.modifiers & GUI::KeyModifier::Shift)   != GUI::KeyModifier::None;
+            const bool ctrl  = (event.state.modifiers & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
+            const bool shift = (event.state.modifiers & interstice::KeyModifier::Shift)   != interstice::KeyModifier::None;
             const bool ctrlShift = ctrl && shift;
 
             const auto* info = state->FindTreeRow(rowID);

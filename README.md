@@ -32,7 +32,7 @@ The library is two static libraries:
   clone without it only has pointer files, so the fonts fail to load
 - Network access on the first configure
 - At runtime, a GPU driver with Vulkan 1.3, `VK_KHR_swapchain` and the features
-  listed by `Vulkan::VulkanDeviceContext::GetDeviceRequirements()` (dynamic
+  listed by `interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()` (dynamic
   rendering, synchronization2, descriptor indexing, buffer device address, 8- and
   16-bit storage, among others)
 
@@ -97,7 +97,7 @@ ctest --test-dir build -C Debug     rem both, one process per test
 
 #include <string>
 
-class HelloApp : public GUI::GUIApplication
+class HelloApp : public interstice::GUIApplication
 {
 public:
     bool Initialize(const InitializeOptions& options = {}) override
@@ -111,9 +111,9 @@ public:
     // Called every frame: describe the whole UI; the library keeps the state.
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "Hello", GUI::LayoutOverride{}.Size(360, 160)))
+        if (BeginWindow(windowID, "Hello", interstice::LayoutOverride{}.Size(360, 160)))
         {
-            BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+            BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
             BeginLabelGroup();
             Label("Name");
             Field(name);
@@ -126,7 +126,7 @@ public:
     }
 
 private:
-    GUI::ID     windowID = GUI::ID::Invalid();
+    interstice::ID     windowID = interstice::ID::Invalid();
     std::string name     = "world";
     std::string greeting;
 };
@@ -204,11 +204,11 @@ as its editor, can hand its handles to the GUI so both render on the same
 device:
 
 ```cpp
-GUI::GUIApplication app;
-app.configureGraphicsContext = [&](GUI::GraphicsContext& context)
+interstice::GUIApplication app;
+app.configureGraphicsContext = [&](interstice::GraphicsContext& context)
 {
-    auto& vk = static_cast<Vulkan::VulkanGraphicsContext&>(context);
-    Vulkan::VulkanDeviceContext::ExternalDevice external;
+    auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(context);
+    interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
     external.instance            = hostInstance;
     external.physicalDevice      = hostPhysicalDevice;
     external.device              = hostDevice;
@@ -225,7 +225,7 @@ up and before the GUI creates a device of its own.
 
 Requirements on the host device:
 
-- `Vulkan::VulkanDeviceContext::GetDeviceRequirements()` lists the API version,
+- `interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()` lists the API version,
   features, and device extensions the GUI needs. Enable all of them when
   creating the device. `CheckPhysicalDeviceSupport` reports what a physical
   device lacks. The GUI checks this when it adopts the device, and fails
@@ -252,11 +252,11 @@ A host can render into an image it owns and show it in the UI, for example a
 3D viewport:
 
 ```cpp
-auto& vk = static_cast<Vulkan::VulkanGraphicsContext&>(*graphicsContext);
-GUI::ImageIndex index = vk.RegisterExternalImage(view, sampler);   // once
+auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(*graphicsContext);
+interstice::ImageIndex index = vk.RegisterExternalImage(view, sampler);   // once
 vk.UpdateExternalImage(index, newView, sampler);                   // after a resize
 
-Image(index, GUI::uint2{ width, height });   // in OnGUI
+Image(index, interstice::uint2{ width, height });   // in OnGUI
 ```
 
 `Image` uses `theme.imageStyleRef`. A custom element or style shows the image only
@@ -287,8 +287,8 @@ Use it to put the UI inside an engine viewport, composite it into the host's
 frame, or render it without anything appearing on screen, as the GPU tests do.
 
 ```cpp
-if (BeginWindow(windowID, "Panel", GUI::LayoutOverride{}.Size(400, 300), theme.windowStyleRef,
-                GUI::ElementFlags::WindowRenderToImage))
+if (BeginWindow(windowID, "Panel", interstice::LayoutOverride{}.Size(400, 300), theme.windowStyleRef,
+                interstice::ElementFlags::WindowRenderToImage))
 {
     // controls as usual
     EndWindow();

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace GUI 
+namespace interstice 
 {
     // ============================================================================
     // StyleSheet — result of parsing a CSS-inspired style file
@@ -190,4 +190,4 @@ namespace GUI
     //
     StyleSheet ParseStyleSheet(std::string_view source);
 
-} // namespace GUI
+} // namespace interstice

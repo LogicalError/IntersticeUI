@@ -1,4 +1,4 @@
-// Per-element typed state keyed by GUI::ID, persisted across frames (drag start,
+// Per-element typed state keyed by interstice::ID, persisted across frames (drag start,
 // double-click timing, etc.).
 //
 // Lifetime: Get/GetOrCreate touch an entry; EndFrame evicts untouched entries.
@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace GUI
+namespace interstice
 {
     class ElementDataStore
     {

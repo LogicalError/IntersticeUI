@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <type_traits>
 
-namespace GUI
+namespace interstice
 {
     template<typename T>
     struct NumericFieldConfig {};

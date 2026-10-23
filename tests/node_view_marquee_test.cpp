@@ -17,7 +17,7 @@
 
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

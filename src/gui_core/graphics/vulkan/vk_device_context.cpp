@@ -6,12 +6,12 @@
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 #include <gui_core/graphics/vulkan/vk_defaults.h>
 
-using namespace Vulkan;
+using namespace interstice::vulkan;
 
 void VulkanDeviceContext::WaitIdle() const
 {
     auto queueLock = LockQueue();
-    VK_CHECK(vkDeviceWaitIdle(device));
+    INTERSTICE_VK_CHECK(vkDeviceWaitIdle(device));
 }
 
 bool VulkanDeviceContext::Initialize()

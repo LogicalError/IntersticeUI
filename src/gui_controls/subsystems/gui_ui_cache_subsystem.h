@@ -9,7 +9,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/elements/gui_element.h>
 
-namespace GUI
+namespace interstice
 {
     class FramePipeline;
     struct FrameContext;

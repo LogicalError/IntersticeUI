@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace GUI
+namespace interstice
 {
     // Memory functions a host gives the library. They receive the allocations that
     // can be routed: Vulkan objects, VMA, vk-bootstrap and SDL. They must outlive

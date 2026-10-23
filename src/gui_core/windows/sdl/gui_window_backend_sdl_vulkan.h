@@ -1,6 +1,6 @@
 #pragma once
 
-namespace GUI
+namespace interstice
 {
     class GraphicsContext;
 

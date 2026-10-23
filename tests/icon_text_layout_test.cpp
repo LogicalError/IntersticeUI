@@ -3,7 +3,7 @@
 #include <gui_core/style/gui_style.h>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class IconTextLayoutTest : public ::testing::Test
     {
@@ -158,4 +158,4 @@ namespace GUI
         EXPECT_EQ(contentRuns[3].type, ContentRun::Text);
     }
 
-} // namespace GUI
+} // namespace interstice

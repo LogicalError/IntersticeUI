@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 namespace
 {
@@ -422,4 +422,4 @@ skb_icon_handle_t RegisterNanoSVG(skb_icon_collection_t* collection,
 	return handle;
 }
 
-} // namespace GUI
+} // namespace interstice

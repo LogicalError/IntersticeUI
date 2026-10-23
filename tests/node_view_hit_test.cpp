@@ -15,7 +15,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/gui_base_types.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -59,7 +59,7 @@ namespace GUI
                 auto nodeRes = app.elementStorage.Add(std::move(node),
                     LayoutOverride{}.FixedWidth(kNodeW).Absolute(pos.x, pos.y));
                 ASSERT_EQ(nodeRes.status, ElementStorageResult::Success);
-                ASSERT_EQ(app.windowRegistry.Add(nodeRes.ref), GUI::RegistryResult::Success);
+                ASSERT_EQ(app.windowRegistry.Add(nodeRes.ref), interstice::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
                 // Body row inside the node — same nesting depth as the
@@ -96,7 +96,7 @@ namespace GUI
                 const float halfH = (float)((kCanvasH - 8) / 2);
                 app.elementStorage.SetContentTransform(canvasRes.ref,
                     float3x2::Translate(float2{ halfW, halfH }));
-                ASSERT_EQ(app.windowRegistry.Add(canvasRes.ref), GUI::RegistryResult::Success);
+                ASSERT_EQ(app.windowRegistry.Add(canvasRes.ref), interstice::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
                 BuildNode(negNodeID, negFieldID, kNegPos, negClicks);
@@ -245,7 +245,7 @@ namespace GUI
                 ASSERT_EQ(cv.status, ElementStorageResult::Success);
                 app.elementStorage.SetContentTransform(cv.ref,
                     float3x2::Translate(float2{ 396.f, 296.f }));
-                ASSERT_EQ(app.windowRegistry.Add(cv.ref), GUI::RegistryResult::Success);
+                ASSERT_EQ(app.windowRegistry.Add(cv.ref), interstice::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
                 // One negative-positioned node containing a label-group with
@@ -257,7 +257,7 @@ namespace GUI
                 auto n = app.elementStorage.Add(std::move(node),
                     LayoutOverride{}.FixedWidth(180).Absolute(-340, -60));
                 ASSERT_EQ(n.status, ElementStorageResult::Success);
-                ASSERT_EQ(app.windowRegistry.Add(n.ref), GUI::RegistryResult::Success);
+                ASSERT_EQ(app.windowRegistry.Add(n.ref), interstice::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
                 {
                     app.BeginHorizontal(LayoutOverride{}.Auto());  // row

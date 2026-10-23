@@ -6,7 +6,7 @@
 
 #include <gui_core/graphics/gui_pixel_snap.h>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

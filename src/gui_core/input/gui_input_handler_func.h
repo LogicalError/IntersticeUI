@@ -5,7 +5,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <functional>
 
-namespace GUI
+namespace interstice
 {
     struct ElementRect;    // requires gui/gui_element_storage.h
     struct ElementRef;     // requires gui/gui_element_storage.h
@@ -14,7 +14,7 @@ namespace GUI
 
     struct ElementEvent
     {
-        GUI::ID             id;
+        interstice::ID             id;
         EventType           type;
         const InputState&   state;
         const ElementRect*  rect;

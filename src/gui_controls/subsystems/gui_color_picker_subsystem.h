@@ -8,7 +8,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_color_conversions.h>
 
-namespace GUI
+namespace interstice
 {
     class FramePipeline;
     struct FrameContext;
@@ -20,15 +20,15 @@ namespace GUI
     // the dataflow re-enters BeginMenu each frame.
     struct ColorPickerState
     {
-        GUI::ID triggerID = GUI::ID::Invalid(); // swatch that opened the picker
-        GUI::ID windowID  = GUI::ID::Invalid(); // popup window ID
+        interstice::ID triggerID = interstice::ID::Invalid(); // swatch that opened the picker
+        interstice::ID windowID  = interstice::ID::Invalid(); // popup window ID
         float h = 0, s = 0, v = 0, a = 1;       // working HSV+A copy
-        GUI::color4f originalColor {};           // color when picker was opened
+        interstice::color4f originalColor {};           // color when picker was opened
         bool  allowHDR      = false;
         float hdrBrightness = 1.0f;
         std::string hexText;                     // hex input field text
 
-        GUI::ColorSpace activeSpace = GUI::ColorSpace::HSV;
+        interstice::ColorSpace activeSpace = interstice::ColorSpace::HSV;
 
         // Components of the active space (H/S/V, R/G/B, L/a/b, ...). Members, since
         // GradientSlider handlers keep pointers to them until dispatch.
@@ -36,20 +36,20 @@ namespace GUI
         float snapComp[3] = { 0, 0, 0 };
         bool  slidersInitialized = false;
 
-        GUI::VisualColorStyleIndex svQuadColor      = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex hueRing          = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex markerColor      = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex whiteColor       = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex svIndicatorColor = GUI::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex svQuadColor      = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex hueRing          = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex markerColor      = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex whiteColor       = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex svIndicatorColor = interstice::VisualColorStyleIndex::Invalid;
 
         enum class WheelDragTarget { None, Ring, Square } wheelDrag = WheelDragTarget::None;
 
         static constexpr int kNumGradientSliders = 4;
-        GUI::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};
-        GUI::VisualColorStyleIndex triangleStyle = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex newColor      = GUI::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};
+        interstice::VisualColorStyleIndex triangleStyle = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid;
 
-        struct PaletteSwatch { GUI::color4f color {}; };
+        struct PaletteSwatch { interstice::color4f color {}; };
         std::vector<PaletteSwatch> palette = {
             {{ 0.8f, 0.8f, 0.8f, 1.0f }},
             {{ 0.0f, 0.8f, 0.8f, 1.0f }},
@@ -70,14 +70,14 @@ namespace GUI
         ColorPickerState& State() { return m_state; }
 
         // Invalid for a new swatch: the caller creates the style, reused from then on.
-        GUI::VisualColorStyleIndex& ClaimSwatchStyle(GUI::ID swatchID);
+        interstice::VisualColorStyleIndex& ClaimSwatchStyle(interstice::ID swatchID);
 
         // Carry swatchID's style over without rebuilding it: a cache-hit scope
         // doesn't re-claim its swatches, but its blitted primitives still use them.
-        void KeepSwatchAlive(GUI::ID swatchID);
+        void KeepSwatchAlive(interstice::ID swatchID);
 
     private:
         ColorPickerState m_state{};
-        std::unordered_map<GUI::ID, GUI::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
+        std::unordered_map<interstice::ID, interstice::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
     };
 }

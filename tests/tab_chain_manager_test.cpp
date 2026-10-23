@@ -3,7 +3,7 @@
 #include <gui/gui_state_manager.h>
 #include <gui/gui_id_manager.h>
 
-using namespace GUI;
+using namespace interstice;
 using namespace testing;
 
 class TabChainManagerTest : public ::testing::Test

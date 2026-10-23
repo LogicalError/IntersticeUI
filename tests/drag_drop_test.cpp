@@ -13,7 +13,7 @@
 
 #include <any>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -174,4 +174,4 @@ namespace GUI
             EXPECT_FALSE(handler(MakeEvent(src, EventType::MouseMove, s)));
         }
     }
-} // namespace GUI
+} // namespace interstice

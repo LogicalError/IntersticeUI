@@ -3,7 +3,7 @@
 
 #include <string>
 
-class HelloApp : public GUI::GUIApplication
+class HelloApp : public interstice::GUIApplication
 {
 public:
     bool Initialize(const InitializeOptions& options = {}) override
@@ -18,10 +18,10 @@ public:
     // Called every frame: describe the whole UI, the library keeps the state.
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "Hello", GUI::LayoutOverride{}.Size(360, 160)))
+        if (BeginWindow(windowID, "Hello", interstice::LayoutOverride{}.Size(360, 160)))
         {
             // A window lays its children out in wrapping rows; stack them instead.
-            BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+            BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
             Text("Hello from IntersticeUI!");
 
             BeginLabelGroup();
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    GUI::ID     windowID = GUI::ID::Invalid();
+    interstice::ID     windowID = interstice::ID::Invalid();
     std::string name     = "world";
     std::string greeting;
 };

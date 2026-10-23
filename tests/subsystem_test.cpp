@@ -17,7 +17,7 @@
 
 #include <string>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -66,15 +66,15 @@ namespace GUI
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const GUI::ID groupID = app.idManager.CreateStaticID();
+        const interstice::ID groupID = app.idManager.CreateStaticID();
         sub.BeginGroup(groupID, /*defaultW*/ 150, /*minW*/ 50, /*maxW*/ 400);
         auto* state = sub.GetActiveGroup();
         ASSERT_NE(state, nullptr);
 
         // Seed transient fields (would normally be set during construction).
         state->anyLabelHovered = true;
-        state->labelTextIDs.push_back(GUI::TextID{});
-        state->labelTextIDs.push_back(GUI::TextID{});
+        state->labelTextIDs.push_back(interstice::TextID{});
+        state->labelTextIDs.push_back(interstice::TextID{});
         // And a persistent field — must survive the reset.
         state->edgeHovered = true;
         sub.EndGroup();
@@ -103,7 +103,7 @@ namespace GUI
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const GUI::ID groupID = app.idManager.CreateStaticID();
+        const interstice::ID groupID = app.idManager.CreateStaticID();
 
         auto setup = [&](bool anyHovered, bool dragging, bool edgeHovered) {
             sub.BeginGroup(groupID, 120, 40, 500);
@@ -148,7 +148,7 @@ namespace GUI
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const GUI::ID groupID = app.idManager.CreateStaticID();
+        const interstice::ID groupID = app.idManager.CreateStaticID();
 
         sub.BeginGroup(groupID, /*defaultW*/ 60, /*minW*/ 30, /*maxW*/ 120, /*resizable*/ false);
         auto* state = sub.GetActiveGroup();
@@ -169,7 +169,7 @@ namespace GUI
         sub.EndGroup();
 
         // Resizable groups: accumulator is ignored.
-        const GUI::ID resizableID = app.idManager.CreateStaticID();
+        const interstice::ID resizableID = app.idManager.CreateStaticID();
         sub.BeginGroup(resizableID, 120, 40, 500, /*resizable*/ true);
         sub.GetActiveGroup()->maxLabelWidthThisFrame = 999;
         sub.EndGroup();
@@ -208,8 +208,8 @@ namespace GUI
 
         EXPECT_TRUE(sub.IsBalanced());
 
-        const GUI::ID a = app.idManager.CreateStaticID();
-        const GUI::ID b = app.idManager.CreateStaticID();
+        const interstice::ID a = app.idManager.CreateStaticID();
+        const interstice::ID b = app.idManager.CreateStaticID();
         sub.BeginGroup(a, 120, 40, 500);
         EXPECT_FALSE(sub.IsBalanced());
         sub.BeginGroup(b, 120, 40, 500);  // nested
@@ -253,10 +253,10 @@ namespace GUI
 
         ButtonGroupSubsystem::ItemState s{};
         // Distinct sentinel layoutStyleIndex per role so we can compare.
-        s.firstStyleRef.layoutStyleIndex = static_cast<GUI::LayoutStyleIndex>(101);
-        s.midStyleRef.layoutStyleIndex   = static_cast<GUI::LayoutStyleIndex>(202);
-        s.lastStyleRef.layoutStyleIndex  = static_cast<GUI::LayoutStyleIndex>(303);
-        s.soloStyleRef.layoutStyleIndex  = static_cast<GUI::LayoutStyleIndex>(404);
+        s.firstStyleRef.layoutStyleIndex = static_cast<interstice::LayoutStyleIndex>(101);
+        s.midStyleRef.layoutStyleIndex   = static_cast<interstice::LayoutStyleIndex>(202);
+        s.lastStyleRef.layoutStyleIndex  = static_cast<interstice::LayoutStyleIndex>(303);
+        s.soloStyleRef.layoutStyleIndex  = static_cast<interstice::LayoutStyleIndex>(404);
 
         EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.firstStyleRef.layoutStyleIndex);
         EXPECT_EQ(s.itemCount, 1);
@@ -365,7 +365,7 @@ namespace GUI
     TEST(RenameSubsystemTest, DefaultStateIsInactive)
     {
         RenameSubsystem r;
-        EXPECT_EQ(r.targetID, GUI::ID::Invalid());
+        EXPECT_EQ(r.targetID, interstice::ID::Invalid());
         EXPECT_FALSE(r.isActive);
         EXPECT_FALSE(r.firstFrame);
         EXPECT_EQ(r.editBuffer, nullptr);
@@ -375,8 +375,8 @@ namespace GUI
     {
         RenameSubsystem r;
         std::string buf = "old text";
-        GUI::ID id{};
-        id.value.dynamicParts.mode      = GUI::IDMode::Static;
+        interstice::ID id{};
+        id.value.dynamicParts.mode      = interstice::IDMode::Static;
         id.value.dynamicParts.hashValue = 0xC0FFEE;
 
         r.Start(id, &buf, "new seed");
@@ -392,8 +392,8 @@ namespace GUI
     {
         RenameSubsystem r;
         std::string buf;
-        GUI::ID id{};
-        id.value.dynamicParts.mode      = GUI::IDMode::Static;
+        interstice::ID id{};
+        id.value.dynamicParts.mode      = interstice::IDMode::Static;
         id.value.dynamicParts.hashValue = 0xC0FFEE;
 
         r.Start(id, &buf, "edited value");
@@ -401,7 +401,7 @@ namespace GUI
         ASSERT_EQ(buf, "edited value");
 
         r.Cancel();
-        EXPECT_EQ(r.targetID,   GUI::ID::Invalid());
+        EXPECT_EQ(r.targetID,   interstice::ID::Invalid());
         EXPECT_FALSE(r.isActive);
         EXPECT_FALSE(r.firstFrame);
         EXPECT_EQ(r.editBuffer, nullptr);
@@ -522,7 +522,7 @@ namespace GUI
             app.Frame([&]{
                 app.BeginRootWindow();
                 int sel = 0;
-                const GUI::ID gridID = app.idManager.CreateStaticID();
+                const interstice::ID gridID = app.idManager.CreateStaticID();
                 app.BeginGridView(gridID, &sel);   // leak — no EndGridView
                 app.EndRootWindow();
             });
@@ -536,8 +536,8 @@ namespace GUI
             ASSERT_TRUE(app.Initialize());
             app.Frame([&]{
                 app.BeginRootWindow();
-                const GUI::ID groupID = app.idManager.CreateStaticID();
-                app.BeginReorderableGroup(groupID, GUI::ReorderDirection::Vertical,
+                const interstice::ID groupID = app.idManager.CreateStaticID();
+                app.BeginReorderableGroup(groupID, interstice::ReorderDirection::Vertical,
                                           [](int, int){});      // leak — no End
                 app.EndRootWindow();
             });

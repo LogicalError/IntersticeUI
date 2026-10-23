@@ -3,7 +3,7 @@
 // Per-property CSS value parsing (Parser::ParseDeclValue) and application to a
 // Style (Parser::ApplyDecl). Adding a CSS property touches only this file.
 
-namespace GUI {
+namespace interstice {
 
 // Parser::ParseDeclValue  (out-of-class definition)
 // ============================================================================

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace GUI
+namespace interstice
 {
     // ------------------------------------------------------------------------
     // StyleRef - References into style pools

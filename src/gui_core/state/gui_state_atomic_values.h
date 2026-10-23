@@ -7,7 +7,7 @@
 
 // Small state values owned by GUIStateManager.
 
-namespace GUI
+namespace interstice
 {
     enum class MouseCursor : uint8_t;   // defined in gui_style.h
 

@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-namespace GUI
+namespace interstice
 {
     struct alignas(16) glsl_float4 { float x, y, z, w; };
 
@@ -21,13 +21,13 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
-        GUI::int2       pos = { 0,0 };
-        GUI::int2       size = { 0,0 };
+        interstice::int2       pos = { 0,0 };
+        interstice::int2       size = { 0,0 };
 
-        GUI::ImageIndex textureIndex  = GUI::ImageIndex::Invalid;
+        interstice::ImageIndex textureIndex  = interstice::ImageIndex::Invalid;
         uint32_t        styleIndex    = 0; // "from" state GPU style index
         int16_t         colorIndex    = 0; // Per-element ColorStyle override (0 = use box style's bg); supports gradients.
         int16_t         _pad3         = 0;
@@ -46,20 +46,20 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
-        GUI::float2     pos = { 0,0 };
-        GUI::float2     size = { 0,0 };
+        interstice::float2     pos = { 0,0 };
+        interstice::float2     size = { 0,0 };
 
-        GUI::float2     uvMin = { 0,0 };
-        GUI::float2     uvMax = { 0,0 };
+        interstice::float2     uvMin = { 0,0 };
+        interstice::float2     uvMax = { 0,0 };
 
         float           scale = 0;
         uint16_t        bpp = 0;
         uint16_t        mode = 0;
 
-        GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid;
+        interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid;
         int16_t         textColorIndex = 0;
         int16_t         _pad = 0;
     };
@@ -69,10 +69,10 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
-        GUI::color4f    color;
+        interstice::color4f    color;
         float           size = 0;
         // std430 aligns vec2 to 8 bytes: pos must start at offset 72, not 68.
         float           _pad_size_to_pos = 0;
@@ -85,8 +85,8 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
         int             colorIndex     = 0;
         float           lineWidth      = 0;
@@ -95,10 +95,10 @@ namespace GUI
         float           gradientOffset = 0;
         float           gradientScale  = 1;
 
-        GUI::short2     p0 = { 0,0 };
-        GUI::short2     p1 = { 0,0 };
-        GUI::short2     p2 = { 0,0 };
-        GUI::short2     p3 = { 0,0 };
+        interstice::short2     p0 = { 0,0 };
+        interstice::short2     p1 = { 0,0 };
+        interstice::short2     p2 = { 0,0 };
+        interstice::short2     p3 = { 0,0 };
     };
 
     static_assert(sizeof(Line) == 96,                    "Line struct size mismatch with GLSL std430 layout");
@@ -111,14 +111,14 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
-        GUI::float2     p0 = { 0,0 };
-        GUI::float2     p1 = { 0,0 };
-        GUI::float2     p2 = { 0,0 };
+        interstice::float2     p0 = { 0,0 };
+        interstice::float2     p1 = { 0,0 };
+        interstice::float2     p2 = { 0,0 };
 
-        GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid;
+        interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid;
 
         int16_t         colorIndex = 0;
 
@@ -129,13 +129,13 @@ namespace GUI
     {
         glsl_float4     transform0 = { 1, 0, 0 };
         glsl_float4     transform1 = { 0, 1, 0 };
-        GUI::int2       clipMin = { 0,0 };
-        GUI::int2       clipMax = { 0,0 };
+        interstice::int2       clipMin = { 0,0 };
+        interstice::int2       clipMax = { 0,0 };
 
-        GUI::int2       pos = { 0,0 };
-        GUI::int2       size = { 0,0 };
+        interstice::int2       pos = { 0,0 };
+        interstice::int2       size = { 0,0 };
 
-        GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid;
+        interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid;
 
         int16_t         colorIndex = 0;
         int16_t         _pad0 = 0;
@@ -181,7 +181,7 @@ namespace GUI
 
     struct GPUDrawPushConstants
     {
-        GUI::float4x4 worldMatrix = {};
+        interstice::float4x4 worldMatrix = {};
 
         // Indexed by PrimitiveSpec::pushSlot (slot order is shader contract).
         DeviceAddress primitiveAddresses[5] = {};

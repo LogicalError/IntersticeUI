@@ -7,8 +7,8 @@
 
 namespace
 {
-    using GUI::AllocationHooks;
-    using GUI::TrackingAllocator;
+    using interstice::AllocationHooks;
+    using interstice::TrackingAllocator;
 
     TEST(TrackingAllocator, CountsLiveAllocationsAndBytes)
     {

@@ -15,11 +15,11 @@
 #include <chrono>
 #include <limits>
 
-namespace GUI
+namespace interstice
 {
-    using namespace GUI::TableInternal;
+    using namespace interstice::TableInternal;
 
-    void GUIApplication::EmitTableHeaderCell(TableEmit& emit, GUI::ID tableID, int c, int16_t gridCol,
+    void GUIApplication::EmitTableHeaderCell(TableEmit& emit, interstice::ID tableID, int c, int16_t gridCol,
                                              bool isStretchTrack, int sectionMin, int sectionMax,
                                              int effectiveSortCol, IconID sortIcon)
     {
@@ -45,11 +45,11 @@ namespace GUI
 
         // Stable per-column header ID from VirtualTable's prologue: emit order changes
         // during a drag (dragged column last), which would shift a dynamic ID and lose capture.
-        const GUI::ID     cellID    = emit.columns[c]._headerCellID != GUI::ID::Invalid()
+        const interstice::ID     cellID    = emit.columns[c]._headerCellID != interstice::ID::Invalid()
             ? emit.columns[c]._headerCellID
             : idManager.AllocateDynamicID();
-        GUI::ElementState cellState = guiStateManager.GetCurrentState(cellID);
-        GUI::Element cell{};
+        interstice::ElementState cellState = guiStateManager.GetCurrentState(cellID);
+        interstice::Element cell{};
         cell.id       = cellID;
         cell.state    = cellState;
         cell.styleRef = headerStyle;
@@ -88,7 +88,7 @@ namespace GUI
                 auto& drag = m_columnDrag;
                 switch (event.type)
                 {
-                    case GUI::EventType::MouseDown:
+                    case interstice::EventType::MouseDown:
                     {
                         if (!event.state.LeftPressed()) return false;
                         drag = {};
@@ -101,7 +101,7 @@ namespace GUI
                         drag.headerRects.reserve(colCount);
                         for (size_t i = 0; i < colCount; i++)
                         {
-                            GUI::IntRect r{};
+                            interstice::IntRect r{};
                             if (i < statePtr->_headerRefs.size())
                                 if (auto* rp = elementStorage.GetElementRectPtr(statePtr->_headerRefs[i]))
                                     r = rp->rect;
@@ -109,7 +109,7 @@ namespace GUI
                         }
                         // Snapshot scroll-X so MouseMove can compensate for scrolling mid-drag.
                         drag.sectionBodyID = statePtr->SectionBodyID(sectionIdx);
-                        if (drag.sectionBodyID != GUI::ID::Invalid())
+                        if (drag.sectionBodyID != interstice::ID::Invalid())
                         {
                             auto& sm = guiStateManager.GetScrollManagement();
                             const auto h = sm.GetScrollOffsetHandle(drag.sectionBodyID);
@@ -120,11 +120,11 @@ namespace GUI
                         return true;
                     }
 
-                    case GUI::EventType::MouseMove:
+                    case interstice::EventType::MouseMove:
                     {
                         if (drag.tableID != tableID || drag.fromCol != colIdx) break;
                         if (!event.state.LeftDown()) break;
-                        GUI::int2 delta = event.state.screenPos - drag.startPos;
+                        interstice::int2 delta = event.state.screenPos - drag.startPos;
                         drag.offset = delta;
                         if (std::abs(delta.x) > styleManager.Px(kDragStartDistance)) drag.active = true;
                         if (drag.active && !drag.headerRects.empty())
@@ -132,7 +132,7 @@ namespace GUI
                             // Auto-scroll near the body's left/right edges, before
                             // resolving the drop target so it uses the new scroll.
                             int32_t curScrollX = drag.startScrollX;
-                            if (drag.sectionBodyID != GUI::ID::Invalid())
+                            if (drag.sectionBodyID != interstice::ID::Invalid())
                             {
                                 auto bodyRef = elementStorage.FindElementRefByID(drag.sectionBodyID);
                                 if (bodyRef.IsValid())
@@ -169,14 +169,14 @@ namespace GUI
                                 event.state.screenPos.x - (curScrollX - drag.startScrollX);
                             int target = TableHelpers::ComputeColumnInsertionIndex(
                                 adjustedMouseX, drag.fromCol,
-                                std::span<const GUI::IntRect>(drag.headerRects.data(),
+                                std::span<const interstice::IntRect>(drag.headerRects.data(),
                                                               drag.headerRects.size()));
                             drag.toCol = std::clamp(target, drag.minTarget, drag.maxTarget);
                         }
                         return true;
                     }
 
-                    case GUI::EventType::MouseUp:
+                    case interstice::EventType::MouseUp:
                     {
                         if (drag.tableID != tableID || drag.fromCol != colIdx) break;
                         const bool  committed = drag.active;
@@ -208,7 +208,7 @@ namespace GUI
                                     if (from < to) std::rotate(widths.begin() + from, widths.begin() + from + 1, widths.begin() + to + 1);
                                     else           std::rotate(widths.begin() + to, widths.begin() + from, widths.begin() + from + 1);
                                 }
-                                guiStateManager.Interaction().SetFocusID(GUI::ID::Invalid());
+                                guiStateManager.Interaction().SetFocusID(interstice::ID::Invalid());
                                 guiStateManager.TextEditorFocus().Clear();
                                 transitionManager.Clear();
                             }
@@ -226,10 +226,10 @@ namespace GUI
                         return true;
                     }
 
-                    case GUI::EventType::KeyDown:
+                    case interstice::EventType::KeyDown:
                     {
                         if (drag.tableID == tableID && drag.fromCol == colIdx
-                            && event.state.lastKey == GUI::KeyCode::Escape)
+                            && event.state.lastKey == interstice::KeyCode::Escape)
                         {
                             drag = {};
                             guiStateManager.Interaction().ReleaseCaptureID();
@@ -247,7 +247,7 @@ namespace GUI
         {
             cell.eventHandler = [statePtr, colIdx](ElementEvent&& event) -> bool
             {
-                if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                 {
                     if (statePtr->sortColumn == colIdx)
                         statePtr->sortDescending = !statePtr->sortDescending;
@@ -268,7 +268,7 @@ namespace GUI
             isStretchTrack);
 
         // Row 0 of the section's body grid, pinned by StickyY during vertical scroll.
-        GUI::LayoutOverride lo;
+        interstice::LayoutOverride lo;
         lo = ApplyColumnDragOffsetX(
                  std::move(lo).GridColumn(gridCol).GridRow(0).ColumnTrack(track).StickyY(), emit, c);
         auto hRes = elementStorage.Add(std::move(cell), std::move(lo));
@@ -280,7 +280,7 @@ namespace GUI
     }
 
 
-    void GUIApplication::EmitTableHeaderSection(TableEmit& emit, GUI::ID tableID,
+    void GUIApplication::EmitTableHeaderSection(TableEmit& emit, interstice::ID tableID,
                                                 int colStart, int colEnd, bool lastColIsStretch,
                                                 int effectiveSortCol, IconID sortIcon)
     {
@@ -320,23 +320,23 @@ namespace GUI
 
     // ---- Direct-emit primitives ----
 
-    void GUIApplication::EmitDirectRowBackdrop(GUI::ID rowID, int16_t gridRow,
+    void GUIApplication::EmitDirectRowBackdrop(interstice::ID rowID, int16_t gridRow,
                                                int colStart, int colEnd,
-                                               GUI::ElementState backdropState,
-                                               GUI::ElementFlags backdropFlags,
-                                               GUI::StyleRef rowStyle,
-                                               GUI::EventHandler backdropHandler,
+                                               interstice::ElementState backdropState,
+                                               interstice::ElementFlags backdropFlags,
+                                               interstice::StyleRef rowStyle,
+                                               interstice::EventHandler backdropHandler,
                                                TableState* tableState,
                                                bool isLastSection)
     {
-        GUI::Element backdrop{};
+        interstice::Element backdrop{};
         backdrop.id           = rowID;
         backdrop.flags        = backdropFlags;
         backdrop.state        = backdropState;
         backdrop.styleRef     = rowStyle;
         backdrop.eventHandler = std::move(backdropHandler);
         auto bRes = elementStorage.Add(std::move(backdrop),
-            GUI::LayoutOverride{}
+            interstice::LayoutOverride{}
                 .GridColumn(0, static_cast<int16_t>(colEnd - colStart))
                 .GridRow(gridRow));
         VERIFY(bRes.status);
@@ -348,7 +348,7 @@ namespace GUI
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(bRes.ref,
             [this, rowID, tableState, isLastSection,
              lineColor = theme.treeDropIndicatorStyle]
-            (GUI::CustomDrawContext& ctx)
+            (interstice::CustomDrawContext& ctx)
             {
                 // A cancelled drag fires neither Drop nor DragOut, so m_treeDropState
                 // can be stale; gate on the live drag.
@@ -377,7 +377,7 @@ namespace GUI
                     ? theme.scrollbarThickness + styleManager.Px(2) : 0;
                 const int32_t rightEdge = leftX + w - scrollbarPad;
 
-                GUI::LineStyle indStyle { .colorStyleIndex = lineColor, .lineWidth = float(kThick) };
+                interstice::LineStyle indStyle { .colorStyleIndex = lineColor, .lineWidth = float(kThick) };
 
                 // InsideLast → rectangle around the row (drop as last child).
                 if (m_treeDropState.position == TreeDropPosition::InsideLast)
@@ -423,14 +423,14 @@ namespace GUI
                                              int colStart, int colEnd, int32_t height)
     {
         if (height <= 0) return;
-        GUI::ID spacerID = idManager.AllocateDynamicID("_table_spacer");
-        GUI::Element spacer{};
+        interstice::ID spacerID = idManager.AllocateDynamicID("_table_spacer");
+        interstice::Element spacer{};
         spacer.id       = spacerID;
         spacer.styleRef = theme.tableCellStyleRef;
-        spacer.flags    = GUI::ElementFlags::NoInput;
+        spacer.flags    = interstice::ElementFlags::NoInput;
         spacer.state    = guiStateManager.GetCurrentState(spacerID);
         auto rSpRes = elementStorage.Add(std::move(spacer),
-            GUI::LayoutOverride{}
+            interstice::LayoutOverride{}
                 .GridColumn(0, static_cast<int16_t>(colEnd - colStart))
                 .GridRow(gridRow)
                 .RowTrack(GridTrack::Fixed(static_cast<float>(height))));
@@ -439,11 +439,11 @@ namespace GUI
     }
 
 
-    void GUIApplication::OpenTableBodySection(TableEmit& emit, GUI::ID sectionID, GUI::StyleRef sectionStyle,
-                                              GUI::LayoutOverride&& layout, bool sampleViewport)
+    void GUIApplication::OpenTableBodySection(TableEmit& emit, interstice::ID sectionID, interstice::StyleRef sectionStyle,
+                                              interstice::LayoutOverride&& layout, bool sampleViewport)
     {
         auto bsRes = elementStorage.Add(
-            GUI::Element
+            interstice::Element
             {
                 .id = sectionID,
                 .styleRef = sectionStyle,
@@ -457,7 +457,7 @@ namespace GUI
         TableState* statePtr = emit.userState;
         [[maybe_unused]]
         auto cdResult = elementStorage.AddPostLayout(bsRes.ref,
-            [this, statePtr, sampleViewport](GUI::PostLayoutContext& plctx)
+            [this, statePtr, sampleViewport](interstice::PostLayoutContext& plctx)
             {
                 const auto innerRect = plctx.ElementInnerRect();
                 const int2 contentSize = plctx.GetContentSize(plctx.Ref());
@@ -489,23 +489,23 @@ namespace GUI
         int32_t writtenY = 0;
         for (int i = 0; i < state._sectionCount; i++)
         {
-            const GUI::ID sid = state.SectionBodyID(i);
-            if (sid == GUI::ID::Invalid()) continue;
+            const interstice::ID sid = state.SectionBodyID(i);
+            if (sid == interstice::ID::Invalid()) continue;
             auto sref = elementStorage.FindElementRefByID(sid);
             if (!sref.IsValid()) continue;
             const auto& srect = elementStorage.GetElementRectUnsafe(sref);
             auto h = sm.GetOrCreateScrollOffsetHandle(sid);
-            const GUI::int2 cur = sm.GetScrollOffset(h);
-            const GUI::int2 clamped = LayoutHelpers::ClampScrollOffsetToContent(
-                GUI::int2{ cur.x, std::numeric_limits<int32_t>::min() / 2 }, srect);
+            const interstice::int2 cur = sm.GetScrollOffset(h);
+            const interstice::int2 clamped = LayoutHelpers::ClampScrollOffsetToContent(
+                interstice::int2{ cur.x, std::numeric_limits<int32_t>::min() / 2 }, srect);
             if (clamped != cur) sm.SetScrollOffset(h, clamped);
             writtenY = clamped.y;
         }
-        if (state._bodyID != GUI::ID::Invalid())
+        if (state._bodyID != interstice::ID::Invalid())
         {
             auto bh = sm.GetOrCreateScrollOffsetHandle(state._bodyID);
             if (sm.GetScrollOffset(bh).y != writtenY)
-                sm.SetScrollOffset(bh, GUI::int2{ 0, writtenY });
+                sm.SetScrollOffset(bh, interstice::int2{ 0, writtenY });
         }
     }
 
@@ -520,7 +520,7 @@ namespace GUI
         auto& sm = guiStateManager.GetScrollManagement();
         const int32_t maxScroll = std::max(0, contentH - viewportH);
         int32_t curMag = 0;
-        if (state._bodyID != GUI::ID::Invalid())
+        if (state._bodyID != interstice::ID::Invalid())
         {
             auto h = sm.GetScrollOffsetHandle(state._bodyID);
             if (sm.IsScrollOffsetHandleValid(h)) curMag = -sm.GetScrollOffset(h).y;
@@ -544,7 +544,7 @@ namespace GUI
         {
             ScrollTableSectionsToBottom(state);
             // Select the row shown at the bottom (the last VISUAL row under a sort).
-            if (state._rowsRangeID != GUI::ID::Invalid() && state._totalRowCount > 0)
+            if (state._rowsRangeID != interstice::ID::Invalid() && state._totalRowCount > 0)
             {
                 state.selectedRowID = state.RowIDInRange(state.VisualToDataset(state._totalRowCount - 1));
                 if (state.multiSelect)
@@ -566,10 +566,10 @@ namespace GUI
 
     // Emit the dragged column's cells, header and sizer last in the section so it
     // paints over its neighbours. The other emit phases skip it.
-    void GUIApplication::EmitDraggedColumnOnTop(TableEmit& emit, GUI::ID tableID,
+    void GUIApplication::EmitDraggedColumnOnTop(TableEmit& emit, interstice::ID tableID,
                                                 int colStart, int colEnd,
                                                 int firstVisible, int lastVisible,
-                                                GUI::ID rowsRangeID,
+                                                interstice::ID rowsRangeID,
                                                 bool lastColIsStretch,
                                                 int effectiveSortCol, IconID sortIcon)
     {
@@ -591,7 +591,7 @@ namespace GUI
             for (int visualIdx = firstVisible; visualIdx < lastVisible; visualIdx++)
             {
                 const int datasetIdx = state->VisualToDataset(visualIdx);
-                const GUI::ID rowID = idManager.GetSubID(rowsRangeID,
+                const interstice::ID rowID = idManager.GetSubID(rowsRangeID,
                                                         static_cast<uint32_t>(datasetIdx));
                 const bool rowSelected = state->multiSelect
                     ? state->multiSelect->selectedIDs.count(rowID) > 0
@@ -605,15 +605,15 @@ namespace GUI
                 // overlapped neighbour content.
                 const StyleRef rowStyle = (visualIdx % 2 == 0)
                     ? theme.tableRowStyleRef : theme.tableRowAltStyleRef;
-                const GUI::ID bgID = idManager.AllocateDynamicID("_table_drag_col_bg");
-                GUI::ElementState bgState = guiStateManager.GetCurrentState(bgID);
-                if (!cellMode && rowSelected) bgState |= GUI::ElementState::Selected;
-                GUI::Element bg{};
+                const interstice::ID bgID = idManager.AllocateDynamicID("_table_drag_col_bg");
+                interstice::ElementState bgState = guiStateManager.GetCurrentState(bgID);
+                if (!cellMode && rowSelected) bgState |= interstice::ElementState::Selected;
+                interstice::Element bg{};
                 bg.id       = bgID;
-                bg.flags    = GUI::ElementFlags::NoInput;
+                bg.flags    = interstice::ElementFlags::NoInput;
                 bg.state    = bgState;
                 bg.styleRef = rowStyle;
-                auto bgLo = GUI::LayoutOverride{}
+                auto bgLo = interstice::LayoutOverride{}
                     .GridColumn(static_cast<int16_t>(draggedCol - colStart))
                     .GridRow(static_cast<int16_t>(emit.directGridRow));
                 bgLo = ApplyColumnDragOffsetX(std::move(bgLo), emit, draggedCol);
@@ -625,7 +625,7 @@ namespace GUI
                 generateCell(datasetIdx);
                 if (rowModeSelected) guiStateManager.Construction().PopSelected();
             }
-            emit.currentRowID = GUI::ID::Invalid();
+            emit.currentRowID = interstice::ID::Invalid();
         }
 
         // 2) Header for the dragged column (only when headers are shown).
@@ -652,7 +652,7 @@ namespace GUI
 
 
     void GUIApplication::CloseTableBodySection(TableEmit& emit,
-                                               GUI::ID sectionBodyID, bool emitVerticalScrollbar,
+                                               interstice::ID sectionBodyID, bool emitVerticalScrollbar,
                                                bool suppressHorzScrollbar)
     {
         // Column sizers are emitted by the caller, before EmitDraggedColumnOnTop.
@@ -674,7 +674,7 @@ namespace GUI
         }
         else if (emitHorz)
         {
-            const GUI::ID hbarID = idManager.AllocateDynamicID("_table_section_hbar");
+            const interstice::ID hbarID = idManager.AllocateDynamicID("_table_section_hbar");
             HorizontalScrollbar(hbarID, sectionBodyID);
         }
 
@@ -686,7 +686,7 @@ namespace GUI
                                              int colStart, int colEnd,
                                              int totalRowCount, int32_t actualRowHeight,
                                              int firstVisible, int lastVisible,
-                                             GUI::ID rowsRangeID,
+                                             interstice::ID rowsRangeID,
                                              bool isLastSection)
     {
         if (colStart >= colEnd) return;
@@ -698,7 +698,7 @@ namespace GUI
         const bool cellMode = emit.cellMode;
         const StyleRef rowStyleEven = theme.tableRowStyleRef;
         const StyleRef rowStyleOdd  = theme.tableRowAltStyleRef;
-        const GUI::EventHandler& sharedHandler = emit.sharedRowHandler;
+        const interstice::EventHandler& sharedHandler = emit.sharedRowHandler;
 
         // Section grid rows: [header] · [top spacer] · visible rows · [bottom spacer].
         // Cells of one logical row share a GridRow, which keeps column-major emission aligned.
@@ -725,16 +725,16 @@ namespace GUI
         for (int visualIdx = firstVisible; visualIdx < lastVisible; visualIdx++)
         {
             const int datasetIdx = state->VisualToDataset(visualIdx);
-            const GUI::ID rowID = idManager.GetSubID(rowsRangeID,
+            const interstice::ID rowID = idManager.GetSubID(rowsRangeID,
                                                     static_cast<uint32_t>(datasetIdx));
             const bool rowSelected = state->multiSelect
                 ? state->multiSelect->selectedIDs.count(rowID) > 0
                 : (state->selectedRowID == rowID);
             const StyleRef rowStyle = (visualIdx % 2 == 0) ? rowStyleEven : rowStyleOdd;
-            GUI::ElementState backdropState = guiStateManager.GetCurrentState(rowID);
-            if (!cellMode && rowSelected) backdropState |= GUI::ElementState::Selected;
-            const GUI::ElementFlags backdropFlags =
-                cellMode ? GUI::ElementFlags::NoInput : GUI::ElementFlags::None;
+            interstice::ElementState backdropState = guiStateManager.GetCurrentState(rowID);
+            if (!cellMode && rowSelected) backdropState |= interstice::ElementState::Selected;
+            const interstice::ElementFlags backdropFlags =
+                cellMode ? interstice::ElementFlags::NoInput : interstice::ElementFlags::None;
 
             EmitDirectRowBackdrop(rowID, static_cast<int16_t>(gridRowOf(visualIdx)),
                                   colStart, colEnd,
@@ -760,7 +760,7 @@ namespace GUI
             for (int visualIdx = firstVisible; visualIdx < lastVisible; visualIdx++)
             {
                 const int datasetIdx = state->VisualToDataset(visualIdx);
-                const GUI::ID rowID = idManager.GetSubID(rowsRangeID,
+                const interstice::ID rowID = idManager.GetSubID(rowsRangeID,
                                                         static_cast<uint32_t>(datasetIdx));
                 const bool rowSelected = state->multiSelect
                     ? state->multiSelect->selectedIDs.count(rowID) > 0
@@ -776,7 +776,7 @@ namespace GUI
             }
         }
 
-        emit.currentRowID      = GUI::ID::Invalid();
+        emit.currentRowID      = interstice::ID::Invalid();
         emit.currentRowHandler = {};
 
         // ---- Bottom spacer ----
@@ -807,7 +807,7 @@ namespace GUI
         // from it is the one the user just scrolled. Single-section tables fall
         // through to offsets[0].y.
         int32_t targetY = offsets[0].y;
-        const ScrollOffsetHandle wrapperHandle = (n > 1 && state->_bodyID != GUI::ID::Invalid())
+        const ScrollOffsetHandle wrapperHandle = (n > 1 && state->_bodyID != interstice::ID::Invalid())
             ? sm.GetScrollOffsetHandle(state->_bodyID) : ScrollOffsetHandle::Invalid;
         if (n > 1 && sm.IsScrollOffsetHandleValid(wrapperHandle))
         {
@@ -843,7 +843,7 @@ namespace GUI
         }
 
         // Store the canonical Y on the bodies-row wrapper (_bodyID).
-        if (state->_bodyID != GUI::ID::Invalid())
+        if (state->_bodyID != interstice::ID::Invalid())
         {
             auto bodiesHandle = sm.GetOrCreateScrollOffsetHandle(state->_bodyID);
             const int2 cur = sm.GetScrollOffset(bodiesHandle);
@@ -855,14 +855,14 @@ namespace GUI
 
     void GUIApplication::EmitTableSectionSeparator()
     {
-        const GUI::ID sepID = idManager.AllocateDynamicID();
-        GUI::Element sep{};
+        const interstice::ID sepID = idManager.AllocateDynamicID();
+        interstice::Element sep{};
         sep.id       = sepID;
         sep.styleRef = theme.tableSeparatorStyleRef;
-        sep.flags    = GUI::ElementFlags::NoInput;
+        sep.flags    = interstice::ElementFlags::NoInput;
         sep.state    = guiStateManager.GetCurrentState(sepID);
         auto sRes = elementStorage.Add(std::move(sep),
-            GUI::LayoutOverride{}.NoGrow().NoShrink());
+            interstice::LayoutOverride{}.NoGrow().NoShrink());
         VERIFY(sRes.status);
         VERIFY(windowRegistry.Add(sRes.ref));
     }
@@ -874,7 +874,7 @@ namespace GUI
         // Placed by absolute X from the column tracks; boundaries past a Stretch track are skipped.
         if (colEnd - colStart < 2) return;
         int32_t gap = 0;
-        if (const GUI::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
+        if (const interstice::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
             gap = ls->layoutData.grid.column.gap;
 
         int32_t x = 0;
@@ -885,17 +885,17 @@ namespace GUI
             if (track.type != GridTrack::Type::Fixed) { sawFractional = true; break; }
             x += static_cast<int32_t>(track.value) + gap;
 
-            const GUI::ID sepID = idManager.AllocateDynamicID("_table_col_sep");
+            const interstice::ID sepID = idManager.AllocateDynamicID("_table_col_sep");
             auto sRes = elementStorage.Add(
-                GUI::Element{
+                interstice::Element{
                     .id       = sepID,
                     .styleRef = theme.tableSizerStyleRef,
-                    .flags    = GUI::ElementFlags::NoInput,
+                    .flags    = interstice::ElementFlags::NoInput,
                     .state    = guiStateManager.GetCurrentState(sepID)
                 },
-                GUI::LayoutOverride{}
-                    .PositionX(GUI::PositionConstraintAxis::Absolute(static_cast<int16_t>(x - gap)))
-                    .PositionY(GUI::PositionConstraintAxis::Absolute(0))
+                interstice::LayoutOverride{}
+                    .PositionX(interstice::PositionConstraintAxis::Absolute(static_cast<int16_t>(x - gap)))
+                    .PositionY(interstice::PositionConstraintAxis::Absolute(0))
                     .Size(styleManager.Px(1), kStretchHeight));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
@@ -911,7 +911,7 @@ namespace GUI
         // AND the empty space past the last one. Skips anything past a
         // fractional track, whose pixel offset isn't known here.
         int32_t gap = 0;
-        if (const GUI::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
+        if (const interstice::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
             gap = ls->layoutData.grid.column.gap;
 
         int32_t x = 0;
@@ -920,20 +920,20 @@ namespace GUI
             const GridTrack& track = emit.columns[c]._columnTrack;
             if (track.type != GridTrack::Type::Fixed) break;
 
-            const GUI::StyleRef bg = emit.columns[c].column.columnBackground;
-            if (bg != GUI::StyleRef::Invalid())
+            const interstice::StyleRef bg = emit.columns[c].column.columnBackground;
+            if (bg != interstice::StyleRef::Invalid())
             {
-                const GUI::ID bgID = idManager.AllocateDynamicID("_table_col_bg");
+                const interstice::ID bgID = idManager.AllocateDynamicID("_table_col_bg");
                 auto bRes = elementStorage.Add(
-                    GUI::Element{
+                    interstice::Element{
                         .id       = bgID,
                         .styleRef = bg,
-                        .flags    = GUI::ElementFlags::NoInput,
+                        .flags    = interstice::ElementFlags::NoInput,
                         .state    = guiStateManager.GetCurrentState(bgID)
                     },
-                    GUI::LayoutOverride{}
-                        .PositionX(GUI::PositionConstraintAxis::Absolute(static_cast<int16_t>(x)))
-                        .PositionY(GUI::PositionConstraintAxis::Absolute(0))
+                    interstice::LayoutOverride{}
+                        .PositionX(interstice::PositionConstraintAxis::Absolute(static_cast<int16_t>(x)))
+                        .PositionY(interstice::PositionConstraintAxis::Absolute(0))
                         .Size(static_cast<int>(track.value), kStretchHeight));
                 VERIFY(bRes.status);
                 VERIFY(windowRegistry.Add(bRes.ref));
@@ -961,20 +961,20 @@ namespace GUI
             const TableColumn& col = vcol.column;
             const bool isDraggable = (col.sizing == ColumnSizing::Resizable) && (c < firstStretchCol);
 
-            GUI::EventHandler sizerHandler{};
-            GUI::ElementFlags sizerFlags = GUI::ElementFlags::NoInput;
+            interstice::EventHandler sizerHandler{};
+            interstice::ElementFlags sizerFlags = interstice::ElementFlags::NoInput;
             const int sizerWidth = styleManager.Px(isDraggable ? kActiveSizerWidth : 1);
 
             if (isDraggable)
             {
                 // No upper bound: when columns can't grow further the table just
                 // starts scrolling horizontally.
-                sizerFlags = GUI::ElementFlags::None;
+                sizerFlags = interstice::ElementFlags::None;
                 auto  headerStyleIndex = theme.tableHeaderStyleRef.layoutStyleIndex;
                 auto  cellStyleIndex   = theme.tableCellStyleRef.layoutStyleIndex;
                 // By pointer: max content width is only final when the handler runs.
                 auto* maxWidth         = &vcol._maxContentWidth;
-                sizerHandler = GUI::MakeHorizontalSizerHandler(
+                sizerHandler = interstice::MakeHorizontalSizerHandler(
                     guiStateManager,
                     state->columnWidths[c],
                     col.minWidth, std::numeric_limits<int>::max(),
@@ -988,20 +988,20 @@ namespace GUI
                     false, styleManager.GetUIScale());
             }
 
-            const GUI::ID sizerID = vcol._sizerID;
-            const GUI::ID leftHeaderID = elementStorage.GetElementUnsafe(vcol._headerRef).id;
+            const interstice::ID sizerID = vcol._sizerID;
+            const interstice::ID leftHeaderID = elementStorage.GetElementUnsafe(vcol._headerRef).id;
             auto sRes = elementStorage.Add(
-                GUI::Element{
+                interstice::Element{
                     .id           = sizerID,
                     .eventHandler = std::move(sizerHandler),
                     .styleRef     = theme.tableSizerStyleRef,
                     .flags        = sizerFlags,
                     .state        = guiStateManager.GetCurrentState(sizerID)
                 },
-                GUI::LayoutOverride{}
-                    .PositionX(GUI::PositionConstraintAxis::Anchored(
-                        leftHeaderID, GUI::AnchorPlacementAxis::OutsideMax, 0))
-                    .PositionY(GUI::PositionConstraintAxis::Absolute(0))
+                interstice::LayoutOverride{}
+                    .PositionX(interstice::PositionConstraintAxis::Anchored(
+                        leftHeaderID, interstice::AnchorPlacementAxis::OutsideMax, 0))
+                    .PositionY(interstice::PositionConstraintAxis::Absolute(0))
                     .Size(sizerWidth, kStretchHeight));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
@@ -1035,7 +1035,7 @@ namespace GUI
         // Visible row range from this frame's scroll + last frame's viewport.
         int32_t scrollY   = 0;
         int32_t viewportH = state._lastViewportH;
-        if (state._bodyID != GUI::ID::Invalid())
+        if (state._bodyID != interstice::ID::Invalid())
         {
             auto& scrollManagement = guiStateManager.GetScrollManagement();
             auto scrollHandle = scrollManagement.GetScrollOffsetHandle(state._bodyID);
@@ -1055,7 +1055,7 @@ namespace GUI
             styleRowHeight = theme.tableRowHeight;
         else if (textSystem)
         {
-            const TextID probeID = textSystem->RegisterText(ID::Invalid(), "Mg", effectiveCellStyle, GUI::ElementState::None);
+            const TextID probeID = textSystem->RegisterText(ID::Invalid(), "Mg", effectiveCellStyle, interstice::ElementState::None);
             int32_t h = textSystem->GetTextMeasurement(probeID).minHeight;
             if (const LayoutStyle* ls = styleManager.GetLayoutStyle(effectiveCellStyle.layoutStyleIndex))
                 h += ls->padding.Vertical() + ls->borderWidths.Vertical();
@@ -1073,10 +1073,10 @@ namespace GUI
 
         // One ranged ID for all rows and one for all sizers, scoped under the table's
         // id so two tables under the same parent don't collide.
-        GUI::ID rowsRangeID = GUI::ID::Invalid();
+        interstice::ID rowsRangeID = interstice::ID::Invalid();
         if (totalRowCount > 0 || columnCount > 0)
         {
-            const uint64_t prevRowsHash = (state._rowsRangeID != GUI::ID::Invalid())
+            const uint64_t prevRowsHash = (state._rowsRangeID != interstice::ID::Invalid())
                 ? state._rowsRangeID.value.rangedParts.hashValue : 0;
             if (totalRowCount > 0)
             {
@@ -1130,7 +1130,7 @@ namespace GUI
             }
             else
             {
-                state._rowsRangeID     = GUI::ID::Invalid();
+                state._rowsRangeID     = interstice::ID::Invalid();
                 state._totalRowCount   = 0;
                 state._actualRowHeight = 0;
                 state._rowOrder.reset();
@@ -1142,23 +1142,23 @@ namespace GUI
             // reappear on whatever data row takes that index when rows are added back.
             if (prevRowsHash != 0)
             {
-                auto pastEnd = [&](GUI::ID r) {
-                    return r.GetMode() == GUI::IDMode::SubRange &&
+                auto pastEnd = [&](interstice::ID r) {
+                    return r.GetMode() == interstice::IDMode::SubRange &&
                            r.value.subRangeParts.parentHashValue == prevRowsHash &&
                            r.value.subRangeParts.index >= uint64_t(std::max(0, totalRowCount));
                 };
-                if (pastEnd(state.selectedRowID)) state.selectedRowID = GUI::ID::Invalid();
+                if (pastEnd(state.selectedRowID)) state.selectedRowID = interstice::ID::Invalid();
                 if (state.multiSelect)
                 {
                     std::erase_if(state.multiSelect->selectedIDs, pastEnd);
-                    if (pastEnd(state.multiSelect->lastClickedID)) state.multiSelect->lastClickedID = GUI::ID::Invalid();
+                    if (pastEnd(state.multiSelect->lastClickedID)) state.multiSelect->lastClickedID = interstice::ID::Invalid();
                 }
             }
             if (columnCount > 0)
             {
-                const GUI::ID bodyRange  = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_bodies");
-                const GUI::ID sizerRange = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_sizers");
-                const GUI::ID hdrRange   = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_headers");
+                const interstice::ID bodyRange  = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_bodies");
+                const interstice::ID sizerRange = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_sizers");
+                const interstice::ID hdrRange   = idManager.AllocateRangedID(static_cast<uint32_t>(columnCount), "_table_headers");
                 for (size_t c = 0; c < columnCount; ++c)
                 {
                     columns[c]._bodyID       = idManager.GetSubID(bodyRange, static_cast<uint32_t>(c));
@@ -1170,7 +1170,7 @@ namespace GUI
         else
         {
             // Nothing to show: drop the previous frame's row info so keyboard nav can't aim at vanished rows.
-            state._rowsRangeID     = GUI::ID::Invalid();
+            state._rowsRangeID     = interstice::ID::Invalid();
             state._totalRowCount   = 0;
             state._actualRowHeight = 0;
             state._rowOrder.reset();
@@ -1181,7 +1181,7 @@ namespace GUI
 
         state._horzScrollbarID = idManager.AllocateDynamicID("_table_horz_scrollbar");
         state._vertScrollbarID = idManager.AllocateDynamicID("_table_vert_scrollbar");
-        const GUI::ID rowID = idManager.AllocateDynamicID("_table_bodies_row");
+        const interstice::ID rowID = idManager.AllocateDynamicID("_table_bodies_row");
 
         (void)idManager.PopParent();
 
@@ -1202,7 +1202,7 @@ namespace GUI
         for (auto& col : columns)
         {
             col._maxContentWidth = 0;
-            col._headerRef       = GUI::ElementRef::Invalid();
+            col._headerRef       = interstice::ElementRef::Invalid();
             col._dragOffsetX     = 0;
         }
         // Tree row map is allocated lazily by TreeCell. clear() preserves
@@ -1223,7 +1223,7 @@ namespace GUI
         // lost its capture (the table wasn't shown when the button went up): cancel it.
         if (m_columnDrag.active && m_columnDrag.tableID == id &&
             (m_columnDrag.fromCol >= int(columnCount) ||
-             guiStateManager.Interaction().GetCaptureID() == GUI::ID::Invalid()))
+             guiStateManager.Interaction().GetCaptureID() == interstice::ID::Invalid()))
             m_columnDrag = {};
         emit.dragActive       = m_columnDrag.active && m_columnDrag.tableID == id;
         emit.cellMode         = (state.selectionMode == TableSelectionMode::Cell);
@@ -1244,7 +1244,7 @@ namespace GUI
         // and the count get written into TableState as we go. Reset here so
         // a frame with zero columns leaves clean state.
         state._sectionCount = 0;
-        state._bodyID       = GUI::ID::Invalid();
+        state._bodyID       = interstice::ID::Invalid();
 
         // During a drag the last column drops its 1fr fill (else it paints under the
         // V scrollbar); use its pre-drag width minus the scrollbar so it doesn't snap smaller.
@@ -1270,10 +1270,10 @@ namespace GUI
                 ? emit.lastColDragFixedWidth
                 : styleManager.Px(state.columnWidths[fromCol]);
             int32_t gap = 0;
-            if (const GUI::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
+            if (const interstice::LayoutStyle* ls = styleManager.GetLayoutStyle(theme.tableScrollableBodyStyleRef.layoutStyleIndex))
                 gap = ls->layoutData.grid.column.gap;
             const int32_t shiftBy = draggedWidth + gap;
-            GUI::IntRect draggedRect{};
+            interstice::IntRect draggedRect{};
             int32_t leftBound = 0, rightBound = 0;
             if (fromCol >= 0 && fromCol < int(drag.headerRects.size()))
             {
@@ -1302,7 +1302,7 @@ namespace GUI
         StyleRef containerStyle = (style != StyleRef{}) ? style : theme.tableStyleRef;
         TableState* statePtr = &state;
 
-        GUI::Element container{
+        interstice::Element container{
             .id           = id,
             .eventHandler = BuildTableContainerHandler(statePtr, id),
             .styleRef     = containerStyle,
@@ -1335,7 +1335,7 @@ namespace GUI
             emit.sharedCellHandler =
                 [this, statePtr, id](ElementEvent&& event) -> bool
             {
-                if (event.type != GUI::EventType::MouseDown) return false;
+                if (event.type != interstice::EventType::MouseDown) return false;
                 if (!event.state.LeftPressed()) return false;
                 const auto* hit = statePtr->FindCell(event.id);
                 if (!hit) return false;
@@ -1370,11 +1370,11 @@ namespace GUI
             // the canonical scroll-Y (kept in sync by MirrorTableScroll).
             state._bodyID = rowID;
             auto res = elementStorage.Add(
-                GUI::Element{
+                interstice::Element{
                     .id       = rowID,
                     .styleRef = theme.tableBodiesRowStyleRef,
                     .state    = guiStateManager.GetCurrentState(rowID),
-                }, GUI::LayoutOverride{});
+                }, interstice::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
             VERIFY(elementStorage.BeginChildren());
@@ -1420,8 +1420,8 @@ namespace GUI
                 OpenTableBodySection(emit, bodyID,
                                      fitContent ? theme.tableFitContentBodyStyleRef
                                                 : theme.tableScrollableBodyStyleRef,
-                                     fitContent ? GUI::LayoutOverride{}.Width(sectionFixedWidth)
-                                                : GUI::LayoutOverride{}.MinWidth(0),
+                                     fitContent ? interstice::LayoutOverride{}.Width(sectionFixedWidth)
+                                                : interstice::LayoutOverride{}.MinWidth(0),
                                      /*sampleViewport*/isLast);
 
                 // Non-dragged content first; EmitDraggedColumnOnTop adds the dragged column last.

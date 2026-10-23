@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace GUI
+namespace interstice
 {
 
     namespace
@@ -27,7 +27,7 @@ namespace GUI
         }
     }
 
-    static Insets InnerInsetsOf(GUI::GUIApplication& app, ID elementID)
+    static Insets InnerInsetsOf(interstice::GUIApplication& app, ID elementID)
     {
         Insets result{};
         const auto ref = app.elementStorage.FindElementRefByID(elementID);
@@ -72,7 +72,7 @@ namespace GUI
             ? app.theme.scrollbarVerticalThumbStyleRef
             : app.theme.scrollbarHorizontalThumbStyleRef;
 
-        GUI::Element track{};
+        interstice::Element track{};
         track.id        = scrollBarID;
         track.styleRef  = trackStyleRef;
         track.state     = app.guiStateManager.GetCurrentState(scrollBarID);
@@ -93,7 +93,7 @@ namespace GUI
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.bottom))
                 .NoGrow().NoShrink();
 
-        const auto trackRef = app.RegisterElement(std::move(track), GUI::LayoutOverride{layout});
+        const auto trackRef = app.RegisterElement(std::move(track), interstice::LayoutOverride{layout});
 
         // Thumb: painted by a custom-draw on the track; no overflow, no thumb.
         auto result = app.elementStorage.AddCustomDraw(trackRef,
@@ -142,13 +142,13 @@ namespace GUI
         const ID cornerID = app.idManager.AllocateDynamicID("_scrollbar_corner");
         (void)app.idManager.PopParent();
         const StyleRef capStyle = app.theme.scrollbarVerticalTrackStyleRef;
-        GUI::Element corner{};
+        interstice::Element corner{};
         corner.id       = cornerID;
         corner.styleRef = capStyle;
         corner.flags    = ElementFlags::NoInput;
         corner.state    = app.guiStateManager.GetCurrentState(cornerID);
         auto cRes = app.elementStorage.Add(std::move(corner),
-            GUI::LayoutOverride{}
+            interstice::LayoutOverride{}
                 .Anchored(containerID,
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.right),
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.bottom))

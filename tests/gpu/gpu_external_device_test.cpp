@@ -48,7 +48,7 @@ namespace
             if (!builtInstance) return false;
             instance = builtInstance.value();
 
-            auto requirements = Vulkan::VulkanDeviceContext::GetDeviceRequirements();   // vk-bootstrap fills in the sTypes
+            auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();   // vk-bootstrap fills in the sTypes
             vkb::PhysicalDeviceSelector selector{ instance };
             auto selected = selector
                 .set_minimum_version(1, 3)
@@ -71,9 +71,9 @@ namespace
             return true;
         }
 
-        Vulkan::VulkanDeviceContext::ExternalDevice Describe()
+        interstice::vulkan::VulkanDeviceContext::ExternalDevice Describe()
         {
-            Vulkan::VulkanDeviceContext::ExternalDevice external;
+            interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
             external.instance            = instance.instance;
             external.physicalDevice      = physicalDevice.physical_device;
             external.device              = device.device;
@@ -95,21 +95,21 @@ namespace
     class GpuExternalDeviceTest : public ::testing::Test
     {
     protected:
-        GUI::GraphicsContext*          graphicsContext = nullptr;
-        GUI::SDLWindowBackend*         windowBackend   = nullptr;
-        Vulkan::VulkanGraphicsContext* vk              = nullptr;
+        interstice::GraphicsContext*          graphicsContext = nullptr;
+        interstice::SDLWindowBackend*         windowBackend   = nullptr;
+        interstice::vulkan::VulkanGraphicsContext* vk              = nullptr;
         ValidationSink                 sink;
         HostDevice                     host;
-        GUI::GradientManager           gradientManager{ 256 };
-        GUI::StyleManager              styleManager{ gradientManager };
+        interstice::GradientManager           gradientManager{ 256 };
+        interstice::StyleManager              styleManager{ gradientManager };
 
         void SetUp() override
         {
-            graphicsContext = GUI::GraphicsContext::CreateContext();
-            windowBackend   = new GUI::SDLWindowBackend(graphicsContext);
-            GUI::InstallSDLVulkanSurfaceFactory(graphicsContext);
-            vk = static_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
-            styleManager.Register(GUI::Style{});
+            graphicsContext = interstice::GraphicsContext::CreateContext();
+            windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
+            interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
+            vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
+            styleManager.Register(interstice::Style{});
         }
 
         void TearDown() override
@@ -126,7 +126,7 @@ TEST_F(GpuExternalDeviceTest, HostDeviceMeetsPublishedRequirements)
 {
     if (!host.Create(sink)) GTEST_SKIP() << "No suitable Vulkan device available";
     std::string problems;
-    EXPECT_TRUE(Vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(
+    EXPECT_TRUE(interstice::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(
         host.physicalDevice.physical_device, &problems)) << problems;
 }
 
@@ -144,25 +144,25 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
     EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
     // Render one frame into a render-to-image window.
-    const GUI::int2 size{ 64, 64 };
-    GUI::ID id{};
-    id.value.dynamicParts.mode      = GUI::IDMode::Static;
+    const interstice::int2 size{ 64, 64 };
+    interstice::ID id{};
+    id.value.dynamicParts.mode      = interstice::IDMode::Static;
     id.value.dynamicParts.hashValue = 9100;
-    auto* window = Vulkan::VulkanWindowContext::Create(
-        id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage,
+    auto* window = interstice::vulkan::VulkanWindowContext::Create(
+        id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage,
         &vk->deviceContext, [] {});
     ASSERT_NE(window, nullptr);
 
     graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-    GUI::GUIRenderer* renderer = graphicsContext->guiRenderer;
+    interstice::GUIRenderer* renderer = graphicsContext->guiRenderer;
     renderer->Reset();
     if (renderer->BeginWindow(window->GetID()))
     {
-        renderer->RenderDot(GUI::float2{ 32.0f, 32.0f }, GUI::IntRect{ 0, 0, size.x, size.y },
-                            10.0f, GUI::color4f{ 1, 1, 1, 1 });
+        renderer->RenderDot(interstice::float2{ 32.0f, 32.0f }, interstice::IntRect{ 0, 0, size.x, size.y },
+                            10.0f, interstice::color4f{ 1, 1, 1, 1 });
         renderer->EndWindow();
     }
-    window->RenderWindowFrame(graphicsContext, GUI::IntRect{ 0, 0, size.x, size.y }, false);
+    window->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
     EXPECT_FALSE(sink.HasErrors()) << "Validation errors rendering on the host device:\n" << sink.Dump();
 
     window->Destroy();
@@ -182,7 +182,7 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
 
 TEST_F(GpuExternalDeviceTest, RejectsIncompleteHostDevice)
 {
-    Vulkan::VulkanDeviceContext::ExternalDevice incomplete;   // all handles null
+    interstice::vulkan::VulkanDeviceContext::ExternalDevice incomplete;   // all handles null
     vk->deviceContext.SetExternalDevice(incomplete);
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend))
         << "An external device without handles must fail cleanly, not crash";
@@ -276,27 +276,27 @@ TEST_F(GpuExternalDeviceTest, SamplesHostRenderedImageInGuiPrimitive)
         ASSERT_EQ(vkQueueSubmit2(host.queue, 1, &submit, VK_NULL_HANDLE), VK_SUCCESS);
     }
 
-    const GUI::ImageIndex hostImageIndex = vk->RegisterExternalImage(hostView, dc.defaultSamplerNearest);
-    ASSERT_NE(hostImageIndex, GUI::ImageIndex::Invalid);
+    const interstice::ImageIndex hostImageIndex = vk->RegisterExternalImage(hostView, dc.defaultSamplerNearest);
+    ASSERT_NE(hostImageIndex, interstice::ImageIndex::Invalid);
 
-    const GUI::int2 size{ 64, 64 };
-    GUI::ID id{};
-    id.value.dynamicParts.mode      = GUI::IDMode::Static;
+    const interstice::int2 size{ 64, 64 };
+    interstice::ID id{};
+    id.value.dynamicParts.mode      = interstice::IDMode::Static;
     id.value.dynamicParts.hashValue = 9200;
-    auto* window = Vulkan::VulkanWindowContext::Create(
-        id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage, &dc, [] {});
+    auto* window = interstice::vulkan::VulkanWindowContext::Create(
+        id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage, &dc, [] {});
     ASSERT_NE(window, nullptr);
 
     // Only texture-typed color styles sample the image passed to a primitive.
-    const auto white = styleManager.RegisterColorStyle(GUI::ColorStyle::Create(
-        GUI::color4b{ 255, 255, 255, 255 }, GUI::color4b{ 255, 255, 255, 255 }, GUI::ColorType::StretchedTexture));
+    const auto white = styleManager.RegisterColorStyle(interstice::ColorStyle::Create(
+        interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 }, interstice::ColorType::StretchedTexture));
     graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-    GUI::GUIRenderer* renderer = graphicsContext->guiRenderer;
+    interstice::GUIRenderer* renderer = graphicsContext->guiRenderer;
     renderer->Reset();
-    const GUI::IntRect full{ 0, 0, size.x, size.y };
+    const interstice::IntRect full{ 0, 0, size.x, size.y };
     if (renderer->BeginWindow(window->GetID()))
     {
-        renderer->RenderQuad(GUI::IntRect{ 0, 0, size.x / 2, size.y }, full, white, 0.0f, hostImageIndex);
+        renderer->RenderQuad(interstice::IntRect{ 0, 0, size.x / 2, size.y }, full, white, 0.0f, hostImageIndex);
         renderer->EndWindow();
     }
     window->RenderWindowFrame(graphicsContext, full, false);

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <unordered_map>
 
-namespace GUI
+namespace interstice
 {
     enum class ElementState : uint8_t;
     enum class VisualBoxStyleIndex : uint16_t;
@@ -59,4 +59,4 @@ namespace GUI
         bool m_enabled = true;
     };
 
-} // namespace GUI
+} // namespace interstice

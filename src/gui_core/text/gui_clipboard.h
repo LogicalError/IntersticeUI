@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace GUI
+namespace interstice
 {
     class IClipboard
     {

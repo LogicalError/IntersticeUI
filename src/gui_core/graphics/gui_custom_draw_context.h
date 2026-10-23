@@ -39,7 +39,7 @@
 
 #include <span>
 
-namespace GUI
+namespace interstice
 {
     class GUIRenderer;
     class ElementStorage;
@@ -234,4 +234,4 @@ namespace GUI
         float3x2        m_contentTransform;
     };
 
-} // namespace GUI
+} // namespace interstice

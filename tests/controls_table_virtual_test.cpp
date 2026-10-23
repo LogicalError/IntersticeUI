@@ -9,7 +9,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_core/state/gui_scroll_management.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -22,10 +22,10 @@ namespace GUI
         {
         protected:
             HeadlessGUIApp app;
-            GUI::ID tableID{};
+            interstice::ID tableID{};
 
             // 4 columns wider than the body so the H-scrollbar shows up.
-            std::vector<GUI::VirtualTableColumn> columns;
+            std::vector<interstice::VirtualTableColumn> columns;
 
             void SetUp() override
             {
@@ -46,22 +46,22 @@ namespace GUI
 
             // Body container 400×300; columns total ~800 → overflow X.
             // 200 rows × ~24 px → overflow Y.
-            void Emit(GUI::TableState& state, int rowCount = 200,
+            void Emit(interstice::TableState& state, int rowCount = 200,
                       int width = 400, int height = 300)
             {
                 app.BeginRootWindow();
-                std::span<GUI::VirtualTableColumn> span(columns.data(), columns.size());
+                std::span<interstice::VirtualTableColumn> span(columns.data(), columns.size());
                 app.VirtualTable(tableID, state, span, rowCount, /*rowHeight*/0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(width, height));
                 app.EndRootWindow();
             }
 
-            int2 SectionScroll(GUI::TableState& state, int sectionIdx = 0)
+            int2 SectionScroll(interstice::TableState& state, int sectionIdx = 0)
             {
                 auto& sm = app.guiStateManager.GetScrollManagement();
-                const GUI::ID id = state.SectionBodyID(sectionIdx);
-                if (id == GUI::ID::Invalid()) return int2{0,0};
+                const interstice::ID id = state.SectionBodyID(sectionIdx);
+                if (id == interstice::ID::Invalid()) return int2{0,0};
                 auto h = sm.GetScrollOffsetHandle(id);
                 if (!sm.IsScrollOffsetHandleValid(h)) return int2{0,0};
                 return sm.GetScrollOffset(h);
@@ -69,7 +69,7 @@ namespace GUI
 
             // Headless skips render, so pin _lastViewportH/W and the overflow flags
             // that its custom-draw would set.
-            void PinViewport(GUI::TableState& state,
+            void PinViewport(interstice::TableState& state,
                              bool xOverflow = true, bool yOverflow = true)
             {
                 state._lastViewportH = 298;
@@ -85,7 +85,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, WheelAtBottomDoesNotOscillate)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -123,14 +123,14 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ScrollbarJumpUpdatesRowWindowSameFrame)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
             ASSERT_GT(state._actualRowHeight, 0);
 
             // Jump the section body to row 100, as a thumb drag does.
@@ -141,9 +141,9 @@ namespace GUI
 
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID rowAtTarget = state.RowIDForIndex(targetRow);
-            const GUI::ID rowAtTop    = state.RowIDForIndex(0);
-            ASSERT_NE(rowAtTarget, GUI::ID::Invalid());
+            const interstice::ID rowAtTarget = state.RowIDForIndex(targetRow);
+            const interstice::ID rowAtTop    = state.RowIDForIndex(0);
+            ASSERT_NE(rowAtTarget, interstice::ID::Invalid());
 
             EXPECT_TRUE(app.HasElement(rowAtTarget))
                 << "row " << targetRow << " must be virtualized the same frame the "
@@ -159,7 +159,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, LastRowClearsHorizontalScrollbarAtMaxScroll)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -177,14 +177,14 @@ namespace GUI
             }
 
             // After scrolling to the bottom, the last dataset row is emitted.
-            const GUI::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
-            ASSERT_NE(lastRowID, GUI::ID::Invalid());
+            const interstice::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
+            ASSERT_NE(lastRowID, interstice::ID::Invalid());
             ASSERT_TRUE(app.HasElement(lastRowID));
 
             const auto lastRowRect = app.GetElementRect(lastRowID);
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
 
@@ -218,7 +218,7 @@ namespace GUI
             columns.push_back({ { .header = "Type", .initialWidth = 120, .minWidth = 40, .maxWidth = 200 },
                                 [this](int r) { app.Cell((r % 2) ? "File" : "Folder"); } });
 
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -252,7 +252,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, PlainAndTreeCellsRenderAtSameHeight)
         {
             // Plain table.
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -272,7 +272,7 @@ namespace GUI
             columns.push_back({ { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 200 },
                                 [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); } });
 
-            GUI::TableState state2{};
+            interstice::TableState state2{};
             auto pin2 = [&]{ PinViewport(state2); };
             pin2();
             app.Frame([&]{ Emit(state2); pin2(); });
@@ -290,7 +290,7 @@ namespace GUI
         // apply when a section overflows X.
         // ---------------------------------------------------------------
         // Section body scroll range (contentH - innerH); needs a laid-out frame.
-        static int32_t SectionScrollRange(GUITest::HeadlessGUIApp& app, GUI::ID sectionID)
+        static int32_t SectionScrollRange(GUITest::HeadlessGUIApp& app, interstice::ID sectionID)
         {
             auto ref = app.elementStorage.FindElementRefByID(sectionID);
             if (!ref.IsValid()) return 0;
@@ -303,7 +303,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, VScrollbarOnlyEmittedWhenContentOverflowsY)
         {
             // No-Y-overflow: pin yOverflow=false. Bar must NOT exist.
-            GUI::TableState stateA{};
+            interstice::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/true, /*yOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -312,7 +312,7 @@ namespace GUI
                 << "V-scrollbar must not be emitted when content fits vertically";
 
             // Y-overflow: pin yOverflow=true. Bar must exist.
-            GUI::TableState stateB{};
+            interstice::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true, /*yOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -326,7 +326,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, HScrollbarOnlyEmittedWhenAnySectionOverflows)
         {
             // No-overflow: pin xOverflow=false. Bar must NOT exist.
-            GUI::TableState stateA{};
+            interstice::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -335,7 +335,7 @@ namespace GUI
                 << "H-scrollbar must not be emitted when no section overflows X";
 
             // Overflow: pin xOverflow=true. Bar must exist.
-            GUI::TableState stateB{};
+            interstice::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -349,7 +349,7 @@ namespace GUI
             // Same table with and without X overflow.
 
             // Scenario A: NO X-overflow — flag false, no pad expected.
-            GUI::TableState stateA{};
+            interstice::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -358,7 +358,7 @@ namespace GUI
             ASSERT_GT(rangeNoOverflow, 0);
 
             // Scenario B: X-overflow — flag true, pad expected.
-            GUI::TableState stateB{};
+            interstice::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -379,17 +379,17 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, HeadersEmittedAfterBodyRowsForCorrectPaintOrder)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
 
             ASSERT_GT(state._totalRowCount, 0);
-            const GUI::ID firstRowID = state.RowIDForIndex(0);
+            const interstice::ID firstRowID = state.RowIDForIndex(0);
             ASSERT_TRUE(app.HasElement(firstRowID));
             const auto rowRef = app.elementStorage.FindElementRefByID(firstRowID);
             ASSERT_TRUE(rowRef.IsValid());
@@ -398,9 +398,9 @@ namespace GUI
             ASSERT_TRUE(sectionRef.IsValid());
 
             ASSERT_FALSE(columns.empty());
-            ASSERT_NE(columns[0]._headerRef, GUI::ElementRef::Invalid())
+            ASSERT_NE(columns[0]._headerRef, interstice::ElementRef::Invalid())
                 << "header ref must be captured in BeginTable for this check";
-            const GUI::ElementRef headerRef = columns[0]._headerRef;
+            const interstice::ElementRef headerRef = columns[0]._headerRef;
 
             // For siblings, HashCode (depth high, index low) orders by emission.
             EXPECT_GT(headerRef.HashCode(), rowRef.HashCode())
@@ -416,7 +416,7 @@ namespace GUI
         {
             // Render a normal (non-virtual) cell so layout produces a
             // real row height, then compare against theme.tableRowHeight.
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -441,15 +441,15 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, ColumnReorderRespectsHorizontalScroll)
         {
             int reorderFrom = -1, reorderTo = -1;
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [&](int f, int t){ reorderFrom = f; reorderTo = t; };
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
@@ -470,7 +470,7 @@ namespace GUI
             app.Frame([&]{ Emit(state); pin(); });
 
             // Move toward col3 (no scroll yet), past the drag threshold.
-            app.InjectMouseMove(col3Center, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Scroll the section horizontally mid-drag.
@@ -481,7 +481,7 @@ namespace GUI
             // must stay col3.
             const auto col3RectS = app.elementStorage.GetElementRectUnsafe(col3Ref).rect;
             const int2 col3CenterS{ col3RectS.x + col3RectS.w / 2, col3RectS.y + col3RectS.h / 2 };
-            app.InjectMouseMove(col3CenterS, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col3CenterS, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Release.
@@ -501,21 +501,21 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, DraggedColumnShowsRowColorization)
         {
             // Helper: count immediate children of the section body.
-            auto countSectionChildren = [&](GUI::ID sectionID) -> int {
+            auto countSectionChildren = [&](interstice::ID sectionID) -> int {
                 auto ref = app.elementStorage.FindElementRefByID(sectionID);
                 if (!ref.IsValid()) return 0;
                 return int(app.elementStorage.GetChildrenSpan(ref).size());
             };
 
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
 
             const int childCountBeforeDrag = countSectionChildren(sectionID);
             ASSERT_GT(childCountBeforeDrag, 0);
@@ -523,7 +523,7 @@ namespace GUI
             // Start a drag on col1, one event per Frame (one hit-test per frame).
             ASSERT_GE(int(columns.size()), 2);
             const auto col1Ref = columns[1]._headerRef;
-            ASSERT_NE(col1Ref, GUI::ElementRef::Invalid());
+            ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2,
                                    col1Rect.y + col1Rect.h / 2 };
@@ -534,7 +534,7 @@ namespace GUI
 
             // Move past drag threshold (>4 px) to commit the drag.
             const int2 col1Off{ col1Center.x + 50, col1Center.y };
-            app.InjectMouseMove(col1Off, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
@@ -559,7 +559,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, DraggedColumnPaintsOnTopOfSizers)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
@@ -568,14 +568,14 @@ namespace GUI
 
             // Start a drag on column 1 and commit (>4 px).
             const auto col1Ref = columns[1]._headerRef;
-            ASSERT_NE(col1Ref, GUI::ElementRef::Invalid());
+            ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
             const int2 col1Off{ col1Center.x + 50, col1Center.y };
-            app.InjectMouseMove(col1Off, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
@@ -605,15 +605,15 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnDragAutoScrollsNearEdges)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
@@ -627,7 +627,7 @@ namespace GUI
 
             // Commit drag (>4 px).
             const int2 col1Off{ col1Center.x + 10, col1Center.y };
-            app.InjectMouseMove(col1Off, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Move into the 30-px right-edge zone of the body.
@@ -636,7 +636,7 @@ namespace GUI
             const int2 nearRight{ bodyInner.x + bodyInner.w - 5, col1Center.y };
 
             const int32_t scrollBefore = sm.GetScrollOffset(handle).x;
-            app.InjectMouseMove(nearRight, GUI::MouseButtons::Left);
+            app.InjectMouseMove(nearRight, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollAfterRight = sm.GetScrollOffset(handle).x;
             EXPECT_LT(scrollAfterRight, scrollBefore)
@@ -649,7 +649,7 @@ namespace GUI
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollSet = sm.GetScrollOffset(handle).x;
             const int2 nearLeft{ bodyInner.x + 5, col1Center.y };
-            app.InjectMouseMove(nearLeft, GUI::MouseButtons::Left);
+            app.InjectMouseMove(nearLeft, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollAfterLeft = sm.GetScrollOffset(handle).x;
             EXPECT_GT(scrollAfterLeft, scrollSet)
@@ -668,7 +668,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardHomeEndJumpToDatasetBoundsNotVisibleWindow)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -684,7 +684,7 @@ namespace GUI
 
             ASSERT_GT(state._totalRowCount, 0)
                 << "VirtualTable must publish dataset row count";
-            ASSERT_NE(state._rowsRangeID, GUI::ID::Invalid())
+            ASSERT_NE(state._rowsRangeID, interstice::ID::Invalid())
                 << "VirtualTable must publish the rows-range ID";
 
             // Scroll so row 0 is outside the virtualized window.
@@ -696,18 +696,18 @@ namespace GUI
             }
 
             // Home selects dataset row 0, not the first buffered row.
-            app.InjectKey(GUI::KeyCode::Home);
+            app.InjectKey(interstice::KeyCode::Home);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_EQ(state.selectedRowID.GetMode(), GUI::IDMode::SubRange);
+            ASSERT_EQ(state.selectedRowID.GetMode(), interstice::IDMode::SubRange);
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index), 0)
                 << "Home must select dataset row 0, not the topmost visible row";
 
             // Press End — selection must jump to row totalRowCount-1.
-            app.InjectKey(GUI::KeyCode::End);
+            app.InjectKey(interstice::KeyCode::End);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_EQ(state.selectedRowID.GetMode(), GUI::IDMode::SubRange);
+            ASSERT_EQ(state.selectedRowID.GetMode(), interstice::IDMode::SubRange);
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index),
                       state._totalRowCount - 1)
                 << "End must select dataset row N-1, not the bottommost visible row";
@@ -717,7 +717,7 @@ namespace GUI
         // virtualized window.
         TEST_F(TableVirtualScrollTest, KeyboardUpStepsBeyondVirtualizedTopBuffer)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -743,7 +743,7 @@ namespace GUI
             const int startIdx = 50;
             state.selectedRowID = state.RowIDForIndex(startIdx);
 
-            app.InjectKey(GUI::KeyCode::Up);
+            app.InjectKey(interstice::KeyCode::Up);
             app.Frame([&]{ Emit(state); pin(); });
 
             const int newIdx = static_cast<int>(state.selectedRowID.value.subRangeParts.index);
@@ -758,7 +758,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, SizersStayPresentWhenScrolling)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -767,7 +767,7 @@ namespace GUI
             // Sanity: every column-boundary sizer exists at the top.
             for (size_t c = 0; c + 1 < columns.size(); ++c)
             {
-                ASSERT_NE(columns[c]._sizerID, GUI::ID::Invalid()) << "col " << c;
+                ASSERT_NE(columns[c]._sizerID, interstice::ID::Invalid()) << "col " << c;
                 EXPECT_TRUE(app.HasElement(columns[c]._sizerID))
                     << "sizer at boundary " << c << " missing at top of scroll";
             }
@@ -795,7 +795,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardEndFullyShowsLastRowAboveHScrollbar)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -809,7 +809,7 @@ namespace GUI
             app.InjectMouseUp(center);
             app.Frame([&]{ Emit(state); pin(); });
 
-            app.InjectKey(GUI::KeyCode::End);
+            app.InjectKey(interstice::KeyCode::End);
             // Three frames: dispatch sets the scroll, it propagates, then the new range
             // is virtualized and the last row emitted.
             app.Frame([&]{ Emit(state); pin(); });
@@ -817,13 +817,13 @@ namespace GUI
             app.Frame([&]{ Emit(state); pin(); });
 
             // The last row must clear the 12-px H-scrollbar strip.
-            const GUI::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
+            const interstice::ID lastRowID = state.RowIDForIndex(state._totalRowCount - 1);
             ASSERT_TRUE(app.HasElement(lastRowID))
                 << "End must bring the last dataset row into view";
 
             const auto lastRect = app.GetElementRect(lastRowID);
-            const GUI::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, GUI::ID::Invalid());
+            const interstice::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, interstice::ID::Invalid());
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -843,7 +843,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardUpScrollsSelectedRowBelowStickyHeader)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -864,22 +864,22 @@ namespace GUI
                 app.InjectMouseScroll(center, int2{ 0, -1 });
                 app.Frame([&]{ Emit(state); pin(); });
             }
-            app.InjectKey(GUI::KeyCode::End);
+            app.InjectKey(interstice::KeyCode::End);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
             // Press Up until the selection reaches the top; it must sit below the header.
             for (int i = 0; i < 50; ++i)
             {
-                app.InjectKey(GUI::KeyCode::Up);
+                app.InjectKey(interstice::KeyCode::Up);
                 app.Frame([&]{ Emit(state); pin(); });
             }
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sel = state.selectedRowID;
+            const interstice::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel)) << "selected row must be emitted after Up navigation";
             const auto selRect = app.GetElementRect(sel);
-            const GUI::ID sectionID = state.SectionBodyID(0);
+            const interstice::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -898,7 +898,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardDownScrollsLastVisibleRowAboveHScrollbar)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -914,15 +914,15 @@ namespace GUI
             // Press Down until the selection reaches the bottom of the window.
             for (int i = 0; i < 60; ++i)
             {
-                app.InjectKey(GUI::KeyCode::Down);
+                app.InjectKey(interstice::KeyCode::Down);
                 app.Frame([&]{ Emit(state); pin(); });
             }
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sel = state.selectedRowID;
+            const interstice::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel));
             const auto selRect = app.GetElementRect(sel);
-            const GUI::ID sectionID = state.SectionBodyID(0);
+            const interstice::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -940,7 +940,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardPageDownLandsAboveHScrollbar)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -955,16 +955,16 @@ namespace GUI
             app.Frame([&]{ Emit(state); pin(); });
 
             // One PageDown from the top lands on the last fully visible row.
-            app.InjectKey(GUI::KeyCode::PageDown);
+            app.InjectKey(interstice::KeyCode::PageDown);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sel = state.selectedRowID;
+            const interstice::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel))
                 << "PageDown's target row must be in the emit window";
 
             const auto selRect = app.GetElementRect(sel);
-            const GUI::ID sectionID = state.SectionBodyID(0);
+            const interstice::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -983,7 +983,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardPageDownClearsHScrollbarWithoutPinningOverflowFlag)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             // Pin only the viewport size; the overflow flag stays false as at dispatch.
             auto pin = [&]{
                 state._lastViewportH = 298;
@@ -1006,14 +1006,14 @@ namespace GUI
                 << "this faithful to production input-dispatch timing";
 
             // PageDown from top.
-            app.InjectKey(GUI::KeyCode::PageDown);
+            app.InjectKey(interstice::KeyCode::PageDown);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const GUI::ID sel = state.selectedRowID;
+            const interstice::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel));
             const auto selRect = app.GetElementRect(sel);
-            const GUI::ID sectionID = state.SectionBodyID(0);
+            const interstice::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -1038,7 +1038,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, SortIndicatorFollowsDraggedColumn)
         {
             int reorderFrom = -1, reorderTo = -1;
-            GUI::TableState state{};
+            interstice::TableState state{};
             // The caller rotates its columns vector on reorder.
             state.onReorderColumns = [&](int f, int t){
                 reorderFrom = f; reorderTo = t;
@@ -1071,7 +1071,7 @@ namespace GUI
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
-            app.InjectMouseMove(col3Center, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.InjectMouseUp(col3Center);
             app.Frame([&]{ Emit(state); pin(); });
@@ -1091,7 +1091,7 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnWidthsFollowDraggedColumn)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [&](int f, int t){
                 if (f == t) return;
                 if (f < t) std::rotate(columns.begin() + f, columns.begin() + f + 1, columns.begin() + t + 1);
@@ -1118,7 +1118,7 @@ namespace GUI
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
-            app.InjectMouseMove(col3Center, GUI::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.InjectMouseUp(col3Center);
             app.Frame([&]{ Emit(state); pin(); });
@@ -1139,8 +1139,8 @@ namespace GUI
         // land in the multi-select set (that is what row highlighting reads).
         TEST_F(TableVirtualScrollTest, FollowTailSelectsTheBottomRowWhenSortedAndMultiSelect)
         {
-            GUI::TableState state{};
-            GUI::MultiSelectState multi{};
+            interstice::TableState state{};
+            interstice::MultiSelectState multi{};
             state.multiSelect = &multi;
             state.followTail  = true;
             state.sortColumn  = 0;
@@ -1149,7 +1149,7 @@ namespace GUI
             // Keys ascending by dataset index, sorted descending: the bottom
             // visual row holds dataset row 0.
             const int kRows = 50;
-            std::vector<GUI::VirtualTableColumn> cols;
+            std::vector<interstice::VirtualTableColumn> cols;
             cols.push_back({
                 .column = { .header = "V", .initialWidth = 200, .minWidth = 60, .maxWidth = 400 },
                 .generateCell  = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); },
@@ -1158,7 +1158,7 @@ namespace GUI
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    std::span<GUI::VirtualTableColumn> sp(cols.data(), cols.size());
+                    std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
                     app.VirtualTable(tableID, state, sp, kRows, 0, app.theme.tableStyleRef,
                                      LayoutOverride{}.Size(400, 300));
                     app.EndRootWindow();
@@ -1177,7 +1177,7 @@ namespace GUI
 
             ASSERT_TRUE(state._rowOrder);
             ASSERT_EQ(state.VisualToDataset(kRows - 1), 0) << "test setup: bottom row is dataset 0";
-            const GUI::ID bottom = state.RowIDForIndex(0);
+            const interstice::ID bottom = state.RowIDForIndex(0);
             EXPECT_EQ(state.selectedRowID, bottom);
             EXPECT_EQ(multi.selectedIDs.size(), 1u);
             EXPECT_EQ(multi.selectedIDs.count(bottom), 1u);
@@ -1190,8 +1190,8 @@ namespace GUI
         // (onto whatever data row then sits there) when rows are added again.
         TEST_F(TableVirtualScrollTest, SelectionPastTheEndIsDroppedWhenRowsShrink)
         {
-            GUI::TableState state{};
-            GUI::MultiSelectState multi{};
+            interstice::TableState state{};
+            interstice::MultiSelectState multi{};
             auto pin = [&]{ PinViewport(state); };
             app.Frame([&]{ Emit(state, 50); pin(); });
             state.selectedRowID = state.RowIDForIndex(40);
@@ -1199,16 +1199,16 @@ namespace GUI
             state.multiSelect   = &multi;
 
             app.Frame([&]{ Emit(state, 10); pin(); });
-            EXPECT_EQ(state.selectedRowID, GUI::ID::Invalid());
+            EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
             EXPECT_EQ(multi.selectedIDs.size(), 1u) << "row 5 still exists; row 40 does not";
 
             app.Frame([&]{ Emit(state, 50); pin(); });
-            EXPECT_EQ(state.selectedRowID, GUI::ID::Invalid());
+            EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
         }
 
         // Begin a column drag on column `col` (press + move past the threshold).
-        static void BeginColumnDrag(HeadlessGUIApp& app, GUI::TableState& state,
-                                    std::vector<GUI::VirtualTableColumn>& columns, int col,
+        static void BeginColumnDrag(HeadlessGUIApp& app, interstice::TableState& state,
+                                    std::vector<interstice::VirtualTableColumn>& columns, int col,
                                     const std::function<void()>& emit)
         {
             const auto r = app.elementStorage.GetElementRectUnsafe(columns[size_t(col)]._headerRef).rect;
@@ -1216,14 +1216,14 @@ namespace GUI
             app.InjectMouseMove(c);
             app.InjectMouseDown(c);
             app.Frame(emit);
-            app.InjectMouseMove(int2{ c.x - 40, c.y }, GUI::MouseButtons::Left);
+            app.InjectMouseMove(int2{ c.x - 40, c.y }, interstice::MouseButtons::Left);
             app.Frame(emit);
             (void)state;
         }
 
         TEST_F(TableVirtualScrollTest, ColumnDragIsCancelledWhenItsColumnDisappears)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [](int, int) {};
             auto pin  = [&]{ PinViewport(state); };
             auto emit = [&]{ Emit(state); pin(); };
@@ -1239,7 +1239,7 @@ namespace GUI
 
         TEST_F(TableVirtualScrollTest, ColumnDragIsCancelledAfterTheTableWasHidden)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
             state.onReorderColumns = [](int, int) {};
             auto pin  = [&]{ PinViewport(state); };
             auto emit = [&]{ Emit(state); pin(); };
@@ -1260,12 +1260,12 @@ namespace GUI
 
         TEST_F(TableVirtualScrollTest, SortAscendingBuildsPermutationAndKeepsSelection)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
 
             // Dataset whose index order isn't its sorted order.
             std::vector<int> data = { 30, 10, 50, 20, 40 };
 
-            std::vector<GUI::VirtualTableColumn> sortedColumns;
+            std::vector<interstice::VirtualTableColumn> sortedColumns;
             sortedColumns.push_back({
                 .column = { .header = "V", .initialWidth = 200, .minWidth = 60, .maxWidth = 400 },
                 .generateCell  = [this, &data](int r) {
@@ -1276,7 +1276,7 @@ namespace GUI
 
             auto emitSorted = [&]{
                 app.BeginRootWindow();
-                std::span<GUI::VirtualTableColumn> sp(sortedColumns.data(), sortedColumns.size());
+                std::span<interstice::VirtualTableColumn> sp(sortedColumns.data(), sortedColumns.size());
                 app.VirtualTable(tableID, state, sp, int(data.size()), 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 300));
@@ -1292,7 +1292,7 @@ namespace GUI
 
             // Select the data row whose value is 50 (dataset index 2).
             state.selectedRowID = state.RowIDForIndex(2);
-            ASSERT_NE(state.selectedRowID, GUI::ID::Invalid());
+            ASSERT_NE(state.selectedRowID, interstice::ID::Invalid());
 
             // Frame 2: sort ascending. Visual order [1, 3, 0, 4, 2]: position 4 holds
             // dataset row 2 (value 50).
@@ -1332,9 +1332,9 @@ namespace GUI
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnWithoutSortLambdaDoesNotBuildPermutation)
         {
-            GUI::TableState state{};
+            interstice::TableState state{};
 
-            std::vector<GUI::VirtualTableColumn> noLambdaCols;
+            std::vector<interstice::VirtualTableColumn> noLambdaCols;
             noLambdaCols.push_back({
                 .column = { .header = "X", .initialWidth = 200, .minWidth = 60, .maxWidth = 400, .sortable = true },
                 .generateCell = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); },
@@ -1345,7 +1345,7 @@ namespace GUI
             state.sortDescending = true;
             app.Frame([&]{
                 app.BeginRootWindow();
-                std::span<GUI::VirtualTableColumn> sp(noLambdaCols.data(), noLambdaCols.size());
+                std::span<interstice::VirtualTableColumn> sp(noLambdaCols.data(), noLambdaCols.size());
                 app.VirtualTable(tableID, state, sp, 10, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 300));
@@ -1365,7 +1365,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, TreeCellPopulatesHasChildrenForBranches)
         {
             bool branchOpen = true;
-            std::vector<GUI::VirtualTableColumn> cols;
+            std::vector<interstice::VirtualTableColumn> cols;
             cols.push_back({ { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 },
                              [&](int r) {
                                  if (r == 0)
@@ -1376,11 +1376,11 @@ namespace GUI
                                                   IconID::Invalid, 0, true, nullptr);
                              } });
 
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state, /*xOverflow*/false, /*yOverflow*/false); };
             auto emit = [&]{
                 app.BeginRootWindow();
-                std::span<GUI::VirtualTableColumn> sp(cols.data(), cols.size());
+                std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
                 app.VirtualTable(tableID, state, sp, 2, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 200));
@@ -1390,8 +1390,8 @@ namespace GUI
             app.Frame([&]{ emit(); pin(); });
             app.Frame([&]{ emit(); pin(); });
 
-            const GUI::ID branchID = state.RowIDForIndex(0);
-            const GUI::ID leafID   = state.RowIDForIndex(1);
+            const interstice::ID branchID = state.RowIDForIndex(0);
+            const interstice::ID leafID   = state.RowIDForIndex(1);
             const auto* branchInfo = state.FindTreeRow(branchID);
             const auto* leafInfo   = state.FindTreeRow(leafID);
             ASSERT_NE(branchInfo, nullptr);
@@ -1403,7 +1403,7 @@ namespace GUI
         TEST_F(TableVirtualScrollTest, TreeCellIconDoubleClickTogglesBranch)
         {
             bool branchOpen = false;
-            std::vector<GUI::VirtualTableColumn> cols;
+            std::vector<interstice::VirtualTableColumn> cols;
             cols.push_back({ { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 },
                              [&](int r) {
                                  (void)r;
@@ -1412,11 +1412,11 @@ namespace GUI
                                               app.theme.sortArrowDownIcon, 0, true, nullptr);
                              } });
 
-            GUI::TableState state{};
+            interstice::TableState state{};
             auto pin = [&]{ PinViewport(state, false, false); };
             auto emit = [&]{
                 app.BeginRootWindow();
-                std::span<GUI::VirtualTableColumn> sp(cols.data(), cols.size());
+                std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
                 app.VirtualTable(tableID, state, sp, 1, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 200));
@@ -1427,7 +1427,7 @@ namespace GUI
             app.Frame([&]{ emit(); pin(); });
 
             // Icon x: depth-0 indent (0) + arrow (20) + ~8 px into the icon.
-            const GUI::ID rowID = state.RowIDForIndex(0);
+            const interstice::ID rowID = state.RowIDForIndex(0);
             const auto rowRect = app.GetElementRect(rowID);
             const int2 iconCenter{ rowRect.x + 20 + 8, rowRect.y + rowRect.h / 2 };
 
@@ -1442,4 +1442,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

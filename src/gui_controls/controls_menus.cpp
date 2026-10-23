@@ -8,7 +8,7 @@
 #include <string>
 #include <chrono>
 
-namespace GUI
+namespace interstice
 {
 
     // ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ namespace GUI
     {
         const int32_t borderWidth = application.styleManager.Px(1);
         const int32_t buttonWidth = std::max(0, windowWidth - borderWidth * 2);
-        application.RegisterElement(GUI::Element{
+        application.RegisterElement(interstice::Element{
             .id = id,
             .eventHandler = [&application, windowID = windowID](ElementEvent&& event) -> bool {
                 if (event.type == EventType::MouseDown && event.state.LeftPressed()) {
@@ -42,7 +42,7 @@ namespace GUI
     {
         const int32_t borderWidth = application.styleManager.Px(1);
         const int32_t buttonWidth = std::max(0, windowWidth - borderWidth * 2);
-        application.RegisterElement(GUI::Element{
+        application.RegisterElement(interstice::Element{
                 .id = id,
                 .eventHandler = [&application, windowID = windowID](ElementEvent&& event) -> bool {
                     if (event.type == EventType::MouseDown && event.state.LeftPressed()) {
@@ -121,7 +121,7 @@ namespace GUI
             return false;
         };
 
-        application.RegisterControl(GUI::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
+        application.RegisterControl(interstice::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
                             text, std::move(constraints));
 
         // Snapshot the trigger's final screen rect after layout; next frame's BeginMenu
@@ -134,9 +134,9 @@ namespace GUI
 		    [[maybe_unused]]
             auto result =
             application.elementStorage.AddPostLayout(triggerRef,
-                [&triggerRects, menuID](GUI::PostLayoutContext& ctx)
+                [&triggerRects, menuID](interstice::PostLayoutContext& ctx)
                 {
-                    const GUI::IntRect r = ctx.ElementRect();
+                    const interstice::IntRect r = ctx.ElementRect();
                     if (r.w > 0 && r.h > 0) triggerRects.insert_or_assign(menuID, r);
                 });
         }
@@ -173,21 +173,21 @@ namespace GUI
     }
 
 
-    GUI::ElementRef GUIApplication::MenuItemRow(ID id, GUI::EventHandler handler, StyleRef rowStyle,
+    interstice::ElementRef GUIApplication::MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
                                                 bool reserveIcon, IconID icon, std::string_view text,
                                                 std::string_view trailing, StyleRef trailingStyle,
                                                 LayoutOverride&& constraints)
     {
-        const GUI::ElementState rowState = guiStateManager.GetCurrentState(id);
-        const bool selected = (rowState & GUI::ElementState::Selected) != GUI::ElementState::None;
+        const interstice::ElementState rowState = guiStateManager.GetCurrentState(id);
+        const bool selected = (rowState & interstice::ElementState::Selected) != interstice::ElementState::None;
 
-        GUI::Element row{};
+        interstice::Element row{};
         row.id           = id;
         row.eventHandler = std::move(handler);
         row.styleRef     = rowStyle;
         row.state        = rowState;
         // The row is the focusable control; its children are non-interactive.
-        GUI::ElementRef rowRef = RegisterControl(std::move(row), std::move(constraints));
+        interstice::ElementRef rowRef = RegisterControl(std::move(row), std::move(constraints));
 
         VERIFY(elementStorage.BeginChildren());
 
@@ -196,41 +196,41 @@ namespace GUI
         // checkmark here; otherwise the item's own icon, if any.
         if (reserveIcon)
         {
-            GUI::Element iconEl{};
+            interstice::Element iconEl{};
             iconEl.id       = idManager.AllocateDynamicID();
-            iconEl.flags    = GUI::ElementFlags::NoInput;
+            iconEl.flags    = interstice::ElementFlags::NoInput;
             iconEl.styleRef = theme.menuItemIconStyleRef;
             if (selected)
                 RegisterControl(std::move(iconEl),
-                    [this](GUI::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
-                    GUI::LayoutOverride{});
+                    [this](interstice::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
+                    interstice::LayoutOverride{});
             else
                 RegisterControl(std::move(iconEl),
-                    [this, icon](GUI::Element& e) { return textSystem->RegisterText(e.id, icon, std::string_view{}, e.styleRef, e.state); },
-                    GUI::LayoutOverride{});
+                    [this, icon](interstice::Element& e) { return textSystem->RegisterText(e.id, icon, std::string_view{}, e.styleRef, e.state); },
+                    interstice::LayoutOverride{});
         }
 
         // Label fills the row and pushes any trailing text to the right edge.
         {
-            GUI::Element labelEl{};
+            interstice::Element labelEl{};
             labelEl.id       = idManager.AllocateDynamicID();
-            labelEl.flags    = GUI::ElementFlags::NoInput;
+            labelEl.flags    = interstice::ElementFlags::NoInput;
             labelEl.styleRef = theme.menuItemLabelStyleRef;
             RegisterControl(std::move(labelEl),
-                [this, text](GUI::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
-                GUI::LayoutOverride{});
+                [this, text](interstice::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
+                interstice::LayoutOverride{});
         }
 
         // Trailing keyboard shortcut or submenu arrow, pinned right.
         if (!trailing.empty())
         {
-            GUI::Element trailEl{};
+            interstice::Element trailEl{};
             trailEl.id       = idManager.AllocateDynamicID();
-            trailEl.flags    = GUI::ElementFlags::NoInput;
+            trailEl.flags    = interstice::ElementFlags::NoInput;
             trailEl.styleRef = trailingStyle;
             RegisterControl(std::move(trailEl),
-                [this, trailing](GUI::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, trailing, e.styleRef, e.state); },
-                GUI::LayoutOverride{});
+                [this, trailing](interstice::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, trailing, e.styleRef, e.state); },
+                interstice::LayoutOverride{});
         }
 
         VERIFY(elementStorage.EndChildren());
@@ -347,15 +347,15 @@ namespace GUI
                 if (menuManager.currentDepth != -1)
                     return pos.MinWidth(kSubmenuFallbackMinWidth).MaxHeight(workArea.h);
 
-                const GUI::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
+                const interstice::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
                 if (!triggerRectPtr)
                     return pos.MaxHeight(workArea.h); // no button rect yet — safest is content-width
 
-                const GUI::IntRect& triggerRect = *triggerRectPtr;
+                const interstice::IntRect& triggerRect = *triggerRectPtr;
                 bool sidePlacedLastFrame = false;
-                if (const GUI::IntRect* windowRectPtr = m_menuRects->FindWindowRect(menuID))
+                if (const interstice::IntRect* windowRectPtr = m_menuRects->FindWindowRect(menuID))
                 {
-                    const GUI::IntRect& windowRect = *windowRectPtr;
+                    const interstice::IntRect& windowRect = *windowRectPtr;
                     // Side-placed ⇔ the X ranges of the popup and the trigger button
                     // don't overlap. Below/above keeps them X-aligned.
                     const int32_t triggerLeft  = triggerRect.x;
@@ -386,9 +386,9 @@ namespace GUI
                     {
                         auto& windowRects = m_menuRects->WindowRects();
                         [[maybe_unused]] auto cdRes = elementStorage.AddPostLayout(windowElementRef,
-                            [&windowRects, menuID](GUI::PostLayoutContext& ctx)
+                            [&windowRects, menuID](interstice::PostLayoutContext& ctx)
                             {
-                                const GUI::IntRect r = ctx.ElementRect();
+                                const interstice::IntRect r = ctx.ElementRect();
                                 if (r.w > 0 && r.h > 0) windowRects.insert_or_assign(menuID, r);
                             });
                     }
@@ -421,14 +421,14 @@ namespace GUI
 
     void GUIApplication::MenuSeparator()
     {
-        const GUI::ID sepID = idManager.AllocateDynamicID();
-        GUI::Element sep{};
+        const interstice::ID sepID = idManager.AllocateDynamicID();
+        interstice::Element sep{};
         sep.id       = sepID;
         sep.styleRef = theme.menuSeparatorStyleRef;
-        sep.flags    = GUI::ElementFlags::NoInput;
+        sep.flags    = interstice::ElementFlags::NoInput;
         sep.state    = guiStateManager.GetCurrentState(sepID);
         auto sRes = elementStorage.Add(std::move(sep),
-            GUI::LayoutOverride{}.NoGrow().NoShrink());
+            interstice::LayoutOverride{}.NoGrow().NoShrink());
         VERIFY(sRes.status);
         VERIFY(windowRegistry.Add(sRes.ref));
     }
@@ -440,7 +440,7 @@ namespace GUI
 
         // Reserve the left column when this item has an icon or is checkable
         // (selected items show a checkmark there).
-        const bool selected = (guiStateManager.GetCurrentState(id) & GUI::ElementState::Selected) != GUI::ElementState::None;
+        const bool selected = (guiStateManager.GetCurrentState(id) & interstice::ElementState::Selected) != interstice::ElementState::None;
         if (icon != IconID::Invalid || selected)
             level.itemsHaveIcons = true;
 

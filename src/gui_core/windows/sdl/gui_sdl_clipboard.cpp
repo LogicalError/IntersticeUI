@@ -2,7 +2,7 @@
 
 #include <SDL3/SDL.h>
 
-namespace GUI
+namespace interstice
 {
     std::string SDLClipboard::Get() const
     {
@@ -20,4 +20,4 @@ namespace GUI
         std::string buffer(text);
         SDL_SetClipboardText(buffer.c_str());
     }
-} // namespace GUI
+} // namespace interstice

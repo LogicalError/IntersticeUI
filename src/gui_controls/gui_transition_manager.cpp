@@ -3,7 +3,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_ref.h>
 
-namespace GUI
+namespace interstice
 {
     uint32_t ComputeGPUStyleIndex(VisualBoxStyleIndex base, ElementState state)
     {
@@ -76,4 +76,4 @@ namespace GUI
         }
     }
 
-} // namespace GUI
+} // namespace interstice

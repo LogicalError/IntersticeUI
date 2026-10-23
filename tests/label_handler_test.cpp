@@ -18,7 +18,7 @@
 
 #include <gui_controls/gui_default_handlers.h>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

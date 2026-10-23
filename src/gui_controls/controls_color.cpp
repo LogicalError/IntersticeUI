@@ -44,32 +44,32 @@ namespace
 
 
     // Create a horizontal linear gradient ColorStyle from two endpoint colors.
-    void SetGradientStyle2(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx,
-                           GUI::color4f c0, GUI::color4f c1)
+    void SetGradientStyle2(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
+                           interstice::color4f c0, interstice::color4f c1)
     {
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(c0, c1, GUI::ColorType::LinearGradient);
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(c0, c1, interstice::ColorType::LinearGradient);
         // Rotate 90° so gradient goes left→right instead of top→bottom
-        cs.SetTransformation(GUI::float3(0, 1, 0), GUI::float3(1, 0, 0));
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0));
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
     }
 
     // Create a horizontal multi-stop gradient for the hue slider.
-    void SetHueGradientStyleHorizontal(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx)
+    void SetHueGradientStyleHorizontal(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx)
     {
-        GUI::Gradient g;
-        g.type = GUI::GradientType::Linear;
+        interstice::Gradient g;
+        g.type = interstice::GradientType::Linear;
         constexpr float hues[] = { 0.0f, 1.0f/6, 2.0f/6, 3.0f/6, 4.0f/6, 5.0f/6, 1.0f };
         for (int i = 0; i < 7; i++)
         {
-            auto [r, gb, b] = GUI::ColorConvert::HSVtoRGB(hues[i], 1.0f, 1.0f);
-            g.AddStop(GUI::color4f{r, gb, b, 1.0f}, hues[i]);
+            auto [r, gb, b] = interstice::ColorConvert::HSVtoRGB(hues[i], 1.0f, 1.0f);
+            g.AddStop(interstice::color4f{r, gb, b, 1.0f}, hues[i]);
         }
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(g, GUI::ColorType::LinearGradient);
-        cs.SetTransformation(GUI::float3(0, 1, 0), GUI::float3(1, 0, 0)); // horizontal
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
+        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -79,38 +79,38 @@ namespace
     // to an sRGB color. RenderCircle maps t=0→1 starting at 3 o'clock going CW.
     // Our convention is hue=0 at 12 o'clock, so we offset by 0.25.
     template <typename Fn>
-    void SetRingGradient(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx, Fn&& sampleFn, int kStops = 7)
+    void SetRingGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx, Fn&& sampleFn, int kStops = 7)
     {
-        GUI::Gradient g;
-        g.type = GUI::GradientType::Linear;
+        interstice::Gradient g;
+        g.type = interstice::GradientType::Linear;
         for (int i = 0; i < kStops; i++)
         {
             float t = float(i) / float(kStops - 1);
             float hue = std::fmod(t + 0.25f, 1.0f);
             g.AddStop(sampleFn(hue), t);
         }
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(g, GUI::ColorType::LinearGradient);
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
     }
 
     // HSV hue ring
-    void SetHueRingGradient(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx)
+    void SetHueRingGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx)
     {
-        SetRingGradient(sm, idx, [](float hue) -> GUI::color4f {
-            auto [r, g, b] = GUI::ColorConvert::HSVtoRGB(hue, 1.0f, 1.0f);
+        SetRingGradient(sm, idx, [](float hue) -> interstice::color4f {
+            auto [r, g, b] = interstice::ColorConvert::HSVtoRGB(hue, 1.0f, 1.0f);
             return { r, g, b, 1.0f };
         });
     }
 
     // Create a 4-corner InterpolatedBox color style.
-    void SetQuadColorStyle(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx,
-                           GUI::color4f c0, GUI::color4f c1, GUI::color4f c2, GUI::color4f c3)
+    void SetQuadColorStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
+                           interstice::color4f c0, interstice::color4f c1, interstice::color4f c2, interstice::color4f c3)
     {
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(c0, c1, c2, c3, GUI::ColorType::InterpolatedBox);
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(c0, c1, c2, c3, interstice::ColorType::InterpolatedBox);
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -119,19 +119,19 @@ namespace
 
     // Create a horizontal multi-stop gradient by sampling a lambda at N points.
     template <typename Fn>
-    void SetSampledGradient(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx,
+    void SetSampledGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
                             Fn&& sampleFn, int numStops = 8)
     {
-        GUI::Gradient g;
-        g.type = GUI::GradientType::Linear;
+        interstice::Gradient g;
+        g.type = interstice::GradientType::Linear;
         for (int i = 0; i < numStops; i++)
         {
             float t = float(i) / float(numStops - 1);
             g.AddStop(sampleFn(t), t);
         }
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(g, GUI::ColorType::LinearGradient);
-        cs.SetTransformation(GUI::float3(0, 1, 0), GUI::float3(1, 0, 0)); // horizontal
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
+        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -139,7 +139,7 @@ namespace
 }
 
 
-namespace GUI
+namespace interstice
 {
 
     // ---------------------------------------------------------------------------
@@ -895,7 +895,7 @@ namespace GUI
 
         // Write current HSV back to output color every frame while picker is open
         {
-            auto [r, g, b] = GUI::ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
+            auto [r, g, b] = interstice::ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
             float mult = (allowHDR && cp.hdrBrightness > 1.0f) ? cp.hdrBrightness : 1.0f;
             outColor = { r * mult, g * mult, b * mult, cp.a };
         }
@@ -918,7 +918,7 @@ namespace GUI
                 auto& swatchStyle = m_colorPickerSub->ClaimSwatchStyle(swatchID);
         SetColorStyle(styleManager, swatchStyle, value);
         RegisterControl(
-            GUI::Element
+            interstice::Element
             {
                 .id = swatchID,
                 // Captures a copy: handlers run after this returns, and `value` may be a temporary.

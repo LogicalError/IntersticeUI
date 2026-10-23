@@ -1,9 +1,9 @@
 #pragma once
 
 #include <gui_core/gui_base_types.h>
-#include <gui_core/graphics/gui_graphics_context.h>   // GUI::DeviceScope
+#include <gui_core/graphics/gui_graphics_context.h>   // interstice::DeviceScope
 #include <gui_core/graphics/gui_image.h>
-#include <gui_core/windows/gui_window_backend.h>      // GUI::OSWindowHandle
+#include <gui_core/windows/gui_window_backend.h>      // interstice::OSWindowHandle
 
 #include <gui_core/graphics/vulkan/vk_image.h>
 #include <gui_core/graphics/vulkan/vk_meshes.h>
@@ -23,14 +23,14 @@
 #include <source_location>
 #include <span>
 
-namespace GUI
+namespace interstice
 {
     class Buffer;
     class VisualColorStyle;
     struct VisualBoxStyle;
 }
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     struct Style;
 
@@ -64,12 +64,12 @@ namespace Vulkan
     class VulkanDeviceContext
     {
     public:
-        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, const VkAllocationCallbacks*, GUI::OSWindowHandle)>;
+        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle)>;
         void SetSurfaceFactory(SurfaceFactory factory) { m_surfaceFactory = std::move(factory); }
 
         // Host memory functions for every Vulkan object, vk-bootstrap and VMA.
         // Call before initialization.
-        void SetAllocationHooks(const GUI::AllocationHooks& hooks);
+        void SetAllocationHooks(const interstice::AllocationHooks& hooks);
         // What the vkCreate*/vkDestroy* calls pass; null when no hooks are set.
         const VkAllocationCallbacks* AllocationCallbacks() const { return m_hooks.IsSet() ? &m_allocationCallbacks : nullptr; }
 
@@ -143,35 +143,35 @@ namespace Vulkan
         void WaitIdle() const;
 
     public:
-        GUI::Image* CreateImage(GUI::uint2 size, GUI::ImageFormat format, GUI::Sampler sampler, bool mipmapped = false) const;
+        interstice::Image* CreateImage(interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false) const;
         // Doesn't wait for the GPU: the pixel upload (and mip generation) is
         // recorded at the start of the next window frame (RecordPendingUploads).
-        GUI::Image* CreateImage(const void* data, GUI::uint2 size, GUI::ImageFormat format, GUI::Sampler sampler, bool mipmapped = false);
+        interstice::Image* CreateImage(const void* data, interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false);
         // Records the queued uploads into cmd, outside any rendering scope.
         void RecordPendingUploads(VkCommandBuffer cmd);
-        void DestroyImage(GUI::Image* img);
-        void DestroyImageAtEnd(GUI::Image* img, GUI::DeviceScope scope,
+        void DestroyImage(interstice::Image* img);
+        void DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
                                const std::source_location& loc =
                                std::source_location::current());
 
-        GUI::Buffer* UploadVisualColorStyles(::std::span<const GUI::VisualColorStyle> colorStyles) const;
-        void DestroyVisualColorStyles(GUI::Buffer* buffer);
-        void DestroyVisualColorStylesAtEnd(GUI::Buffer* buffer, GUI::DeviceScope scope,
+        interstice::Buffer* UploadVisualColorStyles(::std::span<const interstice::VisualColorStyle> colorStyles) const;
+        void DestroyVisualColorStyles(interstice::Buffer* buffer);
+        void DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
                                            const std::source_location& loc =
                                            std::source_location::current());
 
-        GUI::Buffer* UploadVisualBoxStyles(::std::span<const GUI::VisualBoxStyle> styles) const;
-        void DestroyVisualBoxStyles(GUI::Buffer* buffer);
-        void DestroyVisualBoxStylesAtEnd(GUI::Buffer* buffer, GUI::DeviceScope scope,
+        interstice::Buffer* UploadVisualBoxStyles(::std::span<const interstice::VisualBoxStyle> styles) const;
+        void DestroyVisualBoxStyles(interstice::Buffer* buffer);
+        void DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
                                          const std::source_location& loc =
                                          std::source_location::current());
 
-        DeletionQueue& GetDeletionQueue(GUI::DeviceScope scope)
+        DeletionQueue& GetDeletionQueue(interstice::DeviceScope scope)
         {
             switch (scope)
             {
-                case GUI::DeviceScope::Frame:       return frameDeletionQueues[frameNumber % FRAME_DELETION_SLOT_COUNT];
-                case GUI::DeviceScope::Application: return mainDeletionQueue;
+                case interstice::DeviceScope::Frame:       return frameDeletionQueues[frameNumber % FRAME_DELETION_SLOT_COUNT];
+                case interstice::DeviceScope::Application: return mainDeletionQueue;
                 default: throw;
             }
         }
@@ -230,7 +230,7 @@ namespace Vulkan
         void Flush();  // Wait for GPU and flush deletion queues
         void Destroy(); // Destroy Vulkan resources
 
-        VkSurfaceKHR CreateSurface(GUI::OSWindowHandle windowHandle);
+        VkSurfaceKHR CreateSurface(interstice::OSWindowHandle windowHandle);
 
     private:
         // Creates the command pool, fence, descriptor layout and samplers, for owned
@@ -239,7 +239,7 @@ namespace Vulkan
         bool AdoptExternalDevice();
 
         SurfaceFactory m_surfaceFactory;
-        GUI::AllocationHooks  m_hooks;
+        interstice::AllocationHooks  m_hooks;
         VkAllocationCallbacks m_allocationCallbacks{};
         InstanceDebugConfig m_instanceDebugConfig;
         std::optional<ExternalDevice> m_externalDevice;
@@ -267,8 +267,8 @@ namespace Vulkan
         void DestroyImage(const VulkanImage& img);
 
         // Style buffers only; per-primitive uploads go through the RHI.
-        VisualBoxStyleBuffers   UploadMesh(::std::span<const GUI::VisualBoxStyle> visualBoxStyles) const;
-        VisualColorStyleBuffers UploadMesh(::std::span<const GUI::VisualColorStyle> colorStyles) const;
+        VisualBoxStyleBuffers   UploadMesh(::std::span<const interstice::VisualBoxStyle> visualBoxStyles) const;
+        VisualColorStyleBuffers UploadMesh(::std::span<const interstice::VisualColorStyle> colorStyles) const;
         void  DestroyMesh(const VisualBoxStyleBuffers& mesh) const;
         void  DestroyMesh(const VisualColorStyleBuffers& mesh) const;
 

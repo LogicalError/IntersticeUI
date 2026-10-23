@@ -5,7 +5,7 @@
 #include <gui_core/graphics/gui_renderer.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 
-namespace GUI
+namespace interstice
 {
     class IWindowBackend;
     class GradientManager;
@@ -17,59 +17,59 @@ namespace GUI
     class ImageSet;
 }
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     struct FrameData;
     class VulkanImageSet;
     class VulkanWindowContext;
 
-    class VulkanGraphicsContext : public GUI::GraphicsContext
+    class VulkanGraphicsContext : public interstice::GraphicsContext
     {
     public:
         VulkanImageSet* vulkanImageSet = nullptr;
-        GUI::Buffer* visualBoxStylesMesh = nullptr;
-        GUI::Buffer* colorStylesMesh = nullptr;
-        std::vector<GUI::ImageIndex> gradientPageImageIndices;
+        interstice::Buffer* visualBoxStylesMesh = nullptr;
+        interstice::Buffer* colorStylesMesh = nullptr;
+        std::vector<interstice::ImageIndex> gradientPageImageIndices;
         VulkanDeviceContext deviceContext;
 
     public:
         VulkanGraphicsContext();
 
         void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
-        void SetAllocationHooks(const GUI::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
-        bool Initialize(GUI::IWindowBackend* windowBackend) override;
+        void SetAllocationHooks(const interstice::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
+        bool Initialize(interstice::IWindowBackend* windowBackend) override;
         void Cleanup() override;
         void BeginFrame() override;
         void EndFrame() override {}
 
     public:
-        GUI::Image* CreateImage(GUI::uint2 size, GUI::ImageFormat format, GUI::Sampler sampler, bool mipmapped = false);
-        GUI::Image* CreateImage(void* data, GUI::uint2 size, GUI::ImageFormat format, GUI::Sampler sampler, bool mipmapped = false) override;
-        void DestroyImage(GUI::Image* img);
-        void DestroyImageAtEnd(GUI::Image* img, GUI::DeviceScope scope,
+        interstice::Image* CreateImage(interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false);
+        interstice::Image* CreateImage(void* data, interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false) override;
+        void DestroyImage(interstice::Image* img);
+        void DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
                                const std::source_location& loc = std::source_location::current()) override;
 
-        GUI::Buffer* UploadVisualColorStyles(std::span<const GUI::VisualColorStyle> colorStyles);
-        void DestroyVisualColorStyles(GUI::Buffer* buffer);
-        void DestroyVisualColorStylesAtEnd(GUI::Buffer* buffer, GUI::DeviceScope scope,
+        interstice::Buffer* UploadVisualColorStyles(std::span<const interstice::VisualColorStyle> colorStyles);
+        void DestroyVisualColorStyles(interstice::Buffer* buffer);
+        void DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
                                            const std::source_location& loc = std::source_location::current());
 
-        GUI::Buffer* UploadVisualBoxStyles(std::span<const GUI::VisualBoxStyle> visualBoxStyles);
-        void DestroyVisualBoxStyles(GUI::Buffer* buffer);
-        void DestroyVisualBoxStylesAtEnd(GUI::Buffer* buffer, GUI::DeviceScope scope,
+        interstice::Buffer* UploadVisualBoxStyles(std::span<const interstice::VisualBoxStyle> visualBoxStyles);
+        void DestroyVisualBoxStyles(interstice::Buffer* buffer);
+        void DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
                                          const std::source_location& loc = std::source_location::current());
 
     public:
-        GUI::IWindowContext* CreateWindowContext(void* nativeHandle, GUI::OSWindowHandle osHandle, 
-                                                 GUI::ID id, GUI::int2 size, GUI::WindowFlags windowFlags,
-                                                 GUI::OnGuiFunc onGui) override;
-        void DestroyWindowContext(GUI::IWindowContext* context) override;
+        interstice::IWindowContext* CreateWindowContext(void* nativeHandle, interstice::OSWindowHandle osHandle, 
+                                                 interstice::ID id, interstice::int2 size, interstice::WindowFlags windowFlags,
+                                                 interstice::OnGuiFunc onGui) override;
+        void DestroyWindowContext(interstice::IWindowContext* context) override;
 
-        GUI::TextAtlasManager* CreateTextAtlasManager() override;
+        interstice::TextAtlasManager* CreateTextAtlasManager() override;
 
-        GUI::ImageSet* GetImageSet() const override;
-        GUI::ImageIndex RegisterImage(GUI::Image* image) override;
-        void UnregisterImage(GUI::ImageIndex index) override;
+        interstice::ImageSet* GetImageSet() const override;
+        interstice::ImageIndex RegisterImage(interstice::Image* image) override;
+        void UnregisterImage(interstice::ImageIndex index) override;
 
         // ---- Host-rendered images ----
         //
@@ -89,10 +89,10 @@ namespace Vulkan
         // write waits for the GUI's earlier reads. Submission order on one queue
         // makes both barriers effective across command buffers. Call these from
         // the UI build phase (OnGUI), before the GUI prepares and submits the frame.
-        GUI::ImageIndex RegisterExternalImage(VkImageView view, VkSampler sampler);
+        interstice::ImageIndex RegisterExternalImage(VkImageView view, VkSampler sampler);
         // Points an existing index at a new view, for example after a resize. The
         // host must make sure no in-flight GUI frame still samples the old view.
-        void UpdateExternalImage(GUI::ImageIndex index, VkImageView view, VkSampler sampler);
+        void UpdateExternalImage(interstice::ImageIndex index, VkImageView view, VkSampler sampler);
 
         // The host image a render-to-image window (WindowFlags::RenderToImage) is
         // copied into after each of its frames; VK_NULL_HANDLE stops the copies. May
@@ -102,29 +102,29 @@ namespace Vulkan
         // first time) to TRANSFER_DST, copies, and leaves it in SHADER_READ_ONLY_OPTIMAL
         // for the fragment stage. The host reads it in work submitted after the GUI's
         // frame and must leave it in SHADER_READ_ONLY_OPTIMAL.
-        void SetWindowImageTarget(GUI::ID window, VkImage image, VkExtent2D extent);
+        void SetWindowImageTarget(interstice::ID window, VkImage image, VkExtent2D extent);
 
-        bool StartResizing(GUI::ID id) { return guiRenderer->StartResizing(id); }
+        bool StartResizing(interstice::ID id) { return guiRenderer->StartResizing(id); }
         void StopResizing() { guiRenderer->StopResizing(); }
 
     private:
         struct ImageTarget { VkImage image; VkExtent2D extent; };
-        std::unordered_map<GUI::ID, ImageTarget>                  m_imageTargets;
-        std::unordered_map<GUI::ID, Vulkan::VulkanWindowContext*> m_windowContexts;
+        std::unordered_map<interstice::ID, ImageTarget>                  m_imageTargets;
+        std::unordered_map<interstice::ID, interstice::vulkan::VulkanWindowContext*> m_windowContexts;
 
     public:
         void Reset() { guiRenderer->Reset(); }
 
-        GUI::Buffer* PrepareVisualBoxStylesBuffer(GUI::StyleManager& styleManager);
-        GUI::Buffer* PrepareVisualColorStylesBuffer(GUI::StyleManager& styleManager, GUI::GradientManager& gradientManager);
+        interstice::Buffer* PrepareVisualBoxStylesBuffer(interstice::StyleManager& styleManager);
+        interstice::Buffer* PrepareVisualColorStylesBuffer(interstice::StyleManager& styleManager, interstice::GradientManager& gradientManager);
 
-        GUI::GPUDrawPushConstants pushConstants{};
+        interstice::GPUDrawPushConstants pushConstants{};
 
-        void PrepareFrame(GUI::StyleManager& styleManager, GUI::GradientManager& gradientManager, float elapsedTimeSecs) override;
+        void PrepareFrame(interstice::StyleManager& styleManager, interstice::GradientManager& gradientManager, float elapsedTimeSecs) override;
         // PrepareFrame with the last call's managers; lets live resize pick up
         // style buffer updates that onGui() just produced.
         void RePrepareFrame();
-        bool RenderWindowFrame(VkCommandBuffer cmd, FrameData& currentFrame, GUI::ID windowID, GUI::uint2 extent);
+        bool RenderWindowFrame(VkCommandBuffer cmd, FrameData& currentFrame, interstice::ID windowID, interstice::uint2 extent);
 
         float GetLastFrameBuildSeconds() const override { return m_frameBuildSeconds; }
         // Window contexts report CPU work between presents (excludes the vsync
@@ -132,8 +132,8 @@ namespace Vulkan
         void  SetFrameBuildSeconds(float seconds) { m_frameBuildSeconds = seconds; }
 
     private:
-        GUI::StyleManager*    m_lastStyleManager{ nullptr };
-        GUI::GradientManager* m_lastGradientManager{ nullptr };
+        interstice::StyleManager*    m_lastStyleManager{ nullptr };
+        interstice::GradientManager* m_lastGradientManager{ nullptr };
         float                 m_lastElapsedTimeSecs{ 0.0f };
         float                 m_frameBuildSeconds{ 0.0f };
     };

@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-static constexpr GUI::Diagnostics::LogCategory kLogVulkan = GUI::Diagnostics::MakeLogCategory("vulkan");
+static constexpr interstice::Diagnostics::LogCategory kLogVulkan = interstice::Diagnostics::MakeLogCategory("vulkan");
 
 void PipelineBuilder::clear()
 {
@@ -83,7 +83,7 @@ VkPipeline PipelineBuilder::build_pipeline(VkDevice device, const VkAllocationCa
             callbacks, &newPipeline)
         != VK_SUCCESS) 
     {
-        LOG_ERROR(kLogVulkan, "failed to create pipeline");
+        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create pipeline");
         return VK_NULL_HANDLE;
     } else 
     {
@@ -94,8 +94,8 @@ VkPipeline PipelineBuilder::build_pipeline(VkDevice device, const VkAllocationCa
 void PipelineBuilder::set_shaders(VkShaderModule vertexShader, VkShaderModule fragmentShader)
 {
     _shaderStages.clear();
-    _shaderStages.push_back(vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT, vertexShader));
-    _shaderStages.push_back(vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentShader));
+    _shaderStages.push_back(interstice::vulkan::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT, vertexShader));
+    _shaderStages.push_back(interstice::vulkan::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentShader));
 }
 
 void PipelineBuilder::set_input_topology(VkPrimitiveTopology topology)
@@ -216,7 +216,7 @@ void PipelineBuilder::enable_depthtest(bool depthWriteEnable, VkCompareOp op)
     _depthStencil.maxDepthBounds = 1.f;
 }
 
-bool vkutil::load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule)
+bool interstice::vulkan::load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule)
 {
     // Opened at the end so tellg() gives the size.
     std::ifstream file(filePath, std::ios::ate | std::ios::binary);

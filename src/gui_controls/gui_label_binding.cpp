@@ -1,7 +1,7 @@
 #include <gui_controls/gui_label_binding.h>
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

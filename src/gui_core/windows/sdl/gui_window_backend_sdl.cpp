@@ -25,9 +25,9 @@
 #undef CreateWindow
 #endif
 
-static constexpr GUI::Diagnostics::LogCategory kLogSDL = GUI::Diagnostics::MakeLogCategory("sdl");
+static constexpr interstice::Diagnostics::LogCategory kLogSDL = interstice::Diagnostics::MakeLogCategory("sdl");
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -70,7 +70,7 @@ namespace GUI
         return buttons;
     }
 
-    SDLWindowBackend::SDLWindowBackend(GUI::GraphicsContext* graphicsContext, const AllocationHooks* hooks)
+    SDLWindowBackend::SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks)
         : graphicsContext(graphicsContext)
     {
         // Replacing SDL's allocator is only safe before SDL holds any memory.
@@ -82,7 +82,7 @@ namespace GUI
                 m_routesSDLMemory = SDL_SetMemoryFunctions(&SDLMalloc, &SDLCalloc, &SDLRealloc, &SDLFree);
             }
             if (!m_routesSDLMemory)
-                LOG_WARNING(kLogSDL, "SDL is already in use, so its memory doesn't go through the allocation hooks");
+                INTERSTICE_LOG_WARNING(kLogSDL, "SDL is already in use, so its memory doesn't go through the allocation hooks");
         }
 
         // Text editors draw the IME composition themselves (OnTextComposition);
@@ -93,7 +93,7 @@ namespace GUI
         {
             if (!SDL_Init(SDL_INIT_VIDEO))
             {
-                LOG_ERROR(kLogSDL, "SDL_Init failed: {}", SDL_GetError());
+                INTERSTICE_LOG_ERROR(kLogSDL, "SDL_Init failed: {}", SDL_GetError());
                 m_sdlInitialized = false;
                 return;
             }
@@ -138,7 +138,7 @@ namespace GUI
                             SDL_GetWindowSizeInPixels(win, &w, &h);
                             int x = 0, y = 0;
                             SDL_GetWindowPosition(win, &x, &y);
-                            windowContext->RenderWindowFrame(backend->graphicsContext, GUI::IntRect{ x, y, w, h }, true);
+                            windowContext->RenderWindowFrame(backend->graphicsContext, interstice::IntRect{ x, y, w, h }, true);
                         }
                     }
                 }
@@ -206,7 +206,7 @@ namespace GUI
                 s_sdlHooks = {};
             }
             else
-                LOG_WARNING(kLogSDL, "SDL still holds {} allocations after SDL_Quit and keeps using the allocation hooks", live);
+                INTERSTICE_LOG_WARNING(kLogSDL, "SDL still holds {} allocations after SDL_Quit and keeps using the allocation hooks", live);
         }
     }
 
@@ -221,7 +221,7 @@ namespace GUI
             SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN
         );
         if (bootstrapWindow == nullptr)
-            LOG_ERROR(kLogSDL, "SDL_CreateWindow failed: {}", SDL_GetError());
+            INTERSTICE_LOG_ERROR(kLogSDL, "SDL_CreateWindow failed: {}", SDL_GetError());
 
         return reinterpret_cast<OSWindowHandle>(bootstrapWindow);
     }
@@ -234,7 +234,7 @@ namespace GUI
         }
     }
 
-    OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title, int2 size, GUI::WindowFlags windowFlags, OSWindowHandle parentOSHandle)
+    OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle)
     {
         return CreateWindow(title, IntRect { SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.x, size.y },
                             windowFlags, parentOSHandle);
@@ -243,14 +243,14 @@ namespace GUI
     static int32_t RoundToInt(float v) { return int32_t(std::lround(v)); }
 
     // A mouse position inside `window` (OS window coordinates) in screen pixels.
-    static GUI::int2 PixelPointOf(SDL_Window* window, float x, float y)
+    static interstice::int2 PixelPointOf(SDL_Window* window, float x, float y)
     {
         auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr);
         if (backend == nullptr)
         {
             int winX = 0, winY = 0;
             SDL_GetWindowPosition(window, &winX, &winY);
-            return GUI::int2{ int32_t(x) + winX, int32_t(y) + winY };
+            return interstice::int2{ int32_t(x) + winX, int32_t(y) + winY };
         }
         return backend->WindowPointToPixels(window, x, y);
     }
@@ -627,13 +627,13 @@ namespace GUI
 
     OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title,
                                                   IntRect rect,
-                                                  GUI::WindowFlags windowFlags,
+                                                  interstice::WindowFlags windowFlags,
                                                   OSWindowHandle parentOSHandle)
     {
         if (!m_sdlInitialized) return nullptr;
         
-        bool isTransparent = (windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None;
-        bool isModal = (windowFlags & GUI::WindowFlags::Modal) != GUI::WindowFlags::None;
+        bool isTransparent = (windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None;
+        bool isModal = (windowFlags & interstice::WindowFlags::Modal) != interstice::WindowFlags::None;
 
 
         Uint64 api_flags = 0;
@@ -656,17 +656,17 @@ namespace GUI
 #endif
 
         // Check individual flag bits (WindowFlags is a bitfield)
-        if ((windowFlags & GUI::WindowFlags::AllowHighDPI)      != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if ((windowFlags & GUI::WindowFlags::Borderless)        != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_BORDERLESS;
-        if ((windowFlags & GUI::WindowFlags::Resizable)         != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_RESIZABLE;
-        if ((windowFlags & GUI::WindowFlags::AlwaysOnTop)       != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
-        if ((windowFlags & GUI::WindowFlags::SkipTaskbar)       != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
-        if ((windowFlags & GUI::WindowFlags::Utility)           != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
-        if ((windowFlags & GUI::WindowFlags::NotFocusable)      != GUI::WindowFlags::None) sd_window_flags |= SDL_WINDOW_NOT_FOCUSABLE;
+        if ((windowFlags & interstice::WindowFlags::AllowHighDPI)      != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        if ((windowFlags & interstice::WindowFlags::Borderless)        != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_BORDERLESS;
+        if ((windowFlags & interstice::WindowFlags::Resizable)         != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_RESIZABLE;
+        if ((windowFlags & interstice::WindowFlags::AlwaysOnTop)       != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+        if ((windowFlags & interstice::WindowFlags::SkipTaskbar)       != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
+        if ((windowFlags & interstice::WindowFlags::Utility)           != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
+        if ((windowFlags & interstice::WindowFlags::NotFocusable)      != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_NOT_FOCUSABLE;
 		
         // Always create hidden, to avoid a native caption flash while Win32 styles are applied;
         // shown below unless requested hidden.
-        bool wasCreatedHidden = (windowFlags & GUI::WindowFlags::Hidden) != GUI::WindowFlags::None;
+        bool wasCreatedHidden = (windowFlags & interstice::WindowFlags::Hidden) != interstice::WindowFlags::None;
         sd_window_flags |= SDL_WINDOW_HIDDEN;
         
         SDL_Window* sdlWindow = SDL_CreateWindow(std::string(title).c_str(),
@@ -693,7 +693,7 @@ namespace GUI
         {
             // Borderless: strip caption/sizing/system-menu styles and use WS_POPUP while
             // still hidden, or some Windows versions briefly show a native caption.
-            if ((windowFlags & GUI::WindowFlags::Borderless) != GUI::WindowFlags::None)
+            if ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None)
             {
                 LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
                 LONG_PTR desiredStyle = (style & ~(WS_CAPTION | WS_BORDER | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)) | WS_POPUP;
@@ -716,8 +716,8 @@ namespace GUI
             // A caption-less WS_POPUP never gets a DWM shadow, so borderless shadows use
             // CS_DROPSHADOW, applied by ShowSDLWindowWithShadow on every Show.
             SDL_SetBooleanProperty(props, "WantsDropShadow",
-                ((windowFlags & GUI::WindowFlags::Borderless) != GUI::WindowFlags::None) &&
-                ((windowFlags & GUI::WindowFlags::Shadow) != GUI::WindowFlags::None));
+                ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None) &&
+                ((windowFlags & interstice::WindowFlags::Shadow) != interstice::WindowFlags::None));
         }
 #endif
 
@@ -746,7 +746,7 @@ namespace GUI
             ShowSDLWindowWithShadow(sdlWindow);
         }
         
-        static GUI::MouseButtons lastMouseButtons = GUI::MouseButtons::None;
+        static interstice::MouseButtons lastMouseButtons = interstice::MouseButtons::None;
 
         m_eventWatch = [](OSWindowHandle data, SDL_Event* event) -> bool
             {
@@ -760,7 +760,7 @@ namespace GUI
                         s_lastFocusableWindow = focused;
                 }
 
-                auto GetInputContext = [](OSWindowHandle windowHandle) -> GUI::IPlatformInputHandler*
+                auto GetInputContext = [](OSWindowHandle windowHandle) -> interstice::IPlatformInputHandler*
                 {
                     SDL_Window* sdlWin = (SDL_Window*)windowHandle;
                     if (SDL_GetWindowFlags(sdlWin) & SDL_WINDOW_NOT_FOCUSABLE)
@@ -772,7 +772,7 @@ namespace GUI
                     }
                     return LocalGetInputHandler(windowHandle);
                 };
-                auto GetWindowID = [](OSWindowHandle windowHandle) -> GUI::ID
+                auto GetWindowID = [](OSWindowHandle windowHandle) -> interstice::ID
                     {
                         SDL_Window* sdlWin = (SDL_Window*)windowHandle;
                         if (SDL_GetWindowFlags(sdlWin) & SDL_WINDOW_NOT_FOCUSABLE)
@@ -794,16 +794,16 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->key.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
                         
                         bool repeat = event->key.repeat;
                         SDL_Keymod modifiers = event->key.mod;
-                        GUI::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
+                        interstice::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
 
-                        GUI::ID windowID = GetWindowID(data);
-                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), GUI::KeyAction::KeyDown);
+                        interstice::ID windowID = GetWindowID(data);
+                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), interstice::KeyAction::KeyDown);
                         break;
                     }
                     case SDL_EVENT_KEY_UP:
@@ -811,16 +811,16 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->key.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
                         bool repeat = event->key.repeat;
                         SDL_Keymod modifiers = event->key.mod;
-                        GUI::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
+                        interstice::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
 
-                        GUI::ID windowID = GetWindowID(data);
-                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), GUI::KeyAction::KeyUp);
+                        interstice::ID windowID = GetWindowID(data);
+                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), interstice::KeyAction::KeyUp);
                         break;
                     }
                     case SDL_EVENT_TEXT_INPUT:
@@ -828,17 +828,17 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->text.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        GUI::ID windowID = GetWindowID(data);
+                        interstice::ID windowID = GetWindowID(data);
                         // SDL delivers UTF-8; decode to Unicode codepoints so a multi-byte
                         // character arrives as a single KeyChar, not one bogus one per byte.
                         const char* text = event->text.text;
                         for (Uint32 codepoint; (codepoint = SDL_StepUTF8(&text, nullptr)) != 0; )
                         {
-                            inputHandler->OnKeyboard(windowID, (GUI::KeyCode)codepoint, 0, GUI::KeyModifier::None, GUI::KeyAction::KeyChar);
+                            inputHandler->OnKeyboard(windowID, (interstice::KeyCode)codepoint, 0, interstice::KeyModifier::None, interstice::KeyAction::KeyChar);
                         }
                         break;
                     }
@@ -847,7 +847,7 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->edit.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
@@ -861,15 +861,15 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->motion.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        const GUI::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->motion.x, event->motion.y);
+                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->motion.x, event->motion.y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
-                        GUI::ID windowID = GetWindowID(data);
-                        inputHandler->OnMouseMove(windowID, GUI::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()));
+                        interstice::ID windowID = GetWindowID(data);
+                        inputHandler->OnMouseMove(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()));
                         break;
                     }
                     case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -878,13 +878,13 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->button.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        GUI::ID windowID = GetWindowID(data);
+                        interstice::ID windowID = GetWindowID(data);
 
-                        const GUI::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->button.x, event->button.y);
+                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->button.x, event->button.y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
                         Uint8 button = event->button.button;
@@ -892,24 +892,24 @@ namespace GUI
                         {
                             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                             {
-                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons |= GUI::MouseButtons::Left;
-                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons |= GUI::MouseButtons::Right;
-                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons |= GUI::MouseButtons::Middle;
-                                if (button == SDL_BUTTON_X1)     lastMouseButtons |= GUI::MouseButtons::X1;
-                                if (button == SDL_BUTTON_X2)     lastMouseButtons |= GUI::MouseButtons::X2;
+                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons |= interstice::MouseButtons::Left;
+                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons |= interstice::MouseButtons::Right;
+                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons |= interstice::MouseButtons::Middle;
+                                if (button == SDL_BUTTON_X1)     lastMouseButtons |= interstice::MouseButtons::X1;
+                                if (button == SDL_BUTTON_X2)     lastMouseButtons |= interstice::MouseButtons::X2;
 
-                                inputHandler->OnMouseButton(windowID, GUI::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), GUI::MouseAction::MouseDown);
+                                inputHandler->OnMouseButton(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), interstice::MouseAction::MouseDown);
                                 break;
                             }
                             case SDL_EVENT_MOUSE_BUTTON_UP:
                             {
-                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons &= ~GUI::MouseButtons::Left;
-                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons &= ~GUI::MouseButtons::Right;
-                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons &= ~GUI::MouseButtons::Middle;
-                                if (button == SDL_BUTTON_X1)     lastMouseButtons &= ~GUI::MouseButtons::X1;
-                                if (button == SDL_BUTTON_X2)     lastMouseButtons &= ~GUI::MouseButtons::X2;
+                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons &= ~interstice::MouseButtons::Left;
+                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons &= ~interstice::MouseButtons::Right;
+                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons &= ~interstice::MouseButtons::Middle;
+                                if (button == SDL_BUTTON_X1)     lastMouseButtons &= ~interstice::MouseButtons::X1;
+                                if (button == SDL_BUTTON_X2)     lastMouseButtons &= ~interstice::MouseButtons::X2;
 
-                                inputHandler->OnMouseButton(windowID, GUI::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), GUI::MouseAction::MouseUp);
+                                inputHandler->OnMouseButton(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), interstice::MouseAction::MouseUp);
                                 break;
                             }
                         }
@@ -920,17 +920,17 @@ namespace GUI
                         if (SDL_GetWindowFromID(event->wheel.windowID) != (SDL_Window*)data)
                             break;
 
-                        GUI::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        const GUI::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->wheel.mouse_x, event->wheel.mouse_y);
+                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->wheel.mouse_x, event->wheel.mouse_y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
                         float mx = event->wheel.x;
                         float my = event->wheel.y;
-                        GUI::ID windowID = GetWindowID(data);
-                        inputHandler->OnMouseScroll(windowID, GUI::int2{ int32_t(x), int32_t(y) }, GUI::float2{ mx, my }, ToKeyModifier(SDL_GetModState()));
+                        interstice::ID windowID = GetWindowID(data);
+                        inputHandler->OnMouseScroll(windowID, interstice::int2{ int32_t(x), int32_t(y) }, interstice::float2{ mx, my }, ToKeyModifier(SDL_GetModState()));
                         break;
                     }
                     case SDL_EVENT_WINDOW_EXPOSED:
@@ -950,9 +950,9 @@ namespace GUI
                         SDL_GetWindowSizeInPixels((SDL_Window*)data, &w, &h);
                         int x = 0, y = 0;
                         SDL_GetWindowPosition((SDL_Window*)data, &x, &y);
-                        auto* gc = (GUI::GraphicsContext*)SDL_GetPointerProperty(
+                        auto* gc = (interstice::GraphicsContext*)SDL_GetPointerProperty(
                             SDL_GetWindowProperties((SDL_Window*)data), "GraphicsContext", nullptr);
-                        windowContext->RenderWindowFrame(gc, GUI::IntRect{ x, y, w, h }, true);
+                        windowContext->RenderWindowFrame(gc, interstice::IntRect{ x, y, w, h }, true);
                         break;
                     }
                 }
@@ -1506,4 +1506,4 @@ namespace GUI
         return true;
     }
 
-} // namespace GUI
+} // namespace interstice

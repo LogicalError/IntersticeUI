@@ -13,7 +13,7 @@ struct skb_layout_t;
 struct skb_text_position_t;
 struct skb_editor_t;
 
-namespace GUI
+namespace interstice
 {
     // Implementation detail, private to the skribidi backend.
     class SkribidiContext;
@@ -57,9 +57,9 @@ namespace GUI
         std::string Cut() override;
         void Paste(std::string_view text) override;
 
-        bool IsHoveringSelectedText(ID textEditorId, ID windowId, GUI::int2 screenSpace) const override;
-        bool TryGetTextDragCursor(ID windowId, GUI::int2 screenSpace, MouseCursor& outCursor) const override;
-        bool TryGetTextDragHoverTarget(ID windowId, GUI::int2 screenSpace, ID& outTargetId) const override;
+        bool IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const override;
+        bool TryGetTextDragCursor(ID windowId, interstice::int2 screenSpace, MouseCursor& outCursor) const override;
+        bool TryGetTextDragHoverTarget(ID windowId, interstice::int2 screenSpace, ID& outTargetId) const override;
 
         // -------------------- Cache Management --------------------
 
@@ -134,7 +134,7 @@ namespace GUI
 
         void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint) override;
 
-        static void ScreenToTextEditorLocalPoint(GUI::int2 screenSpace, const IntRect& textEditorInnerRect, GUI::float2& outLocal,
+        static void ScreenToTextEditorLocalPoint(interstice::int2 screenSpace, const IntRect& textEditorInnerRect, interstice::float2& outLocal,
                                                  const float3x2& screenToLayout = float3x2::Identity());
 
     private:
@@ -144,8 +144,8 @@ namespace GUI
         bool RebuildFontCollection(FontID fontId);
         void EvictUnusedTexts();
 
-        bool TryGetCaretPositionInternal(ID windowId, GUI::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition);
-        void DropDraggedText(ID windowId, GUI::int2 screenPos, ID targetTextEditorId);
+        bool TryGetCaretPositionInternal(ID windowId, interstice::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition);
+        void DropDraggedText(ID windowId, interstice::int2 screenPos, ID targetTextEditorId);
         void EndTextDragging();
 
         void RenderText(RegisteredText* entry, IntRect rect, IntRect innerRectScreen, IntRect clipRect, float pixelScale);
@@ -154,12 +154,12 @@ namespace GUI
 
         bool ApplyTextEditUpdate(ID elementId, std::string& currentText, bool& wasModified);
         void ClearComposition();
-        bool TryGetActiveTextEditorLocalPoint(ID windowId, GUI::int2 screenSpace, GUI::float2& outLocal) const;
+        bool TryGetActiveTextEditorLocalPoint(ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
         // True if (localX, localY) in the active editor falls within a link run (uses the active
         // entry's linkRanges). Lets read-only editors skip caret placement on a link press.
         bool IsActiveEditorPosOnLink(float localX, float localY) const;
-        bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, GUI::int2 screenSpace, GUI::float2& outLocal) const;
-        ID FindTextEditorAtScreenPoint(ID windowId, GUI::int2 screenSpace) const;
+        bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
+        ID FindTextEditorAtScreenPoint(ID windowId, interstice::int2 screenSpace) const;
         bool IsNumericTextEditor(ID elementId) const;
         bool CanDropDraggedTextInto(ID targetTextEditorId) const;
         void* UpdateLayoutWhenNecessary(RegisteredText* entry, float width) const;
@@ -168,7 +168,7 @@ namespace GUI
         TextMeasurement UpdateWrapMeasurementWhenNecessary(RegisteredText* entry, const TextWrapContext& wrapContext) const;
         TextMeasurement MeasureTextInternal(RegisteredText* entry, const skb_layout_t* layout) const;
 
-        void UpdateRegisteredTextStyleState(RegisteredText* entry, GUI::StyleRef styleIndex, GUI::ElementState state);
+        void UpdateRegisteredTextStyleState(RegisteredText* entry, interstice::StyleRef styleIndex, interstice::ElementState state);
 
         std::unordered_map<uint64_t, TextID> m_elementIdToTextIdMap;
         std::unordered_map<uint64_t, TextID> m_textKeyToIdMap;
@@ -204,4 +204,4 @@ namespace GUI
         std::string      m_fontDirectory { "fonts/Noto-otf" };
     };
 
-} // namespace GUI
+} // namespace interstice

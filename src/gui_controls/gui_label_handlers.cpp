@@ -11,7 +11,7 @@
 
 // Label drag / group-label event handlers.
 
-namespace GUI
+namespace interstice
 {
     static bool DispatchToNextSibling(const ElementStorage& elementStorage, ID labelID, EventType type, const InputState& state)
     {
@@ -84,7 +84,7 @@ namespace GUI
                 case EventType::KeyUp:
                     if (auto* state = store.Get<DragLabelState>(event.id);
                         state && state->activeID == event.id &&
-                        event.state.lastKey == GUI::KeyCode::Escape)
+                        event.state.lastKey == interstice::KeyCode::Escape)
                     {
                         DispatchToNextSibling(elementStorage, event.id, EventType::LabelDragCancel, event.state);
                         state->mode = DragScalarMode::Idle;
@@ -264,7 +264,7 @@ namespace GUI
                     break;
 
                 case EventType::KeyDown:
-                    if (event.state.lastKey == GUI::KeyCode::Escape)
+                    if (event.state.lastKey == interstice::KeyCode::Escape)
                     {
                         if (auto* resizeState = store.Get<LabelGroupResizeState>(event.id);
                             resizeState && resizeState->draggingID == event.id)
@@ -412,7 +412,7 @@ namespace GUI
                     break;
 
                 case EventType::KeyUp:
-                    if (event.state.lastKey == GUI::KeyCode::Escape)
+                    if (event.state.lastKey == interstice::KeyCode::Escape)
                     {
                         if (auto* s = store.Get<GroupDraggableLabelState>(event.id))
                         {

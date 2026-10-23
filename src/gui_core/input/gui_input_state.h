@@ -6,27 +6,27 @@
 
 #include <string>
 
-namespace GUI
+namespace interstice
 {
     // Snapshot of input state for a single recorded OS event.
     struct InputState
     {
-        GUI::int2 screenPos{0,0};
-        GUI::int2 prevScreenPos{0,0};
-        GUI::int2 screenDelta{0,0};
+        interstice::int2 screenPos{0,0};
+        interstice::int2 prevScreenPos{0,0};
+        interstice::int2 screenDelta{0,0};
 
-        GUI::MouseButtons buttons = GUI::MouseButtons::None;
-        GUI::MouseButtons prevButtons = GUI::MouseButtons::None;
+        interstice::MouseButtons buttons = interstice::MouseButtons::None;
+        interstice::MouseButtons prevButtons = interstice::MouseButtons::None;
 
-        GUI::KeyModifier modifiers = GUI::KeyModifier::None;
+        interstice::KeyModifier modifiers = interstice::KeyModifier::None;
 
-        GUI::float2 scroll{}; // wheel notches (fractional on hi-res devices); label drags: pixels
+        interstice::float2 scroll{}; // wheel notches (fractional on hi-res devices); label drags: pixels
 
-        GUI::KeyCode lastKey = GUI::KeyCode::None;
-        GUI::KeyAction lastKeyAction = GUI::KeyAction::KeyDown;
+        interstice::KeyCode lastKey = interstice::KeyCode::None;
+        interstice::KeyAction lastKeyAction = interstice::KeyAction::KeyDown;
 
         // Drag/drop payload metadata (set by dispatcher when dispatching drag events)
-        GUI::ID dragSourceID = GUI::ID::Invalid();
+        interstice::ID dragSourceID = interstice::ID::Invalid();
         uint32_t dragPayloadType = 0;
         uintptr_t dragPayloadValue = 0;
 
@@ -36,16 +36,16 @@ namespace GUI
         // Indicates that this event has already been consumed (e.g., Tab handled by tab navigation)
         bool consumed = false;
 
-        bool LeftDown() const { return (buttons & GUI::MouseButtons::Left) != GUI::MouseButtons::None; }
-        bool LeftPressed() const { return LeftDown() && ((prevButtons & GUI::MouseButtons::Left) == GUI::MouseButtons::None); }
-        bool LeftReleased() const { return !LeftDown() && ((prevButtons & GUI::MouseButtons::Left) != GUI::MouseButtons::None); }
+        bool LeftDown() const { return (buttons & interstice::MouseButtons::Left) != interstice::MouseButtons::None; }
+        bool LeftPressed() const { return LeftDown() && ((prevButtons & interstice::MouseButtons::Left) == interstice::MouseButtons::None); }
+        bool LeftReleased() const { return !LeftDown() && ((prevButtons & interstice::MouseButtons::Left) != interstice::MouseButtons::None); }
 
-        bool RightDown() const { return (buttons & GUI::MouseButtons::Right) != GUI::MouseButtons::None; }
-        bool RightPressed() const { return RightDown() && ((prevButtons & GUI::MouseButtons::Right) == GUI::MouseButtons::None); }
-        bool RightReleased() const { return !RightDown() && ((prevButtons & GUI::MouseButtons::Right) != GUI::MouseButtons::None); }
+        bool RightDown() const { return (buttons & interstice::MouseButtons::Right) != interstice::MouseButtons::None; }
+        bool RightPressed() const { return RightDown() && ((prevButtons & interstice::MouseButtons::Right) == interstice::MouseButtons::None); }
+        bool RightReleased() const { return !RightDown() && ((prevButtons & interstice::MouseButtons::Right) != interstice::MouseButtons::None); }
 
-        bool MiddleDown() const { return (buttons & GUI::MouseButtons::Middle) != GUI::MouseButtons::None; }
-        bool MiddlePressed() const { return MiddleDown() && ((prevButtons & GUI::MouseButtons::Middle) == GUI::MouseButtons::None); }
-        bool MiddleReleased() const { return !MiddleDown() && ((prevButtons & GUI::MouseButtons::Middle) != GUI::MouseButtons::None); }
+        bool MiddleDown() const { return (buttons & interstice::MouseButtons::Middle) != interstice::MouseButtons::None; }
+        bool MiddlePressed() const { return MiddleDown() && ((prevButtons & interstice::MouseButtons::Middle) == interstice::MouseButtons::None); }
+        bool MiddleReleased() const { return !MiddleDown() && ((prevButtons & interstice::MouseButtons::Middle) != interstice::MouseButtons::None); }
     };
 }

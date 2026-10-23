@@ -318,6 +318,8 @@ target_link_libraries(gui_controls PUBLIC gui_core)
 
 
 interstice_apply_compile_options(gui_core)
+option(INTERSTICE_VMA_IMPLEMENTATION "Compile VMA's implementation into gui_core; off when the host links its own VMA" ON)
+target_compile_definitions(gui_core PRIVATE INTERSTICE_VMA_IMPLEMENTATION=$<BOOL:${INTERSTICE_VMA_IMPLEMENTATION}>)
 interstice_apply_compile_options(gui_controls)
 interstice_precompile_headers(gui_core <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector>)
 interstice_precompile_headers(gui_controls <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector> <gui_controls/gui_application.h>)

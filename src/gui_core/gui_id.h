@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <memory>
 
-namespace GUI
+namespace interstice
 {
     // Stored as 2 bits for mode
     enum class IDMode : uint64_t
@@ -77,14 +77,14 @@ namespace GUI
     static_assert(sizeof(ID::Value::RangedParts) == sizeof(uint64_t), "ID size must be 64 bits");
     static_assert(sizeof(ID::Value::SubRangeParts) == sizeof(uint64_t), "ID size must be 64 bits");
 
-} // namespace GUI
+} // namespace interstice
 
 namespace std
 {
     template<>
-    struct hash<GUI::ID>
+    struct hash<interstice::ID>
     {
-        inline size_t operator()(const GUI::ID& id) const noexcept
+        inline size_t operator()(const interstice::ID& id) const noexcept
         {
             return static_cast<size_t>(id.value.integer);
         }

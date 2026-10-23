@@ -5,7 +5,7 @@
 
 // Box-model rect helpers on LayoutStyle. Asymmetric edges catch a helper that
 // subtracts left-right instead of left+right (symmetric insets would hide it).
-namespace GUI
+namespace interstice
 {
     static LayoutStyle MakeBoxStyle()
     {

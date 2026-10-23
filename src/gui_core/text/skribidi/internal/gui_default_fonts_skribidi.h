@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 	// Owned by the context; the fallback callback reads and updates it.
 	struct FontFallbackState

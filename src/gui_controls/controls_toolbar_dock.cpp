@@ -7,7 +7,7 @@
 #include <cmath>
 #include <utility>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -524,4 +524,4 @@ namespace GUI
         app.EndVertical();
     }
 
-} // namespace GUI
+} // namespace interstice

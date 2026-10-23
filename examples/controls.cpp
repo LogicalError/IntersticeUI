@@ -3,7 +3,7 @@
 
 #include <string>
 
-class ControlsApp : public GUI::GUIApplication
+class ControlsApp : public interstice::GUIApplication
 {
 public:
     bool Initialize(const InitializeOptions& options = {}) override
@@ -17,9 +17,9 @@ public:
 
     void OnGUI() override
     {
-        if (!BeginWindow(windowID, "Controls", GUI::LayoutOverride{}.Size(480, 560)))
+        if (!BeginWindow(windowID, "Controls", interstice::LayoutOverride{}.Size(480, 560)))
             return;
-        BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+        BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
 
         // A label group lines up Label + control pairs as rows with a shared,
         // resizable label column. DragLabel also drags the value it labels.
@@ -45,13 +45,13 @@ public:
         Field(text);
 
         Label("Multiline");
-        Field(notes, GUI::TextEditBehavior::ContinuousUpdate | GUI::TextEditBehavior::Multiline);
+        Field(notes, interstice::TextEditBehavior::ContinuousUpdate | interstice::TextEditBehavior::Multiline);
 
         DragLabel("Float");
         Field(floatValue);
 
         DragLabel("Int [0, 10]");
-        Field(intValue, GUI::NumericFieldConfig<int>{ .minVal = 0, .maxVal = 10 });
+        Field(intValue, interstice::NumericFieldConfig<int>{ .minVal = 0, .maxVal = 10 });
 
         DragLabel("Vector");
         Field(position);
@@ -63,7 +63,7 @@ public:
         ColorField(color);
 
         Label("Menu");
-        if (BeginMenu(menuID, "Choose...", GUI::LayoutOverride{}.NoGrow().NoShrink()))
+        if (BeginMenu(menuID, "Choose...", interstice::LayoutOverride{}.NoGrow().NoShrink()))
         {
             for (const char* item : { "Apple", "Banana", "Cherry" })
                 MenuItem(item, [this, item] { choice = item; });
@@ -87,8 +87,8 @@ public:
     }
 
 private:
-    GUI::ID     windowID = GUI::ID::Invalid();
-    GUI::ID     menuID   = GUI::ID::Invalid();
+    interstice::ID     windowID = interstice::ID::Invalid();
+    interstice::ID     menuID   = interstice::ID::Invalid();
     int         clicks   = 0;
     bool        enabled  = true;
     bool        bold = false, italic = false, underline = false;
@@ -96,9 +96,9 @@ private:
     std::string notes    = "Line one\nLine two";
     float       floatValue = 1.5f;
     int         intValue   = 5;
-    GUI::float3 position { 1.0f, 2.0f, 3.0f };
+    interstice::float3 position { 1.0f, 2.0f, 3.0f };
     float       volume   = 75.0f;
-    GUI::color4f color   { 0.2f, 0.6f, 1.0f, 1.0f };
+    interstice::color4f color   { 0.2f, 0.6f, 1.0f, 1.0f };
     std::string choice   = "(none)";
     int         selectedTab = 0;
 };

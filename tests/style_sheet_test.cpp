@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace GUI
+namespace interstice
 {
 
     // ============================================================================

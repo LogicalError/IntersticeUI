@@ -8,13 +8,13 @@
 #include <gui_core/graphics/vulkan/vk_types.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 
-namespace GUI
+namespace interstice
 {
     class GraphicsContext;
 }
 
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     class VulkanGraphicsContext;
 
@@ -71,16 +71,16 @@ namespace Vulkan
         VkCommandBuffer commandBuffer = {};
     };
 
-    class VulkanWindowContext : public GUI::IWindowContext
+    class VulkanWindowContext : public interstice::IWindowContext
     {
     public:
-        GUI::ID                  id { GUI::ID::Invalid()};
+        interstice::ID                  id { interstice::ID::Invalid()};
         VulkanDeviceContext*     deviceContext{ nullptr };
-        GUI::OSWindowHandle      osHandle { nullptr };
+        interstice::OSWindowHandle      osHandle { nullptr };
         void*                    nativeHandle { nullptr };
-        GUI::OnGuiFunc           onGui{};
+        interstice::OnGuiFunc           onGui{};
 
-        GUI::WindowFlags         windowFlags = GUI::WindowFlags::None;
+        interstice::WindowFlags         windowFlags = interstice::WindowFlags::None;
                                  
         SwapchainState           swapchain = {};
         WindowVulkanState        state = {};
@@ -92,7 +92,7 @@ namespace Vulkan
                                  
         bool                     resize_requested{ false };
         bool                     freeze_rendering{ false };
-        GUI::int2                mouse_pos = { 0,0 };
+        interstice::int2                mouse_pos = { 0,0 };
         int                      frameNumber{ 0 };
 
         // Frame-build timing measured between presents: from just after one
@@ -109,17 +109,17 @@ namespace Vulkan
         VkImage                  targetImage{ VK_NULL_HANDLE }; // host image each frame is copied into
         VkExtent2D               targetExtent{};
         bool                     targetWritten{ false };       // targetImage holds a previous frame
-        Vulkan::AllocatedBuffer  readbackBuffer = {};
+        interstice::vulkan::AllocatedBuffer  readbackBuffer = {};
         std::vector<uint8_t>     cachedBitmap;
 
         FrameData& GetCurrentFrame();
         FrameData& GetLastFrame();
 
-		bool IsTransparent() const override { return (windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None; }
+		bool IsTransparent() const override { return (windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None; }
 
         void CreateSwapchain();
         void DestroySwapchain();
-        void ResizeSwapchain(GUI::int2 size);
+        void ResizeSwapchain(interstice::int2 size);
         void FlushWindowContext();
 
         // Create / destroy a draw+depth image pair sized to windowExtent. One pair
@@ -139,17 +139,17 @@ namespace Vulkan
                               VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess);
         void UpdateLayeredWindowFromCache(int screenX, int screenY);
 
-        static VulkanWindowContext* Create(GUI::ID id, void* nativeHandle, GUI::OSWindowHandle osHandle, GUI::int2 size, GUI::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, GUI::OnGuiFunc onGUI);
+        static VulkanWindowContext* Create(interstice::ID id, void* nativeHandle, interstice::OSWindowHandle osHandle, interstice::int2 size, interstice::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, interstice::OnGuiFunc onGUI);
         void Destroy();
 
 
-        GUI::ID GetID() const override { return id; }
+        interstice::ID GetID() const override { return id; }
 
-        void RenderWindowFrame(GUI::GraphicsContext* graphicsContext, GUI::IntRect rect, bool resizing) override;
+        void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) override;
         
-        void UpdateTransparentWindow(GUI::int2 screenPos) override;
+        void UpdateTransparentWindow(interstice::int2 screenPos) override;
 
-        GUI::OSWindowHandle GetWindowHandle() const override { return osHandle; }
+        interstice::OSWindowHandle GetWindowHandle() const override { return osHandle; }
     };
 
 }

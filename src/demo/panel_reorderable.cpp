@@ -4,7 +4,7 @@
 // This file is for testing and prototyping a reorderable panel, which can be used for things like tab bars, lists, etc.
 //
 
-namespace GUI
+namespace interstice
 {
 
     void Application::RenderReorderablePanel()
@@ -21,7 +21,7 @@ namespace GUI
                     auto item = std::move(reorderTabs[from]);
                     reorderTabs.erase(reorderTabs.begin() + from);
                     reorderTabs.insert(reorderTabs.begin() + to, std::move(item));
-                }, theme.emptyHorzStyleRef, GUI::LayoutOverride{}.Height(styleManager.Px(40))))
+                }, theme.emptyHorzStyleRef, interstice::LayoutOverride{}.Height(styleManager.Px(40))))
             {
                 for (int i = 0; i < static_cast<int>(reorderTabs.size()); i++)
                 {
@@ -43,7 +43,7 @@ namespace GUI
                     auto item = std::move(reorderItems[from]);
                     reorderItems.erase(reorderItems.begin() + from);
                     reorderItems.insert(reorderItems.begin() + to, std::move(item));
-                }, GUI::LayoutOverride{}.FixedWidth(styleManager.Px(300))))
+                }, interstice::LayoutOverride{}.FixedWidth(styleManager.Px(300))))
             {
                 for (int i = 0; i < static_cast<int>(reorderItems.size()); i++)
                 {
@@ -68,7 +68,7 @@ namespace GUI
                     auto item = std::move(wrappedHorzItems[from]);
                     wrappedHorzItems.erase(wrappedHorzItems.begin() + from);
                     wrappedHorzItems.insert(wrappedHorzItems.begin() + to, std::move(item));
-                }, GUI::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
+                }, interstice::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
             {
                 for (int i = 0; i < static_cast<int>(wrappedHorzItems.size()); i++)
                 {
@@ -93,7 +93,7 @@ namespace GUI
                     auto item = std::move(wrappedVertItems[from]);
                     wrappedVertItems.erase(wrappedVertItems.begin() + from);
                     wrappedVertItems.insert(wrappedVertItems.begin() + to, std::move(item));
-                }, GUI::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
+                }, interstice::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
             {
                 for (int i = 0; i < static_cast<int>(wrappedVertItems.size()); i++)
                 {

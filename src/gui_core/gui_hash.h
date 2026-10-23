@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string_view>
 
-namespace GUI
+namespace interstice
 {
     namespace Hash
     {

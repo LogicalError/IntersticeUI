@@ -14,7 +14,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_controls/gui_menu_manager.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -414,4 +414,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

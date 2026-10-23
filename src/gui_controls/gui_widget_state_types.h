@@ -10,13 +10,13 @@
 
 // Widget-state types shared by several control families (node view, table, tree/grid).
 
-namespace GUI
+namespace interstice
 {
     // ---- Multi-selection state (user-owned) ----
     struct MultiSelectState {
-        std::unordered_set<GUI::ID> selectedIDs;
-        GUI::ID lastClickedID = GUI::ID::Invalid();
-        std::vector<GUI::ID> orderedItemIDs; // transient: rebuilt each frame for Shift+Click range selection
+        std::unordered_set<interstice::ID> selectedIDs;
+        interstice::ID lastClickedID = interstice::ID::Invalid();
+        std::vector<interstice::ID> orderedItemIDs; // transient: rebuilt each frame for Shift+Click range selection
     };
 
     // ---- Drop position for tree reorder drops ----
@@ -31,28 +31,28 @@ namespace GUI
     // ---- Drag & drop config for item-based views (tree, list, grid) ----
     struct ItemDragDropConfig {
         uint32_t payloadType = 0;                                       // 0 = disabled
-        std::function<uintptr_t(GUI::ID)> getPayload;                   // what to drag
+        std::function<uintptr_t(interstice::ID)> getPayload;                   // what to drag
         // Optional: returning false refuses the payload at that target (e.g. a folder
         // rejecting its own parent).
-        std::function<bool(uintptr_t payload, GUI::ID targetID)> canDrop;
-        std::function<void(uintptr_t, GUI::ID)> onDrop;                 // dropped payload value + target ID
+        std::function<bool(uintptr_t payload, interstice::ID targetID)> canDrop;
+        std::function<void(uintptr_t, interstice::ID)> onDrop;                 // dropped payload value + target ID
         // Tree reorder: rows become drop targets with sibling / child zones.
-        std::function<void(uintptr_t srcPayload, GUI::ID targetID,
+        std::function<void(uintptr_t srcPayload, interstice::ID targetID,
                            TreeDropPosition pos)> onReorder;
         // Every drop on a row means InsideLast (folder-style targets, no sibling reordering).
         bool dropInsideOnly = false;
-        GUI::DragVisualizer visualizer;                                 // optional visual feedback
+        interstice::DragVisualizer visualizer;                                 // optional visual feedback
     };
 
     // Click-gesture tracker, owned per widget instance so instances (and tests) don't share it.
     struct DoubleClickTracker
     {
-        GUI::ID lastID = GUI::ID::Invalid();
+        interstice::ID lastID = interstice::ID::Invalid();
         int64_t lastTimeNanos = 0;   // steady-clock ns; see SteadyClockNowNanos()
 
         struct Result { bool sameAsPrevious; float elapsedMs; };
 
-        Result Update(GUI::ID id)
+        Result Update(interstice::ID id)
         {
             const int64_t now = SteadyClockNowNanos();
             Result r{
@@ -64,6 +64,6 @@ namespace GUI
             return r;
         }
 
-        void Reset() { lastID = GUI::ID::Invalid(); }
+        void Reset() { lastID = interstice::ID::Invalid(); }
     };
 }

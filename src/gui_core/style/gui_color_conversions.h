@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace GUI::ColorConvert
+namespace interstice::ColorConvert
 {
     // ---- sRGB <-> Linear ----
 

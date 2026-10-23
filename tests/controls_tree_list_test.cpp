@@ -12,7 +12,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -24,9 +24,9 @@ namespace GUI
             HeadlessGUIApp app;
             ID treeID{};
 
-            std::vector<GUI::TreeViewRow> rows;
+            std::vector<interstice::TreeViewRow> rows;
             std::vector<int>                         visibleIdx;
-            GUI::TableState               state;
+            interstice::TableState               state;
 
             void SetUp() override
             {
@@ -50,7 +50,7 @@ namespace GUI
                 };
                 for (int i = 0; i < n; ++i)
                 {
-                    GUI::TreeViewRow row{};
+                    interstice::TreeViewRow row{};
                     row.id     = makeID();
                     row.name   = "Branch";
                     row.depth  = 0;
@@ -58,7 +58,7 @@ namespace GUI
                     rows.push_back(std::move(row));
                     for (int c = 0; c < childrenPerNode; ++c)
                     {
-                        GUI::TreeViewRow child{};
+                        interstice::TreeViewRow child{};
                         child.id    = makeID();
                         child.name  = "Leaf";
                         child.depth = 1;
@@ -189,11 +189,11 @@ namespace GUI
         TEST_F(VirtualTreeViewTest, RowDoubleClickOnBranchReachesCallback)
         {
             BuildFlatTree(/*n*/1, /*children*/1, /*open*/true);
-            std::vector<GUI::ID> doubleClicked;
-            state.onRowDoubleClick = [&](GUI::ID rowID) { doubleClicked.push_back(rowID); };
+            std::vector<interstice::ID> doubleClicked;
+            state.onRowDoubleClick = [&](interstice::ID rowID) { doubleClicked.push_back(rowID); };
             RenderFrame();
 
-            const GUI::int2 pt = app.CenterOf(RowIDAt(0));
+            const interstice::int2 pt = app.CenterOf(RowIDAt(0));
             app.ClickAt(pt);
             RenderFrame();
             app.ClickAt(pt);
@@ -213,17 +213,17 @@ namespace GUI
             RenderFrame();
 
             // The icon element is the branch row's only IconID-bearing tree icon.
-            GUI::IntRect iconRect{};
+            interstice::IntRect iconRect{};
             for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                 for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                 {
-                    GUI::ElementRef ref{ d, i };
+                    interstice::ElementRef ref{ d, i };
                     if (!app.elementStorage.IsValidRef(ref)) continue;
                     if (app.elementStorage.GetElementUnsafe(ref).styleRef != app.theme.treeTableIconStyleRef) continue;
                     if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) { iconRect = rp->rect; }
                 }
             ASSERT_GT(iconRect.w, 0);
-            const GUI::int2 pt{ iconRect.x + iconRect.w / 2, iconRect.y + iconRect.h / 2 };
+            const interstice::int2 pt{ iconRect.x + iconRect.w / 2, iconRect.y + iconRect.h / 2 };
 
             app.ClickAt(pt);
             RenderFrame();
@@ -253,8 +253,8 @@ namespace GUI
                     app.EndRootWindow();
                 };
                 app.Frame(render);
-                const GUI::ID row0 = state.RowIDForIndex(0);
-                const GUI::int2 pt = app.CenterOf(row0);
+                const interstice::ID row0 = state.RowIDForIndex(0);
+                const interstice::int2 pt = app.CenterOf(row0);
                 app.ClickAt(pt);
                 app.Frame(render);
                 app.Frame(render);
@@ -278,22 +278,22 @@ namespace GUI
             BuildFlatTree(/*n*/1, /*children*/1, /*open*/true);
 
             // Tree B = an independent tree view (own id / rows / state).
-            const GUI::ID treeIDB = app.idManager.CreateStaticID();
-            std::vector<GUI::TreeViewRow> rowsB;
+            const interstice::ID treeIDB = app.idManager.CreateStaticID();
+            std::vector<interstice::TreeViewRow> rowsB;
             std::vector<int>                         visibleIdxB;
-            GUI::TableState               stateB{};
+            interstice::TableState               stateB{};
             {
                 int idc = 6000;
                 auto makeID = [&] {
-                    GUI::ID id{};
+                    interstice::ID id{};
                     id.value.dynamicParts.mode      = IDMode::Static;
                     id.value.dynamicParts.hashValue = ++idc;
                     return id;
                 };
-                GUI::TreeViewRow branch{};
+                interstice::TreeViewRow branch{};
                 branch.id = makeID(); branch.name = "Branch"; branch.depth = 0; branch.isOpen = true;
                 rowsB.push_back(std::move(branch));
-                GUI::TreeViewRow leaf{};
+                interstice::TreeViewRow leaf{};
                 leaf.id = makeID(); leaf.name = "Leaf"; leaf.depth = 1;
                 rowsB.push_back(std::move(leaf));
                 app.RebuildTreeViewIndex(rowsB);
@@ -309,12 +309,12 @@ namespace GUI
             };
             app.Frame(renderBoth);
 
-            const GUI::ID branchA = state.RowIDForIndex(0);
-            const GUI::ID branchB = stateB.RowIDForIndex(0);
+            const interstice::ID branchA = state.RowIDForIndex(0);
+            const interstice::ID branchB = stateB.RowIDForIndex(0);
             ASSERT_TRUE(app.HasElement(branchA));
             ASSERT_TRUE(app.HasElement(branchB));
-            const GUI::int2 ptA = app.CenterOf(branchA);
-            const GUI::int2 ptB = app.CenterOf(branchB);
+            const interstice::int2 ptA = app.CenterOf(branchA);
+            const interstice::int2 ptB = app.CenterOf(branchB);
             ASSERT_TRUE(ptA.x != ptB.x || ptA.y != ptB.y)
                 << "tree views overlap: A=(" << ptA.x << "," << ptA.y << ") "
                 << "B=(" << ptB.x << "," << ptB.y << ")";
@@ -322,7 +322,7 @@ namespace GUI
 
             // B click 1 → A click → B click 2. A consumed MouseDown captures the mouse
             // until a frame after button-up, so each click settles before the next.
-            auto clickAndSettle = [&](GUI::int2 pt) {
+            auto clickAndSettle = [&](interstice::int2 pt) {
                 app.ClickAt(pt);
                 app.Frame(renderBoth);   // dispatch the click
                 app.Frame(renderBoth);   // let the deferred capture-release fire
@@ -343,4 +343,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

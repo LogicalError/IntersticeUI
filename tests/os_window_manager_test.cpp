@@ -14,7 +14,7 @@
 
 #include "mock_window_backend.h"
 
-namespace GUI
+namespace interstice
 {
     using ::testing::Return;
     using ::testing::_;
@@ -1020,16 +1020,16 @@ namespace GUI
         EXPECT_EQ(result1, AddWindowResult::WindowUserClosed);
         manager->EndFrame();
 
-        GUI::WindowRegistry registry;
+        interstice::WindowRegistry registry;
         registry.Clear();
 
         // Frame where we DON'T declare the window - this should clear the user-closed flag
         manager->BeginFrame();
 
         // An empty ElementStorage for PreLayoutSync.
-        GUI::GradientManager gradientManager;
-        GUI::StyleManager styleManager(gradientManager);
-        GUI::ElementStorage elementStorage(styleManager);
+        interstice::GradientManager gradientManager;
+        interstice::StyleManager styleManager(gradientManager);
+        interstice::ElementStorage elementStorage(styleManager);
         EXPECT_EQ(elementStorage.BeginConstruction(), ElementStorageResult::Success);
         EXPECT_EQ(elementStorage.EndConstruction(), ElementStorageResult::Success);
     

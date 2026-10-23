@@ -14,12 +14,12 @@
 #include <skribidi/skb_rich_layout.h>
 #include <skribidi/skb_icon_collection.h>
 
-static constexpr GUI::Diagnostics::LogCategory kLogText = GUI::Diagnostics::MakeLogCategory("text");
+static constexpr interstice::Diagnostics::LogCategory kLogText = interstice::Diagnostics::MakeLogCategory("text");
 
 #undef SKB_ATTRIBUTE_SET_FROM_STATIC_ARRAY
 #define SKB_ATTRIBUTE_SET_FROM_STATIC_ARRAY(array) skb_attribute_set_t { .attributes = (array), .attributes_count = SKB_COUNTOF(array) }
 
-namespace GUI
+namespace interstice
 {
 	skb_rect2_t view_transform_rect(view_t* view, skb_rect2_t geom)
 	{
@@ -80,7 +80,7 @@ namespace GUI
 
 		if (!skribidi_load_fonts(font_collection, m_fontFallback))
 		{
-			LOG_ERROR(kLogText, "could not load the default fonts from {}", m_fontFallback.fontDirectory);
+			INTERSTICE_LOG_ERROR(kLogText, "could not load the default fonts from {}", m_fontFallback.fontDirectory);
 			Shutdown();
 			return false;
 		}
@@ -1107,7 +1107,7 @@ namespace GUI
 	{
 		if (texID == 0)
 		{
-			LOG_ERROR(kLogText, "draw_image_quad_sdf: text_id == 0");
+			INTERSTICE_LOG_ERROR(kLogText, "draw_image_quad_sdf: text_id == 0");
 			return;
 		}
 
@@ -1314,4 +1314,4 @@ namespace GUI
 		return intact;
 	}
 
-} // namespace GUI
+} // namespace interstice

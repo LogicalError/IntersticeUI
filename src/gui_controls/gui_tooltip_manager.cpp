@@ -1,6 +1,6 @@
 #include <gui_controls/gui_tooltip_manager.h>
 
-namespace GUI
+namespace interstice
 {
     void TooltipManager::BeginFrame(ID currentHoveredID, ID currentFocusedID, float elapsedTimeSecs,
                                     bool hasMouseMove, bool hasMousePress, bool hasKeyboard, bool hasScroll, bool menuIsOpen)
@@ -99,4 +99,4 @@ namespace GUI
         }
     }
 
-} // namespace GUI
+} // namespace interstice

@@ -11,7 +11,7 @@
 #include <gui_core/graphics/gui_renderer.h>
 #include <gui_core/state/gui_state_manager.h>
 
-namespace GUI
+namespace interstice
 {
     LabelGroupSubsystem::LabelGroupSubsystem(FramePipeline& frame,
                                              ElementStorage& elementStorage,
@@ -35,7 +35,7 @@ namespace GUI
         return entry.state;
     }
 
-    void LabelGroupSubsystem::BeginGroup(GUI::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
+    void LabelGroupSubsystem::BeginGroup(interstice::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
     {
         // No per-frame reset here (it's in OnPreConstruct): a group may be entered several
         // times per frame (e.g. once per row), and a reset would drop an earlier hover.
@@ -84,24 +84,24 @@ namespace GUI
         }
     }
 
-    void LabelGroupSubsystem::AddDragger(GUI::ElementRef labelRef)
+    void LabelGroupSubsystem::AddDragger(interstice::ElementRef labelRef)
     {
         auto* groupState = m_stack.back().state;
 
         // Hover from last frame's hit-test, so edge state persists without a MouseMove.
-        GUI::ID labelID = m_elementStorage.GetElementUnsafe(labelRef).id;
-        GUI::ElementState labelState = m_guiStateManager.GetCurrentState(labelID);
-        if ((labelState & GUI::ElementState::Hover) != GUI::ElementState::None)
+        interstice::ID labelID = m_elementStorage.GetElementUnsafe(labelRef).id;
+        interstice::ElementState labelState = m_guiStateManager.GetCurrentState(labelID);
+        if ((labelState & interstice::ElementState::Hover) != interstice::ElementState::None)
         {
             groupState->anyLabelHovered = true;
             if (groupState->edgeHovered || groupState->edgeDragging)
-                m_guiStateManager.Cursor().Request(GUI::MouseCursor::ColResize);
+                m_guiStateManager.Cursor().Request(interstice::MouseCursor::ColResize);
         }
 
         auto* state = groupState;
         auto lineColor = m_theme.treeGuideLineStyle;
         [[maybe_unused]] auto cdRes = m_elementStorage.AddCustomDraw(labelRef,
-            [state, lineColor, edgeWidth = m_elementStorage.GetStyleManager().Px(4)](GUI::CustomDrawContext& ctx)
+            [state, lineColor, edgeWidth = m_elementStorage.GetStyleManager().Px(4)](interstice::CustomDrawContext& ctx)
             {
                 if (!state->edgeHovered && !state->edgeDragging)
                     return;
@@ -112,7 +112,7 @@ namespace GUI
                 const int32_t yTop   = outer.y - inner.y;
                 const int32_t yBot   = (outer.y + outer.h) - inner.y;
 
-                GUI::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
+                interstice::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
                 ctx.RenderLine({ xRight, yTop }, { xRight, yBot }, style);
             });
         assert(cdRes == ElementStorageResult::Success);

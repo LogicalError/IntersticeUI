@@ -10,7 +10,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_controls/gui_tooltip_manager.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -237,4 +237,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

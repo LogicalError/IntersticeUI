@@ -8,7 +8,7 @@
 
 #include <array>
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     class VulkanDeviceContext;
     struct DeletionQueue;
@@ -20,16 +20,16 @@ namespace Vulkan
     {
         bool Create(VulkanDeviceContext& deviceContext);
 
-        std::array<GUI::RHI::GpuPipeline, GUI::kPrimitiveKindCount> pipelines{};
+        std::array<interstice::RHI::GpuPipeline, interstice::kPrimitiveKindCount> pipelines{};
     };
 
-    class VulkanRenderDevice final : public GUI::RHI::RenderDevice
+    class VulkanRenderDevice final : public interstice::RHI::RenderDevice
     {
     public:
         explicit VulkanRenderDevice(VulkanDeviceContext& deviceContext)
             : dc(deviceContext) {}
 
-        GUI::RHI::GpuPipeline CreatePrimitivePipeline(const GUI::PrimitiveSpec& spec) override;
+        interstice::RHI::GpuPipeline CreatePrimitivePipeline(const interstice::PrimitiveSpec& spec) override;
 
         // All GUI pipelines share one layout (identical push range + image
         // set). Created lazily by the first CreatePrimitivePipeline call.
@@ -40,7 +40,7 @@ namespace Vulkan
         VulkanDeviceContext& dc;
     };
 
-    class VulkanRenderCommandList final : public GUI::RHI::RenderCommandList
+    class VulkanRenderCommandList final : public interstice::RHI::RenderCommandList
     {
     public:
         VulkanRenderCommandList(VulkanDeviceContext& deviceContext,
@@ -50,11 +50,11 @@ namespace Vulkan
             : dc(deviceContext), cmd(commandBuffer)
             , imageSet(imageDescriptorSet), frame(frameData) {}
 
-        void DrawPrimitives(const GUI::RHI::GpuPipeline& pipeline,
-                            const GUI::GPUDrawPushConstants& pushConstants,
+        void DrawPrimitives(const interstice::RHI::GpuPipeline& pipeline,
+                            const interstice::GPUDrawPushConstants& pushConstants,
                             uint32_t primitiveCount, uint32_t firstPrimitive) override;
-        void UploadTransientBuffers(std::span<const GUI::RHI::UploadRequest> requests,
-                                    std::span<GUI::DeviceAddress> addresses) override;
+        void UploadTransientBuffers(std::span<const interstice::RHI::UploadRequest> requests,
+                                    std::span<interstice::DeviceAddress> addresses) override;
 
     private:
         VulkanDeviceContext& dc;

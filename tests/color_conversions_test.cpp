@@ -2,7 +2,7 @@
 
 #include <gui_core/style/gui_color_conversions.h>
 
-namespace GUI
+namespace interstice
 {
     // LabToRGB / OklabToRGB must not clamp the signed a/b channels to >= 0 (that
     // collapses blue and green hues); a round-trip must preserve the color.

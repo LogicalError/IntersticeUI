@@ -3,12 +3,12 @@
 #include <gui_controls/controls_toolbar_dock.h>
 
 //
-// View panel: thin adapter over GUI::RenderToolbarDock. ToolbarItem lists
+// View panel: thin adapter over interstice::RenderToolbarDock. ToolbarItem lists
 // live directly in toolbars.sides[] and are seeded in InitializeDemoGUI;
 // the reorder / cross-side / tear-off callbacks mutate those side vectors.
 //
 
-namespace GUI
+namespace interstice
 {
     void Application::RenderViewportPanel()
     {
@@ -18,4 +18,4 @@ namespace GUI
                 // Placeholder for actual view content (3D viewport etc.). Currently empty.
             });
     }
-} // namespace GUI
+} // namespace interstice

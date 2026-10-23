@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace GUI::TreeUtils
+namespace interstice::TreeUtils
 {
     template <typename Row>
     concept TreeRowLike = requires(Row r)
@@ -69,7 +69,7 @@ namespace GUI::TreeUtils
     // flat index, or -1 on rejection.
     template <TreeRowLike Row>
     int ReorderTreeRow(std::vector<Row>& rows, int srcDs, int dstDs,
-                       GUI::TreeDropPosition pos)
+                       interstice::TreeDropPosition pos)
     {
         const int n = static_cast<int>(rows.size());
         if (srcDs < 0 || srcDs >= n) return -1;
@@ -87,23 +87,23 @@ namespace GUI::TreeUtils
         int insertAt        = dstDs;
         switch (pos)
         {
-            case GUI::TreeDropPosition::Before:
+            case interstice::TreeDropPosition::Before:
                 insertAt        = dstDs;
                 targetBaseDepth = rows[dstDs].depth;
                 break;
-            case GUI::TreeDropPosition::Inside:
+            case interstice::TreeDropPosition::Inside:
                 // First child: splice in right after the parent row.
                 insertAt        = dstDs + 1;
                 targetBaseDepth = rows[dstDs].depth + 1;
                 rows[dstDs].isOpen = true;
                 break;
-            case GUI::TreeDropPosition::InsideLast:
+            case interstice::TreeDropPosition::InsideLast:
                 // Last child: splice in past the parent's whole subtree.
                 insertAt        = dstDs + 1 + rows[dstDs].skipCount;
                 targetBaseDepth = rows[dstDs].depth + 1;
                 rows[dstDs].isOpen = true;
                 break;
-            case GUI::TreeDropPosition::After:
+            case interstice::TreeDropPosition::After:
                 insertAt        = dstDs + 1 + rows[dstDs].skipCount;
                 targetBaseDepth = rows[dstDs].depth;
                 break;

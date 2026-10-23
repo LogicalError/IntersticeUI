@@ -16,7 +16,7 @@
 #include <gui_core/style/gui_style_gradient.h>
 #include <gui_core/graphics/gui_image.h>
 
-namespace GUI
+namespace interstice
 {
     class GradientManager;
     struct GradientHandle;
@@ -43,7 +43,7 @@ namespace GUI
 
         VisualMask = Active | Hover | Focused | Selected | Selection | Disabled
     };
-    ENUM_OPERATORS(ElementState)
+    INTERSTICE_ENUM_OPERATORS(ElementState)
 
     // ------------------------------------------------------------------------
     // Box Model Types
@@ -246,7 +246,7 @@ namespace GUI
 		OutsideBottomLeft  = OutsideBottom | OutsideLeft,
         OutsideBottomRight = OutsideBottom | OutsideRight,
     };
-    ENUM_OPERATORS(AnchorPlacement);
+    INTERSTICE_ENUM_OPERATORS(AnchorPlacement);
 
     // Single-axis anchor placement (4-bit value matching the per-nibble encoding in AnchorPlacement)
     enum class AnchorPlacementAxis : uint8_t

@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <numeric>
 
-namespace GUI
+namespace interstice
 {
     // Stage 1: Determine placement and effective grid dimensions
     void LayoutGrid::DeterminePlacement(std::span<const ElementRect> childRects,
@@ -575,7 +575,7 @@ namespace GUI
         if (childRects.empty())
             return 0;
 
-        //PROFILE_SCOPE("LayoutGrid::HorizontalSizing");
+        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::HorizontalSizing");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
 
         GridLayout layout {};
@@ -590,7 +590,7 @@ namespace GUI
         if (childRects.empty())
             return 0;
 
-        //PROFILE_SCOPE("LayoutGrid::VerticalSizing");
+        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::VerticalSizing");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
 
         GridLayout layout{};
@@ -605,7 +605,7 @@ namespace GUI
         if (childRects.empty())
             return;
 
-        //PROFILE_SCOPE("LayoutGrid::HorizontalPositioning");
+        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::HorizontalPositioning");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
         const IntRect& areaRect = parentRect.innerRect;
 
@@ -659,7 +659,7 @@ namespace GUI
             return {};
         }
 
-        //PROFILE_SCOPE("LayoutGrid::VerticalPositioning");
+        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::VerticalPositioning");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
         const IntRect& areaRect = parentRect.innerRect;
 
@@ -704,4 +704,4 @@ namespace GUI
         return contentRect;
     }
 
-} // namespace GUI
+} // namespace interstice

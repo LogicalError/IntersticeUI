@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace GUI
+namespace interstice
 {
     enum class ImageFormat
     {

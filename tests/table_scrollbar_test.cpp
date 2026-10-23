@@ -16,7 +16,7 @@
 
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -36,8 +36,8 @@ namespace GUI
         {
         protected:
             SettingsHostApp app;
-            GUI::TableState state;
-            std::vector<GUI::VirtualTableColumn> cols;
+            interstice::TableState state;
+            std::vector<interstice::VirtualTableColumn> cols;
 
             void SetUp() override
             {
@@ -74,9 +74,9 @@ namespace GUI
             {
                 app.BeginRootWindow();
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<GUI::VirtualTableColumn>(cols),
+                                 std::span<interstice::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 GUI::LayoutOverride{}.Width(500).Height(300));
+                                 interstice::LayoutOverride{}.Width(500).Height(300));
                 app.EndRootWindow();
             }
 
@@ -87,43 +87,43 @@ namespace GUI
                 app.BeginRootWindow();
                 app.BeginArea(app.idManager.AllocateDynamicID("pane"),
                               app.theme.settingsPageStyleRef,
-                              GUI::LayoutOverride{}.Size(700, 300).NoGrow().NoShrink());
+                              interstice::LayoutOverride{}.Size(700, 300).NoGrow().NoShrink());
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("fill"),
                                     app.theme.flexFillRowStyleRef,
-                                    GUI::LayoutOverride::Auto().FlexGrow(1));
+                                    interstice::LayoutOverride::Auto().FlexGrow(1));
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<GUI::VirtualTableColumn>(cols),
+                                 std::span<interstice::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 GUI::LayoutOverride::Auto().FlexGrow(1));
+                                 interstice::LayoutOverride::Auto().FlexGrow(1));
                 app.EndHorizontal();
                 app.EndArea();
                 app.EndRootWindow();
             }
 
-            GUI::IntRect BarRect() const { return app.GetElementRect(state._vertScrollbarID); }
+            interstice::IntRect BarRect() const { return app.GetElementRect(state._vertScrollbarID); }
 
             // A table whose columns (sum 500) far exceed the host width, using
             // the given outer style. The container is fixed at 300 wide.
-            void BuildWideColumns(GUI::StyleRef tableStyle)
+            void BuildWideColumns(interstice::StyleRef tableStyle)
             {
-                std::vector<GUI::VirtualTableColumn> wide(2);
+                std::vector<interstice::VirtualTableColumn> wide(2);
                 wide[0].column = { .header = "A", .initialWidth = 250, .minWidth = 200, .maxWidth = 400 };
                 wide[0].generateCell = [this](int r){ (void)r; app.Cell("aaaa"); };
                 wide[1].column = { .header = "B", .initialWidth = 250, .minWidth = 200, .maxWidth = 400 };
                 wide[1].generateCell = [this](int r){ (void)r; app.Cell("bbbb"); };
                 // Keep them alive for the frame; static so the sizer pointers
                 // (if any) stay valid like the demo's persistent columns.
-                static std::vector<GUI::VirtualTableColumn> held;
+                static std::vector<interstice::VirtualTableColumn> held;
                 held = std::move(wide);
 
                 app.BeginRootWindow();
                 app.BeginArea(app.idManager.AllocateDynamicID("wpane"),
                               app.theme.flexFillRowStyleRef,
-                              GUI::LayoutOverride{}.Size(300, 300).NoGrow().NoShrink());
+                              interstice::LayoutOverride{}.Size(300, 300).NoGrow().NoShrink());
                 app.VirtualTable(app.idManager.AllocateDynamicID("wtbl"), state,
-                                 std::span<GUI::VirtualTableColumn>(held),
+                                 std::span<interstice::VirtualTableColumn>(held),
                                  /*rows*/200, 0, tableStyle,
-                                 GUI::LayoutOverride{}.FlexGrow(1));
+                                 interstice::LayoutOverride{}.FlexGrow(1));
                 app.EndArea();
                 app.EndRootWindow();
             }
@@ -175,9 +175,9 @@ namespace GUI
         TEST_F(TableScrollbarTest, ShortcutsShapedSettingsPageEmitsVerticalScrollbar)
         {
             auto& sp = app.settings;
-            std::vector<GUI::TreeViewRow> catRows;
+            std::vector<interstice::TreeViewRow> catRows;
             std::vector<int>           catVisible;
-            GUI::TableState catTable;
+            interstice::TableState catTable;
             std::string searchText;
             int  catWidth = 160;
 
@@ -188,7 +188,7 @@ namespace GUI
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("searchRow"),
                                     app.theme.searchRowStyleRef,
-                                    GUI::LayoutOverride::Auto().NoShrink());
+                                    interstice::LayoutOverride::Auto().NoShrink());
                 app.BeginLabelGroup(140, 40, 500, /*resizable*/false);
                 app.Label("Search");
                 app.Field(searchText, TextEditBehavior::ContinuousUpdate);
@@ -197,10 +197,10 @@ namespace GUI
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("split"),
                                     app.theme.flexFillRowStyleRef,
-                                    GUI::LayoutOverride::Auto().FlexGrow(1));
+                                    interstice::LayoutOverride::Auto().FlexGrow(1));
 
                 catRows.clear();
-                GUI::TreeViewRow r{};
+                interstice::TreeViewRow r{};
                 r.id   = app.idManager.AllocateDynamicID("cat");
                 r.name = "All";
                 catRows.push_back(std::move(r));
@@ -208,26 +208,26 @@ namespace GUI
                 app.VirtualTreeView(app.idManager.AllocateDynamicID("catTree"),
                                     catRows, catVisible, catTable,
                                     app.theme.treeViewStyleRef,
-                                    GUI::LayoutOverride::Auto().FixedWidth(catWidth).NoGrow());
+                                    interstice::LayoutOverride::Auto().FixedWidth(catWidth).NoGrow());
 
-                GUI::Element sizer{};
+                interstice::Element sizer{};
                 sizer.id       = app.idManager.AllocateDynamicID("catSizer");
                 sizer.styleRef = app.theme.dockSizerHorzStyleRef;
                 sizer.state    = app.guiStateManager.GetCurrentState(sizer.id);
-                sizer.eventHandler = GUI::MakeHorizontalSizerHandler(
+                sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
                     app.guiStateManager, catWidth, 100, 400);
                 auto sRes = app.elementStorage.Add(std::move(sizer),
-                                                   GUI::LayoutOverride::FixedWidth(4));
+                                                   interstice::LayoutOverride::FixedWidth(4));
                 VERIFY(sRes.status);
                 VERIFY(app.windowRegistry.Add(sRes.ref));
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("gridCol"),
                                     app.theme.flexFillRowStyleRef,
-                                    GUI::LayoutOverride::Auto().FlexGrow(1));
+                                    interstice::LayoutOverride::Auto().FlexGrow(1));
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<GUI::VirtualTableColumn>(cols),
+                                 std::span<interstice::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 GUI::LayoutOverride::Auto().FlexGrow(1));
+                                 interstice::LayoutOverride::Auto().FlexGrow(1));
                 app.EndHorizontal();
 
                 app.EndHorizontal(); // split
@@ -242,10 +242,10 @@ namespace GUI
                 // EmitDockLeaf wraps a panel's onPanelGUI.
                 app.BeginArea(app.idManager.AllocateDynamicID("leaf"),
                               app.theme.flexFillRowStyleRef,
-                              GUI::LayoutOverride{}.Size(900, 400).NoGrow().NoShrink());
+                              interstice::LayoutOverride{}.Size(900, 400).NoGrow().NoShrink());
                 app.BeginArea(app.idManager.AllocateDynamicID("dockContent"),
                               app.theme.dockContentStyleRef,
-                              GUI::LayoutOverride{}.FlexGrow(1));
+                              interstice::LayoutOverride{}.FlexGrow(1));
                 app.RenderSettingsPanel(sp);
                 app.EndArea(); // dockContent
                 app.EndArea(); // leaf

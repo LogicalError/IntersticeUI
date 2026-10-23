@@ -2,7 +2,7 @@
 
 #include <gui_core/text/gui_icon_text_placement.h>
 
-namespace GUI
+namespace interstice
 {
     // ---------------------------------------------------------------------
     // ComputeIconTextPlacement / IconAwareLayoutMaxWidth unit tests.

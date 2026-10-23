@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <type_traits>
 
-namespace GUI
+namespace interstice
 {
     class ElementStorage;
     class ITextSystem;
@@ -28,10 +28,10 @@ namespace GUI
     inline bool IsActivationKey(const ElementEvent& event)
     {
         if (event.type != EventType::KeyDown) return false;
-        return event.state.lastKey == GUI::KeyCode::Return ||
-               event.state.lastKey == GUI::KeyCode::Return2 ||
-               event.state.lastKey == GUI::KeyCode::KeyPadEnter ||
-               event.state.lastKey == GUI::KeyCode::Space;
+        return event.state.lastKey == interstice::KeyCode::Return ||
+               event.state.lastKey == interstice::KeyCode::Return2 ||
+               event.state.lastKey == interstice::KeyCode::KeyPadEnter ||
+               event.state.lastKey == interstice::KeyCode::Space;
     }
     
     
@@ -47,7 +47,7 @@ namespace GUI
 		ID previousFocusID = ID::Invalid();
         ID previousTextFocusID = ID::Invalid();
         ID draggingID = ID::Invalid();
-        GUI::int2 dragStartLocal{0,0};
+        interstice::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenX = 0;
         int64_t lastClickTimeNanos = 0;   // steady-clock ns; see SteadyClockNowNanos()
@@ -67,7 +67,7 @@ namespace GUI
         ID previousFocusID = ID::Invalid();
         ID previousTextFocusID = ID::Invalid();
         ID draggingID = ID::Invalid();
-        GUI::int2 dragStartLocal{0,0};
+        interstice::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenY = 0;
         int64_t lastClickTimeNanos = 0;   // steady-clock ns; see SteadyClockNowNanos()
@@ -83,7 +83,7 @@ namespace GUI
     struct SliderState
     {
         ID draggingID = ID::Invalid();
-        GUI::int2 dragStartLocal{ 0,0 }; // mouse screen pos at MouseDown (click-vs-drag origin)
+        interstice::int2 dragStartLocal{ 0,0 }; // mouse screen pos at MouseDown (click-vs-drag origin)
         float startValue = 0.0f;
         bool cancelDrag = false;
         bool movedPastThreshold = false;
@@ -103,7 +103,7 @@ namespace GUI
     {
         ID             activeID;
         DragScalarMode mode = DragScalarMode::Idle;
-        GUI::int2      dragStartPos{ 0, 0 };
+        interstice::int2      dragStartPos{ 0, 0 };
     };
 
     // Forwards LabelDrag* events to the next sibling element.

@@ -37,7 +37,7 @@ public:
     void enable_depthtest(bool depthWriteEnable,VkCompareOp op);
 };
 
-namespace vkutil 
+namespace interstice::vulkan 
 {
     bool load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule);
 }

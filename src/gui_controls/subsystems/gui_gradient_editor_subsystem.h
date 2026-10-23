@@ -6,7 +6,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_gradient.h>
 
-namespace GUI
+namespace interstice
 {
     class FramePipeline;
     struct FrameContext;
@@ -14,19 +14,19 @@ namespace GUI
     // Gradient editor popup state: edits a working copy, written back each frame it's open.
     struct GradientEditorState
     {
-        GUI::ID       triggerID = GUI::ID::Invalid(); // swatch that opened the editor
-        GUI::ID       windowID  = GUI::ID::Invalid(); // popup window ID
-        GUI::Gradient workingCopy {};                  // mutable copy while editor is open
+        interstice::ID       triggerID = interstice::ID::Invalid(); // swatch that opened the editor
+        interstice::ID       windowID  = interstice::ID::Invalid(); // popup window ID
+        interstice::Gradient workingCopy {};                  // mutable copy while editor is open
         int           selectedStop          = 0;       // index into workingCopy.stops[]
-        GUI::color4f  selectedStopColor {};            // bridge to ColorField
+        interstice::color4f  selectedStopColor {};            // bridge to ColorField
         float         selectedStopPosition  = 0.0f;    // bridge to numeric Field
 
         enum class DragTarget { None, Stop } drag = DragTarget::None;
         int           dragStopIndex          = -1;
 
-        GUI::VisualColorStyleIndex previewGradientStyle = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex stopMarkerColor      = GUI::VisualColorStyleIndex::Invalid;
-        GUI::VisualColorStyleIndex stopMarkerSelected   = GUI::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex previewGradientStyle = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex stopMarkerColor      = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex stopMarkerSelected   = interstice::VisualColorStyleIndex::Invalid;
     };
 
     // The gradient editor's state plus swatch styles keyed by swatch ID, with the same
@@ -39,14 +39,14 @@ namespace GUI
         GradientEditorState& State() { return m_state; }
 
         // Invalid for a new swatch: the caller creates the style, reused from then on.
-        GUI::VisualColorStyleIndex& ClaimSwatchStyle(GUI::ID swatchID);
+        interstice::VisualColorStyleIndex& ClaimSwatchStyle(interstice::ID swatchID);
 
         // Carry swatchID's style over without rebuilding it: a cache-hit scope
         // doesn't re-claim its swatches, but its blitted primitives still use them.
-        void KeepSwatchAlive(GUI::ID swatchID);
+        void KeepSwatchAlive(interstice::ID swatchID);
 
     private:
         GradientEditorState m_state{};
-        std::unordered_map<GUI::ID, GUI::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
+        std::unordered_map<interstice::ID, interstice::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
     };
 }

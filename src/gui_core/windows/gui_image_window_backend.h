@@ -4,7 +4,7 @@
 
 #include <memory>
 
-namespace GUI
+namespace interstice
 {
     // Adds windows that render to an image (WindowFlags::RenderToImage) to another
     // window backend. They have no OS window: the backend keeps their rect and

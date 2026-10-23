@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace GUI
+namespace interstice
 {
     // Animation time locked to the display refresh. Frames reach the screen on
     // vsyncs, a whole number of refresh periods after the previous one, but the CPU

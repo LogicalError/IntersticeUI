@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class IDManager;
 
@@ -184,4 +184,4 @@ namespace GUI
     // saved layout uses this to place panels added since the layout was saved.
     std::vector<ID> UnplacedPanels(const DockNode& root, const std::vector<ID>& allPanels);
 
-} // namespace GUI
+} // namespace interstice

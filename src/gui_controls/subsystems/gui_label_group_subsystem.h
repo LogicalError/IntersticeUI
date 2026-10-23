@@ -7,7 +7,7 @@
 #include <gui_core/elements/gui_element.h>
 #include <gui_core/text/gui_text_system.h>
 
-namespace GUI
+namespace interstice
 {
     class FramePipeline;
     struct FrameContext;
@@ -33,7 +33,7 @@ namespace GUI
             bool    edgeHovered     = false;
             bool    edgeDragging    = false;
             bool    anyLabelHovered = false; // transient: set during construction if any label has hover
-            std::vector<GUI::TextID> labelTextIDs; // transient: rebuilt each frame for auto-size
+            std::vector<interstice::TextID> labelTextIDs; // transient: rebuilt each frame for auto-size
             int32_t maxLabelWidthThisFrame = 0;    // transient: accumulator for non-resizable auto-width
         };
 
@@ -43,10 +43,10 @@ namespace GUI
                             GUITheme& theme);
 
         // Called from GUIApplication's Begin/End/Label/DragLabel methods.
-        void   BeginGroup(GUI::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable = true);
+        void   BeginGroup(interstice::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable = true);
         void   EndGroup();
         State* GetActiveGroup();
-        void   AddDragger(GUI::ElementRef labelRef);
+        void   AddDragger(interstice::ElementRef labelRef);
 
         // True iff every BeginGroup was matched by EndGroup.
         bool IsBalanced() const { return m_stack.empty(); }
@@ -61,7 +61,7 @@ namespace GUI
             uint32_t nestingDepth;
         };
 
-        std::unordered_map<GUI::ID, State> m_states;
+        std::unordered_map<interstice::ID, State> m_states;
         std::vector<StackEntry>            m_stack;
 
         ElementStorage&  m_elementStorage;

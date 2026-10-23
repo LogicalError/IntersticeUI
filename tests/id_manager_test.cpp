@@ -2,7 +2,7 @@
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_id_manager.h>
 
-namespace GUI
+namespace interstice
 {
 
     static void VERIFY([[maybe_unused]] bool result)
@@ -133,7 +133,7 @@ namespace GUI
         EXPECT_NE(id1, id2);
     }
 
-#ifdef SUPPORT_CPP20
+#ifdef INTERSTICE_SUPPORT_CPP20
     TEST_F(IDManagerTest, DynamicIDWithSourceLocation) {
         ID id = manager.AllocateDynamicID();
         EXPECT_EQ(id.GetMode(), IDMode::Dynamic);
@@ -289,10 +289,10 @@ namespace GUI
     }
 
     TEST_F(IDManagerTest, IsInParentStack) {
-        EXPECT_FALSE(manager.IsInParentStack(GUI::ID::Invalid()));
+        EXPECT_FALSE(manager.IsInParentStack(interstice::ID::Invalid()));
 
         // Create a static ID and push it as parent
-        GUI::ID staticID = manager.CreateStaticID();
+        interstice::ID staticID = manager.CreateStaticID();
         EXPECT_FALSE(manager.IsInParentStack(staticID));
 
         EXPECT_TRUE(manager.PushParent(staticID));
@@ -333,7 +333,7 @@ namespace GUI
     }
 
     TEST_F(IDManagerTest, FrameStateConstraints) {
-        GUI::IDManager manualManager;
+        interstice::IDManager manualManager;
 
         // --- PHASE 1: OUTSIDE FRAME ---
         EXPECT_FALSE(manualManager.IsInsideFrame());

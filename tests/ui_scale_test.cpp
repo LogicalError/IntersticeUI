@@ -10,7 +10,7 @@
 
 using ::testing::Return;
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 

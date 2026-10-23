@@ -14,7 +14,7 @@
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char*);
 #endif
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     namespace
     {

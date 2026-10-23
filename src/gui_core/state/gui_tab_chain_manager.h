@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_id.h>
 
-namespace GUI
+namespace interstice
 {
     class GUIStateManager;
     
@@ -116,4 +116,4 @@ namespace GUI
         ID GetDefaultFocus() const { return m_defaultFocusID != ID::Invalid() ? m_defaultFocusID : m_firstTabTarget; }
     };
 
-} // namespace GUI
+} // namespace interstice

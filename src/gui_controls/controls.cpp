@@ -5,22 +5,22 @@
 #include <format>
 #include <string>
 
-namespace GUI
+namespace interstice
 {
     // ---------------------------------------------------------------------------
     // Event handler factories
     // ---------------------------------------------------------------------------
 
-    GUI::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return GUI::MakeButtonHandler(guiStateManager, [this, &toggle]() { toggle = !toggle; }); }
-    GUI::EventHandler GUIApplication::MakeButtonHandler(std::function<void()> onClick) { return GUI::MakeButtonHandler(guiStateManager, onClick); }
-    GUI::EventHandler GUIApplication::MakeLabelHandler() { return GUI::MakeLabelHandler(guiStateManager, elementStorage); }
+    interstice::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return interstice::MakeButtonHandler(guiStateManager, [this, &toggle]() { toggle = !toggle; }); }
+    interstice::EventHandler GUIApplication::MakeButtonHandler(std::function<void()> onClick) { return interstice::MakeButtonHandler(guiStateManager, onClick); }
+    interstice::EventHandler GUIApplication::MakeLabelHandler() { return interstice::MakeLabelHandler(guiStateManager, elementStorage); }
 
 
     // ---------------------------------------------------------------------------
     // Element registration
     // ---------------------------------------------------------------------------
 
-    GUI::ElementRef GUIApplication::RegisterElementInternal(GUI::Element&& element, LayoutOverride&& constraints, bool updateState)
+    interstice::ElementRef GUIApplication::RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState)
     {
         if (updateState) element.state |= guiStateManager.GetCurrentState(element.id);
         auto addRes = elementStorage.Add(std::move(element), std::move(constraints));
@@ -29,12 +29,12 @@ namespace GUI
         return addRes.ref;
     }
 
-    GUI::ElementRef GUIApplication::RegisterElement(GUI::Element&& element, LayoutOverride&& constraints)
+    interstice::ElementRef GUIApplication::RegisterElement(interstice::Element&& element, LayoutOverride&& constraints)
     {
 	    return RegisterElementInternal(std::move(element), std::move(constraints), true);
     }
 
-    GUI::ElementRef GUIApplication::RegisterElement(GUI::Element&& element, std::string_view text, LayoutOverride&& constraints)
+    interstice::ElementRef GUIApplication::RegisterElement(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.state |= guiStateManager.GetCurrentState(element.id); // required for RegisterText
         element.textID = textSystem->RegisterText(element.id, text, element.styleRef, element.state);
@@ -42,21 +42,21 @@ namespace GUI
 		    false); // already updated state, so skipping it in RegisterElementInternal
     }
 
-    GUI::ElementRef GUIApplication::RegisterControl(GUI::Element&& element, std::string_view text, LayoutOverride&& constraints)
+    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         tabChainManager.RegisterTabTarget(element.id);
         return RegisterElement(std::move(element), text, std::move(constraints));
     }
 
-    GUI::ElementRef GUIApplication::RegisterControl(GUI::Element&& element, LayoutOverride&& constraints)
+    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         tabChainManager.RegisterTabTarget(element.id);
         return RegisterElement(std::move(element), std::move(constraints));
     }
 
-    GUI::ElementRef GUIApplication::RegisterControl(GUI::Element&& element, std::function<TextID(GUI::Element& element)> createTextID, LayoutOverride&& constraints)
+    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::function<TextID(interstice::Element& element)> createTextID, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         element.state |= guiStateManager.GetCurrentState(element.id); // required for createTextID callback
@@ -79,15 +79,15 @@ namespace GUI
 
         if (guiStateManager.Construction().IsIndeterminate())
         {
-            RegisterControl(GUI::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                [this](GUI::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
+            RegisterControl(interstice::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                [this](interstice::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
                 std::move(constraints));
             return false;
         }
 
         bool modified = false;
-        RegisterControl(GUI::Element{ .id = id, .eventHandler = MakeTextBoxHandler(guiStateManager), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-            [this, &modified, &value, textEditBehavior](GUI::Element& element)
+        RegisterControl(interstice::Element{ .id = id, .eventHandler = MakeTextBoxHandler(guiStateManager), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+            [this, &modified, &value, textEditBehavior](interstice::Element& element)
             {
                 return textSystem->RegisterEditableText(element.id, value, textEditBehavior, element.styleRef, element.state, modified);
             },
@@ -100,7 +100,7 @@ namespace GUI
     {
         // The container draws the textbox chrome and takes the inner field's
         // hover/focus state (PropagatesDescendantState); the field itself is borderless.
-        GUI::Element container{};
+        interstice::Element container{};
         container.id       = id;
         container.styleRef = theme.searchTextboxStyleRef;
         container.flags    = ElementFlags::PropagatesDescendantState;
@@ -109,14 +109,14 @@ namespace GUI
         VERIFY(elementStorage.BeginChildren());
 
         {
-            const GUI::ID iconID = idManager.AllocateDynamicID("searchIcon");
-            GUI::Element iconElem{};
+            const interstice::ID iconID = idManager.AllocateDynamicID("searchIcon");
+            interstice::Element iconElem{};
             iconElem.id       = iconID;
             iconElem.iconID   = icon;
             iconElem.flags    = ElementFlags::NoInput;
             iconElem.state    = guiStateManager.GetCurrentState(iconID);
             iconElem.styleRef = theme.searchTextboxIconStyleRef;
-            auto res = elementStorage.Add(std::move(iconElem), GUI::LayoutOverride{});
+            auto res = elementStorage.Add(std::move(iconElem), interstice::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
         }
@@ -124,7 +124,7 @@ namespace GUI
         const bool modified = Field(idManager.AllocateDynamicID("searchField"),
                                     value, textEditBehavior,
                                     theme.searchTextboxFieldStyleRef,
-                                    GUI::LayoutOverride{}.FlexGrow(1));
+                                    interstice::LayoutOverride{}.FlexGrow(1));
 
         VERIFY(elementStorage.EndChildren());
         return modified;
@@ -138,7 +138,7 @@ namespace GUI
     void GUIApplication::DragLabel(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
-        GUI::EventHandler handler;
+        interstice::EventHandler handler;
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
@@ -161,7 +161,7 @@ namespace GUI
         {
             handler = MakeDraggableLabelHandler(guiStateManager, elementStorage);
         }
-        auto ref = RegisterElement(GUI::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, title,
+        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, title,
                         std::move(constraints));
         if (gs)
         {
@@ -184,7 +184,7 @@ namespace GUI
     void GUIApplication::Label(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
-        GUI::EventHandler handler;
+        interstice::EventHandler handler;
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
@@ -209,7 +209,7 @@ namespace GUI
         {
             handler = MakeLabelHandler();
         }
-        auto ref = RegisterElement(GUI::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
+        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
                         std::move(constraints));
         if (gs)
         {
@@ -232,7 +232,7 @@ namespace GUI
     void GUIApplication::Text(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         [[maybe_unused]]
-        auto ref = RegisterElement(GUI::Element{ .id = id, .styleRef = style }, text, std::move(constraints));
+        auto ref = RegisterElement(interstice::Element{ .id = id, .styleRef = style }, text, std::move(constraints));
     }
 
     void GUIApplication::SelectableText(ID id, const std::span<ContentRun>& runs,
@@ -243,8 +243,8 @@ namespace GUI
         // (activate the link under it) while a drag is a text selection.
         struct PressState { int2 pressPos {}; };
 
-        GUI::EventHandler handler =
-            [this, id, onLinkActivate = std::move(onLinkActivate)](GUI::ElementEvent&& ev) -> bool
+        interstice::EventHandler handler =
+            [this, id, onLinkActivate = std::move(onLinkActivate)](interstice::ElementEvent&& ev) -> bool
         {
             // The editor's TextID isn't known when this handler is built (it's created by the
             // createTextID callback below), so resolve it at event time.
@@ -255,11 +255,11 @@ namespace GUI
             auto& store = guiStateManager.GetElementDataStore();
             switch (ev.type)
             {
-                case GUI::EventType::MouseMove:
+                case interstice::EventType::MouseMove:
                     if (textID != TextID::Invalid)
                         textSystem->SetHoveredContent(textID, textSystem->HitTestContent(textID, localPos.x, localPos.y));
                     break;
-                case GUI::EventType::MouseDown:
+                case interstice::EventType::MouseDown:
                     if (ev.state.LeftPressed())
                     {
                         // A press on a link only activates it (on release); elsewhere, focus the editor.
@@ -274,7 +274,7 @@ namespace GUI
                         return true;
                     }
                     break;
-                case GUI::EventType::MouseUp:
+                case interstice::EventType::MouseUp:
                     if (onLinkActivate && textID != TextID::Invalid)
                         if (auto* press = store.Get<PressState>(id))
                         {
@@ -287,12 +287,12 @@ namespace GUI
                             }
                         }
                     break;
-                case GUI::EventType::KeyDown:
-                case GUI::EventType::KeyUp:
-                case GUI::EventType::TextInput:
+                case interstice::EventType::KeyDown:
+                case interstice::EventType::KeyUp:
+                case interstice::EventType::TextInput:
                     // Takes the selection keys (Ctrl+C, Ctrl+A, arrows) while focused.
                     if (guiStateManager.Interaction().GetFocusedID() == id && !ev.state.consumed)
-                        return ev.type != GUI::EventType::TextInput && TextEditorUsesKey(ev.state, /*readOnly*/ true);
+                        return ev.type != interstice::EventType::TextInput && TextEditorUsesKey(ev.state, /*readOnly*/ true);
                     break;
                 default:
                     break;
@@ -301,8 +301,8 @@ namespace GUI
         };
 
         bool modified = false;
-        RegisterControl(GUI::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style },
-            [this, &modified, &runs](GUI::Element& element)
+        RegisterControl(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style },
+            [this, &modified, &runs](interstice::Element& element)
             {
                 return textSystem->RegisterEditableRichText(element.id, runs,
                     TextEditBehavior::ReadOnly | TextEditBehavior::Multiline,
@@ -314,7 +314,7 @@ namespace GUI
     void GUIApplication::Image(ID id, ImageIndex image, StyleRef style, LayoutOverride&& constraints)
     {
         // Drawn as the element's backgroundImage; sized by style + constraints. Non-interactive.
-        GUI::Element el{ .id = id, .styleRef = style };
+        interstice::Element el{ .id = id, .styleRef = style };
         el.backgroundImage = image;
         [[maybe_unused]]
         auto ref = RegisterElement(std::move(el), std::move(constraints));
@@ -340,7 +340,7 @@ namespace GUI
                 h = int32_t((int64_t(boxW) * sourceSize.y + sourceSize.x / 2) / sourceSize.x);
             }
         }
-        Image(id, image, style, GUI::LayoutOverride::FixedSize(w, h));
+        Image(id, image, style, interstice::LayoutOverride::FixedSize(w, h));
     }
 
     bool GUIApplication::Button(ID id, IconID icon, std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
@@ -348,8 +348,8 @@ namespace GUI
         auto* gs = m_buttonGroup->GetActiveButton();
         if (gs) style = m_buttonGroup->NextItemStyleRef(*gs);
         auto ref = RegisterControl(
-            GUI::Element{ .id = id, .eventHandler = MakeButtonHandler(onClick), .styleRef = style },
-            [this, icon, text](GUI::Element& element) {
+            interstice::Element{ .id = id, .eventHandler = MakeButtonHandler(onClick), .styleRef = style },
+            [this, icon, text](interstice::Element& element) {
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
@@ -368,17 +368,17 @@ namespace GUI
         auto* gs = m_buttonGroup->GetActiveToggle();
         if (gs) style = m_buttonGroup->NextItemStyleRef(*gs);
         auto ref = RegisterControl(
-            GUI::Element 
+            interstice::Element 
             { 
                 .id = id, 
-                .eventHandler = GUI::MakeButtonHandler(guiStateManager, 
+                .eventHandler = interstice::MakeButtonHandler(guiStateManager, 
                                                        [this, value, onToggle]() 
                                                        { 
                                                            onToggle(!value); 
                                                        }), 
                 .styleRef = style 
             },
-            [this, icon, text](GUI::Element& element) {
+            [this, icon, text](interstice::Element& element) {
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
@@ -414,8 +414,8 @@ namespace GUI
 
     void GUIApplication::BeginButtonGroup(LayoutOverride&& constraints)
     {
-        GUI::ID groupID = idManager.AllocateDynamicID("button_group");
-        GUI::Element wrap{};
+        interstice::ID groupID = idManager.AllocateDynamicID("button_group");
+        interstice::Element wrap{};
         wrap.id       = groupID;
         wrap.styleRef = theme.buttonGroupStyleRef;
         wrap.state    = guiStateManager.GetCurrentState(groupID);
@@ -437,8 +437,8 @@ namespace GUI
 
     void GUIApplication::BeginToggleGroup(LayoutOverride&& constraints)
     {
-        GUI::ID groupID = idManager.AllocateDynamicID("toggle_group");
-        GUI::Element wrap{};
+        interstice::ID groupID = idManager.AllocateDynamicID("toggle_group");
+        interstice::Element wrap{};
         wrap.id       = groupID;
         wrap.styleRef = theme.toggleGroupStyleRef;
         wrap.state    = guiStateManager.GetCurrentState(groupID);
@@ -464,7 +464,7 @@ namespace GUI
 
     bool GUIApplication::BeginArea(ID id, StyleRef style, LayoutOverride&& constraints)
     {
-        GUI::Element container
+        interstice::Element container
         {
             .id       = id,
             .styleRef = style,
@@ -491,9 +491,9 @@ namespace GUI
         assert(pushed && "BeginCached requires a valid, stable id");
 
         // The container itself is built every frame, so its layout and hit-testing stay live.
-        GUI::Element container{ .id = id, .styleRef = style, .flags = ElementFlags::IsCachedScope };
+        interstice::Element container{ .id = id, .styleRef = style, .flags = ElementFlags::IsCachedScope };
         container.state = guiStateManager.GetCurrentState(id);
-        GUI::ElementRef containerRef = RegisterElement(std::move(container), std::move(constraints));
+        interstice::ElementRef containerRef = RegisterElement(std::move(container), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
 
         UICacheManager::Scope& scope = m_uiCache->GetOrCreate(id);
@@ -671,17 +671,17 @@ namespace GUI
         {
             // Wrap MakeNumericalBoxHandler so Enter/Escape blur back to the slider bar.
             const NumericFieldConfig<float> cfg{ .minVal = minVal, .maxVal = maxVal };
-            GUI::EventHandler inner = MakeNumericalBoxHandler<float>(guiStateManager, value, cfg);
-            GUI::EventHandler editHandler =
-                [this, inner = std::move(inner)](GUI::ElementEvent&& event) -> bool
+            interstice::EventHandler inner = MakeNumericalBoxHandler<float>(guiStateManager, value, cfg);
+            interstice::EventHandler editHandler =
+                [this, inner = std::move(inner)](interstice::ElementEvent&& event) -> bool
                 {
-                    if (event.type == GUI::EventType::KeyDown &&
-                        (event.state.lastKey == GUI::KeyCode::Return ||
-                         event.state.lastKey == GUI::KeyCode::Return2 ||
-                         event.state.lastKey == GUI::KeyCode::KeyPadEnter ||
-                         event.state.lastKey == GUI::KeyCode::Escape))
+                    if (event.type == interstice::EventType::KeyDown &&
+                        (event.state.lastKey == interstice::KeyCode::Return ||
+                         event.state.lastKey == interstice::KeyCode::Return2 ||
+                         event.state.lastKey == interstice::KeyCode::KeyPadEnter ||
+                         event.state.lastKey == interstice::KeyCode::Escape))
                     {
-                        guiStateManager.Interaction().SetFocusID(GUI::ID::Invalid());
+                        guiStateManager.Interaction().SetFocusID(interstice::ID::Invalid());
                         guiStateManager.TextEditorFocus().Clear();
                         return true;
                     }
@@ -690,13 +690,13 @@ namespace GUI
 
             bool modified = false;
             RegisterControl(
-                GUI::Element{
+                interstice::Element{
                     .id           = id,
                     .eventHandler = std::move(editHandler),
                     .styleRef     = theme.regularControls.textbox,
                     .flags        = ElementFlags::DoNotMeasureText
                 },
-                [this, &modified, &value, cfg](GUI::Element& element)
+                [this, &modified, &value, cfg](interstice::Element& element)
                 {
                     return textSystem->RegisterEditableNumber(element.id, value, TextEditBehavior::ContinuousUpdate,
                                                               element.styleRef, element.state, modified, cfg);
@@ -716,7 +716,7 @@ namespace GUI
 
             const float t = (maxVal > minVal) ? std::clamp((value - minVal) / (maxVal - minVal), 0.0f, 1.0f) : 0.0f;
 
-            GUI::Element track{};
+            interstice::Element track{};
             track.id           = id;
             track.state        = guiStateManager.GetCurrentState(id);
             track.styleRef     = theme.sliderFieldTrackStyleRef;
@@ -730,7 +730,7 @@ namespace GUI
             const auto trackState = track.state;
             auto& widthMap        = m_sliderFieldTrack->Widths();
             [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-                [bgStyle, fillStyle, trackState, &widthMap, id, t](GUI::CustomDrawContext& ctx)
+                [bgStyle, fillStyle, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
                 {
                     // Both halves draw the full rounded track, sub-clipped at fillX.
                     // Coords are inner-rect-local, so the outer top-left is (outer.pos - inner.pos).
@@ -744,15 +744,15 @@ namespace GUI
                     const int32_t Y = outer.y - inner.y;
 
                     const int32_t fillX = int32_t(t * float(W) + 0.5f);
-                    const GUI::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
+                    const interstice::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
 
                     if (fillX < W)
                         ctx.RenderBox(baseRect,
-                                      GUI::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
+                                      interstice::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
                                       bgStyle, trackState);
                     if (fillX > 0)
                         ctx.RenderBox(baseRect,
-                                      GUI::IntRect{ .position = { X, Y }, .size = { fillX, H } },
+                                      interstice::IntRect{ .position = { X, Y }, .size = { fillX, H } },
                                       fillStyle, trackState);
                 });
 
@@ -761,30 +761,30 @@ namespace GUI
             VERIFY(elementStorage.BeginChildren());
             if (!label.empty())
             {
-                const GUI::ID lblID = idManager.AllocateDynamicID("slider_field_label");
-                const GUI::ElementState lblState = guiStateManager.GetCurrentState(lblID);
+                const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
+                const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
                 RegisterElement(
-                    GUI::Element {
+                    interstice::Element {
                         .id       = lblID,
                         .textID   = textSystem->RegisterText(lblID, label, theme.sliderFieldTextStyleRef, lblState),
                         .styleRef = theme.sliderFieldTextStyleRef,
-                        .flags    = GUI::ElementFlags::NoInput,
+                        .flags    = interstice::ElementFlags::NoInput,
                         .state    = lblState
                     },
                     LayoutOverride::Auto());
             }
             {
-                const GUI::ID valID = idManager.AllocateDynamicID("slider_field_value");
-                const GUI::ElementState valState = guiStateManager.GetCurrentState(valID);
+                const interstice::ID valID = idManager.AllocateDynamicID("slider_field_value");
+                const interstice::ElementState valState = guiStateManager.GetCurrentState(valID);
                 char valueBuffer[64]; // fits any float with 3 decimals
                 const auto formatted = std::format_to_n(valueBuffer, sizeof(valueBuffer), "{:.3f}", value);
                 const std::string_view valueText(valueBuffer, size_t(formatted.out - valueBuffer));
                 RegisterElement(
-                    GUI::Element {
+                    interstice::Element {
                         .id       = valID,
                         .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldTextStyleRef, valState),
                         .styleRef = theme.sliderFieldTextStyleRef,
-                        .flags    = GUI::ElementFlags::NoInput,
+                        .flags    = interstice::ElementFlags::NoInput,
                         .state    = valState
                     },
                     LayoutOverride::Auto());
@@ -799,11 +799,11 @@ namespace GUI
     {
         // Drag handler for the integer Slider / SliderField. Writes the caller's int
         // (must be stable storage) from the cursor X, rounded to a whole number.
-        GUI::EventHandler MakeIntSliderDrag(GUIStateManager& gsm, const ElementStorage& es,
+        interstice::EventHandler MakeIntSliderDrag(GUIStateManager& gsm, const ElementStorage& es,
                                             int* valuePtr, int minVal, int maxVal, int trackWidth)
         {
             const int range = maxVal - minVal;
-            return [&gsm, &es, valuePtr, minVal, maxVal, range, trackWidth](GUI::ElementEvent&& event) -> bool
+            return [&gsm, &es, valuePtr, minVal, maxVal, range, trackWidth](interstice::ElementEvent&& event) -> bool
             {
                 auto& store = gsm.GetElementDataStore();
                 auto setFromMouse = [&]()
@@ -818,7 +818,7 @@ namespace GUI
                 };
                 switch (event.type)
                 {
-                    case GUI::EventType::MouseDown:
+                    case interstice::EventType::MouseDown:
                         if (event.state.LeftPressed())
                         {
                             gsm.Interaction().SetFocusID(event.id);
@@ -828,13 +828,13 @@ namespace GUI
                             return true;
                         }
                         break;
-                    case GUI::EventType::MouseMove:
+                    case interstice::EventType::MouseMove:
                         if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
                         { setFromMouse(); return true; }
                         break;
-                    case GUI::EventType::MouseUp:
+                    case interstice::EventType::MouseUp:
                         if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
-                        { s->draggingID = GUI::ID::Invalid(); return true; }
+                        { s->draggingID = interstice::ID::Invalid(); return true; }
                         break;
                     default: break;
                 }
@@ -862,7 +862,7 @@ namespace GUI
             ? std::clamp(float(value - minVal) / float(range), 0.0f, 1.0f) : 0.0f;
 
         int* valuePtr = &value; // caller-owned, stable storage for the end-of-frame write
-        GUI::Element track{};
+        interstice::Element track{};
         track.id       = id;
         track.state    = guiStateManager.GetCurrentState(id);
         track.styleRef = theme.sliderFieldTrackStyleRef;
@@ -875,7 +875,7 @@ namespace GUI
         const auto trackState = track.state;
         auto& widthMap        = m_sliderFieldTrack->Widths();
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-            [bgStyle, fillStyle, trackState, &widthMap, id, t](GUI::CustomDrawContext& ctx)
+            [bgStyle, fillStyle, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
             {
                 const auto outer = ctx.ElementRect();
                 const auto inner = ctx.ElementInnerRect();
@@ -886,42 +886,42 @@ namespace GUI
                 const int32_t X = outer.x - inner.x;
                 const int32_t Y = outer.y - inner.y;
                 const int32_t fillX = int32_t(t * float(W) + 0.5f);
-                const GUI::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
+                const interstice::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
                 if (fillX < W)
                     ctx.RenderBox(baseRect,
-                                  GUI::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
+                                  interstice::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
                                   bgStyle, trackState);
                 if (fillX > 0)
                     ctx.RenderBox(baseRect,
-                                  GUI::IntRect{ .position = { X, Y }, .size = { fillX, H } },
+                                  interstice::IntRect{ .position = { X, Y }, .size = { fillX, H } },
                                   fillStyle, trackState);
             });
 
         VERIFY(elementStorage.BeginChildren());
         if (!label.empty())
         {
-            const GUI::ID lblID = idManager.AllocateDynamicID("slider_field_label");
-            const GUI::ElementState lblState = guiStateManager.GetCurrentState(lblID);
+            const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
+            const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
             RegisterElement(
-                GUI::Element {
+                interstice::Element {
                     .id       = lblID,
                     .textID   = textSystem->RegisterText(lblID, label, theme.sliderFieldTextStyleRef, lblState),
                     .styleRef = theme.sliderFieldTextStyleRef,
-                    .flags    = GUI::ElementFlags::NoInput,
+                    .flags    = interstice::ElementFlags::NoInput,
                     .state    = lblState
                 },
                 LayoutOverride::Auto());
         }
         {
-            const GUI::ID valID = idManager.AllocateDynamicID("slider_field_value");
-            const GUI::ElementState valState = guiStateManager.GetCurrentState(valID);
+            const interstice::ID valID = idManager.AllocateDynamicID("slider_field_value");
+            const interstice::ElementState valState = guiStateManager.GetCurrentState(valID);
             const std::string valueText = std::format("{}", value);
             RegisterElement(
-                GUI::Element {
+                interstice::Element {
                     .id       = valID,
                     .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldTextStyleRef, valState),
                     .styleRef = theme.sliderFieldTextStyleRef,
-                    .flags    = GUI::ElementFlags::NoInput,
+                    .flags    = interstice::ElementFlags::NoInput,
                     .state    = valState
                 },
                 LayoutOverride::Auto());
@@ -949,7 +949,7 @@ namespace GUI
         const float t = (range > 0)
             ? std::clamp(float(value - minVal) / float(range), 0.0f, 1.0f) : 0.0f;
 
-        GUI::Element track{};
+        interstice::Element track{};
         track.id           = id;
         track.state        = guiStateManager.GetCurrentState(id);
         track.styleRef     = theme.sliderStyleRef;
@@ -964,7 +964,7 @@ namespace GUI
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
             [grooveStyle, knobStyle, trackState, &widthMap, id, t,
              grooveMin = styleManager.Px(3), grooveMax = styleManager.Px(6),
-             knobMin = styleManager.Px(6), knobInset = styleManager.Px(2)](GUI::CustomDrawContext& ctx)
+             knobMin = styleManager.Px(6), knobInset = styleManager.Px(2)](interstice::CustomDrawContext& ctx)
             {
                 const auto outer = ctx.ElementRect();
                 const auto inner = ctx.ElementInnerRect();
@@ -976,14 +976,14 @@ namespace GUI
 
                 // Groove: full width, centred in the content area (below the top padding).
                 const int grooveH = std::clamp(Hc / 4, grooveMin, grooveMax);
-                ctx.RenderBox(GUI::IntRect{ .position = { X, (Hc - grooveH) / 2 },
+                ctx.RenderBox(interstice::IntRect{ .position = { X, (Hc - grooveH) / 2 },
                                             .size     = { W, grooveH } },
                               grooveStyle, trackState);
 
                 // Knob: slightly smaller than the content height, kept inside the track.
                 const int knobSz = std::max(knobMin, Hc - knobInset);
                 const int knobX  = X + static_cast<int>(std::lround(t * float(std::max(0, W - knobSz))));
-                ctx.RenderBox(GUI::IntRect{ .position = { knobX, (Hc - knobSz) / 2 },
+                ctx.RenderBox(interstice::IntRect{ .position = { knobX, (Hc - knobSz) / 2 },
                                             .size     = { knobSz, knobSz } },
                               knobStyle, trackState);
             });

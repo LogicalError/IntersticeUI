@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     namespace
     {
@@ -53,7 +53,7 @@ namespace GUI::Diagnostics
 
         TEST_F(LoggingTest, ArgumentsAreFormattedIntoTheTemplate)
         {
-            LOG_INFO(kTestCategory, "loaded {} items ({} skipped) in {} ms from {}", 12, 3u, 1.5, "disk");
+            INTERSTICE_LOG_INFO(kTestCategory, "loaded {} items ({} skipped) in {} ms from {}", 12, 3u, 1.5, "disk");
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], "loaded 12 items (3 skipped) in 1.5 ms from disk");
 
@@ -75,7 +75,7 @@ namespace GUI::Diagnostics
         {
             {
                 std::string path = "themes/styles.css";
-                LOG_ERROR(kTestCategory, "{}:{}: {}", path, 7, std::string("bad value"));
+                INTERSTICE_LOG_ERROR(kTestCategory, "{}:{}: {}", path, 7, std::string("bad value"));
                 path.assign(path.size(), 'x'); // the record must not view the caller's string
             }
             ASSERT_EQ(captured.records.size(), 1u);
@@ -87,14 +87,14 @@ namespace GUI::Diagnostics
         TEST_F(LoggingTest, OversizedTextIsTruncated)
         {
             const std::string longText(kLogTextCapacity * 2, 'a');
-            LOG_WARNING(kTestCategory, "[{}]", longText);
+            INTERSTICE_LOG_WARNING(kTestCategory, "[{}]", longText);
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], "[" + std::string(kLogTextCapacity, 'a') + "]");
         }
 
         TEST_F(LoggingTest, FormattingHandlesMissingArgumentsAndSmallBuffers)
         {
-            LOG_INFO(kTestCategory, "{} and {}", 1);
+            INTERSTICE_LOG_INFO(kTestCategory, "{} and {}", 1);
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], "1 and {}");
 
@@ -107,10 +107,10 @@ namespace GUI::Diagnostics
         {
             SetMinimumLogSeverity(LogSeverity::Warning);
             const uint64_t before = LatestLogSequence();
-            LOG_INFO(kTestCategory, "info");
-            LOG_DEBUG(kTestCategory, "debug");
-            LOG_WARNING(kTestCategory, "warning");
-            LOG_CRITICAL(kTestCategory, "critical");
+            INTERSTICE_LOG_INFO(kTestCategory, "info");
+            INTERSTICE_LOG_DEBUG(kTestCategory, "debug");
+            INTERSTICE_LOG_WARNING(kTestCategory, "warning");
+            INTERSTICE_LOG_CRITICAL(kTestCategory, "critical");
             ASSERT_EQ(captured.records.size(), 2u);
             EXPECT_EQ(captured.records[0].severity, LogSeverity::Warning);
             EXPECT_EQ(captured.records[1].severity, LogSeverity::Critical);
@@ -121,7 +121,7 @@ namespace GUI::Diagnostics
         {
             const uint64_t before = LatestLogSequence();
             for (int i = 0; i < kLogRingCapacity + 10; ++i)
-                LOG_INFO(kTestCategory, "record {}", i);
+                INTERSTICE_LOG_INFO(kTestCategory, "record {}", i);
             EXPECT_EQ(LatestLogSequence(), before + kLogRingCapacity + 10);
 
             std::vector<LogRecord> recent(kLogRingCapacity + 5);
@@ -142,9 +142,9 @@ namespace GUI::Diagnostics
             int count = 0;
             EXPECT_TRUE(AddLogSink(CountSink, &count));
             EXPECT_FALSE(AddLogSink(CountSink, &count)) << "the same sink twice is rejected";
-            LOG_INFO(kTestCategory, "one");
+            INTERSTICE_LOG_INFO(kTestCategory, "one");
             RemoveLogSink(CountSink, &count);
-            LOG_INFO(kTestCategory, "two");
+            INTERSTICE_LOG_INFO(kTestCategory, "two");
             EXPECT_EQ(count, 1);
             EXPECT_EQ(captured.records.size(), 2u);
         }
@@ -154,7 +154,7 @@ namespace GUI::Diagnostics
             int count = 0;
             ASSERT_TRUE(AddLogSink(CountSink, &count));
             constexpr int kPerThread = 500;
-            auto emit = [] { for (int i = 0; i < kPerThread; ++i) LOG_DEBUG(kTestCategory, "tick {}", i); };
+            auto emit = [] { for (int i = 0; i < kPerThread; ++i) INTERSTICE_LOG_DEBUG(kTestCategory, "tick {}", i); };
             std::thread a(emit), b(emit);
             a.join();
             b.join();

@@ -28,22 +28,22 @@ namespace GUITest
     // Stub atlas: hands back distinct, valid TextureIndex values so glyph
     // rasterization paths (editor caret, selection) don't treat every glyph as
     // sharing slot 0. No real GPU upload happens.
-    class StubTextAtlasManager : public GUI::TextAtlasManager
+    class StubTextAtlasManager : public interstice::TextAtlasManager
     {
     public:
-        bool Initialize(GUI::GraphicsContext*, GUI::ImageSet*) override { return true; }
-        GUI::TextureIndex CreateTexture(const uint8_t*, GUI::uint2, uint8_t) override
+        bool Initialize(interstice::GraphicsContext*, interstice::ImageSet*) override { return true; }
+        interstice::TextureIndex CreateTexture(const uint8_t*, interstice::uint2, uint8_t) override
         {
-            return static_cast<GUI::TextureIndex>(++m_next);
+            return static_cast<interstice::TextureIndex>(++m_next);
         }
-        void UpdateTexture(GUI::TextureIndex, const uint8_t*, GUI::uint2) override {}
-        GUI::ImageIndex GetImageIndex(GUI::TextureIndex) override { return GUI::ImageIndex{ 0 }; }
+        void UpdateTexture(interstice::TextureIndex, const uint8_t*, interstice::uint2) override {}
+        interstice::ImageIndex GetImageIndex(interstice::TextureIndex) override { return interstice::ImageIndex{ 0 }; }
         void SyncTextureIndices() override {}
     private:
         uint32_t m_next = 0;
     };
 
-    class StubClipboard : public GUI::IClipboard
+    class StubClipboard : public interstice::IClipboard
     {
     public:
         std::string Get() const override { return m_data; }
@@ -53,28 +53,28 @@ namespace GUITest
     };
 
     // Draws nothing; lets the real text editor render (RenderText) headless.
-    class StubGUIRenderer : public GUI::GUIRenderer
+    class StubGUIRenderer : public interstice::GUIRenderer
     {
     public:
         void Reset() override {}
-        void SetTransform(GUI::float3x2) override {}
-        void RenderBox(GUI::IntRect, GUI::IntRect, uint32_t, uint32_t, float,
-                       GUI::VisualColorStyleIndex, GUI::ImageIndex, GUI::IntRect) override {}
-        void RenderLine(GUI::int2, GUI::int2, GUI::int2, GUI::int2, GUI::IntRect, const GUI::LineStyle&) override {}
-        void RenderDot(GUI::float2, GUI::IntRect, float, GUI::color4f) override {}
-        void RenderTriangle(GUI::float2, GUI::float2, GUI::float2, GUI::IntRect,
-                            GUI::VisualColorStyleIndex, GUI::ImageIndex) override {}
-        void RenderQuad(GUI::IntRect, GUI::IntRect, GUI::VisualColorStyleIndex, float, GUI::ImageIndex) override {}
-        void RenderGlyph(GUI::float2 pos, GUI::float2 size, GUI::float2, GUI::float2, float scale, int, int,
-                         GUI::VisualColorStyleIndex, GUI::IntRect, GUI::ImageIndex) override
+        void SetTransform(interstice::float3x2) override {}
+        void RenderBox(interstice::IntRect, interstice::IntRect, uint32_t, uint32_t, float,
+                       interstice::VisualColorStyleIndex, interstice::ImageIndex, interstice::IntRect) override {}
+        void RenderLine(interstice::int2, interstice::int2, interstice::int2, interstice::int2, interstice::IntRect, const interstice::LineStyle&) override {}
+        void RenderDot(interstice::float2, interstice::IntRect, float, interstice::color4f) override {}
+        void RenderTriangle(interstice::float2, interstice::float2, interstice::float2, interstice::IntRect,
+                            interstice::VisualColorStyleIndex, interstice::ImageIndex) override {}
+        void RenderQuad(interstice::IntRect, interstice::IntRect, interstice::VisualColorStyleIndex, float, interstice::ImageIndex) override {}
+        void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2, interstice::float2, float scale, int, int,
+                         interstice::VisualColorStyleIndex, interstice::IntRect, interstice::ImageIndex) override
         {
             glyphRight = std::max(glyphRight, pos.x + size.x);
             glyphTop   = std::min(glyphTop, pos.y);
             lastGlyphScale = scale;
         }
-        bool StartResizing(GUI::ID) override { return false; }
+        bool StartResizing(interstice::ID) override { return false; }
         void StopResizing() override {}
-        bool BeginWindow(GUI::ID) override { return true; }
+        bool BeginWindow(interstice::ID) override { return true; }
         void EndWindow() override {}
 
         float glyphRight     = 0.0f; // right edge of the rightmost glyph drawn since last reset
@@ -83,27 +83,27 @@ namespace GUITest
     };
 
     // Only carries the stub renderer; the text system reads nothing else from it.
-    class StubGraphicsContext : public GUI::GraphicsContext
+    class StubGraphicsContext : public interstice::GraphicsContext
     {
     public:
         StubGraphicsContext() { guiRenderer = &renderer; }
         StubGUIRenderer& Renderer() { return renderer; }
         void SetShaderDirectory(std::string_view) override {}
-        void SetAllocationHooks(const GUI::AllocationHooks&) override {}
-        bool Initialize(GUI::IWindowBackend*) override { return true; }
+        void SetAllocationHooks(const interstice::AllocationHooks&) override {}
+        bool Initialize(interstice::IWindowBackend*) override { return true; }
         void Cleanup() override {}
         void BeginFrame() override {}
         void EndFrame() override {}
-        GUI::Image* CreateImage(void*, GUI::uint2, GUI::ImageFormat, GUI::Sampler, bool) override { return nullptr; }
-        void DestroyImageAtEnd(GUI::Image*, GUI::DeviceScope, const std::source_location&) override {}
-        GUI::TextAtlasManager* CreateTextAtlasManager() override { return nullptr; }
-        GUI::IWindowContext* CreateWindowContext(void*, GUI::OSWindowHandle, GUI::ID, GUI::int2,
-                                                 GUI::WindowFlags, GUI::OnGuiFunc) override { return nullptr; }
-        void DestroyWindowContext(GUI::IWindowContext*) override {}
-        GUI::ImageSet* GetImageSet() const override { return nullptr; }
-        GUI::ImageIndex RegisterImage(GUI::Image*) override { return GUI::ImageIndex::Invalid; }
-        void UnregisterImage(GUI::ImageIndex) override {}
-        void PrepareFrame(GUI::StyleManager&, GUI::GradientManager&, float) override {}
+        interstice::Image* CreateImage(void*, interstice::uint2, interstice::ImageFormat, interstice::Sampler, bool) override { return nullptr; }
+        void DestroyImageAtEnd(interstice::Image*, interstice::DeviceScope, const std::source_location&) override {}
+        interstice::TextAtlasManager* CreateTextAtlasManager() override { return nullptr; }
+        interstice::IWindowContext* CreateWindowContext(void*, interstice::OSWindowHandle, interstice::ID, interstice::int2,
+                                                 interstice::WindowFlags, interstice::OnGuiFunc) override { return nullptr; }
+        void DestroyWindowContext(interstice::IWindowContext*) override {}
+        interstice::ImageSet* GetImageSet() const override { return nullptr; }
+        interstice::ImageIndex RegisterImage(interstice::Image*) override { return interstice::ImageIndex::Invalid; }
+        void UnregisterImage(interstice::ImageIndex) override {}
+        void PrepareFrame(interstice::StyleManager&, interstice::GradientManager&, float) override {}
     private:
         StubGUIRenderer renderer;
     };
@@ -111,17 +111,17 @@ namespace GUITest
     class SkribidiHeadlessTest : public ::testing::Test
     {
     protected:
-        GUI::GradientManager       gradientManager{ 256 };
-        GUI::StyleManager          styleManager{ gradientManager };
-        GUI::GUIStateManager       stateManager{};
+        interstice::GradientManager       gradientManager{ 256 };
+        interstice::StyleManager          styleManager{ gradientManager };
+        interstice::GUIStateManager       stateManager{};
         StubTextAtlasManager       atlasManager{};
         StubClipboard              clipboard{};
         StubGraphicsContext        graphicsContext{};
-        std::unique_ptr<GUI::SkribidiTextSystem> textSystem;
+        std::unique_ptr<interstice::SkribidiTextSystem> textSystem;
 
         void SetUp() override
         {
-            textSystem = std::make_unique<GUI::SkribidiTextSystem>();
+            textSystem = std::make_unique<interstice::SkribidiTextSystem>();
             ASSERT_TRUE(textSystem->Initialize(&graphicsContext,
                                                &styleManager,
                                                &atlasManager,
@@ -138,17 +138,17 @@ namespace GUITest
         }
 
         // A plain wrap-mode text style with a real font size so glyphs shape.
-        GUI::StyleRef MakeTextStyle(float fontSize = 14.0f, GUI::FontID fontId = GUI::FontID::Invalid,
-                                    GUI::FontFamily family = GUI::FontFamily::Default)
+        interstice::StyleRef MakeTextStyle(float fontSize = 14.0f, interstice::FontID fontId = interstice::FontID::Invalid,
+                                    interstice::FontFamily family = interstice::FontFamily::Default)
         {
-            GUI::Style s{};
-            s.borderWidths    = GUI::BoxEdges(0);
-            s.padding         = GUI::BoxEdges(0);
-            s.margin          = GUI::BoxEdges(0);
+            interstice::Style s{};
+            s.borderWidths    = interstice::BoxEdges(0);
+            s.padding         = interstice::BoxEdges(0);
+            s.margin          = interstice::BoxEdges(0);
             s.textLayoutStyle = {};
-            s.textLayoutStyle.textWrapping = GUI::TextWrap::Wrap;
-            s.SetOverflow(GUI::Overflow::Auto);
-            for (int i = 0; i < GUI::Style::kStateCount; ++i)
+            s.textLayoutStyle.textWrapping = interstice::TextWrap::Wrap;
+            s.SetOverflow(interstice::Overflow::Auto);
+            for (int i = 0; i < interstice::Style::kStateCount; ++i)
             {
                 s.states[i].textStyle.fontSize = fontSize;
                 s.states[i].textStyle.fontId   = fontId;
@@ -159,12 +159,12 @@ namespace GUITest
 
         // Measured natural width of `text` under `style`. `seed` keeps element
         // IDs distinct across calls in one test.
-        int32_t MeasureWidth(std::string_view text, GUI::StyleRef style, uint64_t seed)
+        int32_t MeasureWidth(std::string_view text, interstice::StyleRef style, uint64_t seed)
         {
-            GUI::ID id = GUI::ID{ .value{ .integer = seed } };
-            GUI::TextID tid = textSystem->RegisterText(id, GUI::IconID::Invalid, text,
-                                                       style, GUI::ElementState::None);
-            EXPECT_NE(tid, GUI::TextID::Invalid);
+            interstice::ID id = interstice::ID{ .value{ .integer = seed } };
+            interstice::TextID tid = textSystem->RegisterText(id, interstice::IconID::Invalid, text,
+                                                       style, interstice::ElementState::None);
+            EXPECT_NE(tid, interstice::TextID::Invalid);
             return textSystem->GetTextMeasurement(tid).maxWidth;
         }
     };

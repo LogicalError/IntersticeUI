@@ -7,13 +7,13 @@
 
 // Helpers shared by the color picker (controls_color.cpp) and gradient editor (controls_gradient.cpp).
 
-namespace GUI
+namespace interstice
 {
     // Create or update a VisualColorStyleIndex with a solid color.
-    inline void SetColorStyle(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx, GUI::color4f c)
+    inline void SetColorStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx, interstice::color4f c)
     {
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(c);
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(c);
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);

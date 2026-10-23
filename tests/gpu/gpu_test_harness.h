@@ -83,25 +83,25 @@ namespace GpuTestHarness
     class GpuTest : public ::testing::Test
     {
     protected:
-        GUI::GraphicsContext*          graphicsContext = nullptr;
-        GUI::SDLWindowBackend*         windowBackend   = nullptr;
-        Vulkan::VulkanGraphicsContext* vk              = nullptr;
+        interstice::GraphicsContext*          graphicsContext = nullptr;
+        interstice::SDLWindowBackend*         windowBackend   = nullptr;
+        interstice::vulkan::VulkanGraphicsContext* vk              = nullptr;
         ValidationSink                 sink;
 
         // Minimal style/gradient managers so the render path (PrepareFrame) has
         // something to upload. Device-independent, so safe as plain members.
-        GUI::GradientManager           gradientManager{ 256 };
-        GUI::StyleManager              styleManager{ gradientManager };
+        interstice::GradientManager           gradientManager{ 256 };
+        interstice::StyleManager              styleManager{ gradientManager };
 
         void SetUp() override
         {
-            graphicsContext = GUI::GraphicsContext::CreateContext();
-            windowBackend   = new GUI::SDLWindowBackend(graphicsContext);
-            GUI::InstallSDLVulkanSurfaceFactory(graphicsContext);
+            graphicsContext = interstice::GraphicsContext::CreateContext();
+            windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
+            interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
 
-            vk = static_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
+            vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
 
-            Vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
+            interstice::vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
             cfg.callback             = &ValidationCallback;
             cfg.userData             = &sink;
             // Synchronization validation is the most crash-prone layer feature. Set
@@ -125,14 +125,14 @@ namespace GpuTestHarness
 
             // With zero styles PrepareFrame would upload a zero-size buffer, which
             // the driver rejects.
-            styleManager.Register(GUI::Style{});
+            styleManager.Register(interstice::Style{});
         }
 
         // ---- Swapchain tier: a real (hidden) window + VulkanWindowContext ----
         struct OwnedWindowContext
         {
-            Vulkan::VulkanWindowContext* context  = nullptr;
-            GUI::OSWindowHandle          osHandle = nullptr;
+            interstice::vulkan::VulkanWindowContext* context  = nullptr;
+            interstice::OSWindowHandle          osHandle = nullptr;
         };
         std::vector<OwnedWindowContext> m_windowContexts;
         uint32_t                        m_nextWindowId = 7000; // monotonic — never reused
@@ -146,19 +146,19 @@ namespace GpuTestHarness
         // nullptr (the test should SKIP) if no window/surface can be created.
         // Defaults to Hidden; pass WindowFlags::None when the test must actually
         // render/present (acquire+present need a presentable surface).
-        Vulkan::VulkanWindowContext* CreateHiddenWindowContext(
-            GUI::int2 size = { 320, 240 },
-            GUI::WindowFlags flags = GUI::WindowFlags::Hidden)
+        interstice::vulkan::VulkanWindowContext* CreateHiddenWindowContext(
+            interstice::int2 size = { 320, 240 },
+            interstice::WindowFlags flags = interstice::WindowFlags::Hidden)
         {
-            GUI::OSWindowHandle osHandle =
+            interstice::OSWindowHandle osHandle =
                 windowBackend->CreateWindow("gpu-test", size, flags, nullptr);
             if (osHandle == nullptr) return nullptr;
 
-            GUI::ID id{};
-            id.value.dynamicParts.mode      = GUI::IDMode::Static;
+            interstice::ID id{};
+            id.value.dynamicParts.mode      = interstice::IDMode::Static;
             id.value.dynamicParts.hashValue = m_nextWindowId++;
 
-            auto* ctx = Vulkan::VulkanWindowContext::Create(
+            auto* ctx = interstice::vulkan::VulkanWindowContext::Create(
                 id, windowBackend->GetNativeHandle(osHandle), osHandle, size,
                 flags, &vk->deviceContext, [] {});
             if (ctx == nullptr) { windowBackend->DestroyWindow(osHandle); return nullptr; }
@@ -169,14 +169,14 @@ namespace GpuTestHarness
 
         // A render-to-image window context: no OS window and no swapchain; ReadPixels
         // returns its frames. For tests that need pixels, not a presented window.
-        Vulkan::VulkanWindowContext* CreateImageWindowContext(GUI::int2 size = { 320, 240 })
+        interstice::vulkan::VulkanWindowContext* CreateImageWindowContext(interstice::int2 size = { 320, 240 })
         {
-            GUI::ID id{};
-            id.value.dynamicParts.mode      = GUI::IDMode::Static;
+            interstice::ID id{};
+            id.value.dynamicParts.mode      = interstice::IDMode::Static;
             id.value.dynamicParts.hashValue = m_nextWindowId++;
 
-            auto* ctx = Vulkan::VulkanWindowContext::Create(
-                id, nullptr, nullptr, size, GUI::WindowFlags::RenderToImage, &vk->deviceContext, [] {});
+            auto* ctx = interstice::vulkan::VulkanWindowContext::Create(
+                id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage, &vk->deviceContext, [] {});
             if (ctx == nullptr) return nullptr;
             m_windowContexts.push_back({ ctx, nullptr });
             return ctx;
@@ -185,19 +185,19 @@ namespace GpuTestHarness
         // Drive one full window frame that emits a single dot, running the real
         // upload + draw + present path. This allocates the window's per-target
         // GPU buffers, so window-destroy buffer reclamation can be observed.
-        void RenderOneFrameWithDot(Vulkan::VulkanWindowContext* ctx, GUI::int2 size)
+        void RenderOneFrameWithDot(interstice::vulkan::VulkanWindowContext* ctx, interstice::int2 size)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            GUI::GUIRenderer* r = graphicsContext->guiRenderer;
+            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
-                r->RenderDot(GUI::float2{ 8.0f, 8.0f },
-                             GUI::IntRect{ 0, 0, size.x, size.y },
-                             4.0f, GUI::color4f{ 1, 1, 1, 1 });
+                r->RenderDot(interstice::float2{ 8.0f, 8.0f },
+                             interstice::IntRect{ 0, 0, size.x, size.y },
+                             4.0f, interstice::color4f{ 1, 1, 1, 1 });
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, GUI::IntRect{ 0, 0, size.x, size.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
         }
 
         void TearDown() override

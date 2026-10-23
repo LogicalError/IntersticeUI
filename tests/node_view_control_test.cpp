@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -35,8 +35,8 @@ namespace GUI
         protected:
             HeadlessGUIApp app;
             NodeView       view;
-            GUI::ID        nodeA{};
-            GUI::ID        nodeB{};
+            interstice::ID        nodeA{};
+            interstice::ID        nodeB{};
 
             void SetUp() override
             {
@@ -57,7 +57,7 @@ namespace GUI
                 b.properties.push_back(NodeProperty{ .input = PropertyEndpoint{} });
 
                 view = {};
-                view.transform = GUI::float3x2::Scale(1.0f); // identity
+                view.transform = interstice::float3x2::Scale(1.0f); // identity
                 view.nodes = { std::move(a), std::move(b) };
             }
 
@@ -75,7 +75,7 @@ namespace GUI
             void Settle() { Frame(); Frame(); }
 
             // The canvas's inner rect (the node-view style is unique to it).
-            GUI::IntRect CanvasInner() const
+            interstice::IntRect CanvasInner() const
             {
                 const auto style = app.theme.nodeViewStyleRef;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
@@ -83,7 +83,7 @@ namespace GUI
                     const uint32_t count = app.elementStorage.DepthSizeOf(d);
                     for (uint32_t i = 0; i < count; i++)
                     {
-                        GUI::ElementRef ref{ d, i };
+                        interstice::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref))
@@ -95,7 +95,7 @@ namespace GUI
 
             // A point on the canvas background (its hittable top strip),
             // clear of any node.
-            GUI::int2 CanvasPoint() const
+            interstice::int2 CanvasPoint() const
             {
                 const auto inner = CanvasInner();
                 return { inner.x + inner.w * 3 / 4, inner.y };
@@ -108,12 +108,12 @@ namespace GUI
         {
             view.nodes[0].collapsed = true;
             Settle();
-            auto rectsWithStyle = [&](GUI::StyleRef style) {
-                std::vector<GUI::IntRect> out;
+            auto rectsWithStyle = [&](interstice::StyleRef style) {
+                std::vector<interstice::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        GUI::ElementRef ref{ d, i };
+                        interstice::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -121,7 +121,7 @@ namespace GUI
                 return out;
             };
             const auto nodeRect = app.GetElementRect(nodeA);
-            GUI::IntRect header{}, socket{};
+            interstice::IntRect header{}, socket{};
             for (const auto& r : rectsWithStyle(app.theme.nodeHeaderStyleRef))
                 if (r.x >= nodeRect.x && r.x < nodeRect.x + nodeRect.w && r.y >= nodeRect.y && r.y < nodeRect.y + nodeRect.h) header = r;
             for (const auto& r : rectsWithStyle(app.theme.nodeSocketStyleRef))
@@ -172,7 +172,7 @@ namespace GUI
         TEST_F(NodeViewControlTest, BackgroundDownActivatesMarquee)
         {
             Settle();
-            const GUI::int2 from = CanvasPoint();
+            const interstice::int2 from = CanvasPoint();
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
@@ -188,8 +188,8 @@ namespace GUI
         TEST_F(NodeViewControlTest, RightDragPansTransform)
         {
             Settle();
-            const GUI::int2 from = CanvasPoint();
-            const GUI::int2 to{ from.x + 60, from.y + 25 };
+            const interstice::int2 from = CanvasPoint();
+            const interstice::int2 to{ from.x + 60, from.y + 25 };
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from, MouseButtons::Right);
@@ -207,7 +207,7 @@ namespace GUI
         TEST_F(NodeViewControlTest, ScrollZoomsTransform)
         {
             Settle();
-            const GUI::int2 p = CanvasPoint();
+            const interstice::int2 p = CanvasPoint();
 
             app.InjectMouseMove(p);
             app.InjectMouseScroll(p, { 0, -1 });

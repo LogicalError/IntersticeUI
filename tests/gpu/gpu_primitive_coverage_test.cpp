@@ -14,52 +14,52 @@ namespace
     class GpuPrimitiveTest : public GpuTest
     {
     protected:
-        GUI::VisualColorStyleIndex solidColor{};
-        GUI::VisualColorStyleIndex gradientColor{};
+        interstice::VisualColorStyleIndex solidColor{};
+        interstice::VisualColorStyleIndex gradientColor{};
 
         // Quad/triangle/line/glyph index into the color-style buffer on the
         // GPU; register real entries so the draws don't read a sentinel slot.
         void RegisterColorStyles()
         {
             solidColor = styleManager.RegisterColorStyle(
-                GUI::ColorStyle::Create(GUI::color4b{ 255, 255, 255, 255 }));
+                interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
             gradientColor = styleManager.RegisterColorStyle(
-                GUI::ColorStyle::Create(GUI::color4b{ 255, 0, 0, 255 },
-                                        GUI::color4b{ 0, 255, 0, 255 },
-                                        GUI::color4b{ 0, 0, 255, 255 },
-                                        GUI::color4b{ 255, 0, 255, 255 },
-                                        GUI::ColorType::InterpolatedBox));
+                interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 },
+                                        interstice::color4b{ 0, 255, 0, 255 },
+                                        interstice::color4b{ 0, 0, 255, 255 },
+                                        interstice::color4b{ 255, 0, 255, 255 },
+                                        interstice::ColorType::InterpolatedBox));
         }
 
-        void EmitAllPrimitives(GUI::GUIRenderer* r, GUI::int2 size)
+        void EmitAllPrimitives(interstice::GUIRenderer* r, interstice::int2 size)
         {
-            const GUI::IntRect clip{ 0, 0, size.x, size.y };
-            r->RenderBox(GUI::IntRect{ 4, 4, 64, 32 }, clip,
+            const interstice::IntRect clip{ 0, 0, size.x, size.y };
+            r->RenderBox(interstice::IntRect{ 4, 4, 64, 32 }, clip,
                          /*fromStyleIndex*/0, /*toStyleIndex*/0, /*blendT*/1.0f);
-            r->RenderQuad(GUI::IntRect{ 8, 48, 48, 24 }, clip, gradientColor);
-            r->RenderTriangle(GUI::float2{ 80, 8 }, GUI::float2{ 120, 8 },
-                              GUI::float2{ 100, 40 }, clip, solidColor);
-            r->RenderLine(GUI::int2{ 8, 90 }, GUI::int2{ 120, 90 }, clip,
-                          GUI::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 2.0f });
-            r->RenderDot(GUI::float2{ 140, 20 }, clip, 6.0f, GUI::color4f{ 1, 1, 1, 1 });
-            r->RenderGlyph(GUI::float2{ 8, 110 }, GUI::float2{ 16, 16 },
-                           GUI::float2{ 0, 0 }, GUI::float2{ 1, 1 },
+            r->RenderQuad(interstice::IntRect{ 8, 48, 48, 24 }, clip, gradientColor);
+            r->RenderTriangle(interstice::float2{ 80, 8 }, interstice::float2{ 120, 8 },
+                              interstice::float2{ 100, 40 }, clip, solidColor);
+            r->RenderLine(interstice::int2{ 8, 90 }, interstice::int2{ 120, 90 }, clip,
+                          interstice::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 2.0f });
+            r->RenderDot(interstice::float2{ 140, 20 }, clip, 6.0f, interstice::color4f{ 1, 1, 1, 1 });
+            r->RenderGlyph(interstice::float2{ 8, 110 }, interstice::float2{ 16, 16 },
+                           interstice::float2{ 0, 0 }, interstice::float2{ 1, 1 },
                            /*scale*/1.0f, /*bpp*/8, /*mode*/0, solidColor, clip);
         }
 
         // One full window frame emitting every primitive kind — the all-kinds
         // analogue of the harness's RenderOneFrameWithDot.
-        void RenderOneFrameAllKinds(Vulkan::VulkanWindowContext* ctx, GUI::int2 size)
+        void RenderOneFrameAllKinds(interstice::vulkan::VulkanWindowContext* ctx, interstice::int2 size)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            GUI::GUIRenderer* r = graphicsContext->guiRenderer;
+            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
                 EmitAllPrimitives(r, size);
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, GUI::IntRect{ 0, 0, size.x, size.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
         }
     };
 

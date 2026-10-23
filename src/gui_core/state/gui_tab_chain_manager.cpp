@@ -2,7 +2,7 @@
 #include <gui_core/state/gui_state_manager.h>
 
 
-namespace GUI
+namespace interstice
 {
     void TabChainManager::BeginFrame(const GUIStateManager& guiStateManager)
     {
@@ -16,4 +16,4 @@ namespace GUI
         m_defaultFocusID = ID::Invalid();
     }
 
-} // namespace GUI
+} // namespace interstice

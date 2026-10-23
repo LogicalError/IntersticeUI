@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -211,7 +211,7 @@ namespace GUI
         if (childRects.size() == 0)
             return 0;
 
-        //PROFILE_SCOPE("LayoutFlexbox::HorizontalSizing");
+        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::HorizontalSizing");
         const FlexProperties& flexLayout = parentRect.layoutStyle->layoutData.flex;
         switch (flexLayout.direction)
         {
@@ -275,7 +275,7 @@ namespace GUI
         if (childRects.empty())
             return 0;
         
-        //PROFILE_SCOPE("LayoutFlexbox::VerticalSizing");
+        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::VerticalSizing");
         const FlexProperties &flexLayout = parentRect.layoutStyle->layoutData.flex;
         switch (flexLayout.direction)
         {
@@ -331,7 +331,7 @@ namespace GUI
         if (childRects.empty())
             return;
 
-        //PROFILE_SCOPE("LayoutFlexbox::HorizontalPositioning");
+        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::HorizontalPositioning");
         const LayoutStyle* layoutStyle = parentRect.layoutStyle;
         const FlexProperties& flexLayout = layoutStyle->layoutData.flex;
         const IntRect& parentContentRect = parentRect.innerRect;
@@ -447,7 +447,7 @@ namespace GUI
             return {};
         }
 
-        //PROFILE_SCOPE("LayoutFlexbox::VerticalPositioning");
+        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::VerticalPositioning");
         const LayoutStyle* layoutStyle = parentRect.layoutStyle;
         const FlexProperties& flexLayout = layoutStyle->layoutData.flex;
         const IntRect& parentContentRect = parentRect.innerRect;

@@ -10,7 +10,7 @@
 #include <span>
 
 
-namespace GUI
+namespace interstice
 {
     // requires gui/windows/gui_window_flags.h
     enum class WindowFlags : uint32_t;
@@ -49,7 +49,7 @@ namespace GUI
         virtual OSWindowHandle GetWindowHandle() const = 0;
 
         virtual bool IsTransparent() const = 0;
-        virtual void RenderWindowFrame(GUI::GraphicsContext* graphicsContext, GUI::IntRect rect, bool resizing) = 0;
+        virtual void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) = 0;
         virtual void UpdateTransparentWindow(int2 /*screenPos*/) {}
 
         // The last rendered frame, BGRA8 with tightly packed rows; bgra holds width ×
@@ -148,4 +148,4 @@ namespace GUI
         std::function<void()> m_onWindowMoved;
 
     };
-} // namespace GUI
+} // namespace interstice

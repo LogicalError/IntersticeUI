@@ -16,7 +16,7 @@
 #include <cmath>
 #include <limits>
 
-namespace GUI
+namespace interstice
 {
     // Descendant X is final after horizontal positioning, so an X change made during vertical
     // positioning (e.g. FlipAvoidTarget placing a menu beside its trigger) shifts the subtree.
@@ -41,30 +41,30 @@ namespace GUI
         // See gui_layout_engine.h. The first VerticalSizingPass gives wrap-column containers
         // a rough height for HorizontalPositioning; the second uses final widths.
 
-        PROFILE_SCOPE("Layout");
+        INTERSTICE_PROFILE_SCOPE("Layout");
 
         {
-            //PROFILE_SCOPE("HorizontalSizingPass");
+            //INTERSTICE_PROFILE_SCOPE("HorizontalSizingPass");
             HorizontalSizingPass(storage);
         }
 
         {
-            //PROFILE_SCOPE("VerticalSizingPass");
+            //INTERSTICE_PROFILE_SCOPE("VerticalSizingPass");
             VerticalSizingPass(storage);
         }
 
         {
-            //PROFILE_SCOPE("HorizontalPositioningPass");
+            //INTERSTICE_PROFILE_SCOPE("HorizontalPositioningPass");
             HorizontalPositioningPass(osWindowManager, storage);
         }
 
         {
-            //PROFILE_SCOPE("VerticalSizingPass");
+            //INTERSTICE_PROFILE_SCOPE("VerticalSizingPass");
             VerticalSizingPass(storage);
         }
 
         {
-            //PROFILE_SCOPE("VerticalPositioningPass");
+            //INTERSTICE_PROFILE_SCOPE("VerticalPositioningPass");
             VerticalPositioningPass(osWindowManager, storage);
         }
     }
@@ -412,4 +412,4 @@ namespace GUI
         }
     }
 
-} // namespace GUI} // namespace GUI
+} // namespace interstice} // namespace interstice

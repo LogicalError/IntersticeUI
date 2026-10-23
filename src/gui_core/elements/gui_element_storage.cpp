@@ -6,7 +6,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/elements/gui_element_data_store.h>
 
-namespace GUI
+namespace interstice
 {
     [[nodiscard]] AddResult ElementStorage::Add(Element &&element, LayoutOverride&& constraints)
     {
@@ -543,4 +543,4 @@ namespace GUI
         return it == m_idIndex.end() ? ElementRef::Invalid() : it->second;
     }
 
-}//namespace GUI
+}//namespace interstice

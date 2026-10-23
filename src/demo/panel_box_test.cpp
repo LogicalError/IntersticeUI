@@ -5,7 +5,7 @@
 // so we can quickly see if they work
 //
 
-namespace GUI
+namespace interstice
 {
 
     void Application::RenderBoxTestPanel()

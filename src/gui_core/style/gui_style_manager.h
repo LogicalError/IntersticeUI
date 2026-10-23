@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace GUI
+namespace interstice
 {
 	// requires gui/style/gui_style_ref.h
     struct StyleRef;
@@ -66,11 +66,11 @@ namespace GUI
         const LayoutStyle*           GetLayoutStyle(LayoutStyleIndex index) const noexcept;
         const VisualColorStyle*      GetVisualColorStyle(VisualColorStyleIndex index) const noexcept;
         const VisualBoxStyleStates*  GetVisualBoxStyles(VisualBoxStyleIndex index) const noexcept;
-        const VisualBoxStyle*        GetVisualBoxStyle(VisualBoxStyleIndex index, GUI::ElementState state) const noexcept;
-        const VisualBoxStyle*        GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, GUI::ElementState state = GUI::ElementState::None) const noexcept;
-        const VisualTextStyle*       GetSelectionVisualTextStyle(VisualTextStyleIndex index, GUI::ElementState state = GUI::ElementState::None) const noexcept;
+        const VisualBoxStyle*        GetVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state) const noexcept;
+        const VisualBoxStyle*        GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state = interstice::ElementState::None) const noexcept;
+        const VisualTextStyle*       GetSelectionVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state = interstice::ElementState::None) const noexcept;
         const VisualTextStyleStates* GetVisualTextStyles(VisualTextStyleIndex index) const noexcept;
-        const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, GUI::ElementState state) const noexcept;
+        const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state) const noexcept;
 
         inline size_t LayoutStyleCount() const noexcept { return m_layoutStyles.size(); }
 
@@ -83,7 +83,7 @@ namespace GUI
 
         inline int32_t GetBorderBoxWidth(LayoutStyleIndex layoutStyleIndex) const noexcept
         {
-            const GUI::LayoutStyle* ls = GetLayoutStyle(layoutStyleIndex);
+            const interstice::LayoutStyle* ls = GetLayoutStyle(layoutStyleIndex);
             return ls == nullptr ? 0 : ls->GetBorderBoxWidth();
         }
 
@@ -99,9 +99,9 @@ namespace GUI
         void ResetVisualBoxStylesModified() noexcept { visualBoxStylesModified = false; }
 
 
-        std::span<const GUI::VisualBoxStyle> GetVisualBoxStylesSpan() noexcept { return m_visualBoxStyles; }
+        std::span<const interstice::VisualBoxStyle> GetVisualBoxStylesSpan() noexcept { return m_visualBoxStyles; }
 
-        std::span<const GUI::VisualColorStyle> GetVisualColorStylesSpan() noexcept { return m_visualColorStyles; }
+        std::span<const interstice::VisualColorStyle> GetVisualColorStylesSpan() noexcept { return m_visualColorStyles; }
 
         // Takes ownership of `incomingHandle`: released on a dedup hit, otherwise stored with the slot.
         VisualColorStyleIndex RegisterVisualColorStyle(const VisualColorStyle& s,

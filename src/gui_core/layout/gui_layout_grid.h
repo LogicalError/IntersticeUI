@@ -4,7 +4,7 @@
 #include <span>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     struct int2;
     struct IntRect;
@@ -93,4 +93,4 @@ namespace GUI
                                      GridPlacement* outPlacement = nullptr);
     };
 
-} // namespace GUI
+} // namespace interstice

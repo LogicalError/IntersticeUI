@@ -10,7 +10,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/input/gui_input_enums.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -135,4 +135,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

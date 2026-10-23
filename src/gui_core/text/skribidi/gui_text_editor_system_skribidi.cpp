@@ -28,23 +28,23 @@
 #define SKB_CURRENT_SELECTION_END \
     skb_text_position_t { .offset = INT32_MIN, .affinity = SKB_AFFINITY_NONE }
 
-namespace GUI
+namespace interstice
 {
     struct draw_selection_context_t
     {
         float x;
         float y;
-        GUI::VisualBoxStyleIndex styleIndex;
-        GUI::ElementState state;
-        GUI::SkribidiContext* ctx;
-        GUI::IntRect clipRect;
+        interstice::VisualBoxStyleIndex styleIndex;
+        interstice::ElementState state;
+        interstice::SkribidiContext* ctx;
+        interstice::IntRect clipRect;
     };
 
 
     static void draw_selection_rect(skb_rect2_t skb_rect, void* context)
     {
         draw_selection_context_t* draw_ctx = (draw_selection_context_t*)context;
-        GUI::SkribidiContext* ctx = draw_ctx->ctx;
+        interstice::SkribidiContext* ctx = draw_ctx->ctx;
 
         float x1 = draw_ctx->x + skb_rect.x;
         float y1 = draw_ctx->y + skb_rect.y;
@@ -56,14 +56,14 @@ namespace GUI
         x2 = ceil(x2);
         y2 = ceil(y2);
 
-        GUI::IntRect rect {};
+        interstice::IntRect rect {};
         rect.position = int2 { (int)x1, (int)y1 };
         rect.size = int2 { (int)(x2 - x1), (int)(y2 - y1) };
 
-        ctx->guiRenderer->RenderBox(rect, draw_ctx->clipRect, draw_ctx->styleIndex, draw_ctx->state | GUI::ElementState::Selection);
+        ctx->guiRenderer->RenderBox(rect, draw_ctx->clipRect, draw_ctx->styleIndex, draw_ctx->state | interstice::ElementState::Selection);
     }
 
-    void SkribidiTextSystem::ScreenToTextEditorLocalPoint(GUI::int2 screenSpace, const IntRect& textEditorInnerRect, GUI::float2& outLocal,
+    void SkribidiTextSystem::ScreenToTextEditorLocalPoint(interstice::int2 screenSpace, const IntRect& textEditorInnerRect, interstice::float2& outLocal,
                                                           const float3x2& screenToLayout)
     {
         const float2 layout = screenToLayout.TransformPoint(float2{ float(screenSpace.x), float(screenSpace.y) });
@@ -376,8 +376,8 @@ namespace GUI
             float x1 = ox + caret_info.x + caret_info.ascender * caret_info.slope;
             float y1 = oy + caret_info.y + caret_info.ascender;
 
-            GUI::int2 p0 = { (int)x0, (int)y0 };
-            GUI::int2 p1 = { (int)x1, (int)y1 };
+            interstice::int2 p0 = { (int)x0, (int)y0 };
+            interstice::int2 p1 = { (int)x1, (int)y1 };
 
             ctx->guiRenderer->RenderLine(p0, p1, clipRect,
                 LineStyle{ .colorStyleIndex = ctx->caretColorStyleIndex, .lineWidth = ctx->Px(2.0f) });
@@ -396,7 +396,7 @@ namespace GUI
                     activeWindowId = ctx->guiStateManager->Interaction().GetActiveWindowID();
                 }
 
-                GUI::float2 localMouse{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
+                interstice::float2 localMouse{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
                 if (TryGetActiveTextEditorLocalPoint(activeWindowId, screenMousePos, localMouse))
                 {
                     const skb_text_position_t hoverCaretPos = skb_editor_hit_test(editor, SKB_MOVEMENT_SELECTION, localMouse.x, localMouse.y);
@@ -407,8 +407,8 @@ namespace GUI
                     const float x1 = ox + hoverCaretInfo.x + hoverCaretInfo.ascender * hoverCaretInfo.slope;
                     const float y1 = oy + hoverCaretInfo.y + hoverCaretInfo.ascender;
 
-                    GUI::int2 p0 = { (int)x0, (int)y0 };
-                    GUI::int2 p1 = { (int)x1, (int)y1 };
+                    interstice::int2 p0 = { (int)x0, (int)y0 };
+                    interstice::int2 p1 = { (int)x1, (int)y1 };
 
                     ctx->guiRenderer->RenderLine(p0, p1, clipRect,
                         LineStyle{ .colorStyleIndex = ctx->caretColorStyleIndex, .lineWidth = ctx->Px(2.0f) });
@@ -819,4 +819,4 @@ namespace GUI
                         std::max(1, int32_t(std::ceil(maxX - minX))), std::max(1, int32_t(std::ceil(maxY - minY))) };
     }
 
-} // namespace GUI
+} // namespace interstice

@@ -3,7 +3,7 @@
 #include <chrono>
 
 
-namespace GUI
+namespace interstice
 {
     float2x2 float2x2::operator*(float2x2 const& m2)
     {
@@ -318,4 +318,4 @@ namespace GUI
     }
 
 
-}// namespace GUI
+}// namespace interstice

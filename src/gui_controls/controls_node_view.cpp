@@ -10,7 +10,7 @@
 // NodeView owns nodes, pan/zoom, z-order and drag state. Nothing is global.
 //
 
-namespace GUI
+namespace interstice
 {
 
     namespace
@@ -37,7 +37,7 @@ namespace GUI
         }
 
         // Pack a colour to an 8-bit-per-channel key, for the wire-colour cache.
-        uint32_t PackColor(const GUI::color4f& c)
+        uint32_t PackColor(const interstice::color4f& c)
         {
             auto q = [](float f) -> uint32_t
             {
@@ -129,14 +129,14 @@ namespace GUI
 
         // ---- Canvas: pan/zoom + focus capture. Everything below renders as
         //      children of this element under the view's content transform.
-        GUI::Element canvas
+        interstice::Element canvas
         {
             .id = canvasID,
             .eventHandler = [this, &view, canvasID](ElementEvent&& event)->bool
             {
                 switch (event.type)
                 {
-                    case GUI::EventType::MouseDown:
+                    case interstice::EventType::MouseDown:
                     {
                         if (!event.state.LeftDown() && !event.state.RightDown())
                             return false;
@@ -156,12 +156,12 @@ namespace GUI
                         }
                         return true;
                     }
-                    case GUI::EventType::MouseMove:
+                    case interstice::EventType::MouseMove:
                     {
                         if (event.state.RightDown())
                         {
                             this->guiStateManager.Interaction().SetFocusID(canvasID);
-                            GUI::float3x2 translate = GUI::float3x2::Translate(event.state.screenDelta);
+                            interstice::float3x2 translate = interstice::float3x2::Translate(event.state.screenDelta);
                             view.transform = translate * view.transform;
                             return true;
                         }
@@ -208,7 +208,7 @@ namespace GUI
                         }
                         return false;
                     }
-                    case GUI::EventType::MouseUp:
+                    case interstice::EventType::MouseUp:
                     {
                         if (view.marqueeActive && event.state.LeftReleased())
                         {
@@ -223,7 +223,7 @@ namespace GUI
                         }
                         return false;
                     }
-                    case GUI::EventType::MouseScroll:
+                    case interstice::EventType::MouseScroll:
                     {
                         if (event.state.scroll.y == 0) return false;
                         this->guiStateManager.Interaction().SetFocusID(canvasID);
@@ -242,7 +242,7 @@ namespace GUI
                         if (newScale < 0.1f || newScale > 1.0f)
                         {
                             scaleFactor = std::clamp(newScale, 0.1f, 1.0f);
-                            GUI::float3x2 clamp = GUI::float3x2::Scale((1.0f / currentScale) * scaleFactor);
+                            interstice::float3x2 clamp = interstice::float3x2::Scale((1.0f / currentScale) * scaleFactor);
                             view.transform = view.transform * clamp;
                         } else
                         {
@@ -250,22 +250,22 @@ namespace GUI
                             int2 translate = event.state.screenPos
                                            - event.rect->innerRect.position
                                            - int2{ innerSize.x / 2, innerSize.y / 2 };
-                            GUI::float3x2 zoomDelta = GUI::float3x2::Translate(translate)
-                                * GUI::float3x2::Scale(scaleFactor)
-                                * GUI::float3x2::Translate(-translate);
+                            interstice::float3x2 zoomDelta = interstice::float3x2::Translate(translate)
+                                * interstice::float3x2::Scale(scaleFactor)
+                                * interstice::float3x2::Translate(-translate);
                             view.transform = zoomDelta * view.transform;
                         }
                         return true;
                     }
-                    case GUI::EventType::KeyDown:
+                    case interstice::EventType::KeyDown:
                     {
-                        if (event.state.lastKey != GUI::KeyCode::Home || view.nodes.empty())
+                        if (event.state.lastKey != interstice::KeyCode::Home || view.nodes.empty())
                             return false;
 
                         // Home = frame all nodes: centre on their bounding box and
                         // zoom to fit it in the viewport (clamped to the usual range).
-                        GUI::int2 bmin = view.nodes[0].pos;
-                        GUI::int2 bmax = bmin;
+                        interstice::int2 bmin = view.nodes[0].pos;
+                        interstice::int2 bmax = bmin;
                         for (const auto& node : view.nodes)
                         {
                             bmin.x = std::min(bmin.x, node.pos.x);
@@ -275,16 +275,16 @@ namespace GUI
                         }
                         const int bw = std::max(1, bmax.x - bmin.x);
                         const int bh = std::max(1, bmax.y - bmin.y);
-                        const GUI::int2 bcenter{ (bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2 };
+                        const interstice::int2 bcenter{ (bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2 };
 
-                        const GUI::int2 vp = view.lastInnerSize;
+                        const interstice::int2 vp = view.lastInnerSize;
                         float s = (vp.x > 0 && vp.y > 0)
                                 ? std::min((float)vp.x / (float)bw, (float)vp.y / (float)bh) * 0.9f
                                 : 1.0f;
                         s = std::clamp(s, 0.1f, 1.0f);   // same clamp as wheel zoom
 
-                        view.transform = GUI::float3x2::Scale(s)
-                                       * GUI::float3x2::Translate(GUI::int2{ -bcenter.x, -bcenter.y });
+                        view.transform = interstice::float3x2::Scale(s)
+                                       * interstice::float3x2::Translate(interstice::int2{ -bcenter.x, -bcenter.y });
                         return true;
                     }
                 }
@@ -297,8 +297,8 @@ namespace GUI
 
         auto canvasRes = elementStorage.Add(std::move(canvas), LayoutOverride{}.Auto());
         VERIFY(canvasRes.status);
-        const GUI::float3x2 effective =
-            GUI::float3x2::Translate(GUI::float2{ (float)(view.lastInnerSize.x / 2),
+        const interstice::float3x2 effective =
+            interstice::float3x2::Translate(interstice::float2{ (float)(view.lastInnerSize.x / 2),
                                                   (float)(view.lastInnerSize.y / 2) })
             * view.transform;
         elementStorage.SetContentTransform(canvasRes.ref, effective);
@@ -329,7 +329,7 @@ namespace GUI
                 const uint32_t ckey = PackColor(cprop.socketColor);
                 if (view.wireColorStyles.find(ckey) == view.wireColorStyles.end())
                     view.wireColorStyles[ckey] =
-                        styleManager.RegisterColorStyle(GUI::ColorStyle::Create(cprop.socketColor));
+                        styleManager.RegisterColorStyle(interstice::ColorStyle::Create(cprop.socketColor));
             }
 
         // Socket box size, from the .node-socket CSS width; dot and border insets derive from it.
@@ -481,7 +481,7 @@ namespace GUI
             //  - INPUT, mid-drag: while the drag hovers it and the connection is allowed
             //    (IsDropTargetFor is live; GetDropTargetID is only set on release).
             //  - INPUT, at rest: on hover when it has a connection to drag out.
-            const GUI::color4f dotColor = view.nodes[n].properties[propIdx].socketColor;
+            const interstice::color4f dotColor = view.nodes[n].properties[propIdx].socketColor;
             const bool hovered = (guiStateManager.GetCurrentState(sockID) & ElementState::Hover) != ElementState::None;
             bool highlight;
             if (isOutput)
@@ -501,15 +501,15 @@ namespace GUI
             // Filled dot; the hit region is the full element rect.
             VERIFY(elementStorage.AddCustomDraw(res.ref,
                 [dotColor, highlight, kSocketSize, inset = styleManager.Px(2.0f), halo = styleManager.Px(6.0f),
-                 grow = styleManager.Px(1.0f)](GUI::CustomDrawContext& ctx)
+                 grow = styleManager.Px(1.0f)](interstice::CustomDrawContext& ctx)
                 {
                     const auto inner = ctx.ElementInnerRect();
                     // Socket centre. Rows are two grid cells tall and the socket is
                     // centred in the row, so this lands on the mid-row grid line.
-                    const GUI::float2 center{ inner.w * 0.5f, inner.h * 0.5f };
+                    const interstice::float2 center{ inner.w * 0.5f, inner.h * 0.5f };
                     const float r = (float)kSocketSize - inset;
                     if (highlight)   // soft white halo behind the dot
-                        ctx.RenderDot(center, r + halo, GUI::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
+                        ctx.RenderDot(center, r + halo, interstice::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
                     ctx.RenderDot(center, highlight ? r + grow : r, dotColor);
                 }));
 
@@ -525,7 +525,7 @@ namespace GUI
         int32_t socketInsetR = kSocketSize / 2;
         // .node bottom chrome; the last row gives it back so the bottom lands on the grid.
         int32_t nodeBottomChromeV = 0;
-        if (const GUI::LayoutStyle* nodeLS = styleManager.GetLayoutStyle(theme.nodeStyleRef.layoutStyleIndex))
+        if (const interstice::LayoutStyle* nodeLS = styleManager.GetLayoutStyle(theme.nodeStyleRef.layoutStyleIndex))
         {
             nodeTopChromeV    = nodeLS->borderWidths.top + nodeLS->padding.top;
             nodeBottomChromeV = nodeLS->borderWidths.bottom + nodeLS->padding.bottom;
@@ -585,8 +585,8 @@ namespace GUI
                                 if (!event.state.LeftDown()) return false;
                                 if (!(view.wireDrag.active && view.wireDrag.wireKey == wireKey &&
                                       view.wireDrag.role == role)) return false;
-                                const GUI::float2 d = view.transform.Inverse().TransformVector(
-                                    GUI::float2{ (float)(event.state.screenPos.x - view.wireDrag.startScreen.x),
+                                const interstice::float2 d = view.transform.Inverse().TransformVector(
+                                    interstice::float2{ (float)(event.state.screenPos.x - view.wireDrag.startScreen.x),
                                                  (float)(event.state.screenPos.y - view.wireDrag.startScreen.y) });
                                 const int32_t newVal = view.wireDrag.startValue +
                                     (vertical ? (int32_t)d.x : (int32_t)d.y);
@@ -744,7 +744,7 @@ namespace GUI
 
             // Cache the node's laid-out size for marquee hit-testing.
             VERIFY(elementStorage.AddPostLayout(outerRes.ref,
-                [&view, n](GUI::PostLayoutContext& ctx)
+                [&view, n](interstice::PostLayoutContext& ctx)
                 {
                     view.nodes[n].lastSize = ctx.ElementRect().size;
                 }));
@@ -767,7 +767,7 @@ namespace GUI
             header.textID = textSystem->RegisterText(headerID, node.title, header.styleRef, header.state);
             // Per-node-type header tint (Blender-style); alpha 0 keeps the CSS default.
             if (node.headerColor.a > 0.0f)
-                header.colorStyleIndex = styleManager.RegisterColorStyle(GUI::ColorStyle::Create(node.headerColor));
+                header.colorStyleIndex = styleManager.RegisterColorStyle(interstice::ColorStyle::Create(node.headerColor));
             // Top chrome + header == one row pitch (2*grid), so rows start on a grid line.
             const int32_t rowPitch = 2 * grid;
             LayoutOverride headerLayout = LayoutOverride{}.Auto();
@@ -900,7 +900,7 @@ namespace GUI
         }
 
         VERIFY(elementStorage.AddPostLayout(canvasRes.ref,
-            [&view](GUI::PostLayoutContext& ctx)
+            [&view](interstice::PostLayoutContext& ctx)
             {
                 view.lastInnerSize = ctx.ElementInnerRect().size;
             }));
@@ -911,41 +911,41 @@ namespace GUI
         // of the frontmost node — and is skipped with that node when it leaves view.
         // Endpoints are CANVAS_LAY, so they pan/zoom with the sockets and clip to the viewport.
         VERIFY(elementStorage.AddCustomDraw(canvasRes.ref,
-            [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs)](GUI::CustomDrawContext& ctx)
+            [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs)](interstice::CustomDrawContext& ctx)
             {
                 // Nodes are positioned relative to the canvas BORDER box, but this draw's
                 // origin is the CONTENT box; offset the grid by the difference.
-                const GUI::int2 gridOrigin = ctx.ElementRect().position - ctx.ElementInnerRect().position;
+                const interstice::int2 gridOrigin = ctx.ElementRect().position - ctx.ElementInnerRect().position;
 
                 // theme.nodeGridSize is the single pitch for node snap, wire snap and this
                 // grid. No subdivisions; density halves per zoom-out octave.
                 // Clamp to the content box: take the (window-local, pan/zoom-correct) ClipRect,
                 // deflate by the canvas chrome, and map into the current space.
-                const GUI::IntRect bbox = ctx.ElementRect();
-                const GUI::IntRect ibox = ctx.ElementInnerRect();
-                const GUI::IntRect clipWL = ctx.ClipRect();
-                const GUI::IntRect contentWL{
+                const interstice::IntRect bbox = ctx.ElementRect();
+                const interstice::IntRect ibox = ctx.ElementInnerRect();
+                const interstice::IntRect clipWL = ctx.ClipRect();
+                const interstice::IntRect contentWL{
                     clipWL.x + (ibox.Min(0) - bbox.Min(0)),
                     clipWL.y + (ibox.Min(1) - bbox.Min(1)),
                     clipWL.w - (ibox.Min(0) - bbox.Min(0)) - (bbox.Max(0) - ibox.Max(0)),
                     clipWL.h - (ibox.Min(1) - bbox.Min(1)) - (bbox.Max(1) - ibox.Max(1)) };
-                const GUI::float3x2 wlToCur = ctx.CurrentTransform().Inverse();
-                auto toCur = [&](GUI::int2 wl) {
-                    const GUI::float2 p = wlToCur.TransformPoint({ (float)wl.x, (float)wl.y });
-                    return GUI::int2{ (int)p.x, (int)p.y };
+                const interstice::float3x2 wlToCur = ctx.CurrentTransform().Inverse();
+                auto toCur = [&](interstice::int2 wl) {
+                    const interstice::float2 p = wlToCur.TransformPoint({ (float)wl.x, (float)wl.y });
+                    return interstice::int2{ (int)p.x, (int)p.y };
                 };
-                const GUI::int2 cc0 = toCur(contentWL.position);
-                const GUI::int2 cc1 = toCur({ contentWL.x + contentWL.w, contentWL.y + contentWL.h });
-                const GUI::IntRect content{
+                const interstice::int2 cc0 = toCur(contentWL.position);
+                const interstice::int2 cc1 = toCur({ contentWL.x + contentWL.w, contentWL.y + contentWL.h });
+                const interstice::IntRect content{
                     std::min(cc0.x, cc1.x), std::min(cc0.y, cc1.y),
                     std::max(cc0.x, cc1.x) - std::min(cc0.x, cc1.x),
                     std::max(cc0.y, cc1.y) - std::min(cc0.y, cc1.y) };
 
-                const GUI::LineStyle gridStyle{ .colorStyleIndex = theme.gridLineStyle, .lineWidth = styleManager.Px(1.f) };
+                const interstice::LineStyle gridStyle{ .colorStyleIndex = theme.gridLineStyle, .lineWidth = styleManager.Px(1.f) };
                 RenderCanvasGrid(ctx, theme.nodeGridSize, gridStyle, gridOrigin, content);
 
                 // Socket rects are laid out even for culled nodes. Local space = CANVAS_LAY.
-                auto socketCenter = [&](const ElementRef& ref) -> GUI::int2
+                auto socketCenter = [&](const ElementRef& ref) -> interstice::int2
                 {
                     // Socket centre in CANVAS_LAY. Rows are two grid cells tall, so
                     // this sits on a grid line — wires run the lattice to the dot.
@@ -954,12 +954,12 @@ namespace GUI
 
                 // Node body rect, in the same CANVAS_LAY space as socketCenter,
                 // so the router can keep wires clear of the source/target bodies.
-                auto nodeRect = [&](int idx) -> GUI::IntRect
+                auto nodeRect = [&](int idx) -> interstice::IntRect
                 {
                     return ctx.GetElementRect(nodeRefs[idx]);
                 };
 
-                const GUI::LineStyle ghostStyle { .colorStyleIndex = theme.lineGrayStyle,   .lineWidth = styleManager.Px(2.f), .dashSize = styleManager.Px(4.f) };
+                const interstice::LineStyle ghostStyle { .colorStyleIndex = theme.lineGrayStyle,   .lineWidth = styleManager.Px(2.f), .dashSize = styleManager.Px(4.f) };
 
                 // Draggable interior segments collected this frame (node.pos
                 // space) for next frame's grab elements. Replaces the cache at
@@ -1007,12 +1007,12 @@ namespace GUI
                                                           nodeRect(src.nodeIdx), nodeRect(n),
                                                           theme.nodeGridSize, gridOrigin, ov);
                         // Wire takes its source socket's colour (style cached above).
-                        const GUI::color4f srcColor =
+                        const interstice::color4f srcColor =
                             view.nodes[src.nodeIdx].properties[src.propIdx].socketColor;
-                        GUI::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
+                        interstice::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
                         if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
                             wireColorIdx = cit->second;
-                        const GUI::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f) };
+                        const interstice::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f) };
                         ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle);
 
                         // Cache draggable segments in node.pos space (subtract
@@ -1037,12 +1037,12 @@ namespace GUI
                         const int srcOutIdx = src.propIdx * 2 + 1;
                         if (srcOutIdx >= 0 && srcOutIdx < (int)srcRefs.size() && srcRefs[srcOutIdx].IsValid())
                         {
-                            const GUI::int2 outPt = socketCenter(srcRefs[srcOutIdx]);
+                            const interstice::int2 outPt = socketCenter(srcRefs[srcOutIdx]);
                             const int32_t grid = theme.nodeGridSize;
                             // currentScreen is a screen-space input; ScreenToCurrent brings it
                             // into CANVAS_LAY, then snap to the grid so the dragged connector
                             // lands on grid lines just like a committed wire.
-                            GUI::int2 cursorLay = ctx.ScreenToCurrent(view.pendingConnection.currentScreen);
+                            interstice::int2 cursorLay = ctx.ScreenToCurrent(view.pendingConnection.currentScreen);
                             if (grid > 0)
                                 cursorLay = { GridLineNearest(cursorLay.x, gridOrigin.x, grid),
                                               GridLineNearest(cursorLay.y, gridOrigin.y, grid) };
@@ -1050,7 +1050,7 @@ namespace GUI
                             // grid line to the right, then elbow to the (snapped) cursor.
                             const int32_t exitX = (grid > 0)
                                 ? GridLineGE(outPt.x + grid, gridOrigin.x, grid) : outPt.x;
-                            const GUI::int2 ghost[] = {
+                            const interstice::int2 ghost[] = {
                                 outPt, { exitX, outPt.y }, { exitX, cursorLay.y }, cursorLay };
                             ctx.RenderPolyline(ghost, /*closed=*/false, ghostStyle);
                         }
@@ -1062,7 +1062,7 @@ namespace GUI
 
         // Marquee rectangle — drawn after the nodes so it sits on top of them.
         VERIFY(elementStorage.AddCustomDrawAfter(canvasRes.ref,
-            [this, &view](GUI::CustomDrawContext& ctx)
+            [this, &view](interstice::CustomDrawContext& ctx)
             {
                 if (!view.marqueeActive || !view.marqueePastThreshold) return;
 
@@ -1078,7 +1078,7 @@ namespace GUI
                 const IntRect marqueeRectLay{ x0, y0, x1 - x0, y1 - y0 };
 
                 ctx.RenderQuad(marqueeRectLay, theme.marqueeFillColorStyle, 0.0f);
-                const GUI::LineStyle border{ .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = styleManager.Px(1.f) };
+                const interstice::LineStyle border{ .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = styleManager.Px(1.f) };
                 ctx.RenderLine({ x0, y0 }, { x1, y0 }, border);
                 ctx.RenderLine({ x1, y0 }, { x1, y1 }, border);
                 ctx.RenderLine({ x1, y1 }, { x0, y1 }, border);

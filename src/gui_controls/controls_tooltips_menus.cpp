@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace GUI
+namespace interstice
 {
 
 
@@ -32,7 +32,7 @@ namespace GUI
             }
 
             auto textID = idManager.AllocateDynamicID();
-            RegisterElement(GUI::Element{ .id = textID, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
+            RegisterElement(interstice::Element{ .id = textID, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
 
             EndWindow();
         }
@@ -57,7 +57,7 @@ namespace GUI
                 elementStorage.GetElementUnsafe(winRef).flags |= ElementFlags::NoInput;
 
             auto contentID = idManager.AllocateDynamicID();
-            RegisterElement(GUI::Element{ .id = contentID, .iconID = icon, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
+            RegisterElement(interstice::Element{ .id = contentID, .iconID = icon, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
             EndWindow();
         }
     }
@@ -104,7 +104,7 @@ namespace GUI
             bool hasRightClick = false;
             for (const auto& e : inputManager->GetRecordedEvents())
             {
-                if (e.type == GUI::EventType::MouseDown && e.state.RightPressed())
+                if (e.type == interstice::EventType::MouseDown && e.state.RightPressed())
                 {
                     hasRightClick = true;
                     break;

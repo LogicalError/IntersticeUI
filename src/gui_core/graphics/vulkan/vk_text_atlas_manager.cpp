@@ -8,12 +8,12 @@
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 #include <gui_core/graphics/vulkan/vk_graphics_context.h>
 
-static constexpr GUI::Diagnostics::LogCategory kLogVulkan = GUI::Diagnostics::MakeLogCategory("vulkan");
+static constexpr interstice::Diagnostics::LogCategory kLogVulkan = interstice::Diagnostics::MakeLogCategory("vulkan");
 
-bool Vulkan::VulkanTextAtlasManager::Initialize(GUI::GraphicsContext* inGraphicsContext, GUI::ImageSet* inImageSet)
+bool interstice::vulkan::VulkanTextAtlasManager::Initialize(interstice::GraphicsContext* inGraphicsContext, interstice::ImageSet* inImageSet)
 {
-	this->graphicsContext = static_cast<Vulkan::VulkanGraphicsContext*>(inGraphicsContext);
-	this->imageSet        = static_cast<Vulkan::VulkanImageSet*>(inImageSet);
+	this->graphicsContext = static_cast<interstice::vulkan::VulkanGraphicsContext*>(inGraphicsContext);
+	this->imageSet        = static_cast<interstice::vulkan::VulkanImageSet*>(inImageSet);
 
 	graphicsContext->deviceContext.mainDeletionQueue.
 		push_function([this]()
@@ -33,7 +33,7 @@ bool Vulkan::VulkanTextAtlasManager::Initialize(GUI::GraphicsContext* inGraphics
     return true;
 }
 
-GUI::TextureIndex Vulkan::VulkanTextAtlasManager::CreateTexture(const uint8_t* imageData, GUI::uint2 imageSize, uint8_t bpp)
+interstice::TextureIndex interstice::vulkan::VulkanTextAtlasManager::CreateTexture(const uint8_t* imageData, interstice::uint2 imageSize, uint8_t bpp)
 {
 	int tex_index = -1;
 	for (int i = 0; i < (int)fontTextures.size(); i++)
@@ -47,28 +47,28 @@ GUI::TextureIndex Vulkan::VulkanTextAtlasManager::CreateTexture(const uint8_t* i
 	if (tex_index == -1)
 	{
 		tex_index = (int)fontTextures.size();
-		fontTextures.emplace_back(Vulkan::FontTexture {});
+		fontTextures.emplace_back(interstice::vulkan::FontTexture {});
 	}
 
-	Vulkan::FontTexture* texture = &fontTextures[tex_index];
+	interstice::vulkan::FontTexture* texture = &fontTextures[tex_index];
 	if (texture->image != nullptr)
 	{
-		graphicsContext->deviceContext.DestroyImageAtEnd(texture->image, GUI::DeviceScope::Frame);
+		graphicsContext->deviceContext.DestroyImageAtEnd(texture->image, interstice::DeviceScope::Frame);
 	}
 
 	assert(bpp == 1 || bpp == 4);
 	// Glyphs draw at their rasterized size, so pages need no mip chain.
 	auto image = graphicsContext->deviceContext.CreateImage(imageData, imageSize,
-															 (bpp == 1) ? GUI::ImageFormat::R8 : GUI::ImageFormat::R8G8B8A8,
-															 GUI::Sampler::LinearClampToEdge);
-	Vulkan::VulkanImage* vulkanImage = (Vulkan::VulkanImage*)image;
+															 (bpp == 1) ? interstice::ImageFormat::R8 : interstice::ImageFormat::R8G8B8A8,
+															 interstice::Sampler::LinearClampToEdge);
+	interstice::vulkan::VulkanImage* vulkanImage = (interstice::vulkan::VulkanImage*)image;
 	VkDescriptorImageInfo descriptorInfo =
 	{
 		.sampler = vulkanImage->imageSampler,
 		.imageView = vulkanImage->imageView,
 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
-	*texture = Vulkan::FontTexture
+	*texture = interstice::vulkan::FontTexture
 	{
 		.descriptorInfo = descriptorInfo,
 		.image = image,
@@ -79,44 +79,44 @@ GUI::TextureIndex Vulkan::VulkanTextAtlasManager::CreateTexture(const uint8_t* i
 	};
 
 	int textureIndex = tex_index + 1;
-	return GUI::TextureIndex(textureIndex);
+	return interstice::TextureIndex(textureIndex);
 }
 
-void Vulkan::VulkanTextAtlasManager::UpdateTexture(GUI::TextureIndex textureIndex, const uint8_t* imageData, GUI::uint2 imageSize)
+void interstice::vulkan::VulkanTextAtlasManager::UpdateTexture(interstice::TextureIndex textureIndex, const uint8_t* imageData, interstice::uint2 imageSize)
 {
-	if (textureIndex == GUI::TextureIndex::Invalid)
+	if (textureIndex == interstice::TextureIndex::Invalid)
 	{
-		LOG_ERROR(kLogVulkan, "UpdateTexture: invalid textureIndex");
+		INTERSTICE_LOG_ERROR(kLogVulkan, "UpdateTexture: invalid textureIndex");
 		return;
 	}
 
 	int tex_index = ((uint32_t)textureIndex) - 1;
 	if (tex_index >= fontTextures.size())
 	{
-		LOG_ERROR(kLogVulkan, "UpdateTexture: texture out of range");
+		INTERSTICE_LOG_ERROR(kLogVulkan, "UpdateTexture: texture out of range");
 		return;
 	}
 
 	auto* texture = &fontTextures[tex_index];
 	if (texture->image != nullptr)
 	{
-		graphicsContext->deviceContext.DestroyImageAtEnd(texture->image, GUI::DeviceScope::Frame);
+		graphicsContext->deviceContext.DestroyImageAtEnd(texture->image, interstice::DeviceScope::Frame);
 	}
     auto bpp = texture->bpp;
 
 	assert(bpp == 1 || bpp == 4);
 	// Glyphs draw at their rasterized size, so pages need no mip chain.
 	auto image = graphicsContext->deviceContext.CreateImage(imageData, imageSize,
-															 (bpp == 1) ? GUI::ImageFormat::R8 : GUI::ImageFormat::R8G8B8A8,
-															 GUI::Sampler::LinearClampToEdge);
-	Vulkan::VulkanImage* vulkanImage = (Vulkan::VulkanImage*)image;
+															 (bpp == 1) ? interstice::ImageFormat::R8 : interstice::ImageFormat::R8G8B8A8,
+															 interstice::Sampler::LinearClampToEdge);
+	interstice::vulkan::VulkanImage* vulkanImage = (interstice::vulkan::VulkanImage*)image;
 	VkDescriptorImageInfo descriptorInfo =
 	{
 		.sampler = vulkanImage->imageSampler,
 		.imageView = vulkanImage->imageView,
 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
-	*texture = Vulkan::FontTexture
+	*texture = interstice::vulkan::FontTexture
 	{
 		.descriptorInfo = descriptorInfo,
 		.image = image,
@@ -127,40 +127,40 @@ void Vulkan::VulkanTextAtlasManager::UpdateTexture(GUI::TextureIndex textureInde
 	};
 }
 
-GUI::ImageIndex Vulkan::VulkanTextAtlasManager::GetImageIndex(GUI::TextureIndex textureIndex)
+interstice::ImageIndex interstice::vulkan::VulkanTextAtlasManager::GetImageIndex(interstice::TextureIndex textureIndex)
 {
-	if (textureIndex == GUI::TextureIndex::Invalid)
+	if (textureIndex == interstice::TextureIndex::Invalid)
 	{
-		LOG_ERROR(kLogVulkan, "GetImageIndex: invalid textureIndex");
-		return GUI::ImageIndex::Invalid;
+		INTERSTICE_LOG_ERROR(kLogVulkan, "GetImageIndex: invalid textureIndex");
+		return interstice::ImageIndex::Invalid;
 	}
 	uint32_t tex_index = ((uint32_t)textureIndex) - 1;
 	if (tex_index >= fontTextures.size())
 	{
-		LOG_ERROR(kLogVulkan, "GetImageIndex: text_id out of range");
-		return GUI::ImageIndex::Invalid;
+		INTERSTICE_LOG_ERROR(kLogVulkan, "GetImageIndex: text_id out of range");
+		return interstice::ImageIndex::Invalid;
 	}
 
 	auto& image_index = fontTextures[tex_index].imageIndex;
 	if (!fontTextures[tex_index].used)
 	{
-		LOG_ERROR(kLogVulkan, "GetImageIndex: font texture not used");
-		return GUI::ImageIndex::Invalid;
+		INTERSTICE_LOG_ERROR(kLogVulkan, "GetImageIndex: font texture not used");
+		return interstice::ImageIndex::Invalid;
 	}
 
-	if (image_index == GUI::ImageIndex::Invalid)
+	if (image_index == interstice::ImageIndex::Invalid)
 	{
 		image_index = imageSet->ReserveIndex();
 	}
 	return image_index;
 }
 
-void Vulkan::VulkanTextAtlasManager::SyncTextureIndices()
+void interstice::vulkan::VulkanTextAtlasManager::SyncTextureIndices()
 {
 	for (size_t f = 0; f < fontTextures.size(); ++f)
 	{
-		Vulkan::FontTexture& fontTexture = fontTextures[f];
-		if (fontTexture.imageIndex == GUI::ImageIndex::Invalid)
+		interstice::vulkan::FontTexture& fontTexture = fontTextures[f];
+		if (fontTexture.imageIndex == interstice::ImageIndex::Invalid)
 		{
 			fontTexture.imageIndex = imageSet->ReserveIndex();
 		}

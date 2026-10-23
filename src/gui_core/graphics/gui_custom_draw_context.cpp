@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
     // subClip arrives in the current space; m_clipRect is in window-local SCREEN space.
     // Map the subClip corners through the current space → window-local transform and take
@@ -242,4 +242,4 @@ namespace GUI
         return rect->innerRect.size;
     }
 
-} // namespace GUI
+} // namespace interstice

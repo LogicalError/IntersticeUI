@@ -23,7 +23,7 @@
 // Table widget data model: column descriptors, the user-owned persistent
 // TableState, drag/drop state and the per-emit TableEmit.
 
-namespace GUI
+namespace interstice
 {
     // ---- Table widget: row × column data grid ----
     //
@@ -87,13 +87,13 @@ namespace GUI
 
         // Widest cell content seen (text + tree prefix), for double-click-to-fit.
         int32_t          _maxContentWidth = 0;
-        GUI::ID          _bodyID          = GUI::ID::Invalid();
+        interstice::ID          _bodyID          = interstice::ID::Invalid();
         // Shared by the header and body copies of the boundary after this column, so their
         // hover state syncs. Unused for the last column.
-        GUI::ID          _sizerID         = GUI::ID::Invalid();
+        interstice::ID          _sizerID         = interstice::ID::Invalid();
         // Ranged, so it doesn't change when the dragged column is emitted last.
-        GUI::ID          _headerCellID    = GUI::ID::Invalid();
-        GUI::ElementRef  _headerRef       = GUI::ElementRef::Invalid();
+        interstice::ID          _headerCellID    = interstice::ID::Invalid();
+        interstice::ElementRef  _headerRef       = interstice::ElementRef::Invalid();
         // Applied to every element of this column during a reorder drag.
         int16_t          _dragOffsetX     = 0;
         // Resolved once per frame.
@@ -111,8 +111,8 @@ namespace GUI
     // MouseUp applies the selection unless a drag promoted in between.
     struct PendingRowClick
     {
-        GUI::ID          rowID        = GUI::ID::Invalid();
-        GUI::KeyModifier mods         = GUI::KeyModifier::None;
+        interstice::ID          rowID        = interstice::ID::Invalid();
+        interstice::KeyModifier mods         = interstice::KeyModifier::None;
         bool             dragPromoted = false;
     };
 
@@ -127,12 +127,12 @@ namespace GUI
             std::string  renameSeed;                     // original label, seeds rename Start()
             bool         hasChildren = false;            // drives drag-drop zone shape (thirds vs halves)
         };
-        using TreeRowMap = std::unordered_map<GUI::ID, TreeRowInfo>;
+        using TreeRowMap = std::unordered_map<interstice::ID, TreeRowInfo>;
 
         // Cell-mode click dispatch: cell-element ID → (rowID, columnIdx).
         // Populated only when selectionMode == Cell.
-        struct CellLookupEntry { GUI::ID rowID; int columnIdx; };
-        using CellLookupMap = std::unordered_map<GUI::ID, CellLookupEntry>;
+        struct CellLookupEntry { interstice::ID rowID; int columnIdx; };
+        using CellLookupMap = std::unordered_map<interstice::ID, CellLookupEntry>;
 
         using ReorderColumnsFn = std::function<void(int fromCol, int toCol)>;
 
@@ -170,18 +170,18 @@ namespace GUI
         std::vector<int32_t>  columnWidths;                       // persisted per-column widths, CSS pixels (follow column reorders)
         MultiSelectState*     multiSelect      = nullptr;
         ItemDragDropConfig*   rowDragDrop      = nullptr;         // when non-null & payloadType != 0, rows become draggable + drop targets
-        GUI::ID               selectedRowID    = GUI::ID::Invalid();
+        interstice::ID               selectedRowID    = interstice::ID::Invalid();
         // Stick to the bottom: start at (and select) the last row, and follow new rows while
         // at the bottom. Scrolling up detaches; scrolling back down re-attaches.
         bool                  followTail       = false;
-        GUI::ID               _bodyID          = GUI::ID::Invalid();   // canonical scroll-Y
-        GUI::ID               _horzScrollbarID = GUI::ID::Invalid();
-        GUI::ID               _vertScrollbarID = GUI::ID::Invalid();
+        interstice::ID               _bodyID          = interstice::ID::Invalid();   // canonical scroll-Y
+        interstice::ID               _horzScrollbarID = interstice::ID::Invalid();
+        interstice::ID               _vertScrollbarID = interstice::ID::Invalid();
         int32_t               _lastViewportH   = 0;               // sampled by render-time draw
         int32_t               _lastViewportW   = 0;
         // Written by VirtualTable each frame, so keyboard navigation can address and
         // scroll to rows outside the virtualized window.
-        GUI::ID               _rowsRangeID     = GUI::ID::Invalid();
+        interstice::ID               _rowsRangeID     = interstice::ID::Invalid();
         int                   _totalRowCount   = 0;
         int32_t               _actualRowHeight = 0;
         // Set at render time when any section overflows; next frame emits a scrollbar only
@@ -206,7 +206,7 @@ namespace GUI
         std::unique_ptr<CellLookupMap> _cellLookup;                // populated in cell mode
         LazyReorderFn                  onReorderColumns;           // headers become drag-to-reorder when set
         // Replaces the default double-click branch toggle (the chevron still toggles).
-        std::function<void(GUI::ID rowID)> onRowDoubleClick;
+        std::function<void(interstice::ID rowID)> onRowDoubleClick;
 
         // Per-table gesture state, so tables don't share click detection.
         DoubleClickTracker _rowClickTracker;
@@ -223,27 +223,27 @@ namespace GUI
         bool                              _rowOrderDirty    = false;
 
         // The first section body inline, others on the heap.
-        GUI::ID                                                          _firstSectionBodyID = GUI::ID::Invalid();
-        std::unique_ptr<std::array<GUI::ID, kMaxTableSections - 1>>      _extraSectionBodyIDs;
+        interstice::ID                                                          _firstSectionBodyID = interstice::ID::Invalid();
+        std::unique_ptr<std::array<interstice::ID, kMaxTableSections - 1>>      _extraSectionBodyIDs;
         int8_t                                                           _sectionCount = 0;
         // Header cell refs of the current frame, by column. Column-reorder handlers read these
         // when they run, after the caller's column array may be gone.
-        std::vector<GUI::ElementRef>                                     _headerRefs;
+        std::vector<interstice::ElementRef>                                     _headerRefs;
 
         // ---- Accessors ----------------------------------------------
         // Invalid when out of range.
-        GUI::ID SectionBodyID(int i) const noexcept
+        interstice::ID SectionBodyID(int i) const noexcept
         {
             if (i == 0) return _firstSectionBodyID;
-            if (i < 1 || i >= kMaxTableSections || !_extraSectionBodyIDs) return GUI::ID::Invalid();
+            if (i < 1 || i >= kMaxTableSections || !_extraSectionBodyIDs) return interstice::ID::Invalid();
             return (*_extraSectionBodyIDs)[size_t(i - 1)];
         }
-        void SetSectionBodyID(int i, GUI::ID id)
+        void SetSectionBodyID(int i, interstice::ID id)
         {
             assert(i >= 0 && i < kMaxTableSections);
             if (i == 0) { _firstSectionBodyID = id; return; }
             if (!_extraSectionBodyIDs)
-                _extraSectionBodyIDs = std::make_unique<std::array<GUI::ID, kMaxTableSections - 1>>();
+                _extraSectionBodyIDs = std::make_unique<std::array<interstice::ID, kMaxTableSections - 1>>();
             (*_extraSectionBodyIDs)[size_t(i - 1)] = id;
         }
 
@@ -261,18 +261,18 @@ namespace GUI
 
         // A row's sub-range ID, usable outside a frame (unlike IDManager::GetSubID).
         // Invalid when out of range.
-        GUI::ID RowIDForIndex(int rowIdx) const noexcept
+        interstice::ID RowIDForIndex(int rowIdx) const noexcept
         {
-            if (rowIdx >= _totalRowCount) return GUI::ID::Invalid();
+            if (rowIdx >= _totalRowCount) return interstice::ID::Invalid();
             return RowIDInRange(rowIdx);
         }
 
         // As RowIDForIndex, without the bound on last frame's row count.
-        GUI::ID RowIDInRange(int rowIdx) const noexcept
+        interstice::ID RowIDInRange(int rowIdx) const noexcept
         {
-            if (_rowsRangeID == GUI::ID::Invalid() || rowIdx < 0) return GUI::ID::Invalid();
-            GUI::ID id{};
-            id.value.subRangeParts.mode = GUI::IDMode::SubRange;
+            if (_rowsRangeID == interstice::ID::Invalid() || rowIdx < 0) return interstice::ID::Invalid();
+            interstice::ID id{};
+            id.value.subRangeParts.mode = interstice::IDMode::SubRange;
             id.value.subRangeParts.index = static_cast<uint64_t>(rowIdx);
             id.value.subRangeParts.parentHashValue = _rowsRangeID.value.rangedParts.hashValue;
             return id;
@@ -300,13 +300,13 @@ namespace GUI
         void InvalidateRowOrder() noexcept { _rowOrderDirty = true; }
 
         // nullptr when not found.
-        const TreeRowInfo* FindTreeRow(GUI::ID id) const noexcept
+        const TreeRowInfo* FindTreeRow(interstice::ID id) const noexcept
         {
             if (!_treeRowInfo) return nullptr;
             auto it = _treeRowInfo->find(id);
             return (it == _treeRowInfo->end()) ? nullptr : &it->second;
         }
-        const CellLookupEntry* FindCell(GUI::ID id) const noexcept
+        const CellLookupEntry* FindCell(interstice::ID id) const noexcept
         {
             if (!_cellLookup) return nullptr;
             auto it = _cellLookup->find(id);
@@ -320,26 +320,26 @@ namespace GUI
     // column gets a Relative() offset. On drop, onReorderColumns fires.
     struct ColumnDragState {
         bool                      active    = false; // committed past click threshold
-        GUI::ID                   tableID   = GUI::ID::Invalid();
+        interstice::ID                   tableID   = interstice::ID::Invalid();
         int                       fromCol   = -1;
         int                       toCol     = -1;
-        GUI::int2                 startPos{};
-        GUI::int2                 offset{};
+        interstice::int2                 startPos{};
+        interstice::int2                 offset{};
         // Header rects at drag start (screen space), for edge-crossing.
-        std::vector<GUI::IntRect> headerRects;
+        std::vector<interstice::IntRect> headerRects;
         // Inclusive target range, bounded by locked columns.
         int                       minTarget = 0;
         int                       maxTarget = 0;
         // Scroll-X at drag start, to correct the cursor for mid-drag scrolling.
         // Drags never leave their section.
-        GUI::ID                   sectionBodyID = GUI::ID::Invalid();
+        interstice::ID                   sectionBodyID = interstice::ID::Invalid();
         int32_t                   startScrollX  = 0;
     };
 
     // ---- Persistent tree reorder drop state (survives across frames) ----
     // Drives the drop indicator line; targetDepth indents it so After and Inside differ visibly.
     struct TreeDropState {
-        GUI::ID           targetRowID  = GUI::ID::Invalid();
+        interstice::ID           targetRowID  = interstice::ID::Invalid();
         TreeDropPosition  position     = TreeDropPosition::None;
         int               targetDepth  = 0;
     };
@@ -372,20 +372,20 @@ namespace GUI
         // Body text cell style; invalid falls back to theme.tableCellStyleRef.
         StyleRef cellStyleRef        = {};
 
-        GUI::EventHandler            sharedRowHandler;
-        GUI::EventHandler            sharedCellHandler;
+        interstice::EventHandler            sharedRowHandler;
+        interstice::EventHandler            sharedCellHandler;
 
         // Current position, read by Cell()/TreeCell().
         int               currentCol     = 0;
-        GUI::ID           currentRowID   = GUI::ID::Invalid();
-        GUI::EventHandler currentRowHandler;
+        interstice::ID           currentRowID   = interstice::ID::Invalid();
+        interstice::EventHandler currentRowHandler;
         int               directGridRow  = 0;
         int               directColStart = 0;
 
         // Recording mode (BeginTable/Cell flow): cells are stored in columnCells[column][row]
         // and replayed by EndTable. An empty slot means the row skipped that column.
         bool                isRecording = false;
-        GUI::ID             containerID = GUI::ID::Invalid();
+        interstice::ID             containerID = interstice::ID::Invalid();
         StyleRef            style       = {};
         LayoutOverride      constraints = {};
         int                 rowCount    = 0;

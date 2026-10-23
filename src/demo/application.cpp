@@ -16,9 +16,9 @@
 #include <sstream>
 #include <string>
 
-static constexpr GUI::Diagnostics::LogCategory kLogDemo = GUI::Diagnostics::MakeLogCategory("demo");
+static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
 
-namespace GUI
+namespace interstice
 {
 
     bool Application::Initialize(const InitializeOptions& options)
@@ -43,7 +43,7 @@ namespace GUI
         // A theme reload wipes styleManager, so every demo StyleRef is stale and
         // gets re-registered. Icons and textures survive the reload.
         boxStyleRefs.clear();
-        animatedHueStyle = GUI::VisualColorStyleIndex::Invalid;
+        animatedHueStyle = interstice::VisualColorStyleIndex::Invalid;
         InitializeDemoStyles();
         ApplyNodeHeaderTints();
     }
@@ -178,7 +178,7 @@ namespace GUI
                     Button(showGrid ? demo.gridOnIcon : demo.gridOffIcon, [this]() { showGrid = !showGrid; });
 					SetTooltip(showGrid ? "Grid on" : "Grid off");
 
-                    Button("FPS 60",    []() { LOG_INFO(kLogDemo, "Toolbar: FPS"); });
+                    Button("FPS 60",    []() { INTERSTICE_LOG_INFO(kLogDemo, "Toolbar: FPS"); });
                 }
             });
 
@@ -202,7 +202,7 @@ namespace GUI
             src.erase(src.begin() + from);
             toolbars.sides[(int)targetSide].push_back(std::move(item));
         };
-        toolbarCallbacks.onTearOff = [this](ToolbarSide srcSide, int from, GUI::int2 mousePos)
+        toolbarCallbacks.onTearOff = [this](ToolbarSide srcSide, int from, interstice::int2 mousePos)
         {
             auto& src = toolbars.sides[(int)srcSide];
             if (from < 0 || from >= (int)src.size()) return;
@@ -243,25 +243,25 @@ namespace GUI
         nodeViewEditMode = commandManager.RegisterEditMode("NodeView");
         commandManager.RegisterCommand(
             nodeViewEditMode,
-            GUI::KeyCode::Home,
-            GUI::KeyModifier::None,
+            interstice::KeyCode::Home,
+            interstice::KeyModifier::None,
             [this]()
             {
-                LOG_INFO(kLogDemo, "Reset view");
-                demo.nodeView.transform = GUI::float3x2::Identity();
+                INTERSTICE_LOG_INFO(kLogDemo, "Reset view");
+                demo.nodeView.transform = interstice::float3x2::Identity();
             },
             "Reset view"
         );
 
         // Example edit mode registration
-        [[maybe_unused]] GUI::EditMode sculptMode = commandManager.RegisterEditMode("Sculpt");
+        [[maybe_unused]] interstice::EditMode sculptMode = commandManager.RegisterEditMode("Sculpt");
 
         // Example: Ctrl+D fires in every edit mode (Default fallback)
         commandManager.RegisterCommand(
             demo.duplicateIcon,
-            GUI::KeyCode::KeyD,
-            GUI::KeyModifier::Control,
-            []() { LOG_INFO(kLogDemo, "Command: Duplicate"); },
+            interstice::KeyCode::KeyD,
+            interstice::KeyModifier::Control,
+            []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Duplicate"); },
             "Duplicate"
         );
 
@@ -270,56 +270,56 @@ namespace GUI
         // Callbacks just print for now. A command may have no shortcut key (still
         // listed in the panel, where the user can bind one).
         auto& cmds = commandManager;
-        demo.cmdNew    = cmds.RegisterCommand(GUI::EditMode::Default, demo.newIcon,      GUI::KeyCode::KeyN, GUI::KeyModifier::Control,                           []() { LOG_INFO(kLogDemo, "Command: New"); },     "New");
-        demo.cmdOpen   = cmds.RegisterCommand(GUI::EditMode::Default, demo.openFileIcon, GUI::KeyCode::KeyO, GUI::KeyModifier::Control,                           []() { LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
-        demo.cmdSave   = cmds.RegisterCommand(GUI::EditMode::Default, demo.saveIcon,     GUI::KeyCode::KeyS, GUI::KeyModifier::Control,                           []() { LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
-        demo.cmdSaveAs = cmds.RegisterCommand(GUI::EditMode::Default, demo.saveAsIcon,   GUI::KeyCode::KeyS, GUI::KeyModifier::Control | GUI::KeyModifier::Shift, []() { LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
-        demo.cmdExit   = cmds.RegisterCommand(GUI::EditMode::Default, demo.closeIcon,    GUI::KeyCode::F4,   GUI::KeyModifier::Alt,                               [this]() { applicationQuit = true; },   "Exit");
+        demo.cmdNew    = cmds.RegisterCommand(interstice::EditMode::Default, demo.newIcon,      interstice::KeyCode::KeyN, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: New"); },     "New");
+        demo.cmdOpen   = cmds.RegisterCommand(interstice::EditMode::Default, demo.openFileIcon, interstice::KeyCode::KeyO, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
+        demo.cmdSave   = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveIcon,     interstice::KeyCode::KeyS, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
+        demo.cmdSaveAs = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
+        demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { applicationQuit = true; },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(GUI::EditMode::Default, demo.undoIcon,  GUI::KeyCode::KeyZ, GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: Undo"); },  "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(GUI::EditMode::Default, demo.redoIcon,  GUI::KeyCode::KeyY, GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: Redo"); },  "Redo");
-        demo.cmdCut    = cmds.RegisterCommand(GUI::EditMode::Default, demo.cutIcon,   GUI::KeyCode::KeyX, GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
-        demo.cmdCopy   = cmds.RegisterCommand(GUI::EditMode::Default, demo.copyIcon,  GUI::KeyCode::KeyC, GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
-        demo.cmdPaste  = cmds.RegisterCommand(GUI::EditMode::Default, demo.pasteIcon, GUI::KeyCode::KeyV, GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
+        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Undo"); },  "Undo");
+        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Redo"); },  "Redo");
+        demo.cmdCut    = cmds.RegisterCommand(interstice::EditMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
+        demo.cmdCopy   = cmds.RegisterCommand(interstice::EditMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
+        demo.cmdPaste  = cmds.RegisterCommand(interstice::EditMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
 
         // Commands shown on a menu but with NO shortcut key (the user can assign
         // one in the Shortcuts panel).
-        demo.cmdDocumentation = cmds.RegisterCommand(GUI::EditMode::Default, GUI::IconID::Invalid, []() { LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
-        demo.cmdAbout         = cmds.RegisterCommand(GUI::EditMode::Default, GUI::IconID::Invalid, []() { LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
+        demo.cmdDocumentation = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
+        demo.cmdAbout         = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
 
         // --- Further commands so the Shortcuts panel has realistic content.
         // These are panel/keyboard only (not referenced by the menu or toolbar).
-        auto dummy = [this](GUI::EditMode mode, GUI::KeyCode key, GUI::KeyModifier mods,
+        auto dummy = [this](interstice::EditMode mode, interstice::KeyCode key, interstice::KeyModifier mods,
             const char* desc)
             {
                 commandManager.RegisterCommand(mode, key, mods,
-                    [desc]() { LOG_INFO(kLogDemo, "Command: {}", desc); }, desc);
+                    [desc]() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", desc); }, desc);
             };
 
         // Default (global).
-        commandManager.RegisterCommand(GUI::EditMode::Default, demo.selectAllIcon, GUI::KeyCode::KeyA,   GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
-        commandManager.RegisterCommand(GUI::EditMode::Default, demo.deleteIcon, GUI::KeyCode::Delete, GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
-        commandManager.RegisterCommand(GUI::EditMode::Default, demo.findIcon, GUI::KeyCode::KeyF,   GUI::KeyModifier::Control, []() { LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
-        commandManager.RegisterCommand(GUI::EditMode::Default, demo.playIcon, GUI::KeyCode::F5,     GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
-        commandManager.RegisterCommand(GUI::EditMode::Default, demo.stopIcon, GUI::KeyCode::F5,     GUI::KeyModifier::Shift, []() { LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
+        commandManager.RegisterCommand(interstice::EditMode::Default, demo.selectAllIcon, interstice::KeyCode::KeyA,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
+        commandManager.RegisterCommand(interstice::EditMode::Default, demo.deleteIcon, interstice::KeyCode::Delete, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
+        commandManager.RegisterCommand(interstice::EditMode::Default, demo.findIcon, interstice::KeyCode::KeyF,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
+        commandManager.RegisterCommand(interstice::EditMode::Default, demo.playIcon, interstice::KeyCode::F5,     interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
+        commandManager.RegisterCommand(interstice::EditMode::Default, demo.stopIcon, interstice::KeyCode::F5,     interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
         // Held shortcut: onBegin fires on press, onEnd on release.
-        commandManager.RegisterHeldCommand(GUI::EditMode::Default, GUI::KeyCode::Space, GUI::KeyModifier::None,
-            []() { LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
-            []() { LOG_INFO(kLogDemo, "Hold end: Pan View"); },
+        commandManager.RegisterHeldCommand(interstice::EditMode::Default, interstice::KeyCode::Space, interstice::KeyModifier::None,
+            []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
+            []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
             "Pan View (hold)");
 
         // NodeView — graph navigation
-        commandManager.RegisterCommand(nodeViewEditMode, demo.frameSelectedIcon, GUI::KeyCode::KeyF,  GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
-        commandManager.RegisterCommand(nodeViewEditMode,                         GUI::KeyCode::KeyA,  GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
-        commandManager.RegisterCommand(nodeViewEditMode,                         GUI::KeyCode::Space, GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
-        commandManager.RegisterCommand(nodeViewEditMode,                         GUI::KeyCode::KeyG,  GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
+        commandManager.RegisterCommand(nodeViewEditMode, demo.frameSelectedIcon, interstice::KeyCode::KeyF,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
+        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyA,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
+        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::Space, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
+        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyG,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
 
         // Sculpt — brush operations.
-        commandManager.RegisterCommand(sculptMode,                  GUI::KeyCode::LeftBracket,  GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
-        commandManager.RegisterCommand(sculptMode,                  GUI::KeyCode::RightBracket, GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
-        commandManager.RegisterCommand(sculptMode, demo.brushIcon,  GUI::KeyCode::KeyB,         GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
-        commandManager.RegisterCommand(sculptMode, demo.eraserIcon, GUI::KeyCode::KeyE,         GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Erase Tool"); }, "Erase Tool");
-        commandManager.RegisterCommand(sculptMode,                  GUI::KeyCode::KeyM,         GUI::KeyModifier::None, []() { LOG_INFO(kLogDemo, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
+        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::LeftBracket,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
+        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::RightBracket, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
+        commandManager.RegisterCommand(sculptMode, demo.brushIcon,  interstice::KeyCode::KeyB,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
+        commandManager.RegisterCommand(sculptMode, demo.eraserIcon, interstice::KeyCode::KeyE,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Erase Tool"); }, "Erase Tool");
+        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::KeyM,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
 
         // Seed the demo node-view. Each renderBody fills the row's middle slot;
         // sockets come from input/output presence.
@@ -328,9 +328,9 @@ namespace GUI
 
             // Socket colours double as the connection type: canConnect below only
             // allows wires between same-coloured sockets.
-            const GUI::color4f kTeal  { 0.20f, 0.75f, 0.72f, 1.0f };
-            const GUI::color4f kAmber { 0.95f, 0.62f, 0.20f, 1.0f };
-            const GUI::color4f kPurple{ 0.62f, 0.45f, 0.92f, 1.0f };
+            const interstice::color4f kTeal  { 0.20f, 0.75f, 0.72f, 1.0f };
+            const interstice::color4f kAmber { 0.95f, 0.62f, 0.20f, 1.0f };
+            const interstice::color4f kPurple{ 0.62f, 0.45f, 0.92f, 1.0f };
 
             // NodeText aligns to its socket (output ⇒ right, input ⇒ left,
             // pass-through ⇒ centred); editable rows use Label + Field.
@@ -422,7 +422,7 @@ namespace GUI
                 tex.properties.push_back(NodeProperty
                 {
                     .output      = PropertyEndpoint{},   // Color output — the dot sits at the image's bottom grid line
-                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, GUI::uint2{ 64, 64 }, GUI::LayoutOverride::FixedSize(imgSide, imgSide)); },
+                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(imgSide, imgSide)); },
                     .socketColor = kTeal,                // can feed Mix.Strength / Output.Value
                     .rowSpan     = rowSpan,
                 });
@@ -527,18 +527,18 @@ namespace GUI
 
         Style boxStyle;
         {
-            boxStyle.textLayoutStyle = GUI::TextLayoutStyle
+            boxStyle.textLayoutStyle = interstice::TextLayoutStyle
             {
-                .textDirection = GUI::TextDirection::Auto,
-                .textWrapping = GUI::TextWrap::WordChar,
-                .horizontalAlignment = GUI::TextAlign::Start,
-                .baseline = GUI::TextBaseline::Middle
+                .textDirection = interstice::TextDirection::Auto,
+                .textWrapping = interstice::TextWrap::WordChar,
+                .horizontalAlignment = interstice::TextAlign::Start,
+                .baseline = interstice::TextBaseline::Middle
             };
             boxStyle.borderWidths = noBorder;
             boxStyle.borderRadius = noRadius;
             boxStyle.margin = BoxEdges(2);
-            boxStyle.SetOverflow(GUI::Overflow::Hidden);
-            boxStyle.padding = GUI::BoxEdges(10);
+            boxStyle.SetOverflow(interstice::Overflow::Hidden);
+            boxStyle.padding = interstice::BoxEdges(10);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 boxStyle.states[i].SetBorderColor({});
@@ -732,9 +732,9 @@ namespace GUI
         {
             //checkerboard image
             {
-                GUI::color4b black = GUI::color4b(0, 0, 0, 255);
-                GUI::color4b magenta = GUI::color4b(255, 0, 255, 255);
-                std::array<GUI::color4b, 16 * 16 > pixels{};
+                interstice::color4b black = interstice::color4b(0, 0, 0, 255);
+                interstice::color4b magenta = interstice::color4b(255, 0, 255, 255);
+                std::array<interstice::color4b, 16 * 16 > pixels{};
                 for (int y = 0, n = 0; y < 16; y++)
                 {
                     for (int x = 0; x < 16; x++, n++)
@@ -742,37 +742,37 @@ namespace GUI
                         pixels[n] = ((x % 2) ^ (y % 2)) ? magenta : black;
                     }
                 }
-                GUI::Image* checkerboardImage = graphicsContext->CreateImage(pixels.data(), uint2{ 16, 16 }, GUI::ImageFormat::R8G8B8A8, GUI::Sampler::LinearRepeat, true);
+                interstice::Image* checkerboardImage = graphicsContext->CreateImage(pixels.data(), uint2{ 16, 16 }, interstice::ImageFormat::R8G8B8A8, interstice::Sampler::LinearRepeat, true);
                 if (checkerboardImage == nullptr)
                 {
-                    LOG_ERROR(kLogDemo, "Failed to create checkerboard image");
+                    INTERSTICE_LOG_ERROR(kLogDemo, "Failed to create checkerboard image");
                     return false;
                 }
                 checkerboardIndex = graphicsContext->RegisterImage(checkerboardImage);
 
-                graphicsContext->DestroyImageAtEnd(checkerboardImage, GUI::DeviceScope::Application);
+                graphicsContext->DestroyImageAtEnd(checkerboardImage, interstice::DeviceScope::Application);
             }
 
             // Sample gradient image to showcase the Image() element (image fields,
             // node thumbnails, …).
             {
                 constexpr int W = 64, H = 64;
-                std::array<GUI::color4b, W * H> pixels{};
+                std::array<interstice::color4b, W * H> pixels{};
                 for (int y = 0, n = 0; y < H; y++)
                     for (int x = 0; x < W; x++, n++)
-                        pixels[n] = GUI::color4b(static_cast<GUI::byte>(x * 4),
-                                                 static_cast<GUI::byte>(y * 4),
-                                                 static_cast<GUI::byte>(160 - (x + y)), 255);
-                GUI::Image* gradient = graphicsContext->CreateImage(
-                    pixels.data(), uint2{ W, H }, GUI::ImageFormat::R8G8B8A8,
-                    GUI::Sampler::LinearClampToEdge, true);
+                        pixels[n] = interstice::color4b(static_cast<interstice::byte>(x * 4),
+                                                 static_cast<interstice::byte>(y * 4),
+                                                 static_cast<interstice::byte>(160 - (x + y)), 255);
+                interstice::Image* gradient = graphicsContext->CreateImage(
+                    pixels.data(), uint2{ W, H }, interstice::ImageFormat::R8G8B8A8,
+                    interstice::Sampler::LinearClampToEdge, true);
                 if (gradient == nullptr)
                 {
-                    LOG_ERROR(kLogDemo, "Failed to create demo image");
+                    INTERSTICE_LOG_ERROR(kLogDemo, "Failed to create demo image");
                     return false;
                 }
                 demoImageIndex = graphicsContext->RegisterImage(gradient);
-                graphicsContext->DestroyImageAtEnd(gradient, GUI::DeviceScope::Application);
+                graphicsContext->DestroyImageAtEnd(gradient, interstice::DeviceScope::Application);
             }
 
             // Register icons from SVG
@@ -1008,7 +1008,7 @@ namespace GUI
         auto&& sizeConstraints = LayoutOverride::FixedSize(styleManager.Px(1700), styleManager.Px(900));
         
         {
-            GUI::int2 size{ styleManager.Px(100), styleManager.Px(50) };
+            interstice::int2 size{ styleManager.Px(100), styleManager.Px(50) };
             static bool mainWindowClosed = false;
             if (mainWindowClosed)
             {

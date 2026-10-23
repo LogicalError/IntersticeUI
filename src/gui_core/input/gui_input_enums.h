@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <gui_core/gui_enum_operators.h>
 
-namespace GUI
+namespace interstice
 {
     // Interaction distances in CSS pixels; scale them with StyleManager::Px.
     constexpr float   kWheelScrollStep   = 30.0f; // content scrolled per wheel notch
@@ -18,7 +18,7 @@ namespace GUI
         Option = 8,
         Command = 16,
     };
-    ENUM_OPERATORS(KeyModifier)
+    INTERSTICE_ENUM_OPERATORS(KeyModifier)
 
     enum class MouseButtons : uint8_t
     {
@@ -29,7 +29,7 @@ namespace GUI
         X1 = 8,
         X2 = 16,
     };
-    ENUM_OPERATORS(MouseButtons)
+    INTERSTICE_ENUM_OPERATORS(MouseButtons)
 
     enum class KeyAction : uint8_t
     {

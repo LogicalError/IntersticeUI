@@ -46,7 +46,7 @@ struct Host
         instance = builtInstance.value();
 
         // Enable everything the GUI needs on the device.
-        auto requirements = Vulkan::VulkanDeviceContext::GetDeviceRequirements();
+        auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();
         auto selected = vkb::PhysicalDeviceSelector{ instance }
             .set_minimum_version(1, 3)
             .set_required_features(requirements.features)
@@ -66,9 +66,9 @@ struct Host
         return true;
     }
 
-    Vulkan::VulkanDeviceContext::ExternalDevice Describe()
+    interstice::vulkan::VulkanDeviceContext::ExternalDevice Describe()
     {
-        Vulkan::VulkanDeviceContext::ExternalDevice external;
+        interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
         external.instance            = instance.instance;
         external.physicalDevice      = physicalDevice.physical_device;
         external.device              = device.device;
@@ -205,21 +205,21 @@ struct Host
     }
 };
 
-class HostedApp : public GUI::GUIApplication
+class HostedApp : public interstice::GUIApplication
 {
 public:
     explicit HostedApp(Host& host) : host(host)
     {
         // Runs inside Initialize, after the window backend is up (SDL names the
         // instance extensions) and before the GUI creates its own device.
-        configureGraphicsContext = [this](GUI::GraphicsContext& context)
+        configureGraphicsContext = [this](interstice::GraphicsContext& context)
         {
             if (!this->host.CreateDevice())
             {
                 std::printf("no Vulkan 1.3 device with the features the GUI needs\n");
                 return;   // the GUI then creates its own device and the example quits
             }
-            static_cast<Vulkan::VulkanGraphicsContext&>(context).deviceContext.SetExternalDevice(this->host.Describe());
+            static_cast<interstice::vulkan::VulkanGraphicsContext&>(context).deviceContext.SetExternalDevice(this->host.Describe());
         };
     }
 
@@ -228,7 +228,7 @@ public:
         if (!GUIApplication::Initialize(options) || host.device.device == VK_NULL_HANDLE || !host.CreateImage())
             return false;
         // The GUI samples the host's view and sampler; the host keeps owning them.
-        auto& vk = static_cast<Vulkan::VulkanGraphicsContext&>(*graphicsContext);
+        auto& vk = static_cast<interstice::vulkan::VulkanGraphicsContext&>(*graphicsContext);
         hostImage = vk.RegisterExternalImage(host.view, host.sampler);
         windowID  = idManager.CreateStaticID();
         return true;
@@ -240,11 +240,11 @@ public:
         const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
         host.Render(0.5f + 0.5f * std::sin(t), 0.5f + 0.5f * std::sin(t + 2.1f), 0.5f + 0.5f * std::sin(t + 4.2f));
 
-        if (BeginWindow(windowID, "Host device", GUI::LayoutOverride{}.Size(320, 340)))
+        if (BeginWindow(windowID, "Host device", interstice::LayoutOverride{}.Size(320, 340)))
         {
-            BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+            BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
             Text("Rendered by the host:");
-            Image(hostImage, GUI::uint2{ Host::kImageSize.width, Host::kImageSize.height });
+            Image(hostImage, interstice::uint2{ Host::kImageSize.width, Host::kImageSize.height });
             EndVertical();
             EndWindow();
         }
@@ -252,8 +252,8 @@ public:
 
 private:
     Host&                                 host;
-    GUI::ImageIndex                       hostImage = GUI::ImageIndex::Invalid;
-    GUI::ID                               windowID  = GUI::ID::Invalid();
+    interstice::ImageIndex                       hostImage = interstice::ImageIndex::Invalid;
+    interstice::ID                               windowID  = interstice::ID::Invalid();
     std::chrono::steady_clock::time_point start     = std::chrono::steady_clock::now();
 };
 

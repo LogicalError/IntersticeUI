@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 	class GUIRenderer;
 	class StyleManager;

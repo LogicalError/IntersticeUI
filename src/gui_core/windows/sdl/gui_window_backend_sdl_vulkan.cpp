@@ -14,7 +14,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-namespace GUI
+namespace interstice
 {
     static VkSurfaceKHR CreateSDLVulkanSurface(VkInstance instance, const VkAllocationCallbacks* callbacks, OSWindowHandle windowHandle)
     {
@@ -30,7 +30,7 @@ namespace GUI
     void InstallSDLVulkanSurfaceFactory(GraphicsContext* graphicsContext)
     {
         if (graphicsContext == nullptr) return;
-        auto* vk = static_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
+        auto* vk = static_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
         vk->deviceContext.SetSurfaceFactory(&CreateSDLVulkanSurface);
     }
-} // namespace GUI
+} // namespace interstice

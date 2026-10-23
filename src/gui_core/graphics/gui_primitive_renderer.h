@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using PipelineSet = std::array<RHI::GpuPipeline, kPrimitiveKindCount>;
 
@@ -44,7 +44,7 @@ namespace GUI
 
         std::vector<PrimitiveRenderPass> renderPasses;
         int           currentKind = -1; // -1 = no open pass
-        GUI::float3x2 currentTransform;
+        interstice::float3x2 currentTransform;
 
     public:
         void FinishRenderPass();
@@ -53,20 +53,20 @@ namespace GUI
         // Append another target's passes, translated by `delta` in screen space.
         // Kind-agnostic: every primitive starts with the same header (transform0,
         // transform1, clipMin, clipMax).
-        void AppendCaptured(const PrimitiveRenderTarget& src, GUI::int2 delta);
+        void AppendCaptured(const PrimitiveRenderTarget& src, interstice::int2 delta);
 
     public:
         void Render(RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
                     GPUDrawPushConstants& push_constants);
         void Reset();
 
-        void SetTransform(GUI::float3x2 transform);
-        void RenderBox(GUI::IntRect rect, GUI::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, GUI::VisualColorStyleIndex colorStyleIndex = {}, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid, GUI::IntRect snappedPx = {});
-        void RenderGlyph(GUI::float2 pos, GUI::float2 size, GUI::float2 uvMin, GUI::float2 uvMax, float scale, int bpp, int mode, GUI::VisualColorStyleIndex textColorIndex, GUI::IntRect clipRect, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid);
-        void RenderLine(GUI::int2 p0, GUI::int2 p1, GUI::int2 p2, GUI::int2 p3, GUI::IntRect clipRect, const GUI::LineStyle& lineStyle);
-        void RenderDot(GUI::float2 pos, GUI::IntRect clipRect, float size, GUI::color4f color);
-        void RenderTriangle(GUI::float2 p0, GUI::float2 p1, GUI::float2 p2, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid);
-        void RenderQuad(GUI::IntRect rect, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid);
+        void SetTransform(interstice::float3x2 transform);
+        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex = {}, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
+        void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
+        void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const interstice::LineStyle& lineStyle);
+        void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color);
+        void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
+        void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
 
     private:
         // Close any open pass of a different kind, then append one primitive
@@ -86,22 +86,22 @@ namespace GUI
     class PrimitiveRenderer : public GUIRenderer
     {
     public:
-        std::unordered_map<GUI::ID, PrimitiveRenderTarget> idTargets;
+        std::unordered_map<interstice::ID, PrimitiveRenderTarget> idTargets;
         PrimitiveRenderTarget* currentTarget{ nullptr };
         PrimitiveRenderTarget* resizingTarget{ nullptr };
 
     public:
         void Reset() override;
-        void SetTransform(GUI::float3x2 transform) override;
-        void RenderBox(GUI::IntRect rect, GUI::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, GUI::VisualColorStyleIndex colorStyleIndex = {}, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid, GUI::IntRect snappedPx = {}) override;
-        void RenderGlyph(GUI::float2 pos, GUI::float2 size, GUI::float2 uvMin, GUI::float2 uvMax, float scale, int bpp, int mode, GUI::VisualColorStyleIndex textColorIndex, GUI::IntRect clipRect, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) override;
-        void RenderLine(GUI::int2 p0, GUI::int2 p1, GUI::int2 p2, GUI::int2 p3, GUI::IntRect clipRect, const GUI::LineStyle& lineStyle) override;
-        void RenderDot(GUI::float2 pos, GUI::IntRect clipRect, float size, GUI::color4f color) override;
-        void RenderTriangle(GUI::float2 p0, GUI::float2 p1, GUI::float2 p2, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) override;
-        void RenderQuad(GUI::IntRect rect, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) override;
+        void SetTransform(interstice::float3x2 transform) override;
+        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex = {}, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {}) override;
+        void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
+        void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const interstice::LineStyle& lineStyle) override;
+        void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color) override;
+        void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
+        void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
 
     public:
-        PrimitiveRenderTarget& GetTarget(GUI::ID id)
+        PrimitiveRenderTarget& GetTarget(interstice::ID id)
         {
             auto target = idTargets.find(id);
             if (target == idTargets.end())
@@ -114,10 +114,10 @@ namespace GUI
 
         // Drop the CPU-side target when its window is destroyed. Transient GPU
         // storage belongs to the window's frame slots, not to this target.
-        void ReleaseTarget(GUI::ID id);
+        void ReleaseTarget(interstice::ID id);
         void ReleaseAllTargets();
 
-        bool StartResizing(GUI::ID id) override
+        bool StartResizing(interstice::ID id) override
         {
             assert(resizingTarget == nullptr);
             auto target = idTargets.find(id);
@@ -135,25 +135,25 @@ namespace GUI
             resizingTarget = nullptr;
         }
 
-        bool BeginWindow(GUI::ID id) override;
+        bool BeginWindow(interstice::ID id) override;
         void EndWindow() override;
 
         // Draw caching. Capture targets are CPU-only; their primitives are merged
         // into the window target on capture/replay.
-        void BeginScopeCapture(GUI::ID scopeId) override;
-        void EndScopeCapture(GUI::ID scopeId) override;
-        bool ReplayScopeCapture(GUI::ID scopeId, GUI::int2 delta) override;
-        bool HasScopeCapture(GUI::ID scopeId) const override;
-        void InvalidateScopeCapture(GUI::ID scopeId) override;
+        void BeginScopeCapture(interstice::ID scopeId) override;
+        void EndScopeCapture(interstice::ID scopeId) override;
+        bool ReplayScopeCapture(interstice::ID scopeId, interstice::int2 delta) override;
+        bool HasScopeCapture(interstice::ID scopeId) const override;
+        void InvalidateScopeCapture(interstice::ID scopeId) override;
         void ClearScopeCaptures() override;
 
-        void Render(GUI::ID id, RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
+        void Render(interstice::ID id, RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
                     GPUDrawPushConstants& push_constants);
 
     private:
         // Captured primitives per cached scope, kept across frames. m_captureSaved
         // holds the window target while a capture redirects emit calls.
-        std::unordered_map<GUI::ID, PrimitiveRenderTarget> scopeCaptures;
+        std::unordered_map<interstice::ID, PrimitiveRenderTarget> scopeCaptures;
         PrimitiveRenderTarget* m_captureSaved = nullptr;
     };
 }

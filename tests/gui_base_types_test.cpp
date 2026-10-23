@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
 
     TEST(IntRectTest, InflateDeflateBeyondEvenSizeClampsAtCenter)

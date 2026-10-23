@@ -6,9 +6,9 @@ using namespace GpuTestHarness;
 
 namespace
 {
-    Vulkan::VulkanImage FakeImage(uintptr_t view)
+    interstice::vulkan::VulkanImage FakeImage(uintptr_t view)
     {
-        Vulkan::VulkanImage image{};
+        interstice::vulkan::VulkanImage image{};
         image.imageView = reinterpret_cast<VkImageView>(view);
         return image;
     }
@@ -17,33 +17,33 @@ namespace
 // The shader's texture array has a fixed size; a slot past it can't be bound.
 TEST(VulkanImageSet, RefusesMoreTexturesThanTheShaderArrayHolds)
 {
-    Vulkan::VulkanImageSet set;
-    Vulkan::VulkanImage image = FakeImage(1);
-    for (uint32_t i = 0; i < Vulkan::VulkanImageSet::kCapacity; ++i)
-        ASSERT_NE(set.Add(&image), GUI::ImageIndex::Invalid);
+    interstice::vulkan::VulkanImageSet set;
+    interstice::vulkan::VulkanImage image = FakeImage(1);
+    for (uint32_t i = 0; i < interstice::vulkan::VulkanImageSet::kCapacity; ++i)
+        ASSERT_NE(set.Add(&image), interstice::ImageIndex::Invalid);
 
-    EXPECT_EQ(set.Add(&image), GUI::ImageIndex::Invalid);
-    EXPECT_EQ(set.ReserveIndex(), GUI::ImageIndex::Invalid);
-    EXPECT_EQ(set.textures.size(), Vulkan::VulkanImageSet::kCapacity);
+    EXPECT_EQ(set.Add(&image), interstice::ImageIndex::Invalid);
+    EXPECT_EQ(set.ReserveIndex(), interstice::ImageIndex::Invalid);
+    EXPECT_EQ(set.textures.size(), interstice::vulkan::VulkanImageSet::kCapacity);
 }
 
 TEST(VulkanImageSet, IgnoresIndicesItNeverHandedOut)
 {
-    Vulkan::VulkanImageSet set;
-    Vulkan::VulkanImage image = FakeImage(1);
-    const GUI::ImageIndex index = set.Add(&image);
+    interstice::vulkan::VulkanImageSet set;
+    interstice::vulkan::VulkanImage image = FakeImage(1);
+    const interstice::ImageIndex index = set.Add(&image);
 
-    EXPECT_FALSE(set.SetDescriptor(GUI::ImageIndex(uint32_t(index) + 4), VkDescriptorImageInfo{}));
-    EXPECT_FALSE(set.SetImage(GUI::ImageIndex(uint32_t(index) + 4), &image));
+    EXPECT_FALSE(set.SetDescriptor(interstice::ImageIndex(uint32_t(index) + 4), VkDescriptorImageInfo{}));
+    EXPECT_FALSE(set.SetImage(interstice::ImageIndex(uint32_t(index) + 4), &image));
     EXPECT_EQ(set.textures.size(), 1u);
 }
 
 TEST(VulkanImageSet, RemovedSlotsAreReused)
 {
-    Vulkan::VulkanImageSet set;
-    Vulkan::VulkanImage a = FakeImage(1), b = FakeImage(2), c = FakeImage(3);
-    const GUI::ImageIndex ia = set.Add(&a);
-    const GUI::ImageIndex ib = set.Add(&b);
+    interstice::vulkan::VulkanImageSet set;
+    interstice::vulkan::VulkanImage a = FakeImage(1), b = FakeImage(2), c = FakeImage(3);
+    const interstice::ImageIndex ia = set.Add(&a);
+    const interstice::ImageIndex ib = set.Add(&b);
 
     set.Remove(ia);
     EXPECT_EQ(set.Add(&c), ia);
@@ -62,16 +62,16 @@ TEST_F(GpuTest, UnregisteredImageSlotIsNotBoundNextFrame)
 
     auto& dc = vk->deviceContext;
     uint32_t pixel = 0xffffffffu;
-    GUI::Image* img = dc.CreateImage(&pixel, GUI::uint2{ 1, 1 }, GUI::ImageFormat::R8G8B8A8,
-                                     GUI::Sampler::LinearClampToEdge, false);
+    interstice::Image* img = dc.CreateImage(&pixel, interstice::uint2{ 1, 1 }, interstice::ImageFormat::R8G8B8A8,
+                                     interstice::Sampler::LinearClampToEdge, false);
     ASSERT_NE(img, nullptr);
-    const GUI::ImageIndex index = vk->RegisterImage(img);
-    ASSERT_NE(index, GUI::ImageIndex::Invalid);
+    const interstice::ImageIndex index = vk->RegisterImage(img);
+    ASSERT_NE(index, interstice::ImageIndex::Invalid);
     RenderOneFrameWithDot(ctx, { 320, 240 });
 
     vk->UnregisterImage(index);
-    dc.DestroyImageAtEnd(img, GUI::DeviceScope::Frame);
-    static_cast<Vulkan::VulkanImageSet*>(vk->GetImageSet())->ReserveIndex(); // reserved, never set
+    dc.DestroyImageAtEnd(img, interstice::DeviceScope::Frame);
+    static_cast<interstice::vulkan::VulkanImageSet*>(vk->GetImageSet())->ReserveIndex(); // reserved, never set
     sink.Clear();
     for (int i = 0; i < 3; ++i)
     {

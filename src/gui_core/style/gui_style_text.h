@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string_view>
 
-namespace GUI
+namespace interstice
 {
     enum class TextID : uint32_t { Invalid = 0 };
 	enum class IconID : uint32_t { Invalid = 0 };
@@ -206,7 +206,7 @@ namespace GUI
 	class TextDecoration
 	{
 	public:
-		GUI::color4b	color = GUI::color4b{ 0,0,0,0 };
+		interstice::color4b	color = interstice::color4b{ 0,0,0,0 };
 		uint16_t		thickness = 0;
 		uint16_t		offset = 0;
 		DecorationStyle	style = DecorationStyle::Solid;
@@ -232,7 +232,7 @@ namespace GUI
 	class TextStyle
 	{
 	public:
-		GUI::color4b		  color          = GUI::color4b{ 0,0,0,0 };
+		interstice::color4b		  color          = interstice::color4b{ 0,0,0,0 };
 		float				  fontSize       = 0;
 		// A fixed pitch, so a fallback font with tall metrics on a line can't stretch it.
 		float				  lineHeight     = 1.25f;
@@ -286,4 +286,4 @@ namespace GUI
 		}
 	};
 
-}//namespace GUI
+}//namespace interstice

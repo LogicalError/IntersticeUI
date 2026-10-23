@@ -12,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     // Opaque edit-mode identifier. Values are indices vended by CommandManager::RegisterEditMode.
     // EditMode::Default (0) is always pre-registered and acts as a fallback when no
@@ -108,7 +108,7 @@ namespace GUI
         {
             if (int32_t existing = FindCommand(mode, key, modifiers); existing >= 0)
             {
-                LOG_DEBUG(::GUI::Diagnostics::MakeLogCategory("input"), "updating existing command: {}", description);
+                INTERSTICE_LOG_DEBUG(::interstice::Diagnostics::MakeLogCategory("input"), "updating existing command: {}", description);
                 Command& s    = m_commands[uint32_t(existing)];
                 s.icon        = icon;
                 s.description = std::string(description);
@@ -573,4 +573,4 @@ namespace GUI
         std::vector<HeldActive>            m_activeHeld;      // held commands with key currently down
     };
 
-} // namespace GUI
+} // namespace interstice

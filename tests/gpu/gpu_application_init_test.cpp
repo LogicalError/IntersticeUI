@@ -16,7 +16,7 @@
 
 namespace
 {
-    class EmptyApp : public GUI::GUIApplication
+    class EmptyApp : public interstice::GUIApplication
     {
     public:
         void OnGUI() override {}
@@ -39,7 +39,7 @@ namespace
     TEST(GpuApplicationInit, OptionsTurnTheDefaultsOff)
     {
         EmptyApp app;
-        GUI::GUIApplication::InitializeOptions options;
+        interstice::GUIApplication::InitializeOptions options;
         options.loadStyles             = false;
         options.commandShortcuts       = false;
         options.repaintWhileResizing   = false;
@@ -78,14 +78,14 @@ namespace
         app.Cleanup();
     }
 
-    class OneWindowApp : public GUI::GUIApplication
+    class OneWindowApp : public interstice::GUIApplication
     {
     public:
-        GUI::ID windowID = GUI::ID::Invalid();
+        interstice::ID windowID = interstice::ID::Invalid();
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Allocations", GUI::LayoutOverride{}.Size(200, 100)))
+            if (BeginWindow(windowID, "Allocations", interstice::LayoutOverride{}.Size(200, 100)))
             {
                 Label("Counting allocations");
                 EndWindow();
@@ -97,7 +97,7 @@ namespace
     // VMA, SDL) is freed again by Cleanup.
     TEST(GpuApplicationInit, AllocationHooksSeeEverythingFreedByCleanup)
     {
-        GUI::TrackingAllocator tracker;
+        interstice::TrackingAllocator tracker;
         // SDL's Windows hotplug thread can leave allocations behind across SDL_Quit;
         // then SDL rightly stays on its own allocator. Only a fresh SDL is routed.
         const bool sdlRoutable = SDL_WasInit(0) == 0 && SDL_GetNumAllocations() == 0;
@@ -128,24 +128,24 @@ namespace
 
     // A render-to-image window with a button. Run() drives real frames (OnFrame
     // only builds); `script` runs at the start of each frame's OnGUI.
-    class ImageWindowApp : public GUI::GUIApplication
+    class ImageWindowApp : public interstice::GUIApplication
     {
     public:
-        GUI::ID windowID = GUI::ID::Invalid();
-        GUI::ID buttonID = GUI::ID::Invalid();
+        interstice::ID windowID = interstice::ID::Invalid();
+        interstice::ID buttonID = interstice::ID::Invalid();
         int     clicks   = 0;
         int     frame    = 0;
         int     frames   = 3;
-        GUI::int2 buttonCenter{ 0, 0 };   // after last frame's layout
+        interstice::int2 buttonCenter{ 0, 0 };   // after last frame's layout
         std::function<void(int)> script;
 
         void OnGUI() override
         {
             if (script) script(frame);
-            if (BeginWindow(windowID, "Image", GUI::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
-                            GUI::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+                            interstice::ElementFlags::WindowRenderToImage))
             {
-                BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+                BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
                 Button(buttonID, "Click", [this] { ++clicks; });
                 EndVertical();
                 EndWindow();
@@ -160,11 +160,11 @@ namespace
                 return false;
             windowID = idManager.CreateStaticID();
             buttonID = idManager.CreateStaticID();
-            m_frame.OnPostLayout([this](GUI::FrameContext&)
+            m_frame.OnPostLayout([this](interstice::FrameContext&)
             {
-                const GUI::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
+                const interstice::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
                 if (!ref.IsValid()) return;
-                const GUI::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
+                const interstice::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
                 buttonCenter = { r.x + r.w / 2, r.y + r.h / 2 };
             });
             return true;
@@ -181,11 +181,11 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         }
         app.Run();
-        const GUI::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
+        const interstice::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
         ASSERT_NE(handle, nullptr) << "the window exists";
         EXPECT_EQ(app.windowBackend->GetNativeHandle(handle), nullptr) << "no OS window behind it";
 
-        const GUI::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
+        const interstice::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
         ASSERT_GT(rect.w, 0);
         std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
         ASSERT_TRUE(app.ReadWindowPixels(app.windowID, pixels));
@@ -206,12 +206,12 @@ namespace
         app.frames = 7;
         app.script = [&](int frame)
         {
-            const GUI::int2 center = app.buttonCenter;
+            const interstice::int2 center = app.buttonCenter;
             switch (frame)
             {
                 case 2: app.InjectMouseMove(app.windowID, center); break;
-                case 3: app.InjectMouseButton(app.windowID, center, GUI::MouseButtons::Left, true); break;
-                case 4: app.InjectMouseButton(app.windowID, center, GUI::MouseButtons::Left, false); break;
+                case 3: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, true); break;
+                case 4: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, false); break;
                 case 5: app.InjectMouseLeave(app.windowID); break;
                 default: break;
             }
@@ -221,11 +221,11 @@ namespace
         app.Cleanup();
     }
 
-    class FloatingToolbarApp : public GUI::GUIApplication
+    class FloatingToolbarApp : public interstice::GUIApplication
     {
     public:
-        std::vector<GUI::FloatingToolbarItem> floating;
-        GUI::FloatingToolbarOptions           options;
+        std::vector<interstice::FloatingToolbarItem> floating;
+        interstice::FloatingToolbarOptions           options;
         bool                                  closeWindow = false;
 
         void OnGUI() override
@@ -247,19 +247,19 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device or window system available";
         }
-        const GUI::ID windowID = app.idManager.CreateStaticID();
-        const GUI::ID buttonID = app.idManager.CreateStaticID();
-        GUI::FloatingToolbarItem fw;
+        const interstice::ID windowID = app.idManager.CreateStaticID();
+        const interstice::ID buttonID = app.idManager.CreateStaticID();
+        interstice::FloatingToolbarItem fw;
         fw.windowID        = windowID;
         fw.spawnPosition   = { 200, 200 };
-        fw.homeSide        = GUI::ToolbarSide::Left;
+        fw.homeSide        = interstice::ToolbarSide::Left;
         fw.item.id         = buttonID;
         fw.item.renderBody = [&] { app.Button(buttonID, "X", [] {}); };
         app.floating.push_back(std::move(fw));
 
         int             dockBacks  = 0;
-        GUI::ToolbarSide dockedSide = GUI::ToolbarSide::Top;
-        app.options.onDockBack = [&](GUI::ID id, GUI::ToolbarSide side)
+        interstice::ToolbarSide dockedSide = interstice::ToolbarSide::Top;
+        app.options.onDockBack = [&](interstice::ID id, interstice::ToolbarSide side)
         {
             ++dockBacks;
             dockedSide = side;
@@ -274,7 +274,7 @@ namespace
         app.OnFrame();
 
         EXPECT_EQ(dockBacks, 1);
-        EXPECT_EQ(dockedSide, GUI::ToolbarSide::Left);
+        EXPECT_EQ(dockedSide, interstice::ToolbarSide::Left);
         EXPECT_TRUE(app.floating.empty());
         app.idManager.ReleaseStaticID(buttonID);
         app.Cleanup();

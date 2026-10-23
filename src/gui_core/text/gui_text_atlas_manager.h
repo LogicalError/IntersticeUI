@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_base_types.h>
 
-namespace GUI
+namespace interstice
 {
 	enum ImageIndex : uint32_t; // defined in gui_image.h
 	class GraphicsContext;

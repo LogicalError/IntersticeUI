@@ -16,25 +16,25 @@
 // Docking + panel data model: Panel, DockingLayout (tree + panel registry),
 // per-frame construction state, hit-test results and floating windows.
 
-namespace GUI
+namespace interstice
 {
 
     // ---- TabBar: reorderable tabs ----
     struct TabBarState {
-        GUI::ID barID = GUI::ID::Invalid();
+        interstice::ID barID = interstice::ID::Invalid();
         int*    selectedIndex = nullptr;
         int     nextTabIndex = 0;
         std::function<void(int)>               onClose;    // tab index when close button clicked
-        std::function<void(int, GUI::int2)>    onDragOut;  // tab index + mouse release pos
+        std::function<void(int, interstice::int2)>    onDragOut;  // tab index + mouse release pos
     };
 
     // ---- Panel + DockingContainer ----
     // Panel: a unit of UI content, built by onPanelGUI during OnGUI. DockNodes store only
     // panel IDs; the Panels live in the DockingLayout.
     struct Panel {
-        GUI::ID               id = GUI::ID::Invalid();
+        interstice::ID               id = interstice::ID::Invalid();
         std::string           title;
-        GUI::IconID           icon = GUI::IconID::Invalid;
+        interstice::IconID           icon = interstice::IconID::Invalid;
 
         // Optional kind tag that presets serialize to pick a factory on load.
         // Empty for one-off panels.
@@ -57,40 +57,40 @@ namespace GUI
 
         // Kept here so a hidden tab keeps its scroll position (ScrollManagement prunes
         // handles of elements not in the tree).
-        GUI::int2             scrollOffset { 0, 0 };
+        interstice::int2             scrollOffset { 0, 0 };
     };
 
     struct DockingLayout {
-        std::unique_ptr<GUI::DockNode>     root;
-        std::unordered_map<GUI::ID, Panel> panels;
+        std::unique_ptr<interstice::DockNode>     root;
+        std::unordered_map<interstice::ID, Panel> panels;
 
         // OS window hosting this layout, refreshed each frame. A cross-window tab drop
         // raises it, since the OS may otherwise focus an arbitrary window when the source closes.
-        GUI::ID hostWindowID = GUI::ID::Invalid();
+        interstice::ID hostWindowID = interstice::ID::Invalid();
     };
 
     // Valid only between BeginDockingContainer / EndDockingContainer; handlers must capture pointers.
     struct DockingConstructionState {
-        GUI::ID        containerID = GUI::ID::Invalid();
+        interstice::ID        containerID = interstice::ID::Invalid();
         DockingLayout* layout      = nullptr;
     };
 
     struct DockLeafResult {
-        GUI::DockNode* leaf   = nullptr;
+        interstice::DockNode* leaf   = nullptr;
         DockingLayout* layout = nullptr;
     };
 
     struct DockDropResult {
-        GUI::DockDropTarget target;
+        interstice::DockDropTarget target;
         DockingLayout*      layout = nullptr;
     };
 
     // ---- Floating dock windows ----
     // A torn-off tab dropped outside every dock area gets its own OS window.
     struct FloatingDockWindow {
-        GUI::ID       windowID    = GUI::ID::Invalid();  // static, persists across frames
+        interstice::ID       windowID    = interstice::ID::Invalid();  // static, persists across frames
         DockingLayout layout;
-        GUI::int2     spawnPosition {};                   // screen coords, first frame only
+        interstice::int2     spawnPosition {};                   // screen coords, first frame only
         bool          positioned = false;                 // once true, the OS manages the position
     };
 

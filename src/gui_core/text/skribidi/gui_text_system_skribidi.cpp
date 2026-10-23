@@ -29,7 +29,7 @@
 #define SKB_CURRENT_SELECTION_END \
 	skb_text_position_t { .offset = INT32_MIN, .affinity = SKB_AFFINITY_NONE }
 
-namespace GUI
+namespace interstice
 {
 	namespace
 	{
@@ -176,11 +176,11 @@ namespace GUI
 					const skb_image_t* image = skb_image_atlas_get_texture(m_skribidiContext->atlas, i);
 					assert(image);
 					auto textAtlasManager = m_skribidiContext->textAtlasManager;
-					auto textureIndex = (GUI::TextureIndex)skb_image_atlas_get_texture_user_data(m_skribidiContext->atlas, i);
-					if (textureIndex == GUI::TextureIndex::Invalid)
+					auto textureIndex = (interstice::TextureIndex)skb_image_atlas_get_texture_user_data(m_skribidiContext->atlas, i);
+					if (textureIndex == interstice::TextureIndex::Invalid)
 					{
 						textureIndex = textAtlasManager->CreateTexture(image->buffer, uint2 { uint32_t(image->width), uint32_t(image->height) }, image->bpp);
-						assert(textureIndex != GUI::TextureIndex::Invalid);
+						assert(textureIndex != interstice::TextureIndex::Invalid);
 						skb_image_atlas_set_texture_user_data(m_skribidiContext->atlas, i, (uint32_t)textureIndex);
 					} else
 					{
@@ -286,7 +286,7 @@ namespace GUI
 
 
 
-	void SkribidiTextSystem::UpdateRegisteredTextStyleState(RegisteredText* entry, GUI::StyleRef styleIndex, GUI::ElementState state)
+	void SkribidiTextSystem::UpdateRegisteredTextStyleState(RegisteredText* entry, interstice::StyleRef styleIndex, interstice::ElementState state)
 	{
 		assert(entry != nullptr);
 
@@ -410,7 +410,7 @@ namespace GUI
 		ctx.font_collection = skb_font_collection_create();
 		ctx.m_fontFallback.attempts.clear();
 		if (!skribidi_load_fonts(ctx.font_collection, ctx.m_fontFallback))
-			LOG_ERROR(kLogText, "could not reload the default fonts");
+			INTERSTICE_LOG_ERROR(kLogText, "could not reload the default fonts");
 
 		bool loaded = false;
 		for (const auto& [key, files] : ctx.m_fontFamilyFaces)
@@ -467,7 +467,7 @@ namespace GUI
 		return textId;
 	}
 
-	TextID SkribidiTextSystem::RegisterText(ID elementId, IconID iconId, std::string_view text, GUI::StyleRef styleIndex, GUI::ElementState state)
+	TextID SkribidiTextSystem::RegisterText(ID elementId, IconID iconId, std::string_view text, interstice::StyleRef styleIndex, interstice::ElementState state)
 	{
 		if (!m_skribidiContext)
 			return TextID::Invalid;
@@ -513,7 +513,7 @@ namespace GUI
 	TextMeasurement SkribidiTextSystem::MeasureText(TextID textId, const TextWrapContext& wrapContext) const
 	{
 		if (!m_skribidiContext) return {};
-		//PROFILE_SCOPE("MeasureText");
+		//INTERSTICE_PROFILE_SCOPE("MeasureText");
 		auto registeredText = m_skribidiContext->GetRegisteredText(textId);
 		if (registeredText == nullptr) return {};
 		if (wrapContext.maxWidth == INT32_MAX)
@@ -530,7 +530,7 @@ namespace GUI
 
 		if (!layout) return {};
 
-		PROFILE_SCOPE("MeasureTextInternal");
+		INTERSTICE_PROFILE_SCOPE("MeasureTextInternal");
 		auto bounds = skb_layout_get_content_bounds(layout);
 
 		// Content bounds give the line box width (the full layout width, e.g. 16384
@@ -602,7 +602,7 @@ namespace GUI
 			return entry->baseMeasurement;
 		}
 
-		//PROFILE_SCOPE("UpdateBaseMeasurementWhenNecessary");
+		//INTERSTICE_PROFILE_SCOPE("UpdateBaseMeasurementWhenNecessary");
 
 		entry->base_measurement_valid = true;
 		
@@ -621,7 +621,7 @@ namespace GUI
 	{
 		if (entry == nullptr) return {};
 
-		//PROFILE_SCOPE("UpdateWrapMeasurementWhenNecessary");
+		//INTERSTICE_PROFILE_SCOPE("UpdateWrapMeasurementWhenNecessary");
 		[[maybe_unused]]
 		auto layout = (skb_layout_t*)UpdateLayoutWhenNecessary(entry, (float)wrapContext.maxWidth);
 		if (entry->wrapMeasurement.IsEmpty())
@@ -643,7 +643,7 @@ namespace GUI
 			return entry->wrap_layout;
 		}
 
-		PROFILE_SCOPE("UpdateLayoutWhenNecessary");
+		INTERSTICE_PROFILE_SCOPE("UpdateLayoutWhenNecessary");
 		m_skribidiContext->ResetLayout(entry);
 		entry->wrap_width = 0;
 
@@ -683,7 +683,7 @@ namespace GUI
 				const ID hoveredTextEditor = FindTextEditorAtScreenPoint(ID::Invalid(), screenMousePos);
 				if (hoveredTextEditor == entry->elementId)
 				{
-					GUI::float2 localPos{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
+					interstice::float2 localPos{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
 					if (TryGetTextEditorLocalPoint(entry->elementId, ID::Invalid(), screenMousePos, localPos))
 					{
 						const auto* layout = static_cast<const skb_layout_t*>(UpdateLayoutWhenNecessary(entry, static_cast<float>(rect.w)));
@@ -697,8 +697,8 @@ namespace GUI
 							const float x1 = rect.x + caretInfo.x + caretInfo.ascender * caretInfo.slope;
 							const float y1 = rect.y + caretInfo.y + caretInfo.ascender;
 
-							const GUI::int2 p0 = { static_cast<int>(x0), static_cast<int>(y0) };
-							const GUI::int2 p1 = { static_cast<int>(x1), static_cast<int>(y1) };
+							const interstice::int2 p0 = { static_cast<int>(x0), static_cast<int>(y0) };
+							const interstice::int2 p1 = { static_cast<int>(x1), static_cast<int>(y1) };
 
 							m_skribidiContext->guiRenderer->RenderLine(p0, p1, clipRect, LineStyle{ .colorStyleIndex = m_skribidiContext->caretColorStyleIndex, .lineWidth = m_skribidiContext->Px(2.0f) });
 						}
@@ -1040,4 +1040,4 @@ namespace GUI
 		}
 	}
 
-} // namespace GUI
+} // namespace interstice

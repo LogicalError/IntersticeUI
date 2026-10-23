@@ -9,7 +9,7 @@
 #include <string_view>
 #include <unordered_map>
 
-namespace GUI
+namespace interstice
 {
     class StyleManager;
     class ITextSystem;
@@ -254,16 +254,16 @@ namespace GUI
         IconID dragHandleIcon = IconID::Invalid;
 
         // Line color styles (CSS custom properties)
-        GUI::VisualColorStyleIndex lineGrayStyle;
-        GUI::VisualColorStyleIndex lineYellowStyle;
-        GUI::VisualColorStyleIndex lineWhiteStyle;
-        GUI::VisualColorStyleIndex lineDarkStyle;
-        GUI::VisualColorStyleIndex gridLineStyle;      // node-view background grid
-        GUI::VisualColorStyleIndex treeGuideLineStyle;
-        GUI::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
+        interstice::VisualColorStyleIndex lineGrayStyle;
+        interstice::VisualColorStyleIndex lineYellowStyle;
+        interstice::VisualColorStyleIndex lineWhiteStyle;
+        interstice::VisualColorStyleIndex lineDarkStyle;
+        interstice::VisualColorStyleIndex gridLineStyle;      // node-view background grid
+        interstice::VisualColorStyleIndex treeGuideLineStyle;
+        interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
-        GUI::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows
-        GUI::VisualColorStyleIndex marqueeFillColorStyle; // translucent accent for selection-marquee fill
+        interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows
+        interstice::VisualColorStyleIndex marqueeFillColorStyle; // translucent accent for selection-marquee fill
 
         // Table row height in pixels, measured from real font metrics in ComputeRowMetrics.
         // Must match the rendered rows exactly, or the max scroll oscillates.
@@ -304,4 +304,4 @@ namespace GUI
         std::map<std::string, StyleRef, std::less<>> m_classStyles;  // every class in the style files
     };
 
-} // namespace GUI
+} // namespace interstice

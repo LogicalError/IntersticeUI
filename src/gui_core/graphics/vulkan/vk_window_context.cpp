@@ -32,7 +32,7 @@
 #include <gui_core/graphics/vulkan/vk_defaults.h>
 #include <gui_core/graphics/gui_graphics_context.h>
 
-using namespace Vulkan;
+using namespace interstice::vulkan;
 
 
 
@@ -58,20 +58,20 @@ void VulkanWindowContext::CreateDrawDepthImages(VulkanImage& drawImage, VulkanIm
     drawImage.imageExtent = extent;
     VkImageUsageFlags drawUsages =
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    VkImageCreateInfo drawInfo = vkinit::image_create_info(colorFormat, drawUsages, extent);
+    VkImageCreateInfo drawInfo = interstice::vulkan::image_create_info(colorFormat, drawUsages, extent);
     vmaCreateImage(deviceContext->allocator, &drawInfo, &allocInfo, &drawImage.image, &drawImage.allocation, nullptr);
     vmaSetAllocationName(deviceContext->allocator, drawImage.allocation, "Window::DrawImage::CreateImage");
-    VkImageViewCreateInfo drawView = vkinit::imageview_create_info(colorFormat, drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
-    VK_CHECK(vkCreateImageView(deviceContext->device, &drawView, deviceContext->AllocationCallbacks(), &drawImage.imageView));
+    VkImageViewCreateInfo drawView = interstice::vulkan::imageview_create_info(colorFormat, drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+    INTERSTICE_VK_CHECK(vkCreateImageView(deviceContext->device, &drawView, deviceContext->AllocationCallbacks(), &drawImage.imageView));
 
     depthImage.imageFormat = depthImageFormat;
     depthImage.imageExtent = extent;
     VkImageCreateInfo depthInfo =
-        vkinit::image_create_info(depthImageFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, extent);
+        interstice::vulkan::image_create_info(depthImageFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, extent);
     vmaCreateImage(deviceContext->allocator, &depthInfo, &allocInfo, &depthImage.image, &depthImage.allocation, nullptr);
     vmaSetAllocationName(deviceContext->allocator, depthImage.allocation, "Window::DepthImage::CreateImage");
-    VkImageViewCreateInfo depthView = vkinit::imageview_create_info(depthImageFormat, depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
-    VK_CHECK(vkCreateImageView(deviceContext->device, &depthView, deviceContext->AllocationCallbacks(), &depthImage.imageView));
+    VkImageViewCreateInfo depthView = interstice::vulkan::imageview_create_info(depthImageFormat, depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+    INTERSTICE_VK_CHECK(vkCreateImageView(deviceContext->device, &depthView, deviceContext->AllocationCallbacks(), &depthImage.imageView));
 }
 
 void VulkanWindowContext::DestroyDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage)
@@ -146,7 +146,7 @@ void VulkanWindowContext::CreateSwapchain()
             compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
         // Opaque-only surfaces composite transparent windows via CPU readback.
-        const bool isTransparent = (windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None;
+        const bool isTransparent = (windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None;
         needsReadback = isTransparent && (compositeAlpha == VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
     }
 
@@ -192,10 +192,10 @@ void VulkanWindowContext::CreateSwapchain()
     swapchain.swapchainImages = vkbSwapchain.get_images().value();
     swapchain.swapchainImageViews = vkbSwapchain.get_image_views().value();
 
-    const VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
+    const VkSemaphoreCreateInfo semaphoreCreateInfo = interstice::vulkan::semaphore_create_info();
     swapchain.presentSemaphores.resize(swapchain.swapchainImages.size());
     for (VkSemaphore& semaphore : swapchain.presentSemaphores)
-        VK_CHECK(vkCreateSemaphore(deviceContext->device, &semaphoreCreateInfo, deviceContext->AllocationCallbacks(), &semaphore));
+        INTERSTICE_VK_CHECK(vkCreateSemaphore(deviceContext->device, &semaphoreCreateInfo, deviceContext->AllocationCallbacks(), &semaphore));
 
     // Per-slot draw + depth images so the FRAME_OVERLAP in-flight frames don't
     // share them (frame N's blit-read must not race frame N+1's transition-write).
@@ -252,7 +252,7 @@ void VulkanWindowContext::DestroySwapchain()
     cachedBitmap.clear();
 }
 
-void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
+void VulkanWindowContext::ResizeSwapchain(interstice::int2 size)
 {
     WaitForFence(deviceContext->device, deviceContext->immFence);
 
@@ -266,7 +266,7 @@ void VulkanWindowContext::ResizeSwapchain(GUI::int2 size)
     // swapchain's present semaphores can be destroyed below.
     {
         auto queueLock = deviceContext->LockQueue();
-        VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
+        INTERSTICE_VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
     }
 
     VkSwapchainKHR oldSwapchain = swapchain.swapchain;
@@ -381,28 +381,28 @@ VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
         drawExtent.height = currentFrame.drawImage.imageExtent.height;
     }
 
-    VK_CHECK(vkResetFences(deviceContext->device, 1, &currentFrame.renderFence));
-    VK_CHECK(vkResetCommandBuffer(currentFrame.mainCommandBuffer, 0));
+    INTERSTICE_VK_CHECK(vkResetFences(deviceContext->device, 1, &currentFrame.renderFence));
+    INTERSTICE_VK_CHECK(vkResetCommandBuffer(currentFrame.mainCommandBuffer, 0));
 
     state.commandBuffer = currentFrame.mainCommandBuffer;
 
-    VkCommandBufferBeginInfo cmdBeginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    VK_CHECK(vkBeginCommandBuffer(state.commandBuffer, &cmdBeginInfo));
+    VkCommandBufferBeginInfo cmdBeginInfo = interstice::vulkan::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    INTERSTICE_VK_CHECK(vkBeginCommandBuffer(state.commandBuffer, &cmdBeginInfo));
 
     // Queued texture uploads (e.g. glyph atlas pages) run ahead of this frame's drawing.
     deviceContext->RecordPendingUploads(state.commandBuffer);
 
-    vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
-    vkutil::transition_image(state.commandBuffer, currentFrame.depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    interstice::vulkan::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+    interstice::vulkan::transition_image(state.commandBuffer, currentFrame.depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     // Layered and render-to-image windows clear to transparent, others to opaque black.
     float clearAlpha = (needsReadback || renderToImage) ? 0.0f : 1.0f;
     VkClearValue clearValue = { .color = { { 0.0f, 0.0f, 0.0f, clearAlpha } } };
 
-    VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(currentFrame.drawImage.imageView, &clearValue, VK_IMAGE_LAYOUT_GENERAL);
-    VkRenderingAttachmentInfo depthAttachment = vkinit::depth_attachment_info(currentFrame.depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+    VkRenderingAttachmentInfo colorAttachment = interstice::vulkan::attachment_info(currentFrame.drawImage.imageView, &clearValue, VK_IMAGE_LAYOUT_GENERAL);
+    VkRenderingAttachmentInfo depthAttachment = interstice::vulkan::depth_attachment_info(currentFrame.depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-    VkRenderingInfo renderInfo = vkinit::rendering_info(drawExtent, &colorAttachment, &depthAttachment);
+    VkRenderingInfo renderInfo = interstice::vulkan::rendering_info(drawExtent, &colorAttachment, &depthAttachment);
 
     vkCmdBeginRendering(state.commandBuffer, &renderInfo);
 
@@ -444,12 +444,12 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
             // reset by BeginWindowFrame) signals for the next frame's wait.
             if (acq == VK_ERROR_OUT_OF_DATE_KHR)
                 resize_requested = true;
-            VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
-            VkCommandBufferSubmitInfo abortCmd = vkinit::command_buffer_submit_info(state.commandBuffer);
-            VkSubmitInfo2 abortSubmit = vkinit::submit_info(&abortCmd, nullptr, nullptr);
+            INTERSTICE_VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
+            VkCommandBufferSubmitInfo abortCmd = interstice::vulkan::command_buffer_submit_info(state.commandBuffer);
+            VkSubmitInfo2 abortSubmit = interstice::vulkan::submit_info(&abortCmd, nullptr, nullptr);
             {
                 auto queueLock = deviceContext->LockQueue();
-                VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &abortSubmit, currentFrame.renderFence));
+                INTERSTICE_VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &abortSubmit, currentFrame.renderFence));
             }
             frameNumber++;
             return;
@@ -457,19 +457,19 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         if (acq == VK_SUBOPTIMAL_KHR)
             resize_requested = true;
         else
-            VK_CHECK(acq);
+            INTERSTICE_VK_CHECK(acq);
 
-        vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-        vkutil::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        interstice::vulkan::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        interstice::vulkan::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        vkutil::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, swapchain.swapchainImages[swapchain.swapchainImageIndex], drawExtent, swapchain.swapchainExtent);
+        interstice::vulkan::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, swapchain.swapchainImages[swapchain.swapchainImageIndex], drawExtent, swapchain.swapchainExtent);
 
-        vkutil::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        interstice::vulkan::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     }
     else if (renderToImage)
     {
         // Ready to read back, and the source of the copy into the host's image.
-        vkutil::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        interstice::vulkan::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
         if (targetImage != VK_NULL_HANDLE)
         {
             // The host reads the image in its fragment shaders after this submission,
@@ -478,7 +478,7 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                              VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, 0,
                              VK_PIPELINE_STAGE_2_BLIT_BIT, VK_ACCESS_2_TRANSFER_WRITE_BIT);
-            vkutil::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, targetImage, drawExtent, targetExtent);
+            interstice::vulkan::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, targetImage, drawExtent, targetExtent);
             TransitionTarget(state.commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                              VK_PIPELINE_STAGE_2_BLIT_BIT, VK_ACCESS_2_TRANSFER_WRITE_BIT,
                              VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
@@ -486,10 +486,10 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         }
     }
     
-    VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
+    INTERSTICE_VK_CHECK(vkEndCommandBuffer(state.commandBuffer));
 
     // Wait on the acquire semaphore, signal the image's present semaphore.
-    VkCommandBufferSubmitInfo cmdinfo = vkinit::command_buffer_submit_info(state.commandBuffer);
+    VkCommandBufferSubmitInfo cmdinfo = interstice::vulkan::command_buffer_submit_info(state.commandBuffer);
 
     VkSemaphoreSubmitInfo waitInfo{};
     VkSemaphoreSubmitInfo signalInfo{};
@@ -500,26 +500,26 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         // first use this frame is the TRANSFER-stage transition/blit above, not a
         // color attachment, so waiting at COLOR_ATTACHMENT_OUTPUT lets the
         // transition race the acquire (sync-validation WRITE_AFTER_READ).
-        waitInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, currentFrame.swapchainSemaphore);
-        signalInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT,
+        waitInfo = interstice::vulkan::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, currentFrame.swapchainSemaphore);
+        signalInfo = interstice::vulkan::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT,
                                                    swapchain.presentSemaphores[swapchain.swapchainImageIndex]);
-        submit = vkinit::submit_info(&cmdinfo, &signalInfo, &waitInfo);
+        submit = interstice::vulkan::submit_info(&cmdinfo, &signalInfo, &waitInfo);
     }
     else
     {
-        submit = vkinit::submit_info(&cmdinfo, nullptr, nullptr);
+        submit = interstice::vulkan::submit_info(&cmdinfo, nullptr, nullptr);
     }
 
     {
         auto queueLock = deviceContext->LockQueue();
-        VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, currentFrame.renderFence));
+        INTERSTICE_VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, currentFrame.renderFence));
     }
 
 
     // Present waits on the image's present semaphore (rendering finished).
     if (swapchain.swapchain != VK_NULL_HANDLE)
     {
-        VkPresentInfoKHR presentInfo = vkinit::present_info();
+        VkPresentInfoKHR presentInfo = interstice::vulkan::present_info();
 
         presentInfo.pSwapchains = &swapchain.swapchain;
         presentInfo.swapchainCount = 1;
@@ -534,7 +534,7 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
             // Under FIFO present usually blocks until a vsync frees an image (some
             // drivers stall in the acquire or frame fence instead); MAILBOX doesn't
             // block. Timed as a wait, not work.
-            PROFILE_SCOPE_WAIT("Present (vsync wait)");
+            INTERSTICE_PROFILE_SCOPE_WAIT("Present (vsync wait)");
             auto queueLock = deviceContext->LockQueue();
             presentResult = vkQueuePresentKHR(deviceContext->graphicsQueue, &presentInfo);
         }
@@ -549,7 +549,7 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         }
         else
         {
-            VK_CHECK(presentResult);
+            INTERSTICE_VK_CHECK(presentResult);
         }
     }
 
@@ -565,17 +565,17 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
 void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
 {
     VkCommandBuffer cmd = deviceContext->immCommandBuffer;
-    VK_CHECK(vkResetFences(deviceContext->device, 1, &deviceContext->immFence));
-    VK_CHECK(vkResetCommandBuffer(cmd, 0));
+    INTERSTICE_VK_CHECK(vkResetFences(deviceContext->device, 1, &deviceContext->immFence));
+    INTERSTICE_VK_CHECK(vkResetCommandBuffer(cmd, 0));
 
-    VkCommandBufferBeginInfo beginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    VK_CHECK(vkBeginCommandBuffer(cmd, &beginInfo));
+    VkCommandBufferBeginInfo beginInfo = interstice::vulkan::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    INTERSTICE_VK_CHECK(vkBeginCommandBuffer(cmd, &beginInfo));
 
     // With a swapchain or as a render-to-image window, EndWindowFrame already left
     // drawImage in TRANSFER_SRC_OPTIMAL; layered windows still have it in GENERAL.
     if (swapchain.swapchain == VK_NULL_HANDLE && !renderToImage)
     {
-        vkutil::transition_image(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        interstice::vulkan::transition_image(cmd, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     }
 
     VkBufferImageCopy region = {};
@@ -603,19 +603,19 @@ void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
     dependency.pMemoryBarriers    = &toHost;
     vkCmdPipelineBarrier2(cmd, &dependency);
 
-    VK_CHECK(vkEndCommandBuffer(cmd));
+    INTERSTICE_VK_CHECK(vkEndCommandBuffer(cmd));
 
-    VkCommandBufferSubmitInfo cmdInfo = vkinit::command_buffer_submit_info(cmd);
-    VkSubmitInfo2 submit = vkinit::submit_info(&cmdInfo, nullptr, nullptr);
+    VkCommandBufferSubmitInfo cmdInfo = interstice::vulkan::command_buffer_submit_info(cmd);
+    VkSubmitInfo2 submit = interstice::vulkan::submit_info(&cmdInfo, nullptr, nullptr);
 
     {
         auto queueLock = deviceContext->LockQueue();
-        VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, deviceContext->immFence));
+        INTERSTICE_VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &submit, deviceContext->immFence));
     }
     WaitForFence(deviceContext->device, deviceContext->immFence);
 
     // Map and copy to CPU cache; invalidate first in case the memory is cached but not coherent.
-    VK_CHECK(vmaInvalidateAllocation(deviceContext->allocator, readbackBuffer.allocation, 0, VK_WHOLE_SIZE));
+    INTERSTICE_VK_CHECK(vmaInvalidateAllocation(deviceContext->allocator, readbackBuffer.allocation, 0, VK_WHOLE_SIZE));
     void* mapped;
     vmaMapMemory(deviceContext->allocator, readbackBuffer.allocation, &mapped);
     memcpy(cachedBitmap.data(), mapped, cachedBitmap.size());
@@ -754,7 +754,7 @@ void VulkanWindowContext::UpdateLayeredWindowFromCache([[maybe_unused]] int scre
 #endif
 }
 
-void VulkanWindowContext::UpdateTransparentWindow(GUI::int2 screenPos)
+void VulkanWindowContext::UpdateTransparentWindow(interstice::int2 screenPos)
 {
     if (needsReadback && !cachedBitmap.empty())
     {
@@ -762,7 +762,7 @@ void VulkanWindowContext::UpdateTransparentWindow(GUI::int2 screenPos)
     }
 }
 
-void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContext, GUI::IntRect rect, bool resizing)
+void VulkanWindowContext::RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing)
 {
     if (onGui && graphicsContext != nullptr)
     {
@@ -778,7 +778,7 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
             resize_requested = true;
         }
 
-		Vulkan::VulkanGraphicsContext* vulkanGraphicsContext = dynamic_cast<Vulkan::VulkanGraphicsContext*>(graphicsContext);
+		interstice::vulkan::VulkanGraphicsContext* vulkanGraphicsContext = dynamic_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext);
 
         if (resizing)
         {
@@ -802,7 +802,7 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
         // the operation that recreates its swapchain and unfreezes rendering.
         if (resize_requested)
         {
-            PROFILE_SCOPE("ResizeSwapchain");
+            INTERSTICE_PROFILE_SCOPE("ResizeSwapchain");
             ResizeSwapchain(rect.size);
             resize_requested = false;
         }
@@ -811,17 +811,17 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
         // draw/depth images. Do not record this frame against cleared handles.
         if (!freeze_rendering)
         {
-            PROFILE_SCOPE("Window render");
+            INTERSTICE_PROFILE_SCOPE("Window render");
 
             FrameData* currentFrame;
             {
-                PROFILE_SCOPE("BeginWindowFrame");
+                INTERSTICE_PROFILE_SCOPE("BeginWindowFrame");
                 currentFrame = &GetCurrentFrame();
             }
             // BeginWindowFrame sets drawExtent.
             VkCommandBuffer cmd;
             {
-                PROFILE_SCOPE("BeginWindowFrame");
+                INTERSTICE_PROFILE_SCOPE("BeginWindowFrame");
                 cmd = BeginWindowFrame(*currentFrame);
             }
             // A zero-extent frame still begins the command buffer, so it must still be ended.
@@ -829,11 +829,11 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
             {
                 if (drawExtent.width != 0 && drawExtent.height != 0)
                 {
-                    PROFILE_SCOPE("Record commands");
+                    INTERSTICE_PROFILE_SCOPE("Record commands");
                     vulkanGraphicsContext->RenderWindowFrame(cmd, *currentFrame, id, { drawExtent.width, drawExtent.height });
                 }
                 {
-                    PROFILE_SCOPE("EndWindowFrame");
+                    INTERSTICE_PROFILE_SCOPE("EndWindowFrame");
                     EndWindowFrame(*currentFrame);
                 }
                 if (lastBuildValid)
@@ -844,19 +844,19 @@ void VulkanWindowContext::RenderWindowFrame(GUI::GraphicsContext* graphicsContex
 
 
     // Layered windows don't redraw on SDL expose events, so update them explicitly.
-    if ((windowFlags & GUI::WindowFlags::Transparent) != GUI::WindowFlags::None)
+    if ((windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None)
     {
         UpdateTransparentWindow(rect.position);
     }
 }
 
-VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle, GUI::OSWindowHandle osHandle, GUI::int2 size, GUI::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, GUI::OnGuiFunc onGUI)
+VulkanWindowContext* VulkanWindowContext::Create(interstice::ID id, void* nativeHandle, interstice::OSWindowHandle osHandle, interstice::int2 size, interstice::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, interstice::OnGuiFunc onGUI)
 {
-    const bool renderToImage = (windowFlags & GUI::WindowFlags::RenderToImage) != GUI::WindowFlags::None;
+    const bool renderToImage = (windowFlags & interstice::WindowFlags::RenderToImage) != interstice::WindowFlags::None;
     if (osHandle == nullptr && !renderToImage)
         return nullptr;
 
-    auto context = new Vulkan::VulkanWindowContext();
+    auto context = new interstice::vulkan::VulkanWindowContext();
     context->id = id;
     context->deviceContext = deviceContext;
     context->onGui = std::move(onGUI);
@@ -897,13 +897,13 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
 
     // Commands
 
-    for (int i = 0; i < Vulkan::FRAME_OVERLAP; i++)
+    for (int i = 0; i < interstice::vulkan::FRAME_OVERLAP; i++)
     {
-        VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, context->deviceContext->AllocationCallbacks(), &context->state.frames[i].commandPool));
+        INTERSTICE_VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, context->deviceContext->AllocationCallbacks(), &context->state.frames[i].commandPool));
 
-        VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(context->state.frames[i].commandPool, 1);
+        VkCommandBufferAllocateInfo cmdAllocInfo = interstice::vulkan::command_buffer_allocate_info(context->state.frames[i].commandPool, 1);
 
-        VK_CHECK(vkAllocateCommandBuffers(context->deviceContext->device, &cmdAllocInfo, &context->state.frames[i].mainCommandBuffer));
+        INTERSTICE_VK_CHECK(vkAllocateCommandBuffers(context->deviceContext->device, &cmdAllocInfo, &context->state.frames[i].mainCommandBuffer));
 
         context->state.frames[i].deletionQueue.push_function([=]()
                                                     {
@@ -927,11 +927,11 @@ VulkanWindowContext* VulkanWindowContext::Create(GUI::ID id, void* nativeHandle,
         frame.frameDescriptors = DescriptorAllocatorGrowable{};
         frame.frameDescriptors.init(context->deviceContext->device, 1000, frame_sizes, context->deviceContext->AllocationCallbacks());
 
-        VK_CHECK(vkCreateFence(context->deviceContext->device, &context->deviceContext->fenceCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.renderFence));
+        INTERSTICE_VK_CHECK(vkCreateFence(context->deviceContext->device, &context->deviceContext->fenceCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.renderFence));
 
-        VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
+        VkSemaphoreCreateInfo semaphoreCreateInfo = interstice::vulkan::semaphore_create_info();
 
-        VK_CHECK(vkCreateSemaphore(context->deviceContext->device, &semaphoreCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.swapchainSemaphore));
+        INTERSTICE_VK_CHECK(vkCreateSemaphore(context->deviceContext->device, &semaphoreCreateInfo, context->deviceContext->AllocationCallbacks(), &frame.swapchainSemaphore));
 
         frame.deletionQueue.push_function([=]()
                                           {
@@ -954,7 +954,7 @@ void VulkanWindowContext::Destroy()
         WaitForFence(deviceContext->device, frame.renderFence);
     {
         auto queueLock = deviceContext->LockQueue();
-        VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
+        INTERSTICE_VK_CHECK(vkQueueWaitIdle(deviceContext->graphicsQueue));
     }
 
     for (auto& frame : state.frames)

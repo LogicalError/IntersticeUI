@@ -25,11 +25,11 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
 
     // Descriptors may alias, so one real image backs every write.
     uint32_t pixel = 0xffffffffu;
-    GUI::Image* img = dc.CreateImage(&pixel, GUI::uint2{ 1, 1 },
-                                     GUI::ImageFormat::R8G8B8A8,
-                                     GUI::Sampler::LinearClampToEdge, false);
+    interstice::Image* img = dc.CreateImage(&pixel, interstice::uint2{ 1, 1 },
+                                     interstice::ImageFormat::R8G8B8A8,
+                                     interstice::Sampler::LinearClampToEdge, false);
     ASSERT_NE(img, nullptr);
-    VkImageView view = static_cast<Vulkan::VulkanImage*>(img)->imageView;
+    VkImageView view = static_cast<interstice::vulkan::VulkanImage*>(img)->imageView;
 
     constexpr uint32_t kCount = 17;
     std::vector<VkDescriptorImageInfo> infos(
@@ -37,8 +37,8 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
         VkDescriptorImageInfo{ dc.defaultSamplerLinear, view,
                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
 
-    Vulkan::DescriptorAllocatorGrowable alloc;
-    std::vector<Vulkan::DescriptorAllocatorGrowable::PoolSizeRatio> ratios = {
+    interstice::vulkan::DescriptorAllocatorGrowable alloc;
+    std::vector<interstice::vulkan::DescriptorAllocatorGrowable::PoolSizeRatio> ratios = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256.0f }
     };
     alloc.init(dc.device, 4, ratios, dc.AllocationCallbacks());
@@ -47,7 +47,7 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
 
     // Mirror the per-frame write in VulkanGraphicsContext::RenderWindowFrame:
     // update_set fills in dstSet for each pushed write.
-    Vulkan::DescriptorWriter writer;
+    interstice::vulkan::DescriptorWriter writer;
     writer.writes.push_back(VkWriteDescriptorSet{
         .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .dstBinding      = 0,

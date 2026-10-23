@@ -1,4 +1,4 @@
-// Unit tests for the hierarchical timing collector (GUI::Diagnostics), through the
+// Unit tests for the hierarchical timing collector (interstice::Diagnostics), through the
 // public API (no GPU, no window):
 //   - nested scopes form a parent/child tree in depth-first order
 //   - siblings keep call order
@@ -22,11 +22,11 @@
 #include <string_view>
 #include <thread>
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     namespace
     {
-        uint64_t H(std::string_view name) { return GUI::Hash::Calculate(name); }
+        uint64_t H(std::string_view name) { return interstice::Hash::Calculate(name); }
 
         const ProfileSample* Find(std::span<const ProfileSample> samples, std::string_view name)
         {

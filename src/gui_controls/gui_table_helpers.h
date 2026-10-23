@@ -4,13 +4,13 @@
 
 #include <span>
 
-namespace GUI
+namespace interstice
 {
     struct LayoutStyle;
     struct VisualTextStyle;
 }
 
-namespace GUI::TableHelpers
+namespace interstice::TableHelpers
 {
     // Half-open [firstVisible, lastVisible) rows to emit, plus bufferRows of over-draw.
     // A 0 viewportH (first frame) still yields a small slice so layout can measure.

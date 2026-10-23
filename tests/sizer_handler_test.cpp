@@ -15,7 +15,7 @@
 
 #include <thread>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

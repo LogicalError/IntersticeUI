@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_base_types.h>
 
-namespace GUI
+namespace interstice
 {
     template<typename T>
     struct TypeDimensions

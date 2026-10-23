@@ -19,7 +19,7 @@
 #include "gui_text_system_stub.h"
 #include "mock_window_backend.h"
 
-namespace GUI
+namespace interstice
 {
     using namespace testing;
     using ::testing::Return;

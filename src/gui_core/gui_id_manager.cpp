@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <vector>
         
-namespace GUI
+namespace interstice
 {
     bool IDManager::BeginFrame()
     {
@@ -16,7 +16,7 @@ namespace GUI
         }
         m_dynamic_id_total = 0;
         m_ranged_count = 0;
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         m_debug_dynamic_ids.clear();
         m_debug_ranges.clear();
 #endif
@@ -194,7 +194,7 @@ namespace GUI
                         .hashValue = hash32 | ((uint64_t)parentData.counter << 32)
                     } };
         //*/
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         m_debug_dynamic_ids.push_back(id);
 #endif
         return id;
@@ -211,7 +211,7 @@ namespace GUI
         if (id == ID::Invalid()) return false;
         const uint64_t hash = id.value.dynamicParts.hashValue;
         if (hash == 0) return false;
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         for (ID debug_id : m_debug_dynamic_ids)
         {
             if (debug_id.value.dynamicParts.hashValue == hash)
@@ -259,7 +259,7 @@ namespace GUI
                         .rangedSize = size,
                         .hashValue = hash
                     }};
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         m_debug_ranges.push_back(id);
 #endif
         return id;
@@ -296,7 +296,7 @@ namespace GUI
         if (id == ID::Invalid()) return false;
         const uint64_t hash = id.value.rangedParts.hashValue;
         if (hash == 0) return false;
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         for (const auto& ranged_id : m_debug_ranges)
         {
             if (ranged_id.value.rangedParts.hashValue == hash)
@@ -361,7 +361,7 @@ namespace GUI
         if (parent_hash == 0) return false;
 
         // Find the parent range in debug info (only in debug mode)
-#ifdef GUI_ID_DEBUG
+#ifdef INTERSTICE_ID_DEBUG
         const uint32_t index = id.value.subRangeParts.index;
         for (const auto& ranged_id : m_debug_ranges)
         {
@@ -412,4 +412,4 @@ namespace GUI
         }
     }
 
-} // namespace GUI
+} // namespace interstice

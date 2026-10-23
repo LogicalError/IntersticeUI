@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace GUI
+namespace interstice
 {
     /// Stub implementation of ITextSystem for testing without platform dependencies
     class StubTextSystem : public ITextSystem
@@ -69,7 +69,7 @@ namespace GUI
 
         // -------------------- Text Registration --------------------
 
-        TextID RegisterText(ID elementId, IconID /*iconId*/, std::string_view text, GUI::StyleRef styleIndex, GUI::ElementState state) override
+        TextID RegisterText(ID elementId, IconID /*iconId*/, std::string_view text, interstice::StyleRef styleIndex, interstice::ElementState state) override
         {
             uint64_t key = Hash::Combine(Hash::Calculate(elementId), Hash::Calculate(text), Hash::Calculate(styleIndex));
             
@@ -94,7 +94,7 @@ namespace GUI
             return textId;
         }
 
-        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, GUI::StyleRef styleIndex, GUI::ElementState state, bool& wasModified) override
+        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified) override
         {
             m_editableElementIds.insert(elementId);
             ApplyTextEditUpdate(elementId, text, behavior, wasModified);
@@ -333,17 +333,17 @@ namespace GUI
         {
         }
 
-        bool IsHoveringSelectedText(ID /*textEditorId*/, ID /*windowId*/, GUI::int2 /*screenSpace*/) const override
+        bool IsHoveringSelectedText(ID /*textEditorId*/, ID /*windowId*/, interstice::int2 /*screenSpace*/) const override
         {
             return false;
         }
 
-        bool TryGetTextDragCursor(ID /*windowId*/, GUI::int2 /*screenSpace*/, MouseCursor& /*outCursor*/) const override
+        bool TryGetTextDragCursor(ID /*windowId*/, interstice::int2 /*screenSpace*/, MouseCursor& /*outCursor*/) const override
         {
             return false;
         }
 
-        bool TryGetTextDragHoverTarget(ID /*windowId*/, GUI::int2 /*screenSpace*/, ID& /*outTargetId*/) const override
+        bool TryGetTextDragHoverTarget(ID /*windowId*/, interstice::int2 /*screenSpace*/, ID& /*outTargetId*/) const override
         {
             return false;
         }
@@ -449,7 +449,7 @@ namespace GUI
         }
 
 
-        TextMeasurement MeasureTextInternal(std::string_view text, const GUI::StyleRef /*styleIndex*/,
+        TextMeasurement MeasureTextInternal(std::string_view text, const interstice::StyleRef /*styleIndex*/,
                                             int32_t maxWidth = INT32_MAX) const
         {
             int32_t charWidth = m_defaultCharWidth;
@@ -472,8 +472,8 @@ namespace GUI
         {
             ID elementId;
             std::string text;
-            GUI::StyleRef styleIndex;
-            GUI::ElementState state;
+            interstice::StyleRef styleIndex;
+            interstice::ElementState state;
             TextMeasurement baseMeasurement;
 
             uint64_t GetHashCode() const
@@ -481,7 +481,7 @@ namespace GUI
                 return GetHashCode(elementId, text, styleIndex, state);
             }
 
-            static uint64_t GetHashCode(ID elementId, std::string_view text, StyleRef styleIndex, GUI::ElementState state)
+            static uint64_t GetHashCode(ID elementId, std::string_view text, StyleRef styleIndex, interstice::ElementState state)
             {
                 return Hash::Combine(Hash::Calculate(elementId), Hash::Calculate(text),
                                      Hash::Calculate(styleIndex), Hash::Calculate(state));
@@ -512,4 +512,4 @@ namespace GUI
         int32_t  m_defaultIconSize;
     };
 
-} // namespace GUI
+} // namespace interstice

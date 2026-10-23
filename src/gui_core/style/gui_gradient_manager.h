@@ -8,7 +8,7 @@
 #include <span>
 #include <unordered_map>
 
-namespace GUI
+namespace interstice
 {
     class Image;
     class GraphicsContext;
@@ -153,7 +153,7 @@ namespace GUI
 
         // Returns the GPU image for a page, allocating / re-uploading as needed.
         // Nullptr if pageIndex is out of range.
-        GUI::Image* GetGradientImage(GraphicsContext* graphicsContext, uint32_t pageIndex = 0);
+        interstice::Image* GetGradientImage(GraphicsContext* graphicsContext, uint32_t pageIndex = 0);
 
     private:
         struct Slot

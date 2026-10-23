@@ -5,7 +5,7 @@
 #include <chrono>
 #include <string>
 
-namespace GUI
+namespace interstice
 {
 
 
@@ -13,7 +13,7 @@ namespace GUI
     // Tree/List shared helpers
     // ---------------------------------------------------------------------------
 
-    bool GUIApplication::IsTreeItemSelected(GUI::ID id, int itemIndex) const
+    bool GUIApplication::IsTreeItemSelected(interstice::ID id, int itemIndex) const
     {
         if (m_treeState.multiSelect)
             return m_treeState.multiSelect->selectedIDs.count(id) > 0;
@@ -25,13 +25,13 @@ namespace GUI
     }
 
 
-    GUI::TextID GUIApplication::TreeItemRegisterText(GUI::ID id, std::string_view text, IconID icon, StyleRef style, GUI::ElementState state)
+    interstice::TextID GUIApplication::TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state)
     {
         if (icon != IconID::Invalid)
         {
-            GUI::ContentRun runs[] = {
-                { .type = GUI::ContentRun::Icon, .iconID = icon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                { .type = GUI::ContentRun::Text, .text = text }
+            interstice::ContentRun runs[] = {
+                { .type = interstice::ContentRun::Icon, .iconID = icon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                { .type = interstice::ContentRun::Text, .text = text }
             };
             return textSystem->RegisterRichText(id, runs, style, state);
         }
@@ -47,13 +47,13 @@ namespace GUI
     // which primes the drag alongside selection (Chain stops at its `return true`).
     //
     // Zones: branches use thirds (Before/Inside/After), leaves halves (Before/After).
-    GUI::EventHandler GUIApplication::MakeTreeRowDragDropHandler(GUI::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen)
+    interstice::EventHandler GUIApplication::MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen)
     {
-        return [this, rowID, rowHasChildren, dd, isOpen](GUI::ElementEvent&& event) -> bool
+        return [this, rowID, rowHasChildren, dd, isOpen](interstice::ElementEvent&& event) -> bool
         {
             if (!dd || dd->payloadType == 0) return false;
 
-            auto computeZone = [&](const GUI::IntRect& rect) -> TreeDropPosition
+            auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
             {
                 if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
                 // rect is layout-space — convert cursor through any ancestor
@@ -83,14 +83,14 @@ namespace GUI
 
             switch (event.type)
             {
-                case GUI::EventType::MouseMove:
+                case interstice::EventType::MouseMove:
                 {
-                    if ((event.state.buttons & GUI::MouseButtons::Left) == GUI::MouseButtons::None) break;
+                    if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
                     guiStateManager.Drag().UpdateFromInput(event.state);
                     return guiStateManager.Drag().GetDraggedID() == rowID;
                 }
-                case GUI::EventType::DragEnter:
-                case GUI::EventType::DragOver:
+                case interstice::EventType::DragEnter:
+                case interstice::EventType::DragOver:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (!event.rect) return true;
@@ -105,13 +105,13 @@ namespace GUI
                     m_treeDropState.position     = computeZone(event.rect->rect);
                     return true;
                 }
-                case GUI::EventType::DragOut:
+                case interstice::EventType::DragOut:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (m_treeDropState.targetRowID == rowID) m_treeDropState = {};
                     return true;
                 }
-                case GUI::EventType::Drop:
+                case interstice::EventType::Drop:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (event.state.dragSourceID == rowID) { m_treeDropState = {}; return true; }
@@ -136,7 +136,7 @@ namespace GUI
 
     // One AddCustomDraw for both the guide line and the drop indicator, so both get the
     // row's overflow:visible clip (AddCustomDrawAfter's tighter clip cuts off edge lines).
-    void GUIApplication::TreeItemRowCustomDraw(const GUI::ElementRef& rowRef, bool hasArrow, GUI::ID rowID)
+    void GUIApplication::TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID)
     {
         bool drawGuideLine = (m_treeState.depth > 0);
 
@@ -146,7 +146,7 @@ namespace GUI
             [this, hasArrow, rowID, drawGuideLine,
              lineColor      = theme.treeGuideLineStyle,
              indicatorColor = theme.treeDropIndicatorStyle]
-            (GUI::CustomDrawContext& ctx)
+            (interstice::CustomDrawContext& ctx)
             {
                 // Span the outer rect so lines are continuous between rows. Coords are
                 // inner-rect-local, so the outer top is outer.y - inner.y.
@@ -162,9 +162,9 @@ namespace GUI
                 {
                     // The tree indent sits halfway into the PARENT's left padding, which isn't
                     // derivable from this element's own rect — look up the parent.
-                    GUI::ElementRef parentRef       = ctx.GetParentRef(ctx.Ref());
-                    GUI::IntRect    parentRect      = ctx.GetElementRect(parentRef);
-                    GUI::IntRect    parentInnerRect = ctx.GetInnerRect(parentRef);
+                    interstice::ElementRef parentRef       = ctx.GetParentRef(ctx.Ref());
+                    interstice::IntRect    parentRect      = ctx.GetElementRect(parentRef);
+                    interstice::IntRect    parentInnerRect = ctx.GetInnerRect(parentRef);
                     if (parentRect.w > 0)
                     {
                         int32_t leftPadding = parentInnerRect.x - parentRect.x;
@@ -172,12 +172,12 @@ namespace GUI
                         int32_t centerY = topY + h / 2;
 
                         // Last sibling: vertical line stops at center. Otherwise extends to bottom.
-                        GUI::ElementRef nextSibling = ctx.GetNextSiblingRef(ctx.Ref());
+                        interstice::ElementRef nextSibling = ctx.GetNextSiblingRef(ctx.Ref());
                         int32_t bottom = nextSibling.IsValid() ? topY + h : centerY;
 
                         int32_t tickRight = left + (hasArrow ? 0 : styleManager.Px(10));
 
-                        GUI::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = styleManager.Px(1.f) };
+                        interstice::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = styleManager.Px(1.f) };
                         ctx.RenderLine({ lineX, topY },    { lineX,     bottom  }, style);
                         ctx.RenderLine({ lineX, centerY }, { tickRight, centerY }, style);
                     }
@@ -192,7 +192,7 @@ namespace GUI
                     const int32_t kIndent = styleManager.Px(16);  // one visual indent level
                     const int32_t thick   = styleManager.Px(3);
                     const int32_t half    = thick / 2;         // insets that keep the line inside the row
-                    GUI::LineStyle indStyle { .colorStyleIndex = indicatorColor, .lineWidth = float(thick) };
+                    interstice::LineStyle indStyle { .colorStyleIndex = indicatorColor, .lineWidth = float(thick) };
 
                     // InsideLast → rectangle around the row (drop as last child).
                     if (m_treeDropState.position == TreeDropPosition::InsideLast)
@@ -233,19 +233,19 @@ namespace GUI
             });
     }
 
-    bool GUIApplication::TreeItemRenameCheck(GUI::ID bodyID, std::string* renameBuffer, StyleRef textStyle)
+    bool GUIApplication::TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle)
     {
         bool modified = false;
         guiStateManager.Interaction().SetFocusID(bodyID);
         guiStateManager.TextEditorFocus().Set(bodyID);
 
         // Escape cancels the rename; everything else goes to the text box handler.
-        GUI::EventHandler textHandler = MakeTextBoxHandler(guiStateManager);
-        GUI::EventHandler editHandler =
-            [this, inner = std::move(textHandler)](GUI::ElementEvent&& event) -> bool
+        interstice::EventHandler textHandler = MakeTextBoxHandler(guiStateManager);
+        interstice::EventHandler editHandler =
+            [this, inner = std::move(textHandler)](interstice::ElementEvent&& event) -> bool
             {
-                if (event.type == GUI::EventType::KeyDown &&
-                    event.state.lastKey == GUI::KeyCode::Escape)
+                if (event.type == interstice::EventType::KeyDown &&
+                    event.state.lastKey == interstice::KeyCode::Escape)
                 {
                     (*m_renameSub).Cancel();
                     return true;
@@ -253,11 +253,11 @@ namespace GUI
                 return inner ? inner(std::move(event)) : false;
             };
 
-        RegisterControl(GUI::Element{ .id = bodyID, .eventHandler = std::move(editHandler), .styleRef = textStyle },
-            [this, &modified, renameBuffer](GUI::Element& element)
+        RegisterControl(interstice::Element{ .id = bodyID, .eventHandler = std::move(editHandler), .styleRef = textStyle },
+            [this, &modified, renameBuffer](interstice::Element& element)
             {
-                return textSystem->RegisterEditableText(element.id, *renameBuffer, GUI::TextEditBehavior::None, element.styleRef, element.state, modified);
-            }, GUI::LayoutOverride::Auto());
+                return textSystem->RegisterEditableText(element.id, *renameBuffer, interstice::TextEditBehavior::None, element.styleRef, element.state, modified);
+            }, interstice::LayoutOverride::Auto());
 
         // Skip commit check on first frame — SetActiveTextEditor(Invalid) from a
         // previous deactivation leaves a stale pending_text_committed.
@@ -283,7 +283,7 @@ namespace GUI
         m_treeState.totalItemCount = itemCount;
         m_treeState.dragDrop       = dragDrop;
 
-        GUI::Element container{};
+        interstice::Element container{};
         container.id       = id;
         container.styleRef = style;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -291,20 +291,20 @@ namespace GUI
         {
             switch (event.type)
             {
-                case GUI::EventType::MouseDown:
+                case interstice::EventType::MouseDown:
                     if (!event.state.LeftPressed()) break;
                     guiStateManager.Interaction().SetFocusID(event.id);
                     guiStateManager.TextEditorFocus().Clear();
                     return true;
-                case GUI::EventType::KeyDown:
+                case interstice::EventType::KeyDown:
                 {
                     if ((guiStateManager.GetCurrentState(event.id) & ElementState::Focused) == ElementState::None)
                         break;
                     if (!selectedIndex) break;
                     switch (event.state.lastKey)
                     {
-                        case GUI::KeyCode::Up:   *selectedIndex = std::max(0, *selectedIndex - 1); return true;
-                        case GUI::KeyCode::Down: *selectedIndex = std::min(itemCount - 1, *selectedIndex + 1); return true;
+                        case interstice::KeyCode::Up:   *selectedIndex = std::max(0, *selectedIndex - 1); return true;
+                        case interstice::KeyCode::Down: *selectedIndex = std::min(itemCount - 1, *selectedIndex + 1); return true;
                         default: break;
                     }
                     break;
@@ -332,7 +332,7 @@ namespace GUI
         bool selected = IsTreeItemSelected(id, itemIndex);
 
         // Capture user-owned pointers; m_treeState is gone by the time handlers run.
-        GUI::ID containerID    = m_treeState.containerID;
+        interstice::ID containerID    = m_treeState.containerID;
         int* selectedIndex     = m_treeState.selectedIndex;
         ItemDragDropConfig* dd = m_treeState.dragDrop;
         const bool dragEnabled = (dd && dd->payloadType != 0);
@@ -351,14 +351,14 @@ namespace GUI
         {
             if (style == StyleRef{}) style = theme.listItemStyleRef;
 
-            GUI::Element item{};
+            interstice::Element item{};
             item.id       = id;
             item.state    = guiStateManager.GetCurrentState(id);
             item.styleRef = style;
             item.textID   = TreeItemRegisterText(id, text, icon, style, item.state);
             item.eventHandler = [this, containerID, id, itemIndex, selectedIndex](ElementEvent&& event) -> bool
             {
-                if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                 {
                     if (selectedIndex) *selectedIndex = itemIndex;
                     auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -391,7 +391,7 @@ namespace GUI
         // ---------------------------------------------------------------------
 
         // 1) Outer row container.
-        GUI::Element row{};
+        interstice::Element row{};
         row.id       = id;
         row.state    = guiStateManager.GetCurrentState(id);
         row.styleRef = theme.listItemRowStyleRef;
@@ -399,7 +399,7 @@ namespace GUI
         // MouseDown on the row itself (margin area) also just selects.
         row.eventHandler = [this, containerID, id, itemIndex, selectedIndex](ElementEvent&& event) -> bool
         {
-            if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+            if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
             {
                 if (selectedIndex) *selectedIndex = itemIndex;
                 auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -411,7 +411,7 @@ namespace GUI
             }
             return false;
         };
-        row.eventHandler = GUI::Chain(std::move(row.eventHandler),
+        row.eventHandler = interstice::Chain(std::move(row.eventHandler),
             MakeTreeRowDragDropHandler(id, /*rowHasChildren=*/false, dd));
 
         auto rowRes = elementStorage.Add(std::move(row), std::move(constraints));
@@ -426,8 +426,8 @@ namespace GUI
         // 2) Drag knob child (leftmost). It captures the mouse on MouseDown, so the drag
         //    must be advanced from its own MouseMove.
         {
-            GUI::ID knobID = idManager.AllocateDynamicID("list_drag_knob");
-            GUI::Element knob{};
+            interstice::ID knobID = idManager.AllocateDynamicID("list_drag_knob");
+            interstice::Element knob{};
             knob.id       = knobID;
             knob.state    = guiStateManager.GetCurrentState(knobID);
             knob.styleRef = theme.listItemDragKnobVertStyleRef;
@@ -435,7 +435,7 @@ namespace GUI
             {
                 switch (event.type)
                 {
-                    case GUI::EventType::MouseDown:
+                    case interstice::EventType::MouseDown:
                     {
                         if (!event.state.LeftPressed()) break;
                         // Selection follows the click so the correct item is highlighted.
@@ -450,13 +450,13 @@ namespace GUI
                                                   dd->visualizer);
                         return true;
                     }
-                    case GUI::EventType::MouseMove:
+                    case interstice::EventType::MouseMove:
                     {
-                        if ((event.state.buttons & GUI::MouseButtons::Left) == GUI::MouseButtons::None) break;
+                        if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         return guiStateManager.Drag().GetDraggedID() == rowID;
                     }
-                    case GUI::EventType::MouseUp:
+                    case interstice::EventType::MouseUp:
                     {
                         if (!event.state.LeftReleased()) break;
                         // Focus the row's first control, if any; otherwise leave focus alone.
@@ -489,15 +489,15 @@ namespace GUI
 
         // 3) Body child (text + icon, flex-grows to fill the remaining width).
         {
-            GUI::ID bodyID = idManager.AllocateDynamicID("list_item_body");
-            GUI::Element body{};
+            interstice::ID bodyID = idManager.AllocateDynamicID("list_item_body");
+            interstice::Element body{};
             body.id       = bodyID;
             body.state    = guiStateManager.GetCurrentState(bodyID);
             body.styleRef = theme.listItemBodyStyleRef;
             body.textID   = TreeItemRegisterText(bodyID, text, icon, theme.listItemBodyStyleRef, body.state);
             body.eventHandler = [this, rowID = id, itemIndex, selectedIndex, containerID](ElementEvent&& event) -> bool
             {
-                if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                 {
                     if (selectedIndex) *selectedIndex = itemIndex;
                     auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -521,7 +521,7 @@ namespace GUI
         return guiStateManager.Interaction().HasBeenClicked(id);
     }
 
-    int GUIApplication::FindListItemIndex(GUI::ID id) const
+    int GUIApplication::FindListItemIndex(interstice::ID id) const
     {
         auto it = m_listItemIndexByID.find(id);
         return (it != m_listItemIndexByID.end()) ? it->second : -1;
@@ -579,32 +579,32 @@ namespace GUI
             return -1;
         };
 
-        auto remap = [&](GUI::ID id, bool toAncestor) -> GUI::ID
+        auto remap = [&](interstice::ID id, bool toAncestor) -> interstice::ID
         {
-            if (id.GetMode() != GUI::IDMode::SubRange ||
+            if (id.GetMode() != interstice::IDMode::SubRange ||
                 id.value.subRangeParts.parentHashValue != state._rowsRangeID.value.rangedParts.hashValue)
                 return id;
             const size_t prevVis = size_t(id.value.subRangeParts.index);
-            if (prevVis >= prevVisible.size()) return GUI::ID::Invalid();
+            if (prevVis >= prevVisible.size()) return interstice::ID::Invalid();
             const int flat = prevVisible[prevVis];
-            if (flat < 0 || flat >= int(rows.size())) return GUI::ID::Invalid();
+            if (flat < 0 || flat >= int(rows.size())) return interstice::ID::Invalid();
             const int vis = toAncestor ? visibleOrAncestor(flat) : flatToVisible[size_t(flat)];
-            return vis >= 0 ? state.RowIDInRange(vis) : GUI::ID::Invalid();
+            return vis >= 0 ? state.RowIDInRange(vis) : interstice::ID::Invalid();
         };
 
         state.selectedRowID = remap(state.selectedRowID, true);
         if (state.multiSelect)
         {
-            std::unordered_set<GUI::ID> remapped;
-            for (GUI::ID sel : state.multiSelect->selectedIDs)
-                if (GUI::ID moved = remap(sel, false); moved != GUI::ID::Invalid())
+            std::unordered_set<interstice::ID> remapped;
+            for (interstice::ID sel : state.multiSelect->selectedIDs)
+                if (interstice::ID moved = remap(sel, false); moved != interstice::ID::Invalid())
                     remapped.insert(moved);
             state.multiSelect->selectedIDs = std::move(remapped);
             state.multiSelect->lastClickedID = remap(state.multiSelect->lastClickedID, true);
         }
     }
 
-    void GUIApplication::VirtualTreeView(GUI::ID id,
+    void GUIApplication::VirtualTreeView(interstice::ID id,
                                          std::vector<TreeViewRow>& rows,
                                          std::vector<int>& visibleIdx,
                                          TableState& state,
@@ -614,7 +614,7 @@ namespace GUI
     {
         // Rebuild the visible-row list each frame from the expand/collapse state.
         WalkTreeViewVisibility(rows, visibleIdx);
-        if (state._rowsRangeID != GUI::ID::Invalid() && visibleIdx != state._treeVisibleIdx)
+        if (state._rowsRangeID != interstice::ID::Invalid() && visibleIdx != state._treeVisibleIdx)
             RemapTreeSelection(rows, visibleIdx, state);
         state._treeVisibleIdx = visibleIdx;
 

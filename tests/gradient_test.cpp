@@ -7,7 +7,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace GUI
+namespace interstice
 {
 
     static uint8_t pack_float_to_byte(float v)

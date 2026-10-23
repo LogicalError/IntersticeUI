@@ -16,7 +16,7 @@
 #include <vector>
 #include <string>
 
-namespace GUI
+namespace interstice
 {
 
 static constexpr Diagnostics::LogCategory k_log_text = Diagnostics::MakeLogCategory("text");
@@ -135,7 +135,7 @@ static bool add_font(skb_font_collection_t* font_collection, const std::string& 
 {
 	if (skb_font_collection_add_font(font_collection, path.c_str(), family, params))
 		return true;
-	LOG_WARNING(k_log_text, "could not load font {}", path);
+	INTERSTICE_LOG_WARNING(k_log_text, "could not load font {}", path);
 	return false;
 }
 
@@ -228,4 +228,4 @@ bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackSta
 	return true;
 }
 
-} // namespace GUI
+} // namespace interstice

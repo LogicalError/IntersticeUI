@@ -6,7 +6,7 @@
 #include <functional>
 
 
-namespace GUI
+namespace interstice
 {
     using OnGuiFunc = std::function<void()>;
 
@@ -466,4 +466,4 @@ namespace GUI
     // widely-included headers avoid <chrono>'s parse cost (~0.5s per TU).
     int64_t SteadyClockNowNanos();
 
-}// namespace GUI
+}// namespace interstice

@@ -12,7 +12,7 @@
 
 #include <span>
 
-namespace GUI::RHI
+namespace interstice::RHI
 {
     struct GpuPipeline
     {

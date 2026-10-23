@@ -7,7 +7,7 @@
 #include <span>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 	struct int2;
 	class ElementStorage;
@@ -290,4 +290,4 @@ namespace GUI
         }
 
     };
-} // namespace GUI
+} // namespace interstice

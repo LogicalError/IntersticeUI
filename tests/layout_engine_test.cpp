@@ -16,7 +16,7 @@
 #include "gui_text_system_stub.h"
 #include "mock_window_backend.h"
 
-namespace GUI
+namespace interstice
 {
 
     using namespace testing;
@@ -1375,13 +1375,13 @@ namespace GUI
     TEST_F(LayoutEngineTest, WindowFixedWidthUsedAsContentPlusPaddingAndBorder)
     {
         Style menuStyle;
-        menuStyle.padding = GUI::BoxEdges(10);
-        menuStyle.borderWidths = GUI::BoxEdges(2);
+        menuStyle.padding = interstice::BoxEdges(10);
+        menuStyle.borderWidths = interstice::BoxEdges(2);
         StyleRef menuRef = styleManager.Register(menuStyle);
 
         Style buttonStyle;
-        buttonStyle.padding = GUI::BoxEdges(0);
-        buttonStyle.borderWidths = GUI::BoxEdges(0);
+        buttonStyle.padding = interstice::BoxEdges(0);
+        buttonStyle.borderWidths = interstice::BoxEdges(0);
         StyleRef buttonRef = styleManager.Register(buttonStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);

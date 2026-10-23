@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <span>
 
-namespace GUI
+namespace interstice
 {
     enum class VisualBoxStyleIndex : uint16_t;
     enum class VisualColorStyleIndex : uint16_t;
@@ -32,47 +32,47 @@ namespace GUI
         virtual void Reset() = 0;
 
 
-        virtual void SetTransform(GUI::float3x2 transformation) = 0;
+        virtual void SetTransform(interstice::float3x2 transformation) = 0;
 
         // from/toStyleIndex are flat GPU style indices; blendT 0 = fully "from", 1 = fully "to".
         // colorStyleIndex overrides the box style's background (Invalid = no override).
         // snappedPx: the box in window pixels snapped relative to its parent
         // (gui_pixel_snap.h); empty = snap the transformed rect to the pixel grid.
-        virtual void RenderBox(GUI::IntRect rect, GUI::IntRect clipRect,
+        virtual void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect,
                                uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT,
-                               GUI::VisualColorStyleIndex colorStyleIndex = {},
-                               GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid,
-                               GUI::IntRect snappedPx = {}) = 0;
+                               interstice::VisualColorStyleIndex colorStyleIndex = {},
+                               interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid,
+                               interstice::IntRect snappedPx = {}) = 0;
 
-        void RenderBox(GUI::IntRect rect, GUI::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
-                       GUI::ElementState state, GUI::VisualColorStyleIndex colorStyleIndex = {},
-                       GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid, GUI::IntRect snappedPx = {});
+        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
+                       interstice::ElementState state, interstice::VisualColorStyleIndex colorStyleIndex = {},
+                       interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
 
-        void RenderBox(GUI::IntRect rect, GUI::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
-                       GUI::VisualColorStyleIndex colorStyleIndex = {},
-                       GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid, GUI::IntRect snappedPx = {});
+        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
+                       interstice::VisualColorStyleIndex colorStyleIndex = {},
+                       interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
 
-        virtual void RenderLine(GUI::int2 p0, GUI::int2 p1, GUI::int2 p2, GUI::int2 p3, GUI::IntRect clipRect, const LineStyle& lineStyle) = 0;
-        void         RenderLine(GUI::int2 p0, GUI::int2 p1, GUI::IntRect clipRect, const LineStyle& lineStyle) { RenderLine(p0, p0, p1, p1, clipRect, lineStyle); }
+        virtual void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const LineStyle& lineStyle) = 0;
+        void         RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::IntRect clipRect, const LineStyle& lineStyle) { RenderLine(p0, p0, p1, p1, clipRect, lineStyle); }
 
-        void RenderCircle(GUI::int2 center, float radius, GUI::IntRect clipRect, const LineStyle& lineStyle);
+        void RenderCircle(interstice::int2 center, float radius, interstice::IntRect clipRect, const LineStyle& lineStyle);
 
-        virtual void RenderDot(GUI::float2 pos, GUI::IntRect clipRect, float size, GUI::color4f color) = 0;
-        virtual void RenderTriangle(GUI::float2 p0, GUI::float2 p1, GUI::float2 p2, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) = 0;
+        virtual void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color) = 0;
+        virtual void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 
         // A Box without SDF borders, style blending or element state.
-        virtual void RenderQuad(GUI::IntRect rect, GUI::IntRect clipRect, GUI::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) = 0;
+        virtual void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 
-        virtual void RenderGlyph(GUI::float2 pos, GUI::float2 size, GUI::float2 uvMin, GUI::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, GUI::IntRect clipRect, GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid) = 0;
+        virtual void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 
         // Convex polygon, fan-triangulated from points[0]; needs at least 3 points.
-        void RenderFilledPolygon(std::span<const GUI::float2> points, GUI::IntRect clipRect,
+        void RenderFilledPolygon(std::span<const interstice::float2> points, interstice::IntRect clipRect,
                                  VisualColorStyleIndex colorIndex,
-                                 GUI::ImageIndex textureIndex = GUI::ImageIndex::Invalid);
+                                 interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
 
         // Outlined polyline. closed=true adds a closing segment from last→first point.
-        void RenderPolyline(std::span<const GUI::int2> points, bool closed,
-                            GUI::IntRect clipRect, const LineStyle& style);
+        void RenderPolyline(std::span<const interstice::int2> points, bool closed,
+                            interstice::IntRect clipRect, const LineStyle& style);
 
     public:
         virtual bool StartResizing(ID id) = 0;
@@ -89,7 +89,7 @@ namespace GUI
         //   false if nothing is cached for scopeId.
         virtual void BeginScopeCapture(ID /*scopeId*/) {}
         virtual void EndScopeCapture(ID /*scopeId*/) {}
-        virtual bool ReplayScopeCapture(ID /*scopeId*/, GUI::int2 /*delta*/) { return false; }
+        virtual bool ReplayScopeCapture(ID /*scopeId*/, interstice::int2 /*delta*/) { return false; }
         virtual bool HasScopeCapture(ID /*scopeId*/) const { return false; }
         virtual void InvalidateScopeCapture(ID /*scopeId*/) {}
         virtual void ClearScopeCaptures() {}

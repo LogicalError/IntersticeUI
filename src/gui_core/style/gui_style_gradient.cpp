@@ -6,7 +6,7 @@
 #include <array>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 using namespace ColorConvert;
 void Gradient::WriteTo(std::span<color4b> out) const
@@ -192,4 +192,4 @@ void Gradient::WriteTo(std::span<color4b> out) const
         out[i] = color4b{ pack(c.r), pack(c.g), pack(c.b), pack(c.a) };
     }
 }
-} // namespace GUI
+} // namespace interstice

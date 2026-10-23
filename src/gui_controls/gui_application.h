@@ -72,7 +72,7 @@
 #include <gui_controls/subsystems/gui_reorderable_subsystem.h>
 #include <gui_controls/subsystems/gui_ui_cache_subsystem.h>
 
-namespace GUI
+namespace interstice
 {
     void VERIFY(ElementStorageResult result);
     void VERIFY(RegistryResult result);
@@ -137,7 +137,7 @@ namespace GUI
         void NoteSwatchClaim(ID swatchID);
 
         // Panel id → its dock content (cached scope) id, for InvalidatePanel.
-        std::unordered_map<GUI::ID, GUI::ID>       m_panelContentIDs;
+        std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
 
         GradientManager     gradientManager{};
         StyleManager        styleManager { gradientManager };
@@ -183,7 +183,7 @@ namespace GUI
 
         // ---- ListView ID->index map (shared by every list view; cleared once per frame) ----
         // Filled by ListItem when dragDrop is on; valid in end-of-frame handlers via FindListItemIndex().
-        std::unordered_map<GUI::ID, int> m_listItemIndexByID;
+        std::unordered_map<interstice::ID, int> m_listItemIndexByID;
 
 
         // Transient construction state (defs in gui_tree_grid_types.h), valid only between
@@ -192,7 +192,7 @@ namespace GUI
         GridViewState m_gridViewState;
 
         // GridView rename lookup, shared by every grid view; cleared before construction.
-        std::unordered_map<GUI::ID, GridItemRenameInfo> m_gridItemRenameByID;
+        std::unordered_map<interstice::ID, GridItemRenameInfo> m_gridItemRenameByID;
 
 
         // Transient state of the VirtualTable being emitted (def in gui_table_types.h).
@@ -209,13 +209,13 @@ namespace GUI
 
         TabBarState m_tabBarState;
 
-        void CreatePanel(std::unordered_map<GUI::ID, GUI::Panel>& panels, ID id, std::string title, GUI::IconID icon,
+        void CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
                          std::function<void()> onPanelGUI,
                          std::string panelType = {},
                          std::function<void()> onEnable = {},
                          std::function<void()> onDisable = {});
 
-        GUI::ID CreatePanel(std::unordered_map<GUI::ID, GUI::Panel>& panels, std::string title, GUI::IconID icon,
+        interstice::ID CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, std::string title, interstice::IconID icon,
                             std::function<void()> onPanelGUI,
                             std::string panelType = {},
                             std::function<void()> onEnable = {},
@@ -258,13 +258,13 @@ namespace GUI
 
         // Dock leaf whose tab bar contains screenPos, plus its owning layout (needed by
         // TransferPanel for cross-layout drops). {nullptr, nullptr} on miss.
-        DockLeafResult FindDockLeafAtScreenPos(GUI::int2 screenPos);
+        DockLeafResult FindDockLeafAtScreenPos(interstice::int2 screenPos);
 
         // Uses last frame's tab-bar rects, so it works during construction.
-        GUI::DockNode* FindDockLeafTabBarCachedAtScreenPos(GUI::int2 screenPos);
+        interstice::DockNode* FindDockLeafTabBarCachedAtScreenPos(interstice::int2 screenPos);
 
         // Hit-tests leaf content areas; falls back to tab bars with zone=Center.
-        DockDropResult FindDockDropTargetAtScreenPos(GUI::int2 screenPos);
+        DockDropResult FindDockDropTargetAtScreenPos(interstice::int2 screenPos);
 
         std::vector<std::unique_ptr<FloatingDockWindow>> m_floatingDockWindows;
 
@@ -278,7 +278,7 @@ namespace GUI
         void CloseDockedPanel(DockingLayout& layout, DockNode& leaf, int tabIndex);
 
         // Moves a panel from sourceNode/sourceLayout to targetLayout, fixing up selectedTab.
-        static void TransferPanel(GUI::ID panelID, GUI::DockNode* sourceNode,
+        static void TransferPanel(interstice::ID panelID, interstice::DockNode* sourceNode,
                                   DockingLayout* sourceLayout,
                                   DockingLayout* targetLayout);
 
@@ -392,18 +392,18 @@ namespace GUI
         // outlive the frame: user-owned pointers, GUIApplication members and copies are fine;
         // transient construction state (m_treeState, ...) and OnGUI stack locals are not.
         //
-        GUI::EventHandler MakeToggleHandler(bool& toggle);
-        GUI::EventHandler MakeButtonHandler(std::function<void()> onClick);
-        GUI::EventHandler MakeLabelHandler();
+        interstice::EventHandler MakeToggleHandler(bool& toggle);
+        interstice::EventHandler MakeButtonHandler(std::function<void()> onClick);
+        interstice::EventHandler MakeLabelHandler();
 
-        GUI::ElementRef RegisterElementInternal(GUI::Element&& element, LayoutOverride&& constraints, bool updateState = true);
-        GUI::ElementRef RegisterElement(GUI::Element&& element, LayoutOverride&& constraints);
-        GUI::ElementRef RegisterElement(GUI::Element&& element, std::string_view text, LayoutOverride&& constraints);
+        interstice::ElementRef RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState = true);
+        interstice::ElementRef RegisterElement(interstice::Element&& element, LayoutOverride&& constraints);
+        interstice::ElementRef RegisterElement(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints);
 
 
-        GUI::ElementRef RegisterControl(GUI::Element&& element, LayoutOverride&& constraints);
-        GUI::ElementRef RegisterControl(GUI::Element&& element, std::string_view text, LayoutOverride&& constraints);
-        GUI::ElementRef RegisterControl(GUI::Element&& element, std::function<TextID(GUI::Element& element)> createTextID, LayoutOverride&& constraints);
+        interstice::ElementRef RegisterControl(interstice::Element&& element, LayoutOverride&& constraints);
+        interstice::ElementRef RegisterControl(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints);
+        interstice::ElementRef RegisterControl(interstice::Element&& element, std::function<TextID(interstice::Element& element)> createTextID, LayoutOverride&& constraints);
 
         // Reusable interactive menu-item row: an optional fixed icon slot, a grow:1
         // label, and an optional trailing text (keyboard shortcut or submenu arrow).
@@ -411,7 +411,7 @@ namespace GUI
         // highlight; its children are non-interactive so the whole row reads as one.
         // `reserveIcon` keeps the icon slot present even when `icon` is Invalid so
         // labels line up across a menu that mixes icon and icon-less items.
-        GUI::ElementRef MenuItemRow(ID id, GUI::EventHandler handler, StyleRef rowStyle,
+        interstice::ElementRef MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
                                     bool reserveIcon, IconID icon, std::string_view text,
                                     std::string_view trailing, StyleRef trailingStyle,
                                     LayoutOverride&& constraints);
@@ -610,7 +610,7 @@ namespace GUI
         // onDragOut(index, screenPos): an item was released outside the group.
         // dragVisualizer(index, screenPos): each frame while dragging outside the group,
         // typically to draw a ghost window; suppresses the in-place cross-axis offset.
-        bool        BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::function<void(int, GUI::int2)> onDragOut = nullptr, std::function<void(int, GUI::int2)> dragVisualizer = nullptr);
+        bool        BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::function<void(int, interstice::int2)> onDragOut = nullptr, std::function<void(int, interstice::int2)> dragVisualizer = nullptr);
         inline bool BeginReorderableGroup(ID id, ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {})
         { return BeginReorderableGroup(id, direction, false, std::move(onReorder), style, std::move(constraints)); }
         inline bool BeginReorderableGroup(ID id, ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, LayoutOverride&& constraints = {})
@@ -648,7 +648,7 @@ namespace GUI
         inline bool BeginListView(       int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}) { return BeginListView(idManager.AllocateDynamicID(), selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
         void EndListView();
 
-        int FindListItemIndex(GUI::ID id) const;
+        int FindListItemIndex(interstice::ID id) const;
 
         bool        ListItem(ID id, std::string_view text, IconID icon = IconID::Invalid, StyleRef style = {}, LayoutOverride&& constraints = {});
         inline bool ListItem(ID id, std::string_view text, LayoutOverride&& constraints = {}) { return ListItem(id, text, IconID::Invalid, theme.listItemStyleRef, std::move(constraints)); }
@@ -686,12 +686,12 @@ namespace GUI
         // renameBuffer (optional) enables in-place rename: F2, Ctrl+Shift+Click or a slow
         // re-click opens an editor. Enter commits; Escape or focus loss cancels.
         bool        GridViewItem(ID id, std::string_view text, IconID icon = IconID::Invalid,
-                                 GUI::ElementState extraState = GUI::ElementState::None,
+                                 interstice::ElementState extraState = interstice::ElementState::None,
                                  StyleRef itemStyle = {},
                                  LayoutOverride&& constraints = {},
                                  std::string* renameBuffer = nullptr);
         inline bool GridViewItem(std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
-            { return GridViewItem(idManager.AllocateDynamicID(), text, icon, GUI::ElementState::None, {}, std::move(constraints)); }
+            { return GridViewItem(idManager.AllocateDynamicID(), text, icon, interstice::ElementState::None, {}, std::move(constraints)); }
 
 
         // generateItem(index, itemID) must emit exactly one cell, typically GridViewItem(itemID, ...).
@@ -797,8 +797,8 @@ namespace GUI
         bool BeginTabBar(ID id, int* selectedIndex,
                          std::function<void(int, int)> onReorder,
                          std::function<void(int)> onClose = nullptr,
-                         std::function<void(int, GUI::int2)> onDragOut = nullptr,
-                         std::function<void(int, GUI::int2)> dragVisualizer = nullptr,
+                         std::function<void(int, interstice::int2)> onDragOut = nullptr,
+                         std::function<void(int, interstice::int2)> dragVisualizer = nullptr,
                          StyleRef style = {},
                          LayoutOverride&& constraints = {});
         void EndTabBar();
@@ -816,13 +816,13 @@ namespace GUI
 
     private:
         // Popup content for ColorField / GradientField.
-        void EmitColorPicker(GUI::color4f& outColor, bool allowHDR);
-        void EmitGradientEditor(GUI::Gradient& outGradient);
+        void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);
+        void EmitGradientEditor(interstice::Gradient& outGradient);
         // Horizontal gradient bar with a triangle indicator.
-        void GradientSlider(GUI::ID id, float& value, float minVal, float maxVal,
+        void GradientSlider(interstice::ID id, float& value, float minVal, float maxVal,
                             std::string_view label,
-                            GUI::VisualColorStyleIndex gradientStyle,
-                            GUI::VisualColorStyleIndex triangleStyle,
+                            interstice::VisualColorStyleIndex gradientStyle,
+                            interstice::VisualColorStyleIndex triangleStyle,
                             LayoutOverride&& constraints = {});
 
         // Column-boundary sizers for [colStart, colEnd), anchored to each header cell's right edge.
@@ -841,22 +841,22 @@ namespace GUI
         void EmitTableSectionSeparator();
 
         // Adds column c's reorder-drag X offset while a drag is live.
-        GUI::LayoutOverride ApplyColumnDragOffsetX(GUI::LayoutOverride lo,
+        interstice::LayoutOverride ApplyColumnDragOffsetX(interstice::LayoutOverride lo,
                                                    const TableEmit& emit, int c) const
         {
             if (emit.dragActive)
-                lo = std::move(lo).PositionX(GUI::PositionConstraintAxis::Relative(emit.columns[c]._dragOffsetX));
+                lo = std::move(lo).PositionX(interstice::PositionConstraintAxis::Relative(emit.columns[c]._dragOffsetX));
             return lo;
         }
         // Mirrors Y across the left/mid/right bodies and X to the mid header; absent sections have invalid IDs.
         void MirrorTableScroll(TableState* state);
         // `gridCol` is section-local. `sectionMin/Max` are the inclusive global columns
         // the reorder drag may move this header within.
-        void EmitTableHeaderCell(TableEmit& emit, GUI::ID tableID, int c, int16_t gridCol,
+        void EmitTableHeaderCell(TableEmit& emit, interstice::ID tableID, int c, int16_t gridCol,
                                  bool isStretchTrack, int sectionMin, int sectionMax,
                                  int effectiveSortCol, IconID sortIcon);
         // Header cells go into row 0 of the section's body grid, StickyY-pinned to the top.
-        void EmitTableHeaderSection(TableEmit& emit, GUI::ID tableID,
+        void EmitTableHeaderSection(TableEmit& emit, interstice::ID tableID,
                                     int colStart, int colEnd, bool lastColIsStretch,
                                     int effectiveSortCol, IconID sortIcon);
         // Stretch for Stretch columns and the middle section's last column; fitContent
@@ -865,58 +865,58 @@ namespace GUI
                                             bool isMiddle, bool fitContent = false) const;
         // Follow with the row loop and CloseTableBodySection. `sampleViewport` records the
         // viewport size for next frame (primary section only).
-        void OpenTableBodySection(TableEmit& emit, GUI::ID sectionID, GUI::StyleRef sectionStyle,
-                                  GUI::LayoutOverride&& layout, bool sampleViewport);
+        void OpenTableBodySection(TableEmit& emit, interstice::ID sectionID, interstice::StyleRef sectionStyle,
+                                  interstice::LayoutOverride&& layout, bool sampleViewport);
         // Emits sizers and the section's H scrollbar (the rightmost section also gets the
         // shared V scrollbar). suppressHorzScrollbar is for fit-content sections.
         void CloseTableBodySection(TableEmit& emit,
-                                   GUI::ID sectionBodyID, bool emitVerticalScrollbar,
+                                   interstice::ID sectionBodyID, bool emitVerticalScrollbar,
                                    bool suppressHorzScrollbar = false);
         // Row loop for an open body section: spacers for off-screen rows, backdrop + cells for visible ones.
         void EmitVirtualBodyRows(TableEmit& emit,
                                  int colStart, int colEnd,
                                  int totalRowCount, int32_t actualRowHeight,
                                  int firstVisible, int lastVisible,
-                                 GUI::ID rowsRangeID,
+                                 interstice::ID rowsRangeID,
                                  bool isLastSection);
 
         // Emits the dragged column (cells, header, sizer) last so it paints on top.
         // Only when emit.dragActive and draggedCol is in [colStart, colEnd).
-        void EmitDraggedColumnOnTop(TableEmit& emit, GUI::ID tableID,
+        void EmitDraggedColumnOnTop(TableEmit& emit, interstice::ID tableID,
                                     int colStart, int colEnd,
                                     int firstVisible, int lastVisible,
-                                    GUI::ID rowsRangeID,
+                                    interstice::ID rowsRangeID,
                                     bool lastColIsStretch,
                                     int effectiveSortCol, IconID sortIcon);
         // Cell emitters for Cell() / TreeCell(), into the open body section.
         void EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
-                                GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
-                                GUI::TextID textID,
+                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                interstice::TextID textID,
                                 int colIdx, int colStart, int16_t gridRow);
         void EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
-                                  GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                  GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
+                                  interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                  interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
                                   bool cellSelected,
                                   std::function<void()> emit_fn,
                                   int colIdx, int colStart, int16_t gridRow);
         void EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
-                                GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
+                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
                                 bool cellSelected,
-                                GUI::TextID textID,
+                                interstice::TextID textID,
                                 int treeDepth, bool* treeIsOpen, IconID treeIcon,
                                 uint32_t treeAncestorMask, bool treeIsLastSibling,
                                 std::string* treeRenameBuffer, bool treeRenameActive,
-                                GUI::ID treeBodyID, bool reserveExpander,
+                                interstice::ID treeBodyID, bool reserveExpander,
                                 int colIdx, int colStart, int16_t gridRow);
         // One element spanning [colStart, colEnd) at gridRow.
-        void EmitDirectRowBackdrop(GUI::ID rowID, int16_t gridRow,
+        void EmitDirectRowBackdrop(interstice::ID rowID, int16_t gridRow,
                                    int colStart, int colEnd,
-                                   GUI::ElementState backdropState,
-                                   GUI::ElementFlags backdropFlags,
-                                   GUI::StyleRef rowStyle,
-                                   GUI::EventHandler backdropHandler,
+                                   interstice::ElementState backdropState,
+                                   interstice::ElementFlags backdropFlags,
+                                   interstice::StyleRef rowStyle,
+                                   interstice::EventHandler backdropHandler,
                                    TableState* tableState,
                                    bool isLastSection);
         // Invisible row of `height` pixels at gridRow.
@@ -924,20 +924,20 @@ namespace GUI
                                  int colStart, int colEnd, int32_t height);
         // Row-mode backdrop MouseDown handler, shared by all rows (the row comes from the event id):
         // selection, double-click toggle, rename start.
-        GUI::EventHandler BuildRowBackdropHandler(TableState* state,
-                                                  GUI::ID containerID);
+        interstice::EventHandler BuildRowBackdropHandler(TableState* state,
+                                                  interstice::ID containerID);
         // Focus on click, scroll routing to the middle body, keyboard navigation.
-        GUI::EventHandler BuildTableContainerHandler(TableState* state,
-                                                     GUI::ID containerID);
+        interstice::EventHandler BuildTableContainerHandler(TableState* state,
+                                                     interstice::ID containerID);
 
         // Tree/list item construction helpers (OnGUI only, not from handlers).
-        bool IsTreeItemSelected(GUI::ID id, int itemIndex) const;
-        GUI::TextID TreeItemRegisterText(GUI::ID id, std::string_view text, IconID icon, StyleRef style, GUI::ElementState state);
-        void TreeItemRowCustomDraw(const GUI::ElementRef& rowRef, bool hasArrow, GUI::ID rowID);
-        GUI::EventHandler MakeTreeRowDragDropHandler(GUI::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
-        bool TreeItemRenameCheck(GUI::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
+        bool IsTreeItemSelected(interstice::ID id, int itemIndex) const;
+        interstice::TextID TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state);
+        void TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID);
+        interstice::EventHandler MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
+        bool TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
 
-        struct TreeClickState { GUI::ID lastClickID = GUI::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
+        struct TreeClickState { interstice::ID lastClickID = interstice::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
     public:
 
         bool        Field(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
@@ -966,8 +966,8 @@ namespace GUI
         {
             if (guiStateManager.Construction().IsIndeterminate())
             {
-                RegisterControl(GUI::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                    [this](GUI::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
+                RegisterControl(interstice::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                    [this](interstice::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
                     std::move(constraints));
                 return false;
             }
@@ -978,8 +978,8 @@ namespace GUI
                 if (nodeRowFieldMinWidth > 0 && !constraints.HasFixedWidth())
                     constraints.FlexGrow(1).MinWidth(nodeRowFieldMinWidth);
                 bool modified = false;
-                RegisterControl(GUI::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                                [this, &modified, &value, textEditBehavior, config](GUI::Element& element) { return textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config); },
+                RegisterControl(interstice::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                                [this, &modified, &value, textEditBehavior, config](interstice::Element& element) { return textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config); },
                                 std::move(constraints));
                 guiStateManager.SetModified(modified);
                 return modified;
@@ -988,7 +988,7 @@ namespace GUI
                 bool modified = false;
                 // Width 0 + flex-grow: the group fills remaining space after the label.
                 constraints.Width(0);
-                RegisterElement(GUI::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
+                RegisterElement(interstice::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
                 VERIFY(elementStorage.BeginChildren());
                 {
 					for (int i = 0; i < TypeDimensions<T>::dimensions; i++)
@@ -1043,24 +1043,24 @@ namespace GUI
 
                 if (BeginReorderableGroup(groupID, ReorderDirection::Vertical,
                                           std::move(onReorder),
-                                          GUI::LayoutOverride{}.FlexGrow(1)))
+                                          interstice::LayoutOverride{}.FlexGrow(1)))
                 {
                     for (int i = 0; i < (int)items.size(); i++)
                     {
                         BeginReorderableItem(idManager.AllocateDynamicID(),
-                                             GUI::LayoutOverride{}.FlexGrow(1));
+                                             interstice::LayoutOverride{}.FlexGrow(1));
                         {
                             EmitDragHandle();
-                            Field(items[i], GUI::LayoutOverride{}.FlexGrow(1));
+                            Field(items[i], interstice::LayoutOverride{}.FlexGrow(1));
                             Button(theme.removeIcon, [&items, i]() { items.erase(items.begin() + i); },
-                                theme.iconButtonStyleRef, GUI::LayoutOverride{}.NoGrow());
+                                theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
                         }
                         EndReorderableItem();
                     }
                     EndReorderableGroup();
                 }
                 Button(theme.addIcon, [&items]() { items.push_back({}); },
-                       theme.iconButtonEndStyleRef, GUI::LayoutOverride{}.NoGrow());
+                       theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
                 EndArea();
             }
         }
@@ -1078,14 +1078,14 @@ namespace GUI
             {
                 for (int i = 0; i < (int)items.size(); i++)
                 {
-                    Field(items[i].first,  GUI::LayoutOverride{}.FlexGrow(1).KeepWithNext());
-                    Text(":",              GUI::LayoutOverride{}.NoGrow()   .KeepWithNext());
-                    Field(items[i].second, GUI::LayoutOverride{}.FlexGrow(1).KeepWithNext());
+                    Field(items[i].first,  interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
+                    Text(":",              interstice::LayoutOverride{}.NoGrow()   .KeepWithNext());
+                    Field(items[i].second, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
                     Button(theme.removeIcon, [&items, i]() { items.erase(items.begin() + i); },
-                        theme.iconButtonStyleRef, GUI::LayoutOverride{}.NoGrow());
+                        theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
                 }
                 Button(theme.addIcon, [&items]() { items.push_back({ std::string{}, V{} }); },
-                    theme.iconButtonEndStyleRef, GUI::LayoutOverride{}.NoGrow());
+                    theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
                 EndArea();
             }
         }
@@ -1107,16 +1107,16 @@ namespace GUI
                 for (auto& pair : items)
                 {
                     std::string key = pair.first;
-                    if (Field(key, TextEditBehavior::None, GUI::LayoutOverride{}.FlexGrow(1).KeepWithNext()) && key != pair.first)
+                    if (Field(key, TextEditBehavior::None, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext()) && key != pair.first)
                     {
                         renameFrom = pair.first;
                         renameTo   = key;
                         rename     = true;
                     }
-                    Text(":", GUI::LayoutOverride{}.NoGrow().KeepWithNext());
-                    Field(pair.second, GUI::LayoutOverride{}.FlexGrow(1).KeepWithNext());
+                    Text(":", interstice::LayoutOverride{}.NoGrow().KeepWithNext());
+                    Field(pair.second, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
                     Button(theme.removeIcon, [&items, k = pair.first]() { items.erase(k); },
-                        theme.iconButtonStyleRef, GUI::LayoutOverride{}.NoGrow());
+                        theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
                 }
                 if (rename && !items.contains(renameTo))
                 {
@@ -1125,7 +1125,7 @@ namespace GUI
                     items.insert(std::move(node));
                 }
                 Button(theme.addIcon, [&items]() { items.emplace(std::string{}, V{}); },
-                    theme.iconButtonEndStyleRef, GUI::LayoutOverride{}.NoGrow());
+                    theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
                 EndArea();
             }
         }
@@ -1134,11 +1134,11 @@ namespace GUI
 
 
         // ---- ColorField: swatch + color picker popup ----
-        bool ColorField(GUI::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
-        bool ColorField(GUI::color4b& value, LayoutOverride&& constraints = {});
+        bool ColorField(interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
+        bool ColorField(interstice::color4b& value, LayoutOverride&& constraints = {});
 
         // ---- GradientField: gradient swatch + editor popup ----
-        bool GradientField(GUI::Gradient& value, LayoutOverride&& constraints = {});
+        bool GradientField(interstice::Gradient& value, LayoutOverride&& constraints = {});
 
         // ---- SliderField: DragLabel + horizontal slider track + numeric textbox ----
         bool        SliderField(ID id, float& value, float minVal, float maxVal,
@@ -1209,7 +1209,7 @@ namespace GUI
 
             auto&& constraints = LayoutOverride::FixedSize(size.x, size.y).Position(position.x, position.y);
 
-            ElementFlags elementFlags = GUI::ElementFlags::WindowNoCaption | GUI::ElementFlags::WindowIsTransparent;
+            ElementFlags elementFlags = interstice::ElementFlags::WindowNoCaption | interstice::ElementFlags::WindowIsTransparent;
             return BeginWindow(windowLayoutID, std::move(constraints), styleRef, elementFlags);
         }
 
@@ -1250,7 +1250,7 @@ namespace GUI
         void AddGhostIcon(IconID icon)
         {
             auto dragGhostIconID = idManager.AllocateDynamicID();
-            GUI::Element ghostIcon
+            interstice::Element ghostIcon
             {
                 .id       = dragGhostIconID,
                 .textID   = TextID::Invalid,
@@ -1259,7 +1259,7 @@ namespace GUI
             };
 
             auto ghostIconRes = elementStorage.Add(std::move(ghostIcon),
-                                                   GUI::LayoutOverride::FixedSize(styleManager.Px(28), styleManager.Px(28)));
+                                                   interstice::LayoutOverride::FixedSize(styleManager.Px(28), styleManager.Px(28)));
             VERIFY(ghostIconRes.status);
             VERIFY(windowRegistry.Add(ghostIconRes.ref));
         }
@@ -1325,7 +1325,7 @@ namespace GUI
                 if (constraints.x.type == PositionType::Fixed &&
                     constraints.y.type == PositionType::Fixed)
                 {
-                    monitorIndex = windowManager->GetMonitorIndexAt(GUI::int2{ .x = constraints.x.near, .y = constraints.y.near });
+                    monitorIndex = windowManager->GetMonitorIndexAt(interstice::int2{ .x = constraints.x.near, .y = constraints.y.near });
                 } else
                     monitorIndex = windowManager->GetPrimaryMonitorIndex();
             }
@@ -1333,7 +1333,7 @@ namespace GUI
             Element windowElement
             {
                 .id           = windowLayoutID,
-                .textID       = (title.size() == 0) ? TextID::Invalid : textSystem->RegisterText(windowLayoutID, title, styleRef, GUI::ElementState::None),
+                .textID       = (title.size() == 0) ? TextID::Invalid : textSystem->RegisterText(windowLayoutID, title, styleRef, interstice::ElementState::None),
                 .styleRef     = styleRef,
                 .monitorIndex = (int16_t)monitorIndex,
                 .flags        = ElementFlags::IsWindow | flags
@@ -1452,13 +1452,13 @@ namespace GUI
         {
             struct Page
             {
-                GUI::ID               id;
+                interstice::ID               id;
                 std::string           name;
                 std::function<void()> render;
             };
 
             std::vector<Page> pages;
-            GUI::ID           selectedID = GUI::ID::Invalid();
+            interstice::ID           selectedID = interstice::ID::Invalid();
             int               treeWidth  = 200; // CSS pixels
 
             // ---- internal: tree-view backing state (rebuilt per frame) ----
@@ -1467,11 +1467,11 @@ namespace GUI
             TableState               _tableState;
 
             // `id` must be stable. The first page added is selected initially.
-            GUI::ID AddPage(GUI::ID id, std::string_view name, 
+            interstice::ID AddPage(interstice::ID id, std::string_view name, 
                             std::function<void()> render)
             {
                 pages.push_back({ id, std::string(name), std::move(render) });
-                if (selectedID == GUI::ID::Invalid()) selectedID = id;
+                if (selectedID == interstice::ID::Invalid()) selectedID = id;
                 return id;
             }
         };
@@ -1481,4 +1481,4 @@ namespace GUI
 
     };
 
-} // namespace GUI
+} // namespace interstice

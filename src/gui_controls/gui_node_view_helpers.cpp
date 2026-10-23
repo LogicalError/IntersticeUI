@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
     void RenderCanvasGrid(CustomDrawContext& ctx, int32_t baseGridSize,
                           const LineStyle& style, int2 originOffset, IntRect clipCurrent)

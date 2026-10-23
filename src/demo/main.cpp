@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string_view>
 
-static constexpr GUI::Diagnostics::LogCategory kLogDemo = GUI::Diagnostics::MakeLogCategory("demo");
+static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
 
 //
 // This project is for testing and prototyping GUI features, so we can iterate on them quickly without worrying about organization / structure / etc. 
@@ -13,7 +13,7 @@ static constexpr GUI::Diagnostics::LogCategory kLogDemo = GUI::Diagnostics::Make
 
 int main(int argc, char* argv[])
 {
-    GUI::Application* application = new GUI::Application();
+    interstice::Application* application = new interstice::Application();
 
     // --ui-scale <factor>: zoom the UI on top of the OS display scale (e.g. 1.5).
     for (int i = 1; i + 1 < argc; ++i)
@@ -32,18 +32,18 @@ int main(int argc, char* argv[])
 				returnCode = EXIT_SUCCESS;
 			} else
 			{
-				LOG_ERROR(kLogDemo, "Application::Run failed");
+				INTERSTICE_LOG_ERROR(kLogDemo, "Application::Run failed");
 				fflush(stderr);
             }
         } else
         {
-            LOG_ERROR(kLogDemo, "Application::Initialize failed");
+            INTERSTICE_LOG_ERROR(kLogDemo, "Application::Initialize failed");
             fflush(stderr);
         }
     }
     catch (const std::exception& e)
     {
-        LOG_CRITICAL(kLogDemo, "Unhandled exception: {}", e.what());
+        INTERSTICE_LOG_CRITICAL(kLogDemo, "Unhandled exception: {}", e.what());
         fflush(stderr);
         returnCode = EXIT_FAILURE;
     }

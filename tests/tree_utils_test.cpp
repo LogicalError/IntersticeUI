@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace {
 
@@ -22,7 +22,7 @@ namespace GUI
             bool        isLastSibling    = false;
         };
 
-        using DropPos = GUI::TreeDropPosition;
+        using DropPos = interstice::TreeDropPosition;
 
         // A(0)
         //   B(1)

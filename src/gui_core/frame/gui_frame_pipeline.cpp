@@ -2,7 +2,7 @@
 
 #include <gui_core/diagnostics/gui_profiler.h>
 
-namespace GUI
+namespace interstice
 {
 #if INTERSTICE_PROFILE_ENABLED
     namespace
@@ -26,7 +26,7 @@ namespace GUI
 
     void FramePipeline::RunStage(FrameStage stage, FrameContext& ctx)
     {
-        PROFILE_SCOPE_REF(kStageScopes[static_cast<size_t>(stage)]);
+        INTERSTICE_PROFILE_SCOPE_REF(kStageScopes[static_cast<size_t>(stage)]);
 
         const std::vector<StageCallback>* callbacks = nullptr;
         switch (stage)

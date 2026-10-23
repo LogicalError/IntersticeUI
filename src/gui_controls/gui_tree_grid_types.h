@@ -10,7 +10,7 @@
 
 // TreeView / ListView / GridView data + construction state.
 
-namespace GUI
+namespace interstice
 {
     // ---- Transient tree/list construction state (valid between Begin/End) ----
     //
@@ -18,12 +18,12 @@ namespace GUI
     // so they must capture the user-owned pointers instead of reading m_treeState.
     //
     struct TreeViewState {
-        GUI::ID   containerID = GUI::ID::Invalid();
+        interstice::ID   containerID = interstice::ID::Invalid();
         int       nextItemIndex = 0;
         int       totalItemCount = 0;
         int       depth = 0;                        // nesting depth (0 = top-level, no guide lines)
         int*      selectedIndex = nullptr;          // for ListView index-based selection
-        GUI::ID*  selectedID = nullptr;             // for single-ID selection
+        interstice::ID*  selectedID = nullptr;             // for single-ID selection
         MultiSelectState* multiSelect = nullptr;    // for multi-selection
         ItemDragDropConfig* dragDrop = nullptr;     // drag & drop config
     };
@@ -34,7 +34,7 @@ namespace GUI
     // capture user-owned pointers.
     //
     struct GridViewState {
-        GUI::ID containerID = GUI::ID::Invalid();
+        interstice::ID containerID = interstice::ID::Invalid();
         int     nextItemIndex = 0;
         int*    selectedIndex = nullptr;
         MultiSelectState* multiSelect = nullptr;
@@ -42,7 +42,7 @@ namespace GUI
         // Slow-re-click rename state in the user's GridViewVirtualState (null in the
         // non-virtual grid, which offers only Ctrl+Shift+Click / F2).
         DoubleClickTracker* clickTracker = nullptr;
-        GUI::ID*            pendingRenameClick = nullptr;
+        interstice::ID*            pendingRenameClick = nullptr;
     };
 
     // ---- GridView rename lookup ----
@@ -55,7 +55,7 @@ namespace GUI
     // maps to its flat index via visibleIdx[rowID.value.subRangeParts.index].
     struct TreeViewRow
     {
-        GUI::ID      id           = GUI::ID::Invalid();
+        interstice::ID      id           = interstice::ID::Invalid();
         std::string  name;
         int          depth        = 0;
         bool         isOpen       = false;
@@ -82,8 +82,8 @@ namespace GUI
         int32_t cellStretchedW = 0;
         // Slow-re-click rename state, and the items range ID so F2 can map selectedIndex to an ID.
         DoubleClickTracker _itemClickTracker;
-        GUI::ID            _pendingRenameClick = GUI::ID::Invalid();
-        GUI::ID            _itemsRangeID       = GUI::ID::Invalid();
+        interstice::ID            _pendingRenameClick = interstice::ID::Invalid();
+        interstice::ID            _itemsRangeID       = interstice::ID::Invalid();
         // For keyboard navigation, which runs after layout.
         int32_t            _cols      = 1;
         int32_t            _rowStride = 1;

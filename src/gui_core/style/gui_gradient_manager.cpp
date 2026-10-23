@@ -9,7 +9,7 @@
 #include <cstring>
 #include <bit>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -80,7 +80,7 @@ namespace GUI
             if (page.image != nullptr)
             {
                 if (graphicsContext != nullptr)
-                    graphicsContext->DestroyImageAtEnd(page.image, GUI::DeviceScope::Application);
+                    graphicsContext->DestroyImageAtEnd(page.image, interstice::DeviceScope::Application);
                 page.image = nullptr;
             }
         }
@@ -573,7 +573,7 @@ namespace GUI
         {
             if (page.image != nullptr && graphicsContext != nullptr)
             {
-                graphicsContext->DestroyImageAtEnd(page.image, GUI::DeviceScope::Frame);
+                graphicsContext->DestroyImageAtEnd(page.image, interstice::DeviceScope::Frame);
                 page.image = nullptr;
             }
             if (graphicsContext != nullptr)
@@ -581,12 +581,12 @@ namespace GUI
                 page.image = graphicsContext->CreateImage(
                     page.data.data(),
                     uint2{ page.width, page.height },
-                    GUI::ImageFormat::R8G8B8A8,
-                    GUI::Sampler::NearestRepeat);
+                    interstice::ImageFormat::R8G8B8A8,
+                    interstice::Sampler::NearestRepeat);
             }
             page.modified = false;
         }
         return page.image;
     }
 
-} // namespace GUI
+} // namespace interstice

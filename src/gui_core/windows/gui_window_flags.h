@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_enum_operators.h>
 
-namespace GUI
+namespace interstice
 {
     enum class WindowFlags : uint32_t
     {
@@ -39,5 +39,5 @@ namespace GUI
 
 		DefaultFlags = AllowHighDPI
     };
-    ENUM_OPERATORS(WindowFlags)
+    INTERSTICE_ENUM_OPERATORS(WindowFlags)
 };

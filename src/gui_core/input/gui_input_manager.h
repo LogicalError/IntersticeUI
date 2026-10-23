@@ -6,7 +6,7 @@
 #include <gui_core/input/gui_platform_input_handler.h>
 #include <gui_core/input/gui_input_handler_func.h>
 
-namespace GUI
+namespace interstice
 {
     class ScrollManagement;
     class ElementStorage;
@@ -19,7 +19,7 @@ namespace GUI
     {
         EventType  type     = EventType::None;
         InputState state    = {};
-        GUI::ID    windowId = GUI::ID::Invalid(); // OS window that received the event
+        interstice::ID    windowId = interstice::ID::Invalid(); // OS window that received the event
         bool       consumed = false; // true if already handled (event will be skipped during Dispatch)
     };
 
@@ -32,11 +32,11 @@ namespace GUI
         ~InputManager() = default;
 
         // IPlatformInputHandler — called by the platform backend when OS events arrive.
-        void OnKeyboard(GUI::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
-        void OnMouseMove(GUI::ID windowId, GUI::int2 screenPos, GUI::MouseButtons buttons, KeyModifier modifiers) override;
-        void OnMouseButton(GUI::ID windowId, GUI::int2 screenPos, GUI::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;
-        void OnMouseScroll(GUI::ID windowId, GUI::int2 screenPos, GUI::float2 scrollOffset, KeyModifier modifiers) override;
-        void OnTextComposition(GUI::ID, std::string_view, int32_t) override {} // the text editor shows it
+        void OnKeyboard(interstice::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
+        void OnMouseMove(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override;
+        void OnMouseButton(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;
+        void OnMouseScroll(interstice::ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) override;
+        void OnTextComposition(interstice::ID, std::string_view, int32_t) override {} // the text editor shows it
 
         // Push a global handler onto the stack. Handlers are tried in LIFO order
         // after element-level handlers have had a chance to consume the input.

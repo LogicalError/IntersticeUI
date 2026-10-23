@@ -12,7 +12,7 @@
 
 #pragma once
 
-namespace GUI
+namespace interstice
 {
     class ScrollManagement;
     class ElementStorage;

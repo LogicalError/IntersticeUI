@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -33,18 +33,18 @@ namespace GUI
         // Used for boxes rendered with an invalid style index.
         {
             Style invalidStyle{};
-            invalidStyle.textLayoutStyle = GUI::TextLayoutStyle
+            invalidStyle.textLayoutStyle = interstice::TextLayoutStyle
             {
-                .textDirection = GUI::TextDirection::Auto,
-                .textWrapping = GUI::TextWrap::WordChar,
-                .horizontalAlignment = GUI::TextAlign::Start,
-                .baseline = GUI::TextBaseline::Middle
+                .textDirection = interstice::TextDirection::Auto,
+                .textWrapping = interstice::TextWrap::WordChar,
+                .horizontalAlignment = interstice::TextAlign::Start,
+                .baseline = interstice::TextBaseline::Middle
             };
             invalidStyle.borderWidths = noBorder;
             invalidStyle.borderRadius = noRadius;
             invalidStyle.margin = BoxEdges(2);
-            invalidStyle.SetOverflow(GUI::Overflow::Hidden);
-            invalidStyle.padding = GUI::BoxEdges(10);
+            invalidStyle.SetOverflow(interstice::Overflow::Hidden);
+            invalidStyle.padding = interstice::BoxEdges(10);
             auto normal_border_color_style = ColorStyle::Create(color4b(121, 153, 169, 255));
             auto normal_background_color_style = ColorStyle::Create(color4b(101, 133, 149, 255));
             for (int i = 0; i < Style::kStateCount; i++)
@@ -62,15 +62,15 @@ namespace GUI
             newStyle.textLayoutStyle = {};
             newStyle.borderWidths = noBorder;
             newStyle.borderRadius = noRadius;
-            newStyle.SetOverflow(GUI::Overflow::Visible);
-            newStyle.display = GUI::Display::Flex;
-            newStyle.layoutData.flex.direction = GUI::FlexDirection::Row;
-            newStyle.layoutData.flex.wrap = GUI::FlexWrap::Wrap;
-            newStyle.layoutData.flex.alignItems = GUI::AlignItems::Stretch;
-            newStyle.layoutData.flex.justifyContent = GUI::JustifyContent::FlexStart;
+            newStyle.SetOverflow(interstice::Overflow::Visible);
+            newStyle.display = interstice::Display::Flex;
+            newStyle.layoutData.flex.direction = interstice::FlexDirection::Row;
+            newStyle.layoutData.flex.wrap = interstice::FlexWrap::Wrap;
+            newStyle.layoutData.flex.alignItems = interstice::AlignItems::Stretch;
+            newStyle.layoutData.flex.justifyContent = interstice::JustifyContent::FlexStart;
             newStyle.layoutData.flex.flexGrow = 1;
             newStyle.layoutData.flex.gap = 0;
-            newStyle.padding = GUI::BoxEdges(0);
+            newStyle.padding = interstice::BoxEdges(0);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 newStyle.states[i].SetBorderColor({});
@@ -118,19 +118,19 @@ namespace GUI
 
         {
             // Undecorated flex containers: the BeginHorizontal / BeginVertical defaults.
-            auto makeEmptyFlexStyle = [&](GUI::FlexDirection dir, GUI::FlexWrap wrap) -> StyleRef
+            auto makeEmptyFlexStyle = [&](interstice::FlexDirection dir, interstice::FlexWrap wrap) -> StyleRef
             {
                 Style newStyle{};
                 newStyle.textLayoutStyle = {};
                 newStyle.borderWidths = noBorder;
                 newStyle.borderRadius = noRadius;
-                newStyle.SetOverflow(GUI::Overflow::Auto);
-                newStyle.display = GUI::Display::Flex;
+                newStyle.SetOverflow(interstice::Overflow::Auto);
+                newStyle.display = interstice::Display::Flex;
                 newStyle.layoutData.flex.direction = dir;
                 newStyle.layoutData.flex.wrap = wrap;
-                newStyle.layoutData.flex.alignItems = GUI::AlignItems::Stretch;
-                newStyle.layoutData.flex.justifyContent = GUI::JustifyContent::FlexStart;
-                newStyle.padding = GUI::BoxEdges(0);
+                newStyle.layoutData.flex.alignItems = interstice::AlignItems::Stretch;
+                newStyle.layoutData.flex.justifyContent = interstice::JustifyContent::FlexStart;
+                newStyle.padding = interstice::BoxEdges(0);
                 for (int i = 0; i < Style::kStateCount; i++)
                 {
                     newStyle.states[i].SetBorderColor({});
@@ -138,10 +138,10 @@ namespace GUI
                 }
                 return styleManager.Register(newStyle);
             };
-            emptyHorzStyleRef     = makeEmptyFlexStyle(GUI::FlexDirection::Row, GUI::FlexWrap::NoWrap);
-            emptyHorzWrapStyleRef = makeEmptyFlexStyle(GUI::FlexDirection::Row, GUI::FlexWrap::Wrap);
-            emptyVertStyleRef     = makeEmptyFlexStyle(GUI::FlexDirection::Column, GUI::FlexWrap::NoWrap);
-            emptyVertWrapStyleRef = makeEmptyFlexStyle(GUI::FlexDirection::Column, GUI::FlexWrap::Wrap);
+            emptyHorzStyleRef     = makeEmptyFlexStyle(interstice::FlexDirection::Row, interstice::FlexWrap::NoWrap);
+            emptyHorzWrapStyleRef = makeEmptyFlexStyle(interstice::FlexDirection::Row, interstice::FlexWrap::Wrap);
+            emptyVertStyleRef     = makeEmptyFlexStyle(interstice::FlexDirection::Column, interstice::FlexWrap::NoWrap);
+            emptyVertWrapStyleRef = makeEmptyFlexStyle(interstice::FlexDirection::Column, interstice::FlexWrap::Wrap);
         }
     }
 
@@ -164,7 +164,7 @@ namespace GUI
                     paths.push_back((baseDir / face.src).lexically_normal().string());
             const std::vector<std::string_view> views(paths.begin(), paths.end());
             if (textSystem.RegisterFontFamily(first.family, views) == FontID::Invalid)
-                LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
+                INTERSTICE_LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
         }
     }
 
@@ -192,7 +192,7 @@ namespace GUI
         std::ifstream paletteFile(themePath);
         if (!paletteFile.good())
         {
-            LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
+            INTERSTICE_LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
             return false;
         }
 
@@ -219,7 +219,7 @@ namespace GUI
             std::ifstream file(path);
             if (!file.good())
             {
-                LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
+                INTERSTICE_LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
                 return false;
             }
             append(path.string(), file);
@@ -231,12 +231,12 @@ namespace GUI
             const Part* part = &parts.front();
             for (const Part& p : parts)
                 if (err.line >= p.firstLine) part = &p;
-            LOG_ERROR(kLogTheme, "{}:{}:{}: {}", part->name, err.line - part->firstLine + 1, err.column, err.message);
+            INTERSTICE_LOG_ERROR(kLogTheme, "{}:{}:{}: {}", part->name, err.line - part->firstLine + 1, err.column, err.message);
         }
 
         if (textSystem)
             RegisterFontFaces(*textSystem, sheet.fontFaces, themeDir);
-        LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
+        INTERSTICE_LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
 
         m_paletteColors.clear();
         for (const auto& [name, prop] : sheet.customProperties)
@@ -244,7 +244,7 @@ namespace GUI
                 m_paletteColors[name] = { prop.color.r / 255.0f, prop.color.g / 255.0f, prop.color.b / 255.0f, prop.color.a / 255.0f };
 
         // Line color styles from CSS custom properties (with fallbacks)
-        auto lineColorFromCSS = [&](const char* varName, color4f fallback) -> GUI::VisualColorStyleIndex
+        auto lineColorFromCSS = [&](const char* varName, color4f fallback) -> interstice::VisualColorStyleIndex
             {
                 const auto* prop = sheet.GetCustomProperty(varName);
                 if (prop && prop->hasColor)
@@ -317,10 +317,10 @@ namespace GUI
         // texture-typed colour styles (StretchedTexture), which CSS can't express.
         {
             Style imageStyle{};
-            imageStyle.borderWidths = GUI::BoxEdges(1);
-            imageStyle.padding      = GUI::BoxEdges(0);
-            imageStyle.margin       = GUI::BoxEdges(8);
-            imageStyle.SetOverflow(GUI::Overflow::Hidden);
+            imageStyle.borderWidths = interstice::BoxEdges(1);
+            imageStyle.padding      = interstice::BoxEdges(0);
+            imageStyle.margin       = interstice::BoxEdges(8);
+            imageStyle.SetOverflow(interstice::Overflow::Hidden);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 imageStyle.states[i].backgroundColor = ColorStyle::Create(
@@ -596,4 +596,4 @@ namespace GUI
         fieldHeight /= 2.0f;   // one property row = two grid cells
         nodeGridSize = (int)ceil(fieldHeight);
     }
-} // namespace GUI
+} // namespace interstice

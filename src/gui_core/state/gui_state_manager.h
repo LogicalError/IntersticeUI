@@ -26,7 +26,7 @@
 
 #include <gui_controls/gui_label_binding.h>
 
-namespace GUI
+namespace interstice
 {
     class IDManager;
 

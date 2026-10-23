@@ -6,7 +6,7 @@
 #include <gui_core/elements/gui_element.h>
 #include <gui_core/style/gui_style_ref.h>
 
-namespace GUI
+namespace interstice
 {
     class ElementStorage;
     class StyleManager;
@@ -22,13 +22,13 @@ namespace GUI
     public:
         struct ItemState
         {
-            GUI::StyleRef firstStyleRef{};
-            GUI::StyleRef midStyleRef{};
-            GUI::StyleRef lastStyleRef{};
-            GUI::StyleRef soloStyleRef{};
+            interstice::StyleRef firstStyleRef{};
+            interstice::StyleRef midStyleRef{};
+            interstice::StyleRef lastStyleRef{};
+            interstice::StyleRef soloStyleRef{};
             int32_t       itemCount = 0;
-            GUI::ElementRef firstRef = GUI::ElementRef::Invalid();
-            GUI::ElementRef lastRef  = GUI::ElementRef::Invalid();
+            interstice::ElementRef firstRef = interstice::ElementRef::Invalid();
+            interstice::ElementRef lastRef  = interstice::ElementRef::Invalid();
         };
 
         ButtonGroupSubsystem(FramePipeline& frame, ElementStorage& elementStorage, StyleManager& styleManager);
@@ -44,7 +44,7 @@ namespace GUI
 
         // Style for the next item. The caller then stores the registered ref in
         // state.firstRef / state.lastRef.
-        GUI::StyleRef NextItemStyleRef(ItemState& state);
+        interstice::StyleRef NextItemStyleRef(ItemState& state);
 
         // True iff every Begin*Group was matched by End*Group.
         bool IsBalanced() const { return m_buttonStack.empty() && m_toggleStack.empty(); }

@@ -7,7 +7,7 @@
 #include <initializer_list>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     // Sends every platform input event to all handlers (e.g. InputManager + ITextSystem);
     // none can block the others.
@@ -19,31 +19,31 @@ namespace GUI
         explicit InputHandlerBroadcaster(std::initializer_list<IPlatformInputHandler*> handlers)
             : m_handlers(handlers) {}
 
-        void OnKeyboard(GUI::ID id, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override
+        void OnKeyboard(interstice::ID id, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnKeyboard(id, key, repeat, modifiers, action);
         }
 
-        void OnMouseMove(GUI::ID id, GUI::int2 screenPos, GUI::MouseButtons buttons, KeyModifier modifiers) override
+        void OnMouseMove(interstice::ID id, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseMove(id, screenPos, buttons, modifiers);
         }
 
-        void OnMouseButton(GUI::ID id, GUI::int2 screenPos, GUI::MouseButtons buttons, KeyModifier modifiers, GUI::MouseAction action) override
+        void OnMouseButton(interstice::ID id, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, interstice::MouseAction action) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseButton(id, screenPos, buttons, modifiers, action);
         }
 
-        void OnMouseScroll(GUI::ID id, GUI::int2 screenPos, GUI::float2 scrollOffset, KeyModifier modifiers) override
+        void OnMouseScroll(interstice::ID id, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseScroll(id, screenPos, scrollOffset, modifiers);
         }
 
-        void OnTextComposition(GUI::ID id, std::string_view text, int32_t cursor) override
+        void OnTextComposition(interstice::ID id, std::string_view text, int32_t cursor) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnTextComposition(id, text, cursor);
@@ -52,4 +52,4 @@ namespace GUI
     private:
         std::vector<IPlatformInputHandler*> m_handlers;
     };
-} // namespace GUI
+} // namespace interstice

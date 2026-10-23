@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     struct ImageWindowBackend::ImageWindow
     {

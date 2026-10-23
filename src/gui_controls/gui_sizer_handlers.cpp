@@ -11,7 +11,7 @@
 
 // Sizer + slider drag-track event handlers.
 
-namespace GUI
+namespace interstice
 {
     EventHandler MakeHorizontalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
                                             std::function<void(int)> onChanged, std::function<int()> onAutoSize,
@@ -100,7 +100,7 @@ namespace GUI
                     break;
 
                 case EventType::KeyDown:
-                    if (event.state.lastKey == GUI::KeyCode::Escape)
+                    if (event.state.lastKey == interstice::KeyCode::Escape)
                     {
                         if (auto* state = store.Get<HorizontalSizerState>(event.id); state && state->draggingID == event.id)
                         {
@@ -212,7 +212,7 @@ namespace GUI
                     break;
 
                 case EventType::KeyDown:
-                    if (event.state.lastKey == GUI::KeyCode::Escape)
+                    if (event.state.lastKey == interstice::KeyCode::Escape)
                     {
                         if (auto* state = store.Get<VerticalSizerState>(event.id); state && state->draggingID == event.id)
                         {
@@ -341,7 +341,7 @@ namespace GUI
                         float oldValue = *value;
                         float newValue = oldValue;
 
-                        if (event.state.lastKey == GUI::KeyCode::Escape)
+                        if (event.state.lastKey == interstice::KeyCode::Escape)
                         {
                             if (auto* state = store.Get<SliderState>(event.id);
                                 state && state->draggingID == event.id)
@@ -355,12 +355,12 @@ namespace GUI
 
                         switch (event.state.lastKey)
                         {
-                            case GUI::KeyCode::Left:     newValue = std::clamp(oldValue - smallStep, minVal, maxVal); break;
-                            case GUI::KeyCode::Right:    newValue = std::clamp(oldValue + smallStep, minVal, maxVal); break;
-                            case GUI::KeyCode::Home:     newValue = minVal; break;
-                            case GUI::KeyCode::End:      newValue = maxVal; break;
-                            case GUI::KeyCode::PageUp:   newValue = std::clamp(oldValue + bigStep, minVal, maxVal); break;
-                            case GUI::KeyCode::PageDown: newValue = std::clamp(oldValue - bigStep, minVal, maxVal); break;
+                            case interstice::KeyCode::Left:     newValue = std::clamp(oldValue - smallStep, minVal, maxVal); break;
+                            case interstice::KeyCode::Right:    newValue = std::clamp(oldValue + smallStep, minVal, maxVal); break;
+                            case interstice::KeyCode::Home:     newValue = minVal; break;
+                            case interstice::KeyCode::End:      newValue = maxVal; break;
+                            case interstice::KeyCode::PageUp:   newValue = std::clamp(oldValue + bigStep, minVal, maxVal); break;
+                            case interstice::KeyCode::PageDown: newValue = std::clamp(oldValue - bigStep, minVal, maxVal); break;
                             default: return false;
                         }
 

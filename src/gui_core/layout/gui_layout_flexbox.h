@@ -4,7 +4,7 @@
 
 #include <span>
 
-namespace GUI
+namespace interstice
 {
     struct IntRect;
 	struct ElementRect;
@@ -27,4 +27,4 @@ namespace GUI
                                            const IntRect&         clipRect,
                                            std::span<ElementRect> childRects);
     };
-} // namespace GUI
+} // namespace interstice

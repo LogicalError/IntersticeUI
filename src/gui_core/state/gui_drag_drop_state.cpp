@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-namespace GUI
+namespace interstice
 {
     ID DragDropState::ResolveDropTarget(ID hoveredID) const
     {

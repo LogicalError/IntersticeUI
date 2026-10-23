@@ -9,7 +9,7 @@
 #include <cmath>
 #include <unordered_set>
 
-namespace GUI
+namespace interstice
 {
 
     // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ namespace GUI
         // Counts tabs before the cursor in (row, x) order: all tabs on rows above, plus those
         // on the cursor's row left of their midpoint. Per-tab counting stays stable on a
         // wrapped row that holds only the phantom (which cachedTabRects excludes).
-        int ComputeTabInsertionIndex(const DockNode* leaf, GUI::int2 mousePos)
+        int ComputeTabInsertionIndex(const DockNode* leaf, interstice::int2 mousePos)
         {
             const auto& rects = leaf->cachedTabRects;
             const int count = static_cast<int>(rects.size());
@@ -99,22 +99,22 @@ namespace GUI
 
         // Emit a phantom tab element matching the dragged panel's appearance.
         // Returns the element ref for position offset / render-on-top.
-        GUI::ElementRef EmitPhantomTab(GUIApplication& app, const DockTabDragInfo& dragInfo)
+        interstice::ElementRef EmitPhantomTab(GUIApplication& app, const DockTabDragInfo& dragInfo)
         {
-            GUI::ID phantomID = app.idManager.AllocateDynamicID("dock_phantom_tab");
+            interstice::ID phantomID = app.idManager.AllocateDynamicID("dock_phantom_tab");
             // Selected state, to match the dragged tab (always its bar's selected tab).
             auto phantomState = app.guiStateManager.GetCurrentState(phantomID)
-                              | GUI::ElementState::Selected;
-            GUI::Element phantom {};
+                              | interstice::ElementState::Selected;
+            interstice::Element phantom {};
             phantom.id       = phantomID;
             phantom.styleRef = app.theme.tabStyleRef;
             phantom.state    = phantomState;
             if (dragInfo.icon != IconID::Invalid)
             {
-                GUI::ContentRun runs[] = {
-                    { .type = GUI::ContentRun::Icon, .iconID = dragInfo.icon,
+                interstice::ContentRun runs[] = {
+                    { .type = interstice::ContentRun::Icon, .iconID = dragInfo.icon,
                       .iconWidth = 16.0f, .iconHeight = 16.0f },
-                    { .type = GUI::ContentRun::Text, .text = dragInfo.title }
+                    { .type = interstice::ContentRun::Text, .text = dragInfo.title }
                 };
                 phantom.textID = app.textSystem->RegisterRichText(
                     phantomID, runs, app.theme.tabStyleRef, phantomState);
@@ -139,7 +139,7 @@ namespace GUI
         // Flow-X is estimated from the cursor's row, not the previous row's right edge.
         int16_t ComputePhantomOffsetX(const DockNode* node, int phantomIdx,
                                        const ReorderableDragState& drag,
-                                       GUI::int2 mousePos)
+                                       interstice::int2 mousePos)
         {
             const auto& rects = node->cachedTabRects;
 
@@ -161,40 +161,40 @@ namespace GUI
             return static_cast<int16_t>(mousePos.x - grabOffset - estimatedX);
         }
 
-        void EmitDockNode(GUIApplication& app, GUI::DockingLayout* layout, DockNode* node);
+        void EmitDockNode(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node);
 
         // Ghost panel at the cursor previewing the floating window a drop would create:
         // a dock-leaf box with the dragged tab and an empty content area.
-        void EmitGhostTab(GUIApplication& app, const GUI::Panel& panel, GUI::int2 mousePos)
+        void EmitGhostTab(GUIApplication& app, const interstice::Panel& panel, interstice::int2 mousePos)
         {
             // Smaller than the real 400x300 spawn so it doesn't swamp the cursor.
-            const GUI::int2 kGhostSize { app.styleManager.Px(220), app.styleManager.Px(150) };
+            const interstice::int2 kGhostSize { app.styleManager.Px(220), app.styleManager.Px(150) };
             if (app.BeginCursorGhostWindow(app.tabDragGhostWindowID, mousePos, kGhostSize,
                                            app.theme.dockLeafStyleRef))
             {
                 // Tab bar across the top, holding the single dragged tab.
-                GUI::ID barID = app.idManager.AllocateDynamicID("dock_ghost_bar");
-                GUI::Element bar{};
+                interstice::ID barID = app.idManager.AllocateDynamicID("dock_ghost_bar");
+                interstice::Element bar{};
                 bar.id       = barID;
                 bar.styleRef = app.theme.tabBarStyleRef;
                 bar.state    = app.guiStateManager.GetCurrentState(barID);
                 app.RegisterElement(std::move(bar), {});
                 VERIFY(app.elementStorage.BeginChildren());
                 {
-                    GUI::ID ghostTabID = app.idManager.AllocateDynamicID("dock_tab_ghost");
+                    interstice::ID ghostTabID = app.idManager.AllocateDynamicID("dock_tab_ghost");
                     // Selected, to match the dragged tab.
-                    GUI::ElementState state = app.guiStateManager.GetCurrentState(ghostTabID)
-                                            | GUI::ElementState::Selected;
-                    GUI::Element ghostTab{};
+                    interstice::ElementState state = app.guiStateManager.GetCurrentState(ghostTabID)
+                                            | interstice::ElementState::Selected;
+                    interstice::Element ghostTab{};
                     ghostTab.id       = ghostTabID;
                     ghostTab.styleRef = app.theme.tabStyleRef;
                     ghostTab.state    = state;
-                    if (panel.icon != GUI::IconID::Invalid)
+                    if (panel.icon != interstice::IconID::Invalid)
                     {
-                        GUI::ContentRun runs[] = {
-                            { .type = GUI::ContentRun::Icon, .iconID = panel.icon,
+                        interstice::ContentRun runs[] = {
+                            { .type = interstice::ContentRun::Icon, .iconID = panel.icon,
                               .iconWidth = 16.0f, .iconHeight = 16.0f },
-                            { .type = GUI::ContentRun::Text, .text = panel.title }
+                            { .type = interstice::ContentRun::Text, .text = panel.title }
                         };
                         ghostTab.textID = app.textSystem->RegisterRichText(
                             ghostTabID, runs, app.theme.tabStyleRef, state);
@@ -211,12 +211,12 @@ namespace GUI
                 VERIFY(app.elementStorage.EndChildren());
 
                 // Empty content area filling the rest of the panel.
-                GUI::ID contentID = app.idManager.AllocateDynamicID("dock_ghost_content");
-                GUI::Element content{};
+                interstice::ID contentID = app.idManager.AllocateDynamicID("dock_ghost_content");
+                interstice::Element content{};
                 content.id       = contentID;
                 content.styleRef = app.theme.dockContentStyleRef;
                 content.state    = app.guiStateManager.GetCurrentState(contentID);
-                app.RegisterElement(std::move(content), GUI::LayoutOverride{}.FlexGrow(1));
+                app.RegisterElement(std::move(content), interstice::LayoutOverride{}.FlexGrow(1));
 
                 app.EndGhostWindow();
             }
@@ -234,9 +234,9 @@ namespace GUI
             }
         }
 
-        void EmitDockLeaf(GUIApplication& app, GUI::DockingLayout* layout, DockNode* node)
+        void EmitDockLeaf(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
         {
-            GUI::Element leafElem{};
+            interstice::Element leafElem{};
             leafElem.id       = node->nodeID;
             leafElem.styleRef = app.theme.dockLeafStyleRef;
             leafElem.state    = app.guiStateManager.GetCurrentState(node->nodeID);
@@ -263,7 +263,7 @@ namespace GUI
                     && drag.draggedIndex >= 0 && drag.draggedIndex < (int)node->panelIds.size())
                 {
                     auto& info = app.m_dockTabDragSub->Info();
-                    GUI::ID pid = node->panelIds[drag.draggedIndex];
+                    interstice::ID pid = node->panelIds[drag.draggedIndex];
                     auto panelIt = layout->panels.find(pid);
                     if (panelIt != layout->panels.end())
                     {
@@ -278,7 +278,7 @@ namespace GUI
 
             // ----- onDragOut: full priority chain -----
             // Fires end-of-frame when a tab is released outside the bar bounds.
-            auto onDragOut = [&app, layout, node](int tabIndex, GUI::int2 mousePos)
+            auto onDragOut = [&app, layout, node](int tabIndex, interstice::int2 mousePos)
             {
                 app.m_dockTabDragSub->DropZoneAnim().hasTarget = false;
                 app.windowManager->RequestCloseAllowReopen(app.tabDragGhostWindowID);
@@ -287,7 +287,7 @@ namespace GUI
 
                 node->selectedTab = node->selectedTabBeforeDrag;
 
-                GUI::ID panelID = node->panelIds[tabIndex];
+                interstice::ID panelID = node->panelIds[tabIndex];
 
                 // 1. Tab-bar drop — insert as tab at the hovered position.
                 //    TransferPanel moves the Panel object too when crossing layouts.
@@ -301,7 +301,7 @@ namespace GUI
                     tabResult.leaf->selectedTab = insertIdx;
                     // Raise the destination, or the OS may focus an unrelated window
                     // when an emptied source window is destroyed.
-                    if (tabResult.layout->hostWindowID != GUI::ID::Invalid())
+                    if (tabResult.layout->hostWindowID != interstice::ID::Invalid())
                         app.windowManager->BringToFront(tabResult.layout->hostWindowID);
                     return;
                 }
@@ -318,7 +318,7 @@ namespace GUI
                     {
                         GUIApplication::TransferPanel(panelID, node, layout, dropResult.layout);
                         SplitLeafAtZone(*ownerPtr, panelID, dropResult.target.zone);
-                        if (dropResult.layout->hostWindowID != GUI::ID::Invalid())
+                        if (dropResult.layout->hostWindowID != interstice::ID::Invalid())
                             app.windowManager->BringToFront(dropResult.layout->hostWindowID);
                     }
                     return;
@@ -327,7 +327,7 @@ namespace GUI
                 // 3. No valid target → tear off into a floating window
                 GUIApplication::TransferPanel(panelID, node, layout, nullptr);
 
-                auto fw = std::make_unique<GUI::FloatingDockWindow>();
+                auto fw = std::make_unique<interstice::FloatingDockWindow>();
                 fw->windowID      = app.idManager.CreateStaticID();
                 fw->spawnPosition = mousePos;
                 fw->layout.root   = MakeLeaf({ panelID });
@@ -344,10 +344,10 @@ namespace GUI
             // ----- dragVisualizer: drop-zone overlay OR ghost tab -----
             // Animated overlay over an edge drop zone, otherwise a ghost panel at the
             // cursor. Both share the ghost window ID; only one renders per frame.
-            auto dragVisualizer = [&app, layout, node](int tabIndex, GUI::int2 mousePos)
+            auto dragVisualizer = [&app, layout, node](int tabIndex, interstice::int2 mousePos)
             {
                 if (tabIndex < 0 || tabIndex >= (int)node->panelIds.size()) return;
-                GUI::ID panelID = node->panelIds[tabIndex];
+                interstice::ID panelID = node->panelIds[tabIndex];
                 auto panelIt = layout->panels.find(panelID);
                 if (panelIt == layout->panels.end()) return;
 
@@ -409,13 +409,13 @@ namespace GUI
                 // insertion point so the real tabs shift apart, like within-bar reorder.
                 auto& drag = app.m_reorderable->Drag();
                 const auto& dragInfo = app.m_dockTabDragSub->Info();
-                GUI::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
+                interstice::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
                 bool emitPhantom = false;
                 int phantomIdx = 0;
-                GUI::ElementRef phantomRef {};
+                interstice::ElementRef phantomRef {};
 
                 if (drag.isDragging && drag.groupID != node->tabBarID
-                    && dragInfo.panelID != GUI::ID::Invalid()
+                    && dragInfo.panelID != interstice::ID::Invalid()
                     && !node->cachedTabRects.empty()
                     && node->cachedTabBarRect.w > 0 && node->cachedTabBarRect.h > 0
                     && TabBarDropHitRect(node).Contains(mousePos))
@@ -454,14 +454,14 @@ namespace GUI
             }
 
             // ----- Content area -----
-            node->lastContentID      = GUI::ID::Invalid();
-            node->lastContentPanelID = GUI::ID::Invalid();
+            node->lastContentID      = interstice::ID::Invalid();
+            node->lastContentPanelID = interstice::ID::Invalid();
             const int count = static_cast<int>(node->panelIds.size());
             if (count > 0 && node->selectedTab >= 0 && node->selectedTab < count)
             {
-                const GUI::ID selectedPanelID = node->panelIds[node->selectedTab];
+                const interstice::ID selectedPanelID = node->panelIds[node->selectedTab];
                 (void)app.idManager.PushParent(selectedPanelID);
-                GUI::ID contentID = app.idManager.AllocateDynamicID("dock_content");
+                interstice::ID contentID = app.idManager.AllocateDynamicID("dock_content");
                 (void)app.idManager.PopParent();
                 node->lastContentID      = contentID;
                 node->lastContentPanelID = selectedPanelID;
@@ -513,12 +513,12 @@ namespace GUI
             VERIFY(app.elementStorage.EndChildren());
         }
 
-        void EmitDockSplit(GUIApplication& app, GUI::DockingLayout* layout, DockNode* node)
+        void EmitDockSplit(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
         {
             const bool horizontal = IsHorizontalSplit(node->mode);
             const bool pinSecond  = PinsSecondChild(node->mode);
 
-            GUI::Element container{};
+            interstice::Element container{};
             container.id       = node->nodeID;
             container.styleRef = horizontal ? app.theme.dockSplitHorzStyleRef : app.theme.dockSplitVertStyleRef;
             container.state    = app.guiStateManager.GetCurrentState(node->nodeID);
@@ -541,8 +541,8 @@ namespace GUI
             }
 
             {
-                GUI::ID sizerID = app.idManager.AllocateDynamicID("dock_sizer");
-                GUI::Element sizer{};
+                interstice::ID sizerID = app.idManager.AllocateDynamicID("dock_sizer");
+                interstice::Element sizer{};
                 sizer.id       = sizerID;
                 sizer.styleRef = horizontal ? app.theme.dockSizerHorzStyleRef : app.theme.dockSizerVertStyleRef;
                 sizer.state    = app.guiStateManager.GetCurrentState(sizerID);
@@ -591,7 +591,7 @@ namespace GUI
             VERIFY(app.elementStorage.EndChildren());
         }
 
-        void EmitDockNode(GUIApplication& app, GUI::DockingLayout* layout, DockNode* node)
+        void EmitDockNode(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
         {
             if (!node) return;
             if (node->isLeaf) EmitDockLeaf(app, layout, node);
@@ -656,8 +656,8 @@ namespace GUI
     {
         // Mark visible panels first so we can do the disable pass with a
         // single tree walk instead of one walk per panel.
-        std::unordered_set<GUI::ID> visible;
-        ForEachVisiblePanelID(layout.root.get(), [&](GUI::ID pid) { visible.insert(pid); });
+        std::unordered_set<interstice::ID> visible;
+        ForEachVisiblePanelID(layout.root.get(), [&](interstice::ID pid) { visible.insert(pid); });
 
         // Disable panels that are enabled but no longer visible.
         for (auto& [id, panel] : layout.panels)
@@ -670,7 +670,7 @@ namespace GUI
         }
 
         // Enable panels that are visible but not yet enabled.
-        for (GUI::ID pid : visible)
+        for (interstice::ID pid : visible)
         {
             auto it = layout.panels.find(pid);
             if (it == layout.panels.end()) continue;
@@ -699,7 +699,7 @@ namespace GUI
             layout->hostWindowID = activeWindowID;
         }
 
-        GUI::Element container{};
+        interstice::Element container{};
         container.id       = id;
         container.styleRef = theme.dockContainerStyleRef;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -729,7 +729,7 @@ namespace GUI
     // Panel transfer helper
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::TransferPanel(GUI::ID panelID, DockNode* sourceNode,
+    void GUIApplication::TransferPanel(interstice::ID panelID, DockNode* sourceNode,
                                     DockingLayout* sourceLayout,
                                     DockingLayout* targetLayout)
     {
@@ -767,7 +767,7 @@ namespace GUI
     // Hit-testing
     // ---------------------------------------------------------------------------
 
-    GUI::DockLeafResult GUIApplication::FindDockLeafAtScreenPos(int2 screenPos)
+    interstice::DockLeafResult GUIApplication::FindDockLeafAtScreenPos(int2 screenPos)
     {
         DockLeafResult found {};
         auto walk = [this, screenPos, &found](auto& self, DockNode* node, DockingLayout* layout) -> void
@@ -818,7 +818,7 @@ namespace GUI
         return found;
     }
 
-    GUI::DockDropResult GUIApplication::FindDockDropTargetAtScreenPos(int2 screenPos)
+    interstice::DockDropResult GUIApplication::FindDockDropTargetAtScreenPos(int2 screenPos)
     {
         // Uses last frame's cachedContentRect; called during construction, before layout.
         DockDropResult result {};
@@ -857,7 +857,7 @@ namespace GUI
     void GUIApplication::CloseDockedPanel(DockingLayout& layout, DockNode& leaf, int tabIndex)
     {
         if (!leaf.isLeaf || tabIndex < 0 || tabIndex >= int(leaf.panelIds.size())) return;
-        const GUI::ID panelID = leaf.panelIds[size_t(tabIndex)];
+        const interstice::ID panelID = leaf.panelIds[size_t(tabIndex)];
         CloseLeafTab(leaf, tabIndex);
 
         // Closing is permanent: the panel and its state are destroyed (a new
@@ -922,7 +922,7 @@ namespace GUI
                             std::move(constraints), theme.dockWindowStyleRef,
                             ElementFlags::WindowUserControlled))
             {
-                GUI::ID containerID = idManager.AllocateDynamicID("floating_dock_container");
+                interstice::ID containerID = idManager.AllocateDynamicID("floating_dock_container");
                 BeginDockingContainer(containerID, &fw.layout);
                 EndDockingContainer();
                 EndWindow();

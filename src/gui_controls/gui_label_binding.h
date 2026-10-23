@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class ElementStorage;
 

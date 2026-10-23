@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <assert.h>
 
-namespace GUI
+namespace interstice
 {
     static WindowFlags ElementFlagsToWindowFlags(ElementFlags elementFlags)
     {
@@ -229,7 +229,7 @@ namespace GUI
             assert(false && "Tried to call Update inside of Begin/EndFrame");
             return false;
         }
-        windowBackendManager->PollEvents([this](GUI::OSWindowHandle handle, IWindowContext* context)
+        windowBackendManager->PollEvents([this](interstice::OSWindowHandle handle, IWindowContext* context)
             {
                 // Destroy the window context before its window is destroyed
                 if (context != nullptr)
@@ -423,7 +423,7 @@ namespace GUI
 
     AddWindowResult
         OSWindowManager::GetOrCreateWindow(ID id, std::string_view title, IntRect rect,
-                                           GUI::OnGuiFunc onGui,
+                                           interstice::OnGuiFunc onGui,
                                            ChildPolicy childPolicy, WindowFlags windowFlags,
                                            ID parentID, int monitorIndex)
     {
@@ -494,7 +494,7 @@ namespace GUI
 
         Window* parentWindow = FindWindow(parentID);
         
-        GUI::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect, windowFlags,
+        interstice::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect, windowFlags,
                 parentWindow != nullptr ? parentWindow->GetWindowHandle() : nullptr);
         if (osHandle == nullptr)
             return AddWindowResult::FailedToCreateOSWindow;
@@ -870,4 +870,4 @@ namespace GUI
         return topModalID;
     }
 
-} // namespace GUI
+} // namespace interstice

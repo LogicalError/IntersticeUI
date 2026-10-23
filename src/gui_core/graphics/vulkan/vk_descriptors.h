@@ -5,7 +5,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     struct DescriptorLayoutBuilder 
     {

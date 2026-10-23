@@ -3,7 +3,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/gui_enum_operators.h>
 
-namespace GUI
+namespace interstice
 {
     // ------------------------------------------------------------------------
     // Element Flags
@@ -41,6 +41,6 @@ namespace GUI
 
         IsMenuWindow = IsWindow | WindowUserControlled | WindowNoCaption | WindowIsPopup | Shadows
     };
-    ENUM_OPERATORS(ElementFlags)
+    INTERSTICE_ENUM_OPERATORS(ElementFlags)
 
-} // namespace GUI
+} // namespace interstice

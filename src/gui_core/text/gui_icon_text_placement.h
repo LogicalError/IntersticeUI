@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-namespace GUI
+namespace interstice
 {
     // Offset of content inside a box along one axis. Values meant for the other axis
     // map as skribidi does: Top/Bottom act as left/right, Left/Right as top/bottom.

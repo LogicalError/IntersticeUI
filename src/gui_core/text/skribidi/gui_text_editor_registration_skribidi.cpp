@@ -19,9 +19,9 @@
 
 // Editable text, rich text and number registration, plus text get/apply.
 
-namespace GUI
+namespace interstice
 {
-    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, GUI::StyleRef styleIndex, GUI::ElementState state, bool& wasModified)
+    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified)
     {
         if (!m_skribidiContext)
             return TextID::Invalid;
@@ -54,7 +54,7 @@ namespace GUI
     }
 
     TextID SkribidiTextSystem::RegisterEditableRichText(ID elementId, const std::span<ContentRun>& runs, TextEditBehavior behavior,
-                                                        GUI::StyleRef styleIndex, GUI::ElementState state, bool& wasModified)
+                                                        interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified)
     {
         if (!m_skribidiContext)
             return TextID::Invalid;

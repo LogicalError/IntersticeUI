@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -83,7 +83,7 @@ namespace GUI
         case ElementStorageResult::InvalidStyle:         message = "ElementStorage: an invalid style was used"; break;
         case ElementStorageResult::UnknownProblem:       message = "ElementStorage: unknown problem (should not happen)"; break;
         }
-        LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "ElementStorageResult is not Success");
     }
 
@@ -97,7 +97,7 @@ namespace GUI
         case RegistryResult::InvalidRef:     message = "WindowRegistry: invalid element reference"; break;
         case RegistryResult::NoActiveWindow: message = "WindowRegistry: no active window scope (call BeginWindowScope() first)"; break;
         }
-        LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "RegistryResult is not Success");
     }
 
@@ -118,7 +118,7 @@ namespace GUI
             case AddWindowResult::FailedToCreateOSWindow:message = "OSWindowManager: OS-level window creation failed"; break;
             case AddWindowResult::InvalidID:             message = "OSWindowManager: AddWindow called with an invalid ID"; break;
         }
-        LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "AddWindowResult is not a success variant");
     }
 
@@ -134,26 +134,26 @@ namespace GUI
             case RequestCloseResult::WindowAlreadyClosed: message = "OSWindowManager: window was already closed"; break;
             case RequestCloseResult::UnknownError:        message = "OSWindowManager: unknown error while closing window"; break;
         }
-        LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "RequestCloseResult is not Success");
     }
 
 
     bool GUIApplication::Initialize(const InitializeOptions& options)
     {
-        textSystem       = new GUI::SkribidiTextSystem();
-        inputManager     = std::make_unique<GUI::InputManager>();
-        inputBroadcaster = GUI::InputHandlerBroadcaster({ inputManager.get(), textSystem });
-        graphicsContext  = GUI::GraphicsContext::CreateContext();
+        textSystem       = new interstice::SkribidiTextSystem();
+        inputManager     = std::make_unique<interstice::InputManager>();
+        inputBroadcaster = interstice::InputHandlerBroadcaster({ inputManager.get(), textSystem });
+        graphicsContext  = interstice::GraphicsContext::CreateContext();
         graphicsContext->SetAllocationHooks(m_allocationHooks);
-        m_osWindowBackend = new GUI::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
-        m_imageWindows   = new GUI::ImageWindowBackend(*m_osWindowBackend);
+        m_osWindowBackend = new interstice::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
+        m_imageWindows   = new interstice::ImageWindowBackend(*m_osWindowBackend);
         windowBackend    = m_imageWindows;
         guiRenderer      = graphicsContext->guiRenderer;
-        layoutEngine     = std::make_unique<GUI::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
-        windowManager    = std::make_unique<GUI::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
+        layoutEngine     = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
+        windowManager    = std::make_unique<interstice::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
 
-        GUI::InstallSDLVulkanSurfaceFactory(graphicsContext);
+        interstice::InstallSDLVulkanSurfaceFactory(graphicsContext);
 
         graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
         textSystem->SetFontDirectory(ResourcePath("fonts/Noto-otf"));
@@ -162,14 +162,14 @@ namespace GUI
 
         if (!graphicsContext->Initialize(windowBackend))
         {
-            LOG_ERROR(kLogApp, "failed to initialize the graphics context");
+            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the graphics context");
             return false;
         }
 
         textAtlasManager.reset(graphicsContext->CreateTextAtlasManager());
         if (!textAtlasManager || !textAtlasManager->Initialize(graphicsContext, graphicsContext->GetImageSet()))
         {
-            LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
+            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
             return false;
         }
 
@@ -177,7 +177,7 @@ namespace GUI
 
         if (!textSystem->Initialize(graphicsContext, &styleManager, textAtlasManager.get(), &guiStateManager, clipboard.get()))
         {
-            LOG_ERROR(kLogApp, "failed to initialize the text system");
+            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text system");
             return false;
         }
         // No localization yet, so the OS language is the best guess for the UI's.
@@ -305,11 +305,11 @@ namespace GUI
             if (textSystem) theme.ComputeRowMetrics(styleManager, *textSystem);
             return true;
         }
-        LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
+        INTERSTICE_LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
         return false;
     }
 
-    void GUIApplication::CreatePanel(std::unordered_map<GUI::ID, GUI::Panel>& panels, ID id, std::string title, GUI::IconID icon,
+    void GUIApplication::CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
                                      std::function<void()> onPanelGUI,
                                      std::string panelType,
                                      std::function<void()> onEnable,
@@ -434,7 +434,7 @@ namespace GUI
         styleManager.ClearAll();
         if (textSystem) textSystem->ClearCache();
         if (!InitializeStyles())
-            LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
+            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
         else
             OnStylesReloaded();
 
@@ -450,18 +450,18 @@ namespace GUI
         {
             auto frameStart = std::chrono::steady_clock::now();
 
-            PROFILE_FRAME_BEGIN("Frame");
+            INTERSTICE_PROFILE_FRAME_BEGIN("Frame");
 
             // Pump input right before the build, after the previous present.
             {
-                PROFILE_SCOPE("Input pump");
+                INTERSTICE_PROFILE_SCOPE("Input pump");
                 windowManager->Update();
             }
 
             // Build: construction, layout, input dispatch and draw recording (CPU only).
             auto buildStart = std::chrono::steady_clock::now();
             {
-                PROFILE_SCOPE("Build");
+                INTERSTICE_PROFILE_SCOPE("Build");
                 graphicsContext->BeginFrame();
                 OnFrame();
                 graphicsContext->EndFrame();
@@ -472,13 +472,13 @@ namespace GUI
             // Uploads must run between build and render: the render consumes what this build requested
             // (windows created/resized by OnFrame, glyphs, styles, gradient pages).
             {
-                PROFILE_SCOPE("Resource upload");
+                INTERSTICE_PROFILE_SCOPE("Resource upload");
                 windowManager->Update();
                 textSystem->Update();
                 graphicsContext->PrepareFrame(styleManager, gradientManager, static_cast<float>(m_frameClock.Seconds()));
             }
             {
-                PROFILE_SCOPE("Render");
+                INTERSTICE_PROFILE_SCOPE("Render");
                 windowManager->ForEachAliveWindowContext
                     ([&](IWindowContext* context, IntRect rect)
                     {
@@ -487,7 +487,7 @@ namespace GUI
             }
 
             // frameTime includes any vsync wait; frameBuildTime is just the CPU build.
-            PROFILE_FRAME_END();
+            INTERSTICE_PROFILE_FRAME_END();
             frameTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - frameStart).count();
 
             // In milliseconds; frozen while profiling is off.
@@ -541,7 +541,7 @@ namespace GUI
             if (!guiRenderer->BeginWindow(windowElement.id))
                 continue;
 
-            guiRenderer->SetTransform(GUI::float3x2::Identity());
+            guiRenderer->SetTransform(interstice::float3x2::Identity());
 
             // Element state plus OS window state: Focused = OS-active window, Hover = window under the mouse.
             ElementState windowState = guiStateManager.GetCurrentState(windowElement.id);
@@ -578,10 +578,10 @@ namespace GUI
             // While capturing, a cached scope's children render into its capture (until captureEndIdx).
             bool     capturing     = false;
             uint32_t captureEndIdx = 0;
-            GUI::ID  captureScopeId = GUI::ID::Invalid();
+            interstice::ID  captureScopeId = interstice::ID::Invalid();
             for (uint32_t i = 0; i < static_cast<uint32_t>(nodes.size()); )
             {
-                const GUI::WindowRegistry::RenderNode& node = nodes[i];
+                const interstice::WindowRegistry::RenderNode& node = nodes[i];
                 if (capturing && i >= captureEndIdx)
                 {
                     guiRenderer->EndScopeCapture(captureScopeId);
@@ -605,7 +605,7 @@ namespace GUI
                 IntRect contentBoundsLayout = childElementRect.contentBounds - offset;
 
                 // Display::None skips this element but still traverses its children.
-                const bool displayNone = layoutStyle->display == GUI::Display::None;
+                const bool displayNone = layoutStyle->display == interstice::Display::None;
 
                 const int2 elementPosLayout{ rectLayout.x, rectLayout.y };
 
@@ -680,8 +680,8 @@ namespace GUI
                 };
 
                 // Children clip when either axis is non-visible (CSS: one paint box).
-                const bool    anyClip              = (layoutStyle->overflowX != GUI::Overflow::Visible)
-                                                  || (layoutStyle->overflowY != GUI::Overflow::Visible);
+                const bool    anyClip              = (layoutStyle->overflowX != interstice::Overflow::Visible)
+                                                  || (layoutStyle->overflowY != interstice::Overflow::Visible);
                 IntRect       childClipRectScreen  = anyClip
                                                      ? parentState.clipRectScreen.Intersection(transformRectToScreen(innerRectLayout))
                                                      : parentState.clipRectScreen;
@@ -817,8 +817,8 @@ namespace GUI
                         if (draw->callback)
                         {
                             const bool customDrawAnyClip =
-                                (layoutStyle->overflowX != GUI::Overflow::Visible) ||
-                                (layoutStyle->overflowY != GUI::Overflow::Visible);
+                                (layoutStyle->overflowX != interstice::Overflow::Visible) ||
+                                (layoutStyle->overflowY != interstice::Overflow::Visible);
                             IntRect customDrawClipScreen = customDrawAnyClip
                                 ? borderClipRectScreen : parentClipRectScreen;
                             guiRenderer->SetTransform(customDrawRenderTransform);
@@ -966,7 +966,7 @@ namespace GUI
 
         // *** BEGIN FRAME ***
         {
-            PROFILE_SCOPE("BeginFrame");
+            INTERSTICE_PROFILE_SCOPE("BeginFrame");
 
             // On Windows, with a secondary top-level window open, the click that activates a
             // sibling never reaches SDL; synthesize it from the physical button state.
@@ -974,8 +974,8 @@ namespace GUI
             if (inputManager &&
                 (windowManager->HasAliveSecondaryWindows() || m_lastPhysicalButtons != MouseButtons::None))
             {
-                GUI::int2 mousePos = m_osWindowBackend->GetScreenMousePos();
-                GUI::MouseButtons physButtons = m_osWindowBackend->GetMouseButtons();
+                interstice::int2 mousePos = m_osWindowBackend->GetScreenMousePos();
+                interstice::MouseButtons physButtons = m_osWindowBackend->GetMouseButtons();
                 inputManager->SynthesizeMissingMouseEvents(mousePos, m_lastPhysicalButtons, physButtons);
                 m_lastPhysicalButtons = physButtons;
             } else
@@ -983,19 +983,19 @@ namespace GUI
 
             if (!idManager.BeginFrame())
             {
-                LOG_ERROR(kLogApp, "IDManager::BeginFrame failed");
+                INTERSTICE_LOG_ERROR(kLogApp, "IDManager::BeginFrame failed");
                 return;
             }
 
             if (!windowManager->BeginFrame())
             {
-                LOG_ERROR(kLogApp, "OSWindowManager::BeginFrame failed");
+                INTERSTICE_LOG_ERROR(kLogApp, "OSWindowManager::BeginFrame failed");
                 return;
             }
 
             if (!guiStateManager.BeginFrame())
             {
-                LOG_ERROR(kLogApp, "GUIStateManager::BeginFrame failed");
+                INTERSTICE_LOG_ERROR(kLogApp, "GUIStateManager::BeginFrame failed");
             }
 
             // Before construction: drives the active-flash window in GetCurrentState.
@@ -1040,12 +1040,12 @@ namespace GUI
 
 
         {
-            PROFILE_SCOPE("OnGUI");
+            INTERSTICE_PROFILE_SCOPE("OnGUI");
             OnGUI();
         }
 
         {
-            PROFILE_SCOPE("EndFrame");
+            INTERSTICE_PROFILE_SCOPE("EndFrame");
             m_frame.RunStage(FrameStage::PostConstruct, ctx);
             
             tooltipManager.EndFrame();
@@ -1058,8 +1058,8 @@ namespace GUI
                 visualContext.screenPos = windowManager->GetScreenMousePos();
                 visualContext.sourceID = guiStateManager.Drag().GetDraggedID();
                 visualContext.targetID = guiStateManager.Drag().GetDragOverID();
-                visualContext.isDropValid = guiStateManager.Drag().GetValidatedTargetID() != GUI::ID::Invalid();
-                visualContext.leftMouseDown = (windowManager->GetMouseButtons() & GUI::MouseButtons::Left) != GUI::MouseButtons::None;
+                visualContext.isDropValid = guiStateManager.Drag().GetValidatedTargetID() != interstice::ID::Invalid();
+                visualContext.leftMouseDown = (windowManager->GetMouseButtons() & interstice::MouseButtons::Left) != interstice::MouseButtons::None;
                 visualContext.payloadType = guiStateManager.Drag().GetEventPayloadType();
                 visualContext.payloadValue = guiStateManager.Drag().GetEventPayloadValue();
                 visualContext.payload = &guiStateManager.Drag().GetPayload();
@@ -1100,13 +1100,13 @@ namespace GUI
             m_frame.RunStage(FrameStage::PreInput, ctx);
 
             // A modal window blocks interaction with all others and becomes the active window.
-            GUI::ID modalWindowID = windowManager->GetTopModalWindow();
+            interstice::ID modalWindowID = windowManager->GetTopModalWindow();
 
-            GUI::ID osActiveWindowID = windowManager->GetActiveWindow();
-            GUI::ID effectiveActiveWindowID = (modalWindowID != ID::Invalid()) ? modalWindowID : osActiveWindowID;
+            interstice::ID osActiveWindowID = windowManager->GetActiveWindow();
+            interstice::ID effectiveActiveWindowID = (modalWindowID != ID::Invalid()) ? modalWindowID : osActiveWindowID;
             guiStateManager.Interaction().SetActiveWindowID(effectiveActiveWindowID);
 
-            GUI::ID hoverWindowID = ID::Invalid();
+            interstice::ID hoverWindowID = ID::Invalid();
 
             if (modalWindowID != ID::Invalid())
             {
@@ -1114,16 +1114,16 @@ namespace GUI
                 hoverWindowID = modalWindowID;
             } else
             {
-                if (guiStateManager.Interaction().GetActiveID() == GUI::ID::Invalid() ||
-                    m_interactionWindowID == GUI::ID::Invalid())
+                if (guiStateManager.Interaction().GetActiveID() == interstice::ID::Invalid() ||
+                    m_interactionWindowID == interstice::ID::Invalid())
                 {
                     hoverWindowID = windowManager->GetWindowUnderMouse();
-                    if (guiStateManager.Interaction().GetActiveID() != GUI::ID::Invalid())
+                    if (guiStateManager.Interaction().GetActiveID() != interstice::ID::Invalid())
                     {
                         m_interactionWindowID = hoverWindowID;
                     } else
                     {
-                        m_interactionWindowID = GUI::ID::Invalid();
+                        m_interactionWindowID = interstice::ID::Invalid();
                     }
                 } else
                 {
@@ -1131,31 +1131,31 @@ namespace GUI
                 }
             }
 
-            GUI::int2 mousePosition = windowManager->GetScreenMousePos();
+            interstice::int2 mousePosition = windowManager->GetScreenMousePos();
 
             ElementRef windowRef = windowRegistry.GetWindowRef(hoverWindowID);
-            GUI::ID overID = windowRef != ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, mousePosition)
-                : GUI::ID::Invalid();
+            interstice::ID overID = windowRef != ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, mousePosition)
+                : interstice::ID::Invalid();
 
             if (inputManager)
                 inputManager->UpdatePreHover(guiStateManager);
 
-            GUI::ID hoverID;
+            interstice::ID hoverID;
             // No hover while the application doesn't have OS focus.
-            if (osActiveWindowID == GUI::ID::Invalid())
+            if (osActiveWindowID == interstice::ID::Invalid())
             {
-                hoverID = GUI::ID::Invalid();
-            } else if (guiStateManager.Interaction().GetCaptureID() != GUI::ID::Invalid())
+                hoverID = interstice::ID::Invalid();
+            } else if (guiStateManager.Interaction().GetCaptureID() != interstice::ID::Invalid())
             {
                 hoverID = guiStateManager.Interaction().GetCaptureID();
-            } else if (guiStateManager.Interaction().GetActiveID() == GUI::ID::Invalid() || guiStateManager.Drag().IsDragging())
+            } else if (guiStateManager.Interaction().GetActiveID() == interstice::ID::Invalid() || guiStateManager.Drag().IsDragging())
             {
                 hoverID = overID;
             } else
             {
                 hoverID = guiStateManager.Interaction().GetActiveID();
             }
-            GUI::MouseButtons mouseButtons = windowManager->GetMouseButtons();
+            interstice::MouseButtons mouseButtons = windowManager->GetMouseButtons();
 
             // During drag/text-drag, only show hover on valid drop targets
             if (guiStateManager.Drag().IsDragging())
@@ -1342,7 +1342,7 @@ namespace GUI
         m_frame.RunStage(FrameStage::PreRender, ctx);
 
         {
-            PROFILE_SCOPE("OnRender");
+            INTERSTICE_PROFILE_SCOPE("OnRender");
             OnRender(elapsedTimeSecs);
         }
 

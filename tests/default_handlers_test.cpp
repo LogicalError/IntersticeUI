@@ -1,7 +1,7 @@
 // Direct unit tests for handler factories in gui_default_handlers.h that
 // aren't otherwise covered:
 //   - MakeButtonHandler   (button click + Space/Enter activation)
-//   - GUI::Chain          (composing handlers)
+//   - interstice::Chain          (composing handlers)
 
 #include <gtest/gtest.h>
 
@@ -13,7 +13,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <gui_controls/gui_default_handlers.h>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -90,7 +90,7 @@ namespace GUI
         }
 
         // ===================================================================
-        // GUI::Chain — composing two handlers.
+        // interstice::Chain — composing two handlers.
         // ===================================================================
 
         TEST(ChainHandler, FirstHandlerShortCircuits)
@@ -186,4 +186,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 

@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <assert.h>
 
-namespace GUI
+namespace interstice
 {
     void ScrollManagement::BeginFrame()
     {

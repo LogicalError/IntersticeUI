@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -19,7 +19,7 @@ namespace GUI
         {
         protected:
             HeadlessGUIApp app;
-            GUI::color4f   color{ 0.2f, 0.4f, 0.8f, 1.0f };
+            interstice::color4f   color{ 0.2f, 0.4f, 0.8f, 1.0f };
 
             void SetUp() override { app.Initialize(); }
             void TearDown() override { app.Cleanup(); }
@@ -28,19 +28,19 @@ namespace GUI
             {
                 app.BeginRootWindow();
                 app.ColorField(color, /*allowHDR*/false,
-                               GUI::LayoutOverride{}.Size(120, 24));
+                               interstice::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
             // First element rect carrying `style` (unique to the swatch / picker).
-            GUI::IntRect FirstRectWithStyle(GUI::StyleRef style) const
+            interstice::IntRect FirstRectWithStyle(interstice::StyleRef style) const
             {
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                 {
                     const uint32_t count = app.elementStorage.DepthSizeOf(d);
                     for (uint32_t i = 0; i < count; i++)
                     {
-                        GUI::ElementRef ref{ d, i };
+                        interstice::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref))
@@ -50,18 +50,18 @@ namespace GUI
                 return {};
             }
 
-            bool HasStyle(GUI::StyleRef style) const
+            bool HasStyle(interstice::StyleRef style) const
             {
                 return FirstRectWithStyle(style).w > 0 || FirstRectWithStyle(style).h > 0;
             }
 
             bool PickerOpen() const  { return HasStyle(app.theme.colorPickerStyleRef); }
-            GUI::IntRect Swatch() const { return FirstRectWithStyle(app.theme.colorSwatchStyleRef); }
+            interstice::IntRect Swatch() const { return FirstRectWithStyle(app.theme.colorSwatchStyleRef); }
 
             void ClickSwatch()
             {
                 const auto s = Swatch();
-                const GUI::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
+                const interstice::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
                 app.InjectMouseMove(c);
                 app.InjectMouseDown(c);
                 app.InjectMouseUp(c);
@@ -122,7 +122,7 @@ namespace GUI
 
         TEST_F(ColorFieldTest, BoundValueSurvivesOpenClose)
         {
-            const GUI::color4f original = color;
+            const interstice::color4f original = color;
             app.Frame([&] { EmitField(); });
             ClickSwatch();
             app.Frame([&] { EmitField(); });
@@ -143,10 +143,10 @@ namespace GUI
         // edits hue/saturation/value with the over-range part as brightness.
         TEST_F(ColorFieldTest, OpeningPickerKeepsHdrColor)
         {
-            color = GUI::color4f{ 2.0f, 1.0f, 0.5f, 1.0f };
+            color = interstice::color4f{ 2.0f, 1.0f, 0.5f, 1.0f };
             auto emitHdr = [&] {
                 app.BeginRootWindow();
-                app.ColorField(color, /*allowHDR*/true, GUI::LayoutOverride{}.Size(120, 24));
+                app.ColorField(color, /*allowHDR*/true, interstice::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             };
             app.Frame(emitHdr);
@@ -166,34 +166,34 @@ namespace GUI
         {
         protected:
             HeadlessGUIApp app;
-            GUI::Gradient  a, b;
+            interstice::Gradient  a, b;
 
             void SetUp() override
             {
                 app.Initialize();
-                a.AddStop(GUI::color4f{ 1, 0, 0, 1 }, 0.0f);
-                a.AddStop(GUI::color4f{ 0, 0, 1, 1 }, 1.0f);
-                b.AddStop(GUI::color4f{ 0, 1, 0, 1 }, 0.0f);
-                b.AddStop(GUI::color4f{ 1, 1, 0, 1 }, 1.0f);
+                a.AddStop(interstice::color4f{ 1, 0, 0, 1 }, 0.0f);
+                a.AddStop(interstice::color4f{ 0, 0, 1, 1 }, 1.0f);
+                b.AddStop(interstice::color4f{ 0, 1, 0, 1 }, 0.0f);
+                b.AddStop(interstice::color4f{ 1, 1, 0, 1 }, 1.0f);
             }
             void TearDown() override { app.Cleanup(); }
 
             void EmitFields()
             {
                 app.BeginRootWindow();
-                app.GradientField(a, GUI::LayoutOverride{}.Size(120, 24));
-                app.GradientField(b, GUI::LayoutOverride{}.Size(120, 24));
+                app.GradientField(a, interstice::LayoutOverride{}.Size(120, 24));
+                app.GradientField(b, interstice::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
             // Swatch rects in emission order.
-            std::vector<GUI::IntRect> Swatches() const
+            std::vector<interstice::IntRect> Swatches() const
             {
-                std::vector<GUI::IntRect> out;
+                std::vector<interstice::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        GUI::ElementRef ref{ d, i };
+                        interstice::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != app.theme.gradientSwatchStyleRef) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -206,12 +206,12 @@ namespace GUI
         // other one's gradient must not be overwritten by the open editor's working copy.
         TEST_F(GradientFieldTest, OpeningOneFieldsEditorLeavesTheOtherFieldAlone)
         {
-            const GUI::Gradient aBefore = a, bBefore = b;
+            const interstice::Gradient aBefore = a, bBefore = b;
             app.Frame([&] { EmitFields(); });
             const auto swatches = Swatches();
             ASSERT_EQ(swatches.size(), 2u);
 
-            const GUI::int2 c{ swatches[0].x + swatches[0].w / 2, swatches[0].y + swatches[0].h / 2 };
+            const interstice::int2 c{ swatches[0].x + swatches[0].w / 2, swatches[0].y + swatches[0].h / 2 };
             app.InjectMouseMove(c);
             app.InjectMouseDown(c);
             app.InjectMouseUp(c);
@@ -227,9 +227,9 @@ namespace GUI
         {
         protected:
             HeadlessGUIApp app;
-            GUI::color4f   a{ 1.0f, 0.0f, 0.0f, 1.0f };
-            GUI::color4f   b{ 0.0f, 0.0f, 1.0f, 1.0f };
-            GUI::color4b   bytes{ 200, 40, 10, 255 };
+            interstice::color4f   a{ 1.0f, 0.0f, 0.0f, 1.0f };
+            interstice::color4f   b{ 0.0f, 0.0f, 1.0f, 1.0f };
+            interstice::color4b   bytes{ 200, 40, 10, 255 };
 
             void SetUp() override { app.Initialize(); }
             void TearDown() override { app.Cleanup(); }
@@ -237,19 +237,19 @@ namespace GUI
             void EmitFields()
             {
                 app.BeginRootWindow();
-                app.ColorField(a, /*allowHDR*/false, GUI::LayoutOverride{}.Size(120, 24));
-                app.ColorField(b, /*allowHDR*/false, GUI::LayoutOverride{}.Size(120, 24));
-                app.ColorField(bytes, GUI::LayoutOverride{}.Size(120, 24));
+                app.ColorField(a, /*allowHDR*/false, interstice::LayoutOverride{}.Size(120, 24));
+                app.ColorField(b, /*allowHDR*/false, interstice::LayoutOverride{}.Size(120, 24));
+                app.ColorField(bytes, interstice::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
-            std::vector<GUI::IntRect> RectsWithStyle(GUI::StyleRef style) const
+            std::vector<interstice::IntRect> RectsWithStyle(interstice::StyleRef style) const
             {
-                std::vector<GUI::IntRect> out;
+                std::vector<interstice::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        GUI::ElementRef ref{ d, i };
+                        interstice::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -262,7 +262,7 @@ namespace GUI
                 const auto swatches = RectsWithStyle(app.theme.colorSwatchStyleRef);
                 ASSERT_EQ(swatches.size(), 3u);
                 const auto& s = swatches[index];
-                const GUI::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
+                const interstice::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
                 app.InjectMouseMove(c);
                 app.InjectMouseDown(c);
                 app.InjectMouseUp(c);
@@ -273,7 +273,7 @@ namespace GUI
         // Only the clicked field owns the picker; the others keep their colors.
         TEST_F(TwoColorFieldsTest, OpeningOnePickerLeavesTheOtherFieldsAlone)
         {
-            const GUI::color4f aBefore = a, bBefore = b;
+            const interstice::color4f aBefore = a, bBefore = b;
             app.Frame([&] { EmitFields(); });
             ClickSwatch(0);
 
@@ -286,7 +286,7 @@ namespace GUI
         // picker must start from the bound color, not from a dead stack slot.
         TEST_F(TwoColorFieldsTest, ByteColorPickerStartsFromTheBoundColor)
         {
-            const GUI::color4b before = bytes;
+            const interstice::color4b before = bytes;
             app.Frame([&] { EmitFields(); });
             ClickSwatch(2);
 

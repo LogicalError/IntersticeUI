@@ -13,7 +13,7 @@
 
 #include <cstdio>
 
-namespace Vulkan
+namespace interstice::vulkan
 {
     struct AllocatedImage 
     {
@@ -31,13 +31,13 @@ namespace Vulkan
         VmaAllocationInfo info;
     };
 
-    #define VK_CHECK(x)                                                     \
+    #define INTERSTICE_VK_CHECK(x)                                                     \
         do                                                                  \
         {                                                                   \
             VkResult err = x;                                               \
             if (err)                                                        \
             {                                                               \
-                LOG_CRITICAL(::GUI::Diagnostics::MakeLogCategory("vulkan"), "Vulkan error: {}", string_VkResult(err)); \
+                INTERSTICE_LOG_CRITICAL(::interstice::Diagnostics::MakeLogCategory("vulkan"), "Vulkan error: {}", string_VkResult(err)); \
                 abort();                                                    \
             }                                                               \
         } while (0)
@@ -51,6 +51,6 @@ namespace Vulkan
         {
             result = vkWaitForFences(device, 1, &fence, VK_TRUE, 1000000000);
         } while (result == VK_TIMEOUT);
-        VK_CHECK(result);
+        INTERSTICE_VK_CHECK(result);
     }
 }

@@ -15,7 +15,7 @@
 #include <climits>
 #include <memory>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -75,7 +75,7 @@ namespace GUI
                 s.margin          = BoxEdges(0);
                 s.textLayoutStyle = {};
                 s.textLayoutStyle.textWrapping = TextWrap::Wrap;
-                s.SetOverflow(GUI::Overflow::Auto);
+                s.SetOverflow(interstice::Overflow::Auto);
                 // A zero font size shapes nothing and measures 0.
                 for (int i = 0; i < Style::kStateCount; ++i)
                     s.states[i].textStyle.fontSize = 13.0f;

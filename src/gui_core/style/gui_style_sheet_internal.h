@@ -14,7 +14,7 @@
 // CSS lexer + parser internals, shared by gui_style_sheet.cpp (top-level API)
 // and gui_style_sheet_properties.cpp (per-property value parsing + apply).
 
-namespace GUI {
+namespace interstice {
 
 // ============================================================================
 // Lexer

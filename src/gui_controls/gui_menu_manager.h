@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class ElementStorage;
     class GUIStateManager;
@@ -127,4 +127,4 @@ namespace GUI
                                            MenuManager& menuManager,
                                            int depth);
 
-} // namespace GUI
+} // namespace interstice

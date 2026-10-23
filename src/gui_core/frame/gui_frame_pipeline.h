@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class GUIApplication;
     class IDManager;

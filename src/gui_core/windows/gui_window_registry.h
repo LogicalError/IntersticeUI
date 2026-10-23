@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace GUI
+namespace interstice
 {
     enum class RegistryResult
     {
@@ -317,4 +317,4 @@ namespace GUI
 
     };
 
-} // namespace GUI
+} // namespace interstice

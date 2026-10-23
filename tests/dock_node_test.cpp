@@ -9,7 +9,7 @@
 #include <random>
 #include <string>
 
-namespace GUI
+namespace interstice
 {
 
     namespace

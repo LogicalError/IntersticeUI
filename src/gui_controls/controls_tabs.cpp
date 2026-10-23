@@ -1,6 +1,6 @@
 #include <gui_controls/gui_application.h>
 
-namespace GUI
+namespace interstice
 {
 
     // ---------------------------------------------------------------------------
@@ -10,8 +10,8 @@ namespace GUI
     bool GUIApplication::BeginTabBar(ID id, int* selectedIndex,
                                   std::function<void(int, int)> onReorder,
                                   std::function<void(int)> onClose,
-                                  std::function<void(int, GUI::int2)> onDragOut,
-                                  std::function<void(int, GUI::int2)> dragVisualizer,
+                                  std::function<void(int, interstice::int2)> onDragOut,
+                                  std::function<void(int, interstice::int2)> dragVisualizer,
                                   StyleRef style, LayoutOverride&& constraints)
     {
         m_tabBarState = {};
@@ -50,17 +50,17 @@ namespace GUI
 
         // Tab body: container only; icon+text and close button live as children.
         auto capturedIndex = tabIndex;
-        GUI::ID bodyID  = idManager.AllocateDynamicID();
+        interstice::ID bodyID  = idManager.AllocateDynamicID();
 
         auto state = guiStateManager.GetCurrentState(bodyID);
 
         auto bodyRes = elementStorage.Add(
-            GUI::Element
+            interstice::Element
             {
                 .id       = bodyID,
                 .eventHandler = [this, id, capturedIndex, selectedIndex](ElementEvent&& event) -> bool
                 {
-                    if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                    if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                     {
                         if (selectedIndex)
                             *selectedIndex = capturedIndex;
@@ -79,9 +79,9 @@ namespace GUI
         VERIFY(elementStorage.BeginChildren());
 
         // Icon+text child: NoInput so input reaches the body; shares the body's state so it restyles with it.
-        GUI::ID contentID = idManager.AllocateDynamicID();
+        interstice::ID contentID = idManager.AllocateDynamicID();
         RegisterElement(
-            GUI::Element
+            interstice::Element
             {
                 .id       = contentID,
                 .textID   = textSystem->RegisterText(contentID, icon, text, theme.tabContentStyleRef, state),

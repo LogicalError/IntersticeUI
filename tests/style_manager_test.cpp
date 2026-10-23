@@ -6,7 +6,7 @@
 #include <gui_core/style/gui_gradient_manager.h>
 #include <gui_core/style/gui_style.h>
 
-namespace GUI
+namespace interstice
 {
 
     static Gradient MakeTwoStopGradient()

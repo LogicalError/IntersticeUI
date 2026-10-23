@@ -6,7 +6,7 @@
 
 #include <assert.h>
 
-namespace GUI
+namespace interstice
 {
     ElementState GUIStateManager::GetCurrentState(ID id) const
     {

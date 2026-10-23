@@ -3,7 +3,7 @@
 #include <gui_controls/gui_application.h>
 #include <gui_controls/controls_toolbar_dock.h>
 
-namespace GUI
+namespace interstice
 {
     enum class EditMode : uint32_t;
 
@@ -76,13 +76,13 @@ namespace GUI
         StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, settingsTitleStyleRef;
         StyleRef iconVAlignDemoStyleRefs[4][3];   // [IconSide L/R/T/B][top/mid/bot]
 
-        GUI::VisualColorStyleIndex triangleFillStyle;
-        GUI::VisualColorStyleIndex triangleFillStyle2;
-        GUI::VisualColorStyleIndex quadFillStyle;
-        GUI::VisualColorStyleIndex animatedHueStyle = GUI::VisualColorStyleIndex::Invalid; // misc panel; recreated after a theme reload
+        interstice::VisualColorStyleIndex triangleFillStyle;
+        interstice::VisualColorStyleIndex triangleFillStyle2;
+        interstice::VisualColorStyleIndex quadFillStyle;
+        interstice::VisualColorStyleIndex animatedHueStyle = interstice::VisualColorStyleIndex::Invalid; // misc panel; recreated after a theme reload
 
-        GUI::ColorStyle triangleFillColorStyle;
-        GUI::ColorStyle quadFillColorStyle;
+        interstice::ColorStyle triangleFillColorStyle;
+        interstice::ColorStyle quadFillColorStyle;
 
         ImageIndex checkerboardIndex { ImageIndex::Invalid };
         ImageIndex demoImageIndex { ImageIndex::Invalid };   // sample image for the Image() element demo
@@ -108,10 +108,10 @@ namespace GUI
 
             float sliderValue = 0.5f;
             float sliderFieldValue = 50.0f; // SliderField demo (range [0, 100])
-            GUI::color4f demoColor { 0.2f, 0.5f, 0.8f, 1.0f }; // ColorField demo
-            GUI::Gradient demoGradient = GUI::Gradient::Linear(
-                GUI::color4f{1.0f, 0.0f, 0.0f, 1.0f},
-                GUI::color4f{0.0f, 0.0f, 1.0f, 1.0f}); // GradientField demo
+            interstice::color4f demoColor { 0.2f, 0.5f, 0.8f, 1.0f }; // ColorField demo
+            interstice::Gradient demoGradient = interstice::Gradient::Linear(
+                interstice::color4f{1.0f, 0.0f, 0.0f, 1.0f},
+                interstice::color4f{0.0f, 0.0f, 1.0f, 1.0f}); // GradientField demo
             int listSelected = 0;
 
             // ListView
@@ -198,7 +198,7 @@ namespace GUI
                 bool         hasChildren = false;
                 bool         isOpen      = true;
                 IconID       icon        = IconID::Invalid;
-                GUI::ID      id          = GUI::ID::Invalid();
+                interstice::ID      id          = interstice::ID::Invalid();
                 // Descendant count. Recomputed by RebuildTreeTableIndex() after edits.
                 int          skipCount   = 0;
                 // Guide-line metadata (also recomputed by RebuildTreeTableIndex):
@@ -460,4 +460,4 @@ namespace GUI
         void DisableLogPanel();
     };
 
-} // namespace GUI
+} // namespace interstice

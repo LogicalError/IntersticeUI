@@ -5,9 +5,9 @@
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 
-namespace Vulkan
+namespace interstice::vulkan
 {
-    class VulkanImage : public GUI::Image
+    class VulkanImage : public interstice::Image
     {
     public:
         VkImage       image;
@@ -18,7 +18,7 @@ namespace Vulkan
         VkSampler     imageSampler;
     };
 
-    class VulkanImageSet : public GUI::ImageSet
+    class VulkanImageSet : public interstice::ImageSet
     {
     public:
         // Size of the shader's bindless texture array.
@@ -28,16 +28,16 @@ namespace Vulkan
 
     public:
         void Clear() override;
-        GUI::ImageIndex Add(GUI::Image* image) override;
-        void Remove(GUI::ImageIndex index) override;
-        bool SetImage(GUI::ImageIndex index, VulkanImage* image);
-        bool SetDescriptor(GUI::ImageIndex index, const VkDescriptorImageInfo& descriptor);
-        GUI::ImageIndex ReserveIndex();
+        interstice::ImageIndex Add(interstice::Image* image) override;
+        void Remove(interstice::ImageIndex index) override;
+        bool SetImage(interstice::ImageIndex index, VulkanImage* image);
+        bool SetDescriptor(interstice::ImageIndex index, const VkDescriptorImageInfo& descriptor);
+        interstice::ImageIndex ReserveIndex();
 
     private:
-        GUI::ImageIndex Allocate(const VkDescriptorImageInfo& descriptor);
-        bool IsInRange(GUI::ImageIndex index) const;
+        interstice::ImageIndex Allocate(const VkDescriptorImageInfo& descriptor);
+        bool IsInRange(interstice::ImageIndex index) const;
 
-        std::vector<GUI::ImageIndex> m_freeIndices;
+        std::vector<interstice::ImageIndex> m_freeIndices;
     };
 }

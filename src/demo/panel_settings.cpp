@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
@@ -126,8 +126,8 @@ namespace GUI
 
         // The dynamic-ID counter makes repeated calls with one hint unique and
         // stable frame to frame.
-        const GUI::ID allCatID = idManager.AllocateDynamicID("shortcutCat_All");
-        GUI::ID catIDs[32];
+        const interstice::ID allCatID = idManager.AllocateDynamicID("shortcutCat_All");
+        interstice::ID catIDs[32];
         const uint32_t cappedCount = modeCount <= 32 ? modeCount : 32;
         for (uint32_t m = 0; m < cappedCount; m++)
             catIDs[m] = idManager.AllocateDynamicID("shortcutCat");
@@ -138,10 +138,10 @@ namespace GUI
         // keep-with-next, which disables its flex-grow and collapses the split.
         BeginHorizontal(idManager.AllocateDynamicID("shortcutSearchRow"),
                         theme.searchRowStyleRef,
-                        GUI::LayoutOverride::Auto().NoShrink());
+                        interstice::LayoutOverride::Auto().NoShrink());
         if (SearchField(demo.settingsShortcutsSearch, demo.findIcon,
                         TextEditBehavior::ContinuousUpdate,
-                        GUI::LayoutOverride{}.FlexGrow(1)))
+                        interstice::LayoutOverride{}.FlexGrow(1)))
         {
             demo.settingsShortcutsSearchLower.clear();
             demo.settingsShortcutsSearchLower.reserve(demo.settingsShortcutsSearch.size());
@@ -172,7 +172,7 @@ namespace GUI
         // table scrolls (the outer split in controls_settings.cpp is bounded too).
         BeginHorizontal(idManager.AllocateDynamicID("shortcutSplit"),
                         theme.flexFillRowStyleRef,
-                        GUI::LayoutOverride::Auto().FlexGrow(1));
+                        interstice::LayoutOverride::Auto().FlexGrow(1));
 
         // Row IDs are the static category IDs, so the sync below can map
         // sub-range row IDs to and from `selection`.
@@ -188,15 +188,15 @@ namespace GUI
             TreeViewRow r{};
             r.id   = allCatID;
             r.name = "All";
-            r.icon = GUI::IconID::Invalid;
+            r.icon = interstice::IconID::Invalid;
             catRows.push_back(std::move(r));
         }
         for (uint32_t m = 0; m < cappedCount; m++)
         {
             TreeViewRow r{};
             r.id   = catIDs[m];
-            r.name = commandManager.GetEditModeName(GUI::EditMode(m));
-            r.icon = GUI::IconID::Invalid;
+            r.name = commandManager.GetEditModeName(interstice::EditMode(m));
+            r.icon = interstice::IconID::Invalid;
             catRows.push_back(std::move(r));
         }
         RebuildTreeViewIndex(catRows);
@@ -205,9 +205,9 @@ namespace GUI
         // sync: clicks only mutate catInternal, and the forward sync would
         // clobber them.
         selection.selectedIDs.clear();
-        for (const GUI::ID& subRangeID : catInternal.selectedIDs)
+        for (const interstice::ID& subRangeID : catInternal.selectedIDs)
         {
-            if (subRangeID.GetMode() != GUI::IDMode::SubRange) continue;
+            if (subRangeID.GetMode() != interstice::IDMode::SubRange) continue;
             const int visIdx = static_cast<int>(subRangeID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= int(catVisibleIdx.size())) continue;
             const int flatIdx = catVisibleIdx[visIdx];
@@ -220,7 +220,7 @@ namespace GUI
 
         // Forward sync (selection → catInternal). GetSubID needs the range ID the
         // table allocates on its first run.
-        if (catTableState._rowsRangeID != GUI::ID::Invalid())
+        if (catTableState._rowsRangeID != interstice::ID::Invalid())
         {
             catInternal.selectedIDs.clear();
             for (size_t i = 0; i < catRows.size(); ++i)
@@ -238,18 +238,18 @@ namespace GUI
         VirtualTreeView(idManager.AllocateDynamicID("shortcutCatTree"),
                         catRows, catVisibleIdx, catTableState,
                         shortcutCategoryStyleRef,
-                        GUI::LayoutOverride::Auto().FixedWidth(styleManager.Px(demo.settingsShortcutsCategoryWidth)).NoGrow(),
+                        interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(demo.settingsShortcutsCategoryWidth)).NoGrow(),
                         "Category");
 
         {
-            GUI::ID sizerID = idManager.AllocateDynamicID("shortcutSizer");
-            GUI::Element sizer{};
+            interstice::ID sizerID = idManager.AllocateDynamicID("shortcutSizer");
+            interstice::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = GUI::MakeHorizontalSizerHandler(
+            sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
                 guiStateManager, demo.settingsShortcutsCategoryWidth, 100, 400, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), GUI::LayoutOverride::FixedWidth(styleManager.Px(4)));
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(styleManager.Px(4)));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -258,7 +258,7 @@ namespace GUI
         // body scrolls instead of overflowing.
         BeginHorizontal(idManager.AllocateDynamicID("shortcutGridCol"),
                         theme.flexFillRowStyleRef,
-                        GUI::LayoutOverride::Auto().FlexGrow(1));
+                        interstice::LayoutOverride::Auto().FlexGrow(1));
 
         // The Context column only shows when more than one mode is selected.
         uint32_t selectedModes = allSelected ? modeCount : 0;
@@ -287,7 +287,7 @@ namespace GUI
             {
                 if (!allSelected && selection.selectedIDs.count(catIDs[mode]) == 0)
                     continue;
-                for (uint32_t i : commandManager.GetCommandsForMode(GUI::EditMode(mode)))
+                for (uint32_t i : commandManager.GetCommandsForMode(interstice::EditMode(mode)))
                 {
                     const auto& e = entries[i];
                     std::string_view desc = e.description.empty()
@@ -330,18 +330,18 @@ namespace GUI
                 // record/replay. Commands without an icon use the indented
                 // style so their labels line up with the icon'd ones.
                 std::string label = e.description.empty() ? "(no description)" : e.description;
-                const GUI::IconID icon = e.icon;
-                const GUI::StyleRef labelStyle = (icon != GUI::IconID::Invalid)
+                const interstice::IconID icon = e.icon;
+                const interstice::StyleRef labelStyle = (icon != interstice::IconID::Invalid)
                     ? theme.iconLabelStyleRef : theme.iconLabelNoIconStyleRef;
                 Cell([this, icon, labelStyle, label = std::move(label)]() {
-                    const GUI::ID id = idManager.AllocateDynamicID();
-                    GUI::Element el{};
+                    const interstice::ID id = idManager.AllocateDynamicID();
+                    interstice::Element el{};
                     el.id       = id;
-                    el.flags    = GUI::ElementFlags::NoInput;
+                    el.flags    = interstice::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
                     el.styleRef = labelStyle;
                     el.textID   = textSystem->RegisterText(id, icon, label, el.styleRef, el.state);
-                    auto res = elementStorage.Add(std::move(el), GUI::LayoutOverride::Auto());
+                    auto res = elementStorage.Add(std::move(el), interstice::LayoutOverride::Auto());
                     VERIFY(res.status);
                     VERIFY(windowRegistry.Add(res.ref));
                 });
@@ -352,13 +352,13 @@ namespace GUI
             cols[1].sortAscending = [this](int a, int b) {
                 const auto& vr = demo.settingsShortcutsVisRows;
                 return CaseInsensitiveLess(
-                    commandManager.GetEditModeName(GUI::EditMode(vr[a].mode)),
-                    commandManager.GetEditModeName(GUI::EditMode(vr[b].mode)));
+                    commandManager.GetEditModeName(interstice::EditMode(vr[a].mode)),
+                    commandManager.GetEditModeName(interstice::EditMode(vr[b].mode)));
             };
             cols[1].generateCell = [this](int rowIdx) {
                 auto& vr = demo.settingsShortcutsVisRows;
                 if (rowIdx < 0 || rowIdx >= int(vr.size())) return;
-                Cell(commandManager.GetEditModeName(GUI::EditMode(vr[rowIdx].mode)));
+                Cell(commandManager.GetEditModeName(interstice::EditMode(vr[rowIdx].mode)));
             };
 
             // Shortcut — the bound key combo (a flat rebind button).
@@ -436,7 +436,7 @@ namespace GUI
                      int(visRows.size()),
                      /*rowHeight*/0,
                      shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
-                     GUI::LayoutOverride{}.FlexGrow(1));
+                     interstice::LayoutOverride{}.FlexGrow(1));
 
         EndHorizontal();  // shortcutGridCol
         EndHorizontal();  // shortcutSplit

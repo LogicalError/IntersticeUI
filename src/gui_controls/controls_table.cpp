@@ -11,9 +11,9 @@
 #include <algorithm>
 #include <span>
 
-namespace GUI
+namespace interstice
 {
-    using namespace GUI::TableInternal;
+    using namespace interstice::TableInternal;
 
     // BeginTable opens a recording. Cell()/TreeCell() push records onto
     // m_tableEmit->columnCells; EndTable hands the populated optional to
@@ -52,7 +52,7 @@ namespace GUI
         for (size_t c = 0; c < columnCount; c++)
         {
             columns[c]._maxContentWidth = 0;
-            columns[c]._headerRef       = GUI::ElementRef::Invalid();
+            columns[c]._headerRef       = interstice::ElementRef::Invalid();
             columns[c]._dragOffsetX     = 0;
         }
 
@@ -68,9 +68,9 @@ namespace GUI
         TableState&         state       = *m_tableEmit->userState;
         VirtualTableColumn* columns     = m_tableEmit->columns;
         const size_t        columnCount = m_tableEmit->columnCount;
-        const GUI::ID       containerID = m_tableEmit->containerID;
+        const interstice::ID       containerID = m_tableEmit->containerID;
         const StyleRef      style       = m_tableEmit->style;
-        GUI::LayoutOverride constraints = std::move(m_tableEmit->constraints);
+        interstice::LayoutOverride constraints = std::move(m_tableEmit->constraints);
         const int           rowCount    = m_tableEmit->rowCount;
         const auto          recorded    = std::move(m_tableEmit->columnCells);
 

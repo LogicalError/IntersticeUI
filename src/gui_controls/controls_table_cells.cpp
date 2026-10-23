@@ -12,20 +12,20 @@
 #include <cassert>
 #include <string>
 
-namespace GUI
+namespace interstice
 {
-    using namespace GUI::TableInternal;
+    using namespace interstice::TableInternal;
 
     namespace
     {
         // 300 ms double-click toggle for `*isOpen`. Cell mode only — in
         // row mode the equivalent lives in BuildRowBackdropHandler (the
         // tree cell shares rowID with the backdrop, which catches dispatch first).
-        GUI::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, GUI::EventHandler inner)
+        interstice::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, interstice::EventHandler inner)
         {
-            return [tracker, isOpen, inner = std::move(inner)](GUI::ElementEvent&& event) -> bool
+            return [tracker, isOpen, inner = std::move(inner)](interstice::ElementEvent&& event) -> bool
             {
-                if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                 {
                     const auto r = tracker->Update(event.id);
                     if (r.sameAsPrevious && r.elapsedMs < 300.0f && isOpen)
@@ -43,7 +43,7 @@ namespace GUI
         // Recording mode: store one replay closure at (currentCol, current
         // row), padding skipped cells, then advance to the next column.
         // EndTable replays the closures through VirtualTable's row loop.
-        void RecordReplayCell(GUI::TableEmit& emit, std::function<void()> replay)
+        void RecordReplayCell(interstice::TableEmit& emit, std::function<void()> replay)
         {
             assert(emit.rowCount > 0 && "Cell() outside BeginRow/EndRow");
             assert(emit.currentCol < int(emit.columnCount) && "more Cell() calls than columns");
@@ -60,12 +60,12 @@ namespace GUI
     void EmitTreeCellIndent(GUIApplication& app, int depth)
     {
         if (depth <= 0) return;
-        GUI::Element spacer{};
+        interstice::Element spacer{};
         spacer.id       = app.idManager.AllocateDynamicID();
         spacer.styleRef = app.theme.treeTableIndentStyleRef;
-        spacer.flags    = GUI::ElementFlags::NoInput;
+        spacer.flags    = interstice::ElementFlags::NoInput;
         auto res = app.elementStorage.Add(std::move(spacer),
-            GUI::LayoutOverride::FixedWidth(depth * app.theme.treeTableIndent));
+            interstice::LayoutOverride::FixedWidth(depth * app.theme.treeTableIndent));
         VERIFY(res.status);
         VERIFY(app.windowRegistry.Add(res.ref));
     }
@@ -77,38 +77,38 @@ namespace GUI
     {
         if (isOpen)
         {
-            GUI::ID arrowID = app.idManager.AllocateDynamicID();
-            GUI::Element arrow{};
+            interstice::ID arrowID = app.idManager.AllocateDynamicID();
+            interstice::Element arrow{};
             arrow.id       = arrowID;
             arrow.styleRef = app.theme.treeTableArrowStyleRef;
             arrow.state    = app.guiStateManager.GetCurrentState(arrowID);
             arrow.eventHandler = [isOpen](ElementEvent&& event) -> bool {
-                if (event.type == GUI::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                     { *isOpen = !*isOpen; return true; }
                 return false;
             };
-            auto res = app.elementStorage.Add(std::move(arrow), GUI::LayoutOverride{});
+            auto res = app.elementStorage.Add(std::move(arrow), interstice::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(app.windowRegistry.Add(res.ref));
 
             VERIFY(app.elementStorage.BeginChildren());
             {
-                GUI::ID glyphID = app.idManager.AllocateDynamicID();
-                GUI::Element glyph{};
+                interstice::ID glyphID = app.idManager.AllocateDynamicID();
+                interstice::Element glyph{};
                 glyph.id       = glyphID;
                 glyph.styleRef = app.theme.treeTableArrowGlyphStyleRef;
-                glyph.flags    = GUI::ElementFlags::NoInput;
+                glyph.flags    = interstice::ElementFlags::NoInput;
                 glyph.state    = app.guiStateManager.GetCurrentState(glyphID);
                 // Explicit size — the arrow SVG is 8×8 intrinsic.
                 const float glyphSize = static_cast<float>(app.theme.treeTableArrowGlyphSize);
-                GUI::ContentRun arrowRun[] = {
-                    { .type = GUI::ContentRun::Icon,
+                interstice::ContentRun arrowRun[] = {
+                    { .type = interstice::ContentRun::Icon,
                       .iconID = (*isOpen ? app.theme.treeArrowDown : app.theme.treeArrowRight),
                       .iconWidth = glyphSize, .iconHeight = glyphSize }
                 };
                 glyph.textID = app.textSystem->RegisterRichText(glyphID, arrowRun,
                                                                 app.theme.treeTableArrowGlyphStyleRef, glyph.state);
-                auto gRes = app.elementStorage.Add(std::move(glyph), GUI::LayoutOverride::Auto());
+                auto gRes = app.elementStorage.Add(std::move(glyph), interstice::LayoutOverride::Auto());
                 VERIFY(gRes.status);
                 VERIFY(app.windowRegistry.Add(gRes.ref));
             }
@@ -116,11 +116,11 @@ namespace GUI
         }
         else
         {
-            GUI::Element spacer{};
+            interstice::Element spacer{};
             spacer.id       = app.idManager.AllocateDynamicID();
             spacer.styleRef = app.theme.treeTableArrowStyleRef;
-            spacer.flags    = GUI::ElementFlags::NoInput;
-            auto res = app.elementStorage.Add(std::move(spacer), GUI::LayoutOverride{});
+            spacer.flags    = interstice::ElementFlags::NoInput;
+            auto res = app.elementStorage.Add(std::move(spacer), interstice::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(app.windowRegistry.Add(res.ref));
         }
@@ -131,28 +131,28 @@ namespace GUI
     // clicks return false so the row backdrop's selection / drag-prime still
     // sees them.
     void EmitTreeCellIcon(GUIApplication& app, IconID icon, bool* isOpen,
-                          GUI::DoubleClickTracker* tracker)
+                          interstice::DoubleClickTracker* tracker)
     {
         if (icon == IconID::Invalid) return;
-        GUI::ID iconElemID = app.idManager.AllocateDynamicID();
-        GUI::Element iconElem{};
+        interstice::ID iconElemID = app.idManager.AllocateDynamicID();
+        interstice::Element iconElem{};
         iconElem.id       = iconElemID;
         iconElem.styleRef = app.theme.treeTableIconStyleRef;
         const bool hittable = (isOpen != nullptr);
         iconElem.state    = app.guiStateManager.GetCurrentState(iconElemID);
-        if (!hittable) iconElem.flags |= GUI::ElementFlags::NoInput;
+        if (!hittable) iconElem.flags |= interstice::ElementFlags::NoInput;
         const float iconSize = static_cast<float>(app.theme.treeTableIconSize);
-        GUI::ContentRun iconRun[] = {
-            { .type = GUI::ContentRun::Icon, .iconID = icon,
+        interstice::ContentRun iconRun[] = {
+            { .type = interstice::ContentRun::Icon, .iconID = icon,
               .iconWidth = iconSize, .iconHeight = iconSize }
         };
         iconElem.textID = app.textSystem->RegisterRichText(iconElemID, iconRun,
                                                            app.theme.treeTableIconStyleRef, iconElem.state);
         if (hittable)
         {
-            iconElem.eventHandler = [isOpen, tracker](GUI::ElementEvent&& event) -> bool
+            iconElem.eventHandler = [isOpen, tracker](interstice::ElementEvent&& event) -> bool
             {
-                if (event.type != GUI::EventType::MouseDown) return false;
+                if (event.type != interstice::EventType::MouseDown) return false;
                 if (!event.state.LeftPressed()) return false;
                 const auto r = tracker->Update(event.id);
                 if (r.sameAsPrevious && r.elapsedMs < 300.0f)
@@ -164,7 +164,7 @@ namespace GUI
                 return false;
             };
         }
-        auto res = app.elementStorage.Add(std::move(iconElem), GUI::LayoutOverride::Auto());
+        auto res = app.elementStorage.Add(std::move(iconElem), interstice::LayoutOverride::Auto());
         VERIFY(res.status);
         VERIFY(app.windowRegistry.Add(res.ref));
     }
@@ -181,24 +181,24 @@ namespace GUI
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const GUI::ID rowID    = emit.currentRowID;
+        const interstice::ID rowID    = emit.currentRowID;
         const StyleRef styleRef = (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid)
             ? emit.cellStyleRef : theme.tableCellStyleRef;
 
-        const GUI::ID cellID = idManager.AllocateDynamicID();
+        const interstice::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        const GUI::ElementFlags cellFlags =
-            cellMode ? GUI::ElementFlags::None : GUI::ElementFlags::NoInput;
+        const interstice::ElementFlags cellFlags =
+            cellMode ? interstice::ElementFlags::None : interstice::ElementFlags::NoInput;
 
-        const GUI::TextID textID = textSystem->RegisterText(
+        const interstice::TextID textID = textSystem->RegisterText(
             cellID, text, styleRef, cellState);
 
         const int32_t cellW = textSystem->GetTextMeasurement(textID).maxWidth;
         emit.columns[c]._maxContentWidth =
             std::max(emit.columns[c]._maxContentWidth, cellW);
 
-        GUI::EventHandler cellHandler;
+        interstice::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -225,20 +225,20 @@ namespace GUI
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const GUI::ID rowID    = emit.currentRowID;
+        const interstice::ID rowID    = emit.currentRowID;
         const StyleRef styleRef = (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid)
             ? emit.cellStyleRef : theme.tableCellStyleRef;
 
-        const GUI::ID cellID = idManager.AllocateDynamicID();
+        const interstice::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
         // Row-mode cells are NoInput (click → select row), except columns that
         // host their own widget — those stay hittable so the widget gets input.
         const bool cellInteractive = cellMode || emit.columns[c].column.interactiveContent;
-        const GUI::ElementFlags cellFlags =
-            cellInteractive ? GUI::ElementFlags::None : GUI::ElementFlags::NoInput;
+        const interstice::ElementFlags cellFlags =
+            cellInteractive ? interstice::ElementFlags::None : interstice::ElementFlags::NoInput;
 
-        GUI::EventHandler cellHandler;
+        interstice::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -271,7 +271,7 @@ namespace GUI
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const GUI::ID rowID    = emit.currentRowID;
+        const interstice::ID rowID    = emit.currentRowID;
 
         // Tree-row metadata; slots are reused across frames (no steady-state allocation).
         auto& info = state->EnsureTreeRowInfo()[rowID];
@@ -282,12 +282,12 @@ namespace GUI
         if (renameBuffer != nullptr) info.renameSeed.assign(text);
         else                         info.renameSeed.clear();
 
-        const GUI::ID cellID = cellMode ? idManager.AllocateDynamicID() : rowID;
+        const interstice::ID cellID = cellMode ? idManager.AllocateDynamicID() : rowID;
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        const GUI::ElementFlags cellFlags = GUI::ElementFlags::None;
+        const interstice::ElementFlags cellFlags = interstice::ElementFlags::None;
 
-        const GUI::ID bodyID = idManager.AllocateDynamicID();
+        const interstice::ID bodyID = idManager.AllocateDynamicID();
 
         if (renameBuffer && (*m_renameSub).isActive &&
             (*m_renameSub).targetID == rowID &&
@@ -300,7 +300,7 @@ namespace GUI
                                   (*m_renameSub).isActive &&
                                   (*m_renameSub).targetID == rowID;
 
-        GUI::EventHandler cellHandler;
+        interstice::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -314,8 +314,8 @@ namespace GUI
             cellHandler = MakeTreeCellDoubleClickToggle(&state->_treeCellClickTracker, isOpen, std::move(cellHandler));
 
         const StyleRef textStyle = theme.treeTableTextStyleRef;
-        const GUI::ElementState textState = guiStateManager.GetCurrentState(bodyID);
-        const GUI::TextID bodyTextID = textSystem->RegisterText(
+        const interstice::ElementState textState = guiStateManager.GetCurrentState(bodyID);
+        const interstice::TextID bodyTextID = textSystem->RegisterText(
             bodyID, text, textStyle, textState);
         // Branches always reserve the arrow / leaf-spacer column (the arrow lives
         // there); leaves only when reserveExpander is set.
@@ -323,7 +323,7 @@ namespace GUI
         int32_t prefix = (depth > 0 ? depth * theme.treeTableIndent : 0)
                        + (hasExpanderColumn ? theme.treeTableExpanderWidth : 0)
                        + (icon != IconID::Invalid ? theme.treeTableIconSize : 0);
-        if (const GUI::LayoutStyle* ts = styleManager.GetLayoutStyle(textStyle.layoutStyleIndex))
+        if (const interstice::LayoutStyle* ts = styleManager.GetLayoutStyle(textStyle.layoutStyleIndex))
             prefix += ts->padding.Horizontal() + ts->borderWidths.Horizontal();
         const int32_t treeRowW = textSystem->GetTextMeasurement(bodyTextID).maxWidth + prefix;
         emit.columns[c]._maxContentWidth =
@@ -343,22 +343,22 @@ namespace GUI
 
 
     void GUIApplication::EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
-                                            GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                            GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
-                                            GUI::TextID textID,
+                                            interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                            interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                            interstice::TextID textID,
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column._columnTrack;
 
-        GUI::Element cell{};
+        interstice::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.textID       = textID;
         cell.eventHandler = std::move(cellHandler);
-        GUI::LayoutOverride cellLo;
+        interstice::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -371,8 +371,8 @@ namespace GUI
 
 
     void GUIApplication::EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
-                                              GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                              GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
+                                              interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                              interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
                                               bool cellSelected,
                                               std::function<void()> emit_fn,
                                               int colIdx, int colStart, int16_t gridRow)
@@ -380,13 +380,13 @@ namespace GUI
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column._columnTrack;
 
-        GUI::Element cell{};
+        interstice::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.eventHandler = std::move(cellHandler);
-        GUI::LayoutOverride cellLo;
+        interstice::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -405,26 +405,26 @@ namespace GUI
 
 
     void GUIApplication::EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
-                                            GUI::ID cellID, GUI::ElementState cellState, GUI::ElementFlags cellFlags,
-                                            GUI::StyleRef cellStyleRef, GUI::EventHandler cellHandler,
+                                            interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
+                                            interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
                                             bool cellSelected,
-                                            GUI::TextID textID,
+                                            interstice::TextID textID,
                                             int treeDepth, bool* treeIsOpen, IconID treeIcon,
                                             uint32_t treeAncestorMask, bool treeIsLastSibling,
                                             std::string* treeRenameBuffer, bool treeRenameActive,
-                                            GUI::ID treeBodyID, bool reserveExpander,
+                                            interstice::ID treeBodyID, bool reserveExpander,
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column._columnTrack;
 
-        GUI::Element cell{};
+        interstice::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.eventHandler = std::move(cellHandler);
-        GUI::LayoutOverride cellLo;
+        interstice::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -448,7 +448,7 @@ namespace GUI
                  treeIndent     = theme.treeTableIndent,
                  sm             = &styleManager,
                  cellStyle      = theme.treeTableCellStyleRef]
-                (GUI::CustomDrawContext& ctx)
+                (interstice::CustomDrawContext& ctx)
                 {
                     // Vertical guides span the full OUTER row so consecutive rows'
                     // guides stay connected (no padding-sized gaps between rows).
@@ -458,12 +458,12 @@ namespace GUI
                     const int32_t topY = outer.y - inner.y;
                     const int32_t leftX = outer.x - inner.x;
                     int32_t padLeft = 0;
-                    if (const GUI::LayoutStyle* ls = sm->GetLayoutStyle(cellStyle.layoutStyleIndex))
+                    if (const interstice::LayoutStyle* ls = sm->GetLayoutStyle(cellStyle.layoutStyleIndex))
                         padLeft = ls->borderWidths.left + ls->padding.left;
                     const int32_t indent  = treeIndent;
                     const int32_t centerY = topY + h / 2;
 
-                    GUI::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = sm->Px(1.f) };
+                    interstice::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = sm->Px(1.f) };
 
                     for (int d = 0; d < depth - 1; d++)
                     {
@@ -498,13 +498,13 @@ namespace GUI
         }
         else
         {
-            GUI::Element textElem{};
+            interstice::Element textElem{};
             textElem.id       = treeBodyID;
             textElem.styleRef = theme.treeTableTextStyleRef;
-            textElem.flags    = GUI::ElementFlags::NoInput;
+            textElem.flags    = interstice::ElementFlags::NoInput;
             textElem.state    = guiStateManager.GetCurrentState(treeBodyID);
             textElem.textID   = textID;
-            auto res = elementStorage.Add(std::move(textElem), GUI::LayoutOverride::Auto());
+            auto res = elementStorage.Add(std::move(textElem), interstice::LayoutOverride::Auto());
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
         }

@@ -14,7 +14,7 @@
 
 #include <gui_controls/gui_default_handlers.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -292,4 +292,4 @@ namespace GUI
 
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

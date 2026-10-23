@@ -10,7 +10,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_controls/subsystems/gui_subsystem_state.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -29,7 +29,7 @@ namespace GUI
             void TearDown() override { app.Cleanup(); }
 
             std::vector<ID> EmitGrid(int n, int& selectedIndex,
-                                     GUI::MultiSelectState* multi = nullptr)
+                                     interstice::MultiSelectState* multi = nullptr)
             {
                 std::vector<ID> ids;
                 ids.reserve(n);
@@ -108,7 +108,7 @@ namespace GUI
         TEST_F(ControlsGridViewTest, PlainClickWithMultiSelectClearsAndInsertsOne)
         {
             int sel = 0;
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             multi.selectedIDs = { ids[0], ids[1] };
@@ -124,7 +124,7 @@ namespace GUI
         TEST_F(ControlsGridViewTest, SingleCtrlClickInsertsItem)
         {
             int sel = 0;
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             app.ClickAt(app.CenterOf(ids[1]), MouseButtons::Left, KeyModifier::Control);
@@ -137,7 +137,7 @@ namespace GUI
         TEST_F(ControlsGridViewTest, CtrlClickAccumulatesAcrossClicks)
         {
             int sel = 0;
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             app.ClickAt(app.CenterOf(ids[0]), MouseButtons::Left, KeyModifier::Control);
@@ -157,7 +157,7 @@ namespace GUI
         TEST_F(ControlsGridViewTest, ShiftClickExtendsRangeFromAnchor)
         {
             int sel = 0;
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             auto ids = EmitGrid(5, sel, &multi);
 
             // Anchor at item 1.
@@ -185,7 +185,7 @@ namespace GUI
         class GridViewRenameTest : public ControlsGridViewTest
         {
         protected:
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             std::vector<std::string> names = { "alpha", "beta", "gamma", "delta" };
             std::vector<ID> ids;
 
@@ -319,7 +319,7 @@ namespace GUI
         {
         protected:
             HeadlessGUIApp app;
-            GUI::GridViewVirtualState vstate{};
+            interstice::GridViewVirtualState vstate{};
             int paneW = 600;
 
             void SetUp() override { app.Initialize(); }
@@ -357,8 +357,8 @@ namespace GUI
                                       app.theme.flexFillColStyleRef,
                                       LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
                     app.VirtualGridView(app.idManager.AllocateDynamicID("grid"), vstate,
-                                        /*itemCount*/5, GUI::int2{ 80, 80 },
-                                        [&](int, GUI::ID itemID) {
+                                        /*itemCount*/5, interstice::int2{ 80, 80 },
+                                        [&](int, interstice::ID itemID) {
                                             const int w = std::max(80, int(vstate.cellStretchedW));
                                             app.GridViewItem(itemID, "file_with_a_long_name.txt",
                                                              IconID::Invalid, ElementState::None,
@@ -436,11 +436,11 @@ namespace GUI
         {
         protected:
             static constexpr int kItems = 120;
-            GUI::ID gridID{};
+            interstice::ID gridID{};
             int selected = 0;
-            GUI::MultiSelectState multi{};
+            interstice::MultiSelectState multi{};
             bool useMulti = false;
-            std::vector<GUI::ID> itemIDs = std::vector<GUI::ID>(kItems, GUI::ID::Invalid());
+            std::vector<interstice::ID> itemIDs = std::vector<interstice::ID>(kItems, interstice::ID::Invalid());
 
             void SetUp() override
             {
@@ -457,8 +457,8 @@ namespace GUI
                     app.BeginArea(app.idManager.AllocateDynamicID("gridPane"),
                                   app.theme.emptyVertStyleRef,
                                   LayoutOverride{}.Size(420, 220));
-                    app.VirtualGridView(gridID, vstate, kItems, GUI::int2{ 100, 50 },
-                                        [&](int idx, GUI::ID itemID) {
+                    app.VirtualGridView(gridID, vstate, kItems, interstice::int2{ 100, 50 },
+                                        [&](int idx, interstice::ID itemID) {
                                             itemIDs[size_t(idx)] = itemID;
                                             app.GridViewItem(itemID, "item", IconID::Invalid,
                                                              ElementState::None, StyleRef{},
@@ -483,7 +483,7 @@ namespace GUI
                 return n;
             }
 
-            void Press(GUI::KeyCode key)
+            void Press(interstice::KeyCode key)
             {
                 app.guiStateManager.Interaction().SetFocusID(gridID);
                 app.InjectKey(key);
@@ -498,7 +498,7 @@ namespace GUI
             const int cols = ItemsInFirstRow();
             ASSERT_GT(cols, 0);
             selected = 0;
-            Press(GUI::KeyCode::Down);
+            Press(interstice::KeyCode::Down);
             EXPECT_EQ(selected, cols) << "Down must land straight below, not diagonally";
         }
 
@@ -507,7 +507,7 @@ namespace GUI
             for (int i = 0; i < 3; ++i) GridFrame();
             selected = 0;
             for (int i = 0; i < 12; ++i)
-                Press(GUI::KeyCode::Down);
+                Press(interstice::KeyCode::Down);
 
             ASSERT_GT(selected, 20);
             ASSERT_TRUE(app.HasElement(itemIDs[size_t(selected)])) << "selected item was virtualized away";
@@ -527,7 +527,7 @@ namespace GUI
 
             // Scroll far enough that item 0 is no longer emitted.
             auto& sm = app.guiStateManager.GetScrollManagement();
-            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(gridID), GUI::int2{ 0, -1200 });
+            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(gridID), interstice::int2{ 0, -1200 });
             GridFrame();
             GridFrame();
             ASSERT_FALSE(app.HasElement(itemIDs[0]));
@@ -553,4 +553,4 @@ namespace GUI
         }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

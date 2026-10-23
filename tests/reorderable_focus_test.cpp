@@ -10,7 +10,7 @@
 
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::HeadlessGUIApp;
 
@@ -23,16 +23,16 @@ namespace GUI
         HeadlessGUIApp app;
 
         // Stable across frames so events can target the same elements.
-        GUI::ID groupID{};
-        GUI::ID itemID0{};
-        GUI::ID itemID1{};
-        GUI::ID itemID2{};
-        GUI::ID buttonID0{};
-        GUI::ID buttonID1{};
-        GUI::ID buttonID2{};
+        interstice::ID groupID{};
+        interstice::ID itemID0{};
+        interstice::ID itemID1{};
+        interstice::ID itemID2{};
+        interstice::ID buttonID0{};
+        interstice::ID buttonID1{};
+        interstice::ID buttonID2{};
 
         // Focused control outside the reorderable; thumb clicks must not steal its focus.
-        GUI::ID externalControlID{};
+        interstice::ID externalControlID{};
 
         std::vector<int> reorderHistory; // appended (from, to) on every onReorder.
 
@@ -58,7 +58,7 @@ namespace GUI
 
             // Out-of-group control we focus to test "don't steal focus".
             app.Button(externalControlID, "Outside", []{},
-                       GUI::LayoutOverride{}.Size(120, 24));
+                       interstice::LayoutOverride{}.Size(120, 24));
 
             auto onReorder = [this](int from, int to)
             {
@@ -67,17 +67,17 @@ namespace GUI
             };
             if (app.BeginReorderableGroup(groupID, ReorderDirection::Vertical,
                                           onReorder,
-                                          GUI::LayoutOverride{}.Size(300, 200)))
+                                          interstice::LayoutOverride{}.Size(300, 200)))
             {
-                const GUI::ID itemIDs[3]   = { itemID0, itemID1, itemID2 };
-                const GUI::ID buttonIDs[3] = { buttonID0, buttonID1, buttonID2 };
+                const interstice::ID itemIDs[3]   = { itemID0, itemID1, itemID2 };
+                const interstice::ID buttonIDs[3] = { buttonID0, buttonID1, buttonID2 };
                 for (int i = 0; i < 3; i++)
                 {
                     app.BeginReorderableItem(itemIDs[i],
-                                             GUI::LayoutOverride{}.Size(280, 40));
+                                             interstice::LayoutOverride{}.Size(280, 40));
                     app.EmitDragHandle();
                     app.Button(buttonIDs[i], "Row", []{},
-                               GUI::LayoutOverride{}.FlexGrow(1));
+                               interstice::LayoutOverride{}.FlexGrow(1));
                     app.EndReorderableItem();
                 }
                 app.EndReorderableGroup();
@@ -87,13 +87,13 @@ namespace GUI
 
         // The drag thumb is the reorderable item's first child (EmitDragHandle
         // adds it before the row content).
-        GUI::int2 ThumbCenterOfItem(GUI::ID itemID) const
+        interstice::int2 ThumbCenterOfItem(interstice::ID itemID) const
         {
             const auto itemRef = app.elementStorage.FindElementRefByID(itemID);
             if (!itemRef.IsValid()) return {};
             const auto children = app.elementStorage.GetChildRange(itemRef);
             if (children.Empty()) return {};
-            const GUI::ElementRef thumbRef{ itemRef.depth + 1, children.begin };
+            const interstice::ElementRef thumbRef{ itemRef.depth + 1, children.begin };
             const auto* thumbRect = app.elementStorage.GetElementRectPtr(thumbRef);
             if (!thumbRect) return {};
             const auto& r = thumbRect->rect;
@@ -116,7 +116,7 @@ namespace GUI
         // Frame 1: lay out the tree so we can find the thumb's rect.
         app.Frame([&] { EmitGroup(); });
         const auto thumbCenter = ThumbCenterOfItem(itemID0);
-        ASSERT_NE(thumbCenter, GUI::int2{});
+        ASSERT_NE(thumbCenter, interstice::int2{});
 
         // Park focus on the external control AFTER layout so the next
         // dispatched MouseDown is the thing under test.
@@ -141,7 +141,7 @@ namespace GUI
     {
         app.Frame([&] { EmitGroup(); });
         const auto thumbCenter = ThumbCenterOfItem(itemID1);
-        ASSERT_NE(thumbCenter, GUI::int2{});
+        ASSERT_NE(thumbCenter, interstice::int2{});
 
         FocusExternalControl();
 
@@ -171,14 +171,14 @@ namespace GUI
         app.Frame([&] { EmitGroup(); });
         const auto thumbCenter0 = ThumbCenterOfItem(itemID0);
         const auto itemRef1     = app.elementStorage.FindElementRefByID(itemID1);
-        ASSERT_NE(thumbCenter0, GUI::int2{});
+        ASSERT_NE(thumbCenter0, interstice::int2{});
         ASSERT_TRUE(itemRef1.IsValid());
 
         // Compute a destination point comfortably past row 1's midpoint so the
         // reorderable's edge-crossing logic moves item 0 into slot 1.
         const auto* row1Rect = app.elementStorage.GetElementRectPtr(itemRef1);
         ASSERT_NE(row1Rect, nullptr);
-        const GUI::int2 dropPos{ thumbCenter0.x,
+        const interstice::int2 dropPos{ thumbCenter0.x,
                                  row1Rect->rect.y + row1Rect->rect.h * 3 / 4 };
 
         FocusExternalControl();
@@ -190,7 +190,7 @@ namespace GUI
 
         // Move past the activation threshold AND past row 1's midpoint to
         // commit the reorder.
-        app.InjectMouseMove(dropPos, GUI::MouseButtons::Left);
+        app.InjectMouseMove(dropPos, interstice::MouseButtons::Left);
         app.Frame([&] { EmitGroup(); });
 
         // Release — fires onReorder and focuses the destination slot's button.
@@ -206,4 +206,4 @@ namespace GUI
     }
 
     } // namespace
-} // namespace GUI
+} // namespace interstice

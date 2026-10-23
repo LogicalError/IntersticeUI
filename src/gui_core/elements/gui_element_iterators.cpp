@@ -1,6 +1,6 @@
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace GUI
+namespace interstice
 {
     // ------------------------------------------------------------------------
     // DepthScanCursor (members)
@@ -35,4 +35,4 @@ namespace GUI
         return storage.GetChildRectSpanUnsafe(parentDepth + 1, childRange);
     }
 
-}//namespace GUI
+}//namespace interstice

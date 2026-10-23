@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace GUI
+namespace interstice
 {
     // Round half up, the same rule the box shader uses.
     inline int32_t SnapPx(float v) { return int32_t(std::floor(v + 0.5f)); }

@@ -8,7 +8,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/elements/gui_element.h>
 
-namespace GUI
+namespace interstice
 {
     enum class ReorderDirection : uint8_t { Horizontal, Vertical };
 
@@ -18,33 +18,33 @@ namespace GUI
         bool     isDragging    = false;
         bool     dragActivated = false; // true once movement exceeds the drag threshold
         bool     isWrapped     = false;
-        GUI::ID  groupID       = GUI::ID::Invalid();
+        interstice::ID  groupID       = interstice::ID::Invalid();
         int      draggedIndex   = -1;
         int      insertionIndex = -1;
         int      itemCount      = 0;
-        std::vector<GUI::IntRect> originalRects; // snapshot at drag start
+        std::vector<interstice::IntRect> originalRects; // snapshot at drag start
         // Child IDs at drag start, in slot order, so MouseUp can resolve slots by ID
         // (storage is already visually reordered by then).
-        std::vector<GUI::ID> originalIDs;
-        GUI::int2  dragStartMousePos{};
-        GUI::int2  dragOffset{};       // cumulative mouse delta from drag start
+        std::vector<interstice::ID> originalIDs;
+        interstice::int2  dragStartMousePos{};
+        interstice::int2  dragOffset{};       // cumulative mouse delta from drag start
         ReorderDirection direction = ReorderDirection::Vertical;
-        GUI::IntRect groupRect{};      // snapshot of group bounds at drag start
+        interstice::IntRect groupRect{};      // snapshot of group bounds at drag start
     };
 
     // Valid only between BeginReorderableGroup / EndReorderableGroup; handlers must capture.
     struct ReorderableConstructionState
     {
-        GUI::ID groupID         = GUI::ID::Invalid();
+        interstice::ID groupID         = interstice::ID::Invalid();
         ReorderDirection direction = ReorderDirection::Vertical;
         bool    isWrapped       = false;
         bool    reorderApplied  = false;
         std::function<void(int, int)>             onReorder;
-        std::function<void(int, GUI::int2)>       onDragOut;       // captured into item lambdas
-        std::function<void(int, GUI::int2)>       dragVisualizer;
+        std::function<void(int, interstice::int2)>       onDragOut;       // captured into item lambdas
+        std::function<void(int, interstice::int2)>       dragVisualizer;
         int                          nextItemIndex = 0;
-        GUI::ElementRef              groupRef      = GUI::ElementRef::Invalid();
-        std::vector<GUI::ElementRef> itemRefs;
+        interstice::ElementRef              groupRef      = interstice::ElementRef::Invalid();
+        std::vector<interstice::ElementRef> itemRefs;
     };
 
     class FramePipeline;
@@ -61,7 +61,7 @@ namespace GUI
         ReorderableConstructionState& Construction() { return m_construction; }
 
         // True iff every BeginReorderableGroup was matched by End.
-        bool IsBalanced() const { return m_construction.groupID == GUI::ID::Invalid(); }
+        bool IsBalanced() const { return m_construction.groupID == interstice::ID::Invalid(); }
 
     private:
         void OnPreConstruct(FrameContext& ctx);

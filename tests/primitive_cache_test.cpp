@@ -15,23 +15,23 @@
 
 #include <cstring>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {
         TEST(PrimitiveCacheTest, AppendCapturedTranslatesAndPreservesPasses)
         {
             PrimitiveRenderTarget src;
-            src.SetTransform(GUI::float3x2::Translate(100.0f, 50.0f));
-            src.RenderBox(GUI::IntRect{ 10, 20, 30, 40 }, GUI::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
+            src.SetTransform(interstice::float3x2::Translate(100.0f, 50.0f));
+            src.RenderBox(interstice::IntRect{ 10, 20, 30, 40 }, interstice::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
             // Different kind → a second pass.
-            src.RenderGlyph(GUI::float2{ 5, 6 }, GUI::float2{ 7, 8 }, GUI::float2{ 0, 0 }, GUI::float2{ 1, 1 },
-                            1.0f, 1, 0, GUI::VisualColorStyleIndex{}, GUI::IntRect{ 0, 0, 200, 200 });
+            src.RenderGlyph(interstice::float2{ 5, 6 }, interstice::float2{ 7, 8 }, interstice::float2{ 0, 0 }, interstice::float2{ 1, 1 },
+                            1.0f, 1, 0, interstice::VisualColorStyleIndex{}, interstice::IntRect{ 0, 0, 200, 200 });
             src.FinishRenderPass();
             ASSERT_EQ(src.renderPasses.size(), 2u);
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, GUI::int2{ 10, 20 });
+            dst.AppendCaptured(src, interstice::int2{ 10, 20 });
 
             // Passes preserved in order.
             ASSERT_EQ(dst.renderPasses.size(), 2u);
@@ -56,12 +56,12 @@ namespace GUI
         TEST(PrimitiveCacheTest, AppendCapturedZeroDeltaIsVerbatim)
         {
             PrimitiveRenderTarget src;
-            src.SetTransform(GUI::float3x2::Translate(100.0f, 50.0f));
-            src.RenderBox(GUI::IntRect{ 10, 20, 30, 40 }, GUI::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
+            src.SetTransform(interstice::float3x2::Translate(100.0f, 50.0f));
+            src.RenderBox(interstice::IntRect{ 10, 20, 30, 40 }, interstice::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
             src.FinishRenderPass();
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, GUI::int2{ 0, 0 });
+            dst.AppendCaptured(src, interstice::int2{ 0, 0 });
 
             const auto& sb = src.streams[size_t(PrimitiveKind::Box)].cpu;
             const auto& db = dst.streams[size_t(PrimitiveKind::Box)].cpu;
@@ -72,20 +72,20 @@ namespace GUI
         TEST(PrimitiveCacheTest, ScopeCaptureReplayMatchesDirectRender)
         {
             PrimitiveRenderer r;
-            r.BeginWindow(GUI::ID::Invalid()); // any id works for a CPU-only target
+            r.BeginWindow(interstice::ID::Invalid()); // any id works for a CPU-only target
 
             // Capture a "subtree" of two primitives under scope S.
-            const GUI::ID scope = GUI::ID::Invalid();
+            const interstice::ID scope = interstice::ID::Invalid();
             r.BeginScopeCapture(scope);
-            r.SetTransform(GUI::float3x2::Translate(0.0f, 0.0f));
-            r.RenderBox(GUI::IntRect{ 0, 0, 50, 50 }, GUI::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f);
+            r.SetTransform(interstice::float3x2::Translate(0.0f, 0.0f));
+            r.RenderBox(interstice::IntRect{ 0, 0, 50, 50 }, interstice::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f);
             r.EndScopeCapture(scope); // emits into the window (delta 0) and stores the capture
 
             EXPECT_TRUE(r.HasScopeCapture(scope));
 
             // Replaying translated appends another, shifted copy.
             const size_t before = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
-            EXPECT_TRUE(r.ReplayScopeCapture(scope, GUI::int2{ 5, 7 }));
+            EXPECT_TRUE(r.ReplayScopeCapture(scope, interstice::int2{ 5, 7 }));
             const size_t after = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
             EXPECT_EQ(after, before + sizeof(Box));
 
@@ -96,12 +96,12 @@ namespace GUI
         TEST(PrimitiveScaleTest, ReplayMovesTheSnappedRect)
         {
             PrimitiveRenderTarget src;
-            src.RenderBox(GUI::IntRect{ 0, 0, 10, 10 }, GUI::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f, {},
-                          GUI::ImageIndex::Invalid, GUI::IntRect{ 3, 4, 15, 16 });
+            src.RenderBox(interstice::IntRect{ 0, 0, 10, 10 }, interstice::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f, {},
+                          interstice::ImageIndex::Invalid, interstice::IntRect{ 3, 4, 15, 16 });
             src.FinishRenderPass();
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, GUI::int2{ 10, 20 });
+            dst.AppendCaptured(src, interstice::int2{ 10, 20 });
             const Box* b = reinterpret_cast<const Box*>(dst.streams[size_t(PrimitiveKind::Box)].cpu.data());
             EXPECT_EQ(b->snappedPx[0], 13);
             EXPECT_EQ(b->snappedPx[1], 24);
@@ -113,20 +113,20 @@ namespace GUI
         // drawing, like element boxes snap to their parent (here under a 1.5x zoom).
         TEST(PrimitiveScaleTest, CustomDrawBoxSnapsToItsOwner)
         {
-            GUI::GradientManager gradients{ 16 };
-            GUI::StyleManager    styles{ gradients };
-            GUI::ElementStorage  storage{ styles };
+            interstice::GradientManager gradients{ 16 };
+            interstice::StyleManager    styles{ gradients };
+            interstice::ElementStorage  storage{ styles };
             PrimitiveRenderer    r;
-            r.BeginWindow(GUI::ID::Invalid());
+            r.BeginWindow(interstice::ID::Invalid());
 
             // Owner zoomed 1.5x (a node view) at layout (20.5, 20.5): pixels from 30.75.
-            const GUI::float3x2 layoutToWindow = GUI::float3x2::Scale(1.5f) * GUI::float3x2::Translate(20.5f, 20.5f);
-            const GUI::float4   ownerPx{ 30.75f, 30.75f, 120.75f, 120.75f };
-            const GUI::IntRect  ownerSnapped = GUI::SnapAbsolute(ownerPx);
-            GUI::CustomDrawContext ctx{ r, storage, GUI::ElementRef::Invalid(), GUI::IntRect{ 0, 0, 60, 60 },
-                                        GUI::IntRect{ 0, 0, 60, 60 }, GUI::IntRect{ 0, 0, 500, 500 },
-                                        layoutToWindow, GUI::int2{ 0, 0 }, nullptr, ownerPx, ownerSnapped };
-            ctx.RenderBox(GUI::IntRect{ 1, 1, 58, 10 }, GUI::VisualBoxStyleIndex::Invalid);
+            const interstice::float3x2 layoutToWindow = interstice::float3x2::Scale(1.5f) * interstice::float3x2::Translate(20.5f, 20.5f);
+            const interstice::float4   ownerPx{ 30.75f, 30.75f, 120.75f, 120.75f };
+            const interstice::IntRect  ownerSnapped = interstice::SnapAbsolute(ownerPx);
+            interstice::CustomDrawContext ctx{ r, storage, interstice::ElementRef::Invalid(), interstice::IntRect{ 0, 0, 60, 60 },
+                                        interstice::IntRect{ 0, 0, 60, 60 }, interstice::IntRect{ 0, 0, 500, 500 },
+                                        layoutToWindow, interstice::int2{ 0, 0 }, nullptr, ownerPx, ownerSnapped };
+            ctx.RenderBox(interstice::IntRect{ 1, 1, 58, 10 }, interstice::VisualBoxStyleIndex::Invalid);
             r.currentTarget->FinishRenderPass();
 
             const Box* b = reinterpret_cast<const Box*>(r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.data());

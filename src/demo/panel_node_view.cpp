@@ -5,7 +5,7 @@
 // graph data is built in application.cpp.
 //
 
-namespace GUI
+namespace interstice
 {
 
     void Application::RenderNodeViewPanel()

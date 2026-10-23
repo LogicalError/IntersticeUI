@@ -9,7 +9,7 @@
 #include <chrono>
 #include <vector>
 
-namespace GUI::TableInternal
+namespace interstice::TableInternal
 {
     // Hit-strip width of an active (draggable) sizer overlay (CSS pixels).
     constexpr int32_t kActiveSizerWidth   = 4;
@@ -18,7 +18,7 @@ namespace GUI::TableInternal
 
 
     // Double-click / slow-re-click tracker; each TableState holds its own.
-    using DoubleClickTracker = GUI::DoubleClickTracker;
+    using DoubleClickTracker = interstice::DoubleClickTracker;
 
 
     // Column GridTrack: 1fr when stretchy, else Fixed. The table's last column
@@ -27,7 +27,7 @@ namespace GUI::TableInternal
     inline GridTrack ComputeColumnTrack(const StyleManager& sm,
                                         int c,
                                         int globalColumnCount,
-                                        const GUI::VirtualTableColumn* /*columns*/,
+                                        const interstice::VirtualTableColumn* /*columns*/,
                                         const std::vector<int32_t>& columnWidths,
                                         bool dragActive,
                                         int32_t lastColDragFixedWidth,
@@ -47,13 +47,13 @@ namespace GUI::TableInternal
     // Overload with implicit stretch on the table's last column. Frozen mode passes
     // `isStretch` explicitly (only the middle section's last column stretches).
     inline GridTrack ComputeColumnTrack(const StyleManager& sm, int c, int globalColumnCount,
-                                        const GUI::VirtualTableColumn* columns,
+                                        const interstice::VirtualTableColumn* columns,
                                         const std::vector<int32_t>& columnWidths,
                                         bool dragActive, int32_t lastColDragFixedWidth)
     {
         const bool isLastGlobal = (c + 1 == globalColumnCount);
         const bool isStretch    = isLastGlobal
-                               || columns[c].column.sizing == GUI::ColumnSizing::Stretch;
+                               || columns[c].column.sizing == interstice::ColumnSizing::Stretch;
         return ComputeColumnTrack(sm, c, globalColumnCount, columns, columnWidths,
                                   dragActive, lastColDragFixedWidth, isStretch);
     }
@@ -63,30 +63,30 @@ namespace GUI::TableInternal
     // TreeCell stays hittable so its arrow/text can be clicked).
     struct CellStateBits
     {
-        GUI::ElementState state;
+        interstice::ElementState state;
         bool              selected;
     };
 
     inline CellStateBits ComputeCellSelectionBits(GUIStateManager& sm,
-                                                  const GUI::TableState* userState,
-                                                  GUI::ID cellID, GUI::ID currentRowID,
+                                                  const interstice::TableState* userState,
+                                                  interstice::ID cellID, interstice::ID currentRowID,
                                                   int c, bool cellMode)
     {
-        GUI::ElementState st = sm.GetCurrentState(cellID);
+        interstice::ElementState st = sm.GetCurrentState(cellID);
         const bool selected = cellMode
             && userState->selectedRowID  == currentRowID
             && userState->selectedColumn == c;
-        if (selected) st |= GUI::ElementState::Selected;
+        if (selected) st |= interstice::ElementState::Selected;
         return { st, selected };
     }
 }
 
-namespace GUI
+namespace interstice
 {
     // Tree-cell flex-row children — emitted at drain time by EndTable's
     // body-section drain. Defined in controls_table_cells.cpp.
     void EmitTreeCellIndent(GUIApplication& app, int depth);
     void EmitTreeCellArrowOrLeafSpacer(GUIApplication& app, bool* isOpen);
     void EmitTreeCellIcon(GUIApplication& app, IconID icon, bool* isOpen,
-                          GUI::DoubleClickTracker* tracker);
+                          interstice::DoubleClickTracker* tracker);
 }

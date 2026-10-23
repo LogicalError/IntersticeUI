@@ -16,7 +16,7 @@
 
 // Node-view (graph editor) data model. The caller owns one NodeView per view.
 
-namespace GUI
+namespace interstice
 {
     // A property on a node. Default-constructed is invalid: in a socket it means "present, unwired".
     struct PropertyEndpoint
@@ -41,7 +41,7 @@ namespace GUI
         std::function<void()> renderBody;
 
         // Socket dot colour, also used for wires leaving this output.
-        GUI::color4f socketColor{ 0.9f, 0.9f, 0.9f, 1.0f };
+        interstice::color4f socketColor{ 0.9f, 0.9f, 0.9f, 1.0f };
 
         // Row height in row pitches, for tall bodies (previews, multi-line). Whole pitches
         // keep later sockets on the grid.
@@ -52,14 +52,14 @@ namespace GUI
     {
         // Assigned once on creation; the node's element ID and the salt for its sub-IDs, so
         // ID-keyed state survives z-order changes (dynamic IDs depend on render order).
-        GUI::ID                    stableID     = GUI::ID::Invalid();
+        interstice::ID                    stableID     = interstice::ID::Invalid();
 
         std::string                title;
-        GUI::color4f               headerColor  = {};   // Blender-style per-type header tint; alpha 0 = theme default
-        GUI::int2                  pos          = {};
-        GUI::int2                  startPos     = {};
-        GUI::int2                  startScreen  = {};
-        GUI::int2                  lastSize     = {};   // outer-rect size from last frame's layout
+        interstice::color4f               headerColor  = {};   // Blender-style per-type header tint; alpha 0 = theme default
+        interstice::int2                  pos          = {};
+        interstice::int2                  startPos     = {};
+        interstice::int2                  startScreen  = {};
+        interstice::int2                  lastSize     = {};   // outer-rect size from last frame's layout
         bool                       isDragging   = false;
         bool                       collapsed    = false;
         std::vector<NodeProperty>  properties;
@@ -70,7 +70,7 @@ namespace GUI
     {
         bool             active        = false;
         PropertyEndpoint source        = {};
-        GUI::int2        currentScreen = {};   // most recent mouse screen pos
+        interstice::int2        currentScreen = {};   // most recent mouse screen pos
     };
 
     // Interior lane a drag handle adjusts: the corridor route's vertical lane (LaneX), or the
@@ -90,7 +90,7 @@ namespace GUI
     // Draggable interior segment; vertical segments drag horizontally and vice versa.
     struct WireSegmentHandle
     {
-        GUI::int2  a, b;     // segment endpoints, same space as the route points
+        interstice::int2  a, b;     // segment endpoints, same space as the route points
         WireHandle role     = WireHandle::None;
         bool       vertical = false;
     };
@@ -98,7 +98,7 @@ namespace GUI
     // Polyline plus its draggable interior segments (never the end stubs).
     struct WireRoute
     {
-        std::vector<GUI::int2>         points;
+        std::vector<interstice::int2>         points;
         std::vector<WireSegmentHandle> handles;
     };
 
@@ -109,7 +109,7 @@ namespace GUI
         uint32_t   wireKey  = 0;
         WireHandle role     = WireHandle::None;
         bool       vertical = false;
-        GUI::int2  a, b;
+        interstice::int2  a, b;
     };
 
     // Segment drag via mouse capture rather than DnD, so the resize cursor sticks.
@@ -119,7 +119,7 @@ namespace GUI
         uint32_t   wireKey    = 0;
         WireHandle role       = WireHandle::None;
         bool       vertical   = false;
-        GUI::int2  startScreen = {};
+        interstice::int2  startScreen = {};
         int32_t    startValue  = 0;   // lane coordinate at drag start (node.pos space)
     };
 
@@ -130,14 +130,14 @@ namespace GUI
     {
         std::vector<NodeModel>  nodes;
         PendingConnection       pendingConnection;
-        GUI::float3x2           transform;                  // identity = centered view (no pan/zoom)
-        GUI::int2               lastInnerSize{ 0, 0 };      // for centering
+        interstice::float3x2           transform;                  // identity = centered view (no pan/zoom)
+        interstice::int2               lastInnerSize{ 0, 0 };      // for centering
         EditMode                editMode  = EditMode::Default;
         std::vector<int>        ordering;                   // z-order, last == front (a clicked node moves there)
 
         // Selected node stableIDs.
-        std::unordered_set<GUI::ID>     selectedNodeIDs;
-        GUI::ID                         lastClickedNodeID = GUI::ID::Invalid();
+        std::unordered_set<interstice::ID>     selectedNodeIDs;
+        interstice::ID                         lastClickedNodeID = interstice::ID::Invalid();
 
         // Double-click-to-collapse, per view so views (and test frames) don't share it.
         DoubleClickTracker              nodeDoubleClick;
@@ -145,9 +145,9 @@ namespace GUI
         // Marquee drag from the empty background; start/current in SCREEN space.
         bool                            marqueeActive        = false;
         bool                            marqueePastThreshold = false;
-        GUI::int2                       marqueeStartScreen   {};
-        GUI::int2                       marqueeCurrentScreen {};
-        std::unordered_set<GUI::ID>     marqueeBaseSelection;     // selection snapshot before the drag
+        interstice::int2                       marqueeStartScreen   {};
+        interstice::int2                       marqueeCurrentScreen {};
+        std::unordered_set<interstice::ID>     marqueeBaseSelection;     // selection snapshot before the drag
         bool                            marqueeShift = false;     // modifier snapshot at start
         bool                            marqueeCtrl  = false;
 
@@ -164,7 +164,7 @@ namespace GUI
                            PropertyEndpoint input)> canConnect;
 
         // Packed RGBA -> registered color style, since RenderPolyline takes a style index.
-        std::unordered_map<uint32_t, GUI::VisualColorStyleIndex> wireColorStyles;
+        std::unordered_map<uint32_t, interstice::VisualColorStyleIndex> wireColorStyles;
         uint32_t wireColorStylesGeneration = 0; // StyleManager::Generation() of the cache
     };
 }

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace GUI::TableHelpers
+namespace interstice::TableHelpers
 {
     VirtualRowRange ComputeVirtualRowRange(int32_t scrollY,
                                            int32_t viewportH,

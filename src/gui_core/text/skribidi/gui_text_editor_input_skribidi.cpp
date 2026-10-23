@@ -25,7 +25,7 @@
 #undef SKB_CURRENT_SELECTION_END
 #define SKB_CURRENT_SELECTION_END \
     skb_text_position_t { .offset = INT32_MIN, .affinity = SKB_AFFINITY_NONE }
-namespace GUI
+namespace interstice
 {
     struct selection_hit_test_context_t
     {
@@ -51,7 +51,7 @@ namespace GUI
         }
     }
 
-    void SkribidiTextSystem::OnKeyboard(ID /*windowId*/, GUI::KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
+    void SkribidiTextSystem::OnKeyboard(ID /*windowId*/, interstice::KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
     {
         if (!m_skribidiContext)
             return;
@@ -106,16 +106,16 @@ namespace GUI
         } else
         {
             // Only process key down events
-            if (action != GUI::KeyAction::KeyDown)
+            if (action != interstice::KeyAction::KeyDown)
                 return;
 
-            if (key == GUI::KeyCode::Escape && m_textDragArmed)
+            if (key == interstice::KeyCode::Escape && m_textDragArmed)
             {
                 EndTextDragging();
                 return;
             }
 
-            if (key == GUI::KeyCode::Return || key == GUI::KeyCode::Return2)
+            if (key == interstice::KeyCode::Return || key == interstice::KeyCode::Return2)
             {
                 if (!m_skribidiContext->active_is_multiline)
                 {
@@ -140,15 +140,15 @@ namespace GUI
             // Map keys
             switch (key)
             {
-                case GUI::KeyCode::Return:
-                case GUI::KeyCode::Return2:        skb_key = SKB_KEY_ENTER; break;
-                case GUI::KeyCode::Left:        skb_key = SKB_KEY_LEFT; break;
-                case GUI::KeyCode::Right:        skb_key = SKB_KEY_RIGHT; break;
-                case GUI::KeyCode::Up:            skb_key = SKB_KEY_UP; break;
-                case GUI::KeyCode::Down:        skb_key = SKB_KEY_DOWN; break;
-                case GUI::KeyCode::Home:        skb_key = SKB_KEY_HOME; break;
-                case GUI::KeyCode::End:            skb_key = SKB_KEY_END; break;
-                case GUI::KeyCode::Backspace:
+                case interstice::KeyCode::Return:
+                case interstice::KeyCode::Return2:        skb_key = SKB_KEY_ENTER; break;
+                case interstice::KeyCode::Left:        skb_key = SKB_KEY_LEFT; break;
+                case interstice::KeyCode::Right:        skb_key = SKB_KEY_RIGHT; break;
+                case interstice::KeyCode::Up:            skb_key = SKB_KEY_UP; break;
+                case interstice::KeyCode::Down:        skb_key = SKB_KEY_DOWN; break;
+                case interstice::KeyCode::Home:        skb_key = SKB_KEY_HOME; break;
+                case interstice::KeyCode::End:            skb_key = SKB_KEY_END; break;
+                case interstice::KeyCode::Backspace:
                 {
                     skb_key = SKB_KEY_BACKSPACE;
                     const skb_text_range_t selection = skb_editor_get_current_selection(m_skribidiContext->editor);
@@ -160,7 +160,7 @@ namespace GUI
                     }
                     break;
                 }
-                case GUI::KeyCode::Delete:
+                case interstice::KeyCode::Delete:
                 {
                     skb_key = SKB_KEY_DELETE;
                     const skb_text_range_t selection = skb_editor_get_current_selection(m_skribidiContext->editor);
@@ -173,7 +173,7 @@ namespace GUI
                     }
                     break;
                 }
-                case GUI::KeyCode::KeyV:
+                case interstice::KeyCode::KeyV:
                     if (readOnly) return;
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
@@ -181,7 +181,7 @@ namespace GUI
                             Paste(m_skribidiContext->clipboard->Get());
                     }
                     return;
-                case GUI::KeyCode::KeyC:
+                case interstice::KeyCode::KeyC:
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
                         std::string copiedText = Copy();
@@ -191,7 +191,7 @@ namespace GUI
                         }
                     }
                     return;
-                case GUI::KeyCode::KeyX:
+                case interstice::KeyCode::KeyX:
                     if (readOnly) return;
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
@@ -202,14 +202,14 @@ namespace GUI
                         }
                     }
                     return;
-                case GUI::KeyCode::KeyA:
+                case interstice::KeyCode::KeyA:
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
                         skb_editor_select_all(m_skribidiContext->editor);
                         EnsureCursorVisible(m_skribidiContext->active_element_id);
                     }
                     return;
-                case GUI::KeyCode::KeyZ:
+                case interstice::KeyCode::KeyZ:
                     if (readOnly) return;
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
@@ -242,7 +242,7 @@ namespace GUI
         }
     }
 
-    void SkribidiTextSystem::OnMouseMove(ID windowId, GUI::int2 screenPos, MouseButtons /*button*/, KeyModifier /*modifiers*/)
+    void SkribidiTextSystem::OnMouseMove(ID windowId, interstice::int2 screenPos, MouseButtons /*button*/, KeyModifier /*modifiers*/)
     {
         if (!m_skribidiContext)
             return;
@@ -266,7 +266,7 @@ namespace GUI
             return;
 
         // Mouse position is in screen space
-        GUI::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
+        interstice::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
         if (!TryGetActiveTextEditorLocalPoint(windowId, screenPos, localPos))
         {
             localPos.x -= m_skribidiContext->view.cx;
@@ -278,7 +278,7 @@ namespace GUI
             EnsureCursorVisible(m_skribidiContext->active_element_id);
     }
 
-    bool SkribidiTextSystem::IsHoveringSelectedText(ID textEditorId, ID windowId, GUI::int2 screenSpace) const
+    bool SkribidiTextSystem::IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const
     {
         if (!m_skribidiContext || !m_skribidiContext->editor)
             return false;
@@ -293,7 +293,7 @@ namespace GUI
         if (skb_editor_get_text_range_count(m_skribidiContext->editor, selection) <= 0)
             return false;
 
-        GUI::float2 localPos{ static_cast<float>(screenSpace.x), static_cast<float>(screenSpace.y) };
+        interstice::float2 localPos{ static_cast<float>(screenSpace.x), static_cast<float>(screenSpace.y) };
         if (!TryGetActiveTextEditorLocalPoint(windowId, screenSpace, localPos))
             return false;
 
@@ -308,7 +308,7 @@ namespace GUI
         return hitContext.hit;
     }
 
-    bool SkribidiTextSystem::TryGetTextDragHoverTarget(ID windowId, GUI::int2 screenSpace, ID& outTargetId) const
+    bool SkribidiTextSystem::TryGetTextDragHoverTarget(ID windowId, interstice::int2 screenSpace, ID& outTargetId) const
     {
         if (!m_skribidiContext)
             return false;
@@ -329,7 +329,7 @@ namespace GUI
         return true;
     }
 
-    bool SkribidiTextSystem::TryGetTextDragCursor(ID windowId, GUI::int2 screenSpace, MouseCursor& outCursor) const
+    bool SkribidiTextSystem::TryGetTextDragCursor(ID windowId, interstice::int2 screenSpace, MouseCursor& outCursor) const
     {
         ID targetId;
         if (!TryGetTextDragHoverTarget(windowId, screenSpace, targetId))
@@ -338,7 +338,7 @@ namespace GUI
         return true;
     }
 
-    bool SkribidiTextSystem::TryGetActiveTextEditorLocalPoint(ID windowId, GUI::int2 screenSpace, GUI::float2& outLocal) const
+    bool SkribidiTextSystem::TryGetActiveTextEditorLocalPoint(ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const
     {
         if (!m_skribidiContext)
             return false;
@@ -363,7 +363,7 @@ namespace GUI
         return false;
     }
 
-    bool SkribidiTextSystem::TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, GUI::int2 screenSpace, GUI::float2& outLocal) const
+    bool SkribidiTextSystem::TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const
     {
         if (!m_skribidiContext || textEditorId == ID::Invalid())
             return false;
@@ -385,7 +385,7 @@ namespace GUI
         return true;
     }
 
-    ID SkribidiTextSystem::FindTextEditorAtScreenPoint(ID windowId, GUI::int2 screenSpace) const
+    ID SkribidiTextSystem::FindTextEditorAtScreenPoint(ID windowId, interstice::int2 screenSpace) const
     {
         if (!m_skribidiContext)
             return ID::Invalid();
@@ -421,7 +421,7 @@ namespace GUI
         m_skribidiContext->editor_drag_active = false;
     }
 
-    bool SkribidiTextSystem::TryGetCaretPositionInternal(ID windowId, GUI::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition)
+    bool SkribidiTextSystem::TryGetCaretPositionInternal(ID windowId, interstice::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition)
     {
         outPosition = {};
 
@@ -438,7 +438,7 @@ namespace GUI
         if (!outTargetEditor)
             return false;
         
-        GUI::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
+        interstice::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
         if (!TryGetTextEditorLocalPoint(targetTextEditorId, windowId, screenPos, localPos))
             return false;
         
@@ -446,7 +446,7 @@ namespace GUI
         return true;
     }
 
-    void SkribidiTextSystem::DropDraggedText(ID windowId, GUI::int2 screenPos, ID targetTextEditorId)
+    void SkribidiTextSystem::DropDraggedText(ID windowId, interstice::int2 screenPos, ID targetTextEditorId)
     {
         std::string movedText;
         bool droppedOnOwnTextbox = (targetTextEditorId == m_textDragSourceId);
@@ -515,12 +515,12 @@ namespace GUI
         EnsureCursorVisible(targetTextEditorId);
     }
 
-    void SkribidiTextSystem::OnMouseButton(ID windowId, GUI::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action)
+    void SkribidiTextSystem::OnMouseButton(ID windowId, interstice::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action)
     {
         if (!m_skribidiContext)
             return;
 
-        if (action == GUI::MouseAction::MouseUp &&
+        if (action == interstice::MouseAction::MouseUp &&
             (!m_skribidiContext->editor || m_skribidiContext->active_text_id != m_skribidiContext->editing_text_id))
         {
             m_textDragSourceId = ID::Invalid();
@@ -536,11 +536,11 @@ namespace GUI
             m_skribidiContext->active_text_id != m_skribidiContext->editing_text_id)
             return;
 
-        if (action == GUI::MouseAction::MouseUp)
+        if (action == interstice::MouseAction::MouseUp)
         {
             if (m_textDragArmed && !m_skribidiContext->drag_text)
             {
-                GUI::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
+                interstice::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
                 if (TryGetActiveTextEditorLocalPoint(windowId, screenPos, localPos))
                 {
                     const skb_text_position_t caretPos = skb_editor_hit_test(m_skribidiContext->editor, SKB_MOVEMENT_CARET, localPos.x, localPos.y);
@@ -585,7 +585,7 @@ namespace GUI
         if ((modifiers & KeyModifier::Option) != KeyModifier::None) skb_modifiers |= SKB_MOD_OPTION;
         if ((modifiers & KeyModifier::Command) != KeyModifier::None) skb_modifiers |= SKB_MOD_COMMAND;
 
-        if (action == GUI::MouseAction::MouseDown)
+        if (action == interstice::MouseAction::MouseDown)
         {
             // Read-only editors never drag their text — pressing (even on selected text) starts
             // a new selection, so click-drag always selects instead of moving text.
@@ -604,7 +604,7 @@ namespace GUI
             m_textDragArmed = false;
             m_skribidiContext->drag_text = false;
 
-            GUI::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
+            interstice::float2 localPos{ static_cast<float>(screenPos.x), static_cast<float>(screenPos.y) };
             if (!TryGetActiveTextEditorLocalPoint(windowId, screenPos, localPos))
             {
                 localPos.x -= m_skribidiContext->view.cx;

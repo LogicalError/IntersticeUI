@@ -4,7 +4,7 @@
 
 #include <string_view>
 
-class ThemeApp : public GUI::GUIApplication
+class ThemeApp : public interstice::GUIApplication
 {
 public:
     bool Initialize(const InitializeOptions& options = {}) override
@@ -20,9 +20,9 @@ public:
 
     void OnGUI() override
     {
-        if (!BeginWindow(windowID, "Custom theme", GUI::LayoutOverride{}.Size(400, 220)))
+        if (!BeginWindow(windowID, "Custom theme", interstice::LayoutOverride{}.Size(400, 220)))
             return;
-        BeginVertical(GUI::LayoutOverride{}.FlexGrow(1));
+        BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
 
         // Look the classes up every frame: a theme reload registers new styles.
         Text("My themed app", theme.GetStyle("banner"));
@@ -43,7 +43,7 @@ public:
     }
 
 private:
-    GUI::ID windowID = GUI::ID::Invalid();
+    interstice::ID windowID = interstice::ID::Invalid();
 };
 
 int main()

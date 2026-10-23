@@ -6,7 +6,7 @@
 #include <charconv>
 #include <utility>
 
-namespace GUI
+namespace interstice
 {
     // ---- Factory helpers ----------------------------------------------------
 
@@ -585,4 +585,4 @@ namespace GUI
         return result;
     }
 
-} // namespace GUI
+} // namespace interstice

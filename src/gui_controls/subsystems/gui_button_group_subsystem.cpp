@@ -6,7 +6,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/style/gui_style_manager.h>
 
-namespace GUI
+namespace interstice
 {
     ButtonGroupSubsystem::ButtonGroupSubsystem(FramePipeline& frame,
                                                ElementStorage& elementStorage,
@@ -26,9 +26,9 @@ namespace GUI
         }
     }
 
-    static void UpdateElementStyleRef(GUI::ElementStorage& storage,
-                                      GUI::StyleManager& styleManager,
-                                      GUI::ElementRef ref, GUI::StyleRef newStyleRef)
+    static void UpdateElementStyleRef(interstice::ElementStorage& storage,
+                                      interstice::StyleManager& styleManager,
+                                      interstice::ElementRef ref, interstice::StyleRef newStyleRef)
     {
         if (auto* el = storage.GetElementPtr(ref))
             el->styleRef = newStyleRef;
@@ -80,7 +80,7 @@ namespace GUI
         return &entry.state;
     }
 
-    GUI::StyleRef ButtonGroupSubsystem::NextItemStyleRef(ItemState& state)
+    interstice::StyleRef ButtonGroupSubsystem::NextItemStyleRef(ItemState& state)
     {
         const int currentCount = state.itemCount;
         state.itemCount++;

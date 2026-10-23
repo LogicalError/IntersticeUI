@@ -2,7 +2,7 @@
 
 #include <gui_core/text/gui_clipboard.h>
 
-namespace GUI
+namespace interstice
 {
     class SDLClipboard : public IClipboard
     {

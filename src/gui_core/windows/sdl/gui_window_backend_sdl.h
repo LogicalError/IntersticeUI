@@ -13,7 +13,7 @@ struct SDL_Window;
 struct SDL_Cursor;
 union SDL_Event;
 
-namespace GUI
+namespace interstice
 {
     class GraphicsContext;
 
@@ -22,7 +22,7 @@ namespace GUI
     public:
         // hooks: SDL's memory functions too, which are process-wide. Used only when
         // this backend starts SDL and SDL holds no memory yet.
-        explicit SDLWindowBackend(GUI::GraphicsContext* graphicsContext, const AllocationHooks* hooks = nullptr);
+        explicit SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks = nullptr);
         ~SDLWindowBackend() override;
 
         // Bootstrap window for Vulkan initialization
@@ -30,8 +30,8 @@ namespace GUI
         void DestroyBootstrapWindow(OSWindowHandle bootstrapWindow) override;
 
         // IWindowBackend
-        OSWindowHandle CreateWindow(std::string_view title, int2 size, GUI::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
-        OSWindowHandle CreateWindow(std::string_view title, IntRect rect, GUI::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
+        OSWindowHandle CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
+        OSWindowHandle CreateWindow(std::string_view title, IntRect rect, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
 
 
         void AttachInputHandlerToWindow(OSWindowHandle window, IPlatformInputHandler* inputHandler) override;
@@ -82,7 +82,7 @@ namespace GUI
     private:
         void UpdateMouseState();
 
-        GUI::GraphicsContext* graphicsContext {nullptr};
+        interstice::GraphicsContext* graphicsContext {nullptr};
 
         std::unordered_set<SDL_Window*> m_windows;
         // Track modal windows in creation order to support nested modals.
@@ -116,4 +116,4 @@ namespace GUI
         bool HandleModalFilterForEvent(SDL_Event* event);
     };
 
-} // namespace GUI
+} // namespace interstice

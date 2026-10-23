@@ -11,15 +11,15 @@
 
 namespace
 {
-    class ConsumerApp : public GUI::GUIApplication
+    class ConsumerApp : public interstice::GUIApplication
     {
     public:
-        GUI::ID windowID     = GUI::ID::Invalid();
+        interstice::ID windowID     = interstice::ID::Invalid();
         int     framesBuilt  = 0;
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Package consumer", GUI::LayoutOverride{}.Size(320, 200)))
+            if (BeginWindow(windowID, "Package consumer", interstice::LayoutOverride{}.Size(320, 200)))
             {
                 Label("IntersticeUI package consumer");
                 EndWindow();
@@ -32,7 +32,7 @@ namespace
 
 int main()
 {
-    const auto requirements = Vulkan::VulkanDeviceContext::GetDeviceRequirements();
+    const auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();
     std::printf("GUI requires Vulkan %u.%u and %zu device extension(s)\n",
         VK_API_VERSION_MAJOR(requirements.apiVersion),
         VK_API_VERSION_MINOR(requirements.apiVersion),

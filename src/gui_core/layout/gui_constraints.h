@@ -4,7 +4,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/style/gui_style.h>
 
-namespace GUI
+namespace interstice
 {
     // ------------------------------------------------------------------------
     // Layout constraints - optional per-element size/position overrides
@@ -161,80 +161,80 @@ namespace GUI
         void ApplyVertical(IntRect& rect, const IntRect& targetRect)   const { y.Apply(rect, 1, targetRect); }
 
         // --- Builders (work on both lvalues and temporaries) ---
-        #define LO_BUILDER(name, body) \
+        #define INTERSTICE_LO_BUILDER(name, body) \
             LayoutOverride&  name &  { body return *this; } \
             LayoutOverride&& name && { body return std::move(*this); }
 
         // Size builders
-        LO_BUILDER(Size(int2 s),                    width.value = s.x; height.value = s.y;)
-        LO_BUILDER(Size(int32_t w, int32_t h),      width.value = w; height.value = h;)
-        LO_BUILDER(Width(int32_t w),                width.value = w;)
-        LO_BUILDER(Height(int32_t h),               height.value = h;)
-        LO_BUILDER(MinWidth(int32_t w),             width.min = w;)
-        LO_BUILDER(MinHeight(int32_t h),            height.min = h;)
-        LO_BUILDER(MaxWidth(int32_t w),             width.max = w;)
-        LO_BUILDER(MaxHeight(int32_t h),            height.max = h;)
+        INTERSTICE_LO_BUILDER(Size(int2 s),                    width.value = s.x; height.value = s.y;)
+        INTERSTICE_LO_BUILDER(Size(int32_t w, int32_t h),      width.value = w; height.value = h;)
+        INTERSTICE_LO_BUILDER(Width(int32_t w),                width.value = w;)
+        INTERSTICE_LO_BUILDER(Height(int32_t h),               height.value = h;)
+        INTERSTICE_LO_BUILDER(MinWidth(int32_t w),             width.min = w;)
+        INTERSTICE_LO_BUILDER(MinHeight(int32_t h),            height.min = h;)
+        INTERSTICE_LO_BUILDER(MaxWidth(int32_t w),             width.max = w;)
+        INTERSTICE_LO_BUILDER(MaxHeight(int32_t h),            height.max = h;)
 
         // Position builders (near = left/top, far = right/bottom)
-        LO_BUILDER(Position(int2 p),                                     x = PositionConstraintAxis::Fixed(int16_t(p.x)); y = PositionConstraintAxis::Fixed(int16_t(p.y));)
-        LO_BUILDER(Position(int32_t px, int32_t py),                     x = PositionConstraintAxis::Fixed(int16_t(px)); y = PositionConstraintAxis::Fixed(int16_t(py));)
-        LO_BUILDER(Position(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Fixed(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Fixed(int16_t(t), int16_t(b));)
-        LO_BUILDER(Position(const EdgeInset& i),                         x = PositionConstraintAxis::Fixed(i.left, i.right); y = PositionConstraintAxis::Fixed(i.top, i.bottom);)
+        INTERSTICE_LO_BUILDER(Position(int2 p),                                     x = PositionConstraintAxis::Fixed(int16_t(p.x)); y = PositionConstraintAxis::Fixed(int16_t(p.y));)
+        INTERSTICE_LO_BUILDER(Position(int32_t px, int32_t py),                     x = PositionConstraintAxis::Fixed(int16_t(px)); y = PositionConstraintAxis::Fixed(int16_t(py));)
+        INTERSTICE_LO_BUILDER(Position(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Fixed(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Fixed(int16_t(t), int16_t(b));)
+        INTERSTICE_LO_BUILDER(Position(const EdgeInset& i),                         x = PositionConstraintAxis::Fixed(i.left, i.right); y = PositionConstraintAxis::Fixed(i.top, i.bottom);)
 
-        LO_BUILDER(Centered(),                                           x = PositionConstraintAxis::Centered(); y = PositionConstraintAxis::Centered();)
+        INTERSTICE_LO_BUILDER(Centered(),                                           x = PositionConstraintAxis::Centered(); y = PositionConstraintAxis::Centered();)
 
-        LO_BUILDER(Relative(),                                           x = PositionConstraintAxis::Relative(); y = PositionConstraintAxis::Relative();)
-        LO_BUILDER(Relative(const EdgeInset& i),                         x = PositionConstraintAxis::Relative(i.left, i.right); y = PositionConstraintAxis::Relative(i.top, i.bottom);)
-        LO_BUILDER(Relative(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Relative(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Relative(int16_t(t), int16_t(b));)
-        LO_BUILDER(Relative(int32_t px, int32_t py),                     x = PositionConstraintAxis::Relative(int16_t(px)); y = PositionConstraintAxis::Relative(int16_t(py));)
-        LO_BUILDER(Relative(const int2& p),                              x = PositionConstraintAxis::Relative(int16_t(p.x)); y = PositionConstraintAxis::Relative(int16_t(p.y));)
+        INTERSTICE_LO_BUILDER(Relative(),                                           x = PositionConstraintAxis::Relative(); y = PositionConstraintAxis::Relative();)
+        INTERSTICE_LO_BUILDER(Relative(const EdgeInset& i),                         x = PositionConstraintAxis::Relative(i.left, i.right); y = PositionConstraintAxis::Relative(i.top, i.bottom);)
+        INTERSTICE_LO_BUILDER(Relative(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Relative(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Relative(int16_t(t), int16_t(b));)
+        INTERSTICE_LO_BUILDER(Relative(int32_t px, int32_t py),                     x = PositionConstraintAxis::Relative(int16_t(px)); y = PositionConstraintAxis::Relative(int16_t(py));)
+        INTERSTICE_LO_BUILDER(Relative(const int2& p),                              x = PositionConstraintAxis::Relative(int16_t(p.x)); y = PositionConstraintAxis::Relative(int16_t(p.y));)
 
-        LO_BUILDER(Absolute(const EdgeInset& i),                         x = PositionConstraintAxis::Absolute(i.left, i.right); y = PositionConstraintAxis::Absolute(i.top, i.bottom);)
-        LO_BUILDER(Absolute(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Absolute(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Absolute(int16_t(t), int16_t(b));)
-        LO_BUILDER(Absolute(int32_t px, int32_t py),                     x = PositionConstraintAxis::Absolute(int16_t(px)); y = PositionConstraintAxis::Absolute(int16_t(py));)
-        LO_BUILDER(Absolute(const int2& p),                              x = PositionConstraintAxis::Absolute(int16_t(p.x)); y = PositionConstraintAxis::Absolute(int16_t(p.y));)
+        INTERSTICE_LO_BUILDER(Absolute(const EdgeInset& i),                         x = PositionConstraintAxis::Absolute(i.left, i.right); y = PositionConstraintAxis::Absolute(i.top, i.bottom);)
+        INTERSTICE_LO_BUILDER(Absolute(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Absolute(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Absolute(int16_t(t), int16_t(b));)
+        INTERSTICE_LO_BUILDER(Absolute(int32_t px, int32_t py),                     x = PositionConstraintAxis::Absolute(int16_t(px)); y = PositionConstraintAxis::Absolute(int16_t(py));)
+        INTERSTICE_LO_BUILDER(Absolute(const int2& p),                              x = PositionConstraintAxis::Absolute(int16_t(p.x)); y = PositionConstraintAxis::Absolute(int16_t(p.y));)
 
-        LO_BUILDER(Anchored(ID target, AnchorPlacement pl, const int2& off = {}, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(off.x), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(off.y), af);)
-        LO_BUILDER(Anchored(ID target, AnchorPlacement pl, int32_t ox, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(oy), af);)
-        LO_BUILDER(Anchored(ID target, AnchorPlacementAxis px, int32_t ox, AnchorPlacementAxis py, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, px, int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, py, int16_t(oy), af);)
+        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, const int2& off = {}, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(off.x), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(off.y), af);)
+        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, int32_t ox, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(oy), af);)
+        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacementAxis px, int32_t ox, AnchorPlacementAxis py, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, px, int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, py, int16_t(oy), af);)
 
         // Per-axis position builders
-        LO_BUILDER(PositionX(PositionConstraintAxis ax), x = ax;)
-        LO_BUILDER(PositionY(PositionConstraintAxis ay), y = ay;)
-        LO_BUILDER(WithTypeX(PositionType t), x.type = t;)
-        LO_BUILDER(WithTypeY(PositionType t), y.type = t;)
+        INTERSTICE_LO_BUILDER(PositionX(PositionConstraintAxis ax), x = ax;)
+        INTERSTICE_LO_BUILDER(PositionY(PositionConstraintAxis ay), y = ay;)
+        INTERSTICE_LO_BUILDER(WithTypeX(PositionType t), x.type = t;)
+        INTERSTICE_LO_BUILDER(WithTypeY(PositionType t), y.type = t;)
 
         // See PositionConstraintAxis::Sticky.
-        LO_BUILDER(StickyX(int16_t threshold = 0), x = PositionConstraintAxis::Sticky(threshold);)
-        LO_BUILDER(StickyY(int16_t threshold = 0), y = PositionConstraintAxis::Sticky(threshold);)
-        LO_BUILDER(Sticky(int16_t thresholdX = 0, int16_t thresholdY = 0),
+        INTERSTICE_LO_BUILDER(StickyX(int16_t threshold = 0), x = PositionConstraintAxis::Sticky(threshold);)
+        INTERSTICE_LO_BUILDER(StickyY(int16_t threshold = 0), y = PositionConstraintAxis::Sticky(threshold);)
+        INTERSTICE_LO_BUILDER(Sticky(int16_t thresholdX = 0, int16_t thresholdY = 0),
                    x = PositionConstraintAxis::Sticky(thresholdX);
                    y = PositionConstraintAxis::Sticky(thresholdY);)
 
         // Flow control builders
-        LO_BUILDER(BreakAfter(bool v = true),   breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Always + 1 : (uint8_t)BreakBehavior::Auto + 1;)
-        LO_BUILDER(BreakBefore(bool v = true),  breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Before + 1 : (uint8_t)BreakBehavior::Auto + 1;)
-        LO_BUILDER(KeepWithNext(bool v = true), breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Avoid  + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        INTERSTICE_LO_BUILDER(BreakAfter(bool v = true),   breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Always + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        INTERSTICE_LO_BUILDER(BreakBefore(bool v = true),  breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Before + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        INTERSTICE_LO_BUILDER(KeepWithNext(bool v = true), breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Avoid  + 1 : (uint8_t)BreakBehavior::Auto + 1;)
 
         // Flex override builders
-        LO_BUILDER(FlexGrow(int16_t v),   flex.grow = v;)
-        LO_BUILDER(FlexShrink(int16_t v), flex.shrink = v;)
-        LO_BUILDER(NoGrow(),              flex.grow = 0;)
-        LO_BUILDER(NoShrink(),            flex.shrink = 0;)
+        INTERSTICE_LO_BUILDER(FlexGrow(int16_t v),   flex.grow = v;)
+        INTERSTICE_LO_BUILDER(FlexShrink(int16_t v), flex.shrink = v;)
+        INTERSTICE_LO_BUILDER(NoGrow(),              flex.grow = 0;)
+        INTERSTICE_LO_BUILDER(NoShrink(),            flex.shrink = 0;)
 
         // Icon layout builders
-        LO_BUILDER(SetIconSide(IconSide s),       iconSideOverride = s;)
-        LO_BUILDER(IconTextGap(int16_t gap),      iconTextGapOverride = gap;)
+        INTERSTICE_LO_BUILDER(SetIconSide(IconSide s),       iconSideOverride = s;)
+        INTERSTICE_LO_BUILDER(IconTextGap(int16_t gap),      iconTextGapOverride = gap;)
 
-        LO_BUILDER(ClampScroll(bool v = true),    clampScroll = v ? TriState::True : TriState::False;)
+        INTERSTICE_LO_BUILDER(ClampScroll(bool v = true),    clampScroll = v ? TriState::True : TriState::False;)
 
         // Grid track builders
-        LO_BUILDER(ColumnTrack(GridTrack t),                    grid.column.track = t;)
-        LO_BUILDER(RowTrack(GridTrack t),                       grid.row.track = t;)
-        LO_BUILDER(GridColumn(int16_t start, int16_t span = 1), grid.column.start = start; grid.column.span = span;)
-        LO_BUILDER(GridRow(int16_t start, int16_t span = 1),    grid.row.start = start;    grid.row.span = span;)
+        INTERSTICE_LO_BUILDER(ColumnTrack(GridTrack t),                    grid.column.track = t;)
+        INTERSTICE_LO_BUILDER(RowTrack(GridTrack t),                       grid.row.track = t;)
+        INTERSTICE_LO_BUILDER(GridColumn(int16_t start, int16_t span = 1), grid.column.start = start; grid.column.span = span;)
+        INTERSTICE_LO_BUILDER(GridRow(int16_t start, int16_t span = 1),    grid.row.start = start;    grid.row.span = span;)
 
-        #undef LO_BUILDER
+        #undef INTERSTICE_LO_BUILDER
 
         // --- Resolvers (apply override or fall back to style) ---
 
@@ -274,4 +274,4 @@ namespace GUI
         bool operator==(const LayoutOverride&) const noexcept = default;
     };
 
-} // namespace GUI
+} // namespace interstice

@@ -11,7 +11,7 @@
 // files and folders between the grid and the folder tree.
 //
 
-namespace GUI
+namespace interstice
 {
 
     // Files have no stored ID: a grid entry's identity is VirtualGridView's
@@ -20,9 +20,9 @@ namespace GUI
         std::string name;
         IconID icon = IconID::Invalid;
     };
-    static GUI::ItemDragDropConfig gridDnD;
-    static GUI::ItemDragDropConfig folderDnD;
-    static GUI::GridViewVirtualState gridScrollState;
+    static interstice::ItemDragDropConfig gridDnD;
+    static interstice::ItemDragDropConfig folderDnD;
+    static interstice::GridViewVirtualState gridScrollState;
     constexpr uint32_t kGridPayload = 0x47524944; // 'GRID'
 
     // Drag payload: a file's index in the current folder's item list, or a
@@ -48,10 +48,10 @@ namespace GUI
 
     // Folder tree left of the grid (flat VirtualTreeView rows). folderItems is
     // parallel to folderRows and holds each folder's files.
-    static std::vector<GUI::TreeViewRow>  folderRows;
+    static std::vector<interstice::TreeViewRow>  folderRows;
     static std::vector<std::vector<GridDemoItem>>    folderItems;
     static std::vector<int>                          folderVisibleIdx;
-    static GUI::TableState                folderTreeState;
+    static interstice::TableState                folderTreeState;
     static int                                       folderTreeWidth = 180; // CSS pixels
     static int                                       currentFolder   = 0;
 
@@ -63,9 +63,9 @@ namespace GUI
     static std::string                               filesSearch;
     static std::string                               filesQueryLower;
     static bool                                      gridFilterDirty = true;
-    static std::vector<GUI::TreeViewRow>  filteredFolderRows;
+    static std::vector<interstice::TreeViewRow>  filteredFolderRows;
     static std::vector<int>                          filteredFolderVisibleIdx;
-    static GUI::TableState                filteredFolderState;
+    static interstice::TableState                filteredFolderState;
     static std::vector<int>                          filteredToMaster; // filtered flat idx → master flat idx
 
     static std::vector<GridDemoItem>& CurrentItems()
@@ -82,17 +82,17 @@ namespace GUI
     }
 
     // Visible position encoded in a grid item's ranged sub-ID (-1 if not one).
-    static int GridItemIndex(GUI::ID id)
+    static int GridItemIndex(interstice::ID id)
     {
-        if (id.GetMode() != GUI::IDMode::SubRange) return -1;
+        if (id.GetMode() != interstice::IDMode::SubRange) return -1;
         return static_cast<int>(id.value.subRangeParts.index);
     }
 
     // Flat row index a tree's single-selection points at (-1 if none).
-    static int SelectedFlat(const GUI::TableState& state,
+    static int SelectedFlat(const interstice::TableState& state,
                             const std::vector<int>& visibleIdx)
     {
-        if (state.selectedRowID.GetMode() != GUI::IDMode::SubRange) return -1;
+        if (state.selectedRowID.GetMode() != interstice::IDMode::SubRange) return -1;
         const int visIdx = static_cast<int>(state.selectedRowID.value.subRangeParts.index);
         if (visIdx < 0 || visIdx >= int(visibleIdx.size())) return -1;
         return visibleIdx[visIdx];
@@ -143,10 +143,10 @@ namespace GUI
         const int n = static_cast<int>(folderRows.size());
         if (src < 0 || src >= n || dst < 0 || dst >= n) return;
 
-        const GUI::ID curID = folderRows[currentFolder].id;
+        const interstice::ID curID = folderRows[currentFolder].id;
         const int     count = 1 + folderRows[src].skipCount;
         const int     newFlat = TreeUtils::ReorderTreeRow(
-            folderRows, src, dst, GUI::TreeDropPosition::InsideLast);
+            folderRows, src, dst, interstice::TreeDropPosition::InsideLast);
         if (newFlat < 0) return;
 
         // Apply the identical splice to the parallel per-folder item lists.
@@ -164,7 +164,7 @@ namespace GUI
         for (int i = 0; i < int(folderRows.size()); ++i)
             if (folderRows[i].id == curID) { currentFolder = i; break; }
         // Visible indices shifted — the render pass re-selects currentFolder.
-        folderTreeState.selectedRowID = GUI::ID::Invalid();
+        folderTreeState.selectedRowID = interstice::ID::Invalid();
         gridFilterDirty = true;
     }
 
@@ -192,7 +192,7 @@ namespace GUI
         for (int i = 0; i < int(folderRows.size()); ++i)
         {
             if (!keep[i]) continue;
-            GUI::TreeViewRow r = folderRows[i];
+            interstice::TreeViewRow r = folderRows[i];
             r.isOpen       = true;
             r.renameBuffer = nullptr; // copies don't write back — no rename
             filteredFolderRows.push_back(std::move(r));
@@ -205,7 +205,7 @@ namespace GUI
     {
         // Seed the folder tree.
         auto addFolder = [this](const char* name, int depth, bool isOpen) {
-            GUI::TreeViewRow row{};
+            interstice::TreeViewRow row{};
             row.id     = idManager.CreateStaticID();
             row.name   = name;
             row.depth  = depth;
@@ -306,7 +306,7 @@ namespace GUI
 
         // Ghost icon that follows the mouse cursor during the drag. The
         // payload identifies the icon for either source view (grid or tree).
-        auto ghost = [this](const GUI::DragVisualContext& visual) {
+        auto ghost = [this](const interstice::DragVisualContext& visual) {
             IconID icon = IconID::Invalid;
             if (IsFolderPayload(visual.payloadValue))
             {
@@ -333,14 +333,14 @@ namespace GUI
         // The item ID's sub-ID index is a position in gridVisible; the payload
         // is the underlying file index or tagged folder index, so drops stay
         // valid across refilters.
-        gridDnD.getPayload = [](GUI::ID id) -> uintptr_t {
+        gridDnD.getPayload = [](interstice::ID id) -> uintptr_t {
             const int e = FilesEntryIndex(GridItemIndex(id));
             if (e < 0) return static_cast<uintptr_t>(-1);
             const auto& entry = gridEntries[e];
             return entry.IsFolder() ? FolderPayload(entry.folderFlat)
                                     : static_cast<uintptr_t>(entry.itemIdx);
         };
-        gridDnD.canDrop = [](uintptr_t payloadValue, GUI::ID targetID) {
+        gridDnD.canDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
             if (!IsFolderPayload(payloadValue)) return true;
             // Folder targets take the payload; files and the background route
             // it into the folder on view.
@@ -351,7 +351,7 @@ namespace GUI
             return CanDropIntoFolder(payloadValue, dst);
         };
         gridDnD.visualizer = ghost;
-        gridDnD.onDrop = [](uintptr_t payloadValue, GUI::ID targetID) {
+        gridDnD.onDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
             // A non-item target (the grid background) drops into the folder on view.
             const int targetEntry = FilesEntryIndex(GridItemIndex(targetID));
             const GridEntry* target = (targetEntry >= 0 && targetEntry < static_cast<int>(gridEntries.size()))
@@ -393,14 +393,14 @@ namespace GUI
         // zone on a row means "into this folder".
         folderDnD.payloadType    = kGridPayload;
         folderDnD.dropInsideOnly = true;
-        folderDnD.getPayload = [](GUI::ID rowID) -> uintptr_t {
-            if (rowID.GetMode() != GUI::IDMode::SubRange) return static_cast<uintptr_t>(-1);
+        folderDnD.getPayload = [](interstice::ID rowID) -> uintptr_t {
+            if (rowID.GetMode() != interstice::IDMode::SubRange) return static_cast<uintptr_t>(-1);
             const int visIdx = static_cast<int>(rowID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= static_cast<int>(folderVisibleIdx.size())) return static_cast<uintptr_t>(-1);
             return FolderPayload(folderVisibleIdx[visIdx]);
         };
-        folderDnD.canDrop = [](uintptr_t payloadValue, GUI::ID targetID) {
-            if (targetID.GetMode() != GUI::IDMode::SubRange) return false;
+        folderDnD.canDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
+            if (targetID.GetMode() != interstice::IDMode::SubRange) return false;
             const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
             if (targetVis < 0 || targetVis >= static_cast<int>(folderVisibleIdx.size())) return false;
             const int dst = folderVisibleIdx[targetVis];
@@ -409,8 +409,8 @@ namespace GUI
             return CanDropIntoFolder(payloadValue, dst);
         };
         folderDnD.visualizer = ghost;
-        folderDnD.onReorder = [](uintptr_t srcPayload, GUI::ID targetID, TreeDropPosition) {
-            if (targetID.GetMode() != GUI::IDMode::SubRange) return;
+        folderDnD.onReorder = [](uintptr_t srcPayload, interstice::ID targetID, TreeDropPosition) {
+            if (targetID.GetMode() != interstice::IDMode::SubRange) return;
             const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
             if (targetVis < 0 || targetVis >= static_cast<int>(folderVisibleIdx.size())) return;
             const int dst = folderVisibleIdx[targetVis];
@@ -450,9 +450,9 @@ namespace GUI
     {
         // Search box (top of panel).
         BeginHorizontal(idManager.AllocateDynamicID("filesSearchRow"),
-                        theme.searchRowStyleRef, GUI::LayoutOverride::Auto().NoShrink());
+                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
         if (SearchField(filesSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
-                        GUI::LayoutOverride{}.FlexGrow(1)))
+                        interstice::LayoutOverride{}.FlexGrow(1)))
             gridFilterDirty = true;
         EndHorizontal();
 
@@ -472,7 +472,7 @@ namespace GUI
         // grid's virtual content scrolls inside it instead of stretching the row.
         BeginHorizontal(idManager.AllocateDynamicID("filesSplit"),
                         theme.flexFillRowStyleRef,
-                        GUI::LayoutOverride::Auto().FlexGrow(1));
+                        interstice::LayoutOverride::Auto().FlexGrow(1));
 
         if (searching)
         {
@@ -481,7 +481,7 @@ namespace GUI
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             filteredFolderRows, filteredFolderVisibleIdx, filteredFolderState,
                             theme.treeViewStyleRef,
-                            GUI::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
+                            interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
 
             const int selFiltered = SelectedFlat(filteredFolderState, filteredFolderVisibleIdx);
             const int selMaster   = (selFiltered >= 0 && selFiltered < int(filteredToMaster.size()))
@@ -503,8 +503,8 @@ namespace GUI
                 row.renameBuffer = &row.name;
             }
             if (guiStateManager.Drag().IsDragging()
-                && m_treeDropState.targetRowID != GUI::ID::Invalid()
-                && folderTreeState._rowsRangeID != GUI::ID::Invalid())
+                && m_treeDropState.targetRowID != interstice::ID::Invalid()
+                && folderTreeState._rowsRangeID != interstice::ID::Invalid())
             {
                 for (size_t vi = 0; vi < folderVisibleIdx.size(); ++vi)
                     if (idManager.GetSubID(folderTreeState._rowsRangeID, static_cast<uint32_t>(vi))
@@ -518,7 +518,7 @@ namespace GUI
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             folderRows, folderVisibleIdx, folderTreeState,
                             theme.treeViewStyleRef,
-                            GUI::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
+                            interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
 
             const int selFlat = SelectedFlat(folderTreeState, folderVisibleIdx);
             if (selFlat >= 0 && selFlat != currentFolder)
@@ -528,8 +528,8 @@ namespace GUI
             }
             // First frame: highlight the initial folder (the sub-ID needs the
             // range the table just allocated).
-            else if (folderTreeState.selectedRowID == GUI::ID::Invalid()
-                     && folderTreeState._rowsRangeID != GUI::ID::Invalid())
+            else if (folderTreeState.selectedRowID == interstice::ID::Invalid()
+                     && folderTreeState._rowsRangeID != interstice::ID::Invalid())
             {
                 for (size_t i = 0; i < folderVisibleIdx.size(); ++i)
                     if (folderVisibleIdx[i] == currentFolder)
@@ -544,14 +544,14 @@ namespace GUI
         // 4px draggable sizer reusing the dock-sizer style (same cursor and hit
         // region as the dock splitter).
         {
-            GUI::ID sizerID = idManager.AllocateDynamicID("filesSizer");
-            GUI::Element sizer{};
+            interstice::ID sizerID = idManager.AllocateDynamicID("filesSizer");
+            interstice::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = GUI::MakeHorizontalSizerHandler(
+            sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
                 guiStateManager, folderTreeWidth, 120, 480, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), GUI::LayoutOverride::FixedWidth(styleManager.Px(4)));
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(styleManager.Px(4)));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -562,7 +562,7 @@ namespace GUI
         // MinHeight(0) bounds it to the split height so the grid scrolls.
         BeginVertical(idManager.AllocateDynamicID("filesGridPane"),
                       theme.flexFillColStyleRef,
-                      GUI::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
+                      interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
 
         // Smallest grid cell where a minimum icon plus the filename line both fit
         // (so the label never clips). The slider's lowest tick is one below that
@@ -594,11 +594,11 @@ namespace GUI
 
         // Only the visible rows are built, so the count can run into the thousands.
         // List mode forces one column by making the cell wider than any viewport.
-        const GUI::int2 cellSize = listMode ? GUI::int2{ 1 << 20, rowH }
-                                            : GUI::int2{ cell, cell };
+        const interstice::int2 cellSize = listMode ? interstice::int2{ 1 << 20, rowH }
+                                            : interstice::int2{ cell, cell };
         VirtualGridView(idManager.AllocateDynamicID("filesGrid"), gridScrollState,
                         static_cast<int>(gridVisible.size()), cellSize,
-                        [this, listMode, itemStyle, cell, rowH](int i, GUI::ID itemID)
+                        [this, listMode, itemStyle, cell, rowH](int i, interstice::ID itemID)
                         {
                             const int e = FilesEntryIndex(i);
                             if (e < 0 || e >= int(gridEntries.size())) return;
@@ -628,7 +628,7 @@ namespace GUI
                             }
 
                             if (listMode)
-                                GridViewItem(itemID, name, icon, GUI::ElementState::None,
+                                GridViewItem(itemID, name, icon, interstice::ElementState::None,
                                              theme.gridViewListItemStyleRef,
                                              LayoutOverride{}.Height(rowH).FlexGrow(1),
                                              renameBuffer);
@@ -636,7 +636,7 @@ namespace GUI
                                 // Stretched width: the grid's columns split the
                                 // viewport evenly, so the cells fill each row
                                 // instead of leaving a gap on the right.
-                                GridViewItem(itemID, name, icon, GUI::ElementState::None,
+                                GridViewItem(itemID, name, icon, interstice::ElementState::None,
                                              itemStyle,
                                              LayoutOverride{}.Size(
                                                  std::max(cell, int(gridScrollState.cellStretchedW)),
@@ -651,21 +651,21 @@ namespace GUI
 
         // Bottom bar: small integer size slider, pushed to the right edge.
         BeginHorizontal(idManager.AllocateDynamicID("filesIconSizeBar"),
-                        GUI::LayoutOverride::Auto().NoGrow());
+                        interstice::LayoutOverride::Auto().NoGrow());
         {
-            GUI::ID spacerID = idManager.AllocateDynamicID("filesIconSizeSpacer");
-            GUI::Element spacer{};
+            interstice::ID spacerID = idManager.AllocateDynamicID("filesIconSizeSpacer");
+            interstice::Element spacer{};
             spacer.id       = spacerID;
             spacer.styleRef = theme.emptyHorzStyleRef;
-            spacer.flags    = GUI::ElementFlags::NoInput;
+            spacer.flags    = interstice::ElementFlags::NoInput;
             spacer.state    = guiStateManager.GetCurrentState(spacerID);
-            auto spRes = elementStorage.Add(std::move(spacer), GUI::LayoutOverride{}.FlexGrow(1));
+            auto spRes = elementStorage.Add(std::move(spacer), interstice::LayoutOverride{}.FlexGrow(1));
             VERIFY(spRes.status);
             VERIFY(windowRegistry.Add(spRes.ref));
         }
         Slider(idManager.AllocateDynamicID("filesIconSizeSlider"),
                gridIconSize, listValue, maxCell,
-               GUI::LayoutOverride{}.Width(styleManager.Px(150)).Height(styleManager.Px(21)).NoGrow());
+               interstice::LayoutOverride{}.Width(styleManager.Px(150)).Height(styleManager.Px(21)).NoGrow());
 
         EndHorizontal();
 

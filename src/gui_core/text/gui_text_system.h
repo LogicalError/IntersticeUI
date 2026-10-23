@@ -17,7 +17,7 @@
 #include <string>
 #include <string_view>
 
-namespace GUI
+namespace interstice
 {
     // Forward declarations
     class GraphicsContext;
@@ -87,7 +87,7 @@ namespace GUI
         AcceptTabs = 1 << 2,        // Allow Tab key to insert tab character (vs navigate focus)
         ReadOnly = 1 << 3           // Selectable + copyable, but blocks all mutation
     };
-    ENUM_OPERATORS(TextEditBehavior)
+    INTERSTICE_ENUM_OPERATORS(TextEditBehavior)
 
         
     // ----------------------------------------------------------------------------------
@@ -441,13 +441,13 @@ namespace GUI
         virtual void OnKeyboard(ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) = 0;
 
         /// Handle mouse movement for text editors
-        virtual void OnMouseMove(ID windowId, GUI::int2 screenPos, MouseButtons button, KeyModifier modifiers) = 0;
+        virtual void OnMouseMove(ID windowId, interstice::int2 screenPos, MouseButtons button, KeyModifier modifiers) = 0;
 
         /// Handle mouse button events for text editors
-        virtual void OnMouseButton(ID windowId, GUI::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action) = 0;
+        virtual void OnMouseButton(ID windowId, interstice::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action) = 0;
 
         /// Handle mouse scroll events for text editors
-        virtual void OnMouseScroll(ID windowId, GUI::int2 screenPos, GUI::float2 scrollOffset, KeyModifier modifiers) = 0;
+        virtual void OnMouseScroll(ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) = 0;
 
         /// Sets which text editor is currently active for input. Pass ID::Invalid to disable.
         virtual void SetActiveTextEditor(ID elementId) = 0;
@@ -477,16 +477,16 @@ namespace GUI
         virtual void Paste(std::string_view text) = 0;
 
         /// Returns true when the provided screen-space point is over selected text in the given text editor.
-        virtual bool IsHoveringSelectedText(ID textEditorId, ID windowId, GUI::int2 screenSpace) const = 0;
+        virtual bool IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const = 0;
 
         /// Returns cursor feedback while text drag-drop is active.
         /// Return true when a drag cursor should override normal hover cursors.
-        virtual bool TryGetTextDragCursor(ID windowId, GUI::int2 screenSpace, MouseCursor& outCursor) const = 0;
+        virtual bool TryGetTextDragCursor(ID windowId, interstice::int2 screenSpace, MouseCursor& outCursor) const = 0;
 
         /// During text drag-drop, returns the element ID of the valid drop target under the cursor.
         /// Returns true when text drag is active; outTargetId is Invalid if no valid drop target is under the cursor.
         /// Returns false when no text drag is in progress (caller should use normal hover logic).
-        virtual bool TryGetTextDragHoverTarget(ID windowId, GUI::int2 screenSpace, ID& outTargetId) const = 0;
+        virtual bool TryGetTextDragHoverTarget(ID windowId, interstice::int2 screenSpace, ID& outTargetId) const = 0;
 
         // -------------------- Cache Management --------------------
 
@@ -511,4 +511,4 @@ namespace GUI
         /// is active.
         virtual std::optional<IntRect> GetCaretScreenRect() const = 0;
     };
-} // namespace GUI
+} // namespace interstice

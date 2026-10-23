@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     class IDManager;
     class ElementStorage;
@@ -22,7 +22,7 @@ namespace GUI
         Y    = 1 << 1,
         Both = X | Y,
     };
-    ENUM_OPERATORS(ScrollAxis)
+    INTERSTICE_ENUM_OPERATORS(ScrollAxis)
 
     class ScrollManagement
     {

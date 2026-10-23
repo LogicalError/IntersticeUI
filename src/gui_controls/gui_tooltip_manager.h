@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_id.h>
 
-namespace GUI
+namespace interstice
 {
     class TooltipManager
     {
@@ -33,4 +33,4 @@ namespace GUI
         bool  m_pressedLastFrame = false; // a press's focus change lands on the next frame
     };
 
-} // namespace GUI
+} // namespace interstice

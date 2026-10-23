@@ -12,7 +12,7 @@
 
 #include <skribidi/skb_attributes.h>
 
-namespace GUI
+namespace interstice
 {
     using GUITest::SkribidiHeadlessTest;
 
@@ -393,7 +393,7 @@ namespace GUI
 }
 
 #include <harfbuzz/hb.h>
-namespace GUI { namespace {
+namespace interstice { namespace {
     // The CJK fallback must be a full Noto Sans CJK font: subset fonts keep one
     // region's glyphs, so they can't switch letterforms by language (locl).
     TEST(SkribidiFonts, CjkFontHasRegionalFormsByLanguage)

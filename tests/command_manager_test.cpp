@@ -1,17 +1,17 @@
-// Unit tests for GUI::CommandManager.
+// Unit tests for interstice::CommandManager.
 
 #include <gtest/gtest.h>
 
 #include <gui_core/input/gui_command_manager.h>
 #include <gui_core/input/gui_input_state.h>
 
-using GUI::CommandManager;
-using GUI::CommandID;
-using GUI::EditMode;
-using GUI::IconID;
-using GUI::KeyCode;
-using GUI::KeyModifier;
-using GUI::InputState;
+using interstice::CommandManager;
+using interstice::CommandID;
+using interstice::EditMode;
+using interstice::IconID;
+using interstice::KeyCode;
+using interstice::KeyModifier;
+using interstice::InputState;
 
 namespace
 {

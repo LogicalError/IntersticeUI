@@ -9,7 +9,7 @@
 #include <gui_core/gui_id_manager.h>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
 
     class WindowRegistryTest : public ::testing::Test

@@ -3,7 +3,7 @@
 // Hierarchical CPU timing: scoped zones accumulated into a per-frame tree, keyed by
 // the hash of their call path (parent path + name) so nodes are stable across frames.
 //
-// Hot path: each PROFILE_SCOPE site caches its node index, and timestamps are raw
+// Hot path: each INTERSTICE_PROFILE_SCOPE site caches its node index, and timestamps are raw
 // ticks (rdtsc on x86) converted to ms only at frame end.
 //
 // See engine design doc 28 (Diagnostics).
@@ -14,7 +14,7 @@
 #include <gui_core/gui_base_types.h>   // SteadyClockNowNanos
 #include <gui_core/gui_hash.h>         // Hash::CalculateConst / Combine
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     // Single-thread collector, opaque by design. Today there is one instance
     // (the main thread); the explicit-collector entry points are the seam for
@@ -33,7 +33,7 @@ namespace GUI::Diagnostics
     // Discards all nodes and history; cached scope sites re-resolve.
     void Reset(ProfilerCollector& collector);
 
-    // Per-call-site descriptor, `static` at each PROFILE_SCOPE site. The cached* fields
+    // Per-call-site descriptor, `static` at each INTERSTICE_PROFILE_SCOPE site. The cached* fields
     // skip the node lookup when hit from the same call path; Reset invalidates them.
     // Single-threaded.
     struct ScopeLocation
@@ -110,41 +110,41 @@ namespace GUI::Diagnostics
 #  define INTERSTICE_PROFILE_CONCAT(a, b)  INTERSTICE_PROFILE_CONCAT2(a, b)
 
    // name must be a string literal so the hash folds at compile time.
-#  define PROFILE_SCOPE(name)                                                                           \
-       static ::GUI::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
-           { ::GUI::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                      \
-       ::GUI::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::GUI::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
+#  define INTERSTICE_PROFILE_SCOPE(name)                                                                           \
+       static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
+           { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                      \
+       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::interstice::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
 
-#  define PROFILE_SCOPE_WAIT(name)                                                                      \
-       static ::GUI::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
-           { ::GUI::Hash::CalculateConst(name), name, __FILE__, __LINE__, true };                       \
-       ::GUI::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::GUI::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
+#  define INTERSTICE_PROFILE_SCOPE_WAIT(name)                                                                      \
+       static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
+           { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, true };                       \
+       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::interstice::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
 
    // Times a scope from a caller-owned ScopeLocation (e.g. an entry of a per-stage table).
-#  define PROFILE_SCOPE_REF(locationLValue)                                                             \
-       ::GUI::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::GUI::Diagnostics::MainThreadCollector(), (locationLValue))
+#  define INTERSTICE_PROFILE_SCOPE_REF(locationLValue)                                                             \
+       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::interstice::Diagnostics::MainThreadCollector(), (locationLValue))
 
    // Root frame scope plus collector frame boundaries; wrap the whole loop iteration.
-#  define PROFILE_FRAME_BEGIN(name)                                                                     \
+#  define INTERSTICE_PROFILE_FRAME_BEGIN(name)                                                                     \
        do {                                                                                             \
-           static ::GUI::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_frameLoc_, __LINE__)        \
-               { ::GUI::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                  \
-           ::GUI::Diagnostics::BeginFrame(::GUI::Diagnostics::MainThreadCollector());                   \
-           ::GUI::Diagnostics::EnterScope(::GUI::Diagnostics::MainThreadCollector(),                    \
+           static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_frameLoc_, __LINE__)        \
+               { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                  \
+           ::interstice::Diagnostics::BeginFrame(::interstice::Diagnostics::MainThreadCollector());                   \
+           ::interstice::Diagnostics::EnterScope(::interstice::Diagnostics::MainThreadCollector(),                    \
                INTERSTICE_PROFILE_CONCAT(s_frameLoc_, __LINE__));                                           \
        } while (0)
-#  define PROFILE_FRAME_END()                                                                           \
+#  define INTERSTICE_PROFILE_FRAME_END()                                                                           \
        do {                                                                                             \
-           ::GUI::Diagnostics::ExitScope(::GUI::Diagnostics::MainThreadCollector());                    \
-           ::GUI::Diagnostics::EndFrame(::GUI::Diagnostics::MainThreadCollector());                     \
+           ::interstice::Diagnostics::ExitScope(::interstice::Diagnostics::MainThreadCollector());                    \
+           ::interstice::Diagnostics::EndFrame(::interstice::Diagnostics::MainThreadCollector());                     \
        } while (0)
 #else
-#  define PROFILE_SCOPE(name)              ((void)0)
-#  define PROFILE_SCOPE_WAIT(name)         ((void)0)
-#  define PROFILE_SCOPE_REF(locationLValue) ((void)0)
-#  define PROFILE_FRAME_BEGIN(name)        ((void)0)
-#  define PROFILE_FRAME_END()              ((void)0)
+#  define INTERSTICE_PROFILE_SCOPE(name)              ((void)0)
+#  define INTERSTICE_PROFILE_SCOPE_WAIT(name)         ((void)0)
+#  define INTERSTICE_PROFILE_SCOPE_REF(locationLValue) ((void)0)
+#  define INTERSTICE_PROFILE_FRAME_BEGIN(name)        ((void)0)
+#  define INTERSTICE_PROFILE_FRAME_END()              ((void)0)
 #endif

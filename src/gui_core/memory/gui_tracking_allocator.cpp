@@ -13,9 +13,9 @@
 #include <malloc.h>
 #endif
 
-static constexpr GUI::Diagnostics::LogCategory kLogMemory = GUI::Diagnostics::MakeLogCategory("memory");
+static constexpr interstice::Diagnostics::LogCategory kLogMemory = interstice::Diagnostics::MakeLogCategory("memory");
 
-namespace GUI
+namespace interstice
 {
     struct TrackingAllocator::State
     {
@@ -139,7 +139,7 @@ namespace GUI
     {
         std::lock_guard lock(m_state->mutex);
         for (const auto& [ptr, size] : m_state->sizes)
-            LOG_WARNING(kLogMemory, "leaked {} bytes at address {}", size, reinterpret_cast<uintptr_t>(ptr));
+            INTERSTICE_LOG_WARNING(kLogMemory, "leaked {} bytes at address {}", size, reinterpret_cast<uintptr_t>(ptr));
         return m_state->sizes.size();
     }
 }

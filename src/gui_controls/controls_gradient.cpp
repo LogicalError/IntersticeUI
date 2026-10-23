@@ -9,14 +9,14 @@
 namespace
 {
     // Create/update a VisualColorStyleIndex that renders a user Gradient horizontally.
-    void SetGradientPreviewStyle(GUI::StyleManager& sm, GUI::VisualColorStyleIndex& idx,
-                                 const GUI::Gradient& gradient)
+    void SetGradientPreviewStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
+                                 const interstice::Gradient& gradient)
     {
-        GUI::Gradient g = gradient;
-        g.type = GUI::GradientType::Linear;
-        GUI::ColorStyle cs = GUI::ColorStyle::Create(g, GUI::ColorType::LinearGradient);
-        cs.SetTransformation(GUI::float3(0, 1, 0), GUI::float3(1, 0, 0)); // horizontal
-        if (idx == GUI::VisualColorStyleIndex::Invalid)
+        interstice::Gradient g = gradient;
+        g.type = interstice::GradientType::Linear;
+        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
+        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
+        if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -24,7 +24,7 @@ namespace
 }
 
 
-namespace GUI
+namespace interstice
 {
     // ---------------------------------------------------------------------------
     // Gradient slider: horizontal gradient bar + triangle indicator

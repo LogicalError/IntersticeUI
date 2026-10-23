@@ -16,7 +16,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace GUI
+namespace interstice
 {
     namespace
     {

@@ -3,7 +3,7 @@
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/style/gui_style_manager.h>
 
-namespace GUI
+namespace interstice
 {
     ColorPickerSubsystem::ColorPickerSubsystem(FramePipeline& frame)
     {
@@ -16,7 +16,7 @@ namespace GUI
         });
     }
 
-    VisualColorStyleIndex& ColorPickerSubsystem::ClaimSwatchStyle(GUI::ID swatchID)
+    VisualColorStyleIndex& ColorPickerSubsystem::ClaimSwatchStyle(interstice::ID swatchID)
     {
         auto [it, inserted] = m_swatchStyles.try_emplace(swatchID, VisualColorStyleIndex::Invalid);
         if (inserted)
@@ -31,7 +31,7 @@ namespace GUI
         return it->second;
     }
 
-    void ColorPickerSubsystem::KeepSwatchAlive(GUI::ID swatchID)
+    void ColorPickerSubsystem::KeepSwatchAlive(interstice::ID swatchID)
     {
         auto prev = m_prevSwatchStyles.find(swatchID);
         if (prev != m_prevSwatchStyles.end())

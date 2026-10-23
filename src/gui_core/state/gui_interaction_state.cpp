@@ -1,6 +1,6 @@
 #include <gui_core/state/gui_interaction_state.h>
 
-namespace GUI
+namespace interstice
 {
     void InteractionState::EndFrame(ID overID, MouseButtons mouseButtons)
     {

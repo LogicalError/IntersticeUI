@@ -12,7 +12,7 @@
 #  define PROF_USE_TSC 0
 #endif
 
-namespace GUI::Diagnostics
+namespace interstice::Diagnostics
 {
     namespace
     {
