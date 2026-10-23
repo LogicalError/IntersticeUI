@@ -11,6 +11,11 @@
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   cmake_minimum_required(VERSION 3.22)
+  # Debug info goes into the libraries (/Z7), not into separate compile PDBs
+  # that the cache and the installed package don't carry (LNK4099 on every
+  # link otherwise). Before project(), which picks the default flags by it.
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0141 NEW)
   project(IntersticeThirdParty LANGUAGES C CXX)
 
   set(CMAKE_CXX_STANDARD 20)
@@ -108,6 +113,15 @@ foreach(_tgt IN LISTS _interstice_third_party_targets)
       get_target_property(_existing_postfix ${_tgt} DEBUG_POSTFIX)
       if(NOT _existing_postfix)
         set_target_properties(${_tgt} PROPERTIES DEBUG_POSTFIX "d")
+      endif()
+      if(MSVC AND _interstice_tp_standalone)
+        set_target_properties(${_tgt} PROPERTIES MSVC_DEBUG_INFORMATION_FORMAT Embedded)
+        # skribidi adds /Zi itself, which would override the embedded format.
+        get_target_property(_tgt_options ${_tgt} COMPILE_OPTIONS)
+        if(_tgt_options)
+          list(FILTER _tgt_options EXCLUDE REGEX "/Zi")
+          set_target_properties(${_tgt} PROPERTIES COMPILE_OPTIONS "${_tgt_options}")
+        endif()
       endif()
     endif()
   endif()
