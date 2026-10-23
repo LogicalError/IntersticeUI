@@ -24,7 +24,8 @@ The library is two static libraries:
 
 ## Requirements
 
-- Windows x64 with Visual Studio 2022 (MSVC) and CMake 3.22 or newer
+- Windows x64 with Visual Studio 2026 (MSVC) and CMake 4.2 or newer; Visual Studio 2022
+  with CMake 3.22 or newer also works
 - The [Vulkan SDK](https://vulkan.lunarg.com/): headers, loader and
   `glslangValidator` for the shaders; the GPU tests also use its validation layers
 - Git with [Git LFS](https://git-lfs.com/): the fonts are stored in LFS, and a
@@ -40,7 +41,7 @@ The library is two static libraries:
 ```text
 git clone --recursive https://github.com/LogicalError/IntersticeUI.git
 cd IntersticeUI
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake -S . -B build -G "Visual Studio 18 2026" -A x64   # or "Visual Studio 17 2022"
 cmake --build build --config Debug
 ```
 
@@ -280,7 +281,7 @@ exercises the contract under synchronization validation.
 
 ## Dependencies
 
-Install yourself: the Vulkan SDK, Visual Studio 2022, CMake, Git and Git LFS
+Install yourself: the Vulkan SDK, Visual Studio 2026 or 2022, CMake, Git and Git LFS
 (see [Requirements](#requirements)).
 
 Handled by the build:
@@ -308,8 +309,8 @@ Known issues:
   A debug build of an application that enables validation layers is affected the
   same way. Crashes in the GPU tests print a symbolized stack trace, and
   `INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION=1` runs them with core validation only.
-- Visual Studio 2026 (MSVC 19.51) builds the project, but CI only checks
-  Visual Studio 2022.
+- CI builds with Visual Studio 2026 only; Visual Studio 2022 builds the project
+  too but isn't checked automatically.
 - Docking layouts can be saved and restored (`SerializeDockTree` / `ParseDockTree` in
   `gui_controls/gui_dock_node.h`); the application chooses where to store them.
   Floating windows are not part of the saved tree.

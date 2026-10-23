@@ -8,7 +8,8 @@ on:
 
 jobs:
   windows:
-    runs-on: windows-2022
+    # windows-2025 has Visual Studio 2026; the generator is named so a missing one fails.
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -55,10 +56,10 @@ jobs:
         uses: actions/cache/restore@v6.1.0
         with:
           path: build/third_party/install
-          key: third-party-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
+          key: third-party-vs2026-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
 
       - name: Configure
-        run: cmake -S . -B build -A x64
+        run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
       - if: steps.third-party-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6.1.0
         with:
@@ -98,7 +99,7 @@ jobs:
         env:
           VK_LOADER_DEBUG: error,warn
         run: |
-          cmake -S tests/package_consumer -B "${{ runner.temp }}/consumer" -A x64 "-DCMAKE_PREFIX_PATH=${{ runner.temp }}/pkg"
+          cmake -S tests/package_consumer -B "${{ runner.temp }}/consumer" -G "Visual Studio 18 2026" -A x64 "-DCMAKE_PREFIX_PATH=${{ runner.temp }}/pkg"
           cmake --build "${{ runner.temp }}/consumer" --config Release
           & "${{ runner.temp }}/consumer/Release/package_consumer.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
