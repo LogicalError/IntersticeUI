@@ -178,7 +178,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     m_frame.RunStage(interstice::FrameStage::PreLayout, ctx);
 
-    // -- Layout. PreLayoutSync is skipped (no live OS windows).
+    // -- Layout. SyncWindowsBeforeLayout is skipped (no live OS windows).
     layoutEngine->Layout(*windowManager, elementStorage);
 
     // Per-element AddPostLayout callbacks are skipped (they need a

@@ -1385,6 +1385,12 @@ namespace interstice
                     backend->m_pendingDestroy.insert(window);
                 break;
 
+            case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            case SDL_EVENT_WINDOW_FOCUS_LOST:
+                if (backend->m_windows.contains(SDL_GetWindowFromID(event->window.windowID)))
+                    ++backend->m_focusChanges;
+                break;
+
             // Render right away for smooth resizing. Suppressed during programmatic window
             // changes (SetWindowRect/SetWindowVisible), which would re-enter OnFrame mid-frame.
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:

@@ -195,7 +195,7 @@ namespace interstice
             {
                 anchorRef = storage.FindElementRefByID(positionConstraints.x.anchorTarget);
             }
-            // Windows are positioned in screen space (from PreLayoutSync), so they skip
+            // Windows are positioned in screen space (from SyncWindowsBeforeLayout), so they skip
             // the parent fallback that would add the parent window's position.
             const bool isWindow = (elementRect.flags & ElementFlags::IsWindow) != ElementFlags::None;
             if (!anchorRef.IsValid() && !isWindow)
@@ -287,7 +287,7 @@ namespace interstice
             {
                 anchorRef = storage.FindElementRefByID(positionConstraints.y.anchorTarget);
             }
-            // Windows are positioned in screen space (from PreLayoutSync), so they skip
+            // Windows are positioned in screen space (from SyncWindowsBeforeLayout), so they skip
             // the parent fallback that would add the parent window's position.
             const bool isWindow = (elementRect.flags & ElementFlags::IsWindow) != ElementFlags::None;
             if (!anchorRef.IsValid() && !isWindow)

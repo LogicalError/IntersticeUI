@@ -33,6 +33,7 @@ public:
     MOCK_METHOD(void, DetachWindowContext, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(bool, IsWindow, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(void, BringToFront, (interstice::OSWindowHandle), (override));
+    MOCK_METHOD(uint32_t, GetFocusChangeCount, (), (const, override));
     MOCK_METHOD(interstice::OSWindowHandle, GetWindowUnderMouse, (), (override));
     MOCK_METHOD(interstice::OSWindowHandle, GetActiveWindow, (), (override));
     MOCK_METHOD(void, PollEvents,

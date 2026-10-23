@@ -90,7 +90,7 @@ namespace interstice
         ID id = CreateTestID(1);
 
         manager->BeginFrame();
-        auto result = manager->GetOrCreateWindow(id, "Test Window", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test Window", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_EQ(result, AddWindowResult::SuccessCreate);
         EXPECT_FALSE(manager->IsNotAlive(id));
@@ -99,7 +99,7 @@ namespace interstice
     TEST_F(OSWindowManagerTest, CreateWindow_InvalidID)
     {
         manager->BeginFrame();
-        auto result = manager->GetOrCreateWindow(ID::Invalid(), "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(ID::Invalid(), "Test", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_EQ(result, AddWindowResult::InvalidID);
     }
@@ -112,7 +112,7 @@ namespace interstice
         ID id = CreateTestID(1);
 
         manager->BeginFrame();
-        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_EQ(result, AddWindowResult::FailedToCreateOSWindow);
     }
@@ -123,8 +123,8 @@ namespace interstice
         ID id = CreateTestID(1);
 
         manager->BeginFrame();
-        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
+        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_EQ(manager->WindowCount(), 1);
         EXPECT_EQ(result1, AddWindowResult::SuccessCreate);
@@ -138,9 +138,9 @@ namespace interstice
         ID id3 = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480}, nullptr);
+        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768}, nullptr);
 
         EXPECT_FALSE(manager->IsNotAlive(id1));
         EXPECT_FALSE(manager->IsNotAlive(id2));
@@ -172,8 +172,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        auto result = manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr);
+        auto result = manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
 
         EXPECT_EQ(result, AddWindowResult::SuccessCreate);
         EXPECT_FALSE(manager->IsNotAlive(childId));
@@ -185,8 +185,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
 
         manager->RequestClose(parentId);
         manager->EndFrame();
@@ -202,8 +202,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags, parentId);
 
         manager->RequestClose(parentId);
         manager->EndFrame();
@@ -219,8 +219,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags, parentId);
 
         manager->RequestClose(childId);
         manager->RequestClose(parentId);
@@ -239,10 +239,10 @@ namespace interstice
         ID child3Id = CreateTestID(4);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
 
         manager->RequestClose(parentId);
         manager->EndFrame();
@@ -260,9 +260,9 @@ namespace interstice
         ID childId = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(grandparentId, "Grandparent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, grandparentId);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 200, 150}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(grandparentId, "Grandparent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, grandparentId);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 200, 150}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
 
         manager->RequestClose(grandparentId);
         manager->EndFrame();
@@ -285,7 +285,7 @@ namespace interstice
             .WillByDefault(Return(handle));
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         manager->EndFrame();
 
         // Simulate OS closing the window
@@ -307,7 +307,7 @@ namespace interstice
             .WillByDefault(Return(handle));
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_CALL(*mockBackend, DestroyWindow(handle))
             .Times(1);
@@ -323,7 +323,7 @@ namespace interstice
         ID id = CreateTestID(1);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         manager->EndFrame();
 
         for (int i = 0; i < 10; ++i)
@@ -345,7 +345,7 @@ namespace interstice
         ID id = CreateTestID(1);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close, WindowFlags::UserControlled, ID::Invalid(), -1);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, WindowFlags::UserControlled | WindowFlags::CloseWithParent, ID::Invalid(), -1);
 
         IntRect rect = manager->GetWindowRect(id);
 
@@ -393,7 +393,7 @@ namespace interstice
             .WillByDefault(Return(handle));
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
 
         EXPECT_CALL(*mockBackend, BringToFront(handle))
             .Times(1);
@@ -407,8 +407,8 @@ namespace interstice
         ID id2 = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr);
 
         const auto& windows = manager->AllWindows();
 
@@ -426,9 +426,9 @@ namespace interstice
         ID id3 = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr);
+        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768 }, nullptr);
 
         manager->RequestClose(id2);
         manager->EndFrame();
@@ -446,9 +446,9 @@ namespace interstice
         ID id3 = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id1, "Window 1", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(id2, "Window 2", IntRect{0, 0, 640, 480 }, nullptr);
+        manager->GetOrCreateWindow(id3, "Window 3", IntRect{0, 0, 1024, 768 }, nullptr);
 
         manager->RequestClose(id1);
         manager->RequestClose(id2);
@@ -464,7 +464,7 @@ namespace interstice
         for (uint32_t i = 1; i <= 100; ++i)
         {
             ID id = CreateTestID(i);
-            manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+            manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
         }
 
         EXPECT_EQ(manager->WindowCount(), 100);
@@ -490,7 +490,7 @@ namespace interstice
         {
             ids[i] = CreateTestID(i + 1);
             ID parentId = (i == 0) ? ID::Invalid() : ids[i - 1];
-            manager->GetOrCreateWindow(ids[i], "Window", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+            manager->GetOrCreateWindow(ids[i], "Window", IntRect{0, 0, 800, 600 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
         }
 
         manager->RequestClose(ids[0]);
@@ -508,8 +508,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
 
         manager->RequestClose(childId);
         manager->EndFrame();
@@ -526,12 +526,12 @@ namespace interstice
     {
         ID id = CreateTestID(1);
     #ifdef NDEBUG
-        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
     
         EXPECT_EQ(result, AddWindowResult::CalledOutsideOfFrame);
         EXPECT_EQ(manager->WindowCount(), 0);
     #else
-        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close), ".*");
+        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr), ".*");
     #endif
     }
 
@@ -543,12 +543,12 @@ namespace interstice
         manager->EndFrame();
 
     #ifdef NDEBUG
-        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
     
         EXPECT_EQ(result, AddWindowResult::CalledOutsideOfFrame);
         EXPECT_EQ(manager->WindowCount(), 0);
     #else
-        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close), ".*");
+        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr), ".*");
     #endif
     }
 
@@ -557,7 +557,7 @@ namespace interstice
         ID id = CreateTestID(1);
     
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
         manager->EndFrame();
 
     #ifdef NDEBUG
@@ -608,7 +608,7 @@ namespace interstice
         ID id = CreateTestID(1);
     
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
     
         auto result1 = manager->RequestClose(id);
         auto result2 = manager->RequestClose(id);
@@ -648,11 +648,11 @@ namespace interstice
         ID child4Id = CreateTestID(5);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(child1Id);
         manager->EndFrame();
@@ -674,11 +674,11 @@ namespace interstice
         ID child4Id = CreateTestID(5);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(child2Id);
         manager->EndFrame();
@@ -700,11 +700,11 @@ namespace interstice
         ID child4Id = CreateTestID(5);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(child4Id);
         manager->EndFrame();
@@ -726,11 +726,11 @@ namespace interstice
         ID child4Id = CreateTestID(5);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
+        manager->GetOrCreateWindow(child4Id, "Child4", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(child2Id);
         manager->RequestClose(child4Id);
@@ -752,10 +752,10 @@ namespace interstice
         ID child3Id = CreateTestID(4);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
     
         manager->RequestClose(parentId);
         manager->EndFrame();
@@ -773,8 +773,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(childId);
         manager->EndFrame();
@@ -794,8 +794,8 @@ namespace interstice
         ID childId = CreateTestID(2);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
     
         manager->RequestClose(parentId);
         manager->RequestClose(childId);
@@ -813,9 +813,9 @@ namespace interstice
         ID childId = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(grandparentId, "Grandparent", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 400, 300}, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, grandparentId);
-        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 200, 150}, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(grandparentId, "Grandparent", IntRect{0, 0, 800, 600}, nullptr);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 400, 300}, nullptr, WindowFlags::DefaultFlags, grandparentId);
+        manager->GetOrCreateWindow(childId, "Child", IntRect{0, 0, 200, 150}, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentId);
     
         manager->RequestClose(grandparentId);
         manager->EndFrame();
@@ -843,10 +843,10 @@ namespace interstice
         ID child3Id = CreateTestID(4);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
-        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(parentId, "Parent", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child1Id, "Child1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(child2Id, "Child2", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
+        manager->GetOrCreateWindow(child3Id, "Child3", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, parentId);
     
         manager->RequestClose(parentId);
         manager->EndFrame();
@@ -866,10 +866,10 @@ namespace interstice
         ID level3_detach = CreateTestID(4);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(root, "Root", IntRect{0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(level1_detach, "L1", IntRect{0, 0, 400, 300 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, root);
-        manager->GetOrCreateWindow(level2_close, "L2", IntRect{0, 0, 200, 150 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, level1_detach);
-        manager->GetOrCreateWindow(level3_detach, "L3", IntRect{0, 0, 100, 75 }, nullptr, ChildPolicy::Detach, WindowFlags::DefaultFlags, level2_close);
+        manager->GetOrCreateWindow(root, "Root", IntRect{0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(level1_detach, "L1", IntRect{0, 0, 400, 300 }, nullptr, WindowFlags::DefaultFlags, root);
+        manager->GetOrCreateWindow(level2_close, "L2", IntRect{0, 0, 200, 150 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, level1_detach);
+        manager->GetOrCreateWindow(level3_detach, "L3", IntRect{0, 0, 100, 75 }, nullptr, WindowFlags::DefaultFlags, level2_close);
     
         manager->RequestClose(root);
         manager->EndFrame();
@@ -896,7 +896,7 @@ namespace interstice
 
         // Create window in first frame
         manager->BeginFrame();
-        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         EXPECT_EQ(result1, AddWindowResult::SuccessCreate);
         manager->EndFrame();
 
@@ -912,7 +912,7 @@ namespace interstice
 
         // Try to recreate the window in next frame - should fail because user closed it
         manager->BeginFrame();
-        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         EXPECT_EQ(result2, AddWindowResult::WindowUserClosed);
         EXPECT_TRUE(manager->IsNotAlive(id));
     }
@@ -927,7 +927,7 @@ namespace interstice
 
         // Create window
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         manager->EndFrame();
 
         // Simulate user closing the window
@@ -952,7 +952,7 @@ namespace interstice
             .WillByDefault(Return(true));
 
         manager->BeginFrame();
-        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         EXPECT_EQ(result, AddWindowResult::SuccessCreate);
         EXPECT_FALSE(manager->IsNotAlive(id));
     }
@@ -967,7 +967,7 @@ namespace interstice
 
         // Create window
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         manager->EndFrame();
 
         // Programmatically close using RequestCloseAllowReopen
@@ -986,7 +986,7 @@ namespace interstice
             .WillByDefault(Return(true));
 
         manager->BeginFrame();
-        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         EXPECT_EQ(result, AddWindowResult::SuccessCreate);
         EXPECT_FALSE(manager->IsNotAlive(id));
     }
@@ -1001,7 +1001,7 @@ namespace interstice
 
         // Create window
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Test", IntRect { 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Test", IntRect { 0, 0, 800, 600 }, nullptr);
         manager->EndFrame();
 
         // Simulate user closing the window
@@ -1016,7 +1016,7 @@ namespace interstice
 
         // Try to create window immediately - should fail
         manager->BeginFrame();
-        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect { 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        auto result1 = manager->GetOrCreateWindow(id, "Test", IntRect { 0, 0, 800, 600 }, nullptr);
         EXPECT_EQ(result1, AddWindowResult::WindowUserClosed);
         manager->EndFrame();
 
@@ -1026,14 +1026,7 @@ namespace interstice
         // Frame where we DON'T declare the window - this should clear the user-closed flag
         manager->BeginFrame();
 
-        // An empty ElementStorage for PreLayoutSync.
-        interstice::GradientManager gradientManager;
-        interstice::StyleManager styleManager(gradientManager);
-        interstice::ElementStorage elementStorage(styleManager);
-        EXPECT_EQ(elementStorage.BeginConstruction(), ElementStorageResult::Success);
-        EXPECT_EQ(elementStorage.EndConstruction(), ElementStorageResult::Success);
-    
-        manager->PreLayoutSync(registry, elementStorage);
+        manager->ReleaseUndeclaredWindows([&](ID declared) { return registry.Contains(declared); });
         manager->EndFrame();
 
         // The user-closed flag should now be cleared
@@ -1047,7 +1040,7 @@ namespace interstice
             .WillByDefault(Return(true));
 
         manager->BeginFrame();
-        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr, ChildPolicy::Close);
+        auto result2 = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600}, nullptr);
         EXPECT_EQ(result2, AddWindowResult::SuccessCreate);
         EXPECT_FALSE(manager->IsNotAlive(id));
         manager->EndFrame();
@@ -1067,22 +1060,84 @@ namespace interstice
         const WindowFlags popupFlags = WindowFlags::DefaultFlags | WindowFlags::PopupMenu;
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr, ChildPolicy::Close, popupFlags, mainId);
+        manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr, popupFlags | WindowFlags::CloseWithParent, mainId);
         manager->EndFrame();
 
         ON_CALL(*mockBackend, GetActiveWindow()).WillByDefault(Return(reinterpret_cast<OSWindowHandle>(1)));
+        ON_CALL(*mockBackend, GetFocusChangeCount()).WillByDefault(Return(1u));
         EXPECT_CALL(*mockBackend, DestroyWindow(_)).Times(0);
         EXPECT_CALL(*mockBackend, CreateWindow(_, testing::A<IntRect>(), _, _)).Times(0);
 
         for (int frame = 0; frame < 2; ++frame)
         {
             manager->BeginFrame();
-            manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-            manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr, ChildPolicy::Close, popupFlags, mainId);
+            manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
+            manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr, popupFlags | WindowFlags::CloseWithParent, mainId);
             manager->EndFrame();
         }
         EXPECT_EQ(manager->WindowCount(), 2);
+    }
+
+    // Popups are only checked against the active window after the focus moves, so
+    // one that hasn't taken focus yet stays open.
+    TEST_F(OSWindowManagerTest, PopupClosesOnlyWhenTheFocusMoves)
+    {
+        const ID mainId  = CreateTestID(1);
+        const ID popupId = CreateTestID(2);
+        const WindowFlags popupFlags = WindowFlags::DefaultFlags | WindowFlags::PopupMenu | WindowFlags::CloseWithParent;
+
+        manager->BeginFrame();
+        manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr, popupFlags, mainId);
+        manager->EndFrame();
+
+        // The main window stays active, but nothing moved the focus.
+        ON_CALL(*mockBackend, GetActiveWindow()).WillByDefault(Return(manager->GetWindowHandle(mainId)));
+        manager->BeginFrame();
+        EXPECT_EQ(manager->GetWindowState(popupId), WindowState::Alive);
+        manager->EndFrame();
+
+        ON_CALL(*mockBackend, GetFocusChangeCount()).WillByDefault(Return(1u));
+        manager->BeginFrame();
+        EXPECT_EQ(manager->GetWindowState(popupId), WindowState::Hidden);
+        manager->EndFrame();
+    }
+
+    // The window manager raises a focusable popup when it opens; not-focusable ones
+    // (tooltips) and other windows are left where they are.
+    TEST_F(OSWindowManagerTest, OpeningAPopupBringsItToFront)
+    {
+        const ID mainId    = CreateTestID(1);
+        const ID popupId   = CreateTestID(2);
+        const ID tooltipId = CreateTestID(3);
+
+        manager->BeginFrame();
+        manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
+        const OSWindowHandle popupHandle = reinterpret_cast<OSWindowHandle>(handleCounter + 1);
+        EXPECT_CALL(*mockBackend, BringToFront(popupHandle)).Times(2);
+        EXPECT_CALL(*mockBackend, BringToFront(testing::Ne(popupHandle))).Times(0);
+        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
+                                   WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+        manager->GetOrCreateWindow(tooltipId, "Tooltip", IntRect{ 10, 10, 50, 20 }, nullptr,
+                                   WindowFlags::DefaultFlags | WindowFlags::PopupMenu | WindowFlags::NotFocusable, mainId);
+        manager->EndFrame();
+
+        // Still open next frame: not raised again.
+        manager->BeginFrame();
+        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
+                                   WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+        manager->EndFrame();
+
+        // Hidden, then shown again: raised again.
+        manager->BeginFrame();
+        manager->ReleaseUndeclaredWindows([&](ID id) { return id == mainId; });
+        manager->EndFrame();
+        EXPECT_EQ(manager->GetWindowState(popupId), WindowState::Hidden);
+        manager->BeginFrame();
+        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
+                                   WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+        manager->EndFrame();
     }
 
     // Re-declaring a window under another parent moves it to that parent's child
@@ -1094,13 +1149,13 @@ namespace interstice
         const ID child   = CreateTestID(3);
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(parentA, "A", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(parentB, "B", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
-        manager->GetOrCreateWindow(child, "C", IntRect{ 0, 0, 200, 100 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentA);
+        manager->GetOrCreateWindow(parentA, "A", IntRect{ 0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(parentB, "B", IntRect{ 0, 0, 800, 600 }, nullptr);
+        manager->GetOrCreateWindow(child, "C", IntRect{ 0, 0, 200, 100 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentA);
         manager->EndFrame();
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(child, "C", IntRect{ 0, 0, 200, 100 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, parentB);
+        manager->GetOrCreateWindow(child, "C", IntRect{ 0, 0, 200, 100 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, parentB);
         EXPECT_EQ(manager->RequestClose(parentB), RequestCloseResult::Success);
         manager->EndFrame();
 
@@ -1133,7 +1188,7 @@ namespace interstice
         const ID id = CreateTestID(1);
         ON_CALL(*mockBackend, GetWindowRect(_)).WillByDefault(Return(IntRect{ 100, 50, 800, 600 }));
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Main", IntRect{ 100, 50, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Main", IntRect{ 100, 50, 800, 600 }, nullptr);
         manager->EndFrame();
         manager->BeginFrame();
 
@@ -1154,7 +1209,7 @@ namespace interstice
         ON_CALL(*mockBackend, GetWindowDisplayScale(_)).WillByDefault([&](OSWindowHandle) { return scale; });
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
         EXPECT_FLOAT_EQ(manager->GetWindowDisplayScale(id), 1.5f) << "known as soon as the window exists";
         manager->EndFrame();
 
@@ -1172,7 +1227,7 @@ namespace interstice
         ON_CALL(*mockBackend, GetWindowDisplayScale(_)).WillByDefault(Return(0.0f));
 
         manager->BeginFrame();
-        manager->GetOrCreateWindow(id, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Close);
+        manager->GetOrCreateWindow(id, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
         manager->EndFrame();
         EXPECT_FLOAT_EQ(manager->GetWindowDisplayScale(id), 1.0f);
     }
@@ -1194,9 +1249,9 @@ namespace interstice
         const ID mainId = CreateTestID(1), childId = CreateTestID(2), otherId = CreateTestID(3);
 
         wm.BeginFrame();
-        wm.GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, ChildPolicy::Detach);
-        wm.GetOrCreateWindow(childId, "Popup", IntRect{ 0, 0, 100, 100 }, nullptr, ChildPolicy::Close, WindowFlags::DefaultFlags, mainId);
-        wm.GetOrCreateWindow(otherId, "Other", IntRect{ 0, 0, 400, 300 }, nullptr, ChildPolicy::Close);
+        wm.GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr, WindowFlags::DefaultFlags);
+        wm.GetOrCreateWindow(childId, "Popup", IntRect{ 0, 0, 100, 100 }, nullptr, WindowFlags::DefaultFlags | WindowFlags::CloseWithParent, mainId);
+        wm.GetOrCreateWindow(otherId, "Other", IntRect{ 0, 0, 400, 300 }, nullptr);
         wm.EndFrame();
         scales[reinterpret_cast<OSWindowHandle>(handleCounter - 2)] = 2.0f;   // the main window's monitor
         scales[reinterpret_cast<OSWindowHandle>(handleCounter - 1)] = 3.0f;   // the child's
@@ -1227,7 +1282,7 @@ namespace interstice
 
         ON_CALL(*mockBackend, GetMonitorFromWindow(_)).WillByDefault(Return(1));
         wm.BeginFrame();
-        wm.GetOrCreateWindow(CreateTestID(1), "Main", IntRect{ 2000, 100, 800, 600 }, nullptr, ChildPolicy::Detach);
+        wm.GetOrCreateWindow(CreateTestID(1), "Main", IntRect{ 2000, 100, 800, 600 }, nullptr, WindowFlags::DefaultFlags);
         wm.EndFrame();
 
         wm.BeginFrame();

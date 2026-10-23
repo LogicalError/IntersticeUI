@@ -27,6 +27,7 @@ namespace interstice
         void BringToFront(OSWindowHandle) override {}
         OSWindowHandle GetWindowUnderMouse() override { return nullptr; }
         OSWindowHandle GetActiveWindow() override { return nullptr; }
+        uint32_t GetFocusChangeCount() const override { return 0; }
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override { return {}; }
         MouseButtons GetMouseButtons() override;

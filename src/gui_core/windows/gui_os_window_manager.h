@@ -14,22 +14,13 @@
 namespace interstice
 {
     // Forward declarations
-    class WindowRegistry;
-    class ElementStorage;
     class GraphicsContext;
-    class ITextSystem;
     class IWindowBackend;
     class ImageSet;
     class StyleManager;
     class GraphicsContext;
     class GradientManager;
 
-    enum class ChildPolicy : uint8_t
-    {
-        Detach,   // child becomes top-level when parent closes
-        Close     // child closes with parent
-    };
-    
     enum class AddWindowResult : int8_t
     {
         SuccessCreate          =  0, // New window created
@@ -68,7 +59,6 @@ namespace interstice
             ID              id = ID::Invalid();
 
             WindowState     state         = WindowState::Alive;
-            ChildPolicy     childPolicy   = ChildPolicy::Close;
             WindowFlags     flags         = WindowFlags::None;
 
             ID              parentID      = ID::Invalid();
@@ -92,6 +82,7 @@ namespace interstice
         std::vector<MonitorInfo> monitors;
         uint32_t m_nextSequence = 0;
         ID      m_textInputWindow = ID::Invalid();
+        uint32_t m_focusChangeCount = 0;   // the backend's, when popups were last checked
         IntRect m_textInputArea {};
         int primaryMonitorIndex = 0;
 
@@ -121,15 +112,12 @@ namespace interstice
 
         bool EndFrame();
 
-        // ---------------- Registry sync ----------------
+        // ---------------- Declared windows ----------------
 
-        bool PreLayoutSync(const WindowRegistry&  windowRegistry,
-                           ElementStorage&        elementStorage);
-
-        bool PostLayoutSync(const WindowRegistry& windowRegistry,
-                            ElementStorage&       elementStorage,
-                            ITextSystem*          textSystem,
-                            OnGuiFunc             onGui);
+        // Windows the app no longer declares (declared(id) is false): popups are
+        // hidden for a fast reopen, the others closed, reopenable. Undeclared windows
+        // also lose their user-closed flag. Call each frame, before layout.
+        void ReleaseUndeclaredWindows(const std::function<bool(ID)>& declared);
 
         // ---------------- Input ----------------
 
@@ -205,8 +193,7 @@ namespace interstice
         AddWindowResult
             GetOrCreateWindow(ID id, std::string_view title, IntRect rect,
                               OnGuiFunc onGui,
-                              ChildPolicy childPolicy = ChildPolicy::Close,
-                              WindowFlags windowFlags = WindowFlags::DefaultFlags,
+                              WindowFlags windowFlags = WindowFlags::DefaultFlags | WindowFlags::CloseWithParent,
                               ID parentID = ID::Invalid(), int monitorIndex = -1);
 
         // ---------------- Monitor State ---------------- 
@@ -279,8 +266,8 @@ namespace interstice
         }
         
         // Allow a window the user closed to be reopened programmatically.
-        // The flag also clears when a window isn't declared in the WindowRegistry for
-        // a frame (PreLayoutSync), so stopping and resuming the declaration reopens it.
+        // The flag also clears when a window isn't declared for a frame
+        // (ReleaseUndeclaredWindows), so stopping and resuming the declaration reopens it.
         void AllowReopenWindow(ID id)
         {
             userClosedWindows.erase(id);
@@ -484,6 +471,7 @@ namespace interstice
         void RemoveWindowFromSiblingList(int32_t window_index);
         float QueryDisplayScale(OSWindowHandle handle) const;
         // First top-level window still open; null when there is none.
+        void RaisePopup(const Window& window);
         const Window* MainWindow() const;
         void LinkToParent(int32_t window_index, ID parentID);
         void ClearParentIDInChildren(int32_t window_index);

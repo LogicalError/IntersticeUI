@@ -36,6 +36,10 @@ namespace interstice
         // and the host passes in its input (GUIApplication::Inject*).
         RenderToImage   = 8192,
 
+        // Closes with its parent window; without it the window becomes top-level
+        // when the parent closes.
+        CloseWithParent = 16384,
+
 
 		DefaultFlags = AllowHighDPI
     };

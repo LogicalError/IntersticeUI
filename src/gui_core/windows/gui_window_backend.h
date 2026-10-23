@@ -88,6 +88,9 @@ namespace interstice
         // Returns the OS window handle that is considered to be under the mouse.
         virtual OSWindowHandle GetWindowUnderMouse() = 0;
         virtual OSWindowHandle GetActiveWindow() = 0;
+        // Goes up whenever keyboard focus moves between windows, or to or from
+        // another application; open popups are checked against it.
+        virtual uint32_t GetFocusChangeCount() const = 0;
 
         virtual void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) = 0;
         virtual int2 GetScreenMousePos() = 0;

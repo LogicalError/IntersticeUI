@@ -50,7 +50,7 @@ namespace interstice
         PreFrame,        // theme reload, synthetic mouse events, per-frame cache clears
         PreConstruct,    // after elementStorage.BeginConstruction(), before OnGUI()
         PostConstruct,   // after OnGUI() returns, before elementStorage.EndConstruction()
-        PreLayout,       // after textSystem->Update() and PreLayoutSync, before Layout()
+        PreLayout,       // after textSystem->Update() and SyncWindowsBeforeLayout, before Layout()
         PostLayout,      // after Layout() and per-element AddPostLayout callbacks
         PreInput,        // hit-test, hover/active/cursor resolution, transitions
         PostInput,       // after inputManager->Process; scroll-offset/rect snapshots

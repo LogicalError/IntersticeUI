@@ -55,6 +55,7 @@ namespace interstice
         void BringToFront(OSWindowHandle) override;
         OSWindowHandle GetWindowUnderMouse() override;
         OSWindowHandle GetActiveWindow() override;
+        uint32_t GetFocusChangeCount() const override { return m_focusChanges; }
 
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override;
@@ -120,6 +121,7 @@ namespace interstice
         bool (*m_eventWatch)(void*, SDL_Event*) = nullptr;
         // Live resize, window moves, close requests and modality; sees every event, drops none.
         static bool BackendEventWatch(void* userdata, SDL_Event* event);
+        uint32_t m_focusChanges = 0;
         bool m_suppressLiveResize = false; // suppress the watch's RenderWindowFrame during programmatic window changes
         SDL_Window* m_lastFocusableWindow = nullptr; // last window that can take focus (for rerouting tooltip input)
         

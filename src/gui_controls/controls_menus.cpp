@@ -374,9 +374,6 @@ namespace interstice
             if (BeginWindow(level.windowID, std::move(windowConstraints), menuStyle,
                             ElementFlags::IsMenuWindow))
             {
-                // Popup needs OS focus, or OSWindowManager's popup auto-close kills it next frame.
-                windowManager->BringToFront(level.windowID);
-
                 // Snapshot the popup rect for next frame's side-placement check.
                 // Top-level only; submenus are always side-placed.
                 if (menuManager.currentDepth == -1)

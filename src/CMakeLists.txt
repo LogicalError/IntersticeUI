@@ -110,6 +110,8 @@ list(APPEND GUI_FILES
   gui_core/windows/null/gui_null_window_backend.h
   gui_core/windows/null/gui_null_window_backend.cpp
   gui_core/windows/gui_os_window_manager.h
+  gui_core/windows/gui_window_sync.h
+  gui_core/windows/gui_window_sync.cpp
   
   
   # Text

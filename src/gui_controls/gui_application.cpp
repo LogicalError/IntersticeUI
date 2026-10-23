@@ -5,6 +5,7 @@
 #include <gui_core/diagnostics/gui_profiler.h>
 #include <gui_core/style/gui_style_sheet.h>
 #include <gui_core/text/skribidi/gui_text_system_skribidi.h>
+#include <gui_core/windows/gui_window_sync.h>
 #if INTERSTICE_SDL
 #include <gui_core/windows/sdl/gui_sdl_clipboard.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
@@ -1093,7 +1094,7 @@ namespace interstice
             textSystem->Update();
 
             // Apply user-moved/resized OS window rects before layout.
-            windowManager->PreLayoutSync(windowRegistry, elementStorage);
+            SyncWindowsBeforeLayout(*windowManager, windowRegistry, elementStorage);
 
             m_frame.RunStage(FrameStage::PreLayout, ctx);
 
@@ -1114,7 +1115,7 @@ namespace interstice
             windowRegistry.BuildRenderSkipLinks();
 
             // Create/update OS windows for layout-driven windows.
-            windowManager->PostLayoutSync(windowRegistry, elementStorage, textSystem, onGui);
+            SyncWindowsAfterLayout(*windowManager, windowRegistry, elementStorage, textSystem, onGui);
             
             m_frame.RunStage(FrameStage::PreInput, ctx);
 

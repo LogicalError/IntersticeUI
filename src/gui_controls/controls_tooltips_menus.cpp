@@ -140,8 +140,6 @@ namespace interstice
         if (BeginWindow(level.windowID, std::move(pos), theme.menuStyleRef,
                         ElementFlags::IsMenuWindow))
         {
-            windowManager->BringToFront(level.windowID);
-
             menuManager.currentDepth = level.depth;
             menuManager.maxOpenDepth = std::max(menuManager.maxOpenDepth, menuManager.currentDepth);
             level.reserveIconColumn = menuManager.menuItemsHaveIcons[level.triggerID];

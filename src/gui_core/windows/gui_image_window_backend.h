@@ -38,6 +38,7 @@ namespace interstice
         void BringToFront(OSWindowHandle window) override;
         OSWindowHandle GetWindowUnderMouse() override;
         OSWindowHandle GetActiveWindow() override;
+        uint32_t GetFocusChangeCount() const override { return m_os.GetFocusChangeCount() + m_focusChanges; }
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override;
         MouseButtons GetMouseButtons() override;
@@ -65,5 +66,6 @@ namespace interstice
         IWindowBackend& m_os;
         struct State;
         std::unique_ptr<State> m_state;
+        uint32_t m_focusChanges = 0;   // SetFocus moving the focus
     };
 }

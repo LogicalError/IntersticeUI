@@ -1,10 +1,4 @@
-#include <gui_core/elements/gui_element_storage.h>
-
 #include <gui_core/graphics/gui_graphics_context.h>
-
-#include <gui_core/text/gui_text_system.h>
-
-#include <gui_core/windows/gui_window_registry.h>
 #include <gui_core/windows/gui_os_window_manager.h>
 
 #include <unordered_set>
@@ -12,44 +6,6 @@
 
 namespace interstice
 {
-    static WindowFlags ElementFlagsToWindowFlags(ElementFlags elementFlags)
-    {
-        WindowFlags windowFlags = WindowFlags::AllowHighDPI;
-        const bool isPopup       = (elementFlags & ElementFlags::WindowIsPopup) != ElementFlags::None;
-        const bool isModal       = (elementFlags & ElementFlags::WindowIsModal) != ElementFlags::None;
-        const bool noCaption     = (elementFlags & ElementFlags::WindowNoCaption) != ElementFlags::None;
-        const bool isTransparent = (elementFlags & ElementFlags::WindowIsTransparent) != ElementFlags::None;
-        //const bool isCentered  = (elementFlags & ElementFlags::WindowIsCentered) != ElementFlags::None;
-        const bool isMoveable    = (elementFlags & ElementFlags::WindowCanMove) != ElementFlags::None;
-        const bool isResizable   = (elementFlags & ElementFlags::WindowCanResize) != ElementFlags::None;
-        const bool hasShadow     = (elementFlags & ElementFlags::Shadows) != ElementFlags::None;
-        const bool notFocusable  = (elementFlags & ElementFlags::WindowNotFocusable) != ElementFlags::None;
-        const bool renderToImage = (elementFlags & ElementFlags::WindowRenderToImage) != ElementFlags::None;
-
-        if (isResizable)   windowFlags |= WindowFlags::Resizable;
-        if (isMoveable)    windowFlags |= WindowFlags::Moveable;
-        if (isTransparent) windowFlags |= WindowFlags::Transparent;
-        if (isModal)       windowFlags |= WindowFlags::Modal;
-        if (hasShadow)     windowFlags |= WindowFlags::Shadow;
-        if (notFocusable)  windowFlags |= WindowFlags::NotFocusable;
-        if (renderToImage) windowFlags |= WindowFlags::RenderToImage;
-
-        if (noCaption)
-        {
-            // Borderless/utility windows usually live on-top and aren't shown in taskbar.
-            // Transparent flag should only be used for special layered windows (e.g., drag ghosts).
-            windowFlags |= WindowFlags::Borderless | WindowFlags::Utility | WindowFlags::SkipTaskbar | WindowFlags::AlwaysOnTop;
-        }
-
-        if (isPopup)
-        {
-            // Popup menus: keep on top and out of taskbar, but do not block other windows.
-            windowFlags |= WindowFlags::PopupMenu | WindowFlags::AlwaysOnTop | WindowFlags::SkipTaskbar | WindowFlags::Utility;
-        }
-        return windowFlags;
-    }
-
-
     OSWindowManager::OSWindowManager(GraphicsContext* graphicsContext, IWindowBackend* backendManager)
         : graphicsContext(graphicsContext)
         , windowBackendManager(backendManager)
@@ -89,8 +45,12 @@ namespace interstice
             window.displayScale = QueryDisplayScale(window.GetWindowHandle());
         }
 
-        // Popup menus close when another (non-child) window becomes active.
+        // Popup menus close when another (non-child) window becomes active; checked
+        // when the focus moved, so a popup that hasn't taken focus yet stays open.
+        if (const uint32_t focusChanges = windowBackendManager->GetFocusChangeCount();
+            focusChanges != m_focusChangeCount)
         {
+            m_focusChangeCount = focusChanges;
             ID activeWindow = GetActiveWindow();
             int32_t activeIndex = activeWindow == ID::Invalid() ? - 1 : IndexOf(activeWindow);
             for (int32_t window_index = 0; window_index < static_cast<int32_t>(windows.size()); ++window_index)
@@ -254,148 +214,35 @@ namespace interstice
         return true;
     }
        
-    bool OSWindowManager::PreLayoutSync(const WindowRegistry &windowRegistry,
-                                           ElementStorage &elementStorage)
+    void OSWindowManager::ReleaseUndeclaredWindows(const std::function<bool(ID)>& declared)
     {
         if (!insideBeginEnd)
         {
-            assert(false && "PreLayoutSync called without BeginFrame called first");
-            return false;
+            assert(false && "ReleaseUndeclaredWindows called outside of Begin/EndFrame");
+            return;
         }
-        
+
         // Windows not declared this frame lose their user-closed flag, so the app can reopen them later.
-        for (auto it = userClosedWindows.begin(); it != userClosedWindows.end(); )
+        std::erase_if(userClosedWindows, [&](ID id) { return !declared(id); });
+
+        for (auto& window : windows)
         {
-            if (!windowRegistry.Contains(*it))
+            // Hidden windows come back through GetOrCreateWindow, after layout has their rect.
+            if (window.state != WindowState::Alive || declared(window.id))
+                continue;
+
+            // Popups are hidden rather than destroyed, which would tear down their
+            // swapchain on every open/close cycle.
+            if ((window.flags & WindowFlags::PopupMenu) != WindowFlags::None)
             {
-                it = userClosedWindows.erase(it);
-            } else
-            {
-                ++it;
+                window.state = WindowState::Hidden;
+                windowBackendManager->SetWindowVisible(window.GetWindowHandle(), false);
+                continue;
             }
+
+            // A programmatic close, not the user's, so the window may be reopened.
+            RequestCloseAllowReopen(window.id);
         }
-
-        for (int32_t window_index = 0; window_index < static_cast<int32_t>(windows.size()); window_index++)
-        {
-            auto& window = windows[static_cast<size_t>(window_index)];
-            if (window.state == WindowState::Closing)
-                continue;
-
-            // Hidden windows are handled in GetOrCreateWindow (called from PostLayoutSync
-            // after layout has computed the correct rect). Skip them here.
-            if (window.state == WindowState::Hidden)
-                continue;
-
-            // Close windows that are managed by OSWindowManager but no longer
-            // present in registry
-            if (!windowRegistry.Contains(window.id))
-            {
-                // For popup/menu windows, hide instead of destroy to avoid expensive
-                // Vulkan swapchain teardown on every open/close cycle.
-                if ((window.flags & WindowFlags::PopupMenu) != WindowFlags::None)
-                {
-                    window.state = WindowState::Hidden;
-                    windowBackendManager->SetWindowVisible(window.GetWindowHandle(), false);
-                    continue;
-                }
-
-                // RequestClose marks them for destruction (handled in EndFrame)
-                // Allow reopening since this is a programmatic close, not user-initiated
-                RequestCloseAllowReopen(window.id);
-                continue;
-            }
-
-            // Window exists in registry and is alive
-
-
-            // Only user-controlled windows sync back; popup menus are UserControlled for
-            // interaction but code-positioned (anchored), so they're skipped too.
-            if ((window.flags & WindowFlags::UserControlled) == WindowFlags::None ||
-                (window.flags & WindowFlags::PopupMenu) != WindowFlags::None)
-                continue;
-
-            ElementRef elementRef = windowRegistry.GetWindowRef(window.id);
-            if (!elementStorage.IsValidRef(elementRef))
-                continue;
-            
-            // Window is user-controlled, so we need to sync its element position and size with the OS window.
-
-            // Update element's client rect (element-storage
-            // expects client-area rects in screen coords)
-            ElementRect& elementRect = elementStorage.GetElementRectUnsafe(elementRef);
-
-            // lock size (in layout) by setting sizeConstraints so layout won't resize it
-            if ((window.flags & WindowFlags::Resizable) == WindowFlags::Resizable)
-            {
-                // Overwrites the code given size of the window, 
-                // which is fine since after creation it's user controlled
-                auto sc = LayoutOverride::FixedSize(window.rect.w, window.rect.h);
-                elementRect.constraints.width = sc.width;
-                elementRect.constraints.height = sc.height;
-            }
-
-            // lock position (in layout) by setting positionConstraints so layout won't move it
-            if ((window.flags & WindowFlags::Moveable) == WindowFlags::Moveable)
-            {
-                // Overwrites the code given position of the window,
-                // which is fine since after creation it's user controlled
-                auto pc = LayoutOverride{}.Position(window.rect.x, window.rect.y);
-                elementRect.constraints.x = pc.x;
-                elementRect.constraints.y = pc.y;
-            }
-        }
-        return true;
-    }
-
-    bool OSWindowManager::PostLayoutSync(const WindowRegistry& windowRegistry,
-                                         ElementStorage&       elementStorage,
-                                         ITextSystem*          textSystem,
-                                         OnGuiFunc             onGui)
-    {
-        if (!insideBeginEnd)
-        {
-            assert(false && "PostLayoutSync called without BeginFrame called first");
-            return false;
-        }
-
-        for (const auto &windowEntry : windowRegistry.Windows())
-        {
-            if (windowEntry.id == ID::Invalid())
-                continue;
-
-            const ElementRef& winRef = windowEntry.windowRef;            
-            if (elementStorage.IsValidRef(winRef) == false)
-                continue;
-
-            ID parentID = ID::Invalid();
-            if (windowEntry.parentWindowEntry != WindowRegistry::kInvalidIndex)
-            {
-                parentID = windowRegistry.GetWindowID(
-                    windowEntry.parentWindowEntry);
-            }
-            
-            const Element&     winElement = elementStorage.GetElementUnsafe(winRef);
-            const ElementRect& winRect    = elementStorage.GetElementRectUnsafe(winRef);
-            
-            std::string_view title = winElement.textID != TextID::Invalid ? textSystem->GetText(winElement.textID) : "";
-
-            ChildPolicy childPolicy = (winElement.flags & ElementFlags::WindowCloseWithParent) != ElementFlags::None ?
-				                        ChildPolicy::Close : ChildPolicy::Detach;
-            WindowFlags windowFlags = ElementFlagsToWindowFlags(winElement.flags);
-
-            int monitorIndex = winElement.monitorIndex;
-            IntRect clientRect = winRect.rect;
-            
-            // Create or recycle existing window
-            [[maybe_unused]]
-            auto addResult = GetOrCreateWindow(
-                                windowEntry.id, title, clientRect, onGui,
-                                childPolicy, windowFlags, parentID, monitorIndex);
-            assert(addResult == AddWindowResult::SuccessCreate ||
-                   addResult == AddWindowResult::SuccessRecycle ||
-                   addResult == AddWindowResult::WindowUserClosed);
-        }
-        return true;
     }
 
     IntRect OSWindowManager::GetMonitorArea(int monitorIndex)
@@ -424,7 +271,7 @@ namespace interstice
     AddWindowResult
         OSWindowManager::GetOrCreateWindow(ID id, std::string_view title, IntRect rect,
                                            interstice::OnGuiFunc onGui,
-                                           ChildPolicy childPolicy, WindowFlags windowFlags,
+                                           WindowFlags windowFlags,
                                            ID parentID, int monitorIndex)
     {
         if (!insideBeginEnd) 
@@ -454,6 +301,7 @@ namespace interstice
                     existing_window->rect = rect;
                 }
                 windowBackendManager->SetWindowVisible(existing_window->GetWindowHandle(), true);
+                RaisePopup(*existing_window);
             }
 
             // this is safe since the windows list cannot be reallocated while we have
@@ -471,7 +319,6 @@ namespace interstice
                 RemoveWindowFromSiblingList(int32_t(existingIndex));
                 LinkToParent(int32_t(existingIndex), parentID);
             }
-            existing_window->childPolicy = childPolicy;
             existing_window->flags = windowFlags;
             existing_window->monitorIndex = monitorIndex;
 
@@ -524,7 +371,6 @@ namespace interstice
         Window window =
         {
             .id           = id,
-            .childPolicy  = childPolicy,
             .flags        = windowFlags,
             .parentID     = parentID,
             .rect         = rect,
@@ -538,6 +384,7 @@ namespace interstice
         window.parentID = ID::Invalid();
         windows.push_back(std::move(window));
         LinkToParent(idx, parentID);
+        RaisePopup(windows.back());
         return AddWindowResult::SuccessCreate;
     }
 
@@ -644,27 +491,28 @@ namespace interstice
             if (child_index == -1)
                 break;
             Window& child_window = windows[child_index];
-            switch (child_window.childPolicy)
+            if ((child_window.flags & WindowFlags::CloseWithParent) != WindowFlags::None)
             {
-                case ChildPolicy::Close:
-                {
-                    auto result = RequestClose(child_index, detach_children);
-                    if (result != RequestCloseResult::WindowAlreadyClosed &&
-                        result != RequestCloseResult::Success)
-                        return result;
-                    break;
-                }
-
-                case ChildPolicy::Detach:
-                {
-                    detach_children.push_back(child_id);
-                    break;
-                }
+                auto result = RequestClose(child_index, detach_children);
+                if (result != RequestCloseResult::WindowAlreadyClosed &&
+                    result != RequestCloseResult::Success)
+                    return result;
             }
+            else
+                detach_children.push_back(child_id);
             child_id = child_window.nextSiblingID;
             children_processed++;
         }
         return RequestCloseResult::Success;
+    }
+
+    // A popup takes focus when it opens, so a focus change elsewhere closes it.
+    void OSWindowManager::RaisePopup(const Window& window)
+    {
+        const bool focusablePopup = (window.flags & WindowFlags::PopupMenu) != WindowFlags::None
+                                 && (window.flags & (WindowFlags::NotFocusable | WindowFlags::Hidden)) == WindowFlags::None;
+        if (focusablePopup && window.GetWindowHandle() != nullptr)
+            windowBackendManager->BringToFront(window.GetWindowHandle());
     }
 
     const OSWindowManager::Window* OSWindowManager::MainWindow() const

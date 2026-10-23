@@ -47,7 +47,13 @@ namespace interstice
         m_state->pointerButtons = buttons;
     }
 
-    void ImageWindowBackend::SetFocus(OSWindowHandle window) { m_state->focusWindow = Find(window); }
+    void ImageWindowBackend::SetFocus(OSWindowHandle window)
+    {
+        ImageWindow* focus = Find(window);
+        if (focus != m_state->focusWindow)
+            ++m_focusChanges;
+        m_state->focusWindow = focus;
+    }
 
 
     OSWindowHandle ImageWindowBackend::CreateWindow(std::string_view title, int2 size, WindowFlags windowFlags, OSWindowHandle parentOSHandle)
