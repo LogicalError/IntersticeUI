@@ -158,6 +158,9 @@ namespace interstice
         StyleRef nodeViewOverlayButtonStyleRef {}; // flat button in such a panel
         StyleRef nodeViewMinimapStyleRef {};
         StyleRef breadcrumbStyleRef {};
+        // Vector fields: the X/Y/Z/W label attached to each component, and the component's field.
+        StyleRef axisLabelStyleRefs[4] {};
+        StyleRef vectorComponentStyleRef {};
         StyleRef breadcrumbSegmentStyleRef {};     // a clickable path segment
         StyleRef breadcrumbCurrentStyleRef {};     // the last segment
         StyleRef breadcrumbSeparatorStyleRef {};

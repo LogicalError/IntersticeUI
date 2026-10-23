@@ -757,11 +757,14 @@ namespace interstice
                 RegisterElement(interstice::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
                 VERIFY(elementStorage.BeginChildren());
                 {
-					for (int i = 0; i < TypeDimensions<T>::dimensions; i++)
+					// Each component: a colored axis label (drag it to change the value) attached
+                    // to the component's field. A caller's own style replaces the attached field.
+                    const StyleRef componentStyle = (style == theme.controls->textbox) ? theme.vectorComponentStyleRef : style;
+                    for (int i = 0; i < TypeDimensions<T>::dimensions; i++)
                     {
-                        DragLabel(TypeDimensions<T>::names[i], 
-                            LayoutOverride::FixedWidth(styleManager.Px(28)));
-                        modified = Field(TypeDimensions<T>::GetComponent(value, i), textEditBehavior, style, config, LayoutOverride::Auto()
+                        DragLabel(TypeDimensions<T>::names[i], theme.axisLabelStyleRefs[i % 4],
+                            LayoutOverride::FixedWidth(styleManager.Px(20)));
+                        modified = Field(TypeDimensions<T>::GetComponent(value, i), textEditBehavior, componentStyle, config, LayoutOverride::Auto()
                             .MinWidth(styleManager.Px(40))) || modified;
                     }
                 }

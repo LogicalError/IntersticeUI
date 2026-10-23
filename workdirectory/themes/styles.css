@@ -163,6 +163,97 @@
 .drag-label:focus  { color: var(--text-1); }
 .drag-label::highlight(selected) { color: var(--text-1); }
 
+/* ---- vector fields: an axis label attached to each component's field ------ */
+.axis-label-x {
+    border-width: var(--border) 0px var(--border) var(--border);
+    border-radius: var(--radius-md) 0px 0px var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--axis-x-bg);
+    color: var(--axis-x-text);
+    margin: 1px 0px 1px 1px;
+    padding: 0px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size-sm);
+    cursor: col-resize;
+}
+.axis-label-y {
+    border-width: var(--border) 0px var(--border) var(--border);
+    border-radius: var(--radius-md) 0px 0px var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--axis-y-bg);
+    color: var(--axis-y-text);
+    margin: 1px 0px 1px 1px;
+    padding: 0px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size-sm);
+    cursor: col-resize;
+}
+.axis-label-z {
+    border-width: var(--border) 0px var(--border) var(--border);
+    border-radius: var(--radius-md) 0px 0px var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--axis-z-bg);
+    color: var(--axis-z-text);
+    margin: 1px 0px 1px 1px;
+    padding: 0px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size-sm);
+    cursor: col-resize;
+}
+.axis-label-w {
+    border-width: var(--border) 0px var(--border) var(--border);
+    border-radius: var(--radius-md) 0px 0px var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--bg-control);
+    color: var(--text-3);
+    margin: 1px 0px 1px 1px;
+    padding: 0px;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size-sm);
+    cursor: col-resize;
+}
+
+.vector-component {
+    border-width: var(--border);
+    border-radius: 0px var(--radius-md) var(--radius-md) 0px;
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    color: var(--text-1);
+    margin: 1px 3px 1px 0px;
+    padding: 4px 8px 4px 8px;
+    overflow: auto;
+    cursor: text;
+    text-overflow: clip;
+    direction: initial;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.vector-component:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
+.vector-component:active { border-color: var(--accent); background-color: var(--bg-input); }
+.vector-component:focus  { border-color: var(--accent); background-color: var(--bg-input); }
+.vector-component::selection { color: var(--text-1); background-color: var(--accent-soft); }
+
 /* ---- grouped label variants (overflow visible for edge dragger rendering) - */
 .group-label {
     border-width: 0px;

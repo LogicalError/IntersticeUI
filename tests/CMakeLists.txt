@@ -15,6 +15,7 @@ list(APPEND GUI_CORE_TEST_FILES
   null_backends_test.cpp
   breadcrumb_test.cpp
   node_view_zoom_test.cpp
+  vector_field_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp

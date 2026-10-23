@@ -400,6 +400,11 @@ namespace interstice
         nodeViewOverlayButtonStyleRef     = registerCSS("node-view-overlay-button");
         nodeViewMinimapStyleRef           = registerCSS("node-view-minimap");
         breadcrumbStyleRef                = registerCSS("breadcrumb");
+        axisLabelStyleRefs[0]             = registerCSS("axis-label-x");
+        axisLabelStyleRefs[1]             = registerCSS("axis-label-y");
+        axisLabelStyleRefs[2]             = registerCSS("axis-label-z");
+        axisLabelStyleRefs[3]             = registerCSS("axis-label-w");
+        vectorComponentStyleRef           = registerCSS("vector-component");
         breadcrumbSegmentStyleRef         = registerCSS("breadcrumb-segment");
         breadcrumbCurrentStyleRef         = registerCSS("breadcrumb-current");
         breadcrumbSeparatorStyleRef       = registerCSS("breadcrumb-separator");
