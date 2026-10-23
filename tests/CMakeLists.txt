@@ -13,6 +13,8 @@ list(APPEND GUI_CORE_TEST_FILES
   default_handlers_test.cpp
   tracking_allocator_test.cpp
   null_backends_test.cpp
+  breadcrumb_test.cpp
+  node_view_zoom_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp

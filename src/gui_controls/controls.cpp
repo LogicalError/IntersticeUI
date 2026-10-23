@@ -361,6 +361,31 @@ namespace interstice
         return guiStateManager.Interaction().HasBeenClicked(id);
     }
 
+    bool GUIApplication::Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, StyleRef style, LayoutOverride&& constraints)
+    {
+        bool clicked = false;
+        if (!BeginHorizontal(id, style, std::move(constraints)))
+            return false;
+        // Under the trail's own ID, so the segment IDs don't depend on what came before.
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+        const int count = int(segments.size());
+        for (int i = 0; i < count; ++i)
+        {
+            if (i > 0)
+                Text(idManager.AllocateDynamicID(), "\u203A", theme.breadcrumbSeparatorStyleRef);
+            const ID segmentID = idManager.AllocateDynamicID();
+            if (i == count - 1)
+                Text(segmentID, segments[size_t(i)], theme.breadcrumbCurrentStyleRef);
+            else
+                clicked = Button(segmentID, segments[size_t(i)], [onSelect, i] { if (onSelect) onSelect(i); },
+                                 theme.breadcrumbSegmentStyleRef) || clicked;
+        }
+        if (pushed)
+            (void)idManager.PopParent();
+        EndHorizontal();
+        return clicked;
+    }
+
     bool GUIApplication::Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
     {
 	    bool currentValue = value;

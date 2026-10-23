@@ -8,6 +8,60 @@
 
 namespace interstice
 {
+    namespace
+    {
+        constexpr float kMinZoom = 0.1f;
+        constexpr float kMaxZoom = 1.0f;
+    }
+
+    float NodeViewZoom(const NodeView& view)
+    {
+        const float3x2& t = view.transform;
+        float zoom = std::sqrt((t[0].x * t[0].x + t[0].y * t[0].y + t[1].x * t[1].x + t[1].y * t[1].y) * 0.5f);
+        if (t[0].x * t[0].y - t[1].x * t[1].y < 0.0f) zoom = -zoom;
+        return zoom;
+    }
+
+    void ZoomNodeView(NodeView& view, float factor, int2 pivot)
+    {
+        const float current = NodeViewZoom(view);
+        const float target  = current * factor;
+        if (current == 0.0f)
+            return;
+        if (target < kMinZoom || target > kMaxZoom)
+            view.transform = view.transform * float3x2::Scale(std::clamp(target, kMinZoom, kMaxZoom) / current);
+        else
+            view.transform = float3x2::Translate(pivot) * float3x2::Scale(factor) * float3x2::Translate(-pivot) * view.transform;
+    }
+
+    void SetNodeViewCenter(NodeView& view, float2 center, float zoom)
+    {
+        view.transform = float3x2::Scale(std::clamp(zoom, kMinZoom, kMaxZoom))
+                       * float3x2::Translate(float2{ -center.x, -center.y });
+    }
+
+    void FrameAllNodes(NodeView& view)
+    {
+        if (view.nodes.empty())
+            return;
+        int2 bmin = view.nodes[0].pos;
+        int2 bmax = bmin;
+        for (const auto& node : view.nodes)
+        {
+            bmin.x = std::min(bmin.x, node.pos.x);
+            bmin.y = std::min(bmin.y, node.pos.y);
+            bmax.x = std::max(bmax.x, node.pos.x + node.lastSize.x);
+            bmax.y = std::max(bmax.y, node.pos.y + node.lastSize.y);
+        }
+        const int bw = std::max(1, bmax.x - bmin.x);
+        const int bh = std::max(1, bmax.y - bmin.y);
+        const int2 vp = view.lastInnerSize;
+        const float zoom = (vp.x > 0 && vp.y > 0)
+                         ? std::min((float)vp.x / (float)bw, (float)vp.y / (float)bh) * 0.9f
+                         : 1.0f;
+        SetNodeViewCenter(view, float2{ (float)((bmin.x + bmax.x) / 2), (float)((bmin.y + bmax.y) / 2) }, zoom);
+    }
+
     void RenderCanvasGrid(CustomDrawContext& ctx, int32_t baseGridSize,
                           color4f dotColor, float dotSize, int2 originOffset, IntRect clipCurrent)
     {
@@ -65,15 +119,15 @@ namespace interstice
             return origin + q * step;
         };
 
-        // Emit in window-local space, snapped to pixel centres: transformed canvas coords land
-        // on sub-pixels, and a 1px dot would smear across two.
+        // Emit in window-local space, snapped to whole pixels (the dot shader adds the half
+        // pixel): transformed canvas coords land on sub-pixels, and a 1px dot would smear across two.
         ctx.SetSpaceRaw(float3x2::Identity());
         const int firstX = firstLine(minX, originOffset.x);
         for (int y = firstLine(minY, originOffset.y); y <= maxY; y += step)
             for (int x = firstX; x <= maxX; x += step)
             {
                 const float2 p = currentToWL.TransformPoint({ (float)x, (float)y });
-                ctx.RenderDot({ std::floor(p.x) + 0.5f, std::floor(p.y) + 0.5f }, dotSize, dotColor);
+                ctx.RenderDot({ std::floor(p.x), std::floor(p.y) }, dotSize, dotColor);
             }
         ctx.SetSpace(DrawSpace::Local);
     }

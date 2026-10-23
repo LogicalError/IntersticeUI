@@ -154,6 +154,13 @@ namespace interstice
         StyleRef nodeCategoryStyleRef {}; // the category square in a node header
         StyleRef nodeTitleStyleRef {};    // a node header's title
         StyleRef nodeCaptionStyleRef {};  // a node header's category name, right-aligned
+        StyleRef nodeViewOverlayStyleRef {};       // panel floating over the node view (breadcrumb, zoom bar)
+        StyleRef nodeViewOverlayButtonStyleRef {}; // flat button in such a panel
+        StyleRef nodeViewMinimapStyleRef {};
+        StyleRef breadcrumbStyleRef {};
+        StyleRef breadcrumbSegmentStyleRef {};     // a clickable path segment
+        StyleRef breadcrumbCurrentStyleRef {};     // the last segment
+        StyleRef breadcrumbSeparatorStyleRef {};
         StyleRef nodeRowStyleRef {};    // node property row (socket | body | socket)
         StyleRef nodeBodyCenterStyleRef {}; // centred body for full-body content (image previews)
         StyleRef nodeSocketStyleRef {}; // socket hit-target; overflow:visible so the dot + hover halo aren't clipped to its box

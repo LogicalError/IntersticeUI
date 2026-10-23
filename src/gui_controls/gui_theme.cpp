@@ -396,6 +396,13 @@ namespace interstice
         nodeCategoryStyleRef              = registerCSS("node-category");
         nodeTitleStyleRef                 = registerCSS("node-title");
         nodeCaptionStyleRef               = registerCSS("node-caption");
+        nodeViewOverlayStyleRef           = registerCSS("node-view-overlay");
+        nodeViewOverlayButtonStyleRef     = registerCSS("node-view-overlay-button");
+        nodeViewMinimapStyleRef           = registerCSS("node-view-minimap");
+        breadcrumbStyleRef                = registerCSS("breadcrumb");
+        breadcrumbSegmentStyleRef         = registerCSS("breadcrumb-segment");
+        breadcrumbCurrentStyleRef         = registerCSS("breadcrumb-current");
+        breadcrumbSeparatorStyleRef       = registerCSS("breadcrumb-separator");
         nodeRowStyleRef                   = registerCSS("node-row");
         nodeBodyCenterStyleRef            = registerCSS("node-body-center");
         nodeSocketStyleRef                = registerCSS("node-socket");

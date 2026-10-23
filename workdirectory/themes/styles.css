@@ -1359,6 +1359,96 @@
     font-size: var(--font-size-sm);
 }
 
+/* ---- node view overlays (breadcrumb, zoom bar, minimap) ----------------- */
+.node-view-overlay {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-header);
+    padding: 2px;
+    margin: 0px;
+    gap: 2px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    color: var(--text-2);
+    font-size: var(--font-size);
+}
+.node-view-overlay-button {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    padding: 3px 8px;
+    margin: 0px;
+    text-wrap: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    color: var(--text-2);
+    font-size: var(--font-size);
+}
+.node-view-overlay-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.node-view-overlay-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.node-view-minimap {
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-header);
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* ---- breadcrumb ------------------------------------------------------------ */
+.breadcrumb {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    gap: 2px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    color: var(--text-2);
+    font-size: var(--font-size);
+}
+.breadcrumb-segment {
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    padding: 3px 6px;
+    margin: 0px;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+.breadcrumb-segment:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.breadcrumb-segment:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.breadcrumb-current {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 3px 6px;
+    margin: 0px;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    color: var(--text-1);
+    font-size: var(--font-size);
+}
+.breadcrumb-separator {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    vertical-align: middle;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+
 /* ---- node-row (one property: socket | body | socket) --------------------- */
 .node-row {
     border-width: 0px;

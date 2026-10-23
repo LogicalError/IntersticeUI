@@ -229,32 +229,10 @@ namespace interstice
                         this->guiStateManager.Interaction().SetFocusID(canvasID);
 
                         constexpr float zoomStep = 1.1f;
-                        float scaleFactor = (event.state.scroll.y > 0) ? zoomStep : (1.0f / zoomStep);
-
-                        float currentScale = sqrt((view.transform[0].x * view.transform[0].x +
-                            view.transform[0].y * view.transform[0].y +
-                            view.transform[1].x * view.transform[1].x +
-                            view.transform[1].y * view.transform[1].y) * 0.5f);
-                        float det = view.transform[0].x * view.transform[0].y - view.transform[1].x * view.transform[1].y;
-                        if (det < 0) currentScale = -currentScale;
-
-                        float newScale = currentScale * scaleFactor;
-                        if (newScale < 0.1f || newScale > 1.0f)
-                        {
-                            scaleFactor = std::clamp(newScale, 0.1f, 1.0f);
-                            interstice::float3x2 clamp = interstice::float3x2::Scale((1.0f / currentScale) * scaleFactor);
-                            view.transform = view.transform * clamp;
-                        } else
-                        {
-                            const int2 innerSize{ event.rect->innerRect.w, event.rect->innerRect.h };
-                            int2 translate = event.state.screenPos
-                                           - event.rect->innerRect.position
-                                           - int2{ innerSize.x / 2, innerSize.y / 2 };
-                            interstice::float3x2 zoomDelta = interstice::float3x2::Translate(translate)
-                                * interstice::float3x2::Scale(scaleFactor)
-                                * interstice::float3x2::Translate(-translate);
-                            view.transform = zoomDelta * view.transform;
-                        }
+                        const int2 innerSize{ event.rect->innerRect.w, event.rect->innerRect.h };
+                        ZoomNodeView(view, (event.state.scroll.y > 0) ? zoomStep : (1.0f / zoomStep),
+                                     event.state.screenPos - event.rect->innerRect.position
+                                     - int2{ innerSize.x / 2, innerSize.y / 2 });
                         return true;
                     }
                     case interstice::EventType::KeyDown:
@@ -262,29 +240,8 @@ namespace interstice
                         if (event.state.lastKey != interstice::KeyCode::Home || view.nodes.empty())
                             return false;
 
-                        // Home = frame all nodes: centre on their bounding box and
-                        // zoom to fit it in the viewport (clamped to the usual range).
-                        interstice::int2 bmin = view.nodes[0].pos;
-                        interstice::int2 bmax = bmin;
-                        for (const auto& node : view.nodes)
-                        {
-                            bmin.x = std::min(bmin.x, node.pos.x);
-                            bmin.y = std::min(bmin.y, node.pos.y);
-                            bmax.x = std::max(bmax.x, node.pos.x + node.lastSize.x);
-                            bmax.y = std::max(bmax.y, node.pos.y + node.lastSize.y);
-                        }
-                        const int bw = std::max(1, bmax.x - bmin.x);
-                        const int bh = std::max(1, bmax.y - bmin.y);
-                        const interstice::int2 bcenter{ (bmin.x + bmax.x) / 2, (bmin.y + bmax.y) / 2 };
-
-                        const interstice::int2 vp = view.lastInnerSize;
-                        float s = (vp.x > 0 && vp.y > 0)
-                                ? std::min((float)vp.x / (float)bw, (float)vp.y / (float)bh) * 0.9f
-                                : 1.0f;
-                        s = std::clamp(s, 0.1f, 1.0f);   // same clamp as wheel zoom
-
-                        view.transform = interstice::float3x2::Scale(s)
-                                       * interstice::float3x2::Translate(interstice::int2{ -bcenter.x, -bcenter.y });
+                        // Home = frame all nodes.
+                        FrameAllNodes(view);
                         return true;
                     }
                 }
@@ -1115,6 +1072,119 @@ namespace interstice
             }));
 
         VERIFY(elementStorage.EndChildren());
+
+        EmitNodeViewOverlays(view, canvasID);
+    }
+
+    void GUIApplication::EmitNodeViewOverlays(NodeView& view, ID canvasID)
+    {
+        // Siblings after the canvas, anchored to its corners: out of the canvas's
+        // pan/zoom, and out of the parent's flow.
+        const int32_t inset = styleManager.Px(8);
+        auto corner = [&](AnchorPlacement placement, int32_t dx, int32_t dy) {
+            return LayoutOverride{}.Anchored(canvasID, placement, dx, dy);
+        };
+
+        if (!view.breadcrumb.empty())
+            Breadcrumb(idManager.AllocateDynamicID("node-view-breadcrumb"), view.breadcrumb, view.onBreadcrumb,
+                       theme.nodeViewOverlayStyleRef,
+                       corner(AnchorPlacement::InsideLeft | AnchorPlacement::InsideTop, inset, inset));
+
+        if (view.showZoomControls)
+        {
+            const ID barID = idManager.AllocateDynamicID("node-view-zoom");
+            if (BeginHorizontal(barID, theme.nodeViewOverlayStyleRef,
+                                corner(AnchorPlacement::InsideLeft | AnchorPlacement::InsideBottom, inset, -inset)))
+            {
+                [[maybe_unused]] const bool pushed = idManager.PushParent(barID);
+                constexpr float kZoomStep = 1.25f;
+                const StyleRef button = theme.nodeViewOverlayButtonStyleRef;
+                Button(idManager.AllocateDynamicID(), "\u2212", [&view] { ZoomNodeView(view, 1.0f / kZoomStep); }, button);
+                // The zoom; clicking it goes back to 100%.
+                const std::string percent = std::to_string(int(std::lround(NodeViewZoom(view) * 100.0f))) + "%";
+                Button(idManager.AllocateDynamicID(), percent, [&view] { ZoomNodeView(view, 1.0f / NodeViewZoom(view)); }, button);
+                Button(idManager.AllocateDynamicID(), "+", [&view] { ZoomNodeView(view, kZoomStep); }, button);
+                Button(idManager.AllocateDynamicID(), "Fit", [&view] { FrameAllNodes(view); }, button);
+                if (pushed)
+                    (void)idManager.PopParent();
+                EndHorizontal();
+            }
+        }
+
+        if (view.showMinimap)
+        {
+            // Clicking or dragging in the minimap centres the view there.
+            const ID minimapID = idManager.AllocateDynamicID("node-view-minimap");
+            Element minimap
+            {
+                .id = minimapID,
+                .eventHandler = [&view](ElementEvent&& event) -> bool
+                {
+                    const bool press = event.type == EventType::MouseDown && event.state.LeftPressed();
+                    const bool drag  = event.type == EventType::MouseMove && event.state.LeftDown();
+                    if ((!press && !drag) || view.minimapScale <= 0.0f)
+                        return false;
+                    const int2 local = event.state.screenPos - event.rect->innerRect.position;
+                    SetNodeViewCenter(view, float2{ view.minimapOrigin.x + float(local.x) / view.minimapScale,
+                                                    view.minimapOrigin.y + float(local.y) / view.minimapScale },
+                                      NodeViewZoom(view));
+                    return true;
+                },
+                .styleRef = theme.nodeViewMinimapStyleRef,
+            };
+            auto res = elementStorage.Add(std::move(minimap),
+                corner(AnchorPlacement::InsideRight | AnchorPlacement::InsideBottom, -inset, -inset)
+                    .Size(styleManager.Px(140), styleManager.Px(88)));
+            VERIFY(res.status);
+            VERIFY(windowRegistry.Add(res.ref));
+            VERIFY(elementStorage.AddCustomDraw(res.ref,
+                [this, &view, nodeColor = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--line-strong"))),
+                 pad = float(styleManager.Px(6))](CustomDrawContext& ctx)
+                {
+                    // Bounds of the nodes and the visible area, in canvas coordinates.
+                    const float2 halfView{ float(view.lastInnerSize.x) * 0.5f, float(view.lastInnerSize.y) * 0.5f };
+                    const float3x2 toCanvas = view.transform.Inverse();
+                    const float2 v0 = toCanvas.TransformPoint({ -halfView.x, -halfView.y });
+                    const float2 v1 = toCanvas.TransformPoint({  halfView.x,  halfView.y });
+                    float2 bmin{ std::min(v0.x, v1.x), std::min(v0.y, v1.y) };
+                    float2 bmax{ std::max(v0.x, v1.x), std::max(v0.y, v1.y) };
+                    for (const auto& node : view.nodes)
+                    {
+                        bmin = { std::min(bmin.x, float(node.pos.x)), std::min(bmin.y, float(node.pos.y)) };
+                        bmax = { std::max(bmax.x, float(node.pos.x + node.lastSize.x)), std::max(bmax.y, float(node.pos.y + node.lastSize.y)) };
+                    }
+
+                    const IntRect inner = ctx.ElementInnerRect();
+                    const float bw = std::max(1.0f, bmax.x - bmin.x), bh = std::max(1.0f, bmax.y - bmin.y);
+                    const float scale = std::min((float(inner.w) - 2.0f * pad) / bw, (float(inner.h) - 2.0f * pad) / bh);
+                    if (scale <= 0.0f)
+                        return;
+                    // Centred in the minimap; the mapping is kept for clicks.
+                    view.minimapScale  = scale;
+                    view.minimapOrigin = { bmin.x - (float(inner.w) / scale - bw) * 0.5f,
+                                           bmin.y - (float(inner.h) / scale - bh) * 0.5f };
+                    auto toMap = [&](float x, float y) {
+                        return int2{ int(std::lround((x - view.minimapOrigin.x) * scale)),
+                                     int(std::lround((y - view.minimapOrigin.y) * scale)) };
+                    };
+
+                    for (const auto& node : view.nodes)
+                    {
+                        const int2 a = toMap(float(node.pos.x), float(node.pos.y));
+                        const int2 b = toMap(float(node.pos.x + node.lastSize.x), float(node.pos.y + node.lastSize.y));
+                        const bool selected = view.selectedNodeIDs.count(node.stableID) != 0;
+                        ctx.RenderQuad(IntRect{ a.x, a.y, std::max(1, b.x - a.x), std::max(1, b.y - a.y) },
+                                       selected ? theme.treeDropIndicatorStyle : nodeColor, 2.0f);
+                    }
+
+                    // The visible area.
+                    const int2 a = toMap(std::min(v0.x, v1.x), std::min(v0.y, v1.y));
+                    const int2 b = toMap(std::max(v0.x, v1.x), std::max(v0.y, v1.y));
+                    const int2 frame[] = { a, { b.x, a.y }, b, { a.x, b.y } };
+                    ctx.RenderPolyline(frame, /*closed=*/true,
+                                       LineStyle{ .colorStyleIndex = theme.treeDropIndicatorStyle, .lineWidth = styleManager.Px(1.0f) });
+                }));
+        }
     }
 
 }

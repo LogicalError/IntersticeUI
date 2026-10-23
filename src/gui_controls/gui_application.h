@@ -673,6 +673,13 @@ namespace interstice
                           StyleRef cellStyle = {},
                           bool columnSeparators = true);
 
+        // ---- Breadcrumb: a path such as Graphs > Terrain material ----
+        // Segments are separated by chevrons; the last is the current one. Clicking another
+        // segment calls onSelect(index) and returns true that frame.
+        bool        Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(id, segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
+        inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(idManager.AllocateDynamicID(), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
+
         // ---- Node view: self-contained graph editor ----
         // All state lives in `view`, so several views can coexist.
         void RenderNodeView(NodeView& view);
@@ -1374,6 +1381,9 @@ namespace interstice
 
         ID activeWindowID { ID::Invalid() };
         std::vector<bool> m_windowIdScopeStack;
+
+        // The node view's breadcrumb, zoom controls and minimap, over its canvas.
+        void EmitNodeViewOverlays(NodeView& view, ID canvasID);
 
         // Popup content for ColorField / GradientField.
         void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);

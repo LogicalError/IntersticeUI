@@ -443,6 +443,7 @@ namespace interstice
             for (auto& node : demo.nodeView.nodes)
                 node.stableID = idManager.CreateStaticID();
             ApplyNodeCategories();
+            demo.nodeView.breadcrumb = { "Graphs", "Terrain material" };
 
             // Connection rule (delegate): only sockets of the same colour may
             // connect. Endpoints are bounds-checked before this is called.

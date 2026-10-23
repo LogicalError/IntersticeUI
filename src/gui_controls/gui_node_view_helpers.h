@@ -14,9 +14,18 @@ namespace interstice
     class CustomDrawContext;
     struct LineStyle;
 
+    // The node view's zoom (1 = 100%).
+    float NodeViewZoom(const NodeView& view);
+    // Zooms by `factor` around `pivot` (pixels from the canvas centre), within 10%..100%.
+    void  ZoomNodeView(NodeView& view, float factor, int2 pivot = {});
+    // Centres the view on canvas point `center` at `zoom` (clamped to 10%..100%).
+    void  SetNodeViewCenter(NodeView& view, float2 center, float zoom);
+    // Centres and zooms the view on all nodes (Home, the Fit button).
+    void  FrameAllNodes(NodeView& view);
+
     // Infinite background dot grid for a pan/zoom canvas, drawn from a CustomDrawContext
     // callback in the canvas's input space (CANVAS_LAY): a dot on every grid point.
-    // dotSize is the dot's diameter; 2 on a pixel centre gives one crisp pixel. The pitch doubles per zoom-out octave, so on-screen density stays
+    // dotSize is the dot's diameter; 2 gives one crisp pixel. The pitch doubles per zoom-out octave, so on-screen density stays
     // roughly constant.
     //
     //   baseGridSize : pitch in CANVAS_LAY pixels at 1:1 zoom. <= 0 draws nothing.

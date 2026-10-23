@@ -132,6 +132,19 @@ namespace interstice
     struct NodeView
     {
         std::vector<NodeModel>  nodes;
+
+        // Overlays over the canvas: a breadcrumb top-left (shown when non-empty; a click
+        // on segment i calls onBreadcrumb(i)), zoom controls bottom-left, a minimap
+        // bottom-right.
+        std::vector<std::string>        breadcrumb;
+        std::function<void(int)>        onBreadcrumb;
+        bool                            showZoomControls = true;
+        bool                            showMinimap      = true;
+
+        // Last frame's minimap mapping (canvas = origin + minimap pixels / scale), for clicks.
+        float                           minimapScale  = 0.0f;
+        interstice::float2              minimapOrigin {};
+
         PendingConnection       pendingConnection;
         interstice::float3x2           transform;                  // identity = centered view (no pan/zoom)
         interstice::int2               lastInnerSize{ 0, 0 };      // for centering
