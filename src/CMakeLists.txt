@@ -107,6 +107,8 @@ list(APPEND GUI_FILES
   gui_core/windows/gui_os_window_manager.cpp
   gui_core/windows/gui_image_window_backend.h
   gui_core/windows/gui_image_window_backend.cpp
+  gui_core/windows/null/gui_null_window_backend.h
+  gui_core/windows/null/gui_null_window_backend.cpp
   gui_core/windows/gui_os_window_manager.h
   
   
@@ -131,14 +133,6 @@ list(APPEND GUI_FILES
   gui_core/text/skribidi/internal/nanosvg_bridge.cpp
   gui_core/text/skribidi/internal/nanosvg_bridge.h
   
-
-  # Graphics/SDL Backend
-  gui_core/windows/sdl/gui_window_backend_sdl_vulkan.cpp
-  gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h
-  gui_core/windows/sdl/gui_window_backend_sdl.cpp
-  gui_core/windows/sdl/gui_window_backend_sdl.h
-  gui_core/windows/sdl/gui_sdl_clipboard.cpp
-  gui_core/windows/sdl/gui_sdl_clipboard.h
 
 
   # Graphics
@@ -204,6 +198,17 @@ list(APPEND GUI_FILES
 )
 
 # Create GUI static library
+# The SDL window backend and clipboard (INTERSTICE_SDL).
+if(INTERSTICE_SDL)
+  list(APPEND GUI_FILES
+    gui_core/windows/sdl/gui_window_backend_sdl_vulkan.cpp
+    gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h
+    gui_core/windows/sdl/gui_window_backend_sdl.cpp
+    gui_core/windows/sdl/gui_window_backend_sdl.h
+    gui_core/windows/sdl/gui_sdl_clipboard.cpp
+    gui_core/windows/sdl/gui_sdl_clipboard.h)
+endif()
+
 add_library(gui_core STATIC ${GUI_FILES})
 
 # Version header, generated from the project version.
@@ -220,7 +225,12 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. FILES ${GUI_FILES})
 # implementation detail of the static library.
 target_link_libraries(gui_core
   PUBLIC  vma Vulkan::Headers
-  PRIVATE Vulkan::Vulkan SDL3::SDL3 vkbootstrap skribidi nanosvg)
+  PRIVATE Vulkan::Vulkan vkbootstrap skribidi nanosvg)
+if(INTERSTICE_SDL)
+  target_link_libraries(gui_core PRIVATE SDL3::SDL3)
+endif()
+# PUBLIC, so a host can tell whether the SDL backend is there.
+target_compile_definitions(gui_core PUBLIC INTERSTICE_SDL=$<BOOL:${INTERSTICE_SDL}>)
 
 #target_precompile_headers(gui_core PUBLIC <optional> <string> <vector> <unordered_map> <memory> )
 
@@ -367,8 +377,5 @@ if(INTERSTICE_BUILD_DEMO)
 
   set_target_properties(demo PROPERTIES FOLDER "Core")
 
-  add_custom_command(TARGET demo POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:demo> $<TARGET_FILE_DIR:demo>
-    COMMAND_EXPAND_LISTS
-  )
+  interstice_copy_runtime_dlls(demo)
 endif()

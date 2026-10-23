@@ -9,9 +9,7 @@ function(interstice_add_example name)
     INTERSTICE_EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
   interstice_apply_compile_options(${name})
   set_target_properties(${name} PROPERTIES FOLDER "Examples")
-  add_custom_command(TARGET ${name} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${name}> $<TARGET_FILE_DIR:${name}>
-    COMMAND_EXPAND_LISTS)
+  interstice_copy_runtime_dlls(${name})
 endfunction()
 
 interstice_add_example(hello_world)
@@ -19,4 +17,6 @@ interstice_add_example(controls)
 interstice_add_example(docking)
 interstice_add_example(custom_theme)
 # The host side creates its own Vulkan device; SDL names the surface extensions.
-interstice_add_example(host_device vkbootstrap vma Vulkan::Vulkan SDL3::SDL3)
+if(INTERSTICE_SDL)
+  interstice_add_example(host_device vkbootstrap vma Vulkan::Vulkan SDL3::SDL3)
+endif()

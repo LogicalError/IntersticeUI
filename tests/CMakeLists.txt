@@ -12,7 +12,7 @@ list(APPEND GUI_CORE_TEST_FILES
   controls_tree_list_test.cpp
   default_handlers_test.cpp
   tracking_allocator_test.cpp
-  null_graphics_backend_test.cpp
+  null_backends_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp
@@ -100,17 +100,11 @@ endif()
 
 include(GoogleTest)
 
-# Copies the runtime DLLs (SDL3) next to a test exe so it can be launched.
-function(interstice_copy_test_dlls target)
-  add_custom_command(TARGET ${target} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
-    COMMAND_EXPAND_LISTS)
-endfunction()
 
 # ctest lists the tests when it runs them, not at build time, so building never
 # launches the executables (slow on a cold CI runner). It runs in the build folder
 # (discovery leaves a JSON file behind); main.cpp switches to workdirectory itself.
-interstice_copy_test_dlls(gui_core_tests)
+interstice_copy_runtime_dlls(gui_core_tests)
 gtest_discover_tests(gui_core_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
 set_target_properties(gui_core_tests PROPERTIES
@@ -124,37 +118,41 @@ set_target_properties(gui_core_tests PROPERTIES
 # recording into a sink, so backend bugs (descriptor overflow, sync hazards,
 # leaks) become test failures. Individual tests SKIP themselves when no suitable
 # device/display is present, so the target is safe to build everywhere.
-list(APPEND GUI_GPU_TEST_FILES
-  gpu/gpu_test_harness.h
-  gpu/gpu_descriptor_test.cpp
-  gpu/gpu_image_set_test.cpp
-  gpu/gpu_window_lifecycle_test.cpp
-  gpu/gpu_primitive_coverage_test.cpp
-  gpu/gpu_readback_smoke_test.cpp
-  gpu/gpu_external_device_test.cpp
-  gpu/gpu_application_init_test.cpp
-  gpu/gpu_crash_trace.cpp
-  main.cpp
-)
+# They drive real windows through SDL.
+if(INTERSTICE_SDL)
+  list(APPEND GUI_GPU_TEST_FILES
+    gpu/gpu_test_harness.h
+    gpu/gpu_descriptor_test.cpp
+    gpu/gpu_image_set_test.cpp
+    gpu/gpu_window_lifecycle_test.cpp
+    gpu/gpu_primitive_coverage_test.cpp
+    gpu/gpu_readback_smoke_test.cpp
+    gpu/gpu_external_device_test.cpp
+    gpu/gpu_application_init_test.cpp
+    gpu/gpu_sdl_host_event_loop_test.cpp
+    gpu/gpu_crash_trace.cpp
+    main.cpp
+  )
 
-add_executable(gui_gpu_tests ${GUI_GPU_TEST_FILES})
+  add_executable(gui_gpu_tests ${GUI_GPU_TEST_FILES})
 
-# gui_controls pulls in gui_core; vma/Vulkan/SDL3 are linked PRIVATE by gui_core
-# (a static lib), so the harness must link them directly to reach the backend.
-target_link_libraries(gui_gpu_tests PRIVATE gui_controls vma Vulkan::Vulkan SDL3::SDL3 vkbootstrap GTest::gtest_main GTest::gmock)
+  # gui_controls pulls in gui_core; vma/Vulkan/SDL3 are linked PRIVATE by gui_core
+  # (a static lib), so the harness must link them directly to reach the backend.
+  target_link_libraries(gui_gpu_tests PRIVATE gui_controls vma Vulkan::Vulkan SDL3::SDL3 vkbootstrap GTest::gtest_main GTest::gmock)
 
-interstice_apply_compile_options(gui_gpu_tests)
-interstice_precompile_headers(gui_gpu_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
+  interstice_apply_compile_options(gui_gpu_tests)
+  interstice_precompile_headers(gui_gpu_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
 
-# Same gmock C4702-at-LTCG situation as gui_core_tests above.
-if(MSVC)
-  target_compile_options(gui_gpu_tests PRIVATE /wd4702)
+  # Same gmock C4702-at-LTCG situation as gui_core_tests above.
+  if(MSVC)
+    target_compile_options(gui_gpu_tests PRIVATE /wd4702)
+  endif()
+
+  interstice_copy_runtime_dlls(gui_gpu_tests)
+  gtest_discover_tests(gui_gpu_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
+
+  set_target_properties(gui_gpu_tests PROPERTIES
+    FOLDER "Tests"
+    VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory"
+  )
 endif()
-
-interstice_copy_test_dlls(gui_gpu_tests)
-gtest_discover_tests(gui_gpu_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
-
-set_target_properties(gui_gpu_tests PROPERTIES
-  FOLDER "Tests"
-  VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory"
-)

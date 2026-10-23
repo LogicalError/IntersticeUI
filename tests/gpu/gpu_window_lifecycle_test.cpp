@@ -407,19 +407,18 @@ TEST(SDLWindowBackendOwnership, LeavesAHostStartedSDLRunning)
 {
     ASSERT_TRUE(SDL_Init(SDL_INIT_VIDEO)) << SDL_GetError();
     {
-        interstice::SDLWindowBackend backend(nullptr);
+        interstice::SDLWindowBackend backend;
     }
     EXPECT_NE(SDL_WasInit(SDL_INIT_VIDEO), 0u);
     SDL_Quit();
 }
 
-// The backend's global event filter points at the backend; it must go with it,
-// or a host whose SDL keeps running would call into a destroyed object.
-TEST(SDLWindowBackendOwnership, RemovesItsEventFilter)
+// SDL has one process-wide event filter; the backend leaves it to the host.
+TEST(SDLWindowBackendOwnership, InstallsNoEventFilter)
 {
     ASSERT_TRUE(SDL_Init(SDL_INIT_VIDEO)) << SDL_GetError();
     {
-        interstice::SDLWindowBackend backend(nullptr);
+        interstice::SDLWindowBackend backend;
     }
     SDL_EventFilter filter   = nullptr;
     void*           userdata = nullptr;
@@ -475,7 +474,8 @@ TEST(GpuInitFailure, MissingSurfaceReturnsFalseInsteadOfTerminating)
 {
     auto* vk = new interstice::vulkan::VulkanGraphicsContext();
     interstice::GraphicsContext* graphicsContext = vk;
-    auto* windowBackend = new interstice::SDLWindowBackend(graphicsContext);
+    auto* windowBackend = new interstice::SDLWindowBackend();
+    windowBackend->SetGraphicsContext(graphicsContext);
     vk->SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
 
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend));

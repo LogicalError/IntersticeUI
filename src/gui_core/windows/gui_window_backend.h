@@ -133,6 +133,10 @@ namespace interstice
         // when the platform doesn't say.
         virtual std::string GetPreferredLanguage() const { return {}; }
 
+        // The graphics context the windows are made for and painted with (during an
+        // OS live resize). GUIApplication::Initialize sets it before initializing the context.
+        virtual void SetGraphicsContext(GraphicsContext* graphicsContext) { m_graphicsContext = graphicsContext; }
+
         // Set a callback invoked immediately when any window is moved/resized.
         // Fires during the OS modal loop (before the next frame), so the
         // callback must be safe to call outside the normal frame lifecycle.
@@ -140,6 +144,7 @@ namespace interstice
 
     protected:
         std::function<void()> m_onWindowMoved;
+        GraphicsContext*      m_graphicsContext = nullptr;
 
     };
 } // namespace interstice

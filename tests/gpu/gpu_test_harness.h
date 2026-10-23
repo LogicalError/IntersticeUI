@@ -96,7 +96,8 @@ namespace GpuTestHarness
         {
             vk              = new interstice::vulkan::VulkanGraphicsContext();
             graphicsContext = vk;
-            windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
+            windowBackend   = new interstice::SDLWindowBackend();
+            windowBackend->SetGraphicsContext(graphicsContext);
 
             interstice::vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
             cfg.callback             = &ValidationCallback;

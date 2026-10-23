@@ -26,6 +26,7 @@ namespace interstice
         // the OS decides again.
         void SetFocus(OSWindowHandle window);
 
+        void SetGraphicsContext(GraphicsContext* graphicsContext) override { IWindowBackend::SetGraphicsContext(graphicsContext); m_os.SetGraphicsContext(graphicsContext); }
         OSWindowHandle CreateWindow(std::string_view title, int2 size, WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
         OSWindowHandle CreateWindow(std::string_view title, IntRect rect, WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
         bool DestroyWindow(OSWindowHandle window) override;

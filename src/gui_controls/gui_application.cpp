@@ -5,8 +5,10 @@
 #include <gui_core/diagnostics/gui_profiler.h>
 #include <gui_core/style/gui_style_sheet.h>
 #include <gui_core/text/skribidi/gui_text_system_skribidi.h>
+#if INTERSTICE_SDL
 #include <gui_core/windows/sdl/gui_sdl_clipboard.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
+#endif
 #include <gui_core/graphics/vulkan/vk_graphics_context.h>
 
 #include <filesystem>
@@ -141,6 +143,26 @@ namespace interstice
 
     bool GUIApplication::Initialize(const InitializeOptions& options)
     {
+        if (!m_osWindowBackend)
+        {
+#if INTERSTICE_SDL
+            SDLWindowBackend::Options sdlOptions;
+            sdlOptions.hooks  = m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr;
+            m_osWindowBackend = std::make_unique<SDLWindowBackend>(sdlOptions);
+#else
+            INTERSTICE_LOG_ERROR(kLogApp, "no window backend: built without SDL, so call SetWindowBackend first");
+            return false;
+#endif
+        }
+        if (!clipboard)
+        {
+#if INTERSTICE_SDL
+            clipboard = std::make_unique<SDLClipboard>();
+#else
+            clipboard = std::make_unique<LocalClipboard>();
+#endif
+        }
+
         textSystem       = new interstice::SkribidiTextSystem();
         inputManager     = std::make_unique<interstice::InputManager>();
         inputBroadcaster = interstice::InputHandlerBroadcaster({ inputManager.get(), textSystem });
@@ -148,9 +170,9 @@ namespace interstice
             m_graphicsBackend = std::make_unique<vulkan::VulkanGraphicsContext>();
         graphicsContext  = m_graphicsBackend.get();
         graphicsContext->SetAllocationHooks(m_allocationHooks);
-        m_osWindowBackend = new interstice::SDLWindowBackend(graphicsContext, m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr);
         m_imageWindows   = new interstice::ImageWindowBackend(*m_osWindowBackend);
         windowBackend    = m_imageWindows;
+        windowBackend->SetGraphicsContext(graphicsContext);
         guiRenderer      = graphicsContext->guiRenderer;
         layoutEngine     = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
         windowManager    = std::make_unique<interstice::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
@@ -170,8 +192,6 @@ namespace interstice
             INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
             return false;
         }
-
-        clipboard = std::make_unique<SDLClipboard>();
 
         if (!textSystem->Initialize(graphicsContext, &styleManager, textAtlasManager.get(), &guiStateManager, clipboard.get()))
         {
@@ -288,7 +308,8 @@ namespace interstice
         textAtlasManager.reset();
         m_graphicsBackend.reset(); graphicsContext = nullptr;
         delete windowBackend; windowBackend = nullptr; m_imageWindows = nullptr;
-        delete m_osWindowBackend; m_osWindowBackend = nullptr;
+        m_osWindowBackend.reset();
+        clipboard.reset();
     }
 
     bool GUIApplication::InitializeStyles()

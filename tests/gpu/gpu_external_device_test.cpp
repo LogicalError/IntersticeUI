@@ -107,7 +107,8 @@ namespace
         {
             vk              = new interstice::vulkan::VulkanGraphicsContext();
             graphicsContext = vk;
-            windowBackend   = new interstice::SDLWindowBackend(graphicsContext);
+            windowBackend   = new interstice::SDLWindowBackend();
+            windowBackend->SetGraphicsContext(graphicsContext);
             styleManager.Register(interstice::Style{});
         }
 

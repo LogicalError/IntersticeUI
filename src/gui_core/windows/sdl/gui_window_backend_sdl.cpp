@@ -72,12 +72,11 @@ namespace interstice
         return buttons;
     }
 
-    SDLWindowBackend::SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks)
-        : graphicsContext(graphicsContext)
+    SDLWindowBackend::SDLWindowBackend(const Options& options)
+        : m_options(options)
     {
-        InstallSDLVulkanSurfaceFactory(graphicsContext);
-
         // Replacing SDL's allocator is only safe before SDL holds any memory.
+        const AllocationHooks* hooks = options.hooks;
         if (hooks != nullptr && hooks->IsSet())
         {
             if (!SDL_WasInit(0) && SDL_GetNumAllocations() == 0)
@@ -105,69 +104,9 @@ namespace interstice
         }
         m_sdlInitialized = true;
 
-        SDL_EventFilter filter =
-            [](void* userdata, SDL_Event* event) -> bool
-            {
-                SDLWindowBackend* backend = static_cast<SDLWindowBackend*>(userdata);
-                if (!backend)
-                {
-                    return true;
-                }
-
-                // Enforce modal behavior: if a modal window is active, suppress
-                // events targeting other windows and keep the modal window raised.
-                if (!backend->HandleModalFilterForEvent(event))
-                {
-                    // Event was consumed due to modality; do not continue processing.
-                    return false;
-                }
-
-                // Handle resize events immediately for smooth resizing.
-                // Suppressed during programmatic window changes (SetWindowRect/SetWindowVisible)
-                // to prevent re-entering OnFrame via RenderWindowFrame while already mid-frame.
-                if (event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
-                    !backend->m_suppressLiveResize)
-                {
-                    SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
-                    if (win)
-                    {
-                        IWindowContext* windowContext =
-                            (IWindowContext*)SDL_GetPointerProperty(
-                                SDL_GetWindowProperties(win),
-                                "WindowContext",
-                                nullptr);
-                        if (windowContext != nullptr)
-                        {
-                            int w = 0, h = 0;
-                            SDL_GetWindowSizeInPixels(win, &w, &h);
-                            int x = 0, y = 0;
-                            SDL_GetWindowPosition(win, &x, &y);
-                            windowContext->RenderWindowFrame(backend->graphicsContext, interstice::IntRect{ x, y, w, h }, true);
-                        }
-                    }
-                }
-
-                // Non-popup window moved/resized; fires during the OS modal loop, where the frame loop is blocked.
-                if (event->type == SDL_EVENT_WINDOW_MOVED ||
-                    event->type == SDL_EVENT_WINDOW_RESIZED)
-                {
-                    SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
-                    if (win)
-                    {
-                        SDL_WindowFlags flags = SDL_GetWindowFlags(win);
-                        if (!(flags & SDL_WINDOW_UTILITY))
-                        {
-                            if (backend->m_onWindowMoved) backend->m_onWindowMoved();
-                        }
-                    }
-                }
-
-                return true;
-            };
-
-        // The event filter runs even during OS modal loops (e.g. resize on Windows), so it
-        // handles live-resize rendering and modal enforcement.
-        SDL_SetEventFilter(filter, this);
+        // A watch, not a filter: SDL has one process-wide filter, and a host may use it.
+        // Watches also run inside OS modal loops (resize on Windows).
+        SDL_AddEventWatch(&SDLWindowBackend::BackendEventWatch, this);
 
         UpdateMouseState();
     }
@@ -189,11 +128,7 @@ namespace interstice
             cursor = nullptr;
         }
 
-        // The filter's userdata is this backend; don't leave it behind in a host's SDL.
-        SDL_EventFilter filter   = nullptr;
-        void*           userdata = nullptr;
-        if (SDL_GetEventFilter(&filter, &userdata) && userdata == this)
-            SDL_SetEventFilter(nullptr, nullptr);
+        SDL_RemoveEventWatch(&SDLWindowBackend::BackendEventWatch, this);
 
         if (m_ownsSDL)
             SDL_Quit();
@@ -617,7 +552,7 @@ namespace interstice
         bool isModal = (windowFlags & interstice::WindowFlags::Modal) != interstice::WindowFlags::None;
 
 
-        const Uint64 api_flags = graphicsContext != nullptr && graphicsContext->GetAPI() == GraphicsAPI::Vulkan
+        const Uint64 api_flags = m_graphicsContext != nullptr && m_graphicsContext->GetAPI() == GraphicsAPI::Vulkan
             ? SDL_WINDOW_VULKAN : 0;
         
         Uint64 sd_window_flags = api_flags;
@@ -767,6 +702,13 @@ namespace interstice
                         auto windowContext = LocalGetWindowContext(windowHandle);
                         return windowContext ? windowContext->GetID() : ID::Invalid();
                     };
+
+                if (auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(
+                        SDL_GetWindowProperties((SDL_Window*)data), "IntersticeBackend", nullptr))
+                {
+                    if (backend->ModalBlockerFor(event) != nullptr)
+                        return false;
+                }
 
                 switch(event->type)
                 {
@@ -931,9 +873,9 @@ namespace interstice
                         SDL_GetWindowSizeInPixels((SDL_Window*)data, &w, &h);
                         int x = 0, y = 0;
                         SDL_GetWindowPosition((SDL_Window*)data, &x, &y);
-                        auto* gc = (interstice::GraphicsContext*)SDL_GetPointerProperty(
-                            SDL_GetWindowProperties((SDL_Window*)data), "GraphicsContext", nullptr);
-                        windowContext->RenderWindowFrame(gc, interstice::IntRect{ x, y, w, h }, true);
+                        auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(
+                            SDL_GetWindowProperties((SDL_Window*)data), "IntersticeBackend", nullptr);
+                        windowContext->RenderWindowFrame(backend ? backend->m_graphicsContext : nullptr, interstice::IntRect{ x, y, w, h }, true);
                         break;
                     }
                 }
@@ -1014,26 +956,12 @@ namespace interstice
     {
         if (!m_sdlInitialized) return;
 
-        SDL_Event ev;
-        while (SDL_PollEvent(&ev))
+        // The watches have already seen every event; the queue is only emptied
+        // when the GUI runs SDL's event loop.
+        if (m_options.pumpEvents)
         {
-            switch (ev.type)
-            {
-                case SDL_EVENT_QUIT:
-                    // schedule destruction of all windows
-                    for (auto sdl_window : m_windows) m_pendingDestroy.insert(sdl_window);
-                    break;
-
-                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-                    {
-                        SDL_Window* sdl_window = SDL_GetWindowFromID(ev.window.windowID);
-                        if (sdl_window) m_pendingDestroy.insert(sdl_window);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
+            SDL_PumpEvents();
+            SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
         }
 
         // destroy windows requested by events
@@ -1400,91 +1328,103 @@ namespace interstice
         return m_modalWindows.back();
     }
 
-    bool SDLWindowBackend::HandleModalFilterForEvent(SDL_Event* event)
+    // The window an event is for, if it names one.
+    static SDL_Window* EventWindow(const SDL_Event* event)
     {
-        if (!m_sdlInitialized)
-        {
-            return true;
-        }
-
-        SDL_Window* topModal = GetTopModalWindowSDL();
-        if (topModal == nullptr)
-        {
-            // No modal windows active; nothing to filter.
-            return true;
-        }
-
-        // Helper to extract the SDL_Window* for this event, if any.
-        SDL_Window* target = nullptr;
         switch (event->type)
         {
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            case SDL_EVENT_WINDOW_EXPOSED:
-            {
-                target = SDL_GetWindowFromID(event->window.windowID);
-                break;
-            }
-
+            case SDL_EVENT_WINDOW_EXPOSED:     return SDL_GetWindowFromID(event->window.windowID);
             case SDL_EVENT_KEY_DOWN:
-            case SDL_EVENT_KEY_UP:
-            {
-                target = SDL_GetWindowFromID(event->key.windowID);
-                break;
-            }
-
-            case SDL_EVENT_TEXT_INPUT:
-            {
-                target = SDL_GetWindowFromID(event->text.windowID);
-                break;
-            }
-
-            case SDL_EVENT_TEXT_EDITING:
-            {
-                target = SDL_GetWindowFromID(event->edit.windowID);
-                break;
-            }
-
-            case SDL_EVENT_MOUSE_MOTION:
-            {
-                target = SDL_GetWindowFromID(event->motion.windowID);
-                break;
-            }
-
+            case SDL_EVENT_KEY_UP:             return SDL_GetWindowFromID(event->key.windowID);
+            case SDL_EVENT_TEXT_INPUT:         return SDL_GetWindowFromID(event->text.windowID);
+            case SDL_EVENT_TEXT_EDITING:       return SDL_GetWindowFromID(event->edit.windowID);
+            case SDL_EVENT_MOUSE_MOTION:       return SDL_GetWindowFromID(event->motion.windowID);
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            case SDL_EVENT_MOUSE_BUTTON_UP:
+            case SDL_EVENT_MOUSE_BUTTON_UP:    return SDL_GetWindowFromID(event->button.windowID);
+            case SDL_EVENT_MOUSE_WHEEL:        return SDL_GetWindowFromID(event->wheel.windowID);
+            default:                           return nullptr;
+        }
+    }
+
+    SDL_Window* SDLWindowBackend::ModalBlockerFor(const SDL_Event* event) const
+    {
+        if (!m_sdlInitialized)
+            return nullptr;
+        SDL_Window* topModal = GetTopModalWindowSDL();
+        if (topModal == nullptr)
+            return nullptr;
+        SDL_Window* target = EventWindow(event);
+        if (target == nullptr || target == topModal || !m_windows.contains(target))
+            return nullptr;
+        return topModal;
+    }
+
+    bool SDLWindowBackend::BackendEventWatch(void* userdata, SDL_Event* event)
+    {
+        auto* backend = static_cast<SDLWindowBackend*>(userdata);
+
+        // A modal window stays in front; its blocked owners get no events (see the per-window watch).
+        if (SDL_Window* modal = backend->ModalBlockerFor(event))
+        {
+            SDL_RaiseWindow(modal);
+            return true;
+        }
+
+        switch (event->type)
+        {
+            case SDL_EVENT_QUIT:
+                // Only when the GUI runs the event loop; otherwise quitting is the host's call.
+                if (backend->m_options.pumpEvents)
+                    for (SDL_Window* window : backend->m_windows) backend->m_pendingDestroy.insert(window);
+                break;
+
+            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                if (SDL_Window* window = SDL_GetWindowFromID(event->window.windowID); backend->m_windows.contains(window))
+                    backend->m_pendingDestroy.insert(window);
+                break;
+
+            // Render right away for smooth resizing. Suppressed during programmatic window
+            // changes (SetWindowRect/SetWindowVisible), which would re-enter OnFrame mid-frame.
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
             {
-                target = SDL_GetWindowFromID(event->button.windowID);
+                SDL_Window* window = SDL_GetWindowFromID(event->window.windowID);
+                if (backend->m_suppressLiveResize || !backend->m_windows.contains(window))
+                    break;
+                auto* windowContext = (IWindowContext*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), "WindowContext", nullptr);
+                if (windowContext != nullptr)
+                {
+                    int w = 0, h = 0;
+                    SDL_GetWindowSizeInPixels(window, &w, &h);
+                    int x = 0, y = 0;
+                    SDL_GetWindowPosition(window, &x, &y);
+                    windowContext->RenderWindowFrame(backend->m_graphicsContext, interstice::IntRect{ x, y, w, h }, true);
+                }
                 break;
             }
 
-            case SDL_EVENT_MOUSE_WHEEL:
+            // A non-popup window moved or resized; fires inside the OS modal loop, where the frame loop is blocked.
+            case SDL_EVENT_WINDOW_MOVED:
+            case SDL_EVENT_WINDOW_RESIZED:
             {
-                target = SDL_GetWindowFromID(event->wheel.windowID);
+                SDL_Window* window = SDL_GetWindowFromID(event->window.windowID);
+                if (backend->m_windows.contains(window) && !(SDL_GetWindowFlags(window) & SDL_WINDOW_UTILITY)
+                    && backend->m_onWindowMoved)
+                    backend->m_onWindowMoved();
                 break;
             }
 
             default:
-            {
                 break;
-            }
         }
-
-        if (target == nullptr)
-        {
-            // Non-window-specific event; let it through.
-            return true;
-        }
-
-        // If the event targets a different window than the top modal, suppress it
-        // and raise the modal window to keep it in front.
-        if (target != topModal)
-        {
-            SDL_RaiseWindow(topModal);
-            return false;
-        }
-
         return true;
+    }
+
+    void SDLWindowBackend::SetGraphicsContext(GraphicsContext* graphicsContext)
+    {
+        IWindowBackend::SetGraphicsContext(graphicsContext);
+        InstallSDLVulkanSurfaceFactory(graphicsContext);
     }
 
 } // namespace interstice

@@ -50,6 +50,10 @@ function(_interstice_build_third_party_config cfg)
   if(INTERSTICE_BUILD_TESTS AND NOT EXISTS "${INTERSTICE_TP_INSTALL}/lib/cmake/GTest")
     file(REMOVE "${stamp}")
   endif()
+  # Likewise SDL, for a cache built without it.
+  if(INTERSTICE_SDL AND NOT EXISTS "${INTERSTICE_TP_INSTALL}/cmake/SDL3Config.cmake")
+    file(REMOVE "${stamp}")
+  endif()
   if(EXISTS "${stamp}")
     return()
   endif()
@@ -75,6 +79,7 @@ function(_interstice_build_third_party_config cfg)
       -B "${INTERSTICE_TP_BUILD}"
       "-DCMAKE_INSTALL_PREFIX=${INTERSTICE_TP_INSTALL}"
       "-DINTERSTICE_BUILD_TESTS=${INTERSTICE_BUILD_TESTS}"
+      "-DINTERSTICE_SDL=${INTERSTICE_SDL}"
     RESULT_VARIABLE _rc
   )
   if(NOT _rc EQUAL 0)
@@ -111,7 +116,9 @@ list(PREPEND CMAKE_PREFIX_PATH "${INTERSTICE_TP_INSTALL}")
 set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO "RelWithDebInfo;Release")
 set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL     "MinSizeRel;Release")
 
-find_package(SDL3 CONFIG REQUIRED)
+if(INTERSTICE_SDL)
+  find_package(SDL3 CONFIG REQUIRED)
+endif()
 
 # skribidi's exported config references its dependencies as imported targets
 # but doesn't call find_dependency() on them — load them first so the targets

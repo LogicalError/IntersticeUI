@@ -1,16 +1,18 @@
-// The full GUIApplication on NullGraphicsContext: no GPU, the rest of the
-// library (window backend, text, layout, input) runs as usual.
+// The full GUIApplication on the null graphics and window backends: no GPU and
+// no OS windows; text, layout and input run as usual.
 #include <gtest/gtest.h>
 
 #include <gui_controls/gui_application_internal.h>
 #include <gui_core/graphics/null/gui_null_graphics_context.h>
+#include <gui_core/windows/null/gui_null_window_backend.h>
+#include <gui_core/windows/gui_window_flags.h>
 
 #include <functional>
 #include <memory>
 
 namespace
 {
-    // A render-to-image window with a button, so no OS window appears.
+    // A render-to-image window with a button.
     class NullBackendApp : public interstice::GUIApplicationInternals
     {
     public:
@@ -40,6 +42,7 @@ namespace
         bool Start()
         {
             SetGraphicsBackend(std::make_unique<interstice::NullGraphicsContext>());
+            SetWindowBackend(std::make_unique<interstice::NullWindowBackend>());
             if (!Initialize())
                 return false;
             windowID = idManager.CreateStaticID();
@@ -55,7 +58,7 @@ namespace
         }
     };
 
-    TEST(NullGraphicsBackend, RunsTheApplicationWithoutAGPU)
+    TEST(NullBackends, RunsTheApplicationWithoutAGPU)
     {
         NullBackendApp app;
         ASSERT_TRUE(app.Start());
@@ -68,7 +71,7 @@ namespace
         EXPECT_EQ(app.graphicsContext, nullptr) << "Cleanup releases the backend";
     }
 
-    TEST(NullGraphicsBackend, InjectedClickReachesAButton)
+    TEST(NullBackends, InjectedClickReachesAButton)
     {
         NullBackendApp app;
         ASSERT_TRUE(app.Start());
@@ -88,5 +91,28 @@ namespace
         app.Run();
         EXPECT_EQ(app.clicks, 1);
         app.Cleanup();
+    }
+
+    // The host's window backend and clipboard are the ones the app uses.
+    TEST(NullBackends, UsesTheHostsWindowBackendAndClipboard)
+    {
+        NullBackendApp app;
+        auto clipboard = std::make_unique<interstice::LocalClipboard>();
+        interstice::IClipboard* hostClipboard = clipboard.get();
+        app.SetClipboard(std::move(clipboard));
+        ASSERT_TRUE(app.Start());
+        EXPECT_EQ(app.clipboard.get(), hostClipboard);
+
+        app.clipboard->Set("pasted");
+        EXPECT_EQ(app.clipboard->Get(), "pasted");
+
+        // A window that isn't render-to-image is one of the backend's windows.
+        const interstice::OSWindowHandle window = app.windowBackend->CreateWindow("os", interstice::int2{ 300, 200 },
+                                                                                  interstice::WindowFlags::None, nullptr);
+        ASSERT_NE(window, nullptr);
+        EXPECT_EQ(app.windowBackend->GetWindowSize(window), (interstice::int2{ 300, 200 }));
+        EXPECT_TRUE(app.windowBackend->DestroyWindow(window));
+        app.Cleanup();
+        EXPECT_EQ(app.clipboard, nullptr) << "Cleanup releases the clipboard";
     }
 }

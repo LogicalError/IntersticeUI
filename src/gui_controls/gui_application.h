@@ -89,10 +89,10 @@ namespace interstice
         std::unique_ptr<LayoutEngine>     layoutEngine;
         std::unique_ptr<OSWindowManager>  windowManager;
         std::unique_ptr<TextAtlasManager> textAtlasManager;
-        std::unique_ptr<IClipboard>       clipboard;
+        std::unique_ptr<IClipboard>       clipboard;          // from SetClipboard
 
         ITextSystem*        textSystem      { nullptr };
-        IWindowBackend*     windowBackend   { nullptr };   // the OS windows plus render-to-image windows
+        IWindowBackend*     windowBackend   { nullptr };   // SetWindowBackend's windows plus render-to-image windows
         GraphicsContext*    graphicsContext { nullptr };   // the backend from SetGraphicsBackend
         GUIRenderer*        guiRenderer     { nullptr };
 
@@ -254,6 +254,14 @@ namespace interstice
         // example SetExternalDevice to render on the host's device. Owned until
         // Cleanup. Call before Initialize.
         void SetGraphicsBackend(std::unique_ptr<GraphicsContext> backend) { m_graphicsBackend = std::move(backend); }
+
+        // The OS windows and their input; Initialize wraps it to add render-to-image
+        // windows. Without one it creates an SDLWindowBackend (SDL builds only).
+        // Owned until Cleanup. Call before Initialize.
+        void SetWindowBackend(std::unique_ptr<IWindowBackend> backend) { m_osWindowBackend = std::move(backend); }
+        // Copy and paste for text fields. Defaults to SDL's clipboard, or a
+        // LocalClipboard without SDL. Owned until Cleanup. Call before Initialize.
+        void SetClipboard(std::unique_ptr<IClipboard> clipboardImpl) { clipboard = std::move(clipboardImpl); }
 
         // Host memory functions for what can be routed: Vulkan objects, VMA,
         // vk-bootstrap and SDL (only when the GUI starts SDL). See AllocationHooks
@@ -1329,7 +1337,7 @@ namespace interstice
 
         // Change via RequestReloadTheme so the reload happens between frames.
         std::string m_resourceRoot;
-        IWindowBackend*      m_osWindowBackend { nullptr };    // wrapped by windowBackend
+        std::unique_ptr<IWindowBackend> m_osWindowBackend;     // wrapped by windowBackend
         ImageWindowBackend*  m_imageWindows    { nullptr };    // == windowBackend
         MouseButtons         m_injectedButtons { MouseButtons::None };
         int2 InjectedScreenPos(ID windowID, int2 pos);

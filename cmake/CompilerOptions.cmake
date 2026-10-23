@@ -92,3 +92,12 @@ function(interstice_apply_compile_options target)
     endif()
   endif()
 endfunction()
+
+# Copies a program's runtime DLLs (SDL3) next to it so it can be launched. A
+# build without SDL has none, and copy_if_different fails on an empty list.
+function(interstice_copy_runtime_dlls target)
+  set(dlls "$<TARGET_RUNTIME_DLLS:${target}>")
+  add_custom_command(TARGET ${target} POST_BUILD
+    COMMAND "$<$<BOOL:${dlls}>:${CMAKE_COMMAND};-E;copy_if_different;${dlls};$<TARGET_FILE_DIR:${target}>>"
+    COMMAND_EXPAND_LISTS)
+endfunction()

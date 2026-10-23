@@ -13,7 +13,9 @@ library keeps the state, lays it out with flexbox and grid, and draws it.
 
 The UI draws through a graphics backend and gets windows and input from a window
 backend, so it isn't tied to one graphics API or platform. The current backends
-are Vulkan and SDL3.
+are Vulkan and SDL3. A host passes its own with `SetGraphicsBackend`,
+`SetWindowBackend` and `SetClipboard`; the CMake option `INTERSTICE_SDL=OFF`
+builds without SDL, and then the host must pass a window backend.
 
 The library is two static libraries:
 

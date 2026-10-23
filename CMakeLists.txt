@@ -19,6 +19,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 option(INTERSTICE_BUILD_DEMO  "Build the demo application" ${PROJECT_IS_TOP_LEVEL})
 option(INTERSTICE_BUILD_TESTS "Build the tests"            ${PROJECT_IS_TOP_LEVEL})
 option(INTERSTICE_BUILD_EXAMPLES "Build the examples"      ${PROJECT_IS_TOP_LEVEL})
+# Off: no SDL at all; the host passes its own window backend (SetWindowBackend).
+option(INTERSTICE_SDL "Build the SDL window backend and clipboard" ON)
 
 find_package(Vulkan REQUIRED)
 
@@ -52,11 +54,14 @@ install(TARGETS gui_core gui_controls
   ARCHIVE DESTINATION "lib/$<CONFIG>")
 
 # Public headers only: *_internal.h and internal/ folders are the library's own.
+set(_interstice_header_excludes PATTERN "*_internal.h" EXCLUDE PATTERN "internal" EXCLUDE)
+if(NOT INTERSTICE_SDL)
+  list(APPEND _interstice_header_excludes PATTERN "sdl" EXCLUDE)
+endif()
 install(DIRECTORY src/gui_core src/gui_controls
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
-  PATTERN "*_internal.h" EXCLUDE
-  PATTERN "internal" EXCLUDE)
+  ${_interstice_header_excludes})
 install(FILES "${PROJECT_BINARY_DIR}/generated/gui_core/gui_version.h"
   DESTINATION include/gui_core)
 

@@ -20,12 +20,23 @@ namespace interstice
     class SDLWindowBackend : public IWindowBackend
     {
     public:
+        struct Options
+        {
+            // SDL's memory functions too, which are process-wide. Used only when
+            // this backend starts SDL and SDL holds no memory yet.
+            const AllocationHooks* hooks = nullptr;
+            // PollEvents empties SDL's event queue. A host that runs SDL's event loop
+            // itself turns this off; the GUI's windows still get their events while
+            // the host pumps (SDL_PollEvent / SDL_PumpEvents).
+            bool pumpEvents = true;
+        };
+
+        explicit SDLWindowBackend(const Options& options = {});
+        ~SDLWindowBackend() override;
+
         // Windows are created for graphicsContext->GetAPI(); for a VulkanGraphicsContext
         // this also installs its SDL surface factory.
-        // hooks: SDL's memory functions too, which are process-wide. Used only when
-        // this backend starts SDL and SDL holds no memory yet.
-        explicit SDLWindowBackend(interstice::GraphicsContext* graphicsContext, const AllocationHooks* hooks = nullptr);
-        ~SDLWindowBackend() override;
+        void SetGraphicsContext(GraphicsContext* graphicsContext) override;
 
         // IWindowBackend
         OSWindowHandle CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
@@ -80,7 +91,7 @@ namespace interstice
     private:
         void UpdateMouseState();
 
-        interstice::GraphicsContext* graphicsContext {nullptr};
+        Options m_options;
 
         std::unordered_set<SDL_Window*> m_windows;
         // Track modal windows in creation order to support nested modals.
@@ -107,11 +118,16 @@ namespace interstice
         SDL_Cursor* m_systemCursors[kSystemCursorSlots] = {};
         // Per-window SDL event watch (userdata = the window); removed when the window is destroyed.
         bool (*m_eventWatch)(void*, SDL_Event*) = nullptr;
-        bool m_suppressLiveResize = false; // suppress event-filter RenderWindowFrame during programmatic window changes
+        // Live resize, window moves, close requests and modality; sees every event, drops none.
+        static bool BackendEventWatch(void* userdata, SDL_Event* event);
+        bool m_suppressLiveResize = false; // suppress the watch's RenderWindowFrame during programmatic window changes
         SDL_Window* m_lastFocusableWindow = nullptr; // last window that can take focus (for rerouting tooltip input)
         
         SDL_Window* GetTopModalWindowSDL() const;
-        bool HandleModalFilterForEvent(SDL_Event* event);
+    public:
+        // The modal window that blocks the event's window (one of ours), or null.
+        SDL_Window* ModalBlockerFor(const SDL_Event* event) const;
+    private:
     };
 
 } // namespace interstice
