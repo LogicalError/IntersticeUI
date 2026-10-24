@@ -89,4 +89,12 @@ namespace
         EXPECT_NE(active->iconColorIndex, active->textColorIndex);
         EXPECT_EQ(idle->iconColorIndex, idle->textColorIndex);
     }
+
+    // The theme gives the caret its color (--caret).
+    TEST(ThemeMetrics, TheCaretTakesTheThemesColor)
+    {
+        HeadlessGUIApp app;
+        ASSERT_TRUE(app.Initialize());
+        EXPECT_NE(app.ownedTextSystem.caretColor, VisualColorStyleIndex::Invalid);
+    }
 }

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <gui_core/gui_id.h>
 #include <gui_core/style/gui_style.h>
@@ -21,12 +23,22 @@ namespace interstice
         interstice::color4f  selectedStopColor {};            // bridge to ColorField
         float         selectedStopPosition  = 0.0f;    // bridge to numeric Field
 
+        interstice::Gradient originalGradient {};             // to restore on Cancel
+        std::string          context;                         // what's being edited (the field's label), after the title
+
+        // OK keeps the gradient, Cancel and the close button restore the original one.
+        // Handled by the GradientField on its next frame.
+        enum class CloseRequest { None, Ok, Cancel } closeRequest = CloseRequest::None;
+        std::vector<interstice::Gradient> savedPresets;       // "Save preset", for the session
+
         enum class DragTarget { None, Stop } drag = DragTarget::None;
         int           dragStopIndex          = -1;
+        bool          dragOff                = false;   // dragged well below the bar: removed on release
 
         interstice::VisualColorStyleIndex previewGradientStyle = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex stopMarkerColor      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex stopMarkerSelected   = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex stopEdgeColor        = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex stopOutlineColor     = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex stopHaloColor        = interstice::VisualColorStyleIndex::Invalid;
     };
 
     // The gradient editor's state plus swatch styles keyed by swatch ID, with the same

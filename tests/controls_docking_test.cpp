@@ -245,6 +245,76 @@ namespace interstice
             EXPECT_EQ(app.idManager.GetStaticIDCount(), before - 1 - treeIDs);
         }
 
+        // Dock (the torn-off window's title-bar button) returns its panels as tabs to the
+        // leaf they came from, and the emptied window goes away.
+        TEST_F(DockingTest, DockReturnsTheTornOffPanelsToTheirLeaf)
+        {
+            Frame();
+            DockNode* home = layout.root->second.get();
+            auto fw = std::make_unique<FloatingDockWindow>();
+            fw->windowID   = app.idManager.CreateStaticID();
+            fw->home       = &layout;
+            fw->homeLeafID = home->nodeID;
+            const ID floating = app.CreatePanel(fw->layout.panels, "F", IconID::Invalid, [] {}, {}, {}, {});
+            fw->layout.root = MakeLeaf({ floating });
+            FloatingDockWindow* window = fw.get();
+            app.m_floatingDockWindows.push_back(std::move(fw));
+
+            auto frame = [&] { app.Frame([&] { EmitDock(); app.EmitFloatingDockWindows(); }); };
+            frame();
+            ASSERT_TRUE(window->layout.onDock) << "a window with a home gets a Dock button";
+            window->layout.onDock();
+            frame();
+            frame();
+
+            EXPECT_TRUE(app.m_floatingDockWindows.empty());
+            ASSERT_EQ(home->panelIds.size(), 3u);
+            EXPECT_EQ(home->panelIds.back(), floating);
+            EXPECT_EQ(home->selectedTab, 2) << "the returned panel is the one shown";
+            EXPECT_TRUE(layout.panels.contains(floating)) << "the panel moved with it";
+        }
+
+        // Its title bar's close button is the user's close: the window stays closed (and
+        // its panels with it) though the app declares it again the next frame.
+        TEST_F(DockingTest, ClosingATornOffWindowFromItsTitleBarKeepsItClosed)
+        {
+            auto fw = std::make_unique<FloatingDockWindow>();
+            fw->windowID = app.idManager.CreateStaticID();
+            const ID floating = app.CreatePanel(fw->layout.panels, "F", IconID::Invalid, [] {}, {}, {}, {});
+            fw->layout.root = MakeLeaf({ floating });
+            const ID windowID = fw->windowID;
+            app.m_floatingDockWindows.push_back(std::move(fw));
+
+            auto frame = [&] { app.Frame([&] { EmitDock(); app.EmitFloatingDockWindows(); }); };
+            frame();
+            app.Frame([&] { (void)app.windowManager->RequestUserClose(windowID); EmitDock(); app.EmitFloatingDockWindows(); });
+            frame();
+
+            EXPECT_TRUE(app.m_floatingDockWindows.empty());
+        }
+
+        // A torn-off window's tabs are its title bar: the strip between and after the tabs
+        // drags the window, the tabs themselves stay the GUI's.
+        TEST_F(DockingTest, TornOffTabsSitInTheTitleBar)
+        {
+            auto fw = std::make_unique<FloatingDockWindow>();
+            fw->windowID = app.idManager.CreateStaticID();
+            const ID floating = app.CreatePanel(fw->layout.panels, "F", IconID::Invalid, [] {}, {}, {}, {});
+            fw->layout.root = MakeLeaf({ floating });
+            FloatingDockWindow* window = fw.get();
+            app.m_floatingDockWindows.push_back(std::move(fw));
+
+            auto frame = [&] { app.Frame([&] { EmitDock(); app.EmitFloatingDockWindows(); }); };
+            frame();
+            frame();
+            const IntRect strip = app.GetElementRect(window->layout.root->tabBarID);
+            const IntRect tab   = app.GetElementRect(floating);
+            ASSERT_GT(strip.w, tab.w) << "test setup: the strip is wider than its tab";
+
+            EXPECT_EQ(app.TitleBarHitTest(window->windowID, { tab.x + tab.w / 2, tab.y + tab.h / 2 }), WindowHitArea::Client);
+            EXPECT_EQ(app.TitleBarHitTest(window->windowID, { strip.x + strip.w - 4, strip.y + strip.h / 2 }), WindowHitArea::Caption);
+        }
+
         // Closing a docked tab closes its panel for good: onDisable fires and the
         // Panel (and its state) is gone; a new panel can be created later.
         TEST_F(DockingTest, ClosingADockedTabDestroysItsPanel)

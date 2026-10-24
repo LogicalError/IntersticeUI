@@ -216,14 +216,60 @@ namespace interstice
             }
         }
 
+        // A torn-off window's resize grip: two diagonal strokes in the bottom-right corner.
+        void DrawResizeGrip(CustomDrawContext& ctx, const GUITheme& theme, float px)
+        {
+            const IntRect r = ctx.ElementRect();
+            const int right = r.x + r.w - int(3 * px), bottom = r.y + r.h - int(3 * px);
+            const auto at = [&](float x, float y) { return int2{ right - int((12.0f - x) * px), bottom - int((12.0f - y) * px) }; };
+            const LineStyle line{ .colorStyleIndex = theme.lineGrayStyle, .lineWidth = 1.2f * px };
+            ctx.RenderLine(at(11.0f, 5.0f), at(5.0f, 11.0f), line);
+            ctx.RenderLine(at(11.0f, 8.5f), at(8.5f, 11.0f), line);
+        }
+
+        // The start of a torn-off window's title bar: the bar and its grip.
+        void BeginDockTitleBar(GUIApplication& app, ID barID)
+        {
+            app.BeginTitleBar(barID, app.theme.titleBarStyleRef);
+            interstice::Element grip{};
+            grip.id       = app.idManager.AllocateDynamicID("dock_grip");
+            grip.iconID   = app.theme.dragHandleIcon;
+            grip.flags    = ElementFlags::NoInput;
+            grip.styleRef = app.theme.titleBarGripStyleRef;
+            app.RegisterElement(std::move(grip), interstice::LayoutOverride{});
+        }
+
+        // Its end: Dock, then the window buttons (EndTitleBar adds those).
+        void EndDockTitleBar(GUIApplication& app, const interstice::DockingLayout* layout)
+        {
+            if (layout->onDock)
+            {
+                app.Button(app.idManager.AllocateDynamicID("dock_back"), app.theme.dockIcon, "Dock", layout->onDock,
+                           app.theme.titleBarTextButtonStyleRef);
+                app.SetTooltip("Dock back into the main window");
+            }
+            app.EndTitleBar();
+        }
+
         void EmitDockLeaf(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
         {
+            // A torn-off window's only leaf: its tabs go in the title bar, the panel inset under it.
+            const bool inTitleBar = layout->tabsInTitleBar && node == layout->root.get();
+
             interstice::Element leafElem{};
             leafElem.id       = node->nodeID;
-            leafElem.styleRef = app.theme.dockLeafStyleRef;
+            leafElem.styleRef = inTitleBar ? app.theme.dockWindowLeafStyleRef : app.theme.dockLeafStyleRef;
             leafElem.state    = app.guiStateManager.GetCurrentState(node->nodeID);
-            app.RegisterElement(std::move(leafElem), {});
+            const interstice::ElementRef leafRef = app.RegisterElement(std::move(leafElem), {});
             VERIFY(app.elementStorage.BeginChildren());
+            if (inTitleBar)
+            {
+                VERIFY(app.elementStorage.AddCustomDrawAfter(leafRef, [&theme = app.theme, px = app.styleManager.GetUIScale()](CustomDrawContext& ctx)
+                    { DrawResizeGrip(ctx, theme, px); }));
+                (void)app.idManager.PushParent(node->nodeID);
+                BeginDockTitleBar(app, app.idManager.AllocateDynamicID("dock_title_bar"));
+                (void)app.idManager.PopParent();
+            }
 
             auto onReorder = [layout, node](int from, int to) {
                 (void)layout;
@@ -313,6 +359,11 @@ namespace interstice
                 fw->windowID      = app.idManager.CreateStaticID();
                 fw->spawnPosition = mousePos;
                 fw->layout.root   = MakeLeaf({ panelID });
+                // Dock returns it here; torn from another torn-off window, to that one's home.
+                fw->home       = layout;
+                fw->homeLeafID = node->nodeID;
+                for (const auto& other : GUIApplicationInternals::FloatingDockWindows(app))
+                    if (&other->layout == layout) { fw->home = other->home; fw->homeLeafID = other->homeLeafID; }
                 // Move Panel object to the floating layout
                 auto panelIt = layout->panels.find(panelID);
                 if (panelIt != layout->panels.end())
@@ -380,8 +431,10 @@ namespace interstice
             if (app.BeginTabBar(node->tabBarID, &node->selectedTab,
                                 std::move(onReorder), std::move(onClose),
                                 std::move(onDragOut), std::move(dragVisualizer),
-                                app.theme.tabBarStyleRef))
+                                inTitleBar ? app.theme.titleBarTabBarStyleRef : app.theme.tabBarStyleRef))
             {
+                // Between the tabs, the strip drags the window.
+                if (inTitleBar) GUIApplicationInternals::TitleBarCaption(app, node->tabBarID);
                 const int count = static_cast<int>(node->panelIds.size());
                 if (count > 0 && (node->selectedTab < 0 || node->selectedTab >= count))
                     node->selectedTab = std::clamp(node->selectedTab, 0, count - 1);
@@ -433,6 +486,13 @@ namespace interstice
                 }
 
                 app.EndTabBar();
+            }
+            if (inTitleBar)
+            {
+                (void)app.idManager.PushParent(node->nodeID);
+                EndDockTitleBar(app, layout);
+                (void)app.idManager.PopParent();
+                app.BeginArea(app.theme.dockWindowPanelStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
             }
 
             // ----- Content area -----
@@ -491,6 +551,8 @@ namespace interstice
                     app.EndArea();
                 }
             }
+            if (inTitleBar)
+                app.EndArea();
 
             VERIFY(app.elementStorage.EndChildren());
         }
@@ -862,11 +924,60 @@ namespace interstice
         m_floatingDockWindows.erase(m_floatingDockWindows.begin() + (ptrdiff_t)index);
     }
 
+    void GUIApplication::DockFloatingWindow(FloatingDockWindow& fw)
+    {
+        fw.dockRequested = false;
+        // Its home must still be docked this frame (not a closed window's layout).
+        DockingLayout* home = fw.home;
+        if (std::find(m_dockingLayoutsThisFrame.begin(), m_dockingLayoutsThisFrame.end(), home) == m_dockingLayoutsThisFrame.end()
+            || home == &fw.layout || !home->root)
+            return;
+
+        // The leaf it came from, else the first one.
+        DockNode* target = nullptr;
+        auto find = [&](auto& self, DockNode* node) -> void
+        {
+            if (!node || (target && target->nodeID == fw.homeLeafID)) return;
+            if (node->isLeaf)
+            {
+                if (!target || node->nodeID == fw.homeLeafID) target = node;
+                return;
+            }
+            self(self, node->first.get());
+            self(self, node->second.get());
+        };
+        find(find, home->root.get());
+        if (!target) return;
+
+        // Every panel, in order, as tabs there; the last one selected.
+        std::vector<std::pair<DockNode*, ID>> moves;
+        auto collect = [&](auto& self, DockNode* node) -> void
+        {
+            if (!node) return;
+            if (node->isLeaf) { for (ID id : node->panelIds) moves.push_back({ node, id }); return; }
+            self(self, node->first.get());
+            self(self, node->second.get());
+        };
+        collect(collect, fw.layout.root.get());
+        for (auto& [leaf, panelID] : moves)
+        {
+            TransferPanel(panelID, leaf, &fw.layout, home);
+            target->panelIds.push_back(panelID);
+        }
+        if (!moves.empty())
+            target->selectedTab = int(target->panelIds.size()) - 1;
+        CollapseEmptyLeaves(fw.layout.root, &idManager);
+        if (home->hostWindowID != ID::Invalid())
+            windowManager->BringToFront(home->hostWindowID);
+    }
+
     void GUIApplication::EmitFloatingDockWindows()
     {
         for (size_t i = 0; i < m_floatingDockWindows.size(); )
         {
             auto& fw = *m_floatingDockWindows[i];
+            if (fw.dockRequested)
+                DockFloatingWindow(fw);
 
             // Check if layout is empty (all panels were dragged out)
             bool isEmpty = !fw.layout.root
@@ -902,10 +1013,24 @@ namespace interstice
             }
             if (BeginWindow(fw.windowID, title,
                             std::move(constraints), theme.dockWindowStyleRef,
-                            ElementFlags::WindowUserControlled))
+                            ElementFlags::WindowUserControlled | ElementFlags::WindowCustomTitleBar | ElementFlags::WindowCloseWithParent))
             {
+                // Custom chrome: a lone leaf puts its tabs in the title bar; a split gets a bar
+                // with the window's name over it.
+                fw.layout.tabsInTitleBar = fw.layout.root && fw.layout.root->isLeaf;
+                fw.layout.onDock = fw.home ? std::function<void()>([&fw] { fw.dockRequested = true; }) : std::function<void()>{};
                 interstice::ID containerID = idManager.AllocateDynamicID("floating_dock_container");
-                BeginDockingContainer(containerID, &fw.layout);
+                if (fw.layout.tabsInTitleBar)
+                    BeginDockingContainer(containerID, &fw.layout);
+                else
+                {
+                    (void)idManager.PushParent(fw.windowID);
+                    BeginDockTitleBar(*this, idManager.AllocateDynamicID("dock_title_bar"));
+                    Text(idManager.AllocateDynamicID("dock_title"), title, theme.titleBarTitleStyleRef, LayoutOverride{}.FlexGrow(1));
+                    EndDockTitleBar(*this, &fw.layout);
+                    (void)idManager.PopParent();
+                    BeginDockingContainer(containerID, &fw.layout, theme.dockWindowBodyStyleRef);
+                }
                 EndDockingContainer();
                 EndWindow();
                 ++i;

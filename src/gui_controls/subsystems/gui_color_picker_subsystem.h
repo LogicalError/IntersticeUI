@@ -36,18 +36,28 @@ namespace interstice
         float snapComp[3] = { 0, 0, 0 };
         bool  slidersInitialized = false;
 
-        interstice::VisualColorStyleIndex svQuadColor      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex hueRing          = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex markerColor      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex whiteColor       = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex svIndicatorColor = interstice::VisualColorStyleIndex::Invalid;
+        // Channel values shown 0-255 (and hue in degrees, S/V/L in percent), or 0-1.
+        bool byteRange = true;
+        std::string context;   // what's being edited (the field's label), after the title
 
-        enum class WheelDragTarget { None, Ring, Square } wheelDrag = WheelDragTarget::None;
+        // OK keeps the color (and adds it to the recent ones), Cancel and the close button
+        // restore the one the picker opened with. Handled by the ColorField on its next frame.
+        enum class CloseRequest { None, Ok, Cancel } closeRequest = CloseRequest::None;
+        std::vector<interstice::color4f> recent;   // newest first
+
+        interstice::VisualColorStyleIndex svQuadColor   = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex hueStrip      = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex alphaStrip    = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex hueColor      = interstice::VisualColorStyleIndex::Invalid; // the pure hue, in its handle
+        interstice::VisualColorStyleIndex whiteColor    = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex outlineColor  = interstice::VisualColorStyleIndex::Invalid; // around cursors and handles
+        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid; // the color, with its alpha
+        interstice::VisualColorStyleIndex originalStyle = interstice::VisualColorStyleIndex::Invalid;
+
+        enum class DragTarget { None, Square, Hue, Alpha } drag = DragTarget::None;
 
         static constexpr int kNumGradientSliders = 4;
         interstice::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};
-        interstice::VisualColorStyleIndex triangleStyle = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid;
 
         struct PaletteSwatch { interstice::color4f color {}; };
         std::vector<PaletteSwatch> palette = {

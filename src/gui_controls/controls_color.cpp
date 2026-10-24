@@ -77,36 +77,6 @@ namespace
             sm.UpdateColorStyle(idx, cs);
     }
 
-    // Create a ring gradient for RenderCircle. sampleFn maps a hue angle [0,1)
-    // to an sRGB color. RenderCircle maps t=0→1 starting at 3 o'clock going CW.
-    // Our convention is hue=0 at 12 o'clock, so we offset by 0.25.
-    template <typename Fn>
-    void SetRingGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx, Fn&& sampleFn, int kStops = 7)
-    {
-        interstice::Gradient g;
-        g.type = interstice::GradientType::Linear;
-        for (int i = 0; i < kStops; i++)
-        {
-            float t = float(i) / float(kStops - 1);
-            float hue = std::fmod(t + 0.25f, 1.0f);
-            g.AddStop(sampleFn(hue), t);
-        }
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
-            idx = sm.CreateColorStyle(cs);
-        else
-            sm.UpdateColorStyle(idx, cs);
-    }
-
-    // HSV hue ring
-    void SetHueRingGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx)
-    {
-        SetRingGradient(sm, idx, [](float hue) -> interstice::color4f {
-            auto [r, g, b] = interstice::ColorConvert::HSVtoRGB(hue, 1.0f, 1.0f);
-            return { r, g, b, 1.0f };
-        });
-    }
-
     // Create a 4-corner InterpolatedBox color style.
     void SetQuadColorStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
                            interstice::color4f c0, interstice::color4f c1, interstice::color4f c2, interstice::color4f c3)
@@ -145,762 +115,718 @@ namespace interstice
 {
 
     // ---------------------------------------------------------------------------
-    // Color picker popup — emitted when ColorPickerSubsystem state's triggerID matches
+    // Color picker dialog: emitted while ColorPickerSubsystem's triggerID is open.
+    //   left:  saturation/value square, hue strip, alpha strip
+    //   right: new/original preview, color space + range, channel sliders, hex, HDR
+    //   below: swatches and recent colors; footer with Cancel / OK
     // ---------------------------------------------------------------------------
 
-    // ---- Color wheel geometry (shared with event handler), at the UI scale ----
-    struct WheelGeometry
+    namespace
     {
-        int padding, size, outerRadius, innerRadius, squareSide, squareHalf, center;
-    };
-    static WheelGeometry MakeWheelGeometry(const StyleManager& sm)
-    {
-        WheelGeometry g{};
-        g.padding     = sm.Px(4);
-        g.size        = sm.Px(220);
-        g.outerRadius = g.size / 2;
-        g.innerRadius = g.outerRadius - sm.Px(18);   // ring thickness
-        // SV square inscribed in the inner circle (side = r*sqrt(2)), a hair under the limit.
-        g.squareSide  = sm.Px(116);
-        g.squareHalf  = g.squareSide / 2;
-        g.center      = g.size / 2 + g.padding;
-        return g;
+        constexpr float kPi = 3.14159265f;
+
+        // Hue position [0,1] → color, for the hue strip of each space.
+        color4f SpaceHueColor(ColorSpace space, float hue)
+        {
+            switch (space)
+            {
+                case ColorSpace::Lab:
+                {
+                    const float angle = hue * 2.0f * kPi;
+                    auto [r, g, b] = ColorConvert::LabToRGB(65.0f, 80.0f * std::cos(angle), 80.0f * std::sin(angle));
+                    return { r, g, b, 1.0f };
+                }
+                case ColorSpace::Oklab:
+                {
+                    const float angle = hue * 2.0f * kPi;
+                    auto [r, g, b] = ColorConvert::OklabToRGB(0.7f, 0.2f * std::cos(angle), 0.2f * std::sin(angle));
+                    return { r, g, b, 1.0f };
+                }
+                default:
+                {
+                    auto [r, g, b] = ColorConvert::HSVtoRGB(hue, 1.0f, 1.0f);
+                    return { r, g, b, 1.0f };
+                }
+            }
+        }
+
+        // A top-to-bottom gradient sampled at N points.
+        template <typename Fn>
+        void SetVerticalGradient(StyleManager& sm, VisualColorStyleIndex& idx, Fn&& sampleFn, int numStops)
+        {
+            Gradient g;
+            g.type = GradientType::Linear;
+            for (int i = 0; i < numStops; i++)
+            {
+                const float t = float(i) / float(numStops - 1);
+                g.AddStop(sampleFn(t), t);
+            }
+            const ColorStyle cs = ColorStyle::Create(g, ColorType::LinearGradient);
+            if (idx == VisualColorStyleIndex::Invalid) idx = sm.CreateColorStyle(cs);
+            else                                       sm.UpdateColorStyle(idx, cs);
+        }
+
+        // Rebuilds h/s/v from a hue position on the strip, keeping the space's other axes.
+        void ApplyStripHue(ColorSpace space, float hue01, float& h, float& s, float& v)
+        {
+            switch (space)
+            {
+                default:
+                    h = std::clamp(hue01, 0.0f, 1.0f);
+                    break;
+                case ColorSpace::HSL:
+                {
+                    auto [cr, cg, cb] = ColorConvert::HSVtoRGB(h, s, v);
+                    float oldH, oldS, oldL;
+                    ColorConvert::RGBtoHSL(cr, cg, cb, oldH, oldS, oldL);
+                    auto [nr, ng, nb] = ColorConvert::HSLtoRGB(hue01, oldS, oldL);
+                    ColorConvert::RGBtoHSV(nr, ng, nb, h, s, v);
+                    break;
+                }
+                case ColorSpace::Lab:
+                case ColorSpace::Oklab:
+                {
+                    auto [cr, cg, cb] = ColorConvert::HSVtoRGB(h, s, v);
+                    float L, a, b;
+                    if (space == ColorSpace::Lab) ColorConvert::RGBtoLab(cr, cg, cb, L, a, b);
+                    else                          ColorConvert::RGBtoOklab(cr, cg, cb, L, a, b);
+                    const float chroma = std::sqrt(a * a + b * b);
+                    const float angle  = hue01 * 2.0f * kPi;
+                    auto [nr, ng, nb] = (space == ColorSpace::Lab)
+                        ? ColorConvert::LabToRGB(L, chroma * std::cos(angle), chroma * std::sin(angle))
+                        : ColorConvert::OklabToRGB(L, chroma * std::cos(angle), chroma * std::sin(angle));
+                    ColorConvert::RGBtoHSV(nr, ng, nb, h, s, v);
+                    break;
+                }
+            }
+        }
+
+        // Rebuilds h/s/v from a point on the square (sx right, sy down), keeping the hue.
+        void ApplySquare(ColorSpace space, float sx, float sy, float& h, float& s, float& v)
+        {
+            sx = std::clamp(sx, 0.0f, 1.0f);
+            sy = std::clamp(sy, 0.0f, 1.0f);
+            switch (space)
+            {
+                default:
+                    s = sx;
+                    v = 1.0f - sy;
+                    break;
+                case ColorSpace::HSL:
+                {
+                    auto [cr, cg, cb] = ColorConvert::HSVtoRGB(h, s, v);
+                    float oldH, oldS, oldL;
+                    ColorConvert::RGBtoHSL(cr, cg, cb, oldH, oldS, oldL);
+                    auto [nr, ng, nb] = ColorConvert::HSLtoRGB(oldH, sx, 1.0f - sy);
+                    ColorConvert::RGBtoHSV(nr, ng, nb, h, s, v);
+                    break;
+                }
+                case ColorSpace::Lab:
+                case ColorSpace::Oklab:
+                {
+                    auto [cr, cg, cb] = ColorConvert::HSVtoRGB(h, s, v);
+                    float L, a, b;
+                    if (space == ColorSpace::Lab) ColorConvert::RGBtoLab(cr, cg, cb, L, a, b);
+                    else                          ColorConvert::RGBtoOklab(cr, cg, cb, L, a, b);
+                    const float angle = std::atan2(b, a);
+                    auto [nr, ng, nb] = (space == ColorSpace::Lab)
+                        ? ColorConvert::LabToRGB((1.0f - sy) * 100.0f, sx * 128.0f * std::cos(angle), sx * 128.0f * std::sin(angle))
+                        : ColorConvert::OklabToRGB(1.0f - sy, sx * 0.4f * std::cos(angle), sx * 0.4f * std::sin(angle));
+                    ColorConvert::RGBtoHSV(nr, ng, nb, h, s, v);
+                    break;
+                }
+            }
+        }
+
+        // A cursor ring with a thin dark outline, as on the square.
+        void DrawRing(const CustomDrawContext& ctx, int2 center, float radius, float width,
+                      VisualColorStyleIndex ring, VisualColorStyleIndex outline, float outlineWidth)
+        {
+            ctx.RenderCircle(center, radius + width * 0.5f + outlineWidth * 0.5f, LineStyle{ .colorStyleIndex = outline, .lineWidth = outlineWidth });
+            ctx.RenderCircle(center, radius, LineStyle{ .colorStyleIndex = ring, .lineWidth = width });
+        }
+
+        // A filled disc (a circle stroked as wide as it is), which stays round at small sizes.
+        void DrawDisc(const CustomDrawContext& ctx, int2 center, float radius, VisualColorStyleIndex color)
+        {
+            ctx.RenderCircle(center, radius * 0.5f, LineStyle{ .colorStyleIndex = color, .lineWidth = radius });
+        }
     }
 
     void GUIApplication::EmitColorPicker(color4f& outColor, bool allowHDR)
     {
         auto& cp = m_colorPickerSub->State();
 
-        // ---- Resolve pending slider modifications FIRST ----
-        // Slider handlers edit cp.comp[] after the previous frame; convert back to HSV
-        // before updating gradient styles to avoid a 1-frame lag.
-        if (cp.slidersInitialized)
+        // ---- Resolve slider edits from last frame's input first ----
+        // Channel handlers edit cp.comp[]; convert back to HSV before rebuilding the styles.
+        if (cp.slidersInitialized
+            && (cp.comp[0] != cp.snapComp[0] || cp.comp[1] != cp.snapComp[1] || cp.comp[2] != cp.snapComp[2]))
         {
-            bool compModified = (cp.comp[0] != cp.snapComp[0] ||
-                                    cp.comp[1] != cp.snapComp[1] ||
-                                    cp.comp[2] != cp.snapComp[2]);
-            if (compModified)
+            switch (cp.activeSpace)
             {
-                switch (cp.activeSpace)
+                case ColorSpace::HSV:
+                    cp.h = std::clamp(cp.comp[0], 0.f, 1.f);
+                    cp.s = std::clamp(cp.comp[1], 0.f, 1.f);
+                    cp.v = std::clamp(cp.comp[2], 0.f, 1.f);
+                    break;
+                case ColorSpace::HSL:
                 {
-                    case ColorSpace::HSV:
-                        cp.h = std::clamp(cp.comp[0], 0.f, 1.f);
-                        cp.s = std::clamp(cp.comp[1], 0.f, 1.f);
-                        cp.v = std::clamp(cp.comp[2], 0.f, 1.f);
-                        break;
-                    case ColorSpace::HSL:
-                    {
-                        auto [r, g, b] = ColorConvert::HSLtoRGB(std::clamp(cp.comp[0], 0.f, 1.f),
-                                                    std::clamp(cp.comp[1], 0.f, 1.f),
-                                                    std::clamp(cp.comp[2], 0.f, 1.f));
-                        ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
-                        break;
-                    }
-                    case ColorSpace::sRGB:
-                        ColorConvert::RGBtoHSV(std::clamp(cp.comp[0], 0.f, 1.f),
-                                    std::clamp(cp.comp[1], 0.f, 1.f),
-                                    std::clamp(cp.comp[2], 0.f, 1.f),
-                                    cp.h, cp.s, cp.v);
-                        break;
-                    case ColorSpace::LinearRGB:
-                    {
-                        float sr = ColorConvert::LinearToSRGB(std::clamp(cp.comp[0], 0.f, 1.f));
-                        float sg = ColorConvert::LinearToSRGB(std::clamp(cp.comp[1], 0.f, 1.f));
-                        float sb = ColorConvert::LinearToSRGB(std::clamp(cp.comp[2], 0.f, 1.f));
-                        ColorConvert::RGBtoHSV(sr, sg, sb, cp.h, cp.s, cp.v);
-                        break;
-                    }
-                    case ColorSpace::Lab:
-                    {
-                        auto [r, g, b] = ColorConvert::LabToRGB(cp.comp[0], cp.comp[1], cp.comp[2]);
-                        ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
-                        break;
-                    }
-                    case ColorSpace::Oklab:
-                    {
-                        auto [r, g, b] = ColorConvert::OklabToRGB(cp.comp[0], cp.comp[1], cp.comp[2]);
-                        ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
-                        break;
-                    }
+                    auto [r, g, b] = ColorConvert::HSLtoRGB(std::clamp(cp.comp[0], 0.f, 1.f), std::clamp(cp.comp[1], 0.f, 1.f), std::clamp(cp.comp[2], 0.f, 1.f));
+                    ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
+                    break;
+                }
+                case ColorSpace::sRGB:
+                    ColorConvert::RGBtoHSV(std::clamp(cp.comp[0], 0.f, 1.f), std::clamp(cp.comp[1], 0.f, 1.f), std::clamp(cp.comp[2], 0.f, 1.f),
+                                           cp.h, cp.s, cp.v);
+                    break;
+                case ColorSpace::LinearRGB:
+                    ColorConvert::RGBtoHSV(ColorConvert::LinearToSRGB(std::clamp(cp.comp[0], 0.f, 1.f)),
+                                           ColorConvert::LinearToSRGB(std::clamp(cp.comp[1], 0.f, 1.f)),
+                                           ColorConvert::LinearToSRGB(std::clamp(cp.comp[2], 0.f, 1.f)), cp.h, cp.s, cp.v);
+                    break;
+                case ColorSpace::Lab:
+                {
+                    auto [r, g, b] = ColorConvert::LabToRGB(cp.comp[0], cp.comp[1], cp.comp[2]);
+                    ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
+                    break;
+                }
+                case ColorSpace::Oklab:
+                {
+                    auto [r, g, b] = ColorConvert::OklabToRGB(cp.comp[0], cp.comp[1], cp.comp[2]);
+                    ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
+                    break;
                 }
             }
         }
 
-
-        // ---- Compute per-space wheel state ----
-        // wheelHue [0,1]: angular position on the ring (0 = top / 12 o'clock, CW)
-        // squareX  [0,1]: horizontal axis of the inner square
-        // squareY  [0,1]: vertical axis (0 = top, 1 = bottom; display inverted where needed)
-        constexpr float kPi = 3.14159265f;
-        auto [curR_w, curG_w, curB_w] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
-        float wheelHue = cp.h;
-        float squareX  = cp.s;
-        float squareY  = cp.v;   // 1 = top of square visually (bright), 0 = bottom (dark)
-
+        // ---- The square's axes and the strip's hue in the active space ----
+        //   stripHue [0,1] top to bottom; squareX [0,1] left to right; squareY [0,1] bottom to top.
+        auto [curR, curG, curB] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
+        float stripHue = cp.h, squareX = cp.s, squareY = cp.v;
         switch (cp.activeSpace)
         {
-            default:
-            case ColorSpace::HSV:
-            case ColorSpace::sRGB:
-            case ColorSpace::LinearRGB:
-                wheelHue = cp.h;
-                squareX  = cp.s;
-                squareY  = cp.v;
-                break;
+            default: break;
             case ColorSpace::HSL:
             {
-                float hsl_h, hsl_s, hsl_l;
-                ColorConvert::RGBtoHSL(curR_w, curG_w, curB_w, hsl_h, hsl_s, hsl_l);
-                wheelHue = hsl_h;
-                squareX  = hsl_s;
-                squareY  = hsl_l;     // 1 = white (top), 0 = black (bottom)
+                float hh, ss, ll;
+                ColorConvert::RGBtoHSL(curR, curG, curB, hh, ss, ll);
+                stripHue = hh; squareX = ss; squareY = ll;
                 break;
             }
             case ColorSpace::Lab:
-            {
-                float L, a, b;
-                ColorConvert::RGBtoLab(curR_w, curG_w, curB_w, L, a, b);
-                wheelHue = std::atan2(b, a) / (2.0f * kPi);
-                if (wheelHue < 0) wheelHue += 1.0f;
-                float chroma = std::sqrt(a * a + b * b);
-                squareX = std::clamp(chroma / 128.0f, 0.0f, 1.0f);  // normalized chroma
-                squareY = std::clamp(L / 100.0f, 0.0f, 1.0f);       // normalized L
-                break;
-            }
             case ColorSpace::Oklab:
             {
                 float L, a, b;
-                ColorConvert::RGBtoOklab(curR_w, curG_w, curB_w, L, a, b);
-                wheelHue = std::atan2(b, a) / (2.0f * kPi);
-                if (wheelHue < 0) wheelHue += 1.0f;
-                float chroma = std::sqrt(a * a + b * b);
-                squareX = std::clamp(chroma / 0.4f, 0.0f, 1.0f);    // normalized chroma
-                squareY = std::clamp(L, 0.0f, 1.0f);                 // L is already 0-1
+                if (cp.activeSpace == ColorSpace::Lab) ColorConvert::RGBtoLab(curR, curG, curB, L, a, b);
+                else                                   ColorConvert::RGBtoOklab(curR, curG, curB, L, a, b);
+                stripHue = std::atan2(b, a) / (2.0f * kPi);
+                if (stripHue < 0) stripHue += 1.0f;
+                const float chroma = std::sqrt(a * a + b * b);
+                squareX = std::clamp(chroma / (cp.activeSpace == ColorSpace::Lab ? 128.0f : 0.4f), 0.0f, 1.0f);
+                squareY = std::clamp(cp.activeSpace == ColorSpace::Lab ? L / 100.0f : L, 0.0f, 1.0f);
                 break;
             }
         }
 
-        // ---- Update inner square color styles (4-corner InterpolatedBox) ----
+        // ---- Color styles: square corners, strips, preview, cursors ----
         {
-            // TL=c0, TR=c1, BR=c2, BL=c3.  X axis = squareX, Y axis = squareY (top→bottom).
-            auto cornerColor = [&](float sx, float sy) -> color4f {
+            auto corner = [&](float sx, float sy) -> color4f {
                 switch (cp.activeSpace)
                 {
+                    case ColorSpace::HSL:
+                    {
+                        auto [r, g, b] = ColorConvert::HSLtoRGB(stripHue, sx, 1.0f - sy);
+                        return { r, g, b, 1.0f };
+                    }
+                    case ColorSpace::Lab:
+                    {
+                        const float angle = stripHue * 2.0f * kPi;
+                        auto [r, g, b] = ColorConvert::LabToRGB((1.0f - sy) * 100.0f, sx * 128.0f * std::cos(angle), sx * 128.0f * std::sin(angle));
+                        return { r, g, b, 1.0f };
+                    }
+                    case ColorSpace::Oklab:
+                    {
+                        const float angle = stripHue * 2.0f * kPi;
+                        auto [r, g, b] = ColorConvert::OklabToRGB(1.0f - sy, sx * 0.4f * std::cos(angle), sx * 0.4f * std::sin(angle));
+                        return { r, g, b, 1.0f };
+                    }
                     default:
-                    case ColorSpace::HSV:
-                    case ColorSpace::sRGB:
-                    case ColorSpace::LinearRGB:
                     {
-                        auto [r, g, b] = ColorConvert::HSVtoRGB(wheelHue, sx, 1.0f - sy); // sy=0 → V=1 (top=bright)
-                        return { r, g, b, 1.0f };
-                    }
-                    case ColorSpace::HSL:
-                    {
-                        auto [r, g, b] = ColorConvert::HSLtoRGB(wheelHue, sx, 1.0f - sy); // sy=0 → L=1 (top=white)
-                        return { r, g, b, 1.0f };
-                    }
-                    case ColorSpace::Lab:
-                    {
-                        float angle = wheelHue * 2.0f * kPi;
-                        float chroma = sx * 128.0f;
-                        float L = (1.0f - sy) * 100.0f;  // sy=0 → L=100 (top=light)
-                        auto [r, g, b] = ColorConvert::LabToRGB(L, chroma * std::cos(angle), chroma * std::sin(angle));
-                        return { r, g, b, 1.0f };
-                    }
-                    case ColorSpace::Oklab:
-                    {
-                        float angle = wheelHue * 2.0f * kPi;
-                        float chroma = sx * 0.4f;
-                        float L = 1.0f - sy;              // sy=0 → L=1 (top=light)
-                        auto [r, g, b] = ColorConvert::OklabToRGB(L, chroma * std::cos(angle), chroma * std::sin(angle));
+                        auto [r, g, b] = ColorConvert::HSVtoRGB(stripHue, sx, 1.0f - sy);
                         return { r, g, b, 1.0f };
                     }
                 }
             };
-            SetQuadColorStyle(styleManager, cp.svQuadColor,
-                cornerColor(0, 0), cornerColor(1, 0),   // TL, TR
-                cornerColor(1, 1), cornerColor(0, 1));   // BR, BL
+            SetQuadColorStyle(styleManager, cp.svQuadColor, corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1));
         }
-
-        // ---- Update hue ring gradient ----
-        switch (cp.activeSpace)
-        {
-            default:
-            case ColorSpace::HSV:
-            case ColorSpace::HSL:
-            case ColorSpace::sRGB:
-            case ColorSpace::LinearRGB:
-                // HSV and HSL share the same hue circle; RGB tabs use HSV wheel
-                SetHueRingGradient(styleManager, cp.hueRing);
-                break;
-            case ColorSpace::Lab:
-                SetRingGradient(styleManager, cp.hueRing, [](float hue) -> color4f {
-                    float angle = hue * 2.0f * kPi;
-                    auto [r, g, b] = ColorConvert::LabToRGB(65.0f, 80.0f * std::cos(angle), 80.0f * std::sin(angle));
-                    return { r, g, b, 1.0f };
-                }, 8);
-                break;
-            case ColorSpace::Oklab:
-                SetRingGradient(styleManager, cp.hueRing, [](float hue) -> color4f {
-                    float angle = hue * 2.0f * kPi;
-                    auto [r, g, b] = ColorConvert::OklabToRGB(0.7f, 0.2f * std::cos(angle), 0.2f * std::sin(angle));
-                    return { r, g, b, 1.0f };
-                }, 8);
-                break;
-        }
-
-        // Dark border for the outer ring edge.
-        SetColorStyle(styleManager, cp.markerColor, { 0.0f, 0.0f, 0.0f, 1.0f });
-        // White for hue indicator circle.
+        const ColorSpace space = cp.activeSpace;
+        SetVerticalGradient(styleManager, cp.hueStrip, [space](float t) { return SpaceHueColor(space, t); }, Gradient::kMaxStops);
+        SetVerticalGradient(styleManager, cp.alphaStrip, [&](float t) { return color4f{ curR, curG, curB, 1.0f - t }; }, 2);
+        SetColorStyle(styleManager, cp.hueColor, SpaceHueColor(space, stripHue));
         SetColorStyle(styleManager, cp.whiteColor, { 1.0f, 1.0f, 1.0f, 1.0f });
-        // Square indicator: contrasting with vertical position (light at bottom, dark at top)
+        SetColorStyle(styleManager, cp.outlineColor, { 0.0f, 0.0f, 0.0f, 0.5f });
+        SetColorStyle(styleManager, cp.newColor, { curR, curG, curB, cp.a });
+        SetColorStyle(styleManager, cp.originalStyle, { std::clamp(cp.originalColor.r, 0.f, 1.f), std::clamp(cp.originalColor.g, 0.f, 1.f),
+                                                        std::clamp(cp.originalColor.b, 0.f, 1.f), cp.originalColor.a });
+
+        const ColorSwatchLook look = SwatchLook();
+        const auto requestClose = [this](ColorPickerState::CloseRequest request) {
+            return [this, request]() { m_colorPickerSub->State().closeRequest = request; };
+        };
+
+        // ---- Header: title and close ----
+        // The header is the dialog's title bar: it drags the window.
+        BeginTitleBar(idManager.AllocateDynamicID("cp_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
+        Text(idManager.AllocateDynamicID("cp_title"), "Color", theme.dialogTitleStyleRef);
+        Text(idManager.AllocateDynamicID("cp_context"), cp.context, theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
+        Button(idManager.AllocateDynamicID("cp_close"), theme.tabCloseIcon, {}, requestClose(ColorPickerState::CloseRequest::Cancel),
+               theme.dialogCloseStyleRef);
+        SetTooltip("Close without changing the color");
+        EndTitleBar();
+
+        BeginHorizontal(idManager.AllocateDynamicID("cp_body"), theme.colorPickerBodyStyleRef, LayoutOverride{}.NoShrink());
+
+        // ---- Left: the square and the strips ----
+        BeginHorizontal(idManager.AllocateDynamicID("cp_planes"), theme.colorPickerPlanesStyleRef, LayoutOverride{}.NoShrink());
         {
-            float lum = squareY;   // squareY=0 at top (bright) → dark indicator; squareY=1 at bottom (dark) → light indicator
-            SetColorStyle(styleManager, cp.svIndicatorColor, { lum, lum, lum, 1.0f });
-        }
-
-        // ---- Update preview swatch colors ----
-        SetColorStyle(styleManager, cp.newColor, { curR_w, curG_w, curB_w, 1.0f });
-
-        // ---- Color wheel (hue ring + inscribed SV square) ----
-        ID wheelID = idManager.AllocateDynamicID("color_picker_wheel");
-        const WheelGeometry wg = MakeWheelGeometry(styleManager);
-        {
-            auto& dragTarget = cp.wheelDrag;
-            float* hp = &cp.h;
-            float* sp = &cp.s;
-            float* vp = &cp.v;
-            ColorSpace wheelSpace = cp.activeSpace;
-
-            Element wheel {};
-            wheel.id       = wheelID;
-            wheel.styleRef = theme.colorPickerWheelStyleRef;
-            wheel.state    = guiStateManager.GetCurrentState(wheelID);
-            wheel.eventHandler = [this, wg, wheelID, hp, sp, vp, wheelSpace, &dragTarget](ElementEvent&& event) -> bool
-            {
-                auto localPos = [&](float& lx, float& ly) -> bool
-                {
-                    if (!event.rect) return false;
-                    auto& r = event.rect->rect;
-                    if (r.w <= 0 || r.h <= 0) return false;
-                    const int2 c = event.LocalCursor(elementStorage);
-                    lx = float(c.x - r.x);
-                    ly = float(c.y - r.y);
-                    return true;
-                };
-
-                // Convert a screen angle [0,1) to canonical h/s/v depending on the active space.
-                // For HSV/HSL/RGB the angle IS the hue; for Lab/Oklab we must rebuild the full color.
-                auto applyRing = [&](float lx, float ly)
-                {
-                    float dx = lx - float(wg.center);
-                    float dy = ly - float(wg.center);
-                    float angle01 = std::atan2(dx, -dy) / (2.0f * kPi);
-                    if (angle01 < 0) angle01 += 1.0f;
-
-                    switch (wheelSpace)
+            // One handler for the three: a press picks the target, the drag follows it.
+            auto planeHandler = [this](ColorPickerState::DragTarget target, ID id) {
+                return [this, target, id](ElementEvent&& event) -> bool {
+                    auto& cp = m_colorPickerSub->State();
+                    auto apply = [&]() {
+                        if (!event.rect || event.rect->rect.w <= 0 || event.rect->rect.h <= 0) return;
+                        const IntRect& r = event.rect->rect;
+                        const int2 c = event.LocalCursor(elementStorage);
+                        const float fx = float(c.x - r.x) / float(r.w);
+                        const float fy = std::clamp(float(c.y - r.y) / float(r.h), 0.0f, 1.0f);
+                        switch (cp.drag)
+                        {
+                            case ColorPickerState::DragTarget::Square: ApplySquare(cp.activeSpace, fx, fy, cp.h, cp.s, cp.v); break;
+                            case ColorPickerState::DragTarget::Hue:    ApplyStripHue(cp.activeSpace, fy, cp.h, cp.s, cp.v);  break;
+                            case ColorPickerState::DragTarget::Alpha:  cp.a = 1.0f - fy; break;
+                            default: break;
+                        }
+                    };
+                    switch (event.type)
                     {
-                        default:
-                        case ColorSpace::HSV:
-                        case ColorSpace::sRGB:
-                        case ColorSpace::LinearRGB:
-                            *hp = std::clamp(angle01, 0.0f, 1.0f);
-                            break;
-                        case ColorSpace::HSL:
-                        {
-                            // HSL hue = HSV hue for saturated colors, but we need to
-                            // preserve the current S,L while changing hue.
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float oldH, oldS, oldL;
-                            ColorConvert::RGBtoHSL(cr, cg, cb, oldH, oldS, oldL);
-                            auto [nr, ng, nb] = ColorConvert::HSLtoRGB(angle01, oldS, oldL);
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                        case ColorSpace::Lab:
-                        {
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float L, a, b;
-                            ColorConvert::RGBtoLab(cr, cg, cb, L, a, b);
-                            float chroma = std::sqrt(a * a + b * b);
-                            float newAngle = angle01 * 2.0f * kPi;
-                            auto [nr, ng, nb] = ColorConvert::LabToRGB(L, chroma * std::cos(newAngle), chroma * std::sin(newAngle));
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                        case ColorSpace::Oklab:
-                        {
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float L, a, b;
-                            ColorConvert::RGBtoOklab(cr, cg, cb, L, a, b);
-                            float chroma = std::sqrt(a * a + b * b);
-                            float newAngle = angle01 * 2.0f * kPi;
-                            auto [nr, ng, nb] = ColorConvert::OklabToRGB(L, chroma * std::cos(newAngle), chroma * std::sin(newAngle));
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                    }
-                };
-
-                auto applySquare = [&](float lx, float ly)
-                {
-                    float sx = std::clamp((lx - float(wg.center - wg.squareHalf)) / float(wg.squareSide), 0.0f, 1.0f);
-                    float sy = std::clamp((ly - float(wg.center - wg.squareHalf)) / float(wg.squareSide), 0.0f, 1.0f);
-
-                    switch (wheelSpace)
-                    {
-                        default:
-                        case ColorSpace::HSV:
-                        case ColorSpace::sRGB:
-                        case ColorSpace::LinearRGB:
-                            *sp = sx;
-                            *vp = 1.0f - sy;
-                            break;
-                        case ColorSpace::HSL:
-                        {
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float oldH, oldS, oldL;
-                            ColorConvert::RGBtoHSL(cr, cg, cb, oldH, oldS, oldL);
-                            auto [nr, ng, nb] = ColorConvert::HSLtoRGB(oldH, sx, 1.0f - sy);
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                        case ColorSpace::Lab:
-                        {
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float oldL, oldA, oldB;
-                            ColorConvert::RGBtoLab(cr, cg, cb, oldL, oldA, oldB);
-                            float hueAngle = std::atan2(oldB, oldA);
-                            float chroma = sx * 128.0f;
-                            float L = (1.0f - sy) * 100.0f;
-                            auto [nr, ng, nb] = ColorConvert::LabToRGB(L, chroma * std::cos(hueAngle), chroma * std::sin(hueAngle));
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                        case ColorSpace::Oklab:
-                        {
-                            auto [cr, cg, cb] = ColorConvert::HSVtoRGB(*hp, *sp, *vp);
-                            float oldL, oldA, oldB;
-                            ColorConvert::RGBtoOklab(cr, cg, cb, oldL, oldA, oldB);
-                            float hueAngle = std::atan2(oldB, oldA);
-                            float chroma = sx * 0.4f;
-                            float L = 1.0f - sy;
-                            auto [nr, ng, nb] = ColorConvert::OklabToRGB(L, chroma * std::cos(hueAngle), chroma * std::sin(hueAngle));
-                            ColorConvert::RGBtoHSV(nr, ng, nb, *hp, *sp, *vp);
-                            break;
-                        }
-                    }
-                };
-
-                switch (event.type)
-                {
-                    case EventType::MouseDown:
-                    {
-                        if (!event.state.LeftPressed()) break;
-                        float lx, ly;
-                        if (!localPos(lx, ly)) break;
-                        float dx = lx - float(wg.center);
-                        float dy = ly - float(wg.center);
-                        float dist = std::sqrt(dx * dx + dy * dy);
-
-                        if (std::abs(dx) <= float(wg.squareHalf) && std::abs(dy) <= float(wg.squareHalf))
-                        {
-                            dragTarget = ColorPickerState::WheelDragTarget::Square;
-                            guiStateManager.Interaction().SetCaptureID(wheelID);
-                            applySquare(lx, ly);
+                        case EventType::MouseDown:
+                            if (!event.state.LeftPressed()) break;
+                            cp.drag = target;
+                            guiStateManager.Interaction().SetCaptureID(id);
+                            apply();
                             return true;
-                        }
-                        if (dist <= float(wg.outerRadius) + styleManager.Px(1.0f) && dist >= float(wg.innerRadius) - styleManager.Px(4.0f))
-                        {
-                            dragTarget = ColorPickerState::WheelDragTarget::Ring;
-                            guiStateManager.Interaction().SetCaptureID(wheelID);
-                            applyRing(lx, ly);
+                        case EventType::MouseMove:
+                            if (cp.drag != target || !event.state.LeftDown()) break;
+                            apply();
                             return true;
-                        }
-                        break;
+                        case EventType::MouseUp:
+                            if (cp.drag != target) break;
+                            cp.drag = ColorPickerState::DragTarget::None;
+                            guiStateManager.Interaction().ReleaseCaptureID();
+                            return true;
+                        default: break;
                     }
-                    case EventType::MouseMove:
-                    {
-                        if (!event.state.LeftDown()) break;
-                        if (dragTarget == ColorPickerState::WheelDragTarget::None) break;
-                        float lx, ly;
-                        if (!localPos(lx, ly)) break;
-                        if (dragTarget == ColorPickerState::WheelDragTarget::Ring)
-                            applyRing(lx, ly);
-                        else
-                            applySquare(lx, ly);
-                        return true;
-                    }
-                    case EventType::MouseUp:
-                        dragTarget = ColorPickerState::WheelDragTarget::None;
-                        guiStateManager.Interaction().ReleaseCaptureID();
-                        return true;
-                    default: break;
-                }
-                return false;
+                    return false;
+                };
             };
 
-            auto wheelRes = elementStorage.Add(std::move(wheel),
-                LayoutOverride::FixedSize(wg.size + (2 * wg.padding), wg.size + (2 * wg.padding)).BreakAfter());
-            VERIFY(wheelRes.status);
-            VERIFY(windowRegistry.Add(wheelRes.ref));
-
-            // Custom draw: hue ring + inscribed square + indicators.
-            auto wheelRef    = wheelRes.ref;
-            auto hueRingIdx  = cp.hueRing;
-            auto svQuad      = cp.svQuadColor;
-            auto markerC     = cp.markerColor;
-            auto whiteC      = cp.whiteColor;
-            auto svIndC      = cp.svIndicatorColor;
-            float drawHue    = wheelHue;    // space-specific hue for indicator
-            float drawSqX    = squareX;     // space-specific square X for indicator
-            float drawSqY    = squareY;     // space-specific square Y for indicator
-            VERIFY(elementStorage.AddCustomDraw(wheelRef,
-                [wg, px = [this](float v) { return styleManager.Px(v); }, hueRingIdx, svQuad, markerC, whiteC, svIndC, drawHue, drawSqX, drawSqY](CustomDrawContext& ctx)
+            // Saturation/value (per space) square with its cursor ring.
+            const ID squareID = idManager.AllocateDynamicID("cp_square");
+            const ElementRef squareRef = RegisterControl(Element{ .id = squareID,
+                .eventHandler = planeHandler(ColorPickerState::DragTarget::Square, squareID), .styleRef = theme.colorPickerSquareStyleRef },
+                LayoutOverride{});
+            VERIFY(elementStorage.AddCustomDraw(squareRef,
+                [quad = cp.svQuadColor, white = cp.whiteColor, outline = cp.outlineColor, squareX, squareY,
+                 radius = float(styleManager.Px(6)), ring = float(styleManager.Px(6)), width = float(styleManager.Px(2)), edge = float(styleManager.Px(1))]
+                (CustomDrawContext& ctx)
                 {
-                    const float ringWidth = float(wg.outerRadius - wg.innerRadius);
-                    const float midRadius = float(wg.outerRadius + wg.innerRadius) * 0.5f;
-                    int2 center { wg.center, wg.center };
-
-                    // 1. Hue ring
-                    {
-                        LineStyle outerLS {};
-                        outerLS.colorStyleIndex = markerC;
-                        outerLS.lineWidth       = ringWidth + px(3.0f);
-                        ctx.RenderCircle(center, midRadius, outerLS);
-
-                        LineStyle hueLS {};
-                        hueLS.colorStyleIndex = hueRingIdx;
-                        hueLS.lineWidth       = ringWidth;
-                        ctx.RenderCircle(center, midRadius, hueLS);
-                    }
-
-                    // 2. Inner square
-                    ctx.RenderQuad(
-                        IntRect{ .position = { wg.center - wg.squareHalf, wg.center - wg.squareHalf },
-                                    .size     = { wg.squareSide, wg.squareSide } },
-                        svQuad);
-
-                    // 3. Hue indicator on ring
-                    {
-                        float angle = drawHue * 2.0f * kPi - kPi * 0.5f;
-                        int hx = int(float(wg.center) + std::cos(angle) * (midRadius + px(1.5f)));
-                        int hy = int(float(wg.center) + std::sin(angle) * (midRadius + px(1.5f)));
-                        LineStyle ls {};
-                        ls.colorStyleIndex = whiteC;
-                        ls.lineWidth       = px(3.0f);
-                        ctx.RenderCircle(int2{ hx, hy }, (ringWidth * 0.5f) + px(1.0f), ls);
-                    }
-
-                    // 4. Square indicator
-                    {
-                        int mx = wg.center - wg.squareHalf + int(drawSqX * float(wg.squareSide) + 0.5f);
-                        int my = wg.center - wg.squareHalf + int((1.0f - drawSqY) * float(wg.squareSide) + 0.5f);
-                        LineStyle ls {};
-                        ls.colorStyleIndex = svIndC;
-                        ls.lineWidth       = px(3.0f);
-                        ctx.RenderCircle(int2{ mx, my }, px(5.0f), ls);
-                    }
+                    const IntRect r = ctx.ElementRect();
+                    ctx.RenderQuad(r, quad, radius);
+                    const int2 at{ r.x + int(std::lround(squareX * float(r.w))), r.y + int(std::lround((1.0f - squareY) * float(r.h))) };
+                    DrawRing(ctx, at, ring, width, white, outline, edge);
                 }));
-        }
 
-        // ---- Color space tabs ----
-        {
-            struct TabDef { ColorSpace space; std::string_view label; };
-            constexpr TabDef tabs[] = {
-                { ColorSpace::HSV,       "HSV"  },
-                { ColorSpace::HSL,       "HSL"  },
-                { ColorSpace::sRGB,      "RGB"  },
-                { ColorSpace::LinearRGB, "Lin"  },
-                { ColorSpace::Lab,       "Lab"  },
-                { ColorSpace::Oklab,     "OkL"  },
-            };
-
-            Element tabRow {};
-            tabRow.id       = idManager.AllocateDynamicID("cp_tab_row");
-            tabRow.styleRef = theme.colorPickerTabRowStyleRef;
-            tabRow.state    = guiStateManager.GetCurrentState(tabRow.id);
-            RegisterElement(std::move(tabRow), LayoutOverride{}.BreakAfter());
-            VERIFY(elementStorage.BeginChildren());
-
-            for (auto& tab : tabs)
+            // The hue and alpha strips, each with a bar handle.
+            auto strip = [&](const char* name, ColorPickerState::DragTarget target, VisualColorStyleIndex fill, bool checker,
+                             float position, VisualColorStyleIndex handleFill)
             {
-                bool isActive = (cp.activeSpace == tab.space);
-                if (isActive) guiStateManager.Construction().PushSelected();
-
-                ColorSpace targetSpace = tab.space;
-                Button(tab.label, [this, targetSpace]()
-                {
-                    m_colorPickerSub->State().activeSpace = targetSpace;
-                });
-
-                if (isActive) guiStateManager.Construction().PopSelected();
-            }
-
-            VERIFY(elementStorage.EndChildren());
+                const ID stripID = idManager.AllocateDynamicID(name);
+                const ElementRef stripRef = RegisterControl(Element{ .id = stripID,
+                    .eventHandler = planeHandler(target, stripID), .styleRef = theme.colorPickerStripStyleRef },
+                    LayoutOverride{});
+                VERIFY(elementStorage.AddCustomDraw(stripRef,
+                    [fill, checker, position, handleFill, look, white = cp.whiteColor, outline = cp.outlineColor,
+                     radius = float(styleManager.Px(4)), overhang = styleManager.Px(3), handleH = styleManager.Px(6),
+                     border = styleManager.Px(2), edge = styleManager.Px(1)](CustomDrawContext& ctx)
+                    {
+                        const IntRect r = ctx.ElementRect();
+                        if (checker)
+                        {
+                            ColorSwatchLook strip = look;
+                            strip.radius = radius;
+                            DrawCheckerboard(ctx, r, r, strip);
+                        }
+                        ctx.RenderQuad(r, fill, radius);
+                        // The handle: a white-edged bar across the strip, outlined in dark.
+                        const int y = r.y + int(std::lround(position * float(r.h)));
+                        const IntRect bar{ .position = { r.x - overhang, y - handleH / 2 }, .size = { r.w + 2 * overhang, handleH } };
+                        const IntRect outer{ .position = { bar.x - edge, bar.y - edge }, .size = { bar.w + 2 * edge, bar.h + 2 * edge } };
+                        const IntRect inner{ .position = { bar.x + border, bar.y + border }, .size = { bar.w - 2 * border, std::max(0, bar.h - 2 * border) } };
+                        ctx.RenderQuad(outer, outline, float(handleH / 2 + edge));
+                        ctx.RenderQuad(bar, white, float(handleH / 2));
+                        if (inner.h > 0) ctx.RenderQuad(inner, handleFill, 0.0f);
+                    }));
+            };
+            strip("cp_hue", ColorPickerState::DragTarget::Hue, cp.hueStrip, false, stripHue, cp.hueColor);
+            strip("cp_alpha", ColorPickerState::DragTarget::Alpha, cp.alphaStrip, true, 1.0f - cp.a, cp.newColor);
         }
+        EndHorizontal();
 
-        // ---- Gradient sliders ----
-        auto ba = [](){ return LayoutOverride{}.FlexGrow(1).BreakAfter(); };
+        // ---- Right: preview, space, channels, hex, HDR ----
+        BeginVertical(idManager.AllocateDynamicID("cp_controls"), theme.colorPickerControlsStyleRef, LayoutOverride{}.FlexGrow(1));
         {
-            auto [curR, curG, curB] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
+            // New | Original, on the checkerboard.
+            BeginVertical(idManager.AllocateDynamicID("cp_preview_group"), theme.colorPickerPreviewGroupStyleRef, LayoutOverride{}.NoShrink());
+            {
+                const ID previewID = idManager.AllocateDynamicID("cp_preview");
+                Element preview{ .id = previewID, .styleRef = theme.colorPickerPreviewStyleRef, .flags = ElementFlags::NoInput };
+                const ElementRef previewRef = RegisterElement(std::move(preview), LayoutOverride{});
+                VERIFY(elementStorage.AddCustomDraw(previewRef,
+                    [look, newColor = cp.newColor, original = cp.originalStyle, radius = float(styleManager.Px(5))](CustomDrawContext& ctx)
+                    {
+                        const IntRect r = ctx.ElementInnerRect();
+                        ColorSwatchLook preview = look;
+                        preview.radius = radius;
+                        DrawCheckerboard(ctx, r, r, preview);
+                        const int half = r.w / 2;
+                        ctx.RenderQuad(r, IntRect{ .position = r.position, .size = { half, r.h } }, newColor, radius);
+                        ctx.RenderQuad(r, IntRect{ .position = { r.x + half, r.y }, .size = { r.w - half, r.h } }, original, radius);
+                    }));
+                BeginHorizontal(idManager.AllocateDynamicID("cp_preview_captions"), theme.colorPickerCaptionsStyleRef, LayoutOverride{});
+                Text(idManager.AllocateDynamicID("cp_new"), "New", theme.colorPickerCaptionStyleRef, LayoutOverride{}.FlexGrow(1));
+                Text(idManager.AllocateDynamicID("cp_original"), "Original", theme.colorPickerCaptionStyleRef);
+                EndHorizontal();
+            }
+            EndVertical();
+
+            // Color space, Linear (for RGB) and the value range.
+            BeginHorizontal(idManager.AllocateDynamicID("cp_mode_row"), theme.colorPickerModeRowStyleRef, LayoutOverride{}.NoShrink());
+            {
+                const bool rgb = (cp.activeSpace == ColorSpace::sRGB || cp.activeSpace == ColorSpace::LinearRGB);
+                struct SpaceTab { ColorSpace space; std::string_view label; };
+                constexpr SpaceTab tabs[] = {
+                    { ColorSpace::sRGB, "RGB" }, { ColorSpace::HSV, "HSV" }, { ColorSpace::HSL, "HSL" },
+                    { ColorSpace::Lab, "Lab" }, { ColorSpace::Oklab, "Oklab" },
+                };
+                BeginButtonGroup(LayoutOverride{}.NoGrow().NoShrink());
+                for (const SpaceTab& tab : tabs)
+                {
+                    const bool active = (tab.space == ColorSpace::sRGB) ? rgb : (cp.activeSpace == tab.space);
+                    if (active) guiStateManager.Construction().PushSelected();
+                    const ColorSpace target = tab.space;
+                    Button(tab.label, [this, target, rgb]() {
+                        auto& cp = m_colorPickerSub->State();
+                        if (target != ColorSpace::sRGB || !rgb)   // RGB keeps its Linear choice
+                            cp.activeSpace = target;
+                    });
+                    if (active) guiStateManager.Construction().PopSelected();
+                }
+                EndButtonGroup();
+
+                Element spacer{ .id = idManager.AllocateDynamicID("cp_mode_spacer"), .styleRef = theme.emptyHorzStyleRef, .flags = ElementFlags::NoInput };
+                RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
+
+                Button(idManager.AllocateDynamicID("cp_range"), IconID::Invalid, cp.byteRange ? "0\xE2\x80\x93" "255" : "0\xE2\x80\x93" "1",
+                       [this]() { auto& cp = m_colorPickerSub->State(); cp.byteRange = !cp.byteRange; },
+                       theme.colorPickerRangeStyleRef);
+                SetTooltip("Show the values 0-255 or 0-1");
+            }
+            EndHorizontal();
+
+            // Channel sliders: label, gradient track with a round thumb, value.
             auto& gs = cp.gradientStyles;
-
-            // Slider labels, ranges, and component values depend on the active space
-            std::string_view label0, label1, label2;
-            float min0 = 0, max0 = 1, min1 = 0, max1 = 1, min2 = 0, max2 = 1;
-
+            std::string_view labels[3];
+            float mins[3] = { 0, 0, 0 }, maxs[3] = { 1, 1, 1 };
+            float scales[3] = { 1, 1, 1 };   // shown value = component * scale (byte range)
+            const float byte = cp.byteRange ? 255.0f : 1.0f;
+            const float percent = cp.byteRange ? 100.0f : 1.0f;
             switch (cp.activeSpace)
             {
                 case ColorSpace::HSV:
                 {
-                    cp.comp[0] = cp.h;
-                    cp.comp[1] = cp.s;
-                    cp.comp[2] = cp.v;
-                    label0 = "H"; label1 = "S"; label2 = "V";
-
-                    // H: rainbow (7 stops)
+                    cp.comp[0] = cp.h; cp.comp[1] = cp.s; cp.comp[2] = cp.v;
+                    labels[0] = "H"; labels[1] = "S"; labels[2] = "V";
+                    scales[0] = cp.byteRange ? 360.0f : 1.0f; scales[1] = scales[2] = percent;
                     SetHueGradientStyleHorizontal(styleManager, gs[0]);
-                    // S: desaturated -> saturated at current H,V
                     auto [s0r, s0g, s0b] = ColorConvert::HSVtoRGB(cp.h, 0.0f, cp.v);
                     auto [s1r, s1g, s1b] = ColorConvert::HSVtoRGB(cp.h, 1.0f, cp.v);
-                    SetGradientStyle2(styleManager, gs[1], { s0r,s0g,s0b,1 }, { s1r,s1g,s1b,1 });
-                    // V: black -> bright at current H,S
+                    SetGradientStyle2(styleManager, gs[1], { s0r, s0g, s0b, 1 }, { s1r, s1g, s1b, 1 });
                     auto [v1r, v1g, v1b] = ColorConvert::HSVtoRGB(cp.h, cp.s, 1.0f);
-                    SetGradientStyle2(styleManager, gs[2], { 0,0,0,1 }, { v1r,v1g,v1b,1 });
+                    SetGradientStyle2(styleManager, gs[2], { 0, 0, 0, 1 }, { v1r, v1g, v1b, 1 });
                     break;
                 }
                 case ColorSpace::HSL:
                 {
-                    float hsl_h, hsl_s, hsl_l;
-                    ColorConvert::RGBtoHSL(curR, curG, curB, hsl_h, hsl_s, hsl_l);
-                    cp.comp[0] = hsl_h;
-                    cp.comp[1] = hsl_s;
-                    cp.comp[2] = hsl_l;
-                    label0 = "H"; label1 = "S"; label2 = "L";
-
-                    // H: rainbow
+                    float hh, ss, ll;
+                    ColorConvert::RGBtoHSL(curR, curG, curB, hh, ss, ll);
+                    cp.comp[0] = hh; cp.comp[1] = ss; cp.comp[2] = ll;
+                    labels[0] = "H"; labels[1] = "S"; labels[2] = "L";
+                    scales[0] = cp.byteRange ? 360.0f : 1.0f; scales[1] = scales[2] = percent;
                     SetHueGradientStyleHorizontal(styleManager, gs[0]);
-                    // S: desaturated -> saturated at current H,L
-                    auto [s0r, s0g, s0b] = ColorConvert::HSLtoRGB(hsl_h, 0.0f, hsl_l);
-                    auto [s1r, s1g, s1b] = ColorConvert::HSLtoRGB(hsl_h, 1.0f, hsl_l);
-                    SetGradientStyle2(styleManager, gs[1], { s0r,s0g,s0b,1 }, { s1r,s1g,s1b,1 });
-                    // L: black -> mid -> white at current H,S
-                    SetSampledGradient(styleManager, gs[2], [hsl_h, hsl_s](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::HSLtoRGB(hsl_h, hsl_s, t);
+                    auto [s0r, s0g, s0b] = ColorConvert::HSLtoRGB(hh, 0.0f, ll);
+                    auto [s1r, s1g, s1b] = ColorConvert::HSLtoRGB(hh, 1.0f, ll);
+                    SetGradientStyle2(styleManager, gs[1], { s0r, s0g, s0b, 1 }, { s1r, s1g, s1b, 1 });
+                    SetSampledGradient(styleManager, gs[2], [hh, ss](float t) -> color4f {
+                        auto [r, g, b] = ColorConvert::HSLtoRGB(hh, ss, t);
                         return { r, g, b, 1.0f };
                     });
                     break;
                 }
                 case ColorSpace::sRGB:
-                {
-                    cp.comp[0] = curR;
-                    cp.comp[1] = curG;
-                    cp.comp[2] = curB;
-                    label0 = "R"; label1 = "G"; label2 = "B";
-
-                    // R: 0 -> 1 with current G,B held
+                    cp.comp[0] = curR; cp.comp[1] = curG; cp.comp[2] = curB;
+                    labels[0] = "R"; labels[1] = "G"; labels[2] = "B";
+                    scales[0] = scales[1] = scales[2] = byte;
                     SetGradientStyle2(styleManager, gs[0], { 0, curG, curB, 1 }, { 1, curG, curB, 1 });
-                    // G: 0 -> 1 with current R,B held
                     SetGradientStyle2(styleManager, gs[1], { curR, 0, curB, 1 }, { curR, 1, curB, 1 });
-                    // B: 0 -> 1 with current R,G held
                     SetGradientStyle2(styleManager, gs[2], { curR, curG, 0, 1 }, { curR, curG, 1, 1 });
                     break;
-                }
                 case ColorSpace::LinearRGB:
                 {
-                    float linR = ColorConvert::SRGBToLinear(curR);
-                    float linG = ColorConvert::SRGBToLinear(curG);
-                    float linB = ColorConvert::SRGBToLinear(curB);
-                    cp.comp[0] = linR;
-                    cp.comp[1] = linG;
-                    cp.comp[2] = linB;
-                    label0 = "R"; label1 = "G"; label2 = "B";
-
-                    // R: display-space endpoints (linear 0 -> 1, converted to sRGB for display)
-                    SetGradientStyle2(styleManager, gs[0],
-                        { ColorConvert::LinearToSRGB(0.0f), ColorConvert::LinearToSRGB(linG), ColorConvert::LinearToSRGB(linB), 1 },
-                        { ColorConvert::LinearToSRGB(1.0f), ColorConvert::LinearToSRGB(linG), ColorConvert::LinearToSRGB(linB), 1 });
-                    SetGradientStyle2(styleManager, gs[1],
-                        { ColorConvert::LinearToSRGB(linR), ColorConvert::LinearToSRGB(0.0f), ColorConvert::LinearToSRGB(linB), 1 },
-                        { ColorConvert::LinearToSRGB(linR), ColorConvert::LinearToSRGB(1.0f), ColorConvert::LinearToSRGB(linB), 1 });
-                    SetGradientStyle2(styleManager, gs[2],
-                        { ColorConvert::LinearToSRGB(linR), ColorConvert::LinearToSRGB(linG), ColorConvert::LinearToSRGB(0.0f), 1 },
-                        { ColorConvert::LinearToSRGB(linR), ColorConvert::LinearToSRGB(linG), ColorConvert::LinearToSRGB(1.0f), 1 });
+                    const float lr = ColorConvert::SRGBToLinear(curR), lg = ColorConvert::SRGBToLinear(curG), lb = ColorConvert::SRGBToLinear(curB);
+                    cp.comp[0] = lr; cp.comp[1] = lg; cp.comp[2] = lb;
+                    labels[0] = "R"; labels[1] = "G"; labels[2] = "B";
+                    scales[0] = scales[1] = scales[2] = byte;
+                    auto toS = [](float x) { return ColorConvert::LinearToSRGB(x); };
+                    SetGradientStyle2(styleManager, gs[0], { toS(0), toS(lg), toS(lb), 1 }, { toS(1), toS(lg), toS(lb), 1 });
+                    SetGradientStyle2(styleManager, gs[1], { toS(lr), toS(0), toS(lb), 1 }, { toS(lr), toS(1), toS(lb), 1 });
+                    SetGradientStyle2(styleManager, gs[2], { toS(lr), toS(lg), toS(0), 1 }, { toS(lr), toS(lg), toS(1), 1 });
                     break;
                 }
                 case ColorSpace::Lab:
                 {
                     float L, a, b;
                     ColorConvert::RGBtoLab(curR, curG, curB, L, a, b);
-                    cp.comp[0] = L;
-                    cp.comp[1] = a;
-                    cp.comp[2] = b;
-                    label0 = "L"; label1 = "a"; label2 = "b";
-                    min0 = 0; max0 = 100; min1 = -128; max1 = 128; min2 = -128; max2 = 128;
-
-                    float ca = a, cb = b, cL = L;
-                    SetSampledGradient(styleManager, gs[0], [ca, cb](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::LabToRGB(t * 100.0f, ca, cb);
-                        return { r, g, b, 1.0f };
-                    });
-                    SetSampledGradient(styleManager, gs[1], [cL, cb](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::LabToRGB(cL, -128.0f + t * 256.0f, cb);
-                        return { r, g, b, 1.0f };
-                    });
-                    SetSampledGradient(styleManager, gs[2], [cL, ca](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::LabToRGB(cL, ca, -128.0f + t * 256.0f);
-                        return { r, g, b, 1.0f };
-                    });
+                    cp.comp[0] = L; cp.comp[1] = a; cp.comp[2] = b;
+                    labels[0] = "L"; labels[1] = "a"; labels[2] = "b";
+                    mins[0] = 0; maxs[0] = 100; mins[1] = -128; maxs[1] = 128; mins[2] = -128; maxs[2] = 128;
+                    SetSampledGradient(styleManager, gs[0], [a, b](float t) -> color4f { auto [r, g, bb] = ColorConvert::LabToRGB(t * 100.0f, a, b); return { r, g, bb, 1.0f }; });
+                    SetSampledGradient(styleManager, gs[1], [L, b](float t) -> color4f { auto [r, g, bb] = ColorConvert::LabToRGB(L, -128.0f + t * 256.0f, b); return { r, g, bb, 1.0f }; });
+                    SetSampledGradient(styleManager, gs[2], [L, a](float t) -> color4f { auto [r, g, bb] = ColorConvert::LabToRGB(L, a, -128.0f + t * 256.0f); return { r, g, bb, 1.0f }; });
                     break;
                 }
                 case ColorSpace::Oklab:
                 {
                     float L, a, b;
                     ColorConvert::RGBtoOklab(curR, curG, curB, L, a, b);
-                    cp.comp[0] = L;
-                    cp.comp[1] = a;
-                    cp.comp[2] = b;
-                    label0 = "L"; label1 = "a"; label2 = "b";
-                    min0 = 0; max0 = 1; min1 = -0.5f; max1 = 0.5f; min2 = -0.5f; max2 = 0.5f;
-
-                    float ca = a, cb = b, cL = L;
-                    SetSampledGradient(styleManager, gs[0], [ca, cb](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::OklabToRGB(t, ca, cb);
-                        return { r, g, b, 1.0f };
-                    });
-                    SetSampledGradient(styleManager, gs[1], [cL, cb](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::OklabToRGB(cL, -0.5f + t * 1.0f, cb);
-                        return { r, g, b, 1.0f };
-                    });
-                    SetSampledGradient(styleManager, gs[2], [cL, ca](float t) -> color4f {
-                        auto [r, g, b] = ColorConvert::OklabToRGB(cL, ca, -0.5f + t * 1.0f);
-                        return { r, g, b, 1.0f };
-                    });
+                    cp.comp[0] = L; cp.comp[1] = a; cp.comp[2] = b;
+                    labels[0] = "L"; labels[1] = "a"; labels[2] = "b";
+                    mins[0] = 0; maxs[0] = 1; mins[1] = -0.5f; maxs[1] = 0.5f; mins[2] = -0.5f; maxs[2] = 0.5f;
+                    SetSampledGradient(styleManager, gs[0], [a, b](float t) -> color4f { auto [r, g, bb] = ColorConvert::OklabToRGB(t, a, b); return { r, g, bb, 1.0f }; });
+                    SetSampledGradient(styleManager, gs[1], [L, b](float t) -> color4f { auto [r, g, bb] = ColorConvert::OklabToRGB(L, -0.5f + t, b); return { r, g, bb, 1.0f }; });
+                    SetSampledGradient(styleManager, gs[2], [L, a](float t) -> color4f { auto [r, g, bb] = ColorConvert::OklabToRGB(L, a, -0.5f + t); return { r, g, bb, 1.0f }; });
                     break;
                 }
             }
+            SetGradientStyle2(styleManager, gs[3], { curR, curG, curB, 0 }, { curR, curG, curB, 1 });
 
-            // A: transparent -> current color (always the same)
-            SetGradientStyle2(styleManager, gs[3], { curR,curG,curB,0 }, { curR,curG,curB,1 });
+            BeginVertical(idManager.AllocateDynamicID("cp_channels"), theme.colorPickerChannelsStyleRef, LayoutOverride{}.NoShrink());
+            auto channel = [&](std::string_view label, float& value, float minVal, float maxVal, float scale,
+                               VisualColorStyleIndex fill, bool checker)
+            {
+                BeginHorizontal(idManager.AllocateDynamicID("cp_channel"), theme.colorPickerChannelStyleRef, LayoutOverride{}.NoShrink());
+                Text(idManager.AllocateDynamicID("cp_channel_label"), label, theme.colorPickerChannelLabelStyleRef);
 
-            // Triangle indicator color (white)
-            SetColorStyle(styleManager, cp.triangleStyle, { 1, 1, 1, 1 });
+                const ID trackID = idManager.AllocateDynamicID("cp_channel_track");
+                const ElementRef trackRef = RegisterControl(Element{ .id = trackID,
+                    .eventHandler = MakeSliderHandler(guiStateManager, elementStorage, &value, styleManager.Px(200), nullptr, minVal, maxVal, SliderPress::Jump),
+                    .styleRef = theme.colorPickerTrackStyleRef }, LayoutOverride{}.FlexGrow(1));
+                const float t = (maxVal > minVal) ? std::clamp((value - minVal) / (maxVal - minVal), 0.0f, 1.0f) : 0.0f;
+                VERIFY(elementStorage.AddCustomDraw(trackRef,
+                    [fill, checker, t, look, white = cp.whiteColor, outline = cp.outlineColor, trackH = styleManager.Px(8),
+                     thumb = float(styleManager.Px(6)), edge = float(styleManager.Px(1))](CustomDrawContext& ctx)
+                    {
+                        const IntRect r = ctx.ElementInnerRect();
+                        const IntRect track{ .position = { r.x, r.y + (r.h - trackH) / 2 }, .size = { r.w, trackH } };
+                        const float radius = float(trackH) * 0.5f;
+                        if (checker)
+                        {
+                            ColorSwatchLook strip = look;
+                            strip.radius = radius;
+                            strip.checkerSize = trackH / 2;
+                            DrawCheckerboard(ctx, track, track, strip);
+                        }
+                        ctx.RenderQuad(track, fill, radius);
+                        const int2 at{ track.x + int(std::lround(t * float(track.w))), track.y + trackH / 2 };
+                        DrawDisc(ctx, at, thumb + edge, outline);
+                        DrawDisc(ctx, at, thumb, white);
+                    }));
 
-            // Emit the 3 component sliders + alpha
-            GradientSlider(idManager.AllocateDynamicID("gs_c0"), cp.comp[0], min0, max0, label0, gs[0], cp.triangleStyle, ba());
-            GradientSlider(idManager.AllocateDynamicID("gs_c1"), cp.comp[1], min1, max1, label1, gs[1], cp.triangleStyle, ba());
-            GradientSlider(idManager.AllocateDynamicID("gs_c2"), cp.comp[2], min2, max2, label2, gs[2], cp.triangleStyle, ba());
-            GradientSlider(idManager.AllocateDynamicID("gs_a"),  cp.a,       0,    1,    "A",    gs[3], cp.triangleStyle, ba());
+                // The value, rounded to what the range shows.
+                float shown = value * scale;
+                shown = (scale > 1.0f) ? std::round(shown) : std::round(shown * 1000.0f) / 1000.0f;
+                if (Field(idManager.AllocateDynamicID("cp_channel_value"), shown, TextEditBehavior::None, theme.colorPickerChannelValueStyleRef,
+                          NumericFieldConfig<float>{ .minVal = minVal * scale, .maxVal = maxVal * scale }, LayoutOverride{}))
+                    value = shown / scale;
+                EndHorizontal();
+            };
+            for (int i = 0; i < 3; ++i)
+                channel(labels[i], cp.comp[i], mins[i], maxs[i], scales[i], gs[i], false);
+            channel("A", cp.a, 0.0f, 1.0f, byte, gs[3], true);
+            EndVertical();
 
-            // Snapshot for next-frame change detection
             cp.snapComp[0] = cp.comp[0];
             cp.snapComp[1] = cp.comp[1];
             cp.snapComp[2] = cp.comp[2];
-
             cp.slidersInitialized = true;
 
-            // Hex field
+            // Hex.
+            BeginHorizontal(idManager.AllocateDynamicID("cp_hex_row"), theme.colorPickerFieldRowStyleRef, LayoutOverride{}.NoShrink());
             {
-                ID hexID = idManager.AllocateDynamicID("color_picker_hex");
+                Text(idManager.AllocateDynamicID("cp_hex_label"), "Hex", theme.colorPickerRowLabelStyleRef);
+                const ID hexID = idManager.AllocateDynamicID("color_picker_hex");
                 if (guiStateManager.Interaction().GetFocusedID() != hexID)
                     cp.hexText = ColorToHex(curR, curG, curB);
-
-                DragLabel("Hex");
-                if (Field(hexID, cp.hexText, TextEditBehavior::None,
-                    LayoutOverride{}.FlexGrow(1).BreakAfter()))
+                if (Field(hexID, cp.hexText, TextEditBehavior::None, theme.colorHexStyleRef, LayoutOverride{}.FlexGrow(1)))
                 {
                     float nr, ng, nb;
                     if (HexToColor(cp.hexText, nr, ng, nb))
                         ColorConvert::RGBtoHSV(nr, ng, nb, cp.h, cp.s, cp.v);
                 }
             }
+            EndHorizontal();
+
+            // HDR: the brightness multiplier over 1 (disabled for a field without HDR), and
+            // whether the RGB channels are edited in linear light.
+            {
+                BeginHorizontal(idManager.AllocateDynamicID("cp_hdr_row"), theme.colorPickerFieldRowStyleRef, LayoutOverride{}.NoShrink());
+                Text(idManager.AllocateDynamicID("cp_hdr_label"), "HDR", theme.colorPickerRowLabelStyleRef);
+                if (!allowHDR) guiStateManager.Construction().PushDisabled();
+                BeginHorizontal(idManager.AllocateDynamicID("cp_hdr_box"), theme.colorPickerHdrStyleRef, LayoutOverride{}.FlexGrow(1));
+                Text(idManager.AllocateDynamicID("cp_hdr_caption"), "Intensity", theme.colorPickerCaptionStyleRef);
+                Field(idManager.AllocateDynamicID("cp_hdr_value"), cp.hdrBrightness, TextEditBehavior::None, theme.colorPickerHdrValueStyleRef,
+                      NumericFieldConfig<float>{ .minVal = 1.0f, .maxVal = 1000.0f }, LayoutOverride{}.FlexGrow(1));
+                EndHorizontal();
+                if (!allowHDR) guiStateManager.Construction().PopDisabled();
+                SetTooltip(allowHDR ? "Brightness over 1" : "This color has no HDR range");
+                const bool linear = (cp.activeSpace == ColorSpace::LinearRGB);
+                Checkbox(idManager.AllocateDynamicID("cp_linear"), linear, "Linear", [this](bool on) {
+                    m_colorPickerSub->State().activeSpace = on ? ColorSpace::LinearRGB : ColorSpace::sRGB;
+                });
+                SetTooltip("Edit the RGB channels in linear light");
+                EndHorizontal();
+            }
         }
+        EndVertical();
+        EndHorizontal();   // body
 
-        // ---- Preview swatches (old / new) ----
+        // ---- Swatches and recent colors ----
+        BeginVertical(idManager.AllocateDynamicID("cp_swatches"), theme.colorPickerSwatchesStyleRef, LayoutOverride{}.NoShrink());
         {
-            Element previewRow {};
-            previewRow.id       = idManager.AllocateDynamicID("color_picker_previews");
-            previewRow.styleRef = theme.colorPickerPreviewsStyleRef;
-            previewRow.state    = guiStateManager.GetCurrentState(previewRow.id);
-            RegisterElement(std::move(previewRow), {});
-            VERIFY(elementStorage.BeginChildren());
+            const color4f current{ curR, curG, curB, cp.a };
+            auto pick = [this](const color4f& c) {
+                auto& cp = m_colorPickerSub->State();
+                ColorConvert::RGBtoHSV(std::clamp(c.r, 0.f, 1.f), std::clamp(c.g, 0.f, 1.f), std::clamp(c.b, 0.f, 1.f), cp.h, cp.s, cp.v);
+                cp.a = c.a;
+            };
+            auto same = [](const color4f& a, const color4f& b) {
+                return std::abs(a.r - b.r) < 0.002f && std::abs(a.g - b.g) < 0.002f && std::abs(a.b - b.b) < 0.002f && std::abs(a.a - b.a) < 0.002f;
+            };
+            // One swatch: the color split opaque | with alpha, an accent ring when it's the current one.
+            auto swatch = [&](ID id, const color4f& c, bool round, EventHandler handler)
+            {
+                NoteSwatchClaim(id);
+                auto& alphaStyle = m_colorPickerSub->ClaimSwatchStyle(id);
+                SetColorStyle(styleManager, alphaStyle, c);
+                const ID opaqueID = idManager.AllocateDynamicID("cp_swatch_opaque");
+                NoteSwatchClaim(opaqueID);
+                auto& opaqueStyle = m_colorPickerSub->ClaimSwatchStyle(opaqueID);
+                SetColorStyle(styleManager, opaqueStyle, color4f{ c.r, c.g, c.b, 1.0f });
+                const bool selected = !round && same(c, current);
+                const ElementRef ref = RegisterControl(Element{ .id = id, .eventHandler = std::move(handler),
+                    .styleRef = round ? theme.colorPickerRecentStyleRef : theme.colorPickerSwatchStyleRef }, LayoutOverride{});
+                ColorSwatchLook swLook = look;
+                swLook.alphaBar = round ? 0 : styleManager.Px(2);
+                VERIFY(elementStorage.AddCustomDraw(ref,
+                    [swLook, round, selected, opaque = opaqueStyle, withAlpha = alphaStyle, alpha = c.a,
+                     accent = theme.accentColor, panel = theme.panelColor, gap = styleManager.Px(2)](CustomDrawContext& ctx)
+                    {
+                        const IntRect outer = ctx.ElementRect();
+                        IntRect inner = ctx.ElementInnerRect();
+                        ColorSwatchLook l = swLook;
+                        if (round) l.radius = float(inner.w) * 0.5f;
+                        if (selected)
+                        {
+                            // A panel-colored gap, then a 2 px accent ring, outside the swatch.
+                            const IntRect ring{ .position = { outer.x - 2 * gap, outer.y - 2 * gap }, .size = { outer.w + 4 * gap, outer.h + 4 * gap } };
+                            const IntRect gapRect{ .position = { outer.x - gap, outer.y - gap }, .size = { outer.w + 2 * gap, outer.h + 2 * gap } };
+                            ctx.RenderQuad(ring, accent, l.radius + float(2 * gap));
+                            ctx.RenderQuad(gapRect, panel, l.radius + float(gap));
+                            inner = outer;
+                        }
+                        DrawColorSwatch(ctx, inner, l, opaque, withAlpha, alpha);
+                    }));
+            };
 
-            // Size comes from CSS (.color-picker-preview / .color-picker-new); NoGrow/NoShrink holds it.
-            LayoutOverride swatchLayout = LayoutOverride{}.NoGrow().NoShrink();
+            BeginHorizontal(idManager.AllocateDynamicID("cp_swatch_row"), theme.colorPickerSwatchRowStyleRef, LayoutOverride{}.NoShrink());
+            Text(idManager.AllocateDynamicID("cp_swatches_label"), "Swatches", theme.colorPickerSectionLabelStyleRef);
             auto& palette = cp.palette;
-
-
             const ID swatchRange = palette.empty() ? ID::Invalid()
                 : idManager.AllocateRangedID(static_cast<uint32_t>(palette.size()), "color_picker_swatch");
-            for (int i = 0; i < (int)palette.size(); i++)
+            for (int i = 0; i < int(palette.size()); i++)
             {
-                ID swatchID = idManager.GetSubID(swatchRange, static_cast<uint32_t>(i));
-
-                // Custom handler: left-click to pick, right-click to remove
-                NoteSwatchClaim(swatchID);
-                auto& swatchStyle = m_colorPickerSub->ClaimSwatchStyle(swatchID);
-                SetColorStyle(styleManager, swatchStyle, palette[i].color);
-                Element sw {};
-                sw.id               = swatchID;
-                sw.styleRef         = theme.colorPickerPreviewStyleRef;
-                sw.colorStyleIndex  = swatchStyle;
-                sw.state            = guiStateManager.GetCurrentState(swatchID);
-                sw.eventHandler = [this, i](ElementEvent&& event) -> bool
-                {
-                    if (event.type != EventType::MouseDown) return false;
-                    auto& cp = m_colorPickerSub->State();
-                    auto& palette = cp.palette;
-                    if (i >= (int)palette.size()) return false;
-
-                    if (event.state.LeftPressed())
-                    {
-                        // Pick this swatch color
-                        float r = std::clamp(palette[i].color.r, 0.f, 1.f);
-                        float g = std::clamp(palette[i].color.g, 0.f, 1.f);
-                        float b = std::clamp(palette[i].color.b, 0.f, 1.f);
-                        ColorConvert::RGBtoHSV(r, g, b, cp.h, cp.s, cp.v);
-                        cp.a = palette[i].color.a;
-                        return true;
-                    }
-                    if (event.state.RightPressed())
-                    {
-                        // Remove this swatch
-                        palette.erase(palette.begin() + i);
-                        return true;
-                    }
-                    return false;
-                };
-                RegisterControl(std::move(sw), LayoutOverride{swatchLayout});
+                // Left-click picks it, right-click removes it.
+                swatch(idManager.GetSubID(swatchRange, uint32_t(i)), palette[size_t(i)].color, false,
+                    [this, i, pick](ElementEvent&& event) -> bool {
+                        if (event.type != EventType::MouseDown) return false;
+                        auto& palette = m_colorPickerSub->State().palette;
+                        if (i >= int(palette.size())) return false;
+                        if (event.state.LeftPressed())  { pick(palette[size_t(i)].color); return true; }
+                        if (event.state.RightPressed()) { palette.erase(palette.begin() + i); return true; }
+                        return false;
+                    });
+                SetTooltip("Click to use, right-click to remove");
             }
+            Button(idManager.AllocateDynamicID("color_picker_add_swatch"), theme.addIcon, {}, [this]() {
+                auto& cp = m_colorPickerSub->State();
+                auto [r, g, b] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
+                const color4f c{ r, g, b, cp.a };
+                if (cp.palette.empty() || !(cp.palette.back().color == c))
+                    cp.palette.push_back({ c });
+            }, theme.colorPickerNewStyleRef);
+            SetTooltip("Add the color to the swatches");
+            EndHorizontal();
 
-            // Add button: append current color unless it equals the last swatch
             {
-                ID addID = idManager.AllocateDynamicID("color_picker_add_swatch");
-                Button(addID, theme.addIcon, [this]()
+                BeginHorizontal(idManager.AllocateDynamicID("cp_recent_row"), theme.colorPickerSwatchRowStyleRef, LayoutOverride{}.NoShrink());
+                Text(idManager.AllocateDynamicID("cp_recent_label"), "Recent", theme.colorPickerSectionLabelStyleRef);
+                const ID recentRange = idManager.AllocateRangedID(static_cast<uint32_t>(std::max<size_t>(1, cp.recent.size())), "color_picker_recent");
+                for (int i = 0; i < int(cp.recent.size()); i++)
                 {
-                    auto& cp = m_colorPickerSub->State();
-                    auto [r, g, b] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
-                    color4f newColor { r, g, b, cp.a };
-
-                    auto& palette = cp.palette;
-                    if (!palette.empty()
-                        && palette.back().color == newColor)
-                        return; // already there
-
-                    palette.push_back({ newColor });
-                }, theme.colorPickerNewStyleRef, LayoutOverride{swatchLayout});
+                    const color4f c = cp.recent[size_t(i)];
+                    swatch(idManager.GetSubID(recentRange, uint32_t(i)), c, true, MakeButtonHandler([pick, c]() { pick(c); }));
+                }
+                EndHorizontal();
             }
-
-            VERIFY(elementStorage.EndChildren());
         }
+        EndVertical();
 
-        // Write current HSV back to output color every frame while picker is open
+        // ---- Footer: status, Cancel, OK ----
+        BeginHorizontal(idManager.AllocateDynamicID("cp_footer"), theme.dialogFooterStyleRef, LayoutOverride{}.NoShrink());
         {
-            auto [r, g, b] = interstice::ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
-            float mult = (allowHDR && cp.hdrBrightness > 1.0f) ? cp.hdrBrightness : 1.0f;
-            outColor = { r * mult, g * mult, b * mult, cp.a };
+            Element dot{ .id = idManager.AllocateDynamicID("cp_status_dot"), .styleRef = theme.dialogStatusDotStyleRef, .flags = ElementFlags::NoInput };
+            RegisterElement(std::move(dot), LayoutOverride{});
+            Text(idManager.AllocateDynamicID("cp_status"), allowHDR ? "HDR \xC2\xB7 float" : "sRGB \xC2\xB7 8-bit", theme.dialogStatusStyleRef,
+                 LayoutOverride{}.FlexGrow(1));
+            Button(idManager.AllocateDynamicID("cp_cancel"), IconID::Invalid, "Cancel", requestClose(ColorPickerState::CloseRequest::Cancel),
+                   theme.dialogButtonStyleRef);
+            Button(idManager.AllocateDynamicID("cp_ok"), IconID::Invalid, "OK", requestClose(ColorPickerState::CloseRequest::Ok),
+                   theme.dialogPrimaryButtonStyleRef);
         }
+        EndHorizontal();
+
+        // Write the working color back every frame while the picker is open.
+        const float mult = (allowHDR && cp.hdrBrightness > 1.0f) ? cp.hdrBrightness : 1.0f;
+        outColor = { curR * mult, curG * mult, curB * mult, cp.a };
     }
 
     // ---------------------------------------------------------------------------
@@ -939,6 +865,17 @@ namespace interstice
         }
     }
 
+    ColorSwatchLook GUIApplication::SwatchLook() const
+    {
+        return ColorSwatchLook{
+            .checkerA    = theme.checkerAColor,  .checkerB  = theme.checkerBColor,
+            .alphaTrack  = theme.alphaTrackColor, .alphaFill = theme.alphaFillColor,
+            .checkerSize = styleManager.Px(8),
+            .alphaBar    = styleManager.Px(3),
+            .radius      = float(styleManager.Px(3)),   // --radius-md inside the 1 px border
+        };
+    }
+
     bool GUIApplication::ColorField(color4f& value, bool allowHDR, LayoutOverride&& constraints)
     {
         const color4f before = value;
@@ -948,18 +885,38 @@ namespace interstice
 
         // ---- Swatch button ----
         ID swatchID = idManager.AllocateDynamicID("color_swatch");
+        const std::string context = PendingLabelText();
         auto& cp = m_colorPickerSub->State();
 
+        // OK keeps the color and remembers it; Cancel and the close button restore the original.
+        if (cp.triggerID == swatchID && cp.closeRequest != ColorPickerState::CloseRequest::None)
+        {
+            if (cp.closeRequest == ColorPickerState::CloseRequest::Cancel)
+                value = cp.originalColor;
+            else
+            {
+                auto& recent = cp.recent;
+                recent.erase(std::remove(recent.begin(), recent.end(), value), recent.end());
+                recent.insert(recent.begin(), value);
+                if (recent.size() > 8) recent.resize(8);
+            }
+            cp.closeRequest = ColorPickerState::CloseRequest::None;
+            cp.triggerID = ID::Invalid();
+        }
         const bool pickerIsOpen = (cp.triggerID == swatchID); // this field's picker, not just any
         NoteSwatchClaim(swatchID);
-                auto& swatchStyle = m_colorPickerSub->ClaimSwatchStyle(swatchID);
+        auto& swatchStyle = m_colorPickerSub->ClaimSwatchStyle(swatchID);
         SetColorStyle(styleManager, swatchStyle, value);
-        RegisterControl(
+        const ID opaqueID = idManager.AllocateDynamicID("color_swatch_opaque");
+        NoteSwatchClaim(opaqueID);
+        auto& opaqueStyle = m_colorPickerSub->ClaimSwatchStyle(opaqueID);
+        SetColorStyle(styleManager, opaqueStyle, color4f{ value.r, value.g, value.b, 1.0f });
+        const ElementRef swatchRef = RegisterControl(
             interstice::Element
             {
                 .id = swatchID,
                 // Captures a copy: handlers run after this returns, and `value` may be a temporary.
-                .eventHandler = MakeButtonHandler([this, value, swatchID, allowHDR, pickerIsOpen]()
+                .eventHandler = MakeButtonHandler([this, value, swatchID, allowHDR, pickerIsOpen, context]()
                 {
                     auto& cp = m_colorPickerSub->State();
                     if (pickerIsOpen)
@@ -980,12 +937,22 @@ namespace interstice
                         cp.a = value.a;
                         cp.originalColor = value;
                         cp.allowHDR = allowHDR;
+                        cp.context = context;
+                        // The color it had counts as a recent one.
+                        auto& recent = cp.recent;
+                        recent.erase(std::remove(recent.begin(), recent.end(), value), recent.end());
+                        recent.insert(recent.begin(), value);
+                        if (recent.size() > 8) recent.resize(8);
                     }
                 }),
-                .styleRef        = theme.colorSwatchStyleRef,
-                .colorStyleIndex = swatchStyle
+                .styleRef        = theme.colorSwatchStyleRef
             },
             LayoutOverride{});
+        VERIFY(elementStorage.AddCustomDraw(swatchRef,
+            [look = SwatchLook(), opaque = opaqueStyle, withAlpha = swatchStyle, alpha = value.a](CustomDrawContext& ctx)
+            {
+                DrawColorSwatch(ctx, ctx.ElementInnerRect(), look, opaque, withAlpha, alpha);
+            }));
 
         std::string hex = ColorHex(value);
         if (Field(idManager.AllocateDynamicID("color_hex"), hex, TextEditBehavior::None, theme.colorHexStyleRef,
@@ -993,6 +960,7 @@ namespace interstice
             ParseColorHex(hex, value);
 
         BeginHorizontal(idManager.AllocateDynamicID("color_alpha"), theme.colorAlphaStyleRef, LayoutOverride{});
+        Text(idManager.AllocateDynamicID("color_alpha_caption"), "A", theme.colorAlphaCaptionStyleRef);
         int alphaPercent = int(std::lround(std::clamp(value.a, 0.0f, 1.0f) * 100.0f));
         if (Field(idManager.AllocateDynamicID("color_alpha_value"), alphaPercent, TextEditBehavior::ContinuousUpdate,
                   theme.colorAlphaInputStyleRef, NumericFieldConfig<int>{ .minVal = 0, .maxVal = 100 },
@@ -1011,7 +979,7 @@ namespace interstice
                 {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
 
             if (BeginWindow(cp.windowID, "Color Picker", std::move(popupPos), theme.colorPickerStyleRef,
-                            ElementFlags::WindowUserControlled | ElementFlags::Shadows))
+                            ElementFlags::WindowCanMove | ElementFlags::WindowNoCaption | ElementFlags::Shadows))
             {
                 EmitColorPicker(value, allowHDR);
                 EndWindow();

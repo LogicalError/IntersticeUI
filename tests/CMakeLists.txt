@@ -24,6 +24,7 @@ list(APPEND GUI_CORE_TEST_FILES
   switch_test.cpp
   number_field_edit_test.cpp
   color_field_hex_test.cpp
+  gradient_editor_dialog_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp
   node_view_wire_edit_test.cpp

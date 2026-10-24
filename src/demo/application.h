@@ -76,8 +76,8 @@ namespace interstice
         StyleRef logLevelIconStyleRef, logLevelWellStyleRef;
         StyleRef logLevelPillStyleRefs[3];   // indexed by LogLevel
         StyleRef iconToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
-        StyleRef logTableStyleRef, filesToolbarStyleRef;
-        StyleRef typedFieldStyleRef, typedFieldInputStyleRef, typedFieldTypeStyleRef, inspectorPairHalfStyleRef, inspectorCaptionStyleRef, inspectorHeaderStyleRef, inspectorObjectIconStyleRef, inspectorObjectNamesStyleRef, inspectorObjectTitleStyleRef, inspectorObjectPathStyleRef, inspectorSearchRowStyleRef, inspectorSectionStyleRef, inspectorSectionFirstStyleRef, inspectorSectionBodyStyleRef;
+        StyleRef logTableStyleRef, filesToolbarStyleRef, appIconStyleRef;
+        StyleRef inspectorPairHalfStyleRef, inspectorCaptionStyleRef, inspectorHeaderStyleRef, inspectorObjectIconStyleRef, inspectorObjectNamesStyleRef, inspectorObjectTitleStyleRef, inspectorObjectPathStyleRef, inspectorSearchRowStyleRef, inspectorSectionStyleRef, inspectorSectionFirstStyleRef, inspectorSectionBodyStyleRef;
         StyleRef profilerHeaderStyleRef, profilerRecordStyleRef, profilerPauseStyleRef, profilerMsStyleRef, profilerFpsStyleRef;
         StyleRef profilerPctCellStyleRef, profilerPctTrackStyleRef, profilerPctFillStyleRef, profilerPctTextStyleRef;
         StyleRef logDetailPaneStyleRef, logDetailTextStyleRef;
@@ -117,7 +117,7 @@ namespace interstice
 
             float sliderValue = 0.5f;
             float sliderFieldValue = 50.0f; // SliderField demo (range [0, 100])
-            interstice::color4f demoColor { 0.2f, 0.5f, 0.8f, 1.0f }; // ColorField demo
+            interstice::color4f demoColor { 0.2f, 0.5f, 0.8f, 0.5f }; // ColorField demo, half transparent to show its alpha
             interstice::Gradient demoGradient = interstice::Gradient::Linear(
                 interstice::color4f{1.0f, 0.0f, 0.0f, 1.0f},
                 interstice::color4f{0.0f, 0.0f, 1.0f, 1.0f}); // GradientField demo

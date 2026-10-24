@@ -71,6 +71,10 @@ namespace interstice
         // OS window hosting this layout, refreshed each frame. A cross-window tab drop
         // raises it, since the OS may otherwise focus an arbitrary window when the source closes.
         interstice::ID hostWindowID = interstice::ID::Invalid();
+
+        // A torn-off window's layout: a root leaf puts its tabs in the window's title bar.
+        bool                  tabsInTitleBar = false;
+        std::function<void()> onDock;   // the title bar's Dock button (none when unset)
     };
 
     // Valid only between BeginDockingContainer / EndDockingContainer; handlers must capture pointers.
@@ -96,6 +100,10 @@ namespace interstice
         DockingLayout layout;
         interstice::int2     spawnPosition {};                   // screen coords, first frame only
         bool          positioned = false;                 // once true, the OS manages the position
+        // Where Dock returns the panels: the layout and leaf they were torn from.
+        DockingLayout*  home       = nullptr;
+        interstice::ID  homeLeafID = interstice::ID::Invalid();
+        bool            dockRequested = false;                // Dock clicked; done next frame
     };
 
 }

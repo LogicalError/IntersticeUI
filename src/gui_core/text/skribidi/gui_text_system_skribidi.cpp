@@ -287,6 +287,12 @@ namespace interstice
 
 
 
+	void SkribidiTextSystem::SetCaretColor(VisualColorStyleIndex color)
+	{
+		if (m_skribidiContext && color != VisualColorStyleIndex::Invalid)
+			m_skribidiContext->caretColorStyleIndex = color;
+	}
+
 	void SkribidiTextSystem::SetTextColor(TextID textId, VisualColorStyleIndex color)
 	{
 		if (!m_skribidiContext) return;

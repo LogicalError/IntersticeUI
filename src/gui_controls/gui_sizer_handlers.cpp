@@ -241,12 +241,12 @@ namespace interstice
     EventHandler MakeSliderHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage,
                                    float* value, int elementWidth,
                                    std::function<void()> onChanged,
-                                   float minVal, float maxVal)
+                                   float minVal, float maxVal, SliderPress press)
     {
         // The clamping below assumes minVal <= maxVal.
         if (maxVal < minVal) std::swap(minVal, maxVal);
 
-        return [value, &guiStateManager, &elementStorage, elementWidth, onChanged, minVal, maxVal](ElementEvent&& event)->bool
+        return [value, &guiStateManager, &elementStorage, elementWidth, onChanged, minVal, maxVal, press](ElementEvent&& event)->bool
         {
             if (value == nullptr) return false;
             int w = std::max(1, elementWidth);
@@ -292,6 +292,11 @@ namespace interstice
                         state.movedPastThreshold = false;
                         state.dragStartLocal = event.state.screenPos;
                         state.startValue = *value; // for Escape-to-cancel
+                        if (press == SliderPress::Jump)
+                        {
+                            state.movedPastThreshold = true;
+                            setValueFromMouse();
+                        }
                         return true;
                     }
                     break;

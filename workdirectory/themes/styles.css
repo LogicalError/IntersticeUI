@@ -16,6 +16,7 @@
     --radius-sm:         4px;
     --radius-md:         4px;  /* controls */
     --radius-lg:         6px;  /* panels, nodes */
+    --radius-dialog:     8px;  /* dialogs, menus */
     --radius-toolbar:    0px;
     --radius-md-first:   4px 0px 0px 4px;
     --radius-md-mid:     0px 0px 0px 0px;
@@ -590,16 +591,19 @@
    aligned (text-align: start) because dropdowns display a current value that
    should read from the left edge — a centered label looks like a plain button. */
 .menu-trigger {
+    min-width: 160px;
+    height: 24px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
     background-color: var(--bg-control);
-    color: var(--text-2);
-    margin: 1px;
-    padding: 4px 8px 4px 8px;
+    color: var(--text-1);
+    margin: 0px;
+    padding: 0px 6px 0px 8px;
     overflow: auto;
     text-align: start;
-    vertical-align: baseline;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     -interstice-icon-side: right;   /* the dropdown arrow */
     -interstice-icon-size: 12px;
     -interstice-icon-text-gap: 6px;
@@ -611,9 +615,10 @@
     cursor: pointer;
 }
 .menu-trigger:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.menu-trigger:active { border-color: var(--accent); background-color: var(--bg-pressed); }
+.menu-trigger:active { border-color: var(--accent); background-color: var(--bg-control); }
 .menu-trigger:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.menu-trigger::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+/* Open: an accent border. */
+.menu-trigger::highlight(selected) { border-color: var(--accent); background-color: var(--bg-control); }
 
 
 /* ---- dashedStyle ---------------------------------------------------------- */
@@ -1810,14 +1815,16 @@
    dictionary Field() helpers. A distinct surface + dark recessed-well border sets
    the collection apart from the panel; the rows, drag knob and add/delete buttons
    sit transparent on top of it. */
+/* ---- List and dictionary fields --------------------------------------------- */
+/* The container: rows 2 apart, then the add button. */
 .collection-area {
-    border-width: var(--border-thin);
-    border-radius: var(--radius-md);
-    border-color: var(--panel-border);
-    background-color: var(--bg-panel);
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-list);
     padding: 4px;
-    margin: 1px;
-    gap: 0px;
+    margin: 0px;
+    gap: 2px;
 
     display: flex;
     overflow: auto;
@@ -1864,24 +1871,139 @@
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 0px;
-    background-color: var(--bg-panel);
+    background-color: var(--bg-app);
     border-color: transparent;
     align-items: stretch;
 }
+/* A torn-off window: the title bar (grip, the panel's tabs, Dock, window buttons) over the
+   panel, inset 4 px as when docked. */
+.dock-window-leaf {
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+.dock-window-panel {
+    margin: 0px 4px 4px 4px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--panel-border);
+    background-color: var(--bg-panel);
+    overflow: hidden;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.dock-window-body {
+    margin: 0px 4px 4px 4px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.title-bar-tab-bar {
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+    background-color: transparent;
+    border-color: transparent;
+    font-size: var(--font-size);
+    align-self: stretch;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.title-bar-grip {
+    width: 12px;
+    margin: 0px 2px 0px 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    -interstice-icon-color: var(--text-3);
+    -interstice-icon-size: 14px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.title-bar-title {
+    margin: 0px 0px 0px 4px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-1);
+    font-weight: 500;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+}
+.title-bar-text-button {
+    height: 26px;
+    margin: 0px 6px 0px 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    text-wrap: nowrap;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 14px;
+    -interstice-icon-text-gap: 6px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.title-bar-text-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.title-bar-text-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
 
 /* ---- menuStyle ------------------------------------------------------------ */
+/* A menu's popup: 264 wide, 4 px inside, rounded. */
 .menu {
+    min-width: 264px;
     display: flex;
     overflow: auto;
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 0px;
-    padding: 0px;
+    padding: 4px;
     margin: 0px;
-    border-width: var(--border-thin);
-    background-color: var(--bg-raised);
-    border-color: var(--line-subtle);
+    border-width: 1px;
+    border-radius: var(--radius-dialog);
+    background-color: var(--bg-popup);
+    border-color: var(--line-strong);
 }
 
 /* ---- menuScrollButtonStyle ------------------------------------------------ */
@@ -1928,21 +2050,23 @@
    optional fixed icon slot, a grow:1 label, and an optional trailing shortcut
    or submenu arrow. The row owns the hover/focus/selected highlight; its
    children are non-interactive so the whole row highlights as one unit. */
+/* An item: icon or check | label | shortcut | submenu arrow, 26 high. */
 .menu-item-row {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 6px;
-    border-width: var(--border-thin);
-    border-radius: 0px;
+    gap: 8px;
+    height: 26px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
     border-color: transparent;
     margin: 0px;
-    padding: 2px 6px;
+    padding: 0px 8px;
     overflow: visible;
     flex-grow: 0;
     flex-shrink: 0;
-    background-color: var(--bg-control);
+    background-color: transparent;
 }
 /* "selected" (current/checked) items are marked with a checkmark in the icon
    column (see MenuItemRow), not a background — so the hover/focus highlight is
@@ -1963,7 +2087,7 @@
 .menu-item-icon {
     width: 16px;
     height: 18px;
-    -interstice-icon-size: 16px;
+    -interstice-icon-size: 14px;
     -interstice-icon-side: left;
     -interstice-icon-text-gap: 0px;
     text-align: center;
@@ -1976,7 +2100,9 @@
     padding: 0px;
     background-color: transparent;
     color: var(--text-2);
+    -interstice-icon-color: var(--text-2);
 }
+.menu-item-icon::highlight(selected) { -interstice-icon-color: var(--accent); }   /* a checked item's tick */
 
 /* The label fills the row, pushing any trailing shortcut/arrow to the edge. */
 .menu-item-label {
@@ -1989,7 +2115,7 @@
     text-align: start;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    color: var(--text-2);
+    color: var(--text-1);
     font-size: var(--font-size);
     background-color: transparent;
 }
@@ -1999,13 +2125,14 @@
     flex-grow: 0;
     flex-shrink: 0;
     border-width: 0px;
-    margin: 0px 0px 0px 12px;
+    margin: 0px;
     padding: 0px;
     vertical-align: middle;
     text-align: end;
     text-wrap: nowrap;
     color: var(--text-3);
-    font-size: var(--font-size);
+    font-family: monospace;
+    font-size: 10.5px;
     background-color: transparent;
 }
 
@@ -2015,7 +2142,8 @@
     flex-grow: 0;
     flex-shrink: 0;
     border-width: 0px;
-    margin: 0px 0px 0px 12px;
+    margin: 0px;
+    width: 12px;
     padding: 0px;
     vertical-align: middle;
     text-align: end;
@@ -2122,11 +2250,24 @@
 /* Thin divider between groups of items inside a dropdown. Height comes from
    MenuSeparator(); this just paints the line and insets it. */
 .menu-separator {
-    margin: 4px 8px;
+    margin: 4px 0px;
     height: 1px;
     padding: 0px;
-    background-color: var(--text-2);
+    background-color: var(--line-subtle);
     border-color: transparent;
+}
+/* A section's name, lined up with the labels (past the icon column). */
+.menu-header {
+    height: 22px;
+    margin: 0px;
+    padding: 7px 8px 0px 32px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 500;
 }
 
 /* ---- tooltipStyle --------------------------------------------------------- */
@@ -2177,6 +2318,281 @@
    button, or a list row's widgets) always stay on one line. The PARENT
    reorderable group can still wrap items between themselves via its own
    flex-wrap setting. */
+.collection-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+}
+/* A list row: grip | index | field | remove. */
+.collection-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    margin: 0px;
+    padding: 0px 2px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+}
+.collection-row:hover { background-color: var(--bg-hover); }
+.collection-index {
+    width: 14px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-align: end;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 10.5px;
+    flex-shrink: 0;
+}
+.collection-remove {
+    width: 22px;
+    height: 22px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 12px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.collection-remove:hover { background-color: var(--error-soft); color: var(--error); }
+/* "+ Add item", lined up with the fields (past the grip and index, short of remove). */
+.collection-add {
+    height: 24px;
+    margin: 2px 24px 0px 42px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    -interstice-border-dash-size: 3px;
+    background-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    text-wrap: nowrap;
+    cursor: pointer;
+}
+.collection-add:hover { background-color: var(--bg-hover); color: var(--text-1); }
+.collection-add-entry {
+    height: 24px;
+    margin: 2px 24px 0px 2px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    -interstice-border-dash-size: 3px;
+    background-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    text-wrap: nowrap;
+    cursor: pointer;
+}
+.collection-add-entry:hover { background-color: var(--bg-hover); color: var(--text-1); }
+/* A dictionary row: key | value | remove; the header names them with their types. */
+.collection-entry {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    margin: 0px;
+    padding: 0px 2px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+}
+.collection-value {
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.collection-value:hover { border-color: var(--line-strong); }
+.collection-value:focus { border-color: var(--accent); }
+.collection-value::selection { color: var(--text-1); background-color: var(--selection); }
+.collection-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 20px;
+    margin: 0px;
+    padding: 0px 2px 0px 4px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.collection-header-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-basis: 0;
+}
+.collection-header-caption {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 500;
+}
+.collection-header-type {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 10px;
+}
+
+/* A number field with its type after the value: the box holds a borderless
+   field and the type. */
+.typed-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px 0px 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    overflow: hidden;
+    flex-grow: 1;   /* fills its row, as a text field */
+    flex-basis: 0;
+}
+.typed-field-input {
+    height: 22px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.typed-field-input::selection { color: var(--text-1); background-color: var(--selection); }
+.typed-field-type {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 10px;
+}
+
+/* A label over a field taller than a row: at the top, with a caption under it. */
+.group-label-top {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0px 1px 0px 0px;
+    padding: 9px 8px 0px 8px;   /* level with the field's first row */
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+    align-self: flex-start;
+    break-after: avoid;
+}
+.group-label-title {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-wrap: nowrap;
+    color: var(--text-2);
+    font-size: var(--font-size);
+}
+.group-label-caption {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+}
+
 .reorderableItem {
     border-width: 0px;
     padding: 0px;
@@ -2906,10 +3322,7 @@
 /* Horizontal flex rows used inside ColorPicker / GradientEditor popups and the
    color-gradient-slider control. Same default geometry; split selectors so any
    one can diverge without touching the others. */
-.color-gradient-slider-row,
-.color-picker-tab-row,
-.color-picker-previews,
-.gradient-editor-tab-row {
+.color-gradient-slider-row {
     border-width: 0px;
     padding: 0px;
     margin: 0px;
@@ -3132,13 +3545,15 @@
     border-color: transparent;
     flex-grow: 1;
 }
+/* The swatch's color is drawn: the left half opaque, the right half at its alpha over a
+   checkerboard, an alpha bar along the bottom. */
 .color-swatch {
-    width: 40px;
+    width: 56px;
     height: 24px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
-    background-color: #ffffffff;
+    background-color: transparent;
     margin: 0px;
     padding: 0px;
     overflow: auto;
@@ -3176,7 +3591,7 @@
     flex-direction: row;
     align-items: center;
     gap: 0px;
-    width: 56px;
+    width: 60px;   /* "A" and "100%" */
     height: 24px;
     margin: 0px;
     padding: 0px 8px 0px 0px;
@@ -3188,10 +3603,22 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
+.color-alpha-caption {
+    margin: 0px;
+    padding: 0px 0px 0px 8px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 10px;
+}
 .color-alpha-input {
     height: 22px;
     margin: 0px;
-    padding: 0px 2px 0px 6px;
+    padding: 0px 1px 0px 2px;
     border-width: 0px;
     border-color: transparent;
     background-color: transparent;
@@ -3221,58 +3648,537 @@
 .color-swatch:hover { border-color: var(--line-strong); }
 
 .color-picker {
-    padding: 8px;
-    gap: 4px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: start;
-}
-
-.color-picker-wheel {
-    width: 220px;
-    height: 220px;
-    background-color: transparent;
-    border-width: 0px;
-    cursor: crosshair;
-}
-
-.color-gradient-slider {
-    height: 24px;
-    background-color: transparent;
-    border-width: var(--border-thin);
-    border-color: var(--line-node);
-    border-radius: var(--radius-sm);
+    width: 640px;   /* the spec's 560, wider for the Lab and Oklab spaces */
     padding: 0px;
+    gap: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-width: 1px;
+    border-radius: var(--radius-dialog);
+    border-color: var(--panel-border);
+    background-color: var(--bg-panel);
+    overflow: hidden;
+}
+
+/* The color picker dialog: square and strips at the left, the controls at the right. */
+.color-picker-body {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    margin: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-planes {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: visible;
+}
+.color-picker-square {
+    width: 240px;
+    height: 240px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    cursor: crosshair;
+    overflow: visible;
+}
+.color-picker-strip {
+    width: 16px;
+    height: 240px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
     cursor: pointer;
     overflow: visible;
 }
-
-.color-picker-new {
-    width: 24px;
-    height: 24px;
+.color-picker-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin: 0px;
     padding: 0px;
-    border-width: var(--border-thin);
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-basis: 0;
+}
+.color-picker-preview-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+/* New | Original, drawn on the checkerboard. */
+.color-picker-preview {
+    height: 40px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--line-node);
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+.color-picker-captions {
+    display: flex;
+    flex-direction: row;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-caption {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+}
+.color-picker-mode-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-range {
+    height: 26px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 11px;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.color-picker-range:hover { background-color: var(--bg-active); color: var(--text-1); }
+.color-picker-channels {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-channel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-channel-label {
+    width: 14px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+/* The track and thumb are drawn: an 8 px gradient bar across the middle of the row. */
+.color-picker-track {
+    height: 26px;
+    margin: 0px;
+    padding: 0px 6px;   /* room for the thumb at the ends */
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    cursor: pointer;
+    overflow: visible;
+}
+.color-picker-channel-value {
+    width: 52px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: end;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: text;
+}
+.color-picker-channel-value:hover { border-color: var(--line-strong); }
+.color-picker-channel-value:focus { border-color: var(--accent); }
+.color-picker-channel-value::selection { color: var(--text-1); background-color: var(--selection); }
+.color-picker-field-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.color-picker-row-label {
+    width: 30px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    flex-shrink: 0;
+}
+.color-picker-hdr {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 0px 0px 8px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    overflow: hidden;
+}
+.color-picker-hdr-value {
+    height: 22px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: end;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.color-picker-hdr-value:disabled { color: var(--text-3); }
+.color-picker-hdr-value::selection { color: var(--text-1); background-color: var(--selection); }
+.color-picker-swatches {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0px;
+    padding: 12px 16px 14px 16px;
+    border-width: 1px 0px 0px 0px;
+    border-color: var(--line-subtle);
+    background-color: transparent;
+}
+.color-picker-swatch-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+}
+.color-picker-section-label {
+    width: 64px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+/* A swatch: drawn split opaque | with alpha over the checkerboard, a 2 px alpha bar. */
+.color-picker-swatch {
+    width: 22px;
+    height: 22px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-node);
+    background-color: transparent;
+    overflow: visible;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.color-picker-recent {
+    width: 22px;
+    height: 22px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: 11px;
+    border-color: var(--line-node);
+    background-color: transparent;
+    overflow: visible;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+/* Adds the current color to the swatches. */
+.color-picker-new {
+    width: 22px;
+    height: 22px;
+    padding: 0px;
+    margin: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
     border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    -interstice-border-dash-size: 3px;
+    background-color: transparent;
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -interstice-icon-size: 12px;
+    color: var(--text-2);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.color-picker-new:hover { background-color: var(--bg-active); color: var(--text-1); }
+
+/* ---- Dialogs: a title row, the content, and a footer with the buttons ------ */
+.dialog-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    margin: 0px;
+    padding: 0px 8px 0px 16px;
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--line-subtle);
+    background-color: var(--bg-header);
+}
+.dialog-title {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-wrap: nowrap;
-    text-overflow: clip;
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 600;
+}
+.dialog-context {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+.dialog-close {
+    width: 28px;
+    height: 28px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-close:hover { background-color: var(--bg-active); color: var(--text-1); }
+.dialog-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    margin: 0px;
+    padding: 0px 16px;
+    border-width: 1px 0px 0px 0px;
+    border-color: var(--line-subtle);
+    background-color: var(--bg-header);
+}
+.dialog-status {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+.dialog-status-dot {
+    width: 6px;
+    height: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: 3px;
+    background-color: var(--ok);
+    border-color: transparent;
+    flex-shrink: 0;
+}
+.dialog-button {
+    height: 28px;
+    margin: 0px;
+    padding: 0px 14px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-1);
+    font-size: var(--font-size);
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-button:hover  { background-color: var(--bg-active); }
+.dialog-button:active { background-color: var(--bg-pressed); }
+.dialog-button-primary {
+    height: 28px;
+    margin: 0px;
+    padding: 0px 18px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: var(--accent);
+    color: var(--on-accent);
+    font-size: var(--font-size);
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-button-primary:hover  { background-color: var(--divider-hover); }
+
+/* ---- Checkbox: a box with a tick when checked, and its label ---------------- */
+.checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.checkbox:hover { background-color: var(--bg-active); }
+.checkbox-box {
+    width: 14px;
+    height: 14px;
+    margin: 0px;
+    padding: 1px;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: var(--line-strong);
+    background-color: var(--bg-input);
+    color: var(--on-accent);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-shrink: 0;
+}
+.checkbox-box::highlight(selected) { background-color: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.checkbox-label {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
     color: var(--text-2);
     font-size: var(--font-size);
-    align-content: center;
 }
-
-.color-picker-preview {
-    width: 24px;
-    height: 24px;
-    border-width: var(--border-thin);
-    border-color: var(--line-strong);
-    background-color: #ffffffff;
-}
+.checkbox-label::highlight(selected) { color: var(--text-1); }
 
 /* ---- Gradient editor ------------------------------------------------------ */
 .gradient-swatch {
@@ -3292,23 +4198,427 @@
 .gradient-swatch:hover { border-color: var(--line-strong); }
 
 .gradient-editor {
-    padding: 8px;
-    gap: 4px;
-    width: 280px;
-    flex-direction: column;
-}
-
-.gradient-editor-bar {
-    height: 30px;
-    background-color: transparent;
-    border-width: var(--border-thin);
-    border-color: var(--line-node);
-    border-radius: var(--radius-sm);
+    width: 720px;
     padding: 0px;
+    gap: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-width: 1px;
+    border-radius: var(--radius-dialog);
+    border-color: var(--panel-border);
+    background-color: var(--bg-panel);
+    overflow: hidden;
+}
+.gradient-editor-presets {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 12px 16px 0px 16px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+}
+.gradient-editor-section-label {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    width: 60px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+/* A preset: its gradient drawn over the checkerboard. */
+.gradient-editor-preset {
+    width: 64px;
+    height: 22px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    overflow: visible;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+/* The bar (44 high, inset 24 at the sides) and the stops under it, all drawn. */
+.gradient-editor-bar {
+    height: 92px;
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-width: 0px;
+    border-color: transparent;
     cursor: pointer;
     overflow: visible;
-    align-self: stretch;
 }
+.gradient-editor-badge {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--on-accent);
+    font-size: 10.5px;
+    font-family: monospace;
+}
+.gradient-editor-columns {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    margin: 0px;
+    padding: 4px 16px 16px 16px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    align-items: flex-start;
+}
+.gradient-editor-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-basis: 0;
+}
+.gradient-editor-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    min-height: 24px;
+}
+.gradient-editor-heading {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-1);
+    font-size: var(--font-size);
+    font-weight: 600;
+}
+.gradient-editor-count {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    font-family: monospace;
+}
+.gradient-editor-label {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    width: 84px;
+    flex-shrink: 0;
+}
+.gradient-editor-location {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px 0px 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    overflow: hidden;
+}
+.gradient-editor-location-input {
+    height: 22px;
+    margin: 0px;
+    padding: 0px 0px 0px 8px;
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: end;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.gradient-editor-location-input::selection { color: var(--text-1); background-color: var(--selection); }
+.gradient-editor-location-unit {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11.5px;
+    font-family: monospace;
+}
+.gradient-editor-divider {
+    height: 1px;
+    margin: 4px 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: var(--line-subtle);
+    border-color: transparent;
+}
+.gradient-editor-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    padding: 0px 0px 0px 92px;   /* under the controls, past the labels */
+}
+/* The stops table: a header row, then one row per stop; the selected one gets a soft
+   fill and a 2 px accent bar on its left. */
+.gradient-editor-table {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    overflow: hidden;
+    flex-basis: 0;
+}
+.gradient-editor-table-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    margin: 0px;
+    padding: 0px 10px;
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--line-subtle);
+    background-color: var(--bg-header);
+}
+.gradient-editor-table-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 10px 0px 8px;
+    border-width: 0px 0px 0px 2px;
+    border-color: transparent;
+    background-color: transparent;
+    cursor: pointer;
+}
+.gradient-editor-table-row:hover { background-color: var(--bg-hover); }
+.gradient-editor-table-row::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent); }
+.gradient-editor-type-cell {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: var(--font-size);
+    width: 52px;
+    flex-shrink: 0;
+}
+.gradient-editor-swatch-cell {
+    width: 22px;
+    height: 14px;
+    margin: 0px 8px 0px 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: 3px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-shrink: 0;
+}
+.gradient-editor-head-cell {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 500;
+}
+.gradient-editor-head-location {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+    width: 64px;
+    text-align: end;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+.gradient-editor-value-cell {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-2);
+    font-size: 11px;
+    font-family: monospace;
+}
+.gradient-editor-location-cell {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-2);
+    font-size: 11px;
+    width: 64px;
+    text-align: end;
+    font-family: monospace;
+    flex-shrink: 0;
+}
+.gradient-editor-value-cell::highlight(selected), .gradient-editor-location-cell::highlight(selected) { color: var(--text-1); }
+
+/* Dialog buttons: 24 high with a label, square icon ones, a delete one. */
+.dialog-small-button {
+    height: 24px;
+    margin: 0px;
+    padding: 0px 10px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-1);
+    font-size: var(--font-size);
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-small-button:hover  { background-color: var(--bg-active); }
+.dialog-small-button:active { background-color: var(--bg-pressed); }
+.dialog-icon-button {
+    width: 24px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-2);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-icon-button:hover { background-color: var(--bg-active); color: var(--text-1); }
+.dialog-square-button {
+    width: 24px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-1);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-square-button:hover { background-color: var(--bg-active); }
+.dialog-delete-button {
+    width: 24px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--error);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dialog-delete-button:hover { background-color: var(--bg-active); }
+
 
 /* ---- View-panel toolbars -------------------------------------------------- */
 /* Each side is a reorderable group; toolbars wrap to extra rows/cols when */

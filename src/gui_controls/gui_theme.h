@@ -92,9 +92,6 @@ namespace interstice
         StyleRef knobStyleRef {};
         StyleRef sliderFieldTrackStyleRef {};
         StyleRef colorGradientSliderRowStyleRef {}; // outer row of EmitColorGradientSlider (bar + numeric field)
-        StyleRef colorPickerTabRowStyleRef {};      // colour-space tabs in ColorPicker
-        StyleRef colorPickerPreviewsStyleRef {};    // old/new + palette swatch row in ColorPicker
-        StyleRef gradientEditorTabRowStyleRef {};   // colour-space tabs in GradientEditor
         StyleRef sliderFieldBgStyleRef {};   // unfilled half painted by the slider's custom-draw
         StyleRef sliderFieldFillStyleRef {}; // filled half painted by the slider's custom-draw
         StyleRef sliderFieldTextStyleRef {}; // label text overlaid on the track
@@ -120,14 +117,78 @@ namespace interstice
         StyleRef colorAlphaStyleRef {};       // ColorField: the alpha box (value and %)
         StyleRef colorAlphaInputStyleRef {};  // ColorField: the alpha value in its box
         StyleRef colorAlphaUnitStyleRef {};   // ColorField: the % after it
+        StyleRef colorAlphaCaptionStyleRef {};// ColorField: the "A" before it
         StyleRef colorPickerStyleRef {};
-        StyleRef colorPickerWheelStyleRef {};
+        StyleRef dialogHeaderStyleRef {};               // dialog: the title row
+        StyleRef dialogTitleStyleRef {};
+        StyleRef dialogContextStyleRef {};    // dialog: what's being edited, after the title
+        StyleRef colorPickerHdrValueStyleRef {}; // color picker: the intensity value                // dialog: its title
+        StyleRef dialogCloseStyleRef {};                // dialog: the close button
+        StyleRef dialogFooterStyleRef {};               // dialog: status and buttons
+        StyleRef dialogStatusStyleRef {};               // dialog: the footer's status text
+        StyleRef dialogStatusDotStyleRef {};            // dialog: the dot before it
+        StyleRef dialogButtonStyleRef {};               // dialog: a secondary button (Cancel)
+        StyleRef dialogPrimaryButtonStyleRef {};        // dialog: the primary button (OK)
+        StyleRef checkboxStyleRef {};                   // Checkbox: the control
+        StyleRef checkboxBoxStyleRef {};                // Checkbox: the box
+        StyleRef checkboxLabelStyleRef {};              // Checkbox: its label
+        StyleRef colorPickerBodyStyleRef {};            // color picker: planes and controls
+        StyleRef colorPickerPlanesStyleRef {};          // color picker: square and strips
+        StyleRef colorPickerSquareStyleRef {};          // color picker: the saturation/value square
+        StyleRef colorPickerStripStyleRef {};           // color picker: the hue and alpha strips
+        StyleRef colorPickerControlsStyleRef {};        // color picker: the right column
+        StyleRef colorPickerPreviewGroupStyleRef {};    // color picker: preview and captions
+        StyleRef colorPickerCaptionsStyleRef {};        // color picker: New / Original
+        StyleRef colorPickerCaptionStyleRef {};         // color picker: a small caption
+        StyleRef colorPickerModeRowStyleRef {};         // color picker: space, Linear, range
+        StyleRef colorPickerRangeStyleRef {};           // color picker: the 0-255 / 0-1 toggle
+        StyleRef colorPickerChannelsStyleRef {};        // color picker: the channel rows
+        StyleRef colorPickerChannelStyleRef {};         // color picker: one channel row
+        StyleRef colorPickerChannelLabelStyleRef {};    // color picker: R, G, B, A ...
+        StyleRef colorPickerTrackStyleRef {};           // color picker: a channel's track
+        StyleRef colorPickerChannelValueStyleRef {};    // color picker: a channel's value
+        StyleRef colorPickerFieldRowStyleRef {};        // color picker: Hex / HDR rows
+        StyleRef colorPickerRowLabelStyleRef {};        // color picker: Hex, HDR
+        StyleRef colorPickerHdrStyleRef {};             // color picker: the intensity box
+        StyleRef colorPickerSwatchesStyleRef {};        // color picker: swatches and recent
+        StyleRef colorPickerSwatchRowStyleRef {};       // color picker: one swatch row
+        StyleRef colorPickerSectionLabelStyleRef {};    // color picker: Swatches, Recent
+        StyleRef colorPickerSwatchStyleRef {};          // color picker: a swatch
+        StyleRef colorPickerRecentStyleRef {};          // color picker: a recent color
         StyleRef colorPickerPreviewStyleRef {};
         StyleRef colorPickerNewStyleRef{};
         StyleRef colorGradientSliderStyleRef {};
         StyleRef gradientSwatchStyleRef {};
         StyleRef gradientEditorStyleRef {};
         StyleRef gradientEditorBarStyleRef {};
+        StyleRef dialogSmallButtonStyleRef {};              // dialog: a 24 high button (Save preset, Reverse)
+        StyleRef dialogIconButtonStyleRef {};               // dialog: a borderless 24 icon button (previous / next)
+        StyleRef dialogSquareButtonStyleRef {};             // dialog: a bordered 24 icon button (duplicate)
+        StyleRef dialogDeleteButtonStyleRef {};             // dialog: the same, in the error color
+        StyleRef gradientEditorPresetsStyleRef {};          // gradient editor: the presets row
+        StyleRef gradientEditorSectionLabelStyleRef {};     // gradient editor: Presets
+        StyleRef gradientEditorPresetStyleRef {};           // gradient editor: a preset chip
+        StyleRef gradientEditorBadgeStyleRef {};            // gradient editor: the selected stop's location
+        StyleRef gradientEditorColumnsStyleRef {};          // gradient editor: the two columns
+        StyleRef gradientEditorColumnStyleRef {};           // gradient editor: the left column
+        StyleRef gradientEditorRowStyleRef {};              // gradient editor: a labeled row
+        StyleRef gradientEditorHeadingStyleRef {};          // gradient editor: Color stop
+        StyleRef gradientEditorCountStyleRef {};            // gradient editor: 2 / 3
+        StyleRef gradientEditorLabelStyleRef {};            // gradient editor: a row's label
+        StyleRef gradientEditorLocationStyleRef {};         // gradient editor: the location box
+        StyleRef gradientEditorLocationInputStyleRef {};    // gradient editor: its value
+        StyleRef gradientEditorLocationUnitStyleRef {};     // gradient editor: its %
+        StyleRef gradientEditorDividerStyleRef {};          // gradient editor: a divider line
+        StyleRef gradientEditorActionsStyleRef {};          // gradient editor: Reverse, Distribute
+        StyleRef gradientEditorTableStyleRef {};            // gradient editor: the stops table
+        StyleRef gradientEditorTableHeadStyleRef {};        // gradient editor: its header row
+        StyleRef gradientEditorTableRowStyleRef {};         // gradient editor: a stop's row
+        StyleRef gradientEditorTypeCellStyleRef {};         // gradient editor: Type
+        StyleRef gradientEditorSwatchCellStyleRef {};       // gradient editor: the stop's color
+        StyleRef gradientEditorHeadCellStyleRef {};         // gradient editor: a header caption
+        StyleRef gradientEditorHeadLocationStyleRef {};     // gradient editor: Location
+        StyleRef gradientEditorValueCellStyleRef {};        // gradient editor: the stop's hex
+        StyleRef gradientEditorLocationCellStyleRef {};     // gradient editor: the stop's location
         StyleRef tableStyleRef {};
         StyleRef tableFillStyleRef {};       // table bounded to its flex container (flex-basis:0) — overflows scroll, table doesn't grow
         // Header grid, a sibling of the body so it doesn't scroll with the rows.
@@ -199,8 +260,33 @@ namespace interstice
         StyleRef mainWindowStyleRef{};
         StyleRef windowStyleRef {};
         StyleRef dockWindowStyleRef {}; // floating dock window — no internal padding
+        StyleRef dockWindowLeafStyleRef {};     // a torn-off window's root leaf: the title bar over the panel
+        StyleRef dockWindowPanelStyleRef {};    // the panel inset under a torn-off window's title bar
+        StyleRef dockWindowBodyStyleRef {};     // a torn-off window's split layout, inset the same
+        StyleRef titleBarTabBarStyleRef {};     // the tab strip in a torn-off window's title bar
+        StyleRef titleBarGripStyleRef {};       // the grip before it
+        StyleRef titleBarTitleStyleRef {};      // the window's name when the tabs aren't in the bar
+        StyleRef titleBarTextButtonStyleRef {}; // a text button in a title bar (Dock)
         StyleRef listAreaStyleRef {};
         StyleRef collectionAreaStyleRef {}; // card-like well behind the list & dictionary Field() helpers
+        StyleRef typedFieldStyleRef {};                 // TypedField: the box
+        StyleRef typedFieldInputStyleRef {};            // TypedField: the value
+        StyleRef typedFieldTypeStyleRef {};             // TypedField: the type tag
+        StyleRef collectionListStyleRef {};             // list field: the rows
+        StyleRef collectionRowStyleRef {};              // list field: a row
+        StyleRef collectionIndexStyleRef {};            // list field: a row's index
+        StyleRef collectionRemoveStyleRef {};           // list / dictionary: remove
+        StyleRef collectionAddStyleRef {};              // list field: Add item
+        StyleRef collectionAddEntryStyleRef {};         // dictionary: Add entry
+        StyleRef collectionEntryStyleRef {};            // dictionary: a row
+        StyleRef collectionValueStyleRef {};            // dictionary: a value
+        StyleRef collectionHeaderStyleRef {};           // dictionary: the header row
+        StyleRef collectionHeaderCellStyleRef {};       // dictionary: Key / Value
+        StyleRef collectionHeaderCaptionStyleRef {};    // dictionary: the caption
+        StyleRef collectionHeaderTypeStyleRef {};       // dictionary: the type
+        StyleRef groupLabelTopStyleRef {};              // Label with a caption: the container
+        StyleRef groupLabelTitleStyleRef {};            // Label with a caption: the title
+        StyleRef groupLabelCaptionStyleRef {};          // Label with a caption: the caption
         StyleRef iconButtonStyleRef {}; // compact flat icon button — list/dict delete (in-row)
         StyleRef iconButtonEndStyleRef {}; // same, end-aligned — the trailing add button
         StyleRef menuStyleRef {};
@@ -211,7 +297,8 @@ namespace interstice
         StyleRef titleBarStyleRef {};            // a window's own title bar (BeginTitleBar)
         StyleRef titleBarButtonStyleRef {};      // its minimize and maximize buttons
         StyleRef titleBarCloseButtonStyleRef {};
-        StyleRef menuSeparatorStyleRef {};  // thin divider between items in a dropdown
+        StyleRef menuSeparatorStyleRef {};
+        StyleRef menuHeaderStyleRef {};     // a section's name in a menu  // thin divider between items in a dropdown
         StyleRef menuItemRowStyleRef {};      // interactive row: icon slot + label + trailing shortcut/arrow
         StyleRef menuItemIconStyleRef {};     // fixed icon slot inside a menu item row
         StyleRef menuItemLabelStyleRef {};    // grow:1 label inside a menu item row
@@ -286,6 +373,12 @@ namespace interstice
         IconID tabCloseIcon = IconID::Invalid;
         IconID menuCheckIcon = IconID::Invalid; // marks the current/checked item in a menu
         IconID dropdownArrowIcon = IconID::Invalid; // after a dropdown's text (menu triggers outside a menu bar)
+        IconID dropdownArrowUpIcon = IconID::Invalid; // the same while its menu is open
+        IconID chevronLeftIcon   = IconID::Invalid; // previous
+        IconID duplicateIcon     = IconID::Invalid;
+        IconID deleteIcon        = IconID::Invalid;
+        IconID reverseIcon       = IconID::Invalid;
+        IconID distributeIcon    = IconID::Invalid;
 
         // Add / remove row buttons in the list & dictionary Field() helpers
         IconID addIcon    = IconID::Invalid;
@@ -293,6 +386,7 @@ namespace interstice
 
         // Drag-handle grip (≡) for reorderable-list / tree-list thumbs
         IconID dragHandleIcon = IconID::Invalid;
+        IconID dockIcon = IconID::Invalid;        // returns a torn-off panel to its dock
         IconID searchIcon     = IconID::Invalid;
         IconID windowMinimizeIcon = IconID::Invalid;
         IconID windowMaximizeIcon = IconID::Invalid;
@@ -306,6 +400,9 @@ namespace interstice
         interstice::VisualColorStyleIndex treeGuideLineStyle;
         interstice::VisualColorStyleIndex dividerHoverLineStyle; // a hovered divider drawn as a line (label sizer)
         interstice::VisualColorStyleIndex nanTextColor;          // a number field's NaN
+        interstice::VisualColorStyleIndex checkerAColor, checkerBColor;     // transparency checkerboard
+        interstice::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  // a color's alpha bar
+        interstice::VisualColorStyleIndex accentColor, panelColor;          // a selected swatch's ring and gap
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
         interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows

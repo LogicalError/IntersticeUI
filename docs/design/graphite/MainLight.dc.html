@@ -271,7 +271,7 @@ a{color:#2459C9}a:hover{color:#1A4296}
 </sc-for>
 </div>
 <div style="flex-shrink: 0; padding: 10px 16px 12px; border-top: 1px solid #E3E6EB; background: #F6F7F9; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 18px">
-<div style="color: #1A1D23"><span style="color: #2459C9">info</span> [theme] loaded themes/light.css: 190 styles, 0 errors</div>
+<div style="color: #1A1D23"><span style="color: #2459C9">info</span> [theme] loaded <span style="background: {{selection}}">themes/light.css: 190 styles</span>, 0 errors</div>
 <div style="color: #5F6673">at <a href="#">src/gui_controls/gui_theme.cpp:218</a></div>
 </div>
 </section>
@@ -365,7 +365,8 @@ class Component extends DCLogic {
       ['00:00:01.418', '[theme] loaded themes/light.css: 190 styles, 0 errors', true]
     ].map(function (l) { return { t: l[0], m: l[1], bg: l[2] ? accentSoft : 'transparent', fg: l[2] ? '#1A1D23' : '#464C57' }; });
 
-    return { accent: accent, accentSoft: accentSoft, tree: tree, bars: bars, flame: flame, scopes: scopes, folders: folders, files: files, log: log };
+    const selection = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
+    return { accent: accent, accentSoft: accentSoft, selection: selection, tree: tree, bars: bars, flame: flame, scopes: scopes, folders: folders, files: files, log: log };
   }
 }
 </script>

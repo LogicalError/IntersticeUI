@@ -115,6 +115,8 @@ namespace interstice
 
         // Remembers the color, so tests can see which texts were recolored.
         void SetTextColor(TextID textId, VisualColorStyleIndex color) override { textColors[textId] = color; }
+        void SetCaretColor(VisualColorStyleIndex color) override { caretColor = color; }
+        VisualColorStyleIndex caretColor = VisualColorStyleIndex::Invalid;
         std::unordered_map<TextID, VisualColorStyleIndex> textColors;
 
 

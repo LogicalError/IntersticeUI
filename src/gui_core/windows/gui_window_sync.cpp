@@ -39,9 +39,13 @@ namespace interstice
 
             if (noCaption)
             {
-                // Borderless/utility windows usually live on-top and aren't shown in taskbar.
+                // Borderless/utility windows aren't shown in the taskbar. They live on top,
+                // except ones the user places (dialogs, floating toolbars): those stay above
+                // their owner only, not above other apps.
                 // Transparent flag should only be used for special layered windows (e.g., drag ghosts).
-                windowFlags |= WindowFlags::Borderless | WindowFlags::Utility | WindowFlags::SkipTaskbar | WindowFlags::AlwaysOnTop;
+                windowFlags |= WindowFlags::Borderless | WindowFlags::Utility | WindowFlags::SkipTaskbar;
+                if (!isMoveable)
+                    windowFlags |= WindowFlags::AlwaysOnTop;
             }
 
             if (isPopup)

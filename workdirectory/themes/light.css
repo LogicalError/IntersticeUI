@@ -14,7 +14,7 @@
     --bg-control: #FFFFFF;
     --bg-active: #E4E7EC;
     --bg-pressed: #EEF0F3;
-    --bg-menu-hover: #E4E7EC;
+    --bg-menu-hover: #E6EEFD;
     --bg-keycap: #FFFFFF;
     --row-stripe: #F6F7F9;
     --canvas-dot: #B5BCC7;
@@ -32,7 +32,17 @@
     --text-link-hover: #1A4296;
     /* ---- Accent ----------------------------------------------------------- */
     --accent: #2F6FEB;
-    --selection: #CBDBFA;
+    --selection: #2F6FEB40;
+    --selection-inactive: #DCDFE5;
+    --caret: #2F6FEB;
+    --bg-list: #F6F7F9;
+    --bg-hover: #EAECF0;
+    --error-soft: #D645451F;
+    --bg-popup: #FFFFFF;
+    --checker-a: #FFFFFF;
+    --checker-b: #E3E6EB;
+    --alpha-track: #464C57;
+    --alpha-fill: #FFFFFF;
     --slider-thumb: #FFFFFF;
     --divider-hover: #2F6FEB;
     --accent-soft: #E2EAFA;   /* accent at 12% over --bg-panel, opaque like dark.css */

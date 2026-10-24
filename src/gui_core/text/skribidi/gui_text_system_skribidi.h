@@ -81,6 +81,7 @@ namespace interstice
         TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) override;
         TextID RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) override;
         void   SetTextColor(TextID textId, VisualColorStyleIndex color) override;
+        void   SetCaretColor(VisualColorStyleIndex color) override;
 
 
         // -------------------- Font Registration --------------------

@@ -716,10 +716,14 @@ namespace interstice
         SetWindowPos(hwnd, nullptr, frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top,
                      SWP_NOZORDER | SWP_NOACTIVATE);
     }
-#else
+#endif
+
+    // A borderless window's title bar (and, off Windows, a custom-title-bar window's frame):
+    // the GUI's caption drags it, and the edges resize a resizable one.
     static SDL_HitTestResult SDLCALL CustomTitleBarHitTest(SDL_Window* window, const SDL_Point* point, void* /*data*/)
     {
-        if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED))
+        const SDL_WindowFlags flags = SDL_GetWindowFlags(window);
+        if ((flags & SDL_WINDOW_RESIZABLE) && !(flags & SDL_WINDOW_MAXIMIZED))
         {
             constexpr int kBorder = 6;
             int w = 0, h = 0;
@@ -743,7 +747,6 @@ namespace interstice
         return backend->HitTestWindow(SDLWindowBackend::FromSDL(window), pos) == WindowHitArea::Caption
             ? SDL_HITTEST_DRAGGABLE : SDL_HITTEST_NORMAL;
     }
-#endif
 
     OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title,
                                                   IntRect rect,
@@ -849,7 +852,13 @@ namespace interstice
 #else
         if (customTitleBar)
             SDL_SetWindowHitTest(sdlWindow, CustomTitleBarHitTest, nullptr);
+        else
 #endif
+        // A borderless window the user places (a dialog) is dragged by its GUI title bar.
+        if ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None
+            && (windowFlags & interstice::WindowFlags::Moveable) != interstice::WindowFlags::None
+            && (windowFlags & interstice::WindowFlags::PopupMenu) == interstice::WindowFlags::None)
+            SDL_SetWindowHitTest(sdlWindow, CustomTitleBarHitTest, nullptr);
 
         // OS parenting makes child popups receive input and position relative to the parent.
         if (parentOSHandle != nullptr)
@@ -863,9 +872,8 @@ namespace interstice
                     SDL_SetWindowModal(sdlWindow, true);
                 }
             }
-
-            // Ensure the child/modal window stays above its parent.
-            SDL_SetWindowAlwaysOnTop(sdlWindow, true);
+            // An owned window stays above its owner without being always-on-top (which
+            // would also lift it over other apps).
         }
 
         SDL_StartTextInput(sdlWindow);

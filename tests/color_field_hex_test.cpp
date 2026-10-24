@@ -45,7 +45,7 @@ namespace
         EXPECT_NE(FindByStyle(app.theme.colorSwatchStyleRef), ID::Invalid());
         EXPECT_NE(FindByStyle(app.theme.colorHexStyleRef), ID::Invalid());
         EXPECT_NE(FindByStyle(app.theme.colorAlphaInputStyleRef), ID::Invalid());
-        EXPECT_EQ(app.GetElementRect(FindByStyle(app.theme.colorSwatchStyleRef)).w, app.styleManager.Px(40));
+        EXPECT_EQ(app.GetElementRect(FindByStyle(app.theme.colorSwatchStyleRef)).w, app.styleManager.Px(56));
     }
 
     TEST_F(ColorFieldHex, TypingAHexColorSetsIt)
@@ -68,5 +68,59 @@ namespace
         EXPECT_FLOAT_EQ(color.g, 0.0f);
         EXPECT_FLOAT_EQ(color.b, 0.0f);
         EXPECT_FLOAT_EQ(color.a, 0.5f) << "the alpha is left alone";
+    }
+
+    // The swatch opens the picker dialog; a click on its square changes the color.
+    class ColorPickerDialog : public ColorFieldHex
+    {
+    protected:
+        void Open()
+        {
+            Emit();
+            app.ClickAt(app.CenterOf(FindByStyle(app.theme.colorSwatchStyleRef)));
+            Emit();
+            Emit();
+        }
+        void Click(StyleRef style)
+        {
+            const ID id = FindByStyle(style);
+            ASSERT_NE(id, ID::Invalid());
+            app.ClickAt(app.CenterOf(id));
+            Emit();
+            Emit();
+        }
+    };
+
+    TEST_F(ColorPickerDialog, TheSwatchOpensIt)
+    {
+        Open();
+        const ID square = FindByStyle(app.theme.colorPickerSquareStyleRef);
+        ASSERT_NE(square, ID::Invalid()) << "the dialog is open";
+        EXPECT_EQ(app.GetElementRect(square).w, app.styleManager.Px(240));
+        EXPECT_NE(FindByStyle(app.theme.dialogPrimaryButtonStyleRef), ID::Invalid()) << "with an OK button";
+    }
+
+    TEST_F(ColorPickerDialog, CancelRestoresTheColor)
+    {
+        const color4f original = color;
+        Open();
+        Click(app.theme.colorPickerSquareStyleRef);
+        EXPECT_NE(color.r, original.r) << "the square changed the color";
+        Click(app.theme.dialogButtonStyleRef);
+        EXPECT_EQ(color.r, original.r);
+        EXPECT_EQ(color.b, original.b);
+        EXPECT_EQ(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "and closed the dialog";
+    }
+
+    TEST_F(ColorPickerDialog, OkKeepsTheColor)
+    {
+        const color4f original = color;
+        Open();
+        Click(app.theme.colorPickerSquareStyleRef);
+        const color4f picked = color;
+        EXPECT_NE(picked.r, original.r);
+        Click(app.theme.dialogPrimaryButtonStyleRef);
+        EXPECT_EQ(color.r, picked.r);
+        EXPECT_EQ(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "and closed the dialog";
     }
 }

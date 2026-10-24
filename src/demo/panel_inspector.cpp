@@ -43,15 +43,6 @@ namespace interstice
             inspectorRows.push_back({ label, section, std::move(emit) });
         };
 
-        // A number field with its type after the value, e.g. "0.5  f32".
-        auto typed = [this](auto& value, const char* type) {
-            BeginHorizontal(idManager.AllocateDynamicID("typedField"), typedFieldStyleRef,
-                            LayoutOverride{}.FlexGrow(1));
-            Field(value, TextEditBehavior::ContinuousUpdate, typedFieldInputStyleRef, LayoutOverride{}.FlexGrow(1));
-            Text(idManager.AllocateDynamicID("typedFieldType"), type, typedFieldTypeStyleRef);
-            EndHorizontal();
-        };
-
         // ---- Controls -------------------------------------------------------
         section = Controls;
         add("Button", [this]() {
@@ -135,16 +126,16 @@ namespace interstice
         // ---- Numbers --------------------------------------------------------
         section = Numbers;
         // One per row: drag the label to scrub the value, or type into the field.
-        add("Float",  [this, typed]() { DragLabel("Float");  typed(demo.floatValue,  "f32"); });
-        add("Double", [this, typed]() { DragLabel("Double"); typed(demo.doubleValue, "f64"); });
-        add("Int64",  [this, typed]() { DragLabel("Int64");  typed(demo.int64Value,  "i64"); });
-        add("Int32",  [this, typed]() { DragLabel("Int32");  typed(demo.int32Value,  "i32"); });
-        add("Int16",  [this, typed]() { DragLabel("Int16");  typed(demo.int16Value,  "i16"); });
-        add("Int8",   [this, typed]() { DragLabel("Int8");   typed(demo.int8Value,   "i8");  });
-        add("UInt64", [this, typed]() { DragLabel("UInt64"); typed(demo.uint64Value, "u64"); });
-        add("UInt32", [this, typed]() { DragLabel("UInt32"); typed(demo.uint32Value, "u32"); });
-        add("UInt16", [this, typed]() { DragLabel("UInt16"); typed(demo.uint16Value, "u16"); });
-        add("UInt8",  [this, typed]() { DragLabel("UInt8");  typed(demo.uint8Value,  "u8");  });
+        add("Float",  [this]() { DragLabel("Float"); TypedField(demo.floatValue); });
+        add("Double", [this]() { DragLabel("Double"); TypedField(demo.doubleValue); });
+        add("Int64",  [this]() { DragLabel("Int64"); TypedField(demo.int64Value); });
+        add("Int32",  [this]() { DragLabel("Int32"); TypedField(demo.int32Value); });
+        add("Int16",  [this]() { DragLabel("Int16"); TypedField(demo.int16Value); });
+        add("Int8",   [this]() { DragLabel("Int8"); TypedField(demo.int8Value); });
+        add("UInt64", [this]() { DragLabel("UInt64"); TypedField(demo.uint64Value); });
+        add("UInt32", [this]() { DragLabel("UInt32"); TypedField(demo.uint32Value); });
+        add("UInt16", [this]() { DragLabel("UInt16"); TypedField(demo.uint16Value); });
+        add("UInt8",  [this]() { DragLabel("UInt8"); TypedField(demo.uint8Value); });
 
         add("Float [0.25, 1]", [this]() {
             DragLabel("Float [0.25, 1]");
@@ -181,15 +172,15 @@ namespace interstice
         // ---- Lists ----------------------------------------------------------
         section = Lists;
         add("String list", [this]() {
-            Label("String list");
+            Label("String list", std::to_string(demo.stringList.size()) + " items");
             Field(demo.reorderStringListID, demo.stringList, interstice::LayoutOverride{}.FlexGrow(1));
         });
         add("Float list", [this]() {
-            Label("Float list");
+            Label("Float list", std::to_string(demo.floatList.size()) + " items");
             Field(demo.reorderFloatListID, demo.floatList, interstice::LayoutOverride{}.FlexGrow(1));
         });
         add("Dictionary", [this]() {
-            Label("Dictionary");
+            Label("Dictionary", std::to_string(demo.dictionary.size()) + " entries");
             Field(demo.dictionary, interstice::LayoutOverride{}.FlexGrow(1));
         });
 

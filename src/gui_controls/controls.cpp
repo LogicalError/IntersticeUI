@@ -183,6 +183,50 @@ namespace interstice
         }
     }
 
+    void GUIApplication::Label(ID id, std::string_view text, std::string_view caption, LayoutOverride&& constraints)
+    {
+        // A label container (the group label, with its width and sizer) holding the title
+        // and the caption, at the top of its row.
+        guiStateManager.Labels().RegisterPendingLabel(id);
+        interstice::EventHandler handler = MakeLabelHandler();
+        auto* gs = m_labelGroup->GetActiveGroup();
+        if (gs)
+        {
+            constraints.Width(styleManager.Px(gs->labelWidth));
+            if (gs->resizable)
+                handler = MakeGroupLabelHandler(guiStateManager, elementStorage,
+                    { &gs->labelWidth, gs->minWidth, gs->maxWidth,
+                      &gs->edgeHovered, &gs->edgeDragging,
+                      &gs->labelTextIDs, textSystem,
+                      &styleManager, theme.groupLabelStyleRef });
+        }
+        const auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler),
+                                                              .styleRef = theme.groupLabelTopStyleRef, .flags = ElementFlags::IsLabel },
+                                         std::move(constraints));
+        VERIFY(elementStorage.BeginChildren());
+        Text(idManager.AllocateDynamicID("label_title"), text, theme.groupLabelTitleStyleRef);
+        Text(idManager.AllocateDynamicID("label_caption"), caption, theme.groupLabelCaptionStyleRef);
+        VERIFY(elementStorage.EndChildren());
+        if (gs && gs->resizable)
+            m_labelGroup->AddDragger(ref);
+    }
+
+    void GUIApplication::CollectionHeader(std::string_view valueType)
+    {
+        BeginHorizontal(idManager.AllocateDynamicID("collection_header"), theme.collectionHeaderStyleRef, LayoutOverride{}.NoShrink());
+        BeginHorizontal(idManager.AllocateDynamicID("collection_key_head"), theme.collectionHeaderCellStyleRef, LayoutOverride{}.FlexGrow(1));
+        Text(idManager.AllocateDynamicID("collection_key"), "Key", theme.collectionHeaderCaptionStyleRef);
+        Text(idManager.AllocateDynamicID("collection_key_type"), "string", theme.collectionHeaderTypeStyleRef);
+        EndHorizontal();
+        BeginHorizontal(idManager.AllocateDynamicID("collection_value_head"), theme.collectionHeaderCellStyleRef, LayoutOverride{}.FlexGrow(1));
+        Text(idManager.AllocateDynamicID("collection_value"), "Value", theme.collectionHeaderCaptionStyleRef);
+        Text(idManager.AllocateDynamicID("collection_value_type"), valueType, theme.collectionHeaderTypeStyleRef);
+        EndHorizontal();
+        Element gap{ .id = idManager.AllocateDynamicID("collection_remove_gap"), .styleRef = theme.collectionRemoveStyleRef, .flags = ElementFlags::NoInput };
+        RegisterElement(std::move(gap), LayoutOverride{});   // over the remove buttons
+        EndHorizontal();
+    }
+
     void GUIApplication::Label(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
@@ -566,6 +610,55 @@ namespace interstice
         if (pushed)
             (void)idManager.PopParent();
         return ran;
+    }
+
+    std::string GUIApplication::PendingLabelText() const
+    {
+        const ID labelID = guiStateManager.Labels().GetPendingLabelID();
+        if (labelID == ID::Invalid()) return {};
+        const ElementRef ref = elementStorage.FindElementRefByID(labelID);
+        if (!ref.IsValid()) return {};
+        const TextID textID = elementStorage.GetElementUnsafe(ref).textID;
+        return textID != TextID::Invalid ? std::string(textSystem->GetText(textID)) : std::string{};
+    }
+
+    bool GUIApplication::Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, LayoutOverride&& constraints)
+    {
+        // Selected while checked, so the box and label restyle with it.
+        if (value) guiStateManager.Construction().PushSelected();
+        const interstice::ElementState state = guiStateManager.GetCurrentState(id);
+        interstice::Element control{};
+        control.id           = id;
+        control.state        = state;
+        control.styleRef     = theme.checkboxStyleRef;
+        control.eventHandler = interstice::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
+        RegisterElement(std::move(control), std::move(constraints));
+        VERIFY(elementStorage.BeginChildren());
+        {
+            const interstice::ElementState partState = value ? (state | interstice::ElementState::Selected) : state;
+            interstice::Element box{};
+            box.id       = idManager.AllocateDynamicID("checkboxBox");
+            box.state    = partState;
+            box.styleRef = theme.checkboxBoxStyleRef;
+            box.flags    = interstice::ElementFlags::NoInput;
+            box.iconID   = value ? theme.menuCheckIcon : IconID::Invalid;
+            RegisterElement(std::move(box), LayoutOverride{});
+            if (!text.empty())
+            {
+                interstice::Element label{};
+                label.id       = idManager.AllocateDynamicID("checkboxLabel");
+                label.state    = partState;
+                label.styleRef = theme.checkboxLabelStyleRef;
+                label.flags    = interstice::ElementFlags::NoInput;
+                label.textID   = textSystem->RegisterText(label.id, text, label.styleRef, label.state);
+                RegisterElement(std::move(label), LayoutOverride{});
+            }
+        }
+        VERIFY(elementStorage.EndChildren());
+        if (value) guiStateManager.Construction().PopSelected();
+        const bool modified = guiStateManager.Interaction().HasBeenClicked(id);
+        guiStateManager.SetModified(modified);
+        return modified;
     }
 
     bool GUIApplication::Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)

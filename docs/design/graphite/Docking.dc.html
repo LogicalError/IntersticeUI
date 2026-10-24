@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Torn-off panel window</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 760px; height: 560px; box-sizing: border-box; padding: 40px; background: {{t.backdrop}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div role="dialog" aria-label="Profiler window" style="position: relative; width: 680px; height: 480px; box-sizing: border-box; display: flex; flex-direction: column; background: {{t.app}}; border: 1px solid {{t.winBorder}}; border-radius: 8px; box-shadow: {{t.winShadow}}; overflow: hidden">
+
+<header style="height: 36px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding-left: 6px">
+<svg width="12" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: {{t.t3}}; margin-right: 2px"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg>
+<span style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.accent}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M22 12h-2.5a2 2 0 0 0-1.9 1.5l-2.4 8.3a.3.3 0 0 1-.5 0L9.2 2.2a.3.3 0 0 0-.5 0l-2.3 8.3A2 2 0 0 1 4.5 12H2"></path></svg>Profiler</span>
+<span style="flex: 1"></span>
+<button aria-label="Dock back into main window" style="height: 26px; display: flex; align-items: center; gap: 6px; margin-right: 6px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 5h18v14H3ZM15 5v14M8 12h4M10 10l2 2-2 2"></path></svg>Dock</button>
+<button aria-label="Minimize" style="width: 44px; height: 36px; border: 0; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M5 12h14"></path></svg></button>
+<button aria-label="Maximize" style="width: 44px; height: 36px; border: 0; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round"><path d="M4 4h16v16H4Z"></path></svg></button>
+<button aria-label="Close" style="width: 44px; height: 36px; border: 0; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</header>
+
+<section aria-label="Profiler" style="flex: 1; min-height: 0; margin: 0 4px 4px; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<div style="height: 26px; display: flex; align-items: center; gap: 6px">
+<span style="height: 26px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{t.error}}"></span>Recording</span>
+<span style="width: 26px; height: 26px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t2}}"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M8 5v14M16 5v14"></path></svg></span>
+<span style="margin-left: auto; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace">9.27 ms</span><span style="color: {{t.t3}}; font-family: 'JetBrains Mono', monospace">108 fps</span>
+</div>
+<div style="position: relative; height: 56px; flex-shrink: 0; display: flex; align-items: flex-end; gap: 1px; padding: 0 4px; border-radius: 4px; background: {{t.well}}">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="100"><span style="flex: 1; height: {{b.h}}%; background: {{b.c}}"></span></sc-for>
+<span style="position: absolute; left: 0; right: 0; bottom: 66.8%; border-top: 1px dashed {{t.budget}}"></span>
+</div>
+<div style="position: relative; height: 58px; flex-shrink: 0">
+<sc-for list="{{flame}}" as="f" hint-placeholder-count="10"><span style="position: absolute; left: {{f.l}}%; width: {{f.w}}%; top: {{f.t}}px; height: 18px; box-sizing: border-box; padding: 0 6px; border-radius: 3px; background: {{f.c}}; color: {{t.t1}}; font-size: 11px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.n}}</span></sc-for>
+</div>
+<div role="table" aria-label="Profiler scopes" style="flex: 1; min-height: 0; overflow: hidden; border: 1px solid {{t.line}}; border-radius: 4px">
+<div role="row" style="height: 26px; display: grid; grid-template-columns: minmax(0, 1fr) 70px 70px 70px; gap: 8px; align-items: center; padding: 0 8px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}; color: {{t.t3}}; font-size: 11px; font-weight: 500"><span>Scope</span><span style="text-align: right">Total ms</span><span style="text-align: right">Self ms</span><span style="text-align: right">% frame</span></div>
+<sc-for list="{{scopes}}" as="s" hint-placeholder-count="9">
+<div role="row" style="height: 22px; display: grid; grid-template-columns: minmax(0, 1fr) 70px 70px 70px; gap: 8px; align-items: center; padding: 0 8px 0 {{s.pad}}px; background: {{s.bg}}; color: {{s.fg}}"><span>{{s.n}}</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.t}}</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.s}}</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.p}}</span></div>
+</sc-for>
+</div>
+</section>
+<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style="position: absolute; right: 3px; bottom: 3px; fill: none; stroke: {{t.t3}}; stroke-width: 1.2; stroke-linecap: round"><path d="M11 5 5 11M11 8.5 8.5 11"></path></svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":760,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      backdrop: '#C9CDD4', app: '#E6E8EC', panel: '#FBFBFC', header: '#F3F4F6', active: '#FBFBFC', control: '#FFFFFF', well: '#F3F4F6',
+      border: '#DADDE3', line: '#E3E6EB', ctlBorder: '#CDD2DA', budget: '#9AA1AD',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', soft: 'rgba(47,111,235,0.12)', error: '#D64545',
+      bar: '#59B88A', over: '#E0A23A',
+      flame: ['#E3E6EB', '#F4DCCF', '#E2DCF5', '#D3ECEF', '#D7EBDD'],
+      winBorder: '#C9CED6', winShadow: '0 20px 48px rgba(16,24,40,0.22), 0 2px 6px rgba(16,24,40,0.10)'
+    } : {
+      backdrop: '#1D2026', app: '#0B0C0F', panel: '#121418', header: '#16191E', active: '#23272F', control: '#1E2128', well: '#0D0F12',
+      border: '#1C1F25', line: '#23272F', ctlBorder: '#2E333D', budget: '#5A606C',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', soft: 'rgba(107,155,255,0.16)', error: '#EF6A6A',
+      bar: '#3E8F6B', over: '#E5B454',
+      flame: ['#2B303B', '#5A3B2E', '#3E3560', '#24505A', '#2E4A3A'],
+      winBorder: '#2E333D', winShadow: '0 24px 56px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3)'
+    };
+
+    const spikes = { 23: 19.5, 71: 14.2 };
+    const bars = [];
+    for (let i = 0; i < 100; i++) {
+      let v = spikes[i] !== undefined ? spikes[i] : 8.9 + 1.1 * Math.sin(i * 0.7) + 0.7 * Math.sin(i * 2.3 + 1);
+      if (i === 99) v = 9.27;
+      bars.push({ h: (v / 25 * 100).toFixed(1), c: i === 99 ? t.accent : (v > 16.7 ? t.over : t.bar) });
+    }
+    const F = t.flame;
+    const flame = [
+      ['Frame', 0, 100, 0, F[0]], ['Build', 0, 63.8, 1, F[1]], ['Render', 64, 36, 1, F[2]],
+      ['OnGUI', 2.8, 15.4, 2, F[3]], ['EndFrame', 18.4, 24, 2, F[3]], ['OnRender', 42.6, 21, 2, F[3]], ['Window render', 64.2, 35.6, 2, F[4]]
+    ].map(function (f) { return { n: f[0], l: f[1], w: f[2], t: f[3] * 20, c: f[4] }; });
+    const scopes = [
+      ['Frame', 0, '9.273', '0.003', '100.0%'], ['Input pump', 1, '0.020', '0.020', '0.2%'], ['Build', 1, '5.943', '0.035', '64.1%'],
+      ['BeginFrame', 2, '0.233', '0.229', '2.5%'], ['OnGUI', 2, '1.450', '1.449', '15.6%', true], ['EndFrame', 2, '2.234', '0.109', '24.1%'],
+      ['Layout', 3, '2.089', '1.486', '22.5%'], ['Render', 1, '3.307', '0.012', '35.7%'], ['Window render', 2, '3.120', '0.410', '33.6%']
+    ].map(function (s) { return { n: s[0], pad: 8 + s[1] * 14, t: s[2], s: s[3], p: s[4], bg: s[5] ? t.soft : 'transparent', fg: s[5] ? t.t1 : t.t2 }; });
+
+    return { t: t, bars: bars, flame: flame, scopes: scopes };
+  }
+}
+</script>
+</body>
+</html>

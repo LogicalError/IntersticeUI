@@ -90,12 +90,17 @@ namespace interstice
         bool editMode = false;           // set by a clean click: in-place text editing
     };
 
+    // What pressing a slider does: Edit — a click (no drag) opens its value for typing;
+    // Jump — the value moves to the cursor at once and follows it while held.
+    enum class SliderPress : uint8_t { Edit, Jump };
+
     // elementWidth maps drag distance onto [minVal, maxVal] (<= 0 is treated as 1).
     // Arrow keys step 1% of the range, PageUp/Down 10%.
     EventHandler MakeSliderHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage,
                                    float* value, int elementWidth,
                                    std::function<void()> onChanged = nullptr,
-                                   float minVal = 0.0f, float maxVal = 1.0f);
+                                   float minVal = 0.0f, float maxVal = 1.0f,
+                                   SliderPress press = SliderPress::Edit);
 
     enum class DragScalarMode { Idle, Pressing, Dragging };
 

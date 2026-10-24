@@ -52,7 +52,7 @@ namespace interstice
 	void SkribidiContext::RegisterCaretColor()
 	{
 		caretColorStyleIndex = styleManager->RegisterColorStyle(
-			ColorStyle::Create(color4f{ 1.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f }));
+			ColorStyle::Create(color4f{ 107.0f / 255.0f, 155.0f / 255.0f, 1.0f, 1.0f }));   // until a theme sets one
 	}
 
 	bool SkribidiContext::Initialize(GraphicsContext* inGraphicsContext, StyleManager* inStyleManager,

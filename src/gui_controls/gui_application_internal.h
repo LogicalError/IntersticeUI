@@ -55,5 +55,6 @@ namespace interstice
         static auto&                 ToolbarDocksThisFrame(GUIApplication& app) { return app.m_toolbarDocksThisFrame; }
         static DockNode* FindDockLeafTabBarCachedAtScreenPos(GUIApplication& app, int2 screenPos) { return app.FindDockLeafTabBarCachedAtScreenPos(screenPos); }
         static void      NotePanelContentID(GUIApplication& app, ID panelId, ID contentID)       { app.NotePanelContentID(panelId, contentID); }
+        static void      TitleBarCaption(GUIApplication& app, ID id)                              { app.TitleBarCaption(id); }
     };
 }

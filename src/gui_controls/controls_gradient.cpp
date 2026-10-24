@@ -1,4 +1,7 @@
 #include <gui_controls/gui_application.h>
+#include <array>
+#include <string>
+#include <cstdio>
 #include <gui_controls/controls_color_internal.h>   // SetColorStyle (shared with controls_color.cpp)
 
 #include <algorithm>
@@ -155,7 +158,16 @@ namespace interstice
 
         // ---- Gradient swatch (inline preview bar) ----
         ID swatchID = idManager.AllocateDynamicID("gradient_swatch");
+        const std::string context = PendingLabelText();
         auto& ge = m_gradientEditorSub->State();
+        // OK keeps the gradient; Cancel and the close button restore the original.
+        if (ge.triggerID == swatchID && ge.closeRequest != GradientEditorState::CloseRequest::None)
+        {
+            if (ge.closeRequest == GradientEditorState::CloseRequest::Cancel)
+                value = ge.originalGradient;
+            ge.closeRequest = GradientEditorState::CloseRequest::None;
+            ge.triggerID = ID::Invalid();
+        }
         const bool editorIsOpen = (ge.triggerID == swatchID); // this field's editor, not just any
 
         // Get or create a persistent style index for this swatch
@@ -168,7 +180,7 @@ namespace interstice
         swatch.styleRef        = theme.gradientSwatchStyleRef;
         swatch.state           = guiStateManager.GetCurrentState(swatchID);
         swatch.colorStyleIndex = swatchStyle;
-        swatch.eventHandler = MakeButtonHandler([this, &value, swatchID, editorIsOpen]()
+        swatch.eventHandler = MakeButtonHandler([this, &value, swatchID, editorIsOpen, context]()
         {
             auto& ge = m_gradientEditorSub->State();
             if (editorIsOpen)
@@ -180,6 +192,8 @@ namespace interstice
                 if (ge.windowID == ID::Invalid())
                     ge.windowID = idManager.CreateStaticID();
                 ge.workingCopy = value;
+                ge.originalGradient = value;
+                ge.context = context;
                 ge.selectedStop = 0;
                 ge.drag = GradientEditorState::DragTarget::None;
             }
@@ -223,7 +237,7 @@ namespace interstice
                 {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
 
             if (BeginWindow(ge.windowID, "Gradient Editor", std::move(popupPos), theme.gradientEditorStyleRef,
-                            ElementFlags::WindowUserControlled | ElementFlags::Shadows))
+                            ElementFlags::WindowCanMove | ElementFlags::WindowNoCaption | ElementFlags::Shadows))
             {
                 EmitGradientEditor(value);
                 EndWindow();
@@ -238,65 +252,200 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // EmitGradientEditor — popup content for the gradient editor
+    // Gradient editor dialog: presets, the bar with its stops, the selected stop,
+    // blend space and actions at the left, a stops table at the right; Cancel / OK.
     // ---------------------------------------------------------------------------
+
+    namespace
+    {
+        // Built-in presets, as stop colors spread evenly.
+        struct GradientPreset { std::string_view name; std::initializer_list<uint32_t> colors; bool fade = false; };
+        constexpr uint32_t Rgb(uint32_t hex) { return hex; }
+        const GradientPreset kGradientPresets[] = {
+            { "Grayscale", { Rgb(0x000000), Rgb(0xFFFFFF) } },
+            { "Sky",       { Rgb(0x0B1D51), Rgb(0x3B82F6), Rgb(0xA5F3FC) } },
+            { "Heat",      { Rgb(0x1A0B00), Rgb(0xB85C10), Rgb(0xFFD27A), Rgb(0xFFFFFF) } },
+            { "Viridis",   { Rgb(0x440154), Rgb(0x3B528B), Rgb(0x21918C), Rgb(0x5EC962), Rgb(0xFDE725) } },
+            { "Hue",       { Rgb(0xFF0000), Rgb(0xFFFF00), Rgb(0x00FF00), Rgb(0x00FFFF), Rgb(0x0000FF), Rgb(0xFF00FF), Rgb(0xFF0000) } },
+            { "Fade",      { Rgb(0x2D3BFF), Rgb(0x2D3BFF) }, true },
+        };
+
+        Gradient MakePreset(const GradientPreset& preset, ColorSpace space)
+        {
+            Gradient g;
+            g.type = GradientType::Linear;
+            g.colorSpace = space;
+            const int n = int(preset.colors.size());
+            int i = 0;
+            for (uint32_t hex : preset.colors)
+            {
+                const float a = (preset.fade && i == n - 1) ? 0.0f : 1.0f;
+                g.AddStop(color4f{ float((hex >> 16) & 0xFF) / 255.0f, float((hex >> 8) & 0xFF) / 255.0f, float(hex & 0xFF) / 255.0f, a },
+                          n > 1 ? float(i) / float(n - 1) : 0.0f);
+                ++i;
+            }
+            return g;
+        }
+
+        // Keeps the stops sorted by location; returns where the one that was at `index` went.
+        int SortStops(Gradient& g, int index)
+        {
+            if (index < 0 || index >= g.stopCount) return index;
+            const ColorStop tracked = g.stops[size_t(index)];
+            std::stable_sort(g.stops.begin(), g.stops.begin() + g.stopCount,
+                             [](const ColorStop& a, const ColorStop& b) { return a.GetOffset() < b.GetOffset(); });
+            for (int i = 0; i < g.stopCount; i++)
+                if (g.stops[size_t(i)] == tracked) return i;
+            return index;
+        }
+
+        void RemoveStop(Gradient& g, int index)
+        {
+            if (g.stopCount <= 2 || index < 0 || index >= g.stopCount) return;
+            for (int i = index; i < g.stopCount - 1; i++)
+                g.stops[size_t(i)] = g.stops[size_t(i + 1)];
+            g.stopCount--;
+        }
+
+        std::string StopHex(const ColorStop& stop)
+        {
+            const color4b c = stop.GetColor4b();
+            char buf[24];
+            if (c.a == 255) std::snprintf(buf, sizeof(buf), "#%02X%02X%02X", c.r, c.g, c.b);
+            else            std::snprintf(buf, sizeof(buf), "#%02X%02X%02X %d%%", c.r, c.g, c.b, int(std::lround(float(c.a) / 2.55f)));
+            return buf;
+        }
+
+        std::string Percent(float t)
+        {
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%.1f%%", double(t) * 100.0);
+            return buf;
+        }
+    }
 
     void GUIApplication::EmitGradientEditor(Gradient& outGradient)
     {
         auto& ge = m_gradientEditorSub->State();
         auto& g  = ge.workingCopy;
-
-        // Clamp selectedStop to valid range
         if (ge.selectedStop >= g.stopCount)
             ge.selectedStop = g.stopCount > 0 ? g.stopCount - 1 : 0;
 
-        // Update the preview gradient style
         SetGradientPreviewStyle(styleManager, ge.previewGradientStyle, g);
+        SetColorStyle(styleManager, ge.stopEdgeColor, theme.GetColor("--text-1", color4f{ 0.91f, 0.92f, 0.94f, 1.0f }));
+        SetColorStyle(styleManager, ge.stopOutlineColor, color4f{ 0.0f, 0.0f, 0.0f, 0.5f });
+        SetColorStyle(styleManager, ge.stopHaloColor, theme.GetColor("--accent-soft", color4f{ 0.42f, 0.61f, 1.0f, 0.16f }));
 
-        // Update marker styles
-        SetColorStyle(styleManager, ge.stopMarkerColor, color4f{0.3f, 0.3f, 0.3f, 1.0f});
-        SetColorStyle(styleManager, ge.stopMarkerSelected, color4f{1.0f, 1.0f, 1.0f, 1.0f});
+        const ColorSwatchLook look = SwatchLook();
+        const auto requestClose = [this](GradientEditorState::CloseRequest request) {
+            return [this, request]() { m_gradientEditorSub->State().closeRequest = request; };
+        };
 
-        // ---- Gradient preview bar + stop handles ----
+        // ---- Header ----
+        // The header is the dialog's title bar: it drags the window.
+        BeginTitleBar(idManager.AllocateDynamicID("ge_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
+        Text(idManager.AllocateDynamicID("ge_title"), "Gradient", theme.dialogTitleStyleRef);
+        Text(idManager.AllocateDynamicID("ge_context"), ge.context, theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
+        Button(idManager.AllocateDynamicID("ge_close"), theme.tabCloseIcon, {}, requestClose(GradientEditorState::CloseRequest::Cancel),
+               theme.dialogCloseStyleRef);
+        SetTooltip("Close without changing the gradient");
+        EndTitleBar();
+
+        // ---- Presets ----
+        BeginHorizontal(idManager.AllocateDynamicID("ge_presets"), theme.gradientEditorPresetsStyleRef, LayoutOverride{}.NoShrink());
         {
-            ID barID = idManager.AllocateDynamicID("ge_bar");
-            Element bar {};
+            Text(idManager.AllocateDynamicID("ge_presets_label"), "Presets", theme.gradientEditorSectionLabelStyleRef);
+            // A chip draws its gradient over the checkerboard; the one matching the gradient is ringed.
+            auto chip = [&](ID id, const Gradient& preset, std::string_view name)
+            {
+                NoteSwatchClaim(id);
+                auto& style = m_gradientEditorSub->ClaimSwatchStyle(id);
+                SetGradientPreviewStyle(styleManager, style, preset);
+                Gradient asIs = preset;
+                asIs.colorSpace = g.colorSpace;
+                const bool current = (asIs == g);
+                const ElementRef ref = RegisterControl(Element{ .id = id,
+                    .eventHandler = MakeButtonHandler([this, preset]() {
+                        auto& ge = m_gradientEditorSub->State();
+                        const ColorSpace space = ge.workingCopy.colorSpace;
+                        ge.workingCopy = preset;
+                        ge.workingCopy.colorSpace = space;
+                        ge.selectedStop = 0;
+                    }),
+                    .styleRef = theme.gradientEditorPresetStyleRef }, LayoutOverride{});
+                SetTooltip(name);
+                VERIFY(elementStorage.AddCustomDraw(ref,
+                    [look, style, current, accent = theme.accentColor, panel = theme.panelColor,
+                     radius = float(styleManager.Px(4)), gap = styleManager.Px(2)](CustomDrawContext& ctx)
+                    {
+                        const IntRect r = ctx.ElementRect();
+                        if (current)
+                        {
+                            const IntRect ring{ .position = { r.x - 2 * gap, r.y - 2 * gap }, .size = { r.w + 4 * gap, r.h + 4 * gap } };
+                            const IntRect gapRect{ .position = { r.x - gap, r.y - gap }, .size = { r.w + 2 * gap, r.h + 2 * gap } };
+                            ctx.RenderQuad(ring, accent, radius + float(2 * gap));
+                            ctx.RenderQuad(gapRect, panel, radius + float(gap));
+                        }
+                        ColorSwatchLook chipLook = look;
+                        chipLook.radius = radius;
+                        DrawCheckerboard(ctx, r, r, chipLook);
+                        ctx.RenderQuad(r, style, radius);
+                    }));
+            };
+            const ID builtInRange = idManager.AllocateRangedID(uint32_t(std::size(kGradientPresets)), "ge_preset");
+            for (uint32_t i = 0; i < uint32_t(std::size(kGradientPresets)); ++i)
+                chip(idManager.GetSubID(builtInRange, i), MakePreset(kGradientPresets[i], g.colorSpace), kGradientPresets[i].name);
+            if (!ge.savedPresets.empty())
+            {
+                const ID savedRange = idManager.AllocateRangedID(uint32_t(ge.savedPresets.size()), "ge_saved_preset");
+                for (uint32_t i = 0; i < uint32_t(ge.savedPresets.size()); ++i)
+                    chip(idManager.GetSubID(savedRange, i), ge.savedPresets[i], "Saved preset");
+            }
+
+            Element spacer{ .id = idManager.AllocateDynamicID("ge_presets_spacer"), .styleRef = theme.emptyHorzStyleRef, .flags = ElementFlags::NoInput };
+            RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
+            Button(idManager.AllocateDynamicID("ge_save_preset"), theme.addIcon, "Save preset", [this]() {
+                auto& ge = m_gradientEditorSub->State();
+                ge.savedPresets.push_back(ge.workingCopy);
+            }, theme.dialogSmallButtonStyleRef);
+            SetTooltip("Keep this gradient as a preset");
+        }
+        EndHorizontal();
+
+        // ---- The bar and its stops ----
+        {
+            const ID barID = idManager.AllocateDynamicID("ge_bar");
+            const int barH    = styleManager.Px(44);
+            const int stopBox = styleManager.Px(18);
+            const int pointer = styleManager.Px(6);
+            const int inset   = styleManager.Px(24);   // the bar's side inset, so the end stops fit
+            const int removeDistance = styleManager.Px(40);
+
+            Element bar{};
             bar.id       = barID;
             bar.styleRef = theme.gradientEditorBarStyleRef;
             bar.state    = guiStateManager.GetCurrentState(barID);
-
-            bar.eventHandler = [this, barID](ElementEvent&& event) -> bool
+            bar.eventHandler = [this, barID, barH, stopBox, pointer, inset, removeDistance](ElementEvent&& event) -> bool
             {
                 auto& ge = m_gradientEditorSub->State();
                 auto& g  = ge.workingCopy;
+                if (!event.rect) return false;
+                const IntRect& r = event.rect->rect;
+                const int barW = r.w - 2 * inset;
+                if (barW <= 0) return false;
+                const int2 c = event.LocalCursor(elementStorage);
+                const float t = std::clamp(float(c.x - r.x - inset) / float(barW), 0.0f, 1.0f);
+                const int top = r.y + (r.h - (barH + pointer + stopBox)) / 2;
+                const bool belowBar = c.y >= top + barH;
 
-                auto localT = [&](float& t) -> bool
-                {
-                    if (!event.rect) return false;
-                    auto& r = event.rect->rect;
-                    if (r.w <= 0) return false;
-                    const int32_t cursorX = event.LocalCursor(elementStorage).x;
-                    t = std::clamp(float(cursorX - r.x) / float(r.w), 0.0f, 1.0f);
-                    return true;
-                };
-
-                auto hitTestStop = [&](int& hitIndex) -> bool
-                {
-                    if (!event.rect) return false;
-                    auto& r = event.rect->rect;
-                    if (r.w <= 0) return false;
-                    const int32_t cursorX = event.LocalCursor(elementStorage).x;
-                    float mx = float(cursorX - r.x);
+                auto hitStop = [&]() -> int {
+                    if (!belowBar || c.y > top + barH + pointer + stopBox) return -1;
                     for (int i = 0; i < g.stopCount; i++)
                     {
-                        float sx = g.stops[i].GetOffset() * float(r.w);
-                        if (std::abs(mx - sx) < styleManager.Px(6.0f))
-                        {
-                            hitIndex = i;
-                            return true;
-                        }
+                        const int sx = r.x + inset + int(std::lround(g.stops[size_t(i)].GetOffset() * float(barW)));
+                        if (std::abs(c.x - sx) <= stopBox / 2) return i;
                     }
-                    return false;
+                    return -1;
                 };
 
                 switch (event.type)
@@ -304,221 +453,299 @@ namespace interstice
                     case EventType::MouseDown:
                     {
                         if (!event.state.LeftPressed()) break;
-                        int hit = -1;
-                        if (hitTestStop(hit))
+                        guiStateManager.Interaction().SetFocusID(barID);
+                        const int hit = hitStop();
+                        if (hit >= 0)
                         {
-                            ge.selectedStop = hit;
-                            ge.drag = GradientEditorState::DragTarget::Stop;
+                            ge.selectedStop  = hit;
+                            ge.drag          = GradientEditorState::DragTarget::Stop;
                             ge.dragStopIndex = hit;
                             guiStateManager.Interaction().SetCaptureID(barID);
-                            guiStateManager.Interaction().SetFocusID(barID);
                             return true;
                         }
-                        // Click on empty space → add new stop
-                        float t;
-                        if (localT(t) && g.stopCount < Gradient::kMaxStops)
+                        // A click on the bar adds a stop with the gradient's color there.
+                        if (!belowBar && c.y >= top && g.stopCount < Gradient::kMaxStops)
                         {
-                            // Sample color from gradient at click position
                             color4b samples[256];
                             g.WriteTo(std::span<color4b>(samples, 256));
-                            int sampleIdx = std::clamp(int(t * 255.0f), 0, 255);
-                            color4b newColor = samples[sampleIdx];
-
-                            g.AddStop(newColor, t);
-                            ge.selectedStop = g.stopCount - 1;
-                            guiStateManager.Interaction().SetFocusID(barID);
+                            g.AddStop(samples[std::clamp(int(t * 255.0f), 0, 255)], t);
+                            ge.selectedStop = SortStops(g, g.stopCount - 1);
                             return true;
                         }
                         break;
                     }
                     case EventType::MouseMove:
-                    {
-                        if (ge.drag == GradientEditorState::DragTarget::Stop &&
-                            ge.dragStopIndex >= 0 && ge.dragStopIndex < g.stopCount)
+                        if (ge.drag == GradientEditorState::DragTarget::Stop && ge.dragStopIndex >= 0 && ge.dragStopIndex < g.stopCount)
                         {
-                            float t;
-                            if (localT(t))
-                            {
-                                // Remember the stop being dragged
-                                auto draggedStop = g.stops[ge.dragStopIndex];
-                                draggedStop.SetOffset(t);
-                                g.stops[ge.dragStopIndex] = draggedStop;
-
-                                // Sort stops by offset, track the dragged one
-                                auto stopColor = draggedStop.GetColor4b();
-                                auto stopOffset = t;
-                                std::sort(g.stops.begin(), g.stops.begin() + g.stopCount,
-                                    [](const ColorStop& a, const ColorStop& b) {
-                                        return a.GetOffset() < b.GetOffset();
-                                    });
-                                // Find the dragged stop after sort
-                                for (int i = 0; i < g.stopCount; i++)
-                                {
-                                    if (g.stops[i].GetColor4b() == stopColor &&
-                                        std::abs(g.stops[i].GetOffset() - stopOffset) < 0.0001f)
-                                    {
-                                        ge.dragStopIndex = i;
-                                        ge.selectedStop = i;
-                                        break;
-                                    }
-                                }
-                            }
+                            g.stops[size_t(ge.dragStopIndex)].SetOffset(t);
+                            ge.dragStopIndex = ge.selectedStop = SortStops(g, ge.dragStopIndex);
+                            ge.dragOff = (c.y > top + barH + pointer + stopBox + removeDistance) && g.stopCount > 2;
                             return true;
                         }
                         break;
-                    }
                     case EventType::MouseUp:
-                    {
                         if (ge.drag != GradientEditorState::DragTarget::None)
                         {
+                            // Dragged well below the bar: the stop goes.
+                            if (ge.dragOff)
+                            {
+                                RemoveStop(g, ge.dragStopIndex);
+                                ge.selectedStop = std::min(ge.dragStopIndex, g.stopCount - 1);
+                            }
                             ge.drag = GradientEditorState::DragTarget::None;
+                            ge.dragOff = false;
                             guiStateManager.Interaction().ReleaseCaptureID();
                             return true;
                         }
                         break;
-                    }
                     case EventType::KeyDown:
-                    {
-                        if (event.state.lastKey == KeyCode::Delete &&
-                            g.stopCount > 2 &&
-                            ge.selectedStop >= 0 && ge.selectedStop < g.stopCount)
+                        if (event.state.lastKey == KeyCode::Delete && g.stopCount > 2)
                         {
-                            // Remove selected stop by shifting
-                            for (int i = ge.selectedStop; i < g.stopCount - 1; i++)
-                                g.stops[i] = g.stops[i + 1];
-                            g.stopCount--;
-                            if (ge.selectedStop >= g.stopCount)
-                                ge.selectedStop = g.stopCount - 1;
+                            RemoveStop(g, ge.selectedStop);
+                            ge.selectedStop = std::min(ge.selectedStop, g.stopCount - 1);
                             return true;
                         }
                         break;
-                    }
                     default: break;
                 }
                 return false;
             };
+            const ElementRef barRef = RegisterControl(std::move(bar), LayoutOverride{});
 
-            auto barRef = RegisterControl(std::move(bar), LayoutOverride{}.FixedHeight(styleManager.Px(30)));
-
-            // Custom draw: gradient fill + stop handle triangles
-            int stopCount = g.stopCount;
-            int selectedIdx = ge.selectedStop;
-            std::array<float, Gradient::kMaxStops> offsets {};
-            std::array<color4b, Gradient::kMaxStops> stopColors {};
+            struct StopDraw { float t; VisualColorStyleIndex color; };
+            std::array<StopDraw, Gradient::kMaxStops> stops{};
+            const int stopCount = g.stopCount;
             for (int i = 0; i < stopCount; i++)
             {
-                offsets[i] = g.stops[i].GetOffset();
-                stopColors[i] = g.stops[i].GetColor4b();
+                const ID stopStyleID = idManager.AllocateDynamicID("ge_stop_color");
+                NoteSwatchClaim(stopStyleID);
+                auto& stopStyle = m_gradientEditorSub->ClaimSwatchStyle(stopStyleID);
+                SetColorStyle(styleManager, stopStyle, g.stops[size_t(i)].GetColor4f());
+                stops[size_t(i)] = { g.stops[size_t(i)].GetOffset(), stopStyle };
             }
-            auto previewStyle = ge.previewGradientStyle;
-            auto markerColor = ge.stopMarkerColor;
-            auto markerSelected = ge.stopMarkerSelected;
-
+            const int selected = ge.selectedStop;
+            const bool hideSelected = ge.dragOff;
+            const TextID badgeText = textSystem->RegisterText(idManager.AllocateDynamicID("ge_badge_text"),
+                Percent(selected < stopCount ? stops[size_t(selected)].t : 0.0f), theme.gradientEditorBadgeStyleRef, ElementState::None);
+            const auto badgeSize = textSystem->GetTextMeasurement(badgeText);
             VERIFY(elementStorage.AddCustomDraw(barRef,
-                [previewStyle, markerColor, markerSelected, triSize = styleManager.Px(6), tail = styleManager.Px(2),
-                    stopCount, selectedIdx, offsets, stopColors](CustomDrawContext& ctx)
+                [look, preview = ge.previewGradientStyle, stops, stopCount, selected, hideSelected, badgeText,
+                 badgeW = badgeSize.maxWidth, badgeH = badgeSize.minHeight,
+                 edgeColor = ge.stopEdgeColor, outline = ge.stopOutlineColor, halo = ge.stopHaloColor,
+                 accent = theme.accentColor, barH, stopBox, pointer, inset,
+                 radius = float(styleManager.Px(4)), border = styleManager.Px(2), haloW = styleManager.Px(3),
+                 badgePadX = styleManager.Px(6), badgePadY = styleManager.Px(1), badgeGap = styleManager.Px(2)](CustomDrawContext& ctx)
                 {
-                    // Fill the FULL outer bar; stop markers sit just outside the
-                    // outer bottom edge.
-                    const auto outer = ctx.ElementRect();
-                    const auto inner = ctx.ElementInnerRect();
-                    const int w = outer.w;
-                    const int h = outer.h;
-                    if (w <= 0 || h <= 0) return;
-                    const int X = outer.x - inner.x;
-                    const int Y = outer.y - inner.y;
+                    const IntRect r = ctx.ElementRect();
+                    const int top = r.y + (r.h - (barH + pointer + stopBox)) / 2;
+                    const IntRect barRect{ .position = { r.x + inset, top }, .size = { r.w - 2 * inset, barH } };
+                    if (barRect.w <= 0) return;
+                    ColorSwatchLook barLook = look;
+                    barLook.radius = radius;
+                    DrawCheckerboard(ctx, barRect, barRect, barLook);
+                    ctx.RenderQuad(barRect, preview, radius);
 
-                    // Gradient fill
-                    ctx.RenderQuad(IntRect{ .position = { X, Y }, .size = { w, h } }, previewStyle);
-
-                    // Stop handle triangles below the bar
+                    // A stop: a pointer up to the bar and a square of its color, edged; the
+                    // selected one in accent with a soft halo and its location under it.
+                    auto drawStop = [&](int i) {
+                        const bool sel = (i == selected);
+                        const int x = barRect.x + int(std::lround(stops[size_t(i)].t * float(barRect.w)));
+                        const int y = barRect.y + barRect.h;
+                        const VisualColorStyleIndex edge = sel ? accent : edgeColor;
+                        ctx.RenderTriangle({ float(x), float(y) }, { float(x + pointer), float(y + pointer) }, { float(x - pointer), float(y + pointer) }, edge);
+                        const IntRect box{ .position = { x - stopBox / 2, y + pointer }, .size = { stopBox, stopBox } };
+                        const IntRect around{ .position = { box.x - (sel ? haloW : 1), box.y - (sel ? haloW : 1) },
+                                              .size = { box.w + 2 * (sel ? haloW : 1), box.h + 2 * (sel ? haloW : 1) } };
+                        ctx.RenderQuad(around, sel ? halo : outline, radius + float(sel ? haloW : 1));
+                        ctx.RenderQuad(box, edge, radius);
+                        const IntRect fill{ .position = { box.x + border, box.y + border }, .size = { box.w - 2 * border, box.h - 2 * border } };
+                        ColorSwatchLook stopLook = look;
+                        stopLook.radius = radius - float(border);
+                        stopLook.checkerSize = fill.w / 2;
+                        DrawCheckerboard(ctx, fill, fill, stopLook);
+                        ctx.RenderQuad(fill, stops[size_t(i)].color, radius - float(border));
+                        if (sel)
+                        {
+                            const IntRect badge{ .position = { x - badgeW / 2 - badgePadX, box.y + box.h + badgeGap },
+                                                 .size = { badgeW + 2 * badgePadX, badgeH + 2 * badgePadY } };
+                            ctx.RenderQuad(badge, accent, radius);
+                            ctx.RenderText(badgeText, IntRect{ .position = { badge.x + badgePadX, badge.y + badgePadY }, .size = { badgeW, badgeH } });
+                        }
+                    };
                     for (int i = 0; i < stopCount; i++)
-                    {
-                        int tx = X + int(offsets[i] * float(w));
-                        int ty = Y + h;
-                        auto style = (i == selectedIdx) ? markerSelected : markerColor;
-                        ctx.RenderTriangle(
-                            { float(tx),           float(ty)               },
-                            { float(tx - triSize), float(ty + triSize + tail) },
-                            { float(tx + triSize), float(ty + triSize + tail) },
-                            style);
-                    }
+                        if (i != selected) drawStop(i);
+                    if (selected >= 0 && selected < stopCount && !hideSelected) drawStop(selected);
                 }));
         }
 
-        // ---- Selected stop controls ----
+        // ---- Below: the selected stop and options at the left, the stops at the right ----
+        BeginHorizontal(idManager.AllocateDynamicID("ge_columns"), theme.gradientEditorColumnsStyleRef, LayoutOverride{}.NoShrink());
+
+        BeginVertical(idManager.AllocateDynamicID("ge_left"), theme.gradientEditorColumnStyleRef, LayoutOverride{}.FlexGrow(3));   // room for the six blend spaces
         if (ge.selectedStop >= 0 && ge.selectedStop < g.stopCount)
         {
-            ge.selectedStopColor = g.stops[ge.selectedStop].GetColor4f();
+            // "Color stop  2 / 3", previous, next.
+            BeginHorizontal(idManager.AllocateDynamicID("ge_stop_head"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
+            Text(idManager.AllocateDynamicID("ge_stop_title"), "Color stop", theme.gradientEditorHeadingStyleRef);
+            char count[16];
+            std::snprintf(count, sizeof(count), "%d / %d", ge.selectedStop + 1, int(g.stopCount));
+            Text(idManager.AllocateDynamicID("ge_stop_count"), count, theme.gradientEditorCountStyleRef, LayoutOverride{}.FlexGrow(1));
+            Button(idManager.AllocateDynamicID("ge_prev"), theme.chevronLeftIcon, {}, [this]() {
+                auto& ge = m_gradientEditorSub->State();
+                ge.selectedStop = std::max(0, ge.selectedStop - 1);
+            }, theme.dialogIconButtonStyleRef);
+            SetTooltip("Previous stop");
+            Button(idManager.AllocateDynamicID("ge_next"), theme.treeArrowRight, {}, [this]() {
+                auto& ge = m_gradientEditorSub->State();
+                ge.selectedStop = std::min(int(ge.workingCopy.stopCount) - 1, ge.selectedStop + 1);
+            }, theme.dialogIconButtonStyleRef);
+            SetTooltip("Next stop");
+            EndHorizontal();
 
-            DragLabel("Color");
-            if (ColorField(ge.selectedStopColor, false, LayoutOverride{}.BreakAfter()))
-            {
-                g.stops[ge.selectedStop].SetColor(ge.selectedStopColor);
-            }
+            // Color, then location with duplicate and delete.
+            BeginHorizontal(idManager.AllocateDynamicID("ge_color_row"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
+            Text(idManager.AllocateDynamicID("ge_color_label"), "Color", theme.gradientEditorLabelStyleRef);
+            ge.selectedStopColor = g.stops[size_t(ge.selectedStop)].GetColor4f();
+            if (ColorField(ge.selectedStopColor, false, LayoutOverride{}.FlexGrow(1)))
+                g.stops[size_t(ge.selectedStop)].SetColor(ge.selectedStopColor);
+            EndHorizontal();
 
-            ge.selectedStopPosition = g.stops[ge.selectedStop].GetOffset();
-            if (Field(ge.selectedStopPosition, TextEditBehavior::ContinuousUpdate,
-                        NumericFieldConfig<float>{ .stepPerPixel = 0.001, .minVal = 0.0f, .maxVal = 1.0f },
-                        LayoutOverride{}.BreakAfter()))
+            BeginHorizontal(idManager.AllocateDynamicID("ge_location_row"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
+            Text(idManager.AllocateDynamicID("ge_location_label"), "Location", theme.gradientEditorLabelStyleRef);
+            BeginHorizontal(idManager.AllocateDynamicID("ge_location_box"), theme.gradientEditorLocationStyleRef, LayoutOverride{}.FlexGrow(1));
+            float percent = std::round(g.stops[size_t(ge.selectedStop)].GetOffset() * 1000.0f) / 10.0f;
+            if (Field(idManager.AllocateDynamicID("ge_location_value"), percent, TextEditBehavior::None, theme.gradientEditorLocationInputStyleRef,
+                      NumericFieldConfig<float>{ .stepPerPixel = 0.1, .minVal = 0.0f, .maxVal = 100.0f }, LayoutOverride{}.FlexGrow(1)))
             {
-                g.stops[ge.selectedStop].SetOffset(ge.selectedStopPosition);
-                // Re-sort stops by offset
-                auto selColor = g.stops[ge.selectedStop].GetColor4b();
-                auto selOffset = ge.selectedStopPosition;
-                std::sort(g.stops.begin(), g.stops.begin() + g.stopCount,
-                    [](const ColorStop& a, const ColorStop& b) {
-                        return a.GetOffset() < b.GetOffset();
-                    });
-                for (int i = 0; i < g.stopCount; i++)
-                {
-                    if (g.stops[i].GetColor4b() == selColor &&
-                        std::abs(g.stops[i].GetOffset() - selOffset) < 0.0001f)
-                    {
-                        ge.selectedStop = i;
-                        break;
-                    }
-                }
+                g.stops[size_t(ge.selectedStop)].SetOffset(percent / 100.0f);
+                ge.selectedStop = SortStops(g, ge.selectedStop);
             }
+            Text(idManager.AllocateDynamicID("ge_location_unit"), "%", theme.gradientEditorLocationUnitStyleRef);
+            EndHorizontal();
+            Button(idManager.AllocateDynamicID("ge_duplicate"), theme.duplicateIcon, {}, [this]() {
+                auto& ge = m_gradientEditorSub->State();
+                auto& g = ge.workingCopy;
+                if (g.stopCount >= Gradient::kMaxStops || ge.selectedStop >= g.stopCount) return;
+                // A copy halfway to the next stop (or the previous one at the end).
+                const ColorStop stop = g.stops[size_t(ge.selectedStop)];
+                const float here = stop.GetOffset();
+                const float there = (ge.selectedStop + 1 < g.stopCount) ? g.stops[size_t(ge.selectedStop + 1)].GetOffset()
+                                  : (ge.selectedStop > 0 ? g.stops[size_t(ge.selectedStop - 1)].GetOffset() : 1.0f);
+                g.AddStop(stop.GetColor4f(), (here + there) * 0.5f);
+                ge.selectedStop = SortStops(g, g.stopCount - 1);
+            }, theme.dialogSquareButtonStyleRef);
+            SetTooltip("Duplicate the stop");
+            Button(idManager.AllocateDynamicID("ge_delete"), theme.deleteIcon, {}, [this]() {
+                auto& ge = m_gradientEditorSub->State();
+                RemoveStop(ge.workingCopy, ge.selectedStop);
+                ge.selectedStop = std::min(ge.selectedStop, int(ge.workingCopy.stopCount) - 1);
+            }, theme.dialogDeleteButtonStyleRef);
+            SetTooltip("Delete the stop");
+            EndHorizontal();
         }
 
-        // ---- Color space tabs ----
+        Element divider{ .id = idManager.AllocateDynamicID("ge_divider"), .styleRef = theme.gradientEditorDividerStyleRef, .flags = ElementFlags::NoInput };
+        RegisterElement(std::move(divider), LayoutOverride{});
+
+        // Blend space.
+        BeginHorizontal(idManager.AllocateDynamicID("ge_space_row"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
+        Text(idManager.AllocateDynamicID("ge_space_label"), "Blend space", theme.gradientEditorLabelStyleRef);
         {
-            struct TabDef { ColorSpace space; std::string_view label; };
-            constexpr TabDef tabs[] = {
-                { ColorSpace::sRGB,      "sRGB" },
-                { ColorSpace::LinearRGB, "Lin"  },
-                { ColorSpace::HSL,       "HSL"  },
-                { ColorSpace::HSV,       "HSV"  },
-                { ColorSpace::Lab,       "Lab"  },
-                { ColorSpace::Oklab,     "OkL"  },
+            struct SpaceTab { ColorSpace space; std::string_view label; };
+            constexpr SpaceTab tabs[] = {
+                { ColorSpace::sRGB, "sRGB" }, { ColorSpace::LinearRGB, "Linear" }, { ColorSpace::HSL, "HSL" },
+                { ColorSpace::HSV, "HSV" }, { ColorSpace::Lab, "Lab" }, { ColorSpace::Oklab, "Oklab" },
             };
-
-            Element tabRow {};
-            tabRow.id       = idManager.AllocateDynamicID("ge_tab_row");
-            tabRow.styleRef = theme.gradientEditorTabRowStyleRef;
-            tabRow.state    = guiStateManager.GetCurrentState(tabRow.id);
-            RegisterElement(std::move(tabRow), LayoutOverride{}.BreakAfter());
-            VERIFY(elementStorage.BeginChildren());
-
-            for (auto& tab : tabs)
+            BeginButtonGroup(LayoutOverride{}.NoGrow().NoShrink());
+            for (const SpaceTab& tab : tabs)
             {
-                bool isActive = (g.colorSpace == tab.space);
-                if (isActive) guiStateManager.Construction().PushSelected();
-
-                ColorSpace targetSpace = tab.space;
-                Button(tab.label, [this, targetSpace]()
-                {
-                    m_gradientEditorSub->State().workingCopy.colorSpace = targetSpace;
-                });
-
-                if (isActive) guiStateManager.Construction().PopSelected();
+                const bool active = (g.colorSpace == tab.space);
+                if (active) guiStateManager.Construction().PushSelected();
+                const ColorSpace target = tab.space;
+                Button(tab.label, [this, target]() { m_gradientEditorSub->State().workingCopy.colorSpace = target; });
+                if (active) guiStateManager.Construction().PopSelected();
             }
-
-            VERIFY(elementStorage.EndChildren());
+            EndButtonGroup();
         }
+        EndHorizontal();
 
-        // Write working copy back to output every frame
+        // Reverse, distribute evenly.
+        BeginHorizontal(idManager.AllocateDynamicID("ge_actions"), theme.gradientEditorActionsStyleRef, LayoutOverride{}.NoShrink());
+        Button(idManager.AllocateDynamicID("ge_reverse"), theme.reverseIcon, "Reverse", [this]() {
+            auto& ge = m_gradientEditorSub->State();
+            auto& g = ge.workingCopy;
+            for (int i = 0; i < g.stopCount; i++)
+                g.stops[size_t(i)].SetOffset(1.0f - g.stops[size_t(i)].GetOffset());
+            std::reverse(g.stops.begin(), g.stops.begin() + g.stopCount);
+            ge.selectedStop = g.stopCount - 1 - ge.selectedStop;
+        }, theme.dialogSmallButtonStyleRef);
+        Button(idManager.AllocateDynamicID("ge_distribute"), theme.distributeIcon, "Distribute evenly", [this]() {
+            auto& g = m_gradientEditorSub->State().workingCopy;
+            for (int i = 0; i < g.stopCount; i++)
+                g.stops[size_t(i)].SetOffset(g.stopCount > 1 ? float(i) / float(g.stopCount - 1) : 0.0f);
+        }, theme.dialogSmallButtonStyleRef);
+        EndHorizontal();
+        EndVertical();   // left
+
+        // The stops table: type, swatch, value, location; a click selects.
+        BeginVertical(idManager.AllocateDynamicID("ge_table"), theme.gradientEditorTableStyleRef, LayoutOverride{}.FlexGrow(2));
+        {
+            BeginHorizontal(idManager.AllocateDynamicID("ge_table_head"), theme.gradientEditorTableHeadStyleRef, LayoutOverride{}.NoShrink());
+            Text(idManager.AllocateDynamicID("ge_th_type"), "Type", theme.gradientEditorTypeCellStyleRef);
+            Element blank{ .id = idManager.AllocateDynamicID("ge_th_swatch"), .styleRef = theme.gradientEditorSwatchCellStyleRef, .flags = ElementFlags::NoInput };
+            RegisterElement(std::move(blank), LayoutOverride{});
+            Text(idManager.AllocateDynamicID("ge_th_value"), "Value", theme.gradientEditorHeadCellStyleRef, LayoutOverride{}.FlexGrow(1));
+            Text(idManager.AllocateDynamicID("ge_th_location"), "Location", theme.gradientEditorHeadLocationStyleRef);
+            EndHorizontal();
+
+            const ID rowRange = idManager.AllocateRangedID(uint32_t(std::max<int>(1, g.stopCount)), "ge_table_row");
+            for (int i = 0; i < g.stopCount; i++)
+            {
+                const ID rowID = idManager.GetSubID(rowRange, uint32_t(i));
+                const bool sel = (i == ge.selectedStop);
+                if (sel) guiStateManager.Construction().PushSelected();
+                RegisterElement(Element{ .id = rowID,
+                    .eventHandler = MakeButtonHandler([this, i]() { m_gradientEditorSub->State().selectedStop = i; }),
+                    .styleRef = theme.gradientEditorTableRowStyleRef, .state = guiStateManager.GetCurrentState(rowID) },
+                    LayoutOverride{}.NoShrink());
+                VERIFY(elementStorage.BeginChildren());
+                Text(idManager.AllocateDynamicID("ge_td_type"), "Color", theme.gradientEditorTypeCellStyleRef);
+                const ID swID = idManager.AllocateDynamicID("ge_td_swatch");
+                NoteSwatchClaim(swID);
+                auto& swStyle = m_gradientEditorSub->ClaimSwatchStyle(swID);
+                SetColorStyle(styleManager, swStyle, g.stops[size_t(i)].GetColor4f());
+                Element sw{ .id = swID, .styleRef = theme.gradientEditorSwatchCellStyleRef, .flags = ElementFlags::NoInput };
+                const ElementRef swRef = RegisterElement(std::move(sw), LayoutOverride{});
+                VERIFY(elementStorage.AddCustomDraw(swRef, [look, swStyle, radius = float(styleManager.Px(3))](CustomDrawContext& ctx) {
+                    const IntRect r = ctx.ElementInnerRect();
+                    ColorSwatchLook l = look;
+                    l.radius = radius;
+                    l.checkerSize = r.h / 2;
+                    DrawCheckerboard(ctx, r, r, l);
+                    ctx.RenderQuad(r, swStyle, radius);
+                }));
+                Text(idManager.AllocateDynamicID("ge_td_value"), StopHex(g.stops[size_t(i)]), theme.gradientEditorValueCellStyleRef, LayoutOverride{}.FlexGrow(1));
+                Text(idManager.AllocateDynamicID("ge_td_location"), Percent(g.stops[size_t(i)].GetOffset()), theme.gradientEditorLocationCellStyleRef);
+                VERIFY(elementStorage.EndChildren());
+                if (sel) guiStateManager.Construction().PopSelected();
+            }
+        }
+        EndVertical();
+        EndHorizontal();   // columns
+
+        // ---- Footer ----
+        BeginHorizontal(idManager.AllocateDynamicID("ge_footer"), theme.dialogFooterStyleRef, LayoutOverride{}.NoShrink());
+        {
+            char status[96];
+            std::snprintf(status, sizeof(status), "%d stops \xC2\xB7 click the bar to add, drag a stop off to remove", int(g.stopCount));
+            Text(idManager.AllocateDynamicID("ge_status"), status, theme.dialogStatusStyleRef, LayoutOverride{}.FlexGrow(1));
+            Button(idManager.AllocateDynamicID("ge_cancel"), IconID::Invalid, "Cancel", requestClose(GradientEditorState::CloseRequest::Cancel),
+                   theme.dialogButtonStyleRef);
+            Button(idManager.AllocateDynamicID("ge_ok"), IconID::Invalid, "OK", requestClose(GradientEditorState::CloseRequest::Ok),
+                   theme.dialogPrimaryButtonStyleRef);
+        }
+        EndHorizontal();
+
         outGradient = g;
     }
 }

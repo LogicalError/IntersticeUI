@@ -337,6 +337,9 @@ namespace interstice
         bool        CommandButton(CommandID command, StyleRef style, LayoutOverride&& constraints = {});
         inline bool CommandButton(CommandID command, LayoutOverride&& constraints = {}) { return CommandButton(command, theme.controls->button, std::move(constraints)); }
 
+        // A checkbox (a box, checked with a tick) and its label.
+        bool        Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, LayoutOverride&& constraints = {});
+
         // An on/off switch (track and knob) with an optional label after it, e.g. "On".
         bool        Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Switch(ID id, bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(id,                            value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
@@ -372,6 +375,9 @@ namespace interstice
         inline bool BeginMenu(ID id, std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(id, text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
         inline bool BeginMenu(       std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, buttonStyle, menuStyle, itemStyle, std::move(constraints)); }
         inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
+        // A section's name between items, e.g. "View", lined up with the labels.
+        void        MenuHeader(std::string_view text);
+
         // Optional icon, label, optional shortcut. The icon column is reserved if any sibling has an icon.
         bool        MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
 
@@ -843,8 +849,41 @@ namespace interstice
         inline bool Field(       T& value, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
         
 
-        // Reorderable list of fields with remove buttons and a trailing add button.
-        // groupID must be stable so reorder state survives across frames.
+        // A number's type as a short tag: f32, f64, i8 ... u64 (empty for other types).
+        template<typename T>
+        static constexpr std::string_view TypeTag()
+        {
+            if constexpr (std::is_same_v<T, float>)         return "f32";
+            else if constexpr (std::is_same_v<T, double>)   return "f64";
+            else if constexpr (std::is_same_v<T, int8_t>)   return "i8";
+            else if constexpr (std::is_same_v<T, int16_t>)  return "i16";
+            else if constexpr (std::is_same_v<T, int32_t>)  return "i32";
+            else if constexpr (std::is_same_v<T, int64_t>)  return "i64";
+            else if constexpr (std::is_same_v<T, uint8_t>)  return "u8";
+            else if constexpr (std::is_same_v<T, uint16_t>) return "u16";
+            else if constexpr (std::is_same_v<T, uint32_t>) return "u32";
+            else if constexpr (std::is_same_v<T, uint64_t>) return "u64";
+            else if constexpr (std::is_same_v<T, std::string>) return "string";
+            else return {};
+        }
+
+        // A number field with its type after the value, e.g. "0.5  f32".
+        template<typename T>
+        bool TypedField(ID id, T& value, LayoutOverride&& constraints = {})
+        {
+            BeginHorizontal(idManager.AllocateDynamicID("typed_field"), theme.typedFieldStyleRef, std::move(constraints));
+            const bool changed = Field(id, value, TextEditBehavior::ContinuousUpdate, theme.typedFieldInputStyleRef, {},
+                                       LayoutOverride{}.FlexGrow(1));
+            Text(idManager.AllocateDynamicID("typed_field_type"), TypeTag<T>(), theme.typedFieldTypeStyleRef);
+            EndHorizontal();
+            return changed;
+        }
+        template<typename T>
+        bool TypedField(T& value, LayoutOverride&& constraints = {}) { return TypedField(idManager.AllocateDynamicID(), value, std::move(constraints)); }
+
+        // A reorderable list: each row a grip, its index, the field (numbers with their type)
+        // and a remove button; "Add item" after the rows. groupID must be stable so the
+        // reorder state survives across frames.
         template<typename T>
         void Field(ID groupID, std::vector<T>& items, StyleRef style, LayoutOverride layoutOverride = {})
         {
@@ -859,58 +898,62 @@ namespace interstice
                     items.insert(items.begin() + to, std::move(moved));
                 };
 
-                if (BeginReorderableGroup(groupID, ReorderDirection::Vertical,
-                                          std::move(onReorder),
-                                          interstice::LayoutOverride{}.FlexGrow(1)))
+                if (BeginReorderableGroup(groupID, ReorderDirection::Vertical, std::move(onReorder),
+                                          theme.collectionListStyleRef, interstice::LayoutOverride{}.FlexGrow(1)))
                 {
                     for (int i = 0; i < (int)items.size(); i++)
                     {
-                        BeginReorderableItem(idManager.AllocateDynamicID(),
+                        BeginReorderableItem(idManager.AllocateDynamicID(), theme.collectionRowStyleRef,
                                              interstice::LayoutOverride{}.FlexGrow(1));
                         {
                             EmitDragHandle();
-                            Field(items[i], interstice::LayoutOverride{}.FlexGrow(1));
-                            Button(theme.removeIcon, [&items, i]() { items.erase(items.begin() + i); },
-                                theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
+                            Text(idManager.AllocateDynamicID("list_index"), std::to_string(i), theme.collectionIndexStyleRef);
+                            if constexpr (std::is_arithmetic_v<T>)
+                                TypedField(items[i], interstice::LayoutOverride{}.FlexGrow(1));
+                            else
+                                Field(items[i], interstice::LayoutOverride{}.FlexGrow(1));
+                            Button(theme.tabCloseIcon, [&items, i]() { items.erase(items.begin() + i); },
+                                   theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
                         }
                         EndReorderableItem();
                     }
                     EndReorderableGroup();
                 }
-                Button(theme.addIcon, [&items]() { items.push_back({}); },
-                       theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
+                Button(idManager.AllocateDynamicID("list_add"), IconID::Invalid, "+  Add item", [&items]() { items.push_back({}); },
+                       theme.collectionAddStyleRef);
                 EndArea();
             }
         }
-        
+
         template<typename T>
         void Field(ID groupID, std::vector<T>& items, LayoutOverride layoutOverride = {}) { Field(groupID, items, theme.collectionAreaStyleRef, layoutOverride); }
 
-        // Key-value list (std::string keys, V values) with add/remove. Each row
-        // is "[key] : [value] [remove]" glued onto one line via KeepWithNext. Not
-        // reorderable — add a reorderable variant when an application needs it.
+        // A key-value list (std::string keys, V values): a Key / Value header with the types,
+        // then a row per entry (key, value, remove) and "Add entry".
         template<typename V>
         void Field(std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride layoutOverride = {})
         {
             if (BeginArea(style, std::move(layoutOverride)))
             {
+                CollectionHeader(TypeTag<V>());
                 for (int i = 0; i < (int)items.size(); i++)
                 {
-                    Field(items[i].first,  interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
-                    Text(":",              interstice::LayoutOverride{}.NoGrow()   .KeepWithNext());
-                    Field(items[i].second, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
-                    Button(theme.removeIcon, [&items, i]() { items.erase(items.begin() + i); },
-                        theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
+                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, interstice::LayoutOverride{}.NoShrink());
+                    Field(items[i].first,  interstice::LayoutOverride{}.FlexGrow(1));
+                    Field(items[i].second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
+                    Button(theme.tabCloseIcon, [&items, i]() { items.erase(items.begin() + i); },
+                           theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
+                    EndHorizontal();
                 }
-                Button(theme.addIcon, [&items]() { items.push_back({ std::string{}, V{} }); },
-                    theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
+                Button(idManager.AllocateDynamicID("dictionary_add"), IconID::Invalid, "+  Add entry",
+                       [&items]() { items.push_back({ std::string{}, V{} }); }, theme.collectionAddEntryStyleRef);
                 EndArea();
             }
         }
         template<typename V>
         void Field(std::vector<std::pair<std::string, V>>& items, LayoutOverride layoutOverride = {}) { Field(items, theme.collectionAreaStyleRef, layoutOverride); }
 
-        
+
 		// Key-value list over an unordered_map. Row order can change when the map rehashes;
         // use the vector-of-pairs version for stable rows.
         template<typename V>
@@ -918,23 +961,25 @@ namespace interstice
         {
             if (BeginArea(style, std::move(layoutOverride)))
             {
+                CollectionHeader(TypeTag<V>());
                 // Map keys are const: edit a copy, committed on Enter/blur, and re-key
                 // after the loop (renaming onto an existing key is ignored).
                 std::string renameFrom, renameTo;
                 bool        rename = false;
                 for (auto& pair : items)
                 {
+                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, interstice::LayoutOverride{}.NoShrink());
                     std::string key = pair.first;
-                    if (Field(key, TextEditBehavior::None, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext()) && key != pair.first)
+                    if (Field(key, TextEditBehavior::None, interstice::LayoutOverride{}.FlexGrow(1)) && key != pair.first)
                     {
                         renameFrom = pair.first;
                         renameTo   = key;
                         rename     = true;
                     }
-                    Text(":", interstice::LayoutOverride{}.NoGrow().KeepWithNext());
-                    Field(pair.second, interstice::LayoutOverride{}.FlexGrow(1).KeepWithNext());
-                    Button(theme.removeIcon, [&items, k = pair.first]() { items.erase(k); },
-                        theme.iconButtonStyleRef, interstice::LayoutOverride{}.NoGrow());
+                    Field(pair.second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
+                    Button(theme.tabCloseIcon, [&items, k = pair.first]() { items.erase(k); },
+                           theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
+                    EndHorizontal();
                 }
                 if (rename && !items.contains(renameTo))
                 {
@@ -942,13 +987,16 @@ namespace interstice
                     node.key() = renameTo;
                     items.insert(std::move(node));
                 }
-                Button(theme.addIcon, [&items]() { items.emplace(std::string{}, V{}); },
-                    theme.iconButtonEndStyleRef, interstice::LayoutOverride{}.NoGrow());
+                Button(idManager.AllocateDynamicID("dictionary_add"), IconID::Invalid, "+  Add entry",
+                       [&items]() { items.emplace(std::string{}, V{}); }, theme.collectionAddEntryStyleRef);
                 EndArea();
             }
         }
         template<typename V>
         void Field(std::unordered_map<std::string, V>& items, LayoutOverride layoutOverride = {}) { Field(items, theme.collectionAreaStyleRef, layoutOverride); }
+
+        // A dictionary's header row: "Key string", "Value <type>".
+        void CollectionHeader(std::string_view valueType);
 
 
         // ---- ColorField: swatch + color picker popup ----
@@ -982,6 +1030,10 @@ namespace interstice
         inline void DragLabel(       std::string_view title,                 LayoutOverride&& constraints = {}) { DragLabel(idManager.AllocateDynamicID(), title, theme.dragLabelStyleRef, std::move(constraints)); }
 
         void        Label(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints = {});
+        // A label over a field taller than a row (a list): at the top, with a caption under
+        // it such as "3 items".
+        void        Label(ID id, std::string_view title, std::string_view caption, LayoutOverride&& constraints = {});
+        inline void Label(       std::string_view title, std::string_view caption, LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, caption, std::move(constraints)); }
         inline void Label(ID id, std::string_view title,                 LayoutOverride&& constraints = {}) { Label(id, title, theme.labelStyleRef, std::move(constraints)); }
         inline void Label(       std::string_view title, StyleRef style, LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, style, std::move(constraints)); }
         inline void Label(       std::string_view title,                 LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, theme.labelStyleRef, std::move(constraints)); }
@@ -1129,7 +1181,8 @@ namespace interstice
             assert(windowLayoutID != ID::Invalid());
 
             // Closed by the user since last frame.
-            if (windowManager->GetWindowState(windowLayoutID) == WindowState::Closing)
+            if (windowManager->GetWindowState(windowLayoutID) == WindowState::Closing
+                || windowManager->WasUserClosed(windowLayoutID))
             {
                 return false;
             }
@@ -1312,6 +1365,10 @@ namespace interstice
 
         // Registers a swatch claim with the enclosing cached scopes so hit frames can keep it alive.
         void NoteSwatchClaim(ID swatchID);
+        // The text of the label just before the current control (empty without one).
+        std::string PendingLabelText() const;
+        // How color swatches draw a color (the theme's checkerboard and alpha bar).
+        struct ColorSwatchLook SwatchLook() const;
 
         // Panel id → its dock content (cached scope) id, for InvalidatePanel.
         std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
@@ -1439,9 +1496,13 @@ namespace interstice
         void EmitNodeViewOverlays(NodeView& view, ID canvasID);
 
         // Each window's title bar, from its last BeginTitleBar / EndTitleBar.
-        struct TitleBar { ID barID = ID::Invalid(); ID maximizeID = ID::Invalid(); };
+        struct TitleBar { ID barID = ID::Invalid(); ID maximizeID = ID::Invalid(); std::vector<ID> captions; };
         std::unordered_map<ID, TitleBar> m_titleBars;
-        std::vector<ID> m_titleBarStack; // bar IDs between BeginTitleBar and EndTitleBar
+        std::vector<ID> m_titleBarStack;    // bar IDs between BeginTitleBar and EndTitleBar
+        std::vector<ID> m_titleBarCaptions; // controls in the open title bar whose background drags the window
+        // A control in the open title bar whose own background is caption (e.g. a tab strip).
+        void TitleBarCaption(ID id) { m_titleBarCaptions.push_back(id); }
+        void DockFloatingWindow(FloatingDockWindow& fw);
 
         // Popup content for ColorField / GradientField.
         void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);

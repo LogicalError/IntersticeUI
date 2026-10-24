@@ -439,7 +439,11 @@ namespace interstice
             {
                 ClearComposition(); // an uncommitted composition is dropped on blur
                 capture_editor_text(m_skribidiContext);
-                if (m_skribidiContext->pending_text_valid)
+                // Only an edit commits on blur: an untouched field's text may be stale by the
+                // next frame (e.g. a list reordered under it) and must not overwrite its value.
+                const RegisteredText* entry = m_skribidiContext->GetRegisteredText(it->second);
+                const bool edited = entry == nullptr || entry->text != m_skribidiContext->pending_text;
+                if (m_skribidiContext->pending_text_valid && edited)
                 {
                     UpdateText(it->second, m_skribidiContext->pending_text);
                     m_skribidiContext->pending_text_prev_id = it->second;

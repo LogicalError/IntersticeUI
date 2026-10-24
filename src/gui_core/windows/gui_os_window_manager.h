@@ -255,6 +255,14 @@ namespace interstice
         // ---------------- Window State ---------------- 
 
         RequestCloseResult RequestClose(ID id) { return RequestClose(IndexOf(id)); }
+
+        // Closes a window on the user's behalf (e.g. its title bar's close button): like
+        // closing it through the OS, it isn't reopened while the app keeps declaring it.
+        RequestCloseResult RequestUserClose(ID id)
+        {
+            userClosedWindows.insert(id);
+            return RequestClose(IndexOf(id));
+        }
         
         // Programmatically close a window and allow it to be reopened
         // (unlike user-initiated closes which prevent automatic reopening)

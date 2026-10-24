@@ -58,8 +58,7 @@ void main()
 
     color.a *= alpha;
 
-    // premultiply alpha
-    color.rgb = linearToSrgb(color.rgb);
+    // Colors are sRGB already, as in the other shaders; premultiply alpha.
     color.a = clamp(color.a, 0, 1);
     color.rgb *= color.a;
 

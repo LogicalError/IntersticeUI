@@ -107,6 +107,26 @@ namespace interstice
         handler(MakeEvent(sliderID, EventType::MouseUp, up));
     }
 
+    // A Jump slider moves to the press at once and follows the cursor from there.
+    TEST_F(SliderHandlerTest, JumpMovesToThePressAndDragsFromThere)
+    {
+        float v = 0.0f;
+        auto handler = MakeSliderHandler(guiStateManager, elementStorage, &v, /*elementWidth*/100,
+                                         nullptr, 0.0f, 1.0f, SliderPress::Jump);
+
+        InputState down = MakeMouseDownState(75, 0);
+        handler(MakeEvent(sliderID, EventType::MouseDown, down));
+        EXPECT_FLOAT_EQ(v, 0.75f) << "the press itself sets the value";
+
+        InputState move = MakeMouseMoveState(76, 0);
+        handler(MakeEvent(sliderID, EventType::MouseMove, move));
+        EXPECT_FLOAT_EQ(v, 0.76f) << "a move under the drag threshold still follows";
+
+        InputState up = MakeMouseUpState(76, 0);
+        handler(MakeEvent(sliderID, EventType::MouseUp, up));
+        EXPECT_FLOAT_EQ(v, 0.76f);
+    }
+
     // =============================================================================
     // Custom range [0, 100]
     // =============================================================================

@@ -121,13 +121,19 @@ namespace interstice
             return false;
         };
 
-        // A dropdown shows an arrow after its text; a menu-bar item doesn't.
-        const IconID arrow = isMenuBar ? IconID::Invalid : application.theme.dropdownArrowIcon;
+        // A dropdown shows an arrow after its text, pointing up (and the button selected)
+        // while its menu is open; a menu-bar item has no arrow.
+        const auto& root = application.menuManager.levels[0];
+        const bool  open = !isMenuBar && root.isOpen && root.triggerID == menuID;
+        const IconID arrow = isMenuBar ? IconID::Invalid
+                           : open      ? application.theme.dropdownArrowUpIcon : application.theme.dropdownArrowIcon;
+        if (open) application.guiStateManager.Construction().PushSelected();
         application.RegisterControl(interstice::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
                             [&application, arrow, text](interstice::Element& element) {
                                 return application.textSystem->RegisterText(element.id, arrow, text, element.styleRef, element.state);
                             },
                             std::move(constraints));
+        if (open) application.guiStateManager.Construction().PopSelected();
 
         // Snapshot the trigger's final screen rect after layout; next frame's BeginMenu
         // uses it to match the popup width and to detect side-flipped placement.
@@ -194,7 +200,8 @@ namespace interstice
         const bool        ownsChrome = elementStorage.IsValidRef(windowRef)
             && (elementStorage.GetElementUnsafe(windowRef).flags & ElementFlags::WindowCustomTitleBar) != ElementFlags::None;
 
-        TitleBar bar{ .barID = barID };
+        TitleBar bar{ .barID = barID, .captions = std::move(m_titleBarCaptions) };
+        m_titleBarCaptions.clear();
         if (ownsChrome)
         {
             [[maybe_unused]] const bool pushed = idManager.PushParent(barID);
@@ -208,7 +215,7 @@ namespace interstice
                        else           windowManager->MaximizeWindow(windowID);
                    }, theme.titleBarButtonStyleRef);
             Button(idManager.AllocateDynamicID("close"), theme.tabCloseIcon,
-                   [this, windowID] { (void)windowManager->RequestClose(windowID); }, theme.titleBarCloseButtonStyleRef);
+                   [this, windowID] { (void)windowManager->RequestUserClose(windowID); }, theme.titleBarCloseButtonStyleRef);
             if (pushed)
                 (void)idManager.PopParent();
         }
@@ -231,6 +238,8 @@ namespace interstice
         // The bar itself, and anything in it that takes no input (spacers, the title).
         const ElementRef hitRef = elementStorage.FindElementRefByID(hit);
         if (hit == it->second.barID || !hitRef.IsValid())
+            return WindowHitArea::Caption;
+        if (std::find(it->second.captions.begin(), it->second.captions.end(), hit) != it->second.captions.end())
             return WindowHitArea::Caption;
         const Element& element = elementStorage.GetElementUnsafe(hitRef);
         const bool interactive = element.eventHandler || (element.flags & ElementFlags::IsControl) != ElementFlags::None;
@@ -480,6 +489,11 @@ namespace interstice
             }
         }
         return false;
+    }
+
+    void GUIApplication::MenuHeader(std::string_view text)
+    {
+        Text(idManager.AllocateDynamicID("menu_header"), text, theme.menuHeaderStyleRef, interstice::LayoutOverride{}.NoGrow().NoShrink());
     }
 
     void GUIApplication::MenuSeparator()

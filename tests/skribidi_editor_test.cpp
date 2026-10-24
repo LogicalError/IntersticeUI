@@ -452,5 +452,75 @@ namespace interstice
 
             EXPECT_NE(bound.find("XY"), std::string::npos) << bound;
         }
+
+        // A list reordered under a focused row: the rows keep their IDs (by position), so
+        // when focus moves on, the old row's editor must not write its text over the item
+        // that now sits there.
+        TEST_F(SkribidiEditorTest, AnUneditedFieldDoesNotCommitOnBlur)
+        {
+            const ID rows[3] = { ID{ .value{ .integer = 910 } }, ID{ .value{ .integer = 911 } }, ID{ .value{ .integer = 912 } } };
+            std::string items[3] = { "a", "b", "c" };
+            auto listFrame = [&]
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    bool changed = false;
+                    const ElementState state = (stateManager.TextEditorFocus().GetFocusedID() == rows[i])
+                        ? ElementState::Focused : ElementState::None;
+                    const TextID id = textSystem->RegisterEditableText(rows[i], items[i], TextEditBehavior::None, style, state, changed);
+                    const IntRect rect{ 0, 20 * i, 200, 20 };
+                    textSystem->RenderText(id, rect, rect, IntRect{ 0, 0, 2000, 2000 });
+                }
+            };
+            listFrame();
+            Focus(rows[2]);
+            listFrame();
+            listFrame();
+
+            // The last item moves to the front; focus goes to the row it landed in.
+            items[0] = "c"; items[1] = "a"; items[2] = "b";
+            Focus(rows[0]);
+            listFrame();
+            listFrame();
+
+            EXPECT_EQ(items[0], "c");
+            EXPECT_EQ(items[1], "a");
+            EXPECT_EQ(items[2], "b") << "the blurred row wrote its old text over the moved item";
+        }
+
+        // The same for numbers.
+        TEST_F(SkribidiEditorTest, AnUneditedNumberDoesNotCommitOnBlur)
+        {
+            const ID rows[3] = { ID{ .value{ .integer = 920 } }, ID{ .value{ .integer = 921 } }, ID{ .value{ .integer = 922 } } };
+            float items[3] = { 1.0f, 2.0f, 3.0f };
+            auto listFrame = [&]
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    bool changed = false;
+                    const ElementState state = (stateManager.TextEditorFocus().GetFocusedID() == rows[i])
+                        ? ElementState::Focused : ElementState::None;
+                    NumericValue v{};
+                    const NumericType type = CopyNumericTypeTo(items[i], v);
+                    const TextID id = textSystem->RegisterEditableNumber(rows[i], type, v, TextEditBehavior::None, style, state, changed);
+                    if (changed) CopyNumericTypeTo(type, v, items[i]);
+                    const IntRect rect{ 0, 20 * i, 200, 20 };
+                    textSystem->RenderText(id, rect, rect, IntRect{ 0, 0, 2000, 2000 });
+                }
+            };
+            listFrame();
+            Focus(rows[2]);
+            listFrame();
+            listFrame();
+
+            items[0] = 3.0f; items[1] = 1.0f; items[2] = 2.0f;
+            Focus(rows[0]);
+            listFrame();
+            listFrame();
+
+            EXPECT_EQ(items[0], 3.0f);
+            EXPECT_EQ(items[1], 1.0f);
+            EXPECT_EQ(items[2], 2.0f) << "the blurred row wrote its old number over the moved item";
+        }
     }
 }

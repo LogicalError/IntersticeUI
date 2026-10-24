@@ -381,6 +381,9 @@ namespace interstice
         /// registered again (call after each registration, e.g. for a NaN value).
         virtual void SetTextColor(TextID textId, VisualColorStyleIndex color) = 0;
 
+        /// The text caret's color (the theme's --caret). Set again after the style manager is cleared.
+        virtual void SetCaretColor(VisualColorStyleIndex color) = 0;
+
         /// Get the original text string from a registered TextID
         virtual std::string_view GetText(TextID textId) const = 0;
 

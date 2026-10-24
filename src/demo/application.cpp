@@ -506,9 +506,7 @@ namespace interstice
         logCellStyleRef             = theme.GetStyle("log-cell");
         logTableStyleRef            = theme.GetStyle("log-table");
         filesToolbarStyleRef        = theme.GetStyle("files-toolbar");
-        typedFieldStyleRef          = theme.GetStyle("typed-field");
-        typedFieldInputStyleRef     = theme.GetStyle("typed-field-input");
-        typedFieldTypeStyleRef      = theme.GetStyle("typed-field-type");
+        appIconStyleRef             = theme.GetStyle("app-icon");
         inspectorPairHalfStyleRef   = theme.GetStyle("inspector-pair-half");
         inspectorCaptionStyleRef    = theme.GetStyle("inspector-caption");
         inspectorHeaderStyleRef     = theme.GetStyle("inspector-header");
@@ -994,6 +992,9 @@ namespace interstice
     void Application::RenderMainMenu()
     {
         BeginTitleBar(idManager.AllocateDynamicID("mainMenuBar"));
+
+        // The application's mark, before the menus.
+        Text(idManager.AllocateDynamicID("appIcon"), "T", appIconStyleRef);
 
         // ---- File ----
         if (BeginMenu(idManager.AllocateDynamicID("menuFile"), "File",

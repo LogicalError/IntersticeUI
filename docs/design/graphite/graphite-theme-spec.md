@@ -1,7 +1,7 @@
 # Graphite dark theme — spec
 
-Reference mockups: `MainDark.dc.html` (NodeView + Profiler), `InspectorDark.dc.html` (Viewport + Inspector),
-`SettingsDark.dc.html` (Settings + Table), `TokensDark.dc.html` (token sheet). They are HTML mockups with inline styles;
+Reference mockups: `Main.dc.html` (NodeView + Profiler), `Inspector.dc.html` (Viewport + Inspector),
+`Settings.dc.html` (Settings + Table), `Tokens.dc.html` (token sheet). They are HTML mockups with inline styles;
 every value below is taken from them. Token names are suggestions — map them onto the existing `themes/dark.css` style names.
 
 ## Colors
@@ -117,10 +117,85 @@ Frame graph bars #3E8F6B, over-budget #E5B454, current frame = accent; 16.7 ms b
 - Selected node: 1px accent border + 3px accent-soft halo.
 - Overlays (8–12px inset, bg-header, radius 6): breadcrumb top-left, zoom −/100%/+/Fit bottom-left, minimap 140 × 88 bottom-right.
 
+## Color field (Inspector)
+- Swatch button 56×24, radius 4, 1px line-strong border, drawn on the checkerboard.
+- Left half: color fully opaque. Right half: color at its actual alpha over the checkerboard.
+- 3px alpha bar along the bottom edge: track #0B0C0F (dark) / #464C57 (light), fill text-1 (dark) / #FFFFFF (light), width = alpha.
+- Followed by hex field and an alpha field ("A" caption left, value right, e.g. 60%).
+
+## Text selection
+| Token | Dark | Light |
+|---|---|---|
+| selection (focused) | accent @ 35% (rgba(107,155,255,.35)) | accent @ 25% (rgba(47,111,235,.25)) |
+| selection-inactive (unfocused field / window) | #3A3F4A | #DCDFE5 |
+| caret | 2px accent, 14px tall | 2px accent, 14px tall |
+- Selected text keeps text-1; never invert to white-on-accent (keeps mono digits and syntax colors readable).
+- Multi-line: each fully selected line extends ~4px past its last glyph to show the selected newline.
+- Read-only text (log details, labels that allow copy) uses the same focused selection color.
+- Numeric fields select all on focus (see Dictionary "100").
+- Selection color derives from the accent, so it follows accent changes.
+
+## Lists, dictionary, menus (Inspector)
+Mockup: `InspectorLists.dc.html` (prop `theme`).
+- Label column stays 116px but is **top-aligned** to the first row (padding-top 9), with a count caption under it (11px text-3: "3 items").
+- List container: 4px padding, 2px row gap, 1px line-subtle border, radius 6, bg #101216 (dark) / #F6F7F9 (light).
+- List row 26: grid 14 (grip, 6-dot, text-3) | 14 (index, mono 10.5 text-3, right-aligned) | field | 22 (remove ×, text-3).
+  Hover row: bg #1A1D23 / #EAECF0, remove turns error color on an error @ 12% chip.
+- Numeric list fields: mono value + type tag right (f32), same as the Numbers section.
+- Add button: inside the container, aligned with the fields (margin 2 24 0 42), 24 high, 1px dashed line-strong, "+ Add item".
+- Drag reorder: source row stays at 35% opacity; dragged copy floats with bg-control/white, drop shadow and 1px accent ring, grip in accent;
+  drop target = a 26px slot opened between rows (1px dashed accent border on accent-soft, radius 4), the dragged copy hovering over it offset ~6px.
+- Dictionary: same container with a 20px header row (Key / Value captions + mono type: string, i32), no grip/index,
+  key field (UI font) | value field (mono) | remove; "+ Add entry" button spans the key+value columns.
+- Dropdown button: 160 × 24, bg-control, 1px line-strong, label left, chevron right (text-3).
+  Open: accent border + 3px accent-soft halo, chevron flips up.
+- Menu popup: 264 wide, 4px padding, radius 8, bg #1A1D23 / #FFFFFF, 1px #2E333D / #D5D9E0, shadow 0 16 40 rgba(0,0,0,.55) / 0 12 32 rgba(16,24,40,.16).
+  Opens 6px below the button. Optional filter field on top for big menus.
+  Item 26: grid 16 (icon or check) | label | shortcut (mono 10.5 text-3) | 12 (submenu chevron). Hover = accent-soft.
+  Section header 22 (11px/500 text-3, indented to label column). Separator 1px line-subtle with 4px margin.
+  Checked item: accent check icon; unchecked: empty icon slot. Disabled: 45% opacity. Destructive: error color text + icon.
+
+## Torn-off panel window
+Mockup: `Docking.dc.html` (prop `theme`).
+A tab dragged out of a dock becomes its own OS window, holding only that panel.
+- Window: bg-app, 1px #2E333D / #C9CED6 border, radius 8 (where the OS allows), shadow 0 24 56 rgba(0,0,0,.55) dark / 0 20 48 rgba(16,24,40,.22) light.
+- Title bar 36 (custom chrome, no menu bar): 6-dot grip (text-3) + the panel's tab (26 high, active-tab style; light theme uses bg-panel so the tab joins the panel)
+  + spacer (drag area) + "Dock" text button (returns the panel to its last dock position) + 44×36 minimize / maximize / close.
+- The panel sits inset 4px (left, right, bottom) inside the window, same panel styling as when docked (bg-panel, panel-border, radius 6).
+- Resize grip (two diagonal strokes, text-3) in the bottom-right corner.
+- The tab strip in the title bar accepts more dragged tabs, so a torn-off window can host several panels.
+
 ## Viewport
 - Floating toolbars over the view (bg rgba(22,25,30,.92), 1px line-subtle, radius 6, 30 high, 3px inset): file/undo group, shading-mode group, camera dropdown.
 - Vertical tool strip at left (select/move/rotate/scale); active tool = accent fill with on-accent icon.
 - Axis gizmo top-right 64px; FPS badge bottom-left (mono).
+
+## Dialogs (shared)
+Mockups: `ColorPicker.dc.html`, `GradientEditor.dc.html` (prop `theme` = dark | light; the `*Light.dc.html` files just set it).
+- Frame: bg-panel, 1px panel-border, radius 8, shadow 0 24 64 rgba(0,0,0,.55) dark / rgba(16,24,40,.18) light.
+- Header 44: title 13/600 text-1 + context path text-3 + 28px close button.
+- Footer 52, bg-header, top divider: status text left; Cancel (secondary) + OK (accent fill, on-accent, 600) right.
+- Transparency checkerboard: 8px squares, #2A2F39/#1E2128 dark, #FFFFFF/#E3E6EB light.
+- Selected swatch/preset: 2px panel-colored gap + 2px accent ring.
+
+### Color picker (560 wide)
+- SV square 240×240, radius 6; cursor 14px ring (2px white + 1px dark outline).
+- Hue strip and alpha strip 16×240, 10px apart; handle 22×6 white-outlined bar.
+- Right column: New/Original split preview 40 high on checkerboard; RGB | HSV | HSL segmented + range toggle (0–255 / 0–1).
+- Channel rows 26: label 14 / track 8 high showing the channel's actual gradient / numeric field 52. Thumb 12px white.
+- Hex field (focused state shown) + eyedropper; HDR intensity field + Linear checkbox.
+- Swatches row (22px squares, dashed add button) and Recent row (22px circles).
+  Both use the color-field split: left half opaque, right half at actual alpha over the checkerboard.
+  Swatch squares also get a 2px alpha bar along the bottom (circles omit it). Unselected outline 1px line-node.
+
+### Gradient editor (720 wide)
+- Preset chips 64×22.
+- Gradient bar 44 high on checkerboard, 24px side inset so end stops fit.
+- Alpha stops above the bar (14px square, fill = grey at alpha level, pointer down); color stops below (18px square with stop color, pointer up).
+  Unselected edge text-1 (dark) / white (light); selected edge = accent + 3px accent-soft halo, with a location badge under it.
+- Left column: selected stop (n / total, prev/next, color swatch + hex, location %, duplicate, delete in error color),
+  Interpolation (Linear | Smooth | Constant), Blend space (sRGB | Linear | Oklab), Reverse, Distribute evenly.
+- Right column: stops table (Type, swatch, value, location) sorted by location; selected row = accent-soft + 2px accent left bar.
 
 ## Light theme (themes/light.css)
 Same token names, metrics and structure. Mockups: `MainLight.dc.html`, `InspectorLight.dc.html`, `SettingsLight.dc.html`, `TokensLight.dc.html`.
