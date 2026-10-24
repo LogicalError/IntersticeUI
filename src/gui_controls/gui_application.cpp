@@ -239,6 +239,10 @@ namespace interstice
         if (options.repaintWhileResizing && !onGui)
             onGui = [this]() { OnFrame(); };
 
+        m_osWindowBackend->SetHitTestCallback([this](OSWindowHandle window, int2 screenPos) {
+            return TitleBarHitTest(windowManager->GetWindowID(window), screenPos);
+        });
+
         // Fires inside the OS modal drag/resize loop, before the next frame.
         if (options.closeMenusOnWindowMove)
             m_osWindowBackend->SetWindowMovedCallback([this]() {

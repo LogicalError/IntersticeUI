@@ -235,7 +235,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 // Root window
 // ---------------------------------------------------------------------------
 
-bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size)
+bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementFlags extraFlags)
 {
     // Stand-in for BeginWindow() without an OS window: an IsWindow + NotFocusable
     // content root.
@@ -243,7 +243,8 @@ bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size)
     root.id    = m_rootWindowID;
     root.flags = interstice::ElementFlags::IsWindow
                | interstice::ElementFlags::WindowNoCaption
-               | interstice::ElementFlags::WindowNotFocusable;
+               | interstice::ElementFlags::WindowNotFocusable
+               | extraFlags;
     // Production window style, for its padding + Display::Flex defaults.
     root.styleRef = theme.windowStyleRef;
     root.state    = guiStateManager.GetCurrentState(m_rootWindowID);

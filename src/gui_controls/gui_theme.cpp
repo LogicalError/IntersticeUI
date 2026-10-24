@@ -99,6 +99,10 @@ namespace interstice
                 R"(<circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/>)"
                 R"(<circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>)");
             searchIcon      = registerIcon("search", R"(<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>)");
+            windowMinimizeIcon = registerIcon("window-minimize", R"(<path d="M5 12h14"/>)");
+            windowMaximizeIcon = registerIcon("window-maximize", R"(<rect x="4" y="4" width="16" height="16" rx="2"/>)");
+            windowRestoreIcon  = registerIcon("window-restore",
+                R"(<rect x="4" y="8" width="12" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2"/>)");
         }
 
         {
@@ -527,6 +531,9 @@ namespace interstice
         menuScrollButtonStyleRef          = registerCSS("menu-scroll-button");
         menuBarStyleRef                   = registerCSS("menu-bar");
         menuBarTriggerStyleRef            = registerCSS("menu-bar-trigger");
+        titleBarStyleRef                  = registerCSS("title-bar");
+        titleBarButtonStyleRef            = registerCSS("title-bar-button");
+        titleBarCloseButtonStyleRef       = registerCSS("title-bar-close-button");
         menuSeparatorStyleRef             = registerCSS("menu-separator");
         menuItemRowStyleRef               = registerCSS("menu-item-row");
         menuItemIconStyleRef              = registerCSS("menu-item-icon");

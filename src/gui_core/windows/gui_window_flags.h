@@ -40,6 +40,10 @@ namespace interstice
         // when the parent closes.
         CloseWithParent = 16384,
 
+        // Keeps the OS frame (resizing, snapping, shadow) but the client area covers the
+        // title bar, which the window draws itself (GUIApplication::BeginTitleBar).
+        CustomTitleBar  = 32768,
+
 
 		DefaultFlags = AllowHighDPI
     };

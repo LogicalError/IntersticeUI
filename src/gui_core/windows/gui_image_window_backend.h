@@ -53,6 +53,10 @@ namespace interstice
         void* GetNativeHandle(OSWindowHandle window) override;
         bool SetWindowRect(OSWindowHandle window, const IntRect& clientRect) override;
         void SetWindowVisible(OSWindowHandle window, bool visible) override;
+        void MinimizeWindow(OSWindowHandle window) override { if (!IsImageWindow(window)) m_os.MinimizeWindow(window); }
+        void MaximizeWindow(OSWindowHandle window) override { if (!IsImageWindow(window)) m_os.MaximizeWindow(window); }
+        void RestoreWindow(OSWindowHandle window) override  { if (!IsImageWindow(window)) m_os.RestoreWindow(window); }
+        bool IsWindowMaximized(OSWindowHandle window) const override { return !IsImageWindow(window) && m_os.IsWindowMaximized(window); }
         std::vector<MonitorInfo> GetMonitors() const override;
         int GetMonitorAt(int2 pos) const override;
         int GetMonitorFromWindow(OSWindowHandle window) const override;

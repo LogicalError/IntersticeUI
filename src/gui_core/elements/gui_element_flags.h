@@ -33,6 +33,7 @@ namespace interstice
             WindowCloseWithParent = 1u << 13,
             WindowNotFocusable    = 1u << 14,
             WindowRenderToImage   = 1u << 18, // no OS window; see WindowFlags::RenderToImage
+            WindowCustomTitleBar  = 1u << 19, // draws its own title bar; see WindowFlags::CustomTitleBar
 
         Shadows                   = 1u << 15, // Window or element casts a shadow on elements behind it
         PropagatesDescendantState = 1u << 16, // Hover/Focused when any descendant is

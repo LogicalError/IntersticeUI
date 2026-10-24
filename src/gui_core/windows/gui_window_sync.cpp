@@ -34,6 +34,8 @@ namespace interstice
             if (renderToImage) windowFlags |= WindowFlags::RenderToImage;
             if ((elementFlags & ElementFlags::WindowCloseWithParent) != ElementFlags::None)
                 windowFlags |= WindowFlags::CloseWithParent;
+            if ((elementFlags & ElementFlags::WindowCustomTitleBar) != ElementFlags::None)
+                windowFlags |= WindowFlags::CustomTitleBar;
 
             if (noCaption)
             {

@@ -126,6 +126,12 @@ namespace interstice
             return static_cast<uint32_t>(m_windowStack.size());
         }
 
+        // The window being built (innermost window scope); Invalid outside one.
+        ID GetCurrentWindowID() const
+        {
+            return m_windowStack.empty() ? ID::Invalid() : GetWindowID(m_windowStack.back());
+        }
+
         // Check if any window is active
         bool HasActiveWindow() const
         {

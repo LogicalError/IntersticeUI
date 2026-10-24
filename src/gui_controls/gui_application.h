@@ -389,6 +389,18 @@ namespace interstice
         inline bool BeginMenuBar(       LayoutOverride&& constraints = {}) { return BeginMenuBar(idManager.AllocateDynamicID(), theme.menuBarStyleRef, std::move(constraints)); }
         void EndMenuBar();
 
+        // ---- Title bar: a menu bar the window is dragged by ----
+        // Whatever in it isn't a control is the caption: dragging it moves the window and a
+        // double-click maximizes it. In a window with ElementFlags::WindowCustomTitleBar,
+        // EndTitleBar adds the minimize, maximize / restore and close buttons.
+        bool        BeginTitleBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool BeginTitleBar(ID id, LayoutOverride&& constraints = {}) { return BeginTitleBar(id, theme.titleBarStyleRef, std::move(constraints)); }
+        inline bool BeginTitleBar(       LayoutOverride&& constraints = {}) { return BeginTitleBar(idManager.AllocateDynamicID(), theme.titleBarStyleRef, std::move(constraints)); }
+        void        EndTitleBar();
+
+        // What the OS should do with a screen point of a window with a custom title bar.
+        WindowHitArea TitleBarHitTest(ID windowID, int2 screenPos) const;
+
         // Divider inside a menu or context menu.
         void MenuSeparator();
 
@@ -1405,6 +1417,11 @@ namespace interstice
 
         // The node view's breadcrumb, zoom controls and minimap, over its canvas.
         void EmitNodeViewOverlays(NodeView& view, ID canvasID);
+
+        // Each window's title bar, from its last BeginTitleBar / EndTitleBar.
+        struct TitleBar { ID barID = ID::Invalid(); ID maximizeID = ID::Invalid(); };
+        std::unordered_map<ID, TitleBar> m_titleBars;
+        std::vector<ID> m_titleBarStack; // bar IDs between BeginTitleBar and EndTitleBar
 
         // Popup content for ColorField / GradientField.
         void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);

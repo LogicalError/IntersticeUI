@@ -67,7 +67,8 @@ public:
     // Emit a root "window" element filling the monitor area. Widgets
     // emitted between BeginRootWindow/EndRootWindow become its children
     // and participate in hit-testing/layout.
-    bool BeginRootWindow(interstice::int2 size = { 1920, 1080 });
+    bool BeginRootWindow(interstice::int2 size = { 1920, 1080 },
+                         interstice::ElementFlags extraFlags = interstice::ElementFlags::None);
     void EndRootWindow();
 
     // ---- Input injection ------------------------------------------------
@@ -127,6 +128,7 @@ public:
     // Screen-space center of an element with the given ID. Useful for
     // "click the middle of this cell" style tests.
     interstice::int2    CenterOf(interstice::ID id) const;
+    interstice::ID      RootWindowID() const { return m_rootWindowID; }
 
     // Mock backend & owned systems — exposed so tests can tune monitor
     // configuration or read recorded events.

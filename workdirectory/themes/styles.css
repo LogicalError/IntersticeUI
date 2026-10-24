@@ -2010,6 +2010,57 @@
 .menu-bar-trigger:focus  { background-color: var(--bg-control); }
 .menu-bar-trigger::highlight(selected) { background-color: var(--bg-pressed); }
 
+/* ---- title bar: a menu bar the window is dragged by ----------------------- */
+.title-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    height: 36px;
+    padding: 0px 0px 0px 6px;
+    margin: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: visible;
+    background-color: var(--bg-app);
+    border-width: 0px;
+}
+.title-bar-button {
+    width: 44px;
+    align-self: stretch;
+    border-width: 0px;
+    border-radius: 0px;
+    background-color: transparent;
+    color: var(--text-2);
+    margin: 0px;
+    padding: 0px;
+    -interstice-icon-size: 14px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.title-bar-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.title-bar-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.title-bar-close-button {
+    width: 44px;
+    align-self: stretch;
+    border-width: 0px;
+    border-radius: 0px;
+    background-color: transparent;
+    color: var(--text-2);
+    margin: 0px;
+    padding: 0px;
+    -interstice-icon-size: 14px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.title-bar-close-button:hover  { background-color: var(--window-close); color: var(--window-close-text); }
+.title-bar-close-button:active { background-color: var(--window-close); color: var(--window-close-text); }
+
 /* Thin divider between groups of items inside a dropdown. Height comes from
    MenuSeparator(); this just paints the line and insets it. */
 .menu-separator {

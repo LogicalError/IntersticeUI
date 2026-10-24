@@ -193,6 +193,9 @@ namespace interstice
         StyleRef menuScrollButtonStyleRef{};
         StyleRef menuBarStyleRef {};        // horizontal strip at the top of the main window
         StyleRef menuBarTriggerStyleRef {}; // flat top-level trigger inside the menu bar
+        StyleRef titleBarStyleRef {};            // a window's own title bar (BeginTitleBar)
+        StyleRef titleBarButtonStyleRef {};      // its minimize and maximize buttons
+        StyleRef titleBarCloseButtonStyleRef {};
         StyleRef menuSeparatorStyleRef {};  // thin divider between items in a dropdown
         StyleRef menuItemRowStyleRef {};      // interactive row: icon slot + label + trailing shortcut/arrow
         StyleRef menuItemIconStyleRef {};     // fixed icon slot inside a menu item row
@@ -274,6 +277,9 @@ namespace interstice
         // Drag-handle grip (≡) for reorderable-list / tree-list thumbs
         IconID dragHandleIcon = IconID::Invalid;
         IconID searchIcon     = IconID::Invalid;
+        IconID windowMinimizeIcon = IconID::Invalid;
+        IconID windowMaximizeIcon = IconID::Invalid;
+        IconID windowRestoreIcon  = IconID::Invalid;
 
         // Line color styles (CSS custom properties)
         interstice::VisualColorStyleIndex lineGrayStyle;

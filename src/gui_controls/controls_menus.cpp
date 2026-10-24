@@ -172,6 +172,66 @@ namespace interstice
         menuManager.buildingMenuBar = false;
     }
 
+    bool GUIApplication::BeginTitleBar(ID id, StyleRef style, LayoutOverride&& constraints)
+    {
+        m_titleBarStack.push_back(id);
+        return BeginMenuBar(id, style, std::move(constraints));
+    }
+
+    void GUIApplication::EndTitleBar()
+    {
+        assert(!m_titleBarStack.empty());
+        const ID barID = m_titleBarStack.back();
+        m_titleBarStack.pop_back();
+
+        const ID          windowID  = windowRegistry.GetCurrentWindowID();
+        const ElementRef  windowRef = windowRegistry.GetWindowRef(windowID);
+        const bool        ownsChrome = elementStorage.IsValidRef(windowRef)
+            && (elementStorage.GetElementUnsafe(windowRef).flags & ElementFlags::WindowCustomTitleBar) != ElementFlags::None;
+
+        TitleBar bar{ .barID = barID };
+        if (ownsChrome)
+        {
+            [[maybe_unused]] const bool pushed = idManager.PushParent(barID);
+            Button(idManager.AllocateDynamicID("minimize"), theme.windowMinimizeIcon,
+                   [this, windowID] { windowManager->MinimizeWindow(windowID); }, theme.titleBarButtonStyleRef);
+            const bool maximized = windowManager->IsWindowMaximized(windowID);
+            bar.maximizeID = idManager.AllocateDynamicID("maximize");
+            Button(bar.maximizeID, maximized ? theme.windowRestoreIcon : theme.windowMaximizeIcon,
+                   [this, windowID, maximized] {
+                       if (maximized) windowManager->RestoreWindow(windowID);
+                       else           windowManager->MaximizeWindow(windowID);
+                   }, theme.titleBarButtonStyleRef);
+            Button(idManager.AllocateDynamicID("close"), theme.tabCloseIcon,
+                   [this, windowID] { (void)windowManager->RequestClose(windowID); }, theme.titleBarCloseButtonStyleRef);
+            if (pushed)
+                (void)idManager.PopParent();
+        }
+        EndMenuBar();
+        m_titleBars[windowID] = bar;
+    }
+
+    WindowHitArea GUIApplication::TitleBarHitTest(ID windowID, int2 screenPos) const
+    {
+        const auto it = m_titleBars.find(windowID);
+        if (it == m_titleBars.end())
+            return WindowHitArea::Client;
+        const ElementRef barRef = elementStorage.FindElementRefByID(it->second.barID);
+        if (!barRef.IsValid() || !elementStorage.GetElementRectUnsafe(barRef).rect.Contains(screenPos))
+            return WindowHitArea::Client;
+
+        const ID hit = elementStorage.GetElementIDAt(windowRegistry.GetWindowRef(windowID), screenPos);
+        if (hit == it->second.maximizeID)
+            return WindowHitArea::MaximizeButton;
+        // The bar itself, and anything in it that takes no input (spacers, the title).
+        const ElementRef hitRef = elementStorage.FindElementRefByID(hit);
+        if (hit == it->second.barID || !hitRef.IsValid())
+            return WindowHitArea::Caption;
+        const Element& element = elementStorage.GetElementUnsafe(hitRef);
+        const bool interactive = element.eventHandler || (element.flags & ElementFlags::IsControl) != ElementFlags::None;
+        return interactive ? WindowHitArea::Client : WindowHitArea::Caption;
+    }
+
 
     interstice::ElementRef GUIApplication::MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
                                                 bool reserveIcon, IconID icon, std::string_view text,

@@ -319,6 +319,21 @@ namespace interstice
             const int32_t index = IndexOf(id);
             return index == -1 ? nullptr : windows[index].GetWindowHandle();
         }
+        // Invalid for a handle this manager doesn't own.
+        ID GetWindowID(OSWindowHandle handle) const
+        {
+            const int32_t index = IndexOf(handle);
+            return index == -1 ? ID::Invalid() : windows[index].id;
+        }
+
+        void MinimizeWindow(ID id) { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->MinimizeWindow(h); }
+        void MaximizeWindow(ID id) { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->MaximizeWindow(h); }
+        void RestoreWindow(ID id)  { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->RestoreWindow(h); }
+        bool IsWindowMaximized(ID id) const
+        {
+            const OSWindowHandle h = GetWindowHandle(id);
+            return h != nullptr && windowBackendManager->IsWindowMaximized(h);
+        }
 
         IntRect GetWindowRect(ID id) const
         {

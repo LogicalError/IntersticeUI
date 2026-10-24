@@ -926,11 +926,11 @@ namespace interstice
         return true;
     }
 
-    // Main menu bar. Most items only log; Theme and Zoom reload the theme and
-    // Exit ends the run loop.
+    // Title bar with the main menu and the command search. Most items only log;
+    // Theme and Zoom reload the theme and Exit ends the run loop.
     void Application::RenderMainMenu()
     {
-        BeginMenuBar(idManager.AllocateDynamicID("mainMenuBar"), theme.menuBarStyleRef);
+        BeginTitleBar(idManager.AllocateDynamicID("mainMenuBar"));
 
         // ---- File ----
         if (BeginMenu(idManager.AllocateDynamicID("menuFile"), "File",
@@ -1017,8 +1017,9 @@ namespace interstice
         CommandSearch(demo.commandSearch);
         BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
         EndHorizontal();
+        StatusText("Test");
 
-        EndMenuBar();
+        EndTitleBar();
     }
 
     // Status bar: state and graphics API on the left, frame time and theme on the right.
@@ -1050,7 +1051,8 @@ namespace interstice
             if (mainWindowClosed)
             {
                 // Closed by the user; reset mainWindowClosed to reopen.
-            } else if (BeginWindow(demo.windowLayoutID2, "Test", std::move(sizeConstraints.Centered()), theme.mainWindowStyleRef))
+            } else if (BeginWindow(demo.windowLayoutID2, "Test", std::move(sizeConstraints.Centered()), theme.mainWindowStyleRef,
+                                   ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar))
             {
                 RenderMainMenu();
 

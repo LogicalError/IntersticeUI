@@ -541,6 +541,210 @@ namespace interstice
 #endif
     }
 
+    // ---- Custom title bars (WindowFlags::CustomTitleBar) ------------------------
+    //
+    // Windows: the window keeps its caption and sizing styles, so snapping, the
+    // shadow and the rounded corners stay, and a subclassed window procedure gives
+    // the caption to the client area. The GUI's title bar then says, through the hit
+    // test, where the caption and the maximize button are. Elsewhere the window is
+    // borderless and SDL's hit test drags and resizes it.
+#ifdef _WIN32
+    static constexpr const wchar_t* kPrevWndProcProp = L"IntersticePrevWndProc";
+    static constexpr const wchar_t* kSDLWindowProp   = L"IntersticeSDLWindow";
+
+    // The sizing frame's thickness; it stays outside the client area on the sides
+    // and bottom, as under a native caption.
+    static int SizingFrame(HWND hwnd, int metric)
+    {
+        const UINT dpi = GetDpiForWindow(hwnd);
+        return GetSystemMetricsForDpi(metric, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+    }
+
+    // The screen point in a mouse message's lParam (GET_X/Y_LPARAM, without windowsx.h's macros).
+    static POINT LParamPoint(LPARAM lParam)
+    {
+        return POINT{ static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)) };
+    }
+
+    static RECT ClientScreenRect(HWND hwnd)
+    {
+        RECT r {};
+        GetClientRect(hwnd, &r);
+        MapWindowPoints(hwnd, nullptr, reinterpret_cast<POINT*>(&r), 2);
+        return r;
+    }
+
+    // Windows reports the mouse over the maximize button as non-client input; the GUI
+    // gets it as ordinary input, so its own button hovers and clicks. The click is sent
+    // whole on release, as the window changes size under the mouse.
+    static void ForwardCaptionButtonInput(SDL_Window* window, UINT msg, LPARAM lParam)
+    {
+        IPlatformInputHandler* input   = LocalGetInputHandler(SDLWindowBackend::FromSDL(window));
+        IWindowContext*        context = LocalGetWindowContext(SDLWindowBackend::FromSDL(window));
+        if (input == nullptr || context == nullptr)
+            return;
+        const POINT       p    = LParamPoint(lParam);
+        const int2        pos  { p.x, p.y };
+        const KeyModifier mods = ToKeyModifier(SDL_GetModState());
+        switch (msg)
+        {
+            case WM_NCMOUSEMOVE:
+                input->OnMouseMove(context->GetID(), pos, MouseButtons::None, mods);
+                break;
+            case WM_NCLBUTTONUP:
+                input->OnMouseButton(context->GetID(), pos, MouseButtons::Left, mods, MouseAction::MouseDown);
+                input->OnMouseButton(context->GetID(), pos, MouseButtons::None, mods, MouseAction::MouseUp);
+                break;
+            default:
+                break;
+        }
+    }
+
+    static LRESULT CALLBACK CustomTitleBarProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        const WNDPROC prev   = reinterpret_cast<WNDPROC>(GetPropW(hwnd, kPrevWndProcProp));
+        SDL_Window*   window = static_cast<SDL_Window*>(GetPropW(hwnd, kSDLWindowProp));
+        auto setButtonHover = [window](bool hover)
+            { SDL_SetBooleanProperty(SDL_GetWindowProperties(window), "CaptionButtonHover", hover); };
+
+        switch (msg)
+        {
+            case WM_NCCALCSIZE:
+                if (wParam == TRUE)
+                {
+                    // The client area takes the caption. Maximized, the frame hangs off the
+                    // screen on every side, so it comes off the top too.
+                    RECT& r = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam)->rgrc[0];
+                    const int fx = SizingFrame(hwnd, SM_CXFRAME);
+                    const int fy = SizingFrame(hwnd, SM_CYFRAME);
+                    r.left   += fx;
+                    r.right  -= fx;
+                    r.bottom -= fy;
+                    if (IsZoomed(hwnd))
+                        r.top += fy;
+                    return 0;
+                }
+                break;
+
+            case WM_NCHITTEST:
+            {
+                const LRESULT hit = CallWindowProcW(prev, hwnd, msg, wParam, lParam);
+                if (hit != HTCLIENT)
+                {
+                    setButtonHover(false);
+                    return hit;
+                }
+                const POINT p = LParamPoint(lParam);
+                if (!IsZoomed(hwnd))
+                {
+                    // The top edge resizes, as the frame above a native caption would.
+                    RECT frame {};
+                    GetWindowRect(hwnd, &frame);
+                    const int fx = SizingFrame(hwnd, SM_CXFRAME);
+                    if (p.y < frame.top + SizingFrame(hwnd, SM_CYFRAME))
+                    {
+                        setButtonHover(false);
+                        if (p.x < frame.left + 2 * fx)  return HTTOPLEFT;
+                        if (p.x >= frame.right - 2 * fx) return HTTOPRIGHT;
+                        return HTTOP;
+                    }
+                }
+                auto* backend = static_cast<SDLWindowBackend*>(
+                    SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr));
+                const WindowHitArea area = backend != nullptr
+                    ? backend->HitTestWindow(SDLWindowBackend::FromSDL(window), int2{ p.x, p.y })
+                    : WindowHitArea::Client;
+                if (area != WindowHitArea::MaximizeButton)
+                    setButtonHover(false);
+                switch (area)
+                {
+                    case WindowHitArea::Caption:        return HTCAPTION;
+                    case WindowHitArea::MaximizeButton: return HTMAXBUTTON;
+                    default:                            return HTCLIENT;
+                }
+            }
+
+            case WM_NCMOUSEMOVE:
+            case WM_NCLBUTTONDOWN:
+            case WM_NCLBUTTONDBLCLK:
+            case WM_NCLBUTTONUP:
+                if (wParam == HTMAXBUTTON)
+                {
+                    if (msg == WM_NCMOUSEMOVE)
+                    {
+                        TRACKMOUSEEVENT track { sizeof(track), TME_LEAVE | TME_NONCLIENT, hwnd, 0 };
+                        TrackMouseEvent(&track);
+                    }
+                    setButtonHover(true);
+                    ForwardCaptionButtonInput(window, msg, lParam);
+                    return 0; // nothing for the default handling to draw
+                }
+                break;
+
+            case WM_NCMOUSELEAVE:
+                setButtonHover(false);
+                break;
+
+            case WM_NCDESTROY:
+                RemovePropW(hwnd, kPrevWndProcProp);
+                RemovePropW(hwnd, kSDLWindowProp);
+                SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(prev));
+                break;
+
+            default:
+                break;
+        }
+        return CallWindowProcW(prev, hwnd, msg, wParam, lParam);
+    }
+
+    static void InstallCustomTitleBar(HWND hwnd, SDL_Window* window)
+    {
+        const RECT before = ClientScreenRect(hwnd);
+        SetPropW(hwnd, kSDLWindowProp, window);
+        SetPropW(hwnd, kPrevWndProcProp, reinterpret_cast<HANDLE>(GetWindowLongPtrW(hwnd, GWLP_WNDPROC)));
+        SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&CustomTitleBarProc));
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+
+        // The client area grew by the caption; put it back where it was asked for.
+        const RECT after = ClientScreenRect(hwnd);
+        RECT frame {};
+        GetWindowRect(hwnd, &frame);
+        frame.left   += before.left   - after.left;
+        frame.top    += before.top    - after.top;
+        frame.right  += before.right  - after.right;
+        frame.bottom += before.bottom - after.bottom;
+        SetWindowPos(hwnd, nullptr, frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+#else
+    static SDL_HitTestResult SDLCALL CustomTitleBarHitTest(SDL_Window* window, const SDL_Point* point, void* /*data*/)
+    {
+        if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED))
+        {
+            constexpr int kBorder = 6;
+            int w = 0, h = 0;
+            SDL_GetWindowSize(window, &w, &h);
+            const bool left = point->x < kBorder, right  = point->x >= w - kBorder;
+            const bool top  = point->y < kBorder, bottom = point->y >= h - kBorder;
+            if (top && left)     return SDL_HITTEST_RESIZE_TOPLEFT;
+            if (top && right)    return SDL_HITTEST_RESIZE_TOPRIGHT;
+            if (bottom && left)  return SDL_HITTEST_RESIZE_BOTTOMLEFT;
+            if (bottom && right) return SDL_HITTEST_RESIZE_BOTTOMRIGHT;
+            if (top)             return SDL_HITTEST_RESIZE_TOP;
+            if (bottom)          return SDL_HITTEST_RESIZE_BOTTOM;
+            if (left)            return SDL_HITTEST_RESIZE_LEFT;
+            if (right)           return SDL_HITTEST_RESIZE_RIGHT;
+        }
+        auto* backend = static_cast<SDLWindowBackend*>(
+            SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr));
+        if (backend == nullptr)
+            return SDL_HITTEST_NORMAL;
+        const int2 pos = backend->WindowPointToPixels(window, float(point->x), float(point->y));
+        return backend->HitTestWindow(SDLWindowBackend::FromSDL(window), pos) == WindowHitArea::Caption
+            ? SDL_HITTEST_DRAGGABLE : SDL_HITTEST_NORMAL;
+    }
+#endif
+
     OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title,
                                                   IntRect rect,
                                                   interstice::WindowFlags windowFlags,
@@ -579,6 +783,10 @@ namespace interstice
         if ((windowFlags & interstice::WindowFlags::SkipTaskbar)       != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
         if ((windowFlags & interstice::WindowFlags::Utility)           != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
         if ((windowFlags & interstice::WindowFlags::NotFocusable)      != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_NOT_FOCUSABLE;
+        const bool customTitleBar = (windowFlags & interstice::WindowFlags::CustomTitleBar) != interstice::WindowFlags::None;
+#ifndef _WIN32
+        if (customTitleBar) sd_window_flags |= SDL_WINDOW_BORDERLESS;
+#endif
 		
         // Always create hidden, to avoid a native caption flash while Win32 styles are applied;
         // shown below unless requested hidden.
@@ -622,6 +830,9 @@ namespace interstice
                 }
             }
 
+            if (customTitleBar)
+                InstallCustomTitleBar(hwnd, sdlWindow);
+
             // For transparent windows on Windows, manually set WS_EX_LAYERED
             if (isTransparent)
             {
@@ -635,6 +846,9 @@ namespace interstice
                 ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None) &&
                 ((windowFlags & interstice::WindowFlags::Shadow) != interstice::WindowFlags::None));
         }
+#else
+        if (customTitleBar)
+            SDL_SetWindowHitTest(sdlWindow, CustomTitleBarHitTest, nullptr);
 #endif
 
         // OS parenting makes child popups receive input and position relative to the parent.
@@ -940,6 +1154,10 @@ namespace interstice
         {
             return FromSDL(mouseFocus);
         }
+        // Over a custom title bar's maximize button the OS reports the mouse as outside.
+        for (SDL_Window* window : m_windows)
+            if (SDL_GetBooleanProperty(SDL_GetWindowProperties(window), "CaptionButtonHover", false))
+                return FromSDL(window);
         return nullptr;
     }
 
@@ -1187,6 +1405,45 @@ namespace interstice
         else
             SDL_HideWindow(sdl_window);
         m_suppressLiveResize = false;
+    }
+
+    void SDLWindowBackend::MinimizeWindow(OSWindowHandle h)
+    {
+        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
+        {
+            // Called mid-frame (a title bar button): no live-resize frame inside it.
+            m_suppressLiveResize = true;
+            SDL_MinimizeWindow(window);
+            m_suppressLiveResize = false;
+        }
+    }
+
+    void SDLWindowBackend::MaximizeWindow(OSWindowHandle h)
+    {
+        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
+        {
+            // Called mid-frame (a title bar button): no live-resize frame inside it.
+            m_suppressLiveResize = true;
+            SDL_MaximizeWindow(window);
+            m_suppressLiveResize = false;
+        }
+    }
+
+    void SDLWindowBackend::RestoreWindow(OSWindowHandle h)
+    {
+        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
+        {
+            // Called mid-frame (a title bar button): no live-resize frame inside it.
+            m_suppressLiveResize = true;
+            SDL_RestoreWindow(window);
+            m_suppressLiveResize = false;
+        }
+    }
+
+    bool SDLWindowBackend::IsWindowMaximized(OSWindowHandle h) const
+    {
+        SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr;
+        return window != nullptr && (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0;
     }
 
     void* SDLWindowBackend::GetNativeHandle(OSWindowHandle h)

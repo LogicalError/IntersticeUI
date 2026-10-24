@@ -18,6 +18,7 @@ list(APPEND GUI_CORE_TEST_FILES
   vector_field_test.cpp
   command_search_test.cpp
   svg_stroke_test.cpp
+  title_bar_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp

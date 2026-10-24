@@ -74,6 +74,10 @@ namespace interstice
 
         bool SetWindowRect(OSWindowHandle, const IntRect& clientRect) override;
         void SetWindowVisible(OSWindowHandle, bool visible) override;
+        void MinimizeWindow(OSWindowHandle) override;
+        void MaximizeWindow(OSWindowHandle) override;
+        void RestoreWindow(OSWindowHandle) override;
+        bool IsWindowMaximized(OSWindowHandle) const override;
 
         std::vector<MonitorInfo> GetMonitors() const override;
         int GetMonitorAt(int2 pos) const override;

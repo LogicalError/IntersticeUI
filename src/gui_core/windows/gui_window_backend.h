@@ -42,6 +42,14 @@ namespace interstice
         float refreshRate  = 0.0f; // Hz; 0 when unknown
     };
 
+    // What a point of a window with a custom title bar (WindowFlags::CustomTitleBar) is to the OS.
+    enum class WindowHitArea : uint8_t
+    {
+        Client,         // the GUI handles it
+        Caption,        // drags the window; a double-click maximizes it
+        MaximizeButton, // the GUI's maximize button, so the OS can offer its snap layouts
+    };
+
     class IWindowContext
     {
     public:
@@ -132,6 +140,12 @@ namespace interstice
         // Timing - get current time in milliseconds
         virtual uint32_t GetTicks() const = 0;
 
+        // The states the OS caption buttons give a window.
+        virtual void MinimizeWindow(OSWindowHandle) {}
+        virtual void MaximizeWindow(OSWindowHandle) {}
+        virtual void RestoreWindow(OSWindowHandle) {}
+        virtual bool IsWindowMaximized(OSWindowHandle) const { return false; }
+
         // The user's preferred language as a BCP 47 tag ("ja", "en-US"), or empty
         // when the platform doesn't say.
         virtual std::string GetPreferredLanguage() const { return {}; }
@@ -145,8 +159,17 @@ namespace interstice
         // callback must be safe to call outside the normal frame lifecycle.
         void SetWindowMovedCallback(std::function<void()> cb) { m_onWindowMoved = std::move(cb); }
 
+        // Classifies points (screen pixels) of CustomTitleBar windows for the OS. Called
+        // from inside PollEvents and the OS's modal move/resize loop.
+        void SetHitTestCallback(std::function<WindowHitArea(OSWindowHandle, int2 screenPos)> cb) { m_hitTest = std::move(cb); }
+        WindowHitArea HitTestWindow(OSWindowHandle window, int2 screenPos) const
+        {
+            return m_hitTest ? m_hitTest(window, screenPos) : WindowHitArea::Client;
+        }
+
     protected:
         std::function<void()> m_onWindowMoved;
+        std::function<WindowHitArea(OSWindowHandle, int2)> m_hitTest;
         GraphicsContext*      m_graphicsContext = nullptr;
 
     };

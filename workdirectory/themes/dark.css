@@ -41,6 +41,8 @@
     --error: #EF6A6A;
     --info: #6B9BFF;
     --folder: #D9A443;
+    --window-close: #C42B1C;      /* a title bar's close button, hovered */
+    --window-close-text: #FFFFFF;
     /* ---- Data: pin types, axes, node categories --------------------------- */
     --pin-float: #34D1BF;
     --pin-int: #F59E4B;
