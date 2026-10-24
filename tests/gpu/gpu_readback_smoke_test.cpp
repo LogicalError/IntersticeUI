@@ -328,6 +328,38 @@ namespace
 
     // ---- Borders under a fractional scale (HiDPI, node-view zoom) ----
 
+    // A translucent fill (a vector field's axis label) meets an opaque border at the
+    // rounded corners: no pixel there may be more saturated than the fill and the border.
+    TEST_F(GpuReadbackTest, TranslucentFillDoesNotGlowAtRoundedCorners)
+    {
+        auto* ctx = CreateReadbackWindow();
+        if (ctx == nullptr)
+            GTEST_SKIP() << "no Vulkan device available";
+
+        interstice::Style style{};
+        style.borderWidths = interstice::BoxEdges(1);
+        style.borderRadius = interstice::BoxCorners(6);
+        for (int i = 0; i < interstice::Style::kStateCount; ++i)
+        {
+            style.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 239, 106, 106, 46 });
+            style.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 42, 47, 57, 255 }));
+        }
+        const interstice::VisualBoxStyleIndex box = styleManager.Register(style).visualBoxStyleIndex;
+        constexpr int kX = 20, kY = 20, kW = 80, kH = 40;
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderBox(interstice::IntRect{ kX, kY, kW, kH }, kFullClip, box);
+        });
+
+        // Redness: red over the other channels (BGRA8).
+        auto redness = [](uint32_t p) { return int((p >> 16) & 0xFF) - int((p >> 8) & 0xFF); };
+        const int fill   = redness(PixelAt(ctx, kX + kW / 2, kY + kH / 2));
+        const int border = redness(PixelAt(ctx, kX, kY + kH / 2));
+        const int limit  = std::max(fill, border) + 3;
+        for (int y = kY; y < kY + 8; ++y)
+            for (int x = kX; x < kX + 8; ++x)
+                EXPECT_LE(redness(PixelAt(ctx, x, y)), limit) << "corner pixel " << x << "," << y << ": " << std::hex << (PixelAt(ctx, x, y) & 0xFFFFFF) << std::dec << " fill " << fill << " border " << border;
+    }
+
     // A child placed just inside its parent's 1-unit border (a node's header)
     // must meet the border at any scale: no background shows between them,
     // whichever way the edges round to pixels.

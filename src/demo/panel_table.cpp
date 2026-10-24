@@ -109,10 +109,12 @@ namespace interstice
             Toggle(demo.tablePanelVirtualTableState.selectionMode == TableSelectionMode::Cell, "Cell", [this](bool) { demo.tablePanelVirtualTableState.selectionMode = TableSelectionMode::Cell; });
         EndHorizontal();
 
+        // Fills the panel and scrolls: sized to its 50k rows it would be past the
+        // 16-bit layout range and not show at all.
         VirtualTable(idManager.AllocateDynamicID("tablePanelVirtual"),
                      demo.tablePanelVirtualTableState,
-                     columnSpan, kTotalRows, 0, theme.tableStyleRef,
-                     LayoutOverride{}.NoGrow().NoShrink());
+                     columnSpan, kTotalRows, 0, theme.tableFillStyleRef,
+                     LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
     }
 
 }

@@ -239,19 +239,30 @@ void main()
     if (currentStyle.borderColor.a > 1e-5)
         currentStyle.borderColor.rgb /= currentStyle.borderColor.a;
 
-    // mix between border and background color
-    vec4 background_color = srgbToLinear(currentStyle.backgroundColor);
-    vec4 border_color     = srgbToLinear(currentStyle.borderColor);
-    vec4 color = mix(background_color, border_color, border_factor);
-    
+    // Mix border and background. Opaque colors mix in linear light; a translucent one
+    // mixes premultiplied in sRGB, the space the result composites in, so where it meets
+    // the border (rounded corners) it never shows more color than either side.
+    vec4 color;
+    if (currentStyle.backgroundColor.a >= 1.0 && currentStyle.borderColor.a >= 1.0)
+    {
+        color = mix(srgbToLinear(currentStyle.backgroundColor), srgbToLinear(currentStyle.borderColor), border_factor);
+        color.rgb = linearToSrgb(color.rgb);
+    }
+    else
+    {
+        const vec4 background_color = vec4(currentStyle.backgroundColor.rgb * currentStyle.backgroundColor.a, currentStyle.backgroundColor.a);
+        const vec4 border_color     = vec4(currentStyle.borderColor.rgb * currentStyle.borderColor.a, currentStyle.borderColor.a);
+        color = mix(background_color, border_color, border_factor);
+        if (color.a > 1e-5)
+            color.rgb /= color.a;
+    }
+
     // make everything outside the rounded box invisible
     color.a *= outer_opacity;
-    
+
     if (color.a <= 1e-5)
         discard;
-        
-    // convert color back to srgb
-    color.rgb = linearToSrgb(color.rgb);
+
     color.a = clamp(color.a, 0, 1);
 
     // pre-multiply alpha

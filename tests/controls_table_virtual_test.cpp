@@ -57,6 +57,24 @@ namespace interstice
                 app.EndRootWindow();
             }
 
+            // A panel-sized pane holding a mode bar and a 50k-row table, like the demo's Table panel.
+            interstice::ID paneID = interstice::ID::Invalid();
+            IntRect EmitInPane(interstice::TableState& state, StyleRef tableStyle, LayoutOverride&& tableLayout)
+            {
+                if (paneID == interstice::ID::Invalid())
+                    paneID = app.idManager.CreateStaticID();
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    app.BeginArea(paneID, app.theme.emptyVertStyleRef, LayoutOverride{}.Size(530, 400));
+                    app.Button(app.idManager.AllocateDynamicID("mode"), "Row", [] {}, LayoutOverride{}.NoGrow().NoShrink());
+                    std::span<interstice::VirtualTableColumn> span(columns.data(), columns.size());
+                    app.VirtualTable(tableID, state, span, 50000, 0, tableStyle, std::move(tableLayout));
+                    app.EndArea();
+                    app.EndRootWindow();
+                });
+                return app.GetElementRect(tableID);
+            }
+
             int2 SectionScroll(interstice::TableState& state, int sectionIdx = 0)
             {
                 auto& sm = app.guiStateManager.GetScrollManagement();
@@ -1441,5 +1459,18 @@ namespace interstice
             EXPECT_TRUE(branchOpen) << "double-click on icon toggles isOpen";
         }
 
-    } // namespace
+    
+        // 50k rows sized to their content would be over a million pixels tall, past the
+        // 16-bit layout range, and not show at all (the demo's Table panel did that).
+        // Filling its panel, the table stays inside it and scrolls.
+        TEST_F(TableVirtualScrollTest, AManyRowTableFillingItsPanelStaysInsideIt)
+        {
+            interstice::TableState state;
+            const IntRect table = EmitInPane(state, app.theme.tableFillStyleRef, LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
+            const IntRect pane  = app.GetElementRect(paneID);
+            EXPECT_GT(table.h, 100);
+            EXPECT_GE(table.y, pane.y);
+            EXPECT_LE(table.y + table.h, pane.y + pane.h);
+        }
+} // namespace
 } // namespace interstice
