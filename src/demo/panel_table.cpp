@@ -96,6 +96,10 @@ namespace interstice
             else           std::rotate(colsPtr->begin() + to, colsPtr->begin() + from, colsPtr->begin() + from + 1);
         };
 
+        // Every column but Name holds a number; set each frame as styles reload.
+        for (VirtualTableColumn& c : columns)
+            c.column.cellStyle = c.column.header == "Name" ? StyleRef::Invalid() : dataTableNumberStyleRef;
+
         const int kTotalRows = int(rows.size());
         std::span<VirtualTableColumn> columnSpan(columns.data(), columns.size());
 
@@ -114,7 +118,8 @@ namespace interstice
         VirtualTable(idManager.AllocateDynamicID("tablePanelVirtual"),
                      demo.tablePanelVirtualTableState,
                      columnSpan, kTotalRows, 0, theme.tableFillStyleRef,
-                     LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
+                     LayoutOverride::Auto().FlexGrow(1).MinHeight(0),
+                     /*showHeaders*/ true, dataTableCellStyleRef);
     }
 
 }

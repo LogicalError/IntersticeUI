@@ -661,7 +661,7 @@ namespace interstice
         }
         Slider(idManager.AllocateDynamicID("filesIconSizeSlider"),
                gridIconSize, listValue, maxCell,
-               interstice::LayoutOverride{}.Width(styleManager.Px(150)).Height(styleManager.Px(21)).NoGrow());
+               interstice::LayoutOverride{}.Width(styleManager.Px(150)).NoGrow());
 
         EndHorizontal();
 

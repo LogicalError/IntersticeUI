@@ -182,8 +182,10 @@ namespace interstice
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
         const interstice::ID rowID    = emit.currentRowID;
-        const StyleRef styleRef = (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid)
-            ? emit.cellStyleRef : theme.tableCellStyleRef;
+        const StyleRef columnStyle = emit.columns[c].column.cellStyle;
+        const StyleRef styleRef = (columnStyle.layoutStyleIndex != LayoutStyleIndex::Invalid) ? columnStyle
+            : (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid) ? emit.cellStyleRef
+            : theme.tableCellStyleRef;
 
         const interstice::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
@@ -226,8 +228,10 @@ namespace interstice
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
         const interstice::ID rowID    = emit.currentRowID;
-        const StyleRef styleRef = (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid)
-            ? emit.cellStyleRef : theme.tableCellStyleRef;
+        const StyleRef columnStyle = emit.columns[c].column.cellStyle;
+        const StyleRef styleRef = (columnStyle.layoutStyleIndex != LayoutStyleIndex::Invalid) ? columnStyle
+            : (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid) ? emit.cellStyleRef
+            : theme.tableCellStyleRef;
 
         const interstice::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(

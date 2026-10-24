@@ -491,6 +491,9 @@ namespace interstice
         logDetailTextStyleRef       = theme.GetStyle("log-detail-text");
         shortcutCategoryStyleRef    = theme.GetStyle("shortcut-category");
         shortcutTableStyleRef       = theme.GetStyle("shortcut-table");
+        shortcutCellStyleRef        = theme.GetStyle("shortcut-cell");
+        dataTableCellStyleRef       = theme.GetStyle("data-table-cell");
+        dataTableNumberStyleRef     = theme.GetStyle("data-table-number");
         settingsTitleStyleRef       = theme.GetStyle("settings-title");
         {
             const char* kSideTag[4]   = { "left", "right", "top", "bottom" };
@@ -1144,7 +1147,7 @@ namespace interstice
 
                     demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");
                     BeginDockingContainer(demo.dockContainerID, &demo.dockingLayout,
-                        LayoutOverride::Auto());
+                        theme.dockContainerMainStyleRef, LayoutOverride::Auto());
                     EndDockingContainer();
                 }
 

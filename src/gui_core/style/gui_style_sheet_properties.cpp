@@ -17,7 +17,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
 
     // --- Color properties ---------------------------------------------------
     if (ICEq(p,"background-color") || ICEq(p,"border-color") || ICEq(p,"color") ||
-        ICEq(p,"border-top-color") || ICEq(p,"border-right-color") ||
+        ICEq(p,"-interstice-icon-color") || ICEq(p,"border-top-color") || ICEq(p,"border-right-color") ||
         ICEq(p,"border-bottom-color") || ICEq(p,"border-left-color"))
         return ParseColorStyleValue(d);
 
@@ -505,6 +505,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"border-right-color"))  { s.states[si].borderColors[1] = d.colorStyleVal; return; }
     if (ICEq(p,"border-bottom-color")) { s.states[si].borderColors[2] = d.colorStyleVal; return; }
     if (ICEq(p,"border-left-color"))   { s.states[si].borderColors[3] = d.colorStyleVal; return; }
+    if (ICEq(p,"-interstice-icon-color")) { s.states[si].iconColor = d.colorStyleVal; return; }
     if (ICEq(p,"color"))
     {
         s.states[si].textColor       = d.colorStyleVal;

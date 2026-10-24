@@ -776,6 +776,28 @@ namespace interstice
             }
         }
 
+        // ---- Selected-row bars: over the cells, at the table's left edge ----
+        if (!cellMode && colStart == 0)
+        {
+            for (int visualIdx = firstVisible; visualIdx < lastVisible; visualIdx++)
+            {
+                const interstice::ID rowID = idManager.GetSubID(rowsRangeID,
+                                                        static_cast<uint32_t>(state->VisualToDataset(visualIdx)));
+                const bool rowSelected = state->multiSelect
+                    ? state->multiSelect->selectedIDs.count(rowID) > 0
+                    : (state->selectedRowID == rowID);
+                if (!rowSelected) continue;
+                interstice::Element bar{};
+                bar.id       = idManager.AllocateDynamicID("_table_row_bar");
+                bar.flags    = interstice::ElementFlags::NoInput;
+                bar.styleRef = theme.tableRowBarStyleRef;
+                auto barRes = elementStorage.Add(std::move(bar), interstice::LayoutOverride{}
+                    .GridColumn(0).GridRow(static_cast<int16_t>(gridRowOf(visualIdx))));
+                VERIFY(barRes.status);
+                VERIFY(windowRegistry.Add(barRes.ref));
+            }
+        }
+
         emit.currentRowID      = interstice::ID::Invalid();
         emit.currentRowHandler = {};
 

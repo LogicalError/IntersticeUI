@@ -20,6 +20,7 @@ list(APPEND GUI_CORE_TEST_FILES
   svg_stroke_test.cpp
   title_bar_test.cpp
   theme_metrics_test.cpp
+  graphite_rows_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp
   node_view_wire_edit_test.cpp

@@ -28,11 +28,13 @@
     /* ---- Text ------------------------------------------------------------- */
     --text-1: #E8EAEF;      /* values, active labels, titles */
     --text-2: #AEB4C0;      /* default UI text, property labels */
-    --text-3: #8A92A2;      /* captions, placeholders, column headers */
+    --text-3: #8E96A7;      /* captions, placeholders, column headers */
     --text-link: #8FB3FF;
     --text-link-hover: #B5CDFF;
     /* ---- Accent ----------------------------------------------------------- */
     --accent: #6B9BFF;
+    --slider-thumb: #E8EAEF;
+    --divider-hover: #6B9BFF; /* a hovered or dragged divider: panel splitters, column and label sizers */
     --accent-soft: #202A3D;   /* accent at 16% over --bg-panel, opaque so stacked rows and cells do not darken */
     --on-accent: #0B0C0F;     /* text and icons on accent fills */
     /* ---- Semantic --------------------------------------------------------- */

@@ -100,6 +100,7 @@ namespace interstice
         StyleRef sliderFieldTextStyleRef {}; // value/label text overlaid on the track
         StyleRef sliderStyleRef {};          // Slider: thin line+knob element (no value text)
         StyleRef sliderGrooveStyleRef {};    // Slider: groove line painted by the custom-draw
+        StyleRef sliderFillStyleRef {};      // Slider: the groove's filled part, up to the knob
         StyleRef sliderKnobStyleRef {};      // Slider: knob painted by the custom-draw
         // Per axis: the track element, and the thumb custom-drawn on top of it.
         StyleRef scrollbarVerticalTrackStyleRef   {};
@@ -125,7 +126,8 @@ namespace interstice
         // SectionSizing::FitContent section body.
         StyleRef tableFitContentBodyStyleRef {};
         StyleRef tableRowStyleRef {};     // row backdrop (odd rows)
-        StyleRef tableRowAltStyleRef {};  // row backdrop (even rows, zebra stripe)
+        StyleRef tableRowAltStyleRef {};
+        StyleRef tableRowBarStyleRef {};  // accent bar on a selected row's left  // row backdrop (even rows, zebra stripe)
         // Row-mode tree cell: transparent hover/selected, so the row backdrop shows them.
         StyleRef treeTableCellRowModeStyleRef {};
         // The arrow's NoInput glyph, inside a full-row-height hit wrapper
@@ -140,6 +142,7 @@ namespace interstice
         StyleRef tableSizerStyleRef {};
         StyleRef tableSeparatorStyleRef {};
         StyleRef tableCellStyleRef {};
+        StyleRef tableCellNumberStyleRef {};  // right-aligned number cell (TableColumn::cellStyle)
         StyleRef tableCellCompactStyleRef {}; // tighter-padded cell for dense tables (opt-in via VirtualTable cellStyle)
         // Tree column: [indent][arrow|spacer][icon?][text], guide lines custom-drawn.
         StyleRef treeTableCellStyleRef {};
@@ -248,6 +251,7 @@ namespace interstice
 
         // DockingContainer styles
         StyleRef dockContainerStyleRef {};
+        StyleRef dockContainerMainStyleRef {};   // a main window's docking area, with a side gutter
         StyleRef dockSplitHorzStyleRef {};   // horizontal flex row (split into left / right)
         StyleRef dockSplitVertStyleRef {};   // vertical flex column (split into top / bottom)
         StyleRef dockSizerHorzStyleRef {};   // vertical bar between left / right panes
@@ -287,6 +291,7 @@ namespace interstice
         interstice::VisualColorStyleIndex lineWhiteStyle;
         interstice::VisualColorStyleIndex lineDarkStyle;
         interstice::VisualColorStyleIndex treeGuideLineStyle;
+        interstice::VisualColorStyleIndex dividerHoverLineStyle; // a hovered divider drawn as a line (label sizer)
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
         interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows

@@ -520,6 +520,10 @@ namespace interstice
             },
         };
 
+        // Numbers right-aligned; set each frame as styles reload.
+        for (size_t i = 1; i < columns.size(); ++i)
+            columns[i].column.cellStyle = theme.tableCellNumberStyleRef;
+
         // The flex-fill row (flex-basis:0) bounds the table to the panel height
         // so its body scrolls internally instead of overflowing the panel.
         std::span<VirtualTableColumn> columnSpan(columns.data(), columns.size());

@@ -67,6 +67,9 @@ namespace interstice
         // Optional background strip spanning the whole body height, behind the cells and
         // above the row backdrops. Fixed-width columns only.
         StyleRef columnBackground = StyleRef::Invalid();
+        // Optional style for this column's Cell(text) cells, in place of the table's, e.g.
+        // right-aligned numbers. Keep its height equal to the table's cell style.
+        StyleRef cellStyle = StyleRef::Invalid();
     };
 
     // Column info plus generateCell (VirtualTable; null in the BeginTable/Cell flow) and

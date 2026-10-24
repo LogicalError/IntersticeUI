@@ -46,11 +46,55 @@
     flex-basis: 0;
 }
 
-/* Log rows: compact cells, text centred in the row (the level icon makes rows
-   taller than the text). */
+/* Data table rows (Table panel): 24 high, numbers right-aligned. */
+.data-table-cell {
+    margin: 0px;
+    padding: 4px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.data-table-cell:hover { background-color: var(--bg-header); }
+.data-table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
+
+.data-table-number {
+    margin: 0px;
+    padding: 4px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-align: end;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.data-table-number:hover { background-color: var(--bg-header); }
+.data-table-number::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
+
+/* Shortcuts list rows: 27 high. */
+.shortcut-cell {
+    margin: 0px;
+    padding: 5px 8px 6px 8px;
+    overflow: hidden;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.shortcut-cell:hover { background-color: var(--bg-header); }
+.shortcut-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
+
+/* Log rows: 24 high, text centred in the row. */
 .log-cell {
     margin: 0px;
-    padding: 1px 8px;
+    padding: 4px 8px;
     overflow: hidden;
     vertical-align: baseline;
     -interstice-vertical-text-align: middle;

@@ -33,7 +33,7 @@ every value below is taken from them. Token names are suggestions — map them o
 |---|---|---|
 | text-1 | #E8EAEF | Values, active labels, titles |
 | text-2 | #AEB4C0 | Default UI text, property labels |
-| text-3 | #8A92A2 | Captions, placeholders, timestamps, column headers (≥4.5:1 on every surface above) |
+| text-3 | #8E96A7 | Captions, placeholders, timestamps, column headers (≥4.5:1 on every surface above) |
 | text-link | #8FB3FF | Links (hover #B5CDFF) |
 
 ### Accent (single, user-tweakable)
@@ -145,12 +145,12 @@ Same token names, metrics and structure. Mockups: `MainLight.dc.html`, `Inspecto
 | section divider | #1E2128 | #E9EBEF |
 | text-1 | #E8EAEF | #1A1D23 |
 | text-2 | #AEB4C0 | #464C57 |
-| text-3 | #8A92A2 | #5F6673 |
+| text-3 | #8E96A7 | #5F6673 |
 | text-link | #8FB3FF | #2459C9 (hover #1A4296) |
 | accent | #6B9BFF | #2F6FEB |
 | accent-soft | accent @ 16% | accent @ 12% |
 | on-accent | #0B0C0F | #FFFFFF |
-| ok / warn / error | #4FC48A / #E5B454 / #EF6A6A | #1E9E62 / #D99A2B (text #9A6512) / #D64545 |
+| ok / warn / error | #4FC48A / #E5B454 / #EF6A6A | #1E9E62 / #D99A2B (text #8E5D11) / #D64545 |
 | pin float / int / bool / color | #34D1BF / #F59E4B / #A98BFF / #F472B6 | #0FA596 / #D9771A / #7C5CE0 / #D63F8C |
 | axis x / y / z | #EF6A6A / #4FC48A / #6B9BFF | #D64545 / #1E9E62 / #2F6FEB |
 | axis label text | #F28B8B / #6FD3A1 / #8FB3FF | #B83232 / #157A4A / #2459C9 (bg axis @ 12%) |

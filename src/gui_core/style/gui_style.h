@@ -552,6 +552,7 @@ namespace interstice
         ColorStyle backgroundColor {};
         ColorStyle borderColors[4] {};  // [0]=top, [1]=right, [2]=bottom, [3]=left
         ColorStyle textColor {};
+        ColorStyle iconColor {};        // -interstice-icon-color; none = the text color
 
         // Shorthand helper — sets all four edges to the same color.
         void SetBorderColor(const ColorStyle& c) { borderColors[0] = borderColors[1] = borderColors[2] = borderColors[3] = c; }
@@ -819,6 +820,7 @@ namespace interstice
         TextStyle             textStyle {};
         TextLayoutStyle       textLayoutStyle {};
         VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid;
+        VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid; // the text color unless set
         uint16_t              iconTextGap = 0; // Spacing between icon and text
         uint16_t              iconSize    = 0; // Icon render size (px); 0 = use natural size
         int16_t               iconOffsetY = 0; // Vertical pixel nudge for the icon rect; positive = up, negative = down
@@ -829,6 +831,7 @@ namespace interstice
             return Hash::Combine(textStyle.GetHashCode(),
                                  textLayoutStyle.GetHashCode(),
                                  Hash::Calculate(textColorIndex),
+                                 Hash::Calculate(iconColorIndex),
                                  Hash::Calculate(iconTextGap),
                                  Hash::Calculate(iconSize),
                                  Hash::Calculate(iconOffsetY),
@@ -840,6 +843,7 @@ namespace interstice
             return textStyle         == other.textStyle &&
                    textLayoutStyle   == other.textLayoutStyle &&
                    textColorIndex    == other.textColorIndex &&
+                   iconColorIndex    == other.iconColorIndex &&
                    iconTextGap       == other.iconTextGap &&
                    iconSize          == other.iconSize &&
                    iconOffsetY       == other.iconOffsetY &&

@@ -57,6 +57,7 @@ namespace interstice
 		TextAlign horizontalAlignment;
 		TextAlign verticalAlignment;
 		VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid;
+		VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid;
 
 		skb_attribute_t		text_attributes[kMaxTextAttributeCount] {};
 		int32_t				text_attribute_count = 0;

@@ -998,10 +998,11 @@ namespace interstice
         const ElementRect& r0 = storage.GetElementRectUnsafe(c0.ref);
         const ElementRect& r1 = storage.GetElementRectUnsafe(c1.ref);
 
+        // The items keep their set (zero) width; the tracks split the width evenly.
         EXPECT_EQ(r0.rect.x, 0);
-        EXPECT_EQ(r0.rect.w, 60);
         EXPECT_EQ(r1.rect.x, 60);
-        EXPECT_EQ(r1.rect.w, 60);
+        EXPECT_EQ(r0.rect.w, 0);
+        EXPECT_EQ(r1.rect.w, 0);
     }
 
     TEST_F(LayoutEngineTest, GridFrTracksDistributeRemainderToFirstTrack)

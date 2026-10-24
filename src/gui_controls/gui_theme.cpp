@@ -246,6 +246,7 @@ namespace interstice
         lineWhiteStyle     = lineColorFromCSS("--text-1", color4f{ 1.0f, 1.0f, 1.0f, 1.0f });
         lineDarkStyle      = lineColorFromCSS("--bg-app", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
         treeGuideLineStyle = lineColorFromCSS("--line-node", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
+        dividerHoverLineStyle = lineColorFromCSS("--divider-hover", color4f{ 0.42f, 0.61f, 1.0f, 1.0f });
         treeDropIndicatorStyle = lineColorFromCSS("--accent", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
 
         {
@@ -360,6 +361,7 @@ namespace interstice
         sliderFieldTextStyleRef           = registerCSS("slider-field-text");
         sliderStyleRef                    = registerCSS("slider");
         sliderGrooveStyleRef              = registerCSS("slider-groove");
+        sliderFillStyleRef                = registerCSS("slider-fill");
         sliderKnobStyleRef                = registerCSS("slider-knob");
         scrollbarVerticalTrackStyleRef    = registerCSS("scrollbar-vertical");
         scrollbarVerticalThumbStyleRef    = registerCSS("scrollbar-vertical-thumb");
@@ -480,6 +482,7 @@ namespace interstice
 
         // Docking container styles
         dockContainerStyleRef             = registerCSS("dock-container");
+        dockContainerMainStyleRef         = registerCSS("dock-container-main");
         dockSplitHorzStyleRef             = registerCSS("dock-split-horz");
         dockSplitVertStyleRef             = registerCSS("dock-split-vert");
         dockSizerHorzStyleRef             = registerCSS("dock-sizer-horz");
@@ -505,11 +508,13 @@ namespace interstice
         tableFitContentBodyStyleRef       = registerCSS("table-fit-content-body");
         tableRowStyleRef                  = registerCSS("table-row");
         tableRowAltStyleRef               = registerCSS("table-row-alt");
+        tableRowBarStyleRef               = registerCSS("table-row-bar");
         tableHeaderStyleRef               = registerCSS("table-header");
         tableHeaderLockedStyleRef         = registerCSS("table-header-locked");
         tableSizerStyleRef                = registerCSS("table-sizer");
         tableSeparatorStyleRef            = registerCSS("table-separator");
         tableCellStyleRef                 = registerCSS("table-cell");
+        tableCellNumberStyleRef           = registerCSS("table-cell-number");
         tableCellCompactStyleRef          = registerCSS("table-cell-compact");
         treeTableCellStyleRef             = registerCSS("tree-table-cell");
         treeTableCellRowModeStyleRef      = registerCSS("tree-table-cell-row-mode");

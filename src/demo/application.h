@@ -73,7 +73,8 @@ namespace interstice
         StyleRef logLevelIconStyleRef, logLevelToggleLeftStyleRef, logLevelToggleMidStyleRef, logLevelToggleRightStyleRef;
         StyleRef logCollapseToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
         StyleRef logDetailPaneStyleRef, logDetailTextStyleRef;
-        StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, settingsTitleStyleRef;
+        StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, shortcutCellStyleRef, settingsTitleStyleRef;
+        StyleRef dataTableCellStyleRef, dataTableNumberStyleRef;
         StyleRef iconVAlignDemoStyleRefs[4][3];   // [IconSide L/R/T/B][top/mid/bot]
 
         interstice::VisualColorStyleIndex triangleFillStyle;

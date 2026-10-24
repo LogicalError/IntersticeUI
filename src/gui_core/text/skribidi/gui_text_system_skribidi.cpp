@@ -291,6 +291,13 @@ namespace interstice
 	{
 		assert(entry != nullptr);
 
+		// Colors follow every state; Selected only recolors, so the layout ignores it.
+		auto* styleManager = m_skribidiContext->styleManager;
+		if (const auto* colors = styleManager->GetVisualTextStyle(styleIndex.visualTextStyleIndex, state))
+		{
+			entry->textColorIndex = colors->textColorIndex;
+			entry->iconColorIndex = colors->iconColorIndex;
+		}
 		state = state & ~ElementState::Selected;
 
 		if (entry->styleIndex == styleIndex &&
@@ -306,7 +313,6 @@ namespace interstice
 		m_skribidiContext->ResetLayout(entry);
 
 
-		auto* styleManager = m_skribidiContext->styleManager;
 		auto visualTextStyle = styleManager->GetVisualTextStyle(entry->styleIndex.visualTextStyleIndex, entry->state);
 		entry->layout_attribute_count = style_to_attributes(&visualTextStyle->textLayoutStyle, entry->layout_attributes, 0);
 		entry->text_attribute_count   = style_to_attributes(&visualTextStyle->textStyle, entry->text_attributes,
@@ -318,7 +324,6 @@ namespace interstice
 		entry->iconOffsetY			  = visualTextStyle->iconOffsetY;
 		entry->horizontalAlignment	  = visualTextStyle->textLayoutStyle.horizontalAlignment;
 		entry->verticalAlignment	  = visualTextStyle->textLayoutStyle.verticalAlignment;
-		entry->textColorIndex         = visualTextStyle->textColorIndex;
 
 		// Hit-test coordinates come in outer-rect local space from input dispatch.
 		// Precompute the style-derived content origin offset (outer -> inner).
@@ -1046,7 +1051,7 @@ namespace interstice
 		// After restoring the view: RenderIcon sets its own.
 		if (entry->iconId != IconID::Invalid)
 		{
-			RenderIcon(entry->iconId, iconRenderRect, clipRect, entry->textColorIndex);
+			RenderIcon(entry->iconId, iconRenderRect, clipRect, entry->iconColorIndex);
 		}
 	}
 

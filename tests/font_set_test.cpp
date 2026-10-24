@@ -25,7 +25,7 @@ namespace interstice
                 return textSystem->Initialize(&graphicsContext, &styleManager, &atlasManager, &stateManager, &clipboard);
             }
 
-            StyleRef TextStyle(FontID font = FontID::Invalid)
+            StyleRef TextStyle(FontID font = FontID::Invalid, FontWeight weight = FontWeight::Normal)
             {
                 Style s{};
                 s.borderWidths    = BoxEdges(0);
@@ -35,6 +35,7 @@ namespace interstice
                 {
                     s.states[i].textStyle.fontSize = 13.0f;
                     s.states[i].textStyle.fontId   = font;
+                    s.states[i].textStyle.weight   = weight;
                 }
                 return styleManager.Register(s);
             }
@@ -62,6 +63,19 @@ namespace interstice
         {
             ASSERT_TRUE(Init("fonts", ""));
             EXPECT_GT(Width("Hello", TextStyle()), 0);
+        }
+
+        // Inter's Medium face is built in: weight 500 sits between Regular and SemiBold
+        // rather than falling back to either.
+        TEST_F(FontSetTest, MediumWeightHasItsOwnFace)
+        {
+            ASSERT_TRUE(Init("fonts", ""));
+            const std::string_view text = "Inspector Profiler Hierarchy";
+            const int32_t regular  = Width(text, TextStyle(FontID::Invalid, FontWeight::Normal));
+            const int32_t medium   = Width(text, TextStyle(FontID::Invalid, FontWeight::Medium));
+            const int32_t semiBold = Width(text, TextStyle(FontID::Invalid, FontWeight::DemiBold));
+            EXPECT_GT(medium, regular);
+            EXPECT_LT(medium, semiBold);
         }
 
         TEST_F(FontSetTest, AMissingFallbackSetIsSkipped)

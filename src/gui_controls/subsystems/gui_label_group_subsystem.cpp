@@ -99,7 +99,7 @@ namespace interstice
         }
 
         auto* state = groupState;
-        auto lineColor = m_theme.treeGuideLineStyle;
+        auto lineColor = m_theme.dividerHoverLineStyle;   // like the other dividers' hover
         [[maybe_unused]] auto cdRes = m_elementStorage.AddCustomDraw(labelRef,
             [state, lineColor, edgeWidth = m_elementStorage.GetStyleManager().Px(4)](interstice::CustomDrawContext& ctx)
             {

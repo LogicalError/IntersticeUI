@@ -822,7 +822,7 @@ namespace interstice
                             iconRectLayout.y -= childElementRect.layoutStyle->iconOffsetY;
                         const VisualTextStyle* iconText = styleManager.GetVisualTextStyle(childElement.styleRef.visualTextStyleIndex, state);
                         textSystem->RenderIcon(childElement.iconID, iconRectLayout, contentClipRectScreen,
-                                               iconText ? iconText->textColorIndex : VisualColorStyleIndex::Invalid);
+                                               iconText ? iconText->iconColorIndex : VisualColorStyleIndex::Invalid);
                     }
 
                     // Custom draws take inner-rect-local LAYOUT pixels, in the same content

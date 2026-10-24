@@ -667,7 +667,7 @@ namespace interstice
     // Application API
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints)
+    void GUIApplication::BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints)
     {
         m_dockingState = {};
         m_dockingState.containerID = id;
@@ -683,7 +683,7 @@ namespace interstice
 
         interstice::Element container{};
         container.id       = id;
-        container.styleRef = theme.dockContainerStyleRef;
+        container.styleRef = style;
         container.state    = guiStateManager.GetCurrentState(id);
         RegisterElement(std::move(container), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());

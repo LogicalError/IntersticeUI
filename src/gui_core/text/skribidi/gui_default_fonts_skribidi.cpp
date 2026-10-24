@@ -257,7 +257,7 @@ bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackSta
 				result.push_back(FontFaceSource{ .file = file });
 			return result;
 		};
-		const auto inter = paths({ "Inter/Inter-Regular.ttf", "Inter/Inter-SemiBold.ttf", "Inter/Inter-Bold.ttf",
+		const auto inter = paths({ "Inter/Inter-Regular.ttf", "Inter/Inter-Medium.ttf", "Inter/Inter-SemiBold.ttf", "Inter/Inter-Bold.ttf",
 		                           "Inter/Inter-Italic.ttf", "Inter/Inter-BoldItalic.ttf" });
 		const auto mono  = paths({ "JetBrainsMono/JetBrainsMono-Regular.ttf", "JetBrainsMono/JetBrainsMono-Bold.ttf" });
 		for (uint8_t family : { uint8_t(SKB_FONT_FAMILY_DEFAULT), uint8_t(SKB_FONT_FAMILY_SANS_SERIF),

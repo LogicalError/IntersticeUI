@@ -173,6 +173,14 @@ namespace interstice
             VisualColorStyleIndex textColorIndex       = RegisterVisualColorStyle(textColor, textColorHandle);
             VisualColorStyleIndex backgroundColorIndex = RegisterVisualColorStyle(backgroundColor, backgroundHandle);
 
+            VisualColorStyleIndex iconColorIndex = textColorIndex;
+            if (styleState.iconColor.gradient.stopCount != 0)
+            {
+                GradientHandle iconHandle;
+                VisualColorStyle iconColor = styleState.iconColor.ToVisualStyle(m_gradientManager, style.textureIndex, iconHandle);
+                iconColorIndex = RegisterVisualColorStyle(iconColor, iconHandle);
+            }
+
             VisualColorStyleIndex borderColorIndices[4];
             for (int e = 0; e < 4; e++)
             {
@@ -198,6 +206,7 @@ namespace interstice
                 .textStyle         = styleState.textStyle,
                 .textLayoutStyle   = style.textLayoutStyle,
 				.textColorIndex    = textColorIndex,
+                .iconColorIndex    = iconColorIndex,
                 .iconTextGap       = style.iconTextGap,
                 .iconSize          = style.iconSize,
                 .iconOffsetY       = style.iconOffsetY,

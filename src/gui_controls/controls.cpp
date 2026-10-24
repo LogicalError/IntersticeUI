@@ -1165,13 +1165,20 @@ namespace interstice
         const auto trackRef = RegisterElement(std::move(track), std::move(constraints));
 
         const auto grooveStyle = theme.sliderGrooveStyleRef.visualBoxStyleIndex;
+        const auto fillStyle   = theme.sliderFillStyleRef.visualBoxStyleIndex;
         const auto knobStyle   = theme.sliderKnobStyleRef.visualBoxStyleIndex;
         const auto trackState  = track.state;
         auto& widthMap         = m_sliderFieldTrack->Widths();
+        // Groove height and knob size from their CSS.
+        auto cssSize = [this](StyleRef style, bool width, int fallback) {
+            const LayoutStyle* ls = styleManager.GetLayoutStyle(style.layoutStyleIndex);
+            const int32_t size = ls ? (width ? ls->layoutData.width : ls->layoutData.height) : LayoutData::kAutoSize;
+            return size != LayoutData::kAutoSize ? int(size) : fallback;
+        };
+        const int grooveH = cssSize(theme.sliderGrooveStyleRef, false, styleManager.Px(4));
+        const int knobSz  = cssSize(theme.sliderKnobStyleRef, true, styleManager.Px(14));
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-            [grooveStyle, knobStyle, trackState, &widthMap, id, t,
-             grooveMin = styleManager.Px(3), grooveMax = styleManager.Px(6),
-             knobMin = styleManager.Px(6), knobInset = styleManager.Px(2)](interstice::CustomDrawContext& ctx)
+            [grooveStyle, fillStyle, knobStyle, trackState, &widthMap, id, t, grooveH, knobSz](interstice::CustomDrawContext& ctx)
             {
                 const auto outer = ctx.ElementRect();
                 const auto inner = ctx.ElementInnerRect();
@@ -1181,15 +1188,16 @@ namespace interstice
                 if (W <= 0 || Hc <= 0) return;
                 const int X = outer.x - inner.x;              // outer left in inner-local coords
 
-                // Groove: full width, centred in the content area (below the top padding).
-                const int grooveH = std::clamp(Hc / 4, grooveMin, grooveMax);
+                // Groove: full width, centred; filled up to the knob's centre.
+                const int knobX = X + static_cast<int>(std::lround(t * float(std::max(0, W - knobSz))));
                 ctx.RenderBox(interstice::IntRect{ .position = { X, (Hc - grooveH) / 2 },
                                             .size     = { W, grooveH } },
                               grooveStyle, trackState);
+                ctx.RenderBox(interstice::IntRect{ .position = { X, (Hc - grooveH) / 2 },
+                                            .size     = { knobX + knobSz / 2 - X, grooveH } },
+                              fillStyle, trackState);
 
-                // Knob: slightly smaller than the content height, kept inside the track.
-                const int knobSz = std::max(knobMin, Hc - knobInset);
-                const int knobX  = X + static_cast<int>(std::lround(t * float(std::max(0, W - knobSz))));
+                // Knob: kept inside the track.
                 ctx.RenderBox(interstice::IntRect{ .position = { knobX, (Hc - knobSz) / 2 },
                                             .size     = { knobSz, knobSz } },
                               knobStyle, trackState);

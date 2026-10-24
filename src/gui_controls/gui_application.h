@@ -739,7 +739,9 @@ namespace interstice
             { return Tab(idManager.AllocateDynamicID(), text, icon, std::move(constraints)); }
 
         // ---- DockingContainer ----
-        void BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {});
+        void BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints = {});
+        inline void BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {})
+            { BeginDockingContainer(id, layout, theme.dockContainerStyleRef, std::move(constraints)); }
         void EndDockingContainer();
 
         bool        Field(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});

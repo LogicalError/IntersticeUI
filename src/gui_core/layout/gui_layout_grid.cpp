@@ -638,8 +638,10 @@ namespace interstice
 
             if (gridLayout.alignItemsSelf == AlignItems::Stretch)
             {
+                // Stretch fills the cell only for an auto width; a set width starts the cell.
                 childRects[i].rect.x = cellX;
-                childRects[i].rect.w = cellW;
+                if (!childRects[i].constraints.HasFixedWidth())
+                    childRects[i].rect.w = cellW;
             } else
             {
                 IntRect cellRect{ cellX, 0, cellW, 0 };

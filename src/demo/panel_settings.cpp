@@ -435,7 +435,8 @@ namespace interstice
                      int(visRows.size()),
                      /*rowHeight*/0,
                      shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
-                     interstice::LayoutOverride{}.FlexGrow(1));
+                     interstice::LayoutOverride{}.FlexGrow(1),
+                     /*showHeaders*/ true, shortcutCellStyleRef);
 
         EndHorizontal();  // shortcutGridCol
         EndHorizontal();  // shortcutSplit
