@@ -89,6 +89,7 @@ namespace interstice
         // persisted widths itself). `columns` is function-local-static, so
         // the captured pointer stays valid.
         auto& ts = demo.tablePanelVirtualTableState;
+        ts.selectionBar = true;
         ts.onReorderColumns = [colsPtr = &columns](int from, int to)
         {
             if (from == to) return;

@@ -568,39 +568,45 @@ namespace interstice
 #endif
 
     // ---------------------------------------------------------------------
-    // Widget-level Begin/End mismatch detection — verifies that a top-level
-    // widget Begin without a matching End propagates through to the
-    // elementStorage layer's MissingEndChildren assert (via VERIFY in the
-    // harness Frame()).
+    // A widget Begin/End mismatch is reported, not fatal: the frame completes
+    // and the next, balanced frame lays out as usual.
     // ---------------------------------------------------------------------
 
-#ifndef NDEBUG
-    TEST(WidgetBalanceTest, BeginAreaWithoutEndAreaAssertsAtFrameEnd)
+    TEST(WidgetBalanceTest, BeginAreaWithoutEndAreaIsSurvived)
     {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                app.BeginArea();   // leak — no EndArea
-                app.EndRootWindow();
-            });
-        }, ".*");
+        HeadlessGUIApp app;
+        ASSERT_TRUE(app.Initialize());
+        const ID buttonID = app.idManager.CreateStaticID();
+        app.Frame([&]{
+            app.BeginRootWindow();
+            app.BeginArea();   // leak — no EndArea
+            app.EndRootWindow();
+        });
+        app.Frame([&]{
+            app.BeginRootWindow();
+            app.Button(buttonID, "OK", [] {});
+            app.EndRootWindow();
+        });
+        EXPECT_GT(app.GetElementRect(buttonID).w, 0);
     }
 
-    TEST(WidgetBalanceTest, EndAreaWithoutBeginAreaAssertsImmediately)
+    TEST(WidgetBalanceTest, EndAreaWithoutBeginAreaIsSurvived)
     {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                app.EndArea();   // no matching BeginArea — EndChildren fails
-                app.EndRootWindow();
-            });
-        }, ".*");
+        HeadlessGUIApp app;
+        ASSERT_TRUE(app.Initialize());
+        const ID buttonID = app.idManager.CreateStaticID();
+        app.Frame([&]{
+            app.BeginRootWindow();
+            app.EndArea();   // no matching BeginArea
+            app.EndRootWindow();
+        });
+        app.Frame([&]{
+            app.BeginRootWindow();
+            app.Button(buttonID, "OK", [] {});
+            app.EndRootWindow();
+        });
+        EXPECT_GT(app.GetElementRect(buttonID).w, 0);
     }
-#endif
 
 #ifndef NDEBUG
     TEST(ConstructionScopesTest, PopWithoutPushAsserts)

@@ -287,6 +287,13 @@ namespace interstice
 
 
 
+	void SkribidiTextSystem::SetTextColor(TextID textId, VisualColorStyleIndex color)
+	{
+		if (!m_skribidiContext) return;
+		if (auto* entry = m_skribidiContext->GetRegisteredText(textId))
+			entry->textColorIndex = color;
+	}
+
 	void SkribidiTextSystem::UpdateRegisteredTextStyleState(RegisteredText* entry, interstice::StyleRef styleIndex, interstice::ElementState state)
 	{
 		assert(entry != nullptr);

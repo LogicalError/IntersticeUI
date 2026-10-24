@@ -100,7 +100,7 @@ namespace interstice
         Field(demo.settingsUserName, TextEditBehavior::None);
 
         Label("Autosave");
-        Field(demo.settingsAutosave, demo.settingsAutosave ? "ON" : "OFF");
+        Switch(demo.settingsAutosave, demo.settingsAutosave ? "On" : "Off");
 
         EndLabelGroup();
     }

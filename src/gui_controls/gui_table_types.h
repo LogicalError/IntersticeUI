@@ -185,6 +185,8 @@ namespace interstice
         int                   sortColumn       = -1;              // -1 = unset; auto-resolved by VirtualTable
         TableSelectionMode    selectionMode    = TableSelectionMode::Row;
         bool                  sortDescending   = false;
+        bool                  selectionBar     = false;           // row mode: an accent bar on a selected row's left
+        StyleRef              rowStyle         = StyleRef::Invalid(); // every row's backdrop, in place of the striped .table-row pair
 
         LazyReorderFn                  onReorderColumns;           // headers become drag-to-reorder when set
         // Replaces the default double-click branch toggle (the chevron still toggles).

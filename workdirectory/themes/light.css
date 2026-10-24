@@ -32,6 +32,7 @@
     --text-link-hover: #1A4296;
     /* ---- Accent ----------------------------------------------------------- */
     --accent: #2F6FEB;
+    --selection: #CBDBFA;
     --slider-thumb: #FFFFFF;
     --divider-hover: #2F6FEB;
     --accent-soft: #E2EAFA;   /* accent at 12% over --bg-panel, opaque like dark.css */

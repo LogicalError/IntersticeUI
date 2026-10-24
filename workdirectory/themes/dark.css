@@ -33,6 +33,7 @@
     --text-link-hover: #B5CDFF;
     /* ---- Accent ----------------------------------------------------------- */
     --accent: #6B9BFF;
+    --selection: #2E4065;   /* selected text: accent at 35% over the field */
     --slider-thumb: #E8EAEF;
     --divider-hover: #6B9BFF; /* a hovered or dragged divider: panel splitters, column and label sizers */
     --accent-soft: #202A3D;   /* accent at 16% over --bg-panel, opaque so stacked rows and cells do not darken */

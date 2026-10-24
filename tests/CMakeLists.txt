@@ -21,6 +21,9 @@ list(APPEND GUI_CORE_TEST_FILES
   title_bar_test.cpp
   theme_metrics_test.cpp
   graphite_rows_test.cpp
+  switch_test.cpp
+  number_field_edit_test.cpp
+  color_field_hex_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp
   node_view_wire_edit_test.cpp

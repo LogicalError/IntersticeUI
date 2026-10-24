@@ -377,6 +377,10 @@ namespace interstice
         /// The text representation and int<->text conversion are handled by the text system.
         virtual TextID RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) = 0;
 
+        /// Draw a registered text in `color` instead of its style's text color, until it is
+        /// registered again (call after each registration, e.g. for a NaN value).
+        virtual void SetTextColor(TextID textId, VisualColorStyleIndex color) = 0;
+
         /// Get the original text string from a registered TextID
         virtual std::string_view GetText(TextID textId) const = 0;
 

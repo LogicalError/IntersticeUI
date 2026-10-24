@@ -93,6 +93,7 @@ namespace interstice
             sortArrowDownIcon = registerIcon("sort-arrow-down", R"(<path d="m6 9 6 6 6-6"/>)");
             tabCloseIcon    = registerIcon("tab-close",  R"(<path d="M18 6 6 18"/><path d="m6 6 12 12"/>)");
             menuCheckIcon   = registerIcon("menu-check", R"(<path d="M20 6 9 17l-5-5"/>)");
+            dropdownArrowIcon = registerIcon("dropdown-arrow", R"(<path d="m6 9 6 6 6-6"/>)");
             addIcon         = registerIcon("list-add",    R"(<path d="M5 12h14"/><path d="M12 5v14"/>)");
             removeIcon      = registerIcon("list-remove", R"(<path d="M5 12h14"/>)");
             dragHandleIcon  = registerIcon("drag-handle",
@@ -247,6 +248,7 @@ namespace interstice
         lineDarkStyle      = lineColorFromCSS("--bg-app", color4f{ 0.1f, 0.1f, 0.1f, 1.0f });
         treeGuideLineStyle = lineColorFromCSS("--line-node", color4f{ 0.5f, 0.5f, 0.5f, 1.0f });
         dividerHoverLineStyle = lineColorFromCSS("--divider-hover", color4f{ 0.42f, 0.61f, 1.0f, 1.0f });
+        nanTextColor          = lineColorFromCSS("--warn-text", color4f{ 0.9f, 0.7f, 0.33f, 1.0f });
         treeDropIndicatorStyle = lineColorFromCSS("--accent", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
 
         {
@@ -359,10 +361,16 @@ namespace interstice
         sliderFieldBgStyleRef             = registerCSS("slider-field-bg");
         sliderFieldFillStyleRef           = registerCSS("slider-field-fill");
         sliderFieldTextStyleRef           = registerCSS("slider-field-text");
+        sliderFieldValueStyleRef          = registerCSS("slider-field-value");
+        sliderFieldEdgeStyleRef           = registerCSS("slider-field-edge");
         sliderStyleRef                    = registerCSS("slider");
         sliderGrooveStyleRef              = registerCSS("slider-groove");
         sliderFillStyleRef                = registerCSS("slider-fill");
         sliderKnobStyleRef                = registerCSS("slider-knob");
+        switchStyleRef                    = registerCSS("switch");
+        switchTrackStyleRef               = registerCSS("switch-track");
+        switchKnobStyleRef                = registerCSS("switch-knob");
+        switchLabelStyleRef               = registerCSS("switch-label");
         scrollbarVerticalTrackStyleRef    = registerCSS("scrollbar-vertical");
         scrollbarVerticalThumbStyleRef    = registerCSS("scrollbar-vertical-thumb");
         scrollbarHorizontalTrackStyleRef  = registerCSS("scrollbar-horizontal");
@@ -370,6 +378,11 @@ namespace interstice
             scrollbarThickness = p->layoutData.width;
         scrollbarHorizontalThumbStyleRef  = registerCSS("scrollbar-horizontal-thumb");
         colorSwatchStyleRef               = registerCSS("color-swatch");
+        colorFieldStyleRef                = registerCSS("color-field");
+        colorHexStyleRef                  = registerCSS("color-hex");
+        colorAlphaStyleRef                = registerCSS("color-alpha");
+        colorAlphaInputStyleRef           = registerCSS("color-alpha-input");
+        colorAlphaUnitStyleRef            = registerCSS("color-alpha-unit");
         colorPickerStyleRef               = registerCSS("color-picker");
         colorPickerWheelStyleRef          = registerCSS("color-picker-wheel");
         colorPickerPreviewStyleRef        = registerCSS("color-picker-preview");
@@ -509,6 +522,7 @@ namespace interstice
         tableRowStyleRef                  = registerCSS("table-row");
         tableRowAltStyleRef               = registerCSS("table-row-alt");
         tableRowBarStyleRef               = registerCSS("table-row-bar");
+        listRowStyleRef                   = registerCSS("list-row");
         tableHeaderStyleRef               = registerCSS("table-header");
         tableHeaderLockedStyleRef         = registerCSS("table-header-locked");
         tableSizerStyleRef                = registerCSS("table-sizer");

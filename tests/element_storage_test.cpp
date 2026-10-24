@@ -310,6 +310,8 @@ namespace interstice
         ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
 
         EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::MissingEndChildren);
+        // The open scope was closed, so the next frame starts cleanly.
+        EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
     }
 
     TEST_F(ElementStorageTest, ValidAddBeginEndChildrenSequenceSucceeds)

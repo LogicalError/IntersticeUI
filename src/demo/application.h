@@ -47,6 +47,9 @@ namespace interstice
     class Application : public GUIApplication
     {
     public:
+        // Panels to bring to the front of their tab groups at startup, by title.
+        void AddStartPanel(std::string title) { m_startPanels.push_back(std::move(title)); }
+
         // ---- Toolbar model (used by the View panel) -----------------------------
         struct ToolbarLayoutModel
         {
@@ -70,8 +73,13 @@ namespace interstice
 
         // Classes from themes/demo.css, looked up after each theme load.
         StyleRef hierarchyVizCellStyleRef, hierarchyVizBgStyleRef, hierarchyVisibilityStyleRef;
-        StyleRef logLevelIconStyleRef, logLevelToggleLeftStyleRef, logLevelToggleMidStyleRef, logLevelToggleRightStyleRef;
-        StyleRef logCollapseToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
+        StyleRef logLevelIconStyleRef, logLevelWellStyleRef;
+        StyleRef logLevelPillStyleRefs[3];   // indexed by LogLevel
+        StyleRef iconToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
+        StyleRef logTableStyleRef, filesToolbarStyleRef;
+        StyleRef typedFieldStyleRef, typedFieldInputStyleRef, typedFieldTypeStyleRef, inspectorPairHalfStyleRef, inspectorCaptionStyleRef, inspectorHeaderStyleRef, inspectorObjectIconStyleRef, inspectorObjectNamesStyleRef, inspectorObjectTitleStyleRef, inspectorObjectPathStyleRef, inspectorSearchRowStyleRef, inspectorSectionStyleRef, inspectorSectionFirstStyleRef, inspectorSectionBodyStyleRef;
+        StyleRef profilerHeaderStyleRef, profilerRecordStyleRef, profilerPauseStyleRef, profilerMsStyleRef, profilerFpsStyleRef;
+        StyleRef profilerPctCellStyleRef, profilerPctTrackStyleRef, profilerPctFillStyleRef, profilerPctTextStyleRef;
         StyleRef logDetailPaneStyleRef, logDetailTextStyleRef;
         StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, shortcutCellStyleRef, settingsTitleStyleRef;
         StyleRef dataTableCellStyleRef, dataTableNumberStyleRef;
@@ -232,9 +240,14 @@ namespace interstice
             IconID infoIcon      = IconID::Invalid;
             IconID warningIcon   = IconID::Invalid;
             IconID errorIcon     = IconID::Invalid;
-            IconID infoBwIcon    = IconID::Invalid;
-            IconID warningBwIcon = IconID::Invalid;
-            IconID errorBwIcon   = IconID::Invalid;
+            IconID dotIcon       = IconID::Invalid;   // a filled dot in the text color
+            IconID pauseIcon     = IconID::Invalid;
+            IconID listIcon      = IconID::Invalid;
+            IconID layoutGridIcon = IconID::Invalid;
+            IconID boxIcon          = IconID::Invalid;
+            IconID moreIcon         = IconID::Invalid;
+            IconID chevronDownIcon  = IconID::Invalid;
+            IconID chevronRightIcon = IconID::Invalid;
 
             IconID folderClosedIcon = IconID::Invalid;
             IconID folderOpenIcon   = IconID::Invalid;
@@ -347,6 +360,8 @@ namespace interstice
             CommandID cmdBrush = 0, cmdEraser = 0;
 
             ID smallMenuID{ ID::Invalid() };
+            ID cameraMenuID{ ID::Invalid() };
+            int cameraView = 0;   // the viewport toolbar's camera menu: perspective, orthographic, ...
             ID bigMenuID{ ID::Invalid() };
 
             // GridView demo
@@ -465,6 +480,8 @@ namespace interstice
         void DisableInspectorPanel();
         void EnableLogPanel();
         void DisableLogPanel();
+    private:
+        std::vector<std::string> m_startPanels;
     };
 
 } // namespace interstice

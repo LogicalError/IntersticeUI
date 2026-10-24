@@ -30,6 +30,7 @@
    Inter for Latin, Greek and Cyrillic; everything Inter lacks falls back to
    Noto. Paths are relative to this file. */
 @font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Regular.ttf"); }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Medium.ttf"); }
 @font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-SemiBold.ttf"); }
 @font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Bold.ttf"); }
 @font-face { font-family: "Inter"; src: url("../fonts/Inter/Inter-Italic.ttf"); }
@@ -86,6 +87,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
+    -interstice-vertical-text-align: middle;   /* centred when its row stretches it */
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -252,7 +254,7 @@
 .vector-component:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
 .vector-component:active { border-color: var(--accent); background-color: var(--bg-input); }
 .vector-component:focus  { border-color: var(--accent); background-color: var(--bg-input); }
-.vector-component::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.vector-component::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- grouped label variants (overflow visible for edge dragger rendering) - */
 /* No margin, like .group-drag-label: the group sizes both to one width, so a
@@ -261,12 +263,13 @@
     border-width: 0px;
     border-radius: 0px;
     padding: 4px 8px;
-    margin: 0px;
+    margin: 0px 1px 0px 0px;   /* with the field's 1 px margin, a 2 px gap after the sizer line */
     overflow: visible;
     direction: initial;
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -283,11 +286,13 @@
     border-width: 0px;
     border-radius: 0px;
     padding: 0px 8px;
+    margin: 0px 1px 0px 0px;   /* with the field's 1 px margin, a 2 px gap after the sizer line */
     overflow: visible;
     direction: initial;
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -325,7 +330,7 @@
 .textbox:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
 .textbox:active { border-color: var(--accent); background-color: var(--bg-input); }
 .textbox:focus  { border-color: var(--accent); background-color: var(--bg-input); }
-.textbox::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.textbox::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- searchTextbox -------------------------------------------------------- */
 /* Search field: a textbox-looking container with a leading icon inside the
@@ -386,7 +391,7 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.search-textbox-field::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.search-textbox-field::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- buttonStyle ---------------------------------------------------------- */
 .button {
@@ -505,83 +510,80 @@
 
 .first-button {
     -interstice-icon-size: 14px;
-    border-width: var(--border-first);
-    border-radius: var(--radius-md-first);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 0px 1px 1px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.first-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.first-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.first-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.first-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
-.first-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.first-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.first-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.first-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.first-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 
 .mid-button {
     -interstice-icon-size: 14px;
-    border-width: var(--border-mid);
-    border-radius: var(--radius-md-mid);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 0px 1px 0px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.mid-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.mid-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.mid-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.mid-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
-.mid-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.mid-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.mid-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.mid-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.mid-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 
 .last-button {
     -interstice-icon-size: 14px;
-    border-width: var(--border-last);
-    border-radius: var(--radius-md-last);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 1px 1px 0px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.last-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.last-button:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.last-button:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.last-button       ::highlight(selected) { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
-.last-button:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.last-button:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.last-button:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.last-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.last-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 /* ---- menuTriggerStyle ----------------------------------------------------- */
 /* Dropdown / menu trigger. Visually matches .button, but its label is left-
@@ -598,6 +600,10 @@
     overflow: auto;
     text-align: start;
     vertical-align: baseline;
+    -interstice-icon-side: right;   /* the dropdown arrow */
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-color: var(--text-3);
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
@@ -794,17 +800,21 @@
 .table-cell:hover { background-color: var(--bg-header); }
 .table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
-/* A number in a table: .table-cell, right-aligned. For TableColumn::cellStyle. */
+/* A number in a table: .table-cell, right-aligned in the monospace font. For
+   TableColumn::cellStyle. */
 .table-cell-number {
     margin: 0px;
     padding: 3px 8px;
     overflow: hidden;
-    vertical-align: baseline;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: end;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     color: var(--text-2);
-    font-size: var(--font-size);
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 16px;   /* the text cells' line, so rows stay one height */
     background-color: transparent;
 }
 .table-cell-number:hover { background-color: var(--bg-header); }
@@ -852,6 +862,18 @@
 }
 .table-row-alt:hover { background-color: var(--bg-header); }
 .table-row-alt::highlight(selected) { background-color: var(--accent-soft); }
+
+/* A rounded list row without stripes: tree views' rows, and any table's through
+   TableState::rowStyle. */
+.list-row {
+    margin: 0px;
+    padding: 0px;
+    overflow: visible;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+}
+.list-row:hover { background-color: var(--bg-header); }
+.list-row::highlight(selected) { background-color: var(--accent-soft); }
 
 /* The accent bar on a selected row's left, drawn over its cells. */
 .table-row-bar {
@@ -1049,7 +1071,7 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.tree-table-text-edit::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.tree-table-text-edit::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- toggleStyle ---------------------------------------------------------- */
 .toggle {
@@ -1080,96 +1102,93 @@
 
 .first-toggle {
     -interstice-icon-size: 14px;
-    border-width: var(--border-first);
-    border-radius: var(--radius-md-first);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 0px 1px 1px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.first-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.first-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.first-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.first-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.first-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.first-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.first-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.first-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.first-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.first-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 .mid-toggle {
     -interstice-icon-size: 14px;
-    border-width: var(--border-mid);
-    border-radius: var(--radius-md-mid);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 0px 1px 0px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.mid-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.mid-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.mid-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.mid-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.mid-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.mid-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.mid-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.mid-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.mid-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.mid-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 .last-toggle {
     -interstice-icon-size: 14px;
-    border-width: var(--border-last);
-    border-radius: var(--radius-md-last);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
-    margin: 1px 1px 1px 0px;
-    padding: 2px 4px 2px 4px;
-    overflow: auto;
-    vertical-align: baseline;
+    margin: 0px;
+    padding: 0px 10px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
-    flex-grow: 1;
+    flex-grow: 0;
+    flex-shrink: 0;
     cursor: pointer;
 }
-.last-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.last-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.last-toggle:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.last-toggle::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.last-toggle:hover::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.last-toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.last-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
+.last-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.last-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.last-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 /* ---- button-group / toggle-group containers ------------------------------ */
-/* Horizontal flex row with no gap. Children (.first-/.mid-/.last-button or
-   -toggle) carry the orientation-aware borders/radii so they butt up against
-   each other and form one tight grouped control. */
+/* A segmented control: a recessed well holding its segments (.first-/.mid-/
+   .last-button or -toggle), the pressed one raised. */
 .button-group, .toggle-group {
-    border-width: 0px;
-    border-color: transparent;
-    background-color: transparent;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
     margin: 0px;
-    padding: 0px;
+    padding: 2px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 0px;
+    gap: 2px;
     flex-grow: 1;
     overflow: visible;
 }
@@ -2374,7 +2393,7 @@
 /* ---- treeViewStyle -------------------------------------------------------- */
 .tree-view {
     border-width: 0px;
-    padding: 0px;
+    padding: 6px 4px;   /* rows inset, as their corners are rounded */
     gap: 0px;
     flex-grow: 1;
     flex-shrink: 0;
@@ -2420,24 +2439,26 @@
 /* ---- gridViewItemStyle: single grid item (icon above text) ---------------- */
 .grid-view-item {
     border-width: var(--border-thin);
+    border-radius: var(--radius-lg);
     padding: 8px 4px;
     background-color: transparent;
     border-color: transparent;
-    color: var(--text-1);
+    color: var(--text-2);
     font-size: var(--font-size);
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     -interstice-icon-side: top;
-    -interstice-icon-text-gap: 4px;
+    -interstice-icon-text-gap: 8px;
     vertical-align: middle;
+    -interstice-vertical-text-align: middle;   /* icon and name centred in the cell */
     flex-grow: 0;
     flex-shrink: 0;
 }
 .grid-view-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
 .grid-view-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
-.grid-view-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
+.grid-view-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- gridViewListItemStyle: list-mode row (icon left, name right) --------- */
 .grid-view-list-item {
@@ -2460,7 +2481,7 @@
 }
 .grid-view-list-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
 .grid-view-list-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
-.grid-view-list-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent); color: var(--text-1); }
+.grid-view-list-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- gridViewRenameItem: rename-mode grid cell --------------------------- */
 /* Mirrors .grid-view-item's geometry, but as a real flex column of           */
@@ -2468,6 +2489,7 @@
 /* the compact one-line shape the text editor's hit-testing expects.         */
 .grid-view-rename-item {
     border-width: var(--border-thin);
+    border-radius: var(--radius-lg);
     padding: 8px 4px;
     background-color: transparent;
     border-color: transparent;
@@ -2475,8 +2497,8 @@
     flex-direction: column;
     flex-wrap: nowrap;
     align-items: stretch;
-    justify-content: flex-start;
-    gap: 4px; /* matches .grid-view-item's -interstice-icon-text-gap */
+    justify-content: center;   /* centred in the cell, as .grid-view-item */
+    gap: 8px; /* matches .grid-view-item's -interstice-icon-text-gap */
     overflow: hidden;
     flex-grow: 0;
     flex-shrink: 0;
@@ -2529,7 +2551,7 @@
     flex-grow: 0;
     flex-shrink: 1;
 }
-.grid-view-rename-edit::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.grid-view-rename-edit::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- gridViewScrollStyle: virtualized grid scroll viewport ---------------- */
 /* Column flex so visible row strips + the top/bottom virtualization spacers   */
@@ -2905,32 +2927,32 @@
    The track itself is the click/drag hit region and parents the value/label
    text overlays (or a Field child while in text-edit mode). */
 .slider-field-track {
+    height: 24px;
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    padding: 2px 4px 2px 4px;
+    border-color: var(--line-subtle);
+    padding: 0px 8px;
     background-color: transparent;
-    margin: 1px;
+    margin: 0px;
     cursor: pointer;
     overflow: hidden;
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
+    justify-content: space-between;   /* the label at the left, the value at the right */
+    gap: 8px;
 }
 .slider-field-track:hover  { border-color: var(--line-strong); }
 .slider-field-track:active { border-color: var(--accent); }
 .slider-field-track:focus  { border-color: var(--accent); }
 
-/* Inner halves painted by the slider's custom-draw. Border-radius = track radius
-   (--radius-md) minus track border (--border) so the curve hugs the inside of
-   the border. border-width stays 0 — these are pure fills. */
+/* The track's halves, painted by the slider's custom-draw: the unfilled part,
+   the filled part and the line that ends it. */
 .slider-field-bg {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-pressed);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
 }
 .slider-field-bg:hover  { border-color: var(--line-strong); }
 .slider-field-bg:active { border-color: var(--accent); }
@@ -2939,12 +2961,71 @@
 .slider-field-fill {
     border-width: var(--border);
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--accent);
+    border-color: var(--line-subtle);
+    background-color: var(--accent-soft);
 }
 .slider-field-fill:hover  { border-color: var(--line-strong); }
 .slider-field-fill:active { border-color: var(--accent); }
 .slider-field-fill:focus  { border-color: var(--accent); }
+
+.slider-field-edge {
+    width: 2px;
+    border-width: 0px;
+    border-radius: 0px;
+    border-color: transparent;
+    background-color: var(--accent);
+}
+
+/* ---- switch: an on/off track with a knob, and an optional label after it ---- */
+.switch {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.switch-track {
+    width: 28px;
+    height: 16px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: 8px;
+    background-color: var(--line-strong);
+    border-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.switch-track::highlight(selected) { background-color: var(--accent); }
+.switch-knob {
+    width: 12px;
+    height: 12px;
+    border-width: 0px;
+    border-radius: 6px;
+    background-color: var(--text-2);
+    border-color: transparent;
+}
+.switch-knob::highlight(selected) { background-color: var(--bg-app); }
+.switch-label {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+.switch-label::highlight(selected) { color: var(--text-2); }
 
 /* ---- slider: a groove, its filled part and a knob, no value text; painted
    by the slider's custom-draw at the groove's height and the knob's size. */
@@ -2991,6 +3072,18 @@
     text-align: start;
     vertical-align: middle;
 }
+.slider-field-value {
+    border-width: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-wrap: nowrap;
+    text-align: end;
+    vertical-align: middle;
+}
 
 /* ---- Scrollbars ----------------------------------------------------------
    Vertical/horizontal scrollbars emitted via VerticalScrollbar /
@@ -3026,18 +3119,104 @@
 }
 
 /* ---- Color picker --------------------------------------------------------- */
+/* ---- ColorField: a swatch (opens the picker), the hex and the alpha in % ---- */
+.color-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-grow: 1;
+}
 .color-swatch {
+    width: 40px;
+    height: 24px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
     background-color: #ffffffff;
-    margin: 1px;
-    padding: 2px 4px 2px 4px;
+    margin: 0px;
+    padding: 0px;
     overflow: auto;
-    min-width: 24px;
-    min-height: 24px;
     cursor: pointer;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.color-hex {
+    height: 24px;
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    color: var(--text-1);
+    margin: 0px;
+    padding: 0px 8px;
+    overflow: auto;
+    cursor: text;
+    text-overflow: clip;
+    text-wrap: nowrap;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    font-family: monospace;
+    font-size: 11.5px;
     flex-grow: 1;
+    flex-shrink: 1;
+}
+.color-hex:hover  { border-color: var(--line-strong); }
+.color-hex:active { border-color: var(--accent); }
+.color-hex:focus  { border-color: var(--accent); }
+.color-hex::selection { color: var(--text-1); background-color: var(--selection); }
+.color-alpha {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0px;
+    width: 56px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px 0px 0px;
+    border-width: var(--border);
+    border-radius: var(--radius-md);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.color-alpha-input {
+    height: 22px;
+    margin: 0px;
+    padding: 0px 2px 0px 6px;
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: end;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.color-alpha-input::selection { color: var(--text-1); background-color: var(--selection); }
+.color-alpha-unit {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
 }
 .color-swatch:hover { border-color: var(--line-strong); }
 
@@ -3097,14 +3276,14 @@
 
 /* ---- Gradient editor ------------------------------------------------------ */
 .gradient-swatch {
+    height: 20px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
     background-color: transparent;
-    margin: 1px;
-    padding: 2px 4px 2px 4px;
+    margin: 2px 0px 4px 0px;   /* room for the stop diamonds below */
+    padding: 0px;
     min-width: 60px;
-    min-height: 24px;
     cursor: pointer;
     flex-grow: 1;
     align-self: stretch;
@@ -3140,9 +3319,9 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 4px;
-    padding: 2px 4px;
-    background-color: var(--bg-header);
+    gap: 6px;
+    padding: 10px 10px 4px 10px;
+    background-color: transparent;
     border-width: 0px;
     /* Keep an empty side hit-testable for cross-side drops. */
     min-height: 24px;
@@ -3152,10 +3331,11 @@
     flex-direction: column;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 4px;
-    padding: 4px 2px;
-    background-color: var(--bg-header);
+    gap: 6px;
+    padding: 4px 10px;
+    background-color: transparent;
     border-width: 0px;
+    /* Keep an empty side hit-testable for cross-side drops. */
     min-width: 24px;
 }
 
@@ -3194,13 +3374,13 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 0px;
-    padding: 0px;
-    background-color: transparent;
-    border-radius: var(--radius-toolbar);
-    border-width: var(--border);
-    border-style: dashed;
-    border-color: transparent;
+    gap: 2px;
+    height: 30px;
+    padding: 0px 3px 0px 0px;
+    background-color: var(--bg-header);
+    border-radius: var(--radius-lg);
+    border-width: 1px;
+    border-color: var(--line-subtle);
 }
 .toolbar-item-horz:hover { border-color: var(--line-strong); }
 .toolbar-item-horz:active { border-color: var(--line-strong); }
@@ -3211,13 +3391,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0px;
-    padding: 0px;
-    background-color: transparent;
-    border-radius: var(--radius-toolbar);
-    border-width: var(--border);
-    border-style: dashed;
-    border-color: transparent;
+    gap: 2px;
+    width: 30px;
+    padding: 0px 0px 3px 0px;
+    background-color: var(--bg-header);
+    border-radius: var(--radius-lg);
+    border-width: 1px;
+    border-color: var(--line-subtle);
 }
 .toolbar-item-vert:hover { border-color: var(--line-strong); }
 .toolbar-item-vert:active { border-color: var(--line-strong); }
@@ -3227,12 +3407,12 @@
 /* left (leading) edge.                                                        */
 .toolbar-thumb-horz {
     border-width: 0px;
-    width: 5px;
+    width: 6px;
     min-height: 10px;
-    border-radius: var(--radius-sm) 0px 0px var(--radius-sm);
-    padding: 1px;
+    border-radius: var(--radius-lg) 0px 0px var(--radius-lg);
+    padding: 0px;
     margin: 0px;
-    background-color: var(--bg-control);
+    background-color: transparent;
     border-color: transparent;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3245,12 +3425,12 @@
 /* Vertical sides round the top (leading) edge.                                */
 .toolbar-thumb-vert {
     border-width: 0px;
-    height: 5px;
+    height: 6px;
     min-width: 10px;
-    border-radius: var(--radius-sm) var(--radius-sm) 0px 0px;
-    padding: 1px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0px 0px;
+    padding: 0px;
     margin: 0px;
-    background-color: var(--bg-control);
+    background-color: transparent;
     border-color: transparent;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3263,13 +3443,15 @@
 /* ---- toolbar buttonStyle -------------------------------------------------- */
 .toolbar-button {
     -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
-    border-width: var(--border-toolbar);
-    border-radius: var(--radius-toolbar);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    min-width: 24px;
+    height: 24px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
     margin: 0px;
-    padding: 1px;
+    padding: 0px 5px;
     overflow: auto;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
@@ -3280,23 +3462,25 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-button:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.toolbar-button:active { border-color: var(--line-strong); border-style: dotted; background-color: var(--accent-soft); }
-.toolbar-button:focus  { border-color: var(--line-strong); border-style: dotted; }
-.toolbar-button::highlight(selected) { background-color: var(--accent-soft); }
+.toolbar-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.toolbar-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.toolbar-button::highlight(selected) { background-color: var(--accent); color: var(--bg-app); }
+.toolbar-button:hover ::highlight(selected) { background-color: var(--accent); color: var(--bg-app); }
 
 /* ---- toolbar toggleStyle -------------------------------------------------- */
 /* Same compact visuals as .toolbar-button; the ::highlight(selected) state    */
 /* paints the "on" appearance via the accent-blue fill.                        */
 .toolbar-toggle {
     -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
-    border-width: var(--border-toolbar);
-    border-radius: var(--radius-toolbar);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    min-width: 24px;
+    height: 24px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
     margin: 0px;
-    padding: 1px;
+    padding: 0px 5px;
     overflow: auto;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
@@ -3307,13 +3491,10 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.toolbar-toggle:active { border-color: var(--line-strong); border-style: dotted; background-color: var(--accent-soft); }
-.toolbar-toggle:focus  { border-color: var(--line-strong); border-style: dotted; }
-.toolbar-toggle       ::highlight(selected) { background-color: var(--accent-soft); }
-.toolbar-toggle:hover ::highlight(selected) { background-color: var(--accent-soft); }
-.toolbar-toggle:active::highlight(selected) { background-color: var(--accent-soft); }
-.toolbar-toggle:focus ::highlight(selected) { background-color: var(--accent-soft); }
+.toolbar-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.toolbar-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.toolbar-toggle::highlight(selected) { background-color: var(--accent); color: var(--bg-app); }
+.toolbar-toggle:hover ::highlight(selected) { background-color: var(--accent); color: var(--bg-app); }
 
 /* ---- toolbar textboxStyle ------------------------------------------------- */
 /* Compact inline text input. Uses --accent2-dark (the regular textbox field   */
@@ -3340,19 +3521,24 @@
 .toolbar-textbox:hover  { border-color: var(--line-strong); border-style: dotted; border-color: var(--line-strong); }
 .toolbar-textbox:active { border-color: var(--line-strong); border-style: dotted; border-color: var(--accent); }
 .toolbar-textbox:focus  { border-color: var(--accent); border-style: dotted; }
-.toolbar-textbox::selection { color: var(--text-1); background-color: var(--accent-soft); }
+.toolbar-textbox::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- toolbar menuTriggerStyle --------------------------------------------- */
 /* Like .toolbar-button but text-aligned to start — menu triggers usually     */
 /* show a current value that should read from the left edge.                   */
 .toolbar-menu-trigger {
-    border-width: var(--border-toolbar);
-    border-radius: var(--radius-toolbar);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    height: 24px;
+    -interstice-icon-side: right;   /* the dropdown arrow */
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-color: var(--text-3);
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
     color: var(--text-2);
     margin: 0px;
-    padding: 1px 4px;
+    padding: 0px 7px;
     overflow: auto;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
@@ -3363,9 +3549,8 @@
     flex-grow: 0;
     cursor: pointer;
 }
-.toolbar-menu-trigger:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.toolbar-menu-trigger:active { border-color: var(--line-strong); background-color: var(--accent-soft); }
-.toolbar-menu-trigger:focus  { border-color: var(--accent); }
+.toolbar-menu-trigger:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.toolbar-menu-trigger:active { background-color: var(--bg-pressed); color: var(--text-1); }
 
 
 /* Container style used inside floating tear-off toolbar windows. Zero  */

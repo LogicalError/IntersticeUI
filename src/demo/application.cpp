@@ -75,6 +75,7 @@ namespace interstice
         idManager.ReleaseStaticID(demo.dragGhostWindowID);
 
         idManager.ReleaseStaticID(demo.smallMenuID);
+        idManager.ReleaseStaticID(demo.cameraMenuID);
         idManager.ReleaseStaticID(demo.bigMenuID);
 
         idManager.ReleaseStaticID(demo.reorderTabsID);
@@ -109,6 +110,7 @@ namespace interstice
         demo.reorderWrappedHorzID = idManager.CreateStaticID();
         demo.reorderWrappedVertID = idManager.CreateStaticID();
         demo.reorderStringListID = idManager.CreateStaticID();
+        demo.cameraMenuID = idManager.CreateStaticID();
         demo.reorderFloatListID = idManager.CreateStaticID();
 
         InitializeToolbarDockState(toolbars.dockState, *this);
@@ -164,6 +166,21 @@ namespace interstice
 							enableAudio = !enableAudio;
                         });
                     SetTooltip(enableAudio ? "Audio on" : "Audio off");
+                }
+            });
+        toolbars.sides[(int)ToolbarSide::Top].push_back(ToolbarItem
+            {
+                .id = idManager.CreateStaticID(), .debugName = "Camera",
+                .renderBody = [this]()
+                {
+                    static const char* const kCameraViews[] = { "Perspective", "Orthographic", "Top", "Front", "Side" };
+                    if (BeginMenu(demo.cameraMenuID, kCameraViews[demo.cameraView]))
+                    {
+                        for (int i = 0; i < int(std::size(kCameraViews)); ++i)
+                            MenuItem(kCameraViews[i], [this, i]() { demo.cameraView = i; });
+                        EndMenu();
+                    }
+                    SetTooltip("Camera view");
                 }
             });
         toolbars.sides[(int)ToolbarSide::Left].push_back(ToolbarItem
@@ -364,7 +381,7 @@ namespace interstice
             src.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { Label("Enabled"); Field(demo.nodeEnabled, demo.nodeEnabled ? "ON" : "OFF"); },
+                .renderBody  = [this]() { Label("Enabled"); Switch(demo.nodeEnabled); },
                 .socketColor = kPurple
             });
 
@@ -480,12 +497,38 @@ namespace interstice
         hierarchyVizBgStyleRef      = theme.GetStyle("hierarchy-viz-bg");
         hierarchyVisibilityStyleRef = theme.GetStyle("hierarchy-visibility");
         logLevelIconStyleRef        = theme.GetStyle("log-level-icon");
-        logLevelToggleLeftStyleRef  = theme.GetStyle("log-level-toggle-left");
-        logLevelToggleMidStyleRef   = theme.GetStyle("log-level-toggle-mid");
-        logLevelToggleRightStyleRef = theme.GetStyle("log-level-toggle-right");
-        logCollapseToggleStyleRef   = theme.GetStyle("log-collapse-toggle");
+        logLevelWellStyleRef        = theme.GetStyle("log-level-well");
+        logLevelPillStyleRefs[0]    = theme.GetStyle("log-level-info");
+        logLevelPillStyleRefs[1]    = theme.GetStyle("log-level-warning");
+        logLevelPillStyleRefs[2]    = theme.GetStyle("log-level-error");
+        iconToggleStyleRef          = theme.GetStyle("icon-toggle");
         logMessageStyleRef          = theme.GetStyle("log-message");
         logCellStyleRef             = theme.GetStyle("log-cell");
+        logTableStyleRef            = theme.GetStyle("log-table");
+        filesToolbarStyleRef        = theme.GetStyle("files-toolbar");
+        typedFieldStyleRef          = theme.GetStyle("typed-field");
+        typedFieldInputStyleRef     = theme.GetStyle("typed-field-input");
+        typedFieldTypeStyleRef      = theme.GetStyle("typed-field-type");
+        inspectorPairHalfStyleRef   = theme.GetStyle("inspector-pair-half");
+        inspectorCaptionStyleRef    = theme.GetStyle("inspector-caption");
+        inspectorHeaderStyleRef     = theme.GetStyle("inspector-header");
+        inspectorObjectIconStyleRef = theme.GetStyle("inspector-object-icon");
+        inspectorObjectNamesStyleRef= theme.GetStyle("inspector-object-names");
+        inspectorObjectTitleStyleRef= theme.GetStyle("inspector-object-title");
+        inspectorObjectPathStyleRef = theme.GetStyle("inspector-object-path");
+        inspectorSearchRowStyleRef  = theme.GetStyle("inspector-search-row");
+        inspectorSectionStyleRef    = theme.GetStyle("inspector-section");
+        inspectorSectionFirstStyleRef= theme.GetStyle("inspector-section-first");
+        inspectorSectionBodyStyleRef= theme.GetStyle("inspector-section-body");
+        profilerHeaderStyleRef      = theme.GetStyle("profiler-header");
+        profilerRecordStyleRef      = theme.GetStyle("profiler-record");
+        profilerPauseStyleRef       = theme.GetStyle("profiler-pause");
+        profilerMsStyleRef          = theme.GetStyle("profiler-ms");
+        profilerFpsStyleRef         = theme.GetStyle("profiler-fps");
+        profilerPctCellStyleRef     = theme.GetStyle("profiler-pct-cell");
+        profilerPctTrackStyleRef    = theme.GetStyle("profiler-pct-track");
+        profilerPctFillStyleRef     = theme.GetStyle("profiler-pct-fill");
+        profilerPctTextStyleRef     = theme.GetStyle("profiler-pct-text");
         logCountBadgeStyleRef       = theme.GetStyle("log-count-badge");
         logDetailPaneStyleRef       = theme.GetStyle("log-detail-pane");
         logDetailTextStyleRef       = theme.GetStyle("log-detail-text");
@@ -821,16 +864,22 @@ namespace interstice
                 const char* errorSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#E5484D"/><path d="M9.2 7.8 L12 10.6 L14.8 7.8 L16.2 9.2 L13.4 12 L16.2 14.8 L14.8 16.2 L12 13.4 L9.2 16.2 L7.8 14.8 L10.6 12 L7.8 9.2 Z" fill="#ffffff"/></svg>)";
                 demo.errorIcon = textSystem->RegisterIconFromSVG("error", errorSvg, strlen(errorSvg));
 
-                // Monochrome variants (grey badge, same glyph) for the log
-                // panel's level-filter toggles.
-                const char* infoBwSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#8a8a8a"/><circle cx="12" cy="7.5" r="1.6" fill="#ffffff"/><rect x="10.4" y="10.5" width="3.2" height="7.5" rx="1.6" fill="#ffffff"/></svg>)";
-                demo.infoBwIcon = textSystem->RegisterIconFromSVG("info-bw", infoBwSvg, strlen(infoBwSvg));
+                // Monochrome glyphs that take the text (or icon) color: the log's level
+                // dots, the profiler's pause and the files view's list mode.
+                const char* dotSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#ffffff"/></svg>)";
+                demo.dotIcon = textSystem->RegisterIconFromSVG("dot", dotSvg, strlen(dotSvg));
 
-                const char* warningBwSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5 L22.5 21 L1.5 21 Z" fill="#8a8a8a"/><rect x="10.7" y="8.5" width="2.6" height="6.5" rx="1.3" fill="#ffffff"/><circle cx="12" cy="18" r="1.4" fill="#ffffff"/></svg>)";
-                demo.warningBwIcon = textSystem->RegisterIconFromSVG("warning-bw", warningBwSvg, strlen(warningBwSvg));
+                const char* pauseSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="4" width="4" height="16" rx="1" fill="#ffffff"/><rect x="14" y="4" width="4" height="16" rx="1" fill="#ffffff"/></svg>)";
+                demo.pauseIcon = textSystem->RegisterIconFromSVG("pause", pauseSvg, strlen(pauseSvg));
 
-                const char* errorBwSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#8a8a8a"/><path d="M9.2 7.8 L12 10.6 L14.8 7.8 L16.2 9.2 L13.4 12 L16.2 14.8 L14.8 16.2 L12 13.4 L9.2 16.2 L7.8 14.8 L10.6 12 L7.8 9.2 Z" fill="#ffffff"/></svg>)";
-                demo.errorBwIcon = textSystem->RegisterIconFromSVG("error-bw", errorBwSvg, strlen(errorBwSvg));
+                const char* listSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>)";
+                demo.listIcon = textSystem->RegisterIconFromSVG("list", listSvg, strlen(listSvg));
+
+                const char* moreSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2" fill="#ffffff"/><circle cx="12" cy="12" r="2" fill="#ffffff"/><circle cx="19" cy="12" r="2" fill="#ffffff"/></svg>)";
+                demo.moreIcon = textSystem->RegisterIconFromSVG("more", moreSvg, strlen(moreSvg));
+
+                const char* chevronRightSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>)";
+                demo.chevronRightIcon = textSystem->RegisterIconFromSVG("chevron-right", chevronRightSvg, strlen(chevronRightSvg));
 
                 // Folder icons for GridView demo — closed and open variants
                 demo.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
@@ -840,6 +889,9 @@ namespace interstice
                 demo.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-x.svg");
                                          
                 demo.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-3x3.svg");
+                demo.layoutGridIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
+                demo.boxIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
+                demo.chevronDownIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
                 demo.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-2x2-x.svg");
                                          
                 demo.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb.svg");
@@ -1143,6 +1195,22 @@ namespace interstice
                                 160  // minSecond
                             );
                         demo.dockInitialized = true;
+
+                        // --panel: bring that panel to the front of its tab group.
+                        auto selectStartPanel = [this](auto& self, DockNode* node) -> void {
+                            if (!node) return;
+                            for (size_t t = 0; t < node->panelIds.size(); ++t)
+                            {
+                                const auto it = demo.dockingLayout.panels.find(node->panelIds[t]);
+                                if (it != demo.dockingLayout.panels.end()
+                                    && std::find(m_startPanels.begin(), m_startPanels.end(), it->second.title) != m_startPanels.end())
+                                    node->selectedTab = int(t);
+                            }
+                            self(self, node->first.get());
+                            self(self, node->second.get());
+                        };
+                        if (!m_startPanels.empty())
+                            selectStartPanel(selectStartPanel, demo.dockingLayout.root.get());
                     }
 
                     demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");

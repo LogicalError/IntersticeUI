@@ -743,6 +743,9 @@ namespace interstice
         m_skribidiContext->pending_text_prev_id  = TextID::Invalid;
         m_textEditorElements.clear();
         m_readOnlyEditorElements.clear();
+
+        // A theme reload cleared the style manager's colors, the caret's among them.
+        m_skribidiContext->RegisterCaretColor();
         m_elementIdToTextIdMap.clear();
         m_textKeyToIdMap.clear();
         m_textEditorNumericModes.clear();

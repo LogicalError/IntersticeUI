@@ -1462,15 +1462,8 @@ namespace interstice
     
         // A resizable column's sizer takes the hover (it highlights like other dividers),
         // rather than the header cell under it.
-        // A selected row has an accent bar on its left, over its cells.
-        TEST_F(TableVirtualScrollTest, ASelectedRowHasAnAccentBar)
+        std::vector<interstice::ID> SelectionBars(const HeadlessGUIApp& app)
         {
-            interstice::TableState state;
-            app.Frame([&] { Emit(state); });
-            state.selectedRowID = state.RowIDInRange(3);
-            ASSERT_NE(state.selectedRowID, interstice::ID::Invalid());
-            app.Frame([&] { Emit(state); });
-
             std::vector<interstice::ID> bars;
             const auto& storage = app.elementStorage;
             for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
@@ -1478,6 +1471,20 @@ namespace interstice
                     if (e.styleRef.visualBoxStyleIndex == app.theme.tableRowBarStyleRef.visualBoxStyleIndex
                         && e.styleRef.layoutStyleIndex == app.theme.tableRowBarStyleRef.layoutStyleIndex)
                         bars.push_back(e.id);
+            return bars;
+        }
+
+        // With selectionBar on, a selected row has an accent bar on its left, over its cells.
+        TEST_F(TableVirtualScrollTest, ASelectedRowHasAnAccentBar)
+        {
+            interstice::TableState state;
+            state.selectionBar = true;
+            app.Frame([&] { Emit(state); });
+            state.selectedRowID = state.RowIDInRange(3);
+            ASSERT_NE(state.selectedRowID, interstice::ID::Invalid());
+            app.Frame([&] { Emit(state); });
+
+            const std::vector<interstice::ID> bars = SelectionBars(app);
             ASSERT_EQ(bars.size(), 1u) << "one bar, on the selected row";
 
             const IntRect bar = app.GetElementRect(bars[0]);
@@ -1486,6 +1493,30 @@ namespace interstice
             EXPECT_EQ(bar.x, row.x);
             EXPECT_EQ(bar.y, row.y);
             EXPECT_EQ(bar.h, row.h);
+        }
+
+        TEST_F(TableVirtualScrollTest, TablesHaveNoSelectionBarByDefault)
+        {
+            interstice::TableState state;
+            app.Frame([&] { Emit(state); });
+            state.selectedRowID = state.RowIDInRange(3);
+            app.Frame([&] { Emit(state); });
+            EXPECT_TRUE(SelectionBars(app).empty());
+        }
+
+        // A table's own row style replaces the striped pair on every row.
+        TEST_F(TableVirtualScrollTest, ARowStyleReplacesTheStripes)
+        {
+            interstice::TableState state;
+            state.rowStyle = app.theme.tableRowBarStyleRef;   // any style will do
+            app.Frame([&] { Emit(state); });
+            for (int row : { 0, 1 })
+            {
+                const auto ref = app.elementStorage.FindElementRefByID(state.RowIDInRange(row));
+                ASSERT_TRUE(ref.IsValid());
+                EXPECT_EQ(app.elementStorage.GetElementUnsafe(ref).styleRef.visualBoxStyleIndex,
+                          app.theme.tableRowBarStyleRef.visualBoxStyleIndex) << row;
+            }
         }
 
         TEST_F(TableVirtualScrollTest, AColumnSizerTakesTheHover)

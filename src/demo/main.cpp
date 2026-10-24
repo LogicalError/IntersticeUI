@@ -17,12 +17,16 @@ int main(int argc, char* argv[])
 
     // --ui-scale <factor>: zoom the UI on top of the OS display scale (e.g. 1.5).
     // --theme <palette>: start with another palette, e.g. themes/light.css.
+    // --panel <title>: bring that panel to the front of its tab group, e.g. Inspector
+    //                  (repeatable).
     for (int i = 1; i + 1 < argc; ++i)
     {
         if (std::string_view(argv[i]) == "--ui-scale")
             application->SetUIScale(std::strtof(argv[i + 1], nullptr));
         else if (std::string_view(argv[i]) == "--theme")
             application->RequestReloadTheme(argv[i + 1], application->GetGlobalFontScale());
+        else if (std::string_view(argv[i]) == "--panel")
+            application->AddStartPanel(argv[i + 1]);
     }
 
     int returnCode = EXIT_FAILURE;

@@ -568,6 +568,77 @@ namespace interstice
         return ran;
     }
 
+    bool GUIApplication::Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
+    {
+        // Inside a node row it sits at the right, by its socket, where fields end.
+        if (nodeRowFieldMinWidth > 0)
+        {
+            interstice::Element spacer{};
+            spacer.id       = idManager.AllocateDynamicID("switchSpacer");
+            spacer.styleRef = theme.emptyHorzStyleRef;
+            spacer.flags    = interstice::ElementFlags::NoInput;
+            RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
+        }
+
+        // Selected while on, so the track, knob and label restyle with it.
+        if (value) guiStateManager.Construction().PushSelected();
+
+        // The whole control takes the click; its parts are NoInput and share its state.
+        const interstice::ElementState state = guiStateManager.GetCurrentState(id);
+        interstice::Element control{};
+        control.id           = id;
+        control.state        = state;
+        control.styleRef     = style;
+        control.eventHandler = interstice::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
+        RegisterElement(std::move(control), std::move(constraints));
+        VERIFY(elementStorage.BeginChildren());
+        {
+            interstice::Element track{};
+            track.id       = idManager.AllocateDynamicID("switchTrack");
+            track.state    = state;
+            track.styleRef = theme.switchTrackStyleRef;
+            track.flags    = interstice::ElementFlags::NoInput;
+            const auto trackRef = RegisterElement(std::move(track), LayoutOverride{});
+
+            // The knob, inset evenly, at the track's left when off and its right when on.
+            const LayoutStyle* knobLayout = styleManager.GetLayoutStyle(theme.switchKnobStyleRef.layoutStyleIndex);
+            const int knobSize = (knobLayout && knobLayout->layoutData.width != LayoutData::kAutoSize)
+                               ? int(knobLayout->layoutData.width) : styleManager.Px(12);
+            // Drawn as a disc (a circle stroked as wide as it is), which stays round at
+            // this size, in the knob style's background color.
+            const interstice::ElementState knobState = value ? (state | interstice::ElementState::Selected) : state;
+            const VisualBoxStyle* knobBox = styleManager.GetVisualBoxStyle(theme.switchKnobStyleRef.visualBoxStyleIndex, knobState);
+            const VisualColorStyleIndex knobColor = knobBox ? knobBox->backgroundColorIndex : VisualColorStyleIndex::Invalid;
+            VERIFY(elementStorage.AddCustomDraw(trackRef,
+                [knobColor, knobSize, value](interstice::CustomDrawContext& ctx)
+                {
+                    const auto outer = ctx.ElementRect();
+                    const int inset = std::max(0, (outer.h - knobSize) / 2);
+                    const int x = value ? outer.x + outer.w - inset - knobSize : outer.x + inset;
+                    const float size = float(knobSize);
+                    ctx.RenderCircle({ x + knobSize / 2, outer.y + inset + knobSize / 2 }, size / 4.0f,
+                                     interstice::LineStyle{ .colorStyleIndex = knobColor, .lineWidth = size / 2.0f });
+                }));
+
+            if (!text.empty())
+            {
+                interstice::Element label{};
+                label.id       = idManager.AllocateDynamicID("switchLabel");
+                label.state    = value ? (state | interstice::ElementState::Selected) : state;
+                label.styleRef = theme.switchLabelStyleRef;
+                label.flags    = interstice::ElementFlags::NoInput;
+                label.textID   = textSystem->RegisterText(label.id, text, label.styleRef, label.state);
+                RegisterElement(std::move(label), LayoutOverride{});
+            }
+        }
+        VERIFY(elementStorage.EndChildren());
+
+        if (value) guiStateManager.Construction().PopSelected();
+        const bool modified = guiStateManager.Interaction().HasBeenClicked(id);
+        guiStateManager.SetModified(modified);
+        return modified;
+    }
+
     bool GUIApplication::Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
     {
 	    bool currentValue = value;
@@ -934,10 +1005,14 @@ namespace interstice
 
             const auto bgStyle    = theme.sliderFieldBgStyleRef.visualBoxStyleIndex;
             const auto fillStyle  = theme.sliderFieldFillStyleRef.visualBoxStyleIndex;
+            const auto edgeStyle  = theme.sliderFieldEdgeStyleRef.visualBoxStyleIndex;
             const auto trackState = track.state;
             auto& widthMap        = m_sliderFieldTrack->Widths();
+            const LayoutStyle* edgeLayout = styleManager.GetLayoutStyle(theme.sliderFieldEdgeStyleRef.layoutStyleIndex);
+            const int32_t edgeWidth = (edgeLayout && edgeLayout->layoutData.width != LayoutData::kAutoSize)
+                                    ? edgeLayout->layoutData.width : styleManager.Px(2);
             [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-                [bgStyle, fillStyle, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
+                [bgStyle, fillStyle, edgeStyle, edgeWidth, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
                 {
                     // Both halves draw the full rounded track, sub-clipped at fillX.
                     // Coords are inner-rect-local, so the outer top-left is (outer.pos - inner.pos).
@@ -961,6 +1036,14 @@ namespace interstice
                         ctx.RenderBox(baseRect,
                                       interstice::IntRect{ .position = { X, Y }, .size = { fillX, H } },
                                       fillStyle, trackState);
+                    // The fill ends in an edge line, kept inside the track.
+                    if (fillX > 0 && edgeWidth > 0)
+                    {
+                        const int32_t edgeX = std::clamp(fillX - edgeWidth, int32_t(0), std::max(0, W - edgeWidth));
+                        ctx.RenderBox(baseRect,
+                                      interstice::IntRect{ .position = { X + edgeX, Y }, .size = { edgeWidth, H } },
+                                      edgeStyle, trackState);
+                    }
                 });
 
             // Text overlays as flex children, centered by the track's justify-content.
@@ -989,8 +1072,8 @@ namespace interstice
                 RegisterElement(
                     interstice::Element {
                         .id       = valID,
-                        .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldTextStyleRef, valState),
-                        .styleRef = theme.sliderFieldTextStyleRef,
+                        .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldValueStyleRef, valState),
+                        .styleRef = theme.sliderFieldValueStyleRef,
                         .flags    = interstice::ElementFlags::NoInput,
                         .state    = valState
                     },

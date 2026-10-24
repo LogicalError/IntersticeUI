@@ -603,8 +603,8 @@ namespace interstice
                 // Drag-column backdrop (matches the row's alternating
                 // colour) so the dragged column isn't transparent over
                 // overlapped neighbour content.
-                const StyleRef rowStyle = (visualIdx % 2 == 0)
-                    ? theme.tableRowStyleRef : theme.tableRowAltStyleRef;
+                const StyleRef rowStyle = (state->rowStyle.layoutStyleIndex != LayoutStyleIndex::Invalid) ? state->rowStyle
+                    : (visualIdx % 2 == 0) ? theme.tableRowStyleRef : theme.tableRowAltStyleRef;
                 const interstice::ID bgID = idManager.AllocateDynamicID("_table_drag_col_bg");
                 interstice::ElementState bgState = guiStateManager.GetCurrentState(bgID);
                 if (!cellMode && rowSelected) bgState |= interstice::ElementState::Selected;
@@ -696,8 +696,9 @@ namespace interstice
 
         // Hot-path locals.
         const bool cellMode = emit.cellMode;
-        const StyleRef rowStyleEven = theme.tableRowStyleRef;
-        const StyleRef rowStyleOdd  = theme.tableRowAltStyleRef;
+        const bool     customRows   = state->rowStyle.layoutStyleIndex != LayoutStyleIndex::Invalid;
+        const StyleRef rowStyleEven = customRows ? state->rowStyle : theme.tableRowStyleRef;
+        const StyleRef rowStyleOdd  = customRows ? state->rowStyle : theme.tableRowAltStyleRef;
         const interstice::EventHandler& sharedHandler = emit.sharedRowHandler;
 
         // Section grid rows: [header] · [top spacer] · visible rows · [bottom spacer].
@@ -777,7 +778,7 @@ namespace interstice
         }
 
         // ---- Selected-row bars: over the cells, at the table's left edge ----
-        if (!cellMode && colStart == 0)
+        if (state->selectionBar && !cellMode && colStart == 0)
         {
             for (int visualIdx = firstVisible; visualIdx < lastVisible; visualIdx++)
             {

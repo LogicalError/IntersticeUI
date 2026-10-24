@@ -113,6 +113,10 @@ namespace interstice
             return textId;
         }
 
+        // Remembers the color, so tests can see which texts were recolored.
+        void SetTextColor(TextID textId, VisualColorStyleIndex color) override { textColors[textId] = color; }
+        std::unordered_map<TextID, VisualColorStyleIndex> textColors;
+
 
         std::string_view GetText(TextID textId) const override
         {

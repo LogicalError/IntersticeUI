@@ -155,11 +155,22 @@ namespace interstice
         frameGraphStylesInit = false;
     }
 
+    // Paused: the panel keeps showing the frame it was paused on.
+    static bool                                     profilerPaused = false;
+    static std::vector<Diagnostics::ProfileSample>  pausedSamples;
+    static double                                   pausedFrameMs  = 0.0;
+
     void Application::RenderProfilerTreePanel()
     {
-        auto&        collector = Diagnostics::MainThreadCollector();
-        const auto   samples   = Diagnostics::LastFrameSamples(collector);
-        const double frameMs   = Diagnostics::LastFrameTotalMs(collector);
+        auto& collector = Diagnostics::MainThreadCollector();
+        if (!profilerPaused)
+        {
+            const auto latest = Diagnostics::LastFrameSamples(collector);
+            pausedSamples.assign(latest.begin(), latest.end());
+            pausedFrameMs = Diagnostics::LastFrameTotalMs(collector);
+        }
+        const std::span<const Diagnostics::ProfileSample> samples = pausedSamples;
+        const double frameMs = pausedFrameMs;
 
         // Double-clicking a row jumps to the scope's source line. (The chevron
         // still toggles open/close on single click.)
@@ -190,7 +201,7 @@ namespace interstice
 
             std::snprintf(buf, sizeof(buf), "%.3f",  s.totalMs);   r.totalStr = buf;
             std::snprintf(buf, sizeof(buf), "%.3f",  s.selfMs);    r.selfStr  = buf;
-            std::snprintf(buf, sizeof(buf), "%.1f%%", r.pctFrame); r.pctStr   = buf;
+            std::snprintf(buf, sizeof(buf), "%.1f %%", r.pctFrame); r.pctStr  = buf;
             std::snprintf(buf, sizeof(buf), "%d",    s.callCount); r.callsStr = buf;
 
             // Open state lives in the persistent map; TreeCell gets a pointer into
@@ -225,14 +236,23 @@ namespace interstice
         // The table's flex-fill row (flex-basis:0) must be a direct child of the
         // dock-content column to bound to its height; otherwise it overflows.
 
-        // ---- Header: enable toggle + live frame total --------------------
-        BeginHorizontal(LayoutOverride{}.NoGrow().NoShrink());
+        // ---- Header: record and pause toggles, frame time and rate ----------
+        BeginHorizontal(idManager.AllocateDynamicID("profilerHeader"), profilerHeaderStyleRef,
+                        LayoutOverride{}.NoGrow().NoShrink());
             const bool enabled = Diagnostics::IsProfilingEnabled();
-            Toggle(enabled, enabled ? "Profiling: on" : "Profiling: off",
-                   [enabled](bool value) { Diagnostics::SetProfilingEnabled(value); });
-            char totalText[48];
-            std::snprintf(totalText, sizeof(totalText), "Frame: %.2f ms", frameMs);
-            Text(idManager.AllocateDynamicID(), totalText, theme.staticTextStyleRef);
+            Toggle(idManager.AllocateDynamicID("profilerRecord"), enabled, demo.dotIcon, "Recording",
+                   [](bool value) { Diagnostics::SetProfilingEnabled(value); },
+                   profilerRecordStyleRef, LayoutOverride{}.NoGrow().NoShrink());
+            SetTooltip("Record frame timings");
+            Toggle(idManager.AllocateDynamicID("profilerPause"), profilerPaused, demo.pauseIcon,
+                   [](bool value) { profilerPaused = value; },
+                   profilerPauseStyleRef, LayoutOverride{}.NoGrow().NoShrink());
+            SetTooltip("Hold the current frame");
+            char msText[32], fpsText[32];
+            std::snprintf(msText,  sizeof(msText),  "%.2f ms", frameMs);
+            std::snprintf(fpsText, sizeof(fpsText), "%.0f fps", frameMs > 0.0 ? 1000.0 / frameMs : 0.0);
+            Text(idManager.AllocateDynamicID("profilerMs"),  msText,  profilerMsStyleRef, LayoutOverride{}.FlexGrow(1));
+            Text(idManager.AllocateDynamicID("profilerFps"), fpsText, profilerFpsStyleRef);
         EndHorizontal();
 
         // ---- Frame graph: per-frame CPU build-time history ---------------
@@ -354,8 +374,13 @@ namespace interstice
                 auto makeBox = [&](color4f bg) -> StyleRef {
                     Style st;
                     st.SetOverflow(interstice::Overflow::Hidden);
-                    st.padding = interstice::BoxEdges(2);
+                    st.padding = interstice::BoxEdges(1, 5);
+                    // Rounded, with a 1 px gap below and after each bar (its margin; the
+                    // bar is sized that much smaller, so bars keep their places).
                     st.margin  = interstice::BoxEdges(0);
+                    st.margin.right  = 1;
+                    st.margin.bottom = 1;
+                    st.borderRadius  = interstice::BoxCorners(3);
                     for (int i = 0; i < Style::kStateCount; ++i)
                         st.states[i].backgroundColor = ColorStyle::Create(bg);
                     return styleManager.Register(st);
@@ -450,7 +475,8 @@ namespace interstice
                     box.styleRef = b.isWait     ? waitBarStyle
                                  : (key == s_selectedKey) ? selBarStyle
                                  : barStyles[size_t(b.colorIdx)];
-                    RegisterElement(std::move(box), LayoutOverride{}.FixedWidth(wpx).Height(rowH));
+                    const int gap = styleManager.Px(1);
+                    RegisterElement(std::move(box), LayoutOverride{}.FixedWidth(std::max(1, wpx - gap)).Height(rowH - gap));
 
                     VERIFY(elementStorage.BeginChildren());
                     if (wpx > styleManager.Px(26))
@@ -481,7 +507,7 @@ namespace interstice
         static std::vector<VirtualTableColumn> columns =
         {
             {
-                { .header = "Scope", .initialWidth = 240, .minWidth = 100, .maxWidth = 600, .locked = true },
+                { .header = "Scope", .initialWidth = 200, .minWidth = 100, .maxWidth = 600, .locked = true },
                 [this](int rowIdx) {
                     if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
                     ProfRow& r = rows[visibleIdx[rowIdx]];
@@ -491,28 +517,41 @@ namespace interstice
                 }
             },
             {
-                { .header = "Total ms", .initialWidth = 84, .minWidth = 60, .maxWidth = 160 },
+                { .header = "Total ms", .initialWidth = 72, .minWidth = 56, .maxWidth = 160 },
                 [this](int rowIdx) {
                     if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
                     Cell(rows[visibleIdx[rowIdx]].totalStr);
                 }
             },
             {
-                { .header = "Self ms", .initialWidth = 84, .minWidth = 60, .maxWidth = 160 },
+                { .header = "Self ms", .initialWidth = 72, .minWidth = 56, .maxWidth = 160 },
                 [this](int rowIdx) {
                     if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
                     Cell(rows[visibleIdx[rowIdx]].selfStr);
                 }
             },
             {
-                { .header = "% frame", .initialWidth = 72, .minWidth = 50, .maxWidth = 120 },
+                { .header = "% frame", .initialWidth = 108, .minWidth = 96, .maxWidth = 160 },
                 [this](int rowIdx) {
                     if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
-                    Cell(rows[visibleIdx[rowIdx]].pctStr);
+                    // A bar at the cell's left (so the bars line up), the number right-aligned.
+                    const ProfRow& r = rows[visibleIdx[rowIdx]];
+                    Cell([this, pct = r.pctFrame, text = r.pctStr]() {
+                        BeginHorizontal(idManager.AllocateDynamicID("pctTrack"), profilerPctTrackStyleRef,
+                                        LayoutOverride{}.NoGrow().NoShrink());
+                        const int trackW = styleManager.Px(36);
+                        const int fillW  = int(std::lround(std::clamp(pct, 0.0, 100.0) / 100.0 * trackW));
+                        BeginHorizontal(idManager.AllocateDynamicID("pctFill"), profilerPctFillStyleRef,
+                                        LayoutOverride{}.FixedWidth(fillW).NoGrow().NoShrink());
+                        EndHorizontal();
+                        EndHorizontal();
+                        Text(idManager.AllocateDynamicID("pctText"), text, profilerPctTextStyleRef,
+                             LayoutOverride{}.FlexGrow(1));
+                    });
                 }
             },
             {
-                { .header = "Calls", .initialWidth = 60, .minWidth = 40, .maxWidth = 100 },
+                { .header = "Calls", .initialWidth = 52, .minWidth = 40, .maxWidth = 100 },
                 [this](int rowIdx) {
                     if (rowIdx < 0 || rowIdx >= int(visibleIdx.size())) return;
                     Cell(rows[visibleIdx[rowIdx]].callsStr);
@@ -523,6 +562,7 @@ namespace interstice
         // Numbers right-aligned; set each frame as styles reload.
         for (size_t i = 1; i < columns.size(); ++i)
             columns[i].column.cellStyle = theme.tableCellNumberStyleRef;
+        columns[3].column.cellStyle = profilerPctCellStyleRef;
 
         // The flex-fill row (flex-basis:0) bounds the table to the panel height
         // so its body scrolls internally instead of overflowing the panel.

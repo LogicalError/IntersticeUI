@@ -43,5 +43,6 @@ namespace
         ASSERT_GT(drag.w, 0);
         EXPECT_EQ(label.x + label.w, drag.x + drag.w) << "the sizer runs along the labels' right edge";
         EXPECT_EQ(textField.x, floatField.x) << "the fields start in one column";
+        EXPECT_EQ(textField.x, label.x + label.w + app.styleManager.Px(2)) << "a 2 px gap between the sizer and the fields";
     }
 }

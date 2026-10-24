@@ -56,6 +56,7 @@ namespace interstice
         {
             gs.anyLabelHovered = false;
             gs.labelTextIDs.clear();
+            gs.labelRefs.clear();
             gs.maxLabelWidthThisFrame = 0;
         }
     }
@@ -99,9 +100,12 @@ namespace interstice
         }
 
         auto* state = groupState;
+        const size_t labelIndex = state->labelRefs.size();
+        state->labelRefs.push_back(labelRef);
         auto lineColor = m_theme.dividerHoverLineStyle;   // like the other dividers' hover
         [[maybe_unused]] auto cdRes = m_elementStorage.AddCustomDraw(labelRef,
-            [state, lineColor, edgeWidth = m_elementStorage.GetStyleManager().Px(4)](interstice::CustomDrawContext& ctx)
+            [state, labelIndex, storage = &m_elementStorage, lineColor,
+             edgeWidth = m_elementStorage.GetStyleManager().Px(4)](interstice::CustomDrawContext& ctx)
             {
                 if (!state->edgeHovered && !state->edgeDragging)
                     return;
@@ -110,7 +114,20 @@ namespace interstice
                 const int32_t edgeOffset = (int32_t)floor(edgeWidth / 2.0f);
                 const int32_t xRight = (outer.x + outer.w) - inner.x - edgeOffset;
                 const int32_t yTop   = outer.y - inner.y;
-                const int32_t yBot   = (outer.y + outer.h) - inner.y;
+                int32_t       yBot   = (outer.y + outer.h) - inner.y;
+
+                // One straight line down the group: run on to the next label in the same
+                // container, across the gap between the rows.
+                if (labelIndex + 1 < state->labelRefs.size())
+                {
+                    const ElementRef self = state->labelRefs[labelIndex];
+                    const ElementRef next = state->labelRefs[labelIndex + 1];
+                    const ElementRect* selfRect = storage->GetElementRectPtr(self);
+                    const ElementRect* nextRect = storage->GetElementRectPtr(next);
+                    if (selfRect && nextRect && storage->GetParentRef(self) == storage->GetParentRef(next)
+                        && nextRect->rect.y >= selfRect->rect.y + selfRect->rect.h)
+                        yBot = (outer.y + (nextRect->rect.y - selfRect->rect.y)) - inner.y;
+                }
 
                 interstice::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
                 ctx.RenderLine({ xRight, yTop }, { xRight, yBot }, style);

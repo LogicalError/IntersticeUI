@@ -42,9 +42,8 @@ namespace interstice
         bool IsFolder() const { return folderFlat >= 0; }
     };
     static std::vector<GridEntry> gridEntries;
-    // Icon (cell) size in px, driven by the slider under the grid. Its lowest
-    // value (minCell-1, computed per frame) means "list view" instead of a grid.
-    static int gridIconSize = 80;  // CSS pixels
+    // Grid of icons, or a list (the toolbar's grid/list toggles).
+    static bool filesListMode = false;
 
     // Folder tree left of the grid (flat VirtualTreeView rows). folderItems is
     // parallel to folderRows and holds each folder's files.
@@ -448,14 +447,6 @@ namespace interstice
 
     void Application::RenderFilesPanel()
     {
-        // Search box (top of panel).
-        BeginHorizontal(idManager.AllocateDynamicID("filesSearchRow"),
-                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
-        if (SearchField(filesSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
-                        interstice::LayoutOverride{}.FlexGrow(1)))
-            gridFilterDirty = true;
-        EndHorizontal();
-
         // Refilter on demand: only when the search changed or the grid mutated.
         if (gridFilterDirty)
         {
@@ -552,7 +543,7 @@ namespace interstice
             VERIFY(windowRegistry.Add(sRes.ref));
         }
 
-        // Right pane: virtualized file grid above an icon-size slider.
+        // Right pane: a toolbar (path, search, grid/list) over the virtualized file grid.
         // flex-fill-col (flex-basis:0) bounds it to its share of the split width,
         // otherwise the stretched cells floor its min width and it can't shrink.
         // MinHeight(0) bounds it to the split height so the grid scrolls.
@@ -560,41 +551,68 @@ namespace interstice
                       theme.flexFillColStyleRef,
                       interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
 
-        // Smallest grid cell where a minimum icon plus the filename line both fit
-        // (so the label never clips). The slider's lowest tick is one below that
-        // and switches to a single-column list instead of a grid.
-        const Style& gis    = theme.gridViewItemBaseStyle;
-        // The cell is laid out in pixels; the slider value gridIconSize is CSS pixels.
-        const Style gisPx   = styleManager.ToPixels(gis);
-        const int minIcon   = styleManager.Px(16);
-        const int lineH     = std::max(1, theme.gridViewItemLineHeight);   // measured
-        const int labelRoom = static_cast<int>(gisPx.padding.Vertical() + gisPx.borderWidths.Vertical()
-                                               + gisPx.iconTextGap) + lineH;
-        const int minCell   = minIcon + labelRoom;
-        const int maxCell   = 160;
-        const int listValue = int(std::ceil(float(minCell) / styleManager.GetUIScale())) - 1;   // the single "list view" tick
-        const bool listMode = (gridIconSize <= listValue);
-
-        const int cell = std::max(minCell, styleManager.Px(gridIconSize));
-        const int rowH = std::max(1, theme.gridViewListRowHeight);         // measured list row height
-
-        // Grid mode: clone the grid-item style with an icon scaled to fill the
-        // cell above its reserved label room (Register dedupes → cheap per frame).
-        StyleRef itemStyle{};
-        if (!listMode)
+        BeginHorizontal(idManager.AllocateDynamicID("filesToolbar"), filesToolbarStyleRef,
+                        interstice::LayoutOverride::Auto().NoShrink());
         {
-            Style def = gisPx;
-            def.iconSize = static_cast<uint16_t>(std::clamp(cell - labelRoom, minIcon, styleManager.Px(480)));
-            itemStyle = styleManager.Register(def, StyleUnits::Pixels);
+            // The open folder's path; a segment opens that folder.
+            std::vector<std::string> path;
+            std::vector<int>         pathFolders;
+            if (currentFolder >= 0 && currentFolder < int(folderRows.size()))
+            {
+                int depth = folderRows[currentFolder].depth + 1;
+                for (int f = currentFolder; f >= 0 && depth > 0; --f)
+                    if (folderRows[f].depth < depth)
+                    {
+                        depth = folderRows[f].depth;
+                        path.insert(path.begin(), folderRows[f].name);
+                        pathFolders.insert(pathFolders.begin(), f);
+                    }
+            }
+            Breadcrumb(idManager.AllocateDynamicID("filesPath"), path,
+                       [pathFolders](int segment) {
+                           currentFolder = pathFolders[size_t(segment)];
+                           folderTreeState.selectedRowID = interstice::ID::Invalid();   // re-selected from currentFolder
+                           gridFilterDirty = true;
+                       },
+                       interstice::LayoutOverride{}.FlexGrow(1));
+
+            if (SearchField(idManager.AllocateDynamicID("filesSearch"), filesSearch, demo.findIcon,
+                            TextEditBehavior::ContinuousUpdate,
+                            interstice::LayoutOverride{}.Width(styleManager.Px(150)).NoGrow()))
+                gridFilterDirty = true;
+            Toggle(idManager.AllocateDynamicID("filesGridMode"), !filesListMode, demo.layoutGridIcon,
+                   [](bool) { filesListMode = false; }, iconToggleStyleRef);
+            SetTooltip("Grid");
+            Toggle(idManager.AllocateDynamicID("filesListMode"), filesListMode, demo.listIcon,
+                   [](bool) { filesListMode = true; }, iconToggleStyleRef);
+            SetTooltip("List");
         }
+        EndHorizontal();
+
+        const bool listMode = filesListMode;
+        const int  cellW    = styleManager.Px(96);
+        const int  cellH    = styleManager.Px(86);
+        const int  rowH     = std::max(1, theme.gridViewListRowHeight);   // measured list row height
+
+        // Grid items: 34 px icons, a file's tinted by its kind (folders keep their color).
+        auto itemStyleFor = [this](IconID icon) -> StyleRef {
+            const char* color = (icon == demo.fileModelIcon) ? "--text-link"
+                              : (icon == demo.fileImageIcon) ? "--ok"
+                              :                                "--text-2";
+            Style def = styleManager.ToPixels(theme.gridViewItemBaseStyle);
+            def.iconSize = static_cast<uint16_t>(styleManager.Px(34));
+            for (auto& st : def.states)
+                st.iconColor = ColorStyle::Create(theme.GetColor(color));
+            return styleManager.Register(def, StyleUnits::Pixels);   // Register dedupes, so per frame is cheap
+        };
 
         // Only the visible rows are built, so the count can run into the thousands.
         // List mode forces one column by making the cell wider than any viewport.
         const interstice::int2 cellSize = listMode ? interstice::int2{ 1 << 20, rowH }
-                                            : interstice::int2{ cell, cell };
+                                            : interstice::int2{ cellW, cellH };
         VirtualGridView(idManager.AllocateDynamicID("filesGrid"), gridScrollState,
                         static_cast<int>(gridVisible.size()), cellSize,
-                        [this, listMode, itemStyle, cell, rowH](int i, interstice::ID itemID)
+                        [this, listMode, itemStyleFor, cellW, cellH, rowH](int i, interstice::ID itemID)
                         {
                             const int e = FilesEntryIndex(i);
                             if (e < 0 || e >= int(gridEntries.size())) return;
@@ -633,10 +651,10 @@ namespace interstice
                                 // viewport evenly, so the cells fill each row
                                 // instead of leaving a gap on the right.
                                 GridViewItem(itemID, name, icon, interstice::ElementState::None,
-                                             itemStyle,
+                                             itemStyleFor(icon),
                                              LayoutOverride{}.Size(
-                                                 std::max(cell, int(gridScrollState.cellStretchedW)),
-                                                 cell),
+                                                 std::max(cellW, int(gridScrollState.cellStretchedW)),
+                                                 cellH),
                                              renameBuffer);
                         },
                         nullptr,                   // selectedIndex (multi-select used instead)
@@ -644,26 +662,6 @@ namespace interstice
                         &gridDnD,
                         {}, {},                    // default scroll / row styles
                         LayoutOverride{}.FlexGrow(1));
-
-        // Bottom bar: small integer size slider, pushed to the right edge.
-        BeginHorizontal(idManager.AllocateDynamicID("filesIconSizeBar"),
-                        interstice::LayoutOverride::Auto().NoGrow());
-        {
-            interstice::ID spacerID = idManager.AllocateDynamicID("filesIconSizeSpacer");
-            interstice::Element spacer{};
-            spacer.id       = spacerID;
-            spacer.styleRef = theme.emptyHorzStyleRef;
-            spacer.flags    = interstice::ElementFlags::NoInput;
-            spacer.state    = guiStateManager.GetCurrentState(spacerID);
-            auto spRes = elementStorage.Add(std::move(spacer), interstice::LayoutOverride{}.FlexGrow(1));
-            VERIFY(spRes.status);
-            VERIFY(windowRegistry.Add(spRes.ref));
-        }
-        Slider(idManager.AllocateDynamicID("filesIconSizeSlider"),
-               gridIconSize, listValue, maxCell,
-               interstice::LayoutOverride{}.Width(styleManager.Px(150)).NoGrow());
-
-        EndHorizontal();
 
         EndVertical();
 

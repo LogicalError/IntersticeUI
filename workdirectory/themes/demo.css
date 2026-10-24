@@ -91,7 +91,27 @@
 .shortcut-cell:hover { background-color: var(--bg-header); }
 .shortcut-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
-/* Log rows: 24 high, text centred in the row. */
+/* The log list: rows inset 4 px, rounded, without stripes. */
+.log-table {
+    border-width: 0px;
+    border-radius: 0px;
+    margin: 0px;
+    padding: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    vertical-align: baseline;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    background-color: var(--bg-panel);
+    border-color: transparent;
+}
+
+/* Log rows: 24 high, text centred in the row. The row backdrop owns the
+   hover and selection backgrounds, so the rounded corners show. */
 .log-cell {
     margin: 0px;
     padding: 4px 8px;
@@ -104,8 +124,7 @@
     font-size: var(--font-size);
     background-color: transparent;
 }
-.log-cell:hover { background-color: var(--bg-header); }
-.log-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
+.log-cell::highlight(selected) { color: var(--text-1); }
 
 /* ---- logLevelIconStyle ---------------------------------------------------- */
 /* Level icon (info / warning / error) in the console log. The icon is drawn
@@ -126,127 +145,128 @@
 }
 .log-level-icon::highlight(selected) { color: var(--text-1); }
 
-/* ---- logLevelToggleStyle --------------------------------------------------- */
-/* Log panel level-filter toggle: .toggle with a small inline level icon next
-   to the count (SVGs are 24px natural — scale them down to text size). */
-.log-level-toggle-left {
-    border-width: 1px 0px 1px 1px;
-    border-radius: var(--radius-md-first);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
-    color: var(--text-2);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 0px 1px 1px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-left:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.log-level-toggle-left:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-left:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.log-level-toggle-left       ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-left:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-left:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-left:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-
-
-.log-level-toggle-mid {
-    border-width: 1px 0px 1px 0px;
-    border-radius: var(--radius-md-mid);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
-    color: var(--text-2);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 0px 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-mid:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.log-level-toggle-mid:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-mid:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.log-level-toggle-mid       ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-mid:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-mid:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-mid:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-
-
-.log-level-toggle-right {
-    border-width: 1px 1px 1px 0px;
-    border-radius: var(--radius-md-last);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
-    color: var(--text-2);
-    padding: 2px 4px 2px 4px;
-    margin: 1px 1px 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-icon-text-gap: 4px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.log-level-toggle-right:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.log-level-toggle-right:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-right:focus  { border-color: var(--accent); background-color: var(--bg-control); }
-.log-level-toggle-right       ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-right:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
-.log-level-toggle-right:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-level-toggle-right:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
-
-/* Standalone collapse-duplicates toggle in the console toolbar (collapse-all
-   icon, next to Clear). Mirrors the level toggles but with all four corners
-   rounded; the selected highlight marks "collapsing on". */
-.log-collapse-toggle {
+/* ---- Log level filter ------------------------------------------------------ */
+/* A well of level toggles: a colored dot and the level's count, pressed while
+   the level shows. */
+.log-level-well {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    margin: 0px;
     border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.log-level-error {
+    height: 20px;
+    border-width: 0px;
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
-    color: var(--text-2);
-    padding: 0px 6px;
-    margin: 1px 0px;
-    overflow: auto;
-    vertical-align: baseline;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    padding: 0px 8px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
     text-align: center;
-    font-size: var(--font-size);
+    text-wrap: nowrap;
+    font-family: monospace;
+    font-size: 11px;
     -interstice-icon-side: left;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;   /* icon-only — centre it vertically */
+    -interstice-icon-size: 7px;
+    -interstice-icon-text-gap: 5px;
+    -interstice-icon-color: var(--error);
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
-.log-collapse-toggle:hover  { border-color: var(--line-strong); background-color: var(--bg-active); }
-.log-collapse-toggle:active { border-color: var(--accent); background-color: var(--bg-pressed); }
-.log-collapse-toggle::highlight(selected)        { border-color: var(--line-strong);       background-color: var(--bg-pressed); }
-.log-collapse-toggle:hover ::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
+.log-level-error:hover { background-color: var(--bg-active); }
+.log-level-error::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--error); }
+.log-level-error:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--error); }
+.log-level-warning {
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    padding: 0px 8px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    font-family: monospace;
+    font-size: 11px;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 7px;
+    -interstice-icon-text-gap: 5px;
+    -interstice-icon-color: var(--warn);
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-level-warning:hover { background-color: var(--bg-active); }
+.log-level-warning::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--warn); }
+.log-level-warning:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--warn); }
+.log-level-info {
+    height: 20px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    padding: 0px 8px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-align: center;
+    text-wrap: nowrap;
+    font-family: monospace;
+    font-size: 11px;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 7px;
+    -interstice-icon-text-gap: 5px;
+    -interstice-icon-color: var(--info);
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.log-level-info:hover { background-color: var(--bg-active); }
+.log-level-info::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--info); }
+.log-level-info:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--info); }
+
+/* A square icon toggle in a panel toolbar (log collapse, files grid/list),
+   raised while on. */
+.icon-toggle {
+    width: 24px;
+    height: 24px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-3);
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    text-align: center;
+    -interstice-icon-size: 13px;
+    -interstice-vertical-text-align: middle;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.icon-toggle:hover { background-color: var(--bg-active); color: var(--text-1); }
+.icon-toggle::highlight(selected) { background-color: var(--bg-active); color: var(--text-1); }
 
 /* Console message text inside the collapse-aware message cell: fills the cell
    so the duplicate-count bubble is pushed to the right edge. (The cell's own
@@ -308,7 +328,7 @@
 }
 /* Selection highlight — without this the selection is made but painted with no
    colour (invisible). Any selectable text style needs a ::selection rule. */
-.log-detail-text::selection { color: var(--text-1); background-color: var(--bg-pressed); }
+.log-detail-text::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- Vertical-align demo boxes -------------------------------------------
    12 styles: 4 icon-sides × 3 block vertical alignments. Fixed min-height
@@ -415,4 +435,360 @@
     align-self: stretch;
     flex-grow: 0;
     flex-shrink: 0;
+}
+
+/* ---- Profiler header -------------------------------------------------------- */
+/* Recording toggle (a red dot while recording), pause toggle, then the frame
+   time and rate on the right. */
+.profiler-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 0px 0px 6px 0px;
+    margin: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.profiler-record {
+    height: 26px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
+    padding: 0px 10px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    font-size: var(--font-size);
+    -interstice-icon-side: left;
+    -interstice-icon-size: 8px;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-color: var(--text-3);
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.profiler-record:hover { background-color: var(--bg-active); }
+.profiler-record::highlight(selected) { color: var(--text-1); -interstice-icon-color: var(--error); }
+.profiler-record:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-1); -interstice-icon-color: var(--error); }
+.profiler-pause {
+    width: 26px;
+    height: 26px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-strong);
+    background-color: var(--bg-control);
+    color: var(--text-2);
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+    vertical-align: middle;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 12px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.profiler-pause:hover { background-color: var(--bg-active); }
+.profiler-pause::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
+.profiler-ms {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-align: end;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: var(--font-size);
+}
+.profiler-fps {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: var(--font-size);
+}
+
+/* The profiler's "% frame" cell: a bar, then the number right-aligned. As high
+   as .table-cell. */
+.profiler-pct-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0px;
+    padding: 3px 8px;
+    overflow: hidden;
+    background-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+}
+.profiler-pct-track {
+    width: 36px;
+    height: 4px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: 2px;
+    overflow: hidden;
+    background-color: var(--bg-active);
+    border-color: transparent;
+}
+.profiler-pct-fill {
+    height: 4px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: 2px;
+    background-color: var(--accent);
+    border-color: transparent;
+}
+.profiler-pct-text {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-align: end;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-2);
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 16px;   /* the text cells' line, so rows stay one height */
+}
+.profiler-pct-text::highlight(selected) { color: var(--text-1); }
+
+/* ---- Files panel -------------------------------------------------------------- */
+/* The bar over the file grid: path, search, grid/list toggles. */
+.files-toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0px 8px;
+    margin: 0px;
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--line-subtle);
+    background-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* ---- Inspector -------------------------------------------------------------- */
+/* The inspected object: an icon tile, its name and where it is. */
+.inspector-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0px 12px;
+    margin: 0px;
+    border-width: 0px 0px 1px 0px;
+    border-color: var(--line-subtle);
+    background-color: transparent;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.inspector-object-icon {
+    width: 28px;
+    height: 28px;
+    margin: 0px;
+    padding: 6px;   /* a 16 px icon in the tile */
+    border-width: 0px;
+    border-radius: var(--radius-lg);
+    background-color: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 16px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.inspector-object-names {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.inspector-object-title {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-wrap: nowrap;
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 600;
+}
+.inspector-object-path {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: 11px;
+}
+.inspector-search-row {
+    display: flex;
+    flex-direction: row;
+    margin: 0px;
+    padding: 8px 12px 4px 12px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* A section header: a chevron and the title; a click folds the section. */
+.inspector-section {
+    height: 30px;
+    align-self: stretch;
+    margin: 0px;
+    padding: 0px 12px;
+    border-width: 1px 0px 0px 0px;
+    border-radius: 0px;
+    border-color: var(--bg-control);
+    background-color: transparent;
+    color: var(--text-1);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-color: var(--text-3);
+    cursor: pointer;
+}
+.inspector-section:hover { background-color: var(--bg-header); }
+.inspector-section-first {
+    height: 30px;
+    align-self: stretch;
+    margin: 0px;
+    padding: 0px 12px;
+    border-width: 0px;
+    border-radius: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-1);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 6px;
+    -interstice-icon-color: var(--text-3);
+    cursor: pointer;
+}
+.inspector-section-first:hover { background-color: var(--bg-header); }
+.inspector-section-body {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin: 0px;
+    padding: 0px 12px 10px 12px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* A row of controls after a label: a button and its caption, several fields. */
+.inspector-pair-half {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-basis: 0;
+}
+.inspector-caption {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+
+/* A number field with its type after the value: the box holds a borderless
+   field and the type. */
+.typed-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px 8px 0px 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--line-subtle);
+    background-color: var(--bg-input);
+    overflow: hidden;
+    flex-basis: 0;
+}
+.typed-field-input {
+    height: 22px;
+    margin: 0px;
+    padding: 0px 8px;
+    border-width: 0px;
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--text-1);
+    font-family: monospace;
+    font-size: 11.5px;
+    text-align: start;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    overflow: hidden;
+    cursor: text;
+}
+.typed-field-input::selection { color: var(--text-1); background-color: var(--selection); }
+.typed-field-type {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    vertical-align: middle;
+    text-wrap: nowrap;
+    color: var(--text-3);
+    font-family: monospace;
+    font-size: 10px;
 }

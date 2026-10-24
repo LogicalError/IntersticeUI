@@ -97,11 +97,17 @@ namespace interstice
         StyleRef gradientEditorTabRowStyleRef {};   // colour-space tabs in GradientEditor
         StyleRef sliderFieldBgStyleRef {};   // unfilled half painted by the slider's custom-draw
         StyleRef sliderFieldFillStyleRef {}; // filled half painted by the slider's custom-draw
-        StyleRef sliderFieldTextStyleRef {}; // value/label text overlaid on the track
+        StyleRef sliderFieldTextStyleRef {}; // label text overlaid on the track
+        StyleRef sliderFieldValueStyleRef {};// value text overlaid on the track
+        StyleRef sliderFieldEdgeStyleRef {}; // the line ending the fill
         StyleRef sliderStyleRef {};          // Slider: thin line+knob element (no value text)
         StyleRef sliderGrooveStyleRef {};    // Slider: groove line painted by the custom-draw
         StyleRef sliderFillStyleRef {};      // Slider: the groove's filled part, up to the knob
         StyleRef sliderKnobStyleRef {};      // Slider: knob painted by the custom-draw
+        StyleRef switchStyleRef {};          // Switch: the control (track + label)
+        StyleRef switchTrackStyleRef {};     // Switch: the track; its knob is painted by the custom-draw
+        StyleRef switchKnobStyleRef {};      // Switch: the knob
+        StyleRef switchLabelStyleRef {};     // Switch: the label after the track
         // Per axis: the track element, and the thumb custom-drawn on top of it.
         StyleRef scrollbarVerticalTrackStyleRef   {};
         StyleRef scrollbarVerticalThumbStyleRef   {};
@@ -109,6 +115,11 @@ namespace interstice
         StyleRef scrollbarHorizontalThumbStyleRef {};
         int      scrollbarThickness = 12;         // .scrollbar-vertical width (read from CSS, at the UI scale)
         StyleRef colorSwatchStyleRef {};
+        StyleRef colorFieldStyleRef {};       // ColorField: swatch, hex and alpha in a row
+        StyleRef colorHexStyleRef {};         // ColorField: the hex field
+        StyleRef colorAlphaStyleRef {};       // ColorField: the alpha box (value and %)
+        StyleRef colorAlphaInputStyleRef {};  // ColorField: the alpha value in its box
+        StyleRef colorAlphaUnitStyleRef {};   // ColorField: the % after it
         StyleRef colorPickerStyleRef {};
         StyleRef colorPickerWheelStyleRef {};
         StyleRef colorPickerPreviewStyleRef {};
@@ -127,7 +138,8 @@ namespace interstice
         StyleRef tableFitContentBodyStyleRef {};
         StyleRef tableRowStyleRef {};     // row backdrop (odd rows)
         StyleRef tableRowAltStyleRef {};
-        StyleRef tableRowBarStyleRef {};  // accent bar on a selected row's left  // row backdrop (even rows, zebra stripe)
+        StyleRef tableRowBarStyleRef {};  // accent bar on a selected row's left
+        StyleRef listRowStyleRef {};      // rounded row without stripes (tree views, TableState::rowStyle)  // row backdrop (even rows, zebra stripe)
         // Row-mode tree cell: transparent hover/selected, so the row backdrop shows them.
         StyleRef treeTableCellRowModeStyleRef {};
         // The arrow's NoInput glyph, inside a full-row-height hit wrapper
@@ -273,6 +285,7 @@ namespace interstice
         // Tab close button "X"
         IconID tabCloseIcon = IconID::Invalid;
         IconID menuCheckIcon = IconID::Invalid; // marks the current/checked item in a menu
+        IconID dropdownArrowIcon = IconID::Invalid; // after a dropdown's text (menu triggers outside a menu bar)
 
         // Add / remove row buttons in the list & dictionary Field() helpers
         IconID addIcon    = IconID::Invalid;
@@ -292,6 +305,7 @@ namespace interstice
         interstice::VisualColorStyleIndex lineDarkStyle;
         interstice::VisualColorStyleIndex treeGuideLineStyle;
         interstice::VisualColorStyleIndex dividerHoverLineStyle; // a hovered divider drawn as a line (label sizer)
+        interstice::VisualColorStyleIndex nanTextColor;          // a number field's NaN
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
         interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows

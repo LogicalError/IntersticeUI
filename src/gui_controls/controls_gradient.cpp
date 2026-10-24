@@ -185,7 +185,35 @@ namespace interstice
             }
         });
 
-        RegisterControl(std::move(swatch), std::move(constraints));
+        const ElementRef swatchRef = RegisterControl(std::move(swatch), std::move(constraints));
+
+        // The stops, as diamonds on the bar's bottom edge: light with a dark outline.
+        {
+            std::array<float, Gradient::kMaxStops> offsets{};
+            const int stopCount = std::min(int(value.stopCount), Gradient::kMaxStops);
+            for (int i = 0; i < stopCount; i++)
+                offsets[size_t(i)] = value.stops[size_t(i)].GetOffset();
+            const VisualColorStyleIndex fill    = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--text-1", color4f{ 0.9f, 0.9f, 0.9f, 1.0f })));
+            const VisualColorStyleIndex outline = styleManager.RegisterColorStyle(ColorStyle::Create(theme.GetColor("--bg-app", color4f{ 0.05f, 0.05f, 0.05f, 1.0f })));
+            VERIFY(elementStorage.AddCustomDraw(swatchRef,
+                [offsets, stopCount, fill, outline, half = float(styleManager.Px(4)), edge = float(styleManager.Px(1))](CustomDrawContext& ctx)
+                {
+                    const auto outer = ctx.ElementRect();
+                    if (outer.w <= 0 || outer.h <= 0) return;
+                    auto diamond = [&ctx](float2 c, float r, VisualColorStyleIndex color) {
+                        ctx.RenderTriangle({ c.x - r, c.y }, { c.x, c.y - r }, { c.x + r, c.y }, color);
+                        ctx.RenderTriangle({ c.x - r, c.y }, { c.x + r, c.y }, { c.x, c.y + r }, color);
+                    };
+                    for (int i = 0; i < stopCount; i++)
+                    {
+                        // Kept inside the bar's ends so the end stops stay whole.
+                        const float x = float(outer.x) + half + offsets[size_t(i)] * float(std::max(0, outer.w) - 2.0f * half);
+                        const float2 center{ x, float(outer.y + outer.h) };
+                        diamond(center, half + edge, outline);
+                        diamond(center, half, fill);
+                    }
+                }));
+        }
 
         // ---- Editor popup ----
         if (editorIsOpen && ge.windowID != ID::Invalid())

@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
+#include <string>
 
 namespace
 {
@@ -905,9 +907,44 @@ namespace interstice
     // ColorField — swatch + optional picker popup
     // ---------------------------------------------------------------------------
 
+    namespace
+    {
+        // "#RRGGBB" of the color, clamped to 0..1.
+        std::string ColorHex(const color4f& c)
+        {
+            auto byte = [](float v) { return int(std::lround(std::clamp(v, 0.0f, 1.0f) * 255.0f)); };
+            char buf[8];
+            std::snprintf(buf, sizeof(buf), "#%02X%02X%02X", byte(c.r), byte(c.g), byte(c.b));
+            return buf;
+        }
+
+        // Reads "#RRGGBB" or "RRGGBB" into rgb; anything else is rejected.
+        bool ParseColorHex(std::string_view text, color4f& c)
+        {
+            if (!text.empty() && text.front() == '#') text.remove_prefix(1);
+            if (text.size() != 6) return false;
+            unsigned rgb = 0;
+            for (char ch : text)
+            {
+                const int digit = (ch >= '0' && ch <= '9') ? ch - '0'
+                                : (ch >= 'a' && ch <= 'f') ? ch - 'a' + 10
+                                : (ch >= 'A' && ch <= 'F') ? ch - 'A' + 10 : -1;
+                if (digit < 0) return false;
+                rgb = (rgb << 4) | unsigned(digit);
+            }
+            c.r = float((rgb >> 16) & 0xFF) / 255.0f;
+            c.g = float((rgb >> 8) & 0xFF) / 255.0f;
+            c.b = float(rgb & 0xFF) / 255.0f;
+            return true;
+        }
+    }
+
     bool GUIApplication::ColorField(color4f& value, bool allowHDR, LayoutOverride&& constraints)
     {
         const color4f before = value;
+
+        // A swatch (opens the picker), the color as hex, and its alpha in percent.
+        BeginHorizontal(idManager.AllocateDynamicID("color_field"), theme.colorFieldStyleRef, std::move(constraints));
 
         // ---- Swatch button ----
         ID swatchID = idManager.AllocateDynamicID("color_swatch");
@@ -948,7 +985,23 @@ namespace interstice
                 .styleRef        = theme.colorSwatchStyleRef,
                 .colorStyleIndex = swatchStyle
             },
-            std::move(constraints));
+            LayoutOverride{});
+
+        std::string hex = ColorHex(value);
+        if (Field(idManager.AllocateDynamicID("color_hex"), hex, TextEditBehavior::None, theme.colorHexStyleRef,
+                  LayoutOverride{}.FlexGrow(1)))
+            ParseColorHex(hex, value);
+
+        BeginHorizontal(idManager.AllocateDynamicID("color_alpha"), theme.colorAlphaStyleRef, LayoutOverride{});
+        int alphaPercent = int(std::lround(std::clamp(value.a, 0.0f, 1.0f) * 100.0f));
+        if (Field(idManager.AllocateDynamicID("color_alpha_value"), alphaPercent, TextEditBehavior::ContinuousUpdate,
+                  theme.colorAlphaInputStyleRef, NumericFieldConfig<int>{ .minVal = 0, .maxVal = 100 },
+                  LayoutOverride{}.FlexGrow(1)))
+            value.a = float(alphaPercent) / 100.0f;
+        Text(idManager.AllocateDynamicID("color_alpha_unit"), "%", theme.colorAlphaUnitStyleRef);
+        EndHorizontal();
+
+        EndHorizontal();
 
         // ---- Picker popup ----
         if (pickerIsOpen && cp.windowID != ID::Invalid())

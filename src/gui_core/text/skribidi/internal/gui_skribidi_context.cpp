@@ -49,6 +49,12 @@ namespace interstice
 
 	}
 
+	void SkribidiContext::RegisterCaretColor()
+	{
+		caretColorStyleIndex = styleManager->RegisterColorStyle(
+			ColorStyle::Create(color4f{ 1.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f }));
+	}
+
 	bool SkribidiContext::Initialize(GraphicsContext* inGraphicsContext, StyleManager* inStyleManager,
 	                                 TextAtlasManager* inTextAtlasManager,
 	                                 GUIStateManager* inGuiStateManager, IClipboard* inClipboard)
@@ -64,10 +70,7 @@ namespace interstice
 		this->textAtlasManager = inTextAtlasManager;
 		this->guiStateManager  = inGuiStateManager;
 
-		{
-			caretColorStyleIndex = styleManager->RegisterColorStyle(
-				ColorStyle::Create(color4f{ 1.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f }));
-		}
+		RegisterCaretColor();
 
 		atlas_scale = 0.25f;
 		view = view_t { .cx = 0, .cy = 0, .scale = 1, .zoom_level = 0 };

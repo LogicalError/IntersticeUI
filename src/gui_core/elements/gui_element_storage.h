@@ -142,13 +142,16 @@ namespace interstice
             return ElementStorageResult::Success;
         }
 
-        // Fails if not constructing or a BeginChildren is unmatched.
+        // Fails if not constructing. An unmatched BeginChildren is closed here, so the
+        // frame still completes, and reported as MissingEndChildren.
         [[nodiscard]] ElementStorageResult EndConstruction()
         {
             if (!m_constructionModeActive) return ElementStorageResult::NotConstructing;
-            if (!m_parentStack.empty()) return ElementStorageResult::MissingEndChildren;
+            const bool unclosed = !m_parentStack.empty();
+            while (!m_parentStack.empty())
+                (void)EndChildren();
             m_constructionModeActive = false;
-            return ElementStorageResult::Success;
+            return unclosed ? ElementStorageResult::MissingEndChildren : ElementStorageResult::Success;
         }
 
         [[nodiscard]] AddResult Add(Element&& element, LayoutOverride&& constraints = {});

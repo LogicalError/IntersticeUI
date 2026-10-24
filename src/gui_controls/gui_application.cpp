@@ -15,8 +15,10 @@
 #include <filesystem>
 #include <chrono>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace interstice
@@ -86,8 +88,12 @@ namespace interstice
         case ElementStorageResult::InvalidStyle:         message = "ElementStorage: an invalid style was used"; break;
         case ElementStorageResult::UnknownProblem:       message = "ElementStorage: unknown problem (should not happen)"; break;
         }
-        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
-        assert(false && "ElementStorageResult is not Success");
+        // A construction mistake (e.g. unbalanced Begin/End) is reported, not fatal: the
+        // storage recovers. Once per kind, as it likely repeats every frame.
+        static bool reported[int(ElementStorageResult::UnknownProblem) + 1] = {};
+        const int kind = int(result);
+        if (kind >= 0 && kind < int(std::size(reported)) && !std::exchange(reported[kind], true))
+            INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
     }
 
     void VERIFY(RegistryResult result)

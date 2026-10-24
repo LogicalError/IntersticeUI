@@ -335,6 +335,36 @@ namespace interstice
                     }
                     break;
 
+                // Dragging the field's label: the distance maps across the track, as a drag on it.
+                case EventType::LabelDragBegin:
+                    store.GetOrCreate<SliderState>(event.id).startValue = *value;
+                    return true;
+
+                case EventType::LabelDrag:
+                    if (auto* state = store.Get<SliderState>(event.id))
+                    {
+                        const float delta = float(event.state.scroll.x) * float(LabelDragSpeedScale(event.state)) * range / float(w);
+                        const float newValue = std::clamp(state->startValue + delta, minVal, maxVal);
+                        if (newValue != *value)
+                        {
+                            *value = newValue;
+                            if (onChanged) onChanged();
+                        }
+                        return true;
+                    }
+                    break;
+
+                case EventType::LabelDragEnd:
+                    return true;
+
+                case EventType::LabelDragCancel:
+                    if (auto* state = store.Get<SliderState>(event.id))
+                    {
+                        *value = state->startValue;
+                        if (onChanged) onChanged();
+                    }
+                    return true;
+
                 case EventType::KeyDown:
                     if ((guiStateManager.GetCurrentState(event.id) & ElementState::Focused) != ElementState::None)
                     {

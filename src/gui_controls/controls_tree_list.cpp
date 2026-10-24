@@ -642,10 +642,15 @@ namespace interstice
 
         const StyleRef tableStyle = (style != StyleRef{}) ? style : theme.treeViewStyleRef;
 
+        // A tree is a list: rounded rows without stripes, unless the caller picked its own.
+        const StyleRef callerRowStyle = state.rowStyle;
+        if (callerRowStyle.layoutStyleIndex == LayoutStyleIndex::Invalid)
+            state.rowStyle = theme.listRowStyleRef;
         VirtualTable(id, state,
                      std::span<VirtualTableColumn>(cols, 1),
                      int(visibleIdx.size()), 0, tableStyle,
                      std::move(constraints), /*showHeaders*/!header.empty());
+        state.rowStyle = callerRowStyle;
     }
 
 }

@@ -2,40 +2,203 @@
 
 #include <gui_core/diagnostics/gui_logging.h>
 
+#include <algorithm>
+
 static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
 
 //
 // This file is for testing and prototyping various GUI features related to inspector-like panels, such as field layouts, context menus, etc.
 //
 // Rows live in a label-keyed table so the search box can filter them by label;
-// the visible list is rebuilt only when the query changes.
+// the visible list is rebuilt only when the query changes. Rows are grouped in
+// collapsible sections under the inspected object's header.
 //
 
 namespace interstice
 {
     namespace
     {
+        enum InspectorSection { Controls, Numbers, ColorAndVectors, Lists, Menus, SectionCount };
+        const char* const kSectionTitles[SectionCount] = { "Controls", "Numbers", "Color & vectors", "Lists", "Menus" };
+
         struct InspectorRow
         {
-            const char*           label; // search key, shown by the row itself
-            std::function<void()> emit;  // emits the whole row (label + field + extras)
+            const char*           label;   // search key, shown by the row itself
+            InspectorSection      section;
+            std::function<void()> emit;    // emits the whole row (label + field + extras)
         };
         std::vector<InspectorRow> inspectorRows;
         std::vector<int>          inspectorVisible;
         std::string               inspectorSearch;
         bool                      inspectorFilterDirty = true;
+        bool                      inspectorSectionOpen[SectionCount] = { true, true, true, true, true };
+        ID                        inspectorLabelGroupID = ID::Invalid();
     }
 
     void Application::EnableInspectorPanel()
     {
         inspectorRows.clear();
-        auto add = [](const char* label, std::function<void()> emit) {
-            inspectorRows.push_back({ label, std::move(emit) });
+        InspectorSection section = Controls;
+        auto add = [&section](const char* label, std::function<void()> emit) {
+            inspectorRows.push_back({ label, section, std::move(emit) });
         };
 
-        // Menu / Popup example. The trigger sizes to its text — no grow/shrink.
-        add("Small Menu", [this]() {
-            if (BeginMenu(demo.smallMenuID, "Small Menu",
+        // A number field with its type after the value, e.g. "0.5  f32".
+        auto typed = [this](auto& value, const char* type) {
+            BeginHorizontal(idManager.AllocateDynamicID("typedField"), typedFieldStyleRef,
+                            LayoutOverride{}.FlexGrow(1));
+            Field(value, TextEditBehavior::ContinuousUpdate, typedFieldInputStyleRef, LayoutOverride{}.FlexGrow(1));
+            Text(idManager.AllocateDynamicID("typedFieldType"), type, typedFieldTypeStyleRef);
+            EndHorizontal();
+        };
+
+        // ---- Controls -------------------------------------------------------
+        section = Controls;
+        add("Button", [this]() {
+            Label("Button");
+            BeginHorizontal(idManager.AllocateDynamicID("buttonRow"), inspectorPairHalfStyleRef, LayoutOverride{}.FlexGrow(1));
+            Button("Click me", [this]() { demo.buttonClickCount++; }, LayoutOverride{}.NoGrow().NoShrink());
+            SetTooltip("Click to increment the counter");
+            if (BeginContextMenu())
+            {
+                MenuItem("Reset counter", [this]() { demo.buttonClickCount = 0; });
+                EndContextMenu();
+            }
+            Text(idManager.AllocateDynamicID("buttonClicks"), "Clicks: " + std::to_string(demo.buttonClickCount),
+                 inspectorCaptionStyleRef);
+            EndHorizontal();
+        });
+
+        add("Toggle", [this]() {
+            Label("Toggle");
+            if (Switch(demo.toggleValue, demo.toggleValue ? "On" : "Off"))
+            {
+                INTERSTICE_LOG_INFO(kLogDemo, "toggle");
+            }
+            SetTooltip("Switch on or off");
+        });
+
+        // Segmented alignment picker: the current choice is selected.
+        add("Alignment", [this]() {
+            Label("Alignment");
+            BeginButtonGroup(LayoutOverride{}.NoGrow());
+            {
+                const char* labels[] = { "Left", "Center", "Right" };
+                for (int i = 0; i < 3; ++i)
+                {
+                    if (demo.alignment == i) guiStateManager.Construction().PushSelected();
+                    Button(labels[i], [this, i]() { demo.alignment = i; });
+                    if (demo.alignment == i) guiStateManager.Construction().PopSelected();
+                }
+            }
+            EndButtonGroup();
+        });
+
+        // Independent style flags: each toggles on its own.
+        add("Style", [this]() {
+            Label("Style");
+            BeginToggleGroup(LayoutOverride{}.NoGrow());
+            {
+                Toggle(demo.bold,      "B");
+                Toggle(demo.italic,    "I");
+                Toggle(demo.underline, "U");
+            }
+            EndToggleGroup();
+        });
+
+        add("Text box", [this]() {
+            Label("Text box");
+            Field(demo.textBox1, TextEditBehavior::None);
+            SetTooltip("Single-line text field");
+            if (BeginContextMenu())
+            {
+                MenuItem("Cut",        "Ctrl+X", []() { INTERSTICE_LOG_INFO(kLogDemo, "Cut"); });
+                MenuItem("Copy",       "Ctrl+C", []() { INTERSTICE_LOG_INFO(kLogDemo, "Copy"); });
+                MenuItem("Paste",      "Ctrl+V", []() { INTERSTICE_LOG_INFO(kLogDemo, "Paste"); });
+                MenuItem("Select All", "Ctrl+A", []() { INTERSTICE_LOG_INFO(kLogDemo, "Select All"); });
+                EndContextMenu();
+            }
+        });
+
+        add("Text box 2", [this]() {
+            Label("Text box 2");
+            Field(demo.textBox2, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
+        });
+
+        add("Indeterminate", [this]() {
+            BeginIndeterminate();
+            DragLabel("Indeterminate");
+            Field(demo.floatValue);
+            EndIndeterminate();
+        });
+
+        // ---- Numbers --------------------------------------------------------
+        section = Numbers;
+        // One per row: drag the label to scrub the value, or type into the field.
+        add("Float",  [this, typed]() { DragLabel("Float");  typed(demo.floatValue,  "f32"); });
+        add("Double", [this, typed]() { DragLabel("Double"); typed(demo.doubleValue, "f64"); });
+        add("Int64",  [this, typed]() { DragLabel("Int64");  typed(demo.int64Value,  "i64"); });
+        add("Int32",  [this, typed]() { DragLabel("Int32");  typed(demo.int32Value,  "i32"); });
+        add("Int16",  [this, typed]() { DragLabel("Int16");  typed(demo.int16Value,  "i16"); });
+        add("Int8",   [this, typed]() { DragLabel("Int8");   typed(demo.int8Value,   "i8");  });
+        add("UInt64", [this, typed]() { DragLabel("UInt64"); typed(demo.uint64Value, "u64"); });
+        add("UInt32", [this, typed]() { DragLabel("UInt32"); typed(demo.uint32Value, "u32"); });
+        add("UInt16", [this, typed]() { DragLabel("UInt16"); typed(demo.uint16Value, "u16"); });
+        add("UInt8",  [this, typed]() { DragLabel("UInt8");  typed(demo.uint8Value,  "u8");  });
+
+        add("Float [0.25, 1]", [this]() {
+            DragLabel("Float [0.25, 1]");
+            Field(demo.clampedFloat, NumericFieldConfig<float>{.minVal = 0.25f, .maxVal = 1.0f });
+        });
+        add("UInt8 [50, 100]", [this]() {
+            DragLabel("UInt8 [50, 100]");
+            Field(demo.clampedUInt8, NumericFieldConfig<uint8_t>{.minVal = 50, .maxVal = 100 });
+        });
+
+        add("Volume", [this]() {
+            DragLabel("Volume");
+            SliderField(demo.sliderFieldValue, 0.0f, 100.0f, "Volume");
+        });
+
+        // NaN and the infinities, side by side.
+        add("Special NaN Inf", [this]() {
+            Label("Special");
+            BeginHorizontal(idManager.AllocateDynamicID("specialRow"), inspectorPairHalfStyleRef, LayoutOverride{}.FlexGrow(1));
+            Field(demo.nanFloat,    LayoutOverride{}.FlexGrow(1));
+            Field(demo.posInfFloat, LayoutOverride{}.FlexGrow(1));
+            Field(demo.negInfFloat, LayoutOverride{}.FlexGrow(1));
+            EndHorizontal();
+        });
+
+        // ---- Color & vectors ------------------------------------------------
+        section = ColorAndVectors;
+        add("Color",    [this]() { DragLabel("Color");    ColorField(demo.demoColor);       });
+        add("Gradient", [this]() { DragLabel("Gradient"); GradientField(demo.demoGradient); });
+        add("Int2", [this]() { DragLabel("Int2"); Field(demo.int2Value); });
+        add("Int3", [this]() { DragLabel("Int3"); Field(demo.int3Value); });
+        add("Int4", [this]() { DragLabel("Int4"); Field(demo.int4Value); });
+
+        // ---- Lists ----------------------------------------------------------
+        section = Lists;
+        add("String list", [this]() {
+            Label("String list");
+            Field(demo.reorderStringListID, demo.stringList, interstice::LayoutOverride{}.FlexGrow(1));
+        });
+        add("Float list", [this]() {
+            Label("Float list");
+            Field(demo.reorderFloatListID, demo.floatList, interstice::LayoutOverride{}.FlexGrow(1));
+        });
+        add("Dictionary", [this]() {
+            Label("Dictionary");
+            Field(demo.dictionary, interstice::LayoutOverride{}.FlexGrow(1));
+        });
+
+        // ---- Menus ----------------------------------------------------------
+        // The triggers size to their text, no grow or shrink.
+        section = Menus;
+        add("Small menu", [this]() {
+            Label("Small menu");
+            if (BeginMenu(demo.smallMenuID, "Open",
                           interstice::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 ID item1ID = idManager.AllocateDynamicID();
@@ -67,8 +230,9 @@ namespace interstice
         });
 
         // Scroll test: menu with 100 items
-        add("Big Menu", [this]() {
-            if (BeginMenu(demo.bigMenuID, "Big Menu",
+        add("Big menu", [this]() {
+            Label("Big menu");
+            if (BeginMenu(demo.bigMenuID, "Open",
                           interstice::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 for (int i = 0; i < 100; i++)
@@ -82,138 +246,8 @@ namespace interstice
             }
         });
 
-        add("Button", [this]() {
-            Label("Button");
-            static int prevDemoButtonClickCount = 0;
-            static std::string buttonText = "Button clicks: 0";
-            if (prevDemoButtonClickCount != demo.buttonClickCount)
-            {
-                buttonText = "Button clicks: " + std::to_string(demo.buttonClickCount);
-                prevDemoButtonClickCount = demo.buttonClickCount;
-            }
-            Button(buttonText, [this]() { demo.buttonClickCount++; });
-            SetTooltip("Click to increment the counter");
-            if (BeginContextMenu())
-            {
-                MenuItem("Reset counter", [this]() { demo.buttonClickCount = 0; });
-                EndContextMenu();
-            }
-        });
-
-        add("Toggle", [this]() {
-            Label("Toggle");
-            if (Field(demo.toggleValue, demo.toggleValue ? "ON" : "OFF"))
-            {
-                INTERSTICE_LOG_INFO(kLogDemo, "toggle");
-            }
-            SetTooltip("Toggle between ON and OFF");
-        });
-
-        // Segmented alignment picker — three buttons packed tight, current
-        // selection rendered with the ::highlight(selected) state.
-        add("Alignment", [this]() {
-            Label("Alignment");
-            BeginButtonGroup(LayoutOverride{}.NoGrow());
-            {
-                const char* labels[] = { "Left", "Center", "Right" };
-                for (int i = 0; i < 3; ++i)
-                {
-                    if (demo.alignment == i) guiStateManager.Construction().PushSelected();
-                    Button(labels[i], [this, i]() { demo.alignment = i; });
-                    if (demo.alignment == i) guiStateManager.Construction().PopSelected();
-                }
-            }
-            EndButtonGroup();
-        });
-
-        // Independent style flags — three toggles packed tight; each toggles
-        // on its own and shows the ::highlight(selected) state when on.
-        add("Style", [this]() {
-            Label("Style");
-            BeginToggleGroup(LayoutOverride{}.NoGrow());
-            {
-                Toggle(demo.bold,      "B");
-                Toggle(demo.italic,    "I");
-                Toggle(demo.underline, "U");
-            }
-            EndToggleGroup();
-        });
-
-        add("Text Box", [this]() {
-            Label("Text Box");
-            Field(demo.textBox1, TextEditBehavior::None);
-            SetTooltip("Single-line text field");
-            if (BeginContextMenu())
-            {
-                MenuItem("Cut",        "Ctrl+X", []() { INTERSTICE_LOG_INFO(kLogDemo, "Cut"); });
-                MenuItem("Copy",       "Ctrl+C", []() { INTERSTICE_LOG_INFO(kLogDemo, "Copy"); });
-                MenuItem("Paste",      "Ctrl+V", []() { INTERSTICE_LOG_INFO(kLogDemo, "Paste"); });
-                MenuItem("Select All", "Ctrl+A", []() { INTERSTICE_LOG_INFO(kLogDemo, "Select All"); });
-                EndContextMenu();
-            }
-        });
-
-        add("Text Box2", [this]() {
-            Label("Text Box2");
-            Field(demo.textBox2, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
-        });
-
-        add("Float Value",  [this]() { DragLabel("Float Value");  Field(demo.floatValue);  });
-        add("Double Value", [this]() { DragLabel("Double Value"); Field(demo.doubleValue); });
-        add("Int64 Value",  [this]() { DragLabel("Int64 Value");  Field(demo.int64Value);  });
-        add("Int32 Value",  [this]() { DragLabel("Int32 Value");  Field(demo.int32Value);  });
-        add("Int16 Value",  [this]() { DragLabel("Int16 Value");  Field(demo.int16Value);  });
-        add("Int8 Value",   [this]() { DragLabel("Int8 Value");   Field(demo.int8Value);   });
-        add("UInt64 Value", [this]() { DragLabel("UInt64 Value"); Field(demo.uint64Value); });
-        add("UInt32 Value", [this]() { DragLabel("UInt32 Value"); Field(demo.uint32Value); });
-        add("UInt16 Value", [this]() { DragLabel("UInt16 Value"); Field(demo.uint16Value); });
-        add("UInt8 Value",  [this]() { DragLabel("UInt8 Value");  Field(demo.uint8Value);  });
-
-        add("Float [0.25, 1]", [this]() {
-            DragLabel("Float [0.25, 1]");
-            Field(demo.clampedFloat, NumericFieldConfig<float>{.minVal = 0.25f, .maxVal = 1.0f });
-        });
-        add("UInt8 [50, 100]", [this]() {
-            DragLabel("UInt8 [50, 100]");
-            Field(demo.clampedUInt8, NumericFieldConfig<uint8_t>{.minVal = 50, .maxVal = 100 });
-        });
-
-        add("Volume", [this]() {
-            DragLabel("Volume");
-            SliderField(demo.sliderFieldValue, 0.0f, 100.0f, "Volume");
-        });
-
-        add("Color",    [this]() { DragLabel("Color");    ColorField(demo.demoColor);       });
-        add("Gradient", [this]() { DragLabel("Gradient"); GradientField(demo.demoGradient); });
-
-        add("Float (NaN)",  [this]() { DragLabel("Float (NaN)");  Field(demo.nanFloat);    });
-        add("Float (+Inf)", [this]() { DragLabel("Float (+Inf)"); Field(demo.posInfFloat); });
-        add("Float (-Inf)", [this]() { DragLabel("Float (-Inf)"); Field(demo.negInfFloat); });
-
-        add("Int2 Value", [this]() { DragLabel("Int2 Value"); Field(demo.int2Value); });
-        add("Int3 Value", [this]() { DragLabel("Int3 Value"); Field(demo.int3Value); });
-        add("Int4 Value", [this]() { DragLabel("Int4 Value"); Field(demo.int4Value); });
-
-        add("Indeterminate", [this]() {
-            BeginIndeterminate();
-            DragLabel("Indeterminate");
-            Field(demo.floatValue);
-            EndIndeterminate();
-        });
-
-        add("String List", [this]() {
-            Label("String List");
-            Field(demo.reorderStringListID, demo.stringList, interstice::LayoutOverride{}.FlexGrow(1));
-        });
-        add("Float List", [this]() {
-            Label("Float List");
-            Field(demo.reorderFloatListID, demo.floatList, interstice::LayoutOverride{}.FlexGrow(1));
-        });
-        add("Dictionary", [this]() {
-            Label("Dictionary");
-            Field(demo.dictionary, interstice::LayoutOverride{}.FlexGrow(1));
-        });
-
+        if (inspectorLabelGroupID == ID::Invalid())
+            inspectorLabelGroupID = idManager.CreateStaticID();
         inspectorFilterDirty = true;
     }
 
@@ -225,9 +259,32 @@ namespace interstice
 
     void Application::RenderInspectorPanel()
     {
-        // Search box (top of panel).
+        // ---- The inspected object: icon, name and where it is ----------------
+        BeginHorizontal(idManager.AllocateDynamicID("inspectorHeader"), inspectorHeaderStyleRef,
+                        interstice::LayoutOverride::Auto().NoShrink());
+        {
+            interstice::Element icon{};
+            icon.id       = idManager.AllocateDynamicID("inspectorObjectIcon");
+            icon.iconID   = demo.boxIcon;
+            icon.flags    = interstice::ElementFlags::NoInput;
+            icon.state    = guiStateManager.GetCurrentState(icon.id);
+            icon.styleRef = inspectorObjectIconStyleRef;
+            RegisterElement(std::move(icon), LayoutOverride{});
+
+            BeginVertical(idManager.AllocateDynamicID("inspectorObjectNames"), inspectorObjectNamesStyleRef,
+                          LayoutOverride{}.FlexGrow(1));
+            Text(idManager.AllocateDynamicID("inspectorObjectName"), "Sphere", inspectorObjectTitleStyleRef);
+            Text(idManager.AllocateDynamicID("inspectorObjectPath"), "Mesh · Scene / Meshes / Meshes", inspectorObjectPathStyleRef);
+            EndVertical();
+
+            Button(idManager.AllocateDynamicID("inspectorObjectMore"), demo.moreIcon, {}, []() {}, iconToggleStyleRef);
+            SetTooltip("Object options");
+        }
+        EndHorizontal();
+
+        // Search box: filters the rows by label.
         BeginHorizontal(idManager.AllocateDynamicID("inspectorSearchRow"),
-                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
+                        inspectorSearchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
         if (SearchField(inspectorSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
                         interstice::LayoutOverride{}.FlexGrow(1)))
             inspectorFilterDirty = true;
@@ -244,10 +301,33 @@ namespace interstice
             inspectorFilterDirty = false;
         }
 
-        BeginLabelGroup(/*defaultWidth=*/120, /*minWidth=*/40, /*maxWidth=*/300);
-        for (int i : inspectorVisible)
-            inspectorRows[i].emit();
-        EndLabelGroup();
+        // ---- Sections: a header that folds it, then its rows ------------------
+        bool firstSection = true;
+        for (int s = 0; s < SectionCount; ++s)
+        {
+            const auto rowInSection = [s](int i) { return inspectorRows[size_t(i)].section == s; };
+            if (std::none_of(inspectorVisible.begin(), inspectorVisible.end(), rowInSection))
+                continue;
+
+            const bool open = inspectorSectionOpen[s];
+            Button(idManager.AllocateDynamicID("inspectorSection"),
+                   open ? demo.chevronDownIcon : demo.chevronRightIcon, kSectionTitles[s],
+                   [s]() { inspectorSectionOpen[s] = !inspectorSectionOpen[s]; },
+                   firstSection ? inspectorSectionFirstStyleRef : inspectorSectionStyleRef,
+                   LayoutOverride{}.NoGrow().NoShrink());
+            firstSection = false;
+            if (!open)
+                continue;
+
+            BeginVertical(idManager.AllocateDynamicID("inspectorSectionBody"), inspectorSectionBodyStyleRef,
+                          LayoutOverride::Auto().NoShrink());
+            BeginLabelGroup(inspectorLabelGroupID, /*defaultWidth=*/116, /*minWidth=*/40, /*maxWidth=*/300);
+            for (int i : inspectorVisible)
+                if (rowInSection(i))
+                    inspectorRows[size_t(i)].emit();
+            EndLabelGroup();
+            EndVertical();
+        }
     }
 
 }

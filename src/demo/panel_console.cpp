@@ -299,7 +299,7 @@ namespace interstice
             logFilterDirty = true;
         }
 
-        // Top row: clear button | search box | collapse toggle | level toggles.
+        // Top row: clear button | search box | level toggles | collapse toggle.
         BeginHorizontal(idManager.AllocateDynamicID("logSearchRow"),
                         theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
         {
@@ -322,22 +322,13 @@ namespace interstice
                             interstice::LayoutOverride{}.FlexGrow(1)))
                             logFilterDirty = true;
 
-            // Collapse-duplicates toggle: fold identical lines into one + count.
-            Toggle(idManager.AllocateDynamicID("logCollapse"),
-                   logCollapse, demo.iconCollapseAllIcon,
-                   [](bool on) { logCollapse = on; logFilterDirty = true; },
-                   logCollapseToggleStyleRef,
-                   interstice::LayoutOverride{}.NoGrow().NoShrink());
-            SetTooltip("Collapse duplicate lines");
-
-            // Level toggles (icon + total count). onToggle fires during end-of-frame
-            // input dispatch, so the refilter picks the change up next frame. The
-            // gap-0 wrapper packs them tight inside the gapped search row.
+            // Level toggles: a colored dot and the level's count, pressed while the
+            // level shows. onToggle fires during end-of-frame input dispatch, so the
+            // refilter picks the change up next frame.
             BeginHorizontal(idManager.AllocateDynamicID("logLevelToggles"),
-                theme.toggleGroupStyleRef,
+                logLevelWellStyleRef,
                 interstice::LayoutOverride{}.NoGrow().NoShrink());
             {
-                const IconID bwIcons[3] = { demo.infoBwIcon, demo.warningBwIcon, demo.errorBwIcon };
                 const char*  levelTip[3] = { "Show or hide info messages",
                                              "Show or hide warnings",
                                              "Show or hide errors" };
@@ -345,16 +336,22 @@ namespace interstice
                 for (int lvl = levelCount; lvl >= 0; --lvl) // error, warning, info — most severe first
                 {
                     Toggle(idManager.AllocateDynamicID("logLevelToggle"),
-                        !logShowLevel[lvl], bwIcons[lvl], logCountText[lvl],
-                        [lvl](bool on) { logShowLevel[lvl] = !on; logFilterDirty = true; },
-                        (lvl == levelCount) ? logLevelToggleLeftStyleRef :
-                        (lvl == 0) ? logLevelToggleRightStyleRef
-                        : logLevelToggleMidStyleRef,
+                        logShowLevel[lvl], demo.dotIcon, logCountText[lvl],
+                        [lvl](bool on) { logShowLevel[lvl] = on; logFilterDirty = true; },
+                        logLevelPillStyleRefs[lvl],
                         interstice::LayoutOverride{}.NoGrow().NoShrink());
                     SetTooltip(levelTip[lvl]);
                 }
             }
             EndHorizontal();
+
+            // Collapse-duplicates toggle: fold identical lines into one + count.
+            Toggle(idManager.AllocateDynamicID("logCollapse"),
+                   logCollapse, demo.iconCollapseAllIcon,
+                   [](bool on) { logCollapse = on; logFilterDirty = true; },
+                   iconToggleStyleRef,
+                   interstice::LayoutOverride{}.NoGrow().NoShrink());
+            SetTooltip("Collapse duplicate lines");
         }
         EndHorizontal();
 
@@ -396,9 +393,10 @@ namespace interstice
         BeginHorizontal(idManager.AllocateDynamicID("consoleFill"),
                         theme.flexFillRowStyleRef,
                         LayoutOverride::Auto().FlexGrow(1));
+        logTableState.rowStyle = theme.listRowStyleRef;
         VirtualTable(idManager.AllocateDynamicID("consoleLog"),
                      logTableState,
-                     columnSpan, int(logVisible.size()), 0, theme.tableStyleRef,
+                     columnSpan, int(logVisible.size()), 0, logTableStyleRef,
                      LayoutOverride{}.FlexGrow(1),
                      /*showHeaders*/ false,
                      /*cellStyle*/ logCellStyleRef,

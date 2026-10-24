@@ -35,6 +35,7 @@ namespace interstice
             bool    anyLabelHovered = false; // transient: set during construction if any label has hover
             std::vector<interstice::TextID> labelTextIDs; // transient: rebuilt each frame for auto-size
             int32_t maxLabelWidthThisFrame = 0;    // transient: accumulator for non-resizable auto-width
+            std::vector<interstice::ElementRef> labelRefs; // transient: this frame's labels, in order
         };
 
         LabelGroupSubsystem(FramePipeline& frame,

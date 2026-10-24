@@ -337,6 +337,11 @@ namespace interstice
         bool        CommandButton(CommandID command, StyleRef style, LayoutOverride&& constraints = {});
         inline bool CommandButton(CommandID command, LayoutOverride&& constraints = {}) { return CommandButton(command, theme.controls->button, std::move(constraints)); }
 
+        // An on/off switch (track and knob) with an optional label after it, e.g. "On".
+        bool        Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool Switch(ID id, bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(id,                            value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+        inline bool Switch(       bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(idManager.AllocateDynamicID(), value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+
         bool        Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            text,               onToggle, theme.controls->toggle, std::move(constraints)); }
         inline bool Toggle(ID id, bool value, IconID icon,                        std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            std::string_view{}, onToggle, style,                  std::move(constraints)); }
@@ -783,7 +788,13 @@ namespace interstice
                     constraints.FlexGrow(1).MinWidth(nodeRowFieldMinWidth);
                 bool modified = false;
                 RegisterControl(interstice::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                                [this, &modified, &value, textEditBehavior, config](interstice::Element& element) { return textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config); },
+                                [this, &modified, &value, textEditBehavior, config](interstice::Element& element) {
+                                    const TextID textID = textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config);
+                                    if constexpr (std::is_floating_point_v<T>)
+                                        if (std::isnan(value))
+                                            textSystem->SetTextColor(textID, theme.nanTextColor);   // NaN reads as a warning
+                                    return textID;
+                                },
                                 std::move(constraints));
                 guiStateManager.SetModified(modified);
                 return modified;

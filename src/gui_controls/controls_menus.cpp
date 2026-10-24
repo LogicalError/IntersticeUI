@@ -121,8 +121,13 @@ namespace interstice
             return false;
         };
 
+        // A dropdown shows an arrow after its text; a menu-bar item doesn't.
+        const IconID arrow = isMenuBar ? IconID::Invalid : application.theme.dropdownArrowIcon;
         application.RegisterControl(interstice::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
-                            text, std::move(constraints));
+                            [&application, arrow, text](interstice::Element& element) {
+                                return application.textSystem->RegisterText(element.id, arrow, text, element.styleRef, element.state);
+                            },
+                            std::move(constraints));
 
         // Snapshot the trigger's final screen rect after layout; next frame's BeginMenu
         // uses it to match the popup width and to detect side-flipped placement.

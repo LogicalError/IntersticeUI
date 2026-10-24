@@ -750,7 +750,7 @@ namespace interstice
         ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << demoFile.rdbuf();
         const StyleSheet s = ParseStyleSheet(ss.view());
 
-        for (const char* name : { "log-level-toggle-left", "log-level-toggle-mid", "log-level-toggle-right", "icon-label" })
+        for (const char* name : { "log-level-error", "log-level-warning", "log-level-info", "icon-label" })
         {
             const Style* style = s.GetStyle(name);
             ASSERT_NE(style, nullptr) << name;
@@ -814,9 +814,9 @@ namespace interstice
         EXPECT_EQ(layout("scrollbar-horizontal").height, 12);
         EXPECT_EQ(layout("table-separator").width, 2);
         EXPECT_EQ(layout("menu-separator").height, 1);
-        EXPECT_EQ(layout("toolbar-thumb-horz").width, 5);
+        EXPECT_EQ(layout("toolbar-thumb-horz").width, 6);
         EXPECT_EQ(layout("toolbar-thumb-horz").minHeight, 10);
-        EXPECT_EQ(layout("toolbar-thumb-vert").height, 5);
+        EXPECT_EQ(layout("toolbar-thumb-vert").height, 6);
         EXPECT_EQ(layout("toolbar-thumb-vert").minWidth, 10);
     }
 

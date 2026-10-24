@@ -245,6 +245,8 @@ namespace interstice
 		}
 
 		VisualColorStyleIndex   caretColorStyleIndex = VisualColorStyleIndex::Invalid;
+		// Registers the caret's color; again after the style manager drops its colors (a theme reload).
+		void RegisterCaretColor();
 
 		GUIRenderer*			guiRenderer      = nullptr;
 		StyleManager*			styleManager     = nullptr;
