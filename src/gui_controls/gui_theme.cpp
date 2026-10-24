@@ -114,6 +114,10 @@ namespace interstice
             // Drag-handle grip for reorderable / tree-list thumbs; sized by -interstice-icon-size.
             const char* dragHandleSvg = R"(<svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M144-264v-72h672v72H144Zm0-180v-72h672v72H144Zm0-180v-72h672v72H144Z" fill="#666666"/></svg>)";
             dragHandleIcon = textSystem->RegisterIconFromSVG("drag-handle", dragHandleSvg, strlen(dragHandleSvg));
+
+            // Magnifier for the command search.
+            const char* searchSvg = R"(<svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M765-144 526-383q-30 22-65.79 34.5-35.79 12.5-76.18 12.5Q284-336 214-406t-70-170q0-100 70-170t170-70q100 0 170 70t70 170.03q0 40.39-12.5 76.18Q599-464 577-434l239 239-51 51ZM384-408q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z" fill="#909090"/></svg>)";
+            searchIcon = textSystem->RegisterIconFromSVG("search", searchSvg, strlen(searchSvg));
         }
 
         {
@@ -400,14 +404,21 @@ namespace interstice
         nodeViewOverlayButtonStyleRef     = registerCSS("node-view-overlay-button");
         nodeViewMinimapStyleRef           = registerCSS("node-view-minimap");
         breadcrumbStyleRef                = registerCSS("breadcrumb");
+        breadcrumbSegmentStyleRef         = registerCSS("breadcrumb-segment");
+        breadcrumbCurrentStyleRef         = registerCSS("breadcrumb-current");
+        breadcrumbSeparatorStyleRef       = registerCSS("breadcrumb-separator");
         axisLabelStyleRefs[0]             = registerCSS("axis-label-x");
         axisLabelStyleRefs[1]             = registerCSS("axis-label-y");
         axisLabelStyleRefs[2]             = registerCSS("axis-label-z");
         axisLabelStyleRefs[3]             = registerCSS("axis-label-w");
         vectorComponentStyleRef           = registerCSS("vector-component");
-        breadcrumbSegmentStyleRef         = registerCSS("breadcrumb-segment");
-        breadcrumbCurrentStyleRef         = registerCSS("breadcrumb-current");
-        breadcrumbSeparatorStyleRef       = registerCSS("breadcrumb-separator");
+        statusBarStyleRef                 = registerCSS("status-bar");
+        statusTextStyleRef                = registerCSS("status-text");
+        commandSearchStyleRef             = registerCSS("command-search");
+        commandSearchHintStyleRef         = registerCSS("command-search-hint");
+        commandSearchKeyStyleRef          = registerCSS("command-search-key");
+        commandSearchListStyleRef         = registerCSS("command-search-list");
+        commandSearchCurrentRowStyleRef   = registerCSS("command-search-current-row");
         nodeRowStyleRef                   = registerCSS("node-row");
         nodeBodyCenterStyleRef            = registerCSS("node-body-center");
         nodeSocketStyleRef                = registerCSS("node-socket");

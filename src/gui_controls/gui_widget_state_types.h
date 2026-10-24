@@ -5,6 +5,7 @@
 #include <gui_core/state/gui_drag_drop_state.h>   // DragVisualizer
 
 #include <functional>
+#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -17,6 +18,17 @@ namespace interstice
         std::unordered_set<interstice::ID> selectedIDs;
         interstice::ID lastClickedID = interstice::ID::Invalid();
         std::vector<interstice::ID> orderedItemIDs; // transient: rebuilt each frame for Shift+Click range selection
+    };
+
+    // ---- Command search (user-owned; see GUIApplication::CommandSearch) ----
+    struct CommandSearchState {
+        std::string query;
+        std::string hint = "Search or run a command"; // shown while the query is empty
+        std::string shortcut;                         // keycap at the right, e.g. the key that focuses the search
+        int         current = 0;                      // highlighted match, moved by Up / Down
+        bool        focusRequested = false;           // set by FocusCommandSearch, taken next frame
+        bool        ranCommand = false;               // a command ran since the last CommandSearch call
+        interstice::ID listWindowID = interstice::ID::Invalid();
     };
 
     // ---- Drop position for tree reorder drops ----

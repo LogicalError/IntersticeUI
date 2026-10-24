@@ -680,6 +680,24 @@ namespace interstice
         inline bool Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(id, segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
         inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(idManager.AllocateDynamicID(), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
 
+        // ---- Status bar: a strip of short status texts, usually along a window's bottom edge ----
+        // Give one StatusText FlexGrow(1) to push the texts after it to the right.
+        bool        BeginStatusBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool BeginStatusBar(ID id, LayoutOverride&& constraints = {}) { return BeginStatusBar(id, theme.statusBarStyleRef, std::move(constraints)); }
+        inline bool BeginStatusBar(       LayoutOverride&& constraints = {}) { return BeginStatusBar(idManager.AllocateDynamicID(), theme.statusBarStyleRef, std::move(constraints)); }
+        void        EndStatusBar();
+        void        StatusText(ID id, std::string_view text, LayoutOverride&& constraints = {});
+        inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}) { StatusText(idManager.AllocateDynamicID(), text, std::move(constraints)); }
+
+        // ---- Command search: finds and runs commandManager's commands ----
+        // Focused, it lists the commands whose description contains the query; Up / Down
+        // move through them and Enter or a click runs one. Escape leaves the search.
+        // `state` must outlive the frame. Returns true when a command ran since the last call.
+        bool        CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints = {});
+        inline bool CommandSearch(       CommandSearchState& state, LayoutOverride&& constraints = {}) { return CommandSearch(idManager.AllocateDynamicID(), state, std::move(constraints)); }
+        // Puts the keyboard in the search next frame; bind it to a command such as Ctrl+K.
+        static void FocusCommandSearch(CommandSearchState& state) { state.focusRequested = true; }
+
         // ---- Node view: self-contained graph editor ----
         // All state lives in `view`, so several views can coexist.
         void RenderNodeView(NodeView& view);

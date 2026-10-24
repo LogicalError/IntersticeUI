@@ -1540,6 +1540,113 @@
     font-size: var(--font-size);
 }
 
+/* ---- status bar: short status texts along a window's bottom edge ---------- */
+.status-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 12px;
+    margin: 0px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-width: 0px;
+    background-color: var(--bg-app);
+}
+.status-text {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    color: var(--text-3);
+    font-size: var(--font-size-sm);
+    flex-shrink: 1;
+}
+
+/* ---- command search: a search box with a hint and a keycap, and its list --- */
+.command-search {
+    width: 380px;
+    border-width: var(--border);
+    border-radius: var(--radius-lg);
+    border-color: var(--line-node);
+    background-color: var(--bg-input);
+    margin: 0px;
+    padding: 4px 4px 4px 8px;
+    overflow: hidden;
+    cursor: text;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+.command-search:hover { border-color: var(--line-strong); }
+.command-search:focus { border-color: var(--accent); }
+.command-search-hint {
+    border-width: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    color: var(--text-3);
+    font-size: var(--font-size);
+}
+.command-search-key {
+    border-width: var(--border);
+    border-radius: var(--radius-sm);
+    border-color: var(--line-node);
+    background-color: var(--bg-control);
+    padding: 0px 5px;
+    margin: 0px;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    color: var(--text-3);
+    font-size: var(--font-size-sm);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.command-search-list {
+    width: 380px;
+    display: flex;
+    overflow: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0px;
+    padding: 4px;
+    margin: 0px;
+    border-width: var(--border-thin);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-raised);
+    border-color: var(--line-subtle);
+}
+/* The row Up / Down and Enter act on; hover keeps the menu row look. */
+.command-search-current-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    border-width: var(--border-thin);
+    border-radius: var(--radius-sm);
+    border-color: transparent;
+    margin: 0px;
+    padding: 2px 6px;
+    overflow: visible;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: var(--bg-active);
+}
+.command-search-current-row:active { background-color: var(--bg-pressed); }
+
 /* ---- node-row (one property: socket | body | socket) --------------------- */
 .node-row {
     border-width: 0px;

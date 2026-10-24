@@ -335,6 +335,8 @@ namespace interstice
             CommandID cmdNew = 0, cmdOpen = 0, cmdSave = 0, cmdSaveAs = 0, cmdExit = 0;
             CommandID cmdUndo = 0, cmdRedo = 0, cmdCut = 0, cmdCopy = 0, cmdPaste = 0;
             CommandID cmdDocumentation = 0, cmdAbout = 0;
+            CommandID cmdSearchCommands = 0;
+            CommandSearchState commandSearch;
             CommandID cmdDuplicate = 0, cmdSelectAll = 0;
             CommandID cmdDelete = 0, cmdZoomIn = 0, cmdZoomOut = 0;
             CommandID cmdFind = 0, cmdPlay = 0, cmdStop = 0;
@@ -446,6 +448,7 @@ namespace interstice
 
         // Main menu bar across the top of the main window (File / Edit / View / Help).
         void RenderMainMenu();
+        void RenderStatusBar();
 
         void EnableFilesPanel();
         void DisableFilesPanel();

@@ -1,6 +1,8 @@
 #include <gui_controls/gui_application.h>
 
+#include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <cmath>
 #include <format>
 #include <string>
@@ -384,6 +386,186 @@ namespace interstice
             (void)idManager.PopParent();
         EndHorizontal();
         return clicked;
+    }
+
+    bool GUIApplication::BeginStatusBar(ID id, StyleRef style, LayoutOverride&& constraints)
+    {
+        return BeginHorizontal(id, style, std::move(constraints));
+    }
+
+    void GUIApplication::EndStatusBar()
+    {
+        EndHorizontal();
+    }
+
+    void GUIApplication::StatusText(ID id, std::string_view text, LayoutOverride&& constraints)
+    {
+        Text(id, text, theme.statusTextStyleRef, std::move(constraints));
+    }
+
+    bool GUIApplication::CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints)
+    {
+        const bool ran = std::exchange(state.ranCommand, false);
+        if (state.listWindowID == ID::Invalid())
+            state.listWindowID = idManager.CreateStaticID();
+
+        // Under the search's own ID, so the field keeps its ID whatever came before.
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+        const ID fieldID = idManager.AllocateDynamicID("field");
+
+        auto& interaction = guiStateManager.Interaction();
+        if (std::exchange(state.focusRequested, false))
+        {
+            interaction.SetFocusID(fieldID);
+            guiStateManager.TextEditorFocus().Set(fieldID);
+        }
+        const bool focused = (interaction.GetFocusedID() == fieldID);
+
+        // The current mode's and Default's commands whose description contains the query.
+        constexpr size_t kMaxMatches = 12;
+        const auto& commands = commandManager.GetCommands();
+        const EditMode mode = commandManager.GetEditMode();
+        std::vector<CommandID> matches;
+        if (focused)
+        {
+            const auto sameLetter = [](char a, char b)
+                { return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); };
+            for (CommandID i = 0; i < CommandID(commands.size()) && matches.size() < kMaxMatches; ++i)
+            {
+                const CommandManager::Command& c = commands[i];
+                if (c.description.empty() || !c.callback || c.IsHeld())
+                    continue;
+                if (c.mode != EditMode::Default && c.mode != mode)
+                    continue;
+                if (std::search(c.description.begin(), c.description.end(),
+                                state.query.begin(), state.query.end(), sameLetter) != c.description.end())
+                    matches.push_back(i);
+            }
+        }
+        const int matchCount = int(matches.size());
+        state.current = std::clamp(state.current, 0, std::max(matchCount - 1, 0));
+
+        // These run from event handlers.
+        auto leave = [this, &state]
+        {
+            state.query.clear();
+            state.current = 0;
+            guiStateManager.Interaction().SetFocusID(ID::Invalid());
+            guiStateManager.TextEditorFocus().Clear();
+        };
+        auto run = [this, &state, leave](CommandID command)
+        {
+            const auto& all = commandManager.GetCommands();
+            if (command >= all.size())
+                return;
+            const std::function<void()> callback = all[command].callback;
+            leave();
+            state.ranCommand = true;
+            if (callback)
+                callback();
+        };
+
+        // The box: a click anywhere in it starts typing.
+        interstice::Element box{};
+        box.id           = id;
+        box.styleRef     = theme.commandSearchStyleRef;
+        box.flags        = ElementFlags::PropagatesDescendantState;
+        box.state        = guiStateManager.GetCurrentState(id);
+        box.eventHandler = [this, fieldID](ElementEvent&& event) -> bool
+        {
+            if (event.type != EventType::MouseDown || !event.state.LeftPressed())
+                return false;
+            guiStateManager.Interaction().SetFocusID(fieldID);
+            guiStateManager.TextEditorFocus().Set(fieldID);
+            return true;
+        };
+        RegisterElement(std::move(box), std::move(constraints));
+        VERIFY(elementStorage.BeginChildren());
+
+        RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("icon"), .iconID = theme.searchIcon,
+                                             .styleRef = theme.searchTextboxIconStyleRef, .flags = ElementFlags::NoInput },
+                        LayoutOverride{});
+
+        // Up / Down / Enter / Escape drive the list; every other key edits the query.
+        const CommandID currentCommand = matchCount > 0 ? matches[size_t(state.current)] : CommandID(~0u);
+        auto textBoxHandler = MakeTextBoxHandler(guiStateManager);
+        auto fieldHandler = [this, &state, textBoxHandler, matchCount, currentCommand, run, leave](ElementEvent&& event) -> bool
+        {
+            if (event.type == EventType::KeyDown && !event.state.consumed
+                && guiStateManager.Interaction().GetFocusedID() == event.id)
+            {
+                switch (event.state.lastKey)
+                {
+                    case KeyCode::Down:
+                        if (matchCount > 0) state.current = (state.current + 1) % matchCount;
+                        return true;
+                    case KeyCode::Up:
+                        if (matchCount > 0) state.current = (state.current + matchCount - 1) % matchCount;
+                        return true;
+                    case KeyCode::Return:
+                    case KeyCode::Return2:
+                        run(currentCommand);
+                        return true;
+                    case KeyCode::Escape:
+                        leave();
+                        return true;
+                    default:
+                        break;
+                }
+            }
+            return textBoxHandler(std::move(event));
+        };
+        bool modified = false;
+        RegisterControl(interstice::Element{ .id = fieldID, .eventHandler = std::move(fieldHandler),
+                                             .styleRef = theme.searchTextboxFieldStyleRef, .flags = ElementFlags::DoNotMeasureText },
+            [this, &modified, &state](interstice::Element& element)
+            {
+                return textSystem->RegisterEditableText(element.id, state.query, TextEditBehavior::ContinuousUpdate,
+                                                        element.styleRef, element.state, modified);
+            },
+            LayoutOverride{}.FlexGrow(1));
+        if (modified)
+            state.current = 0;
+
+        if (state.query.empty() && !state.hint.empty())
+            RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("hint"), .styleRef = theme.commandSearchHintStyleRef,
+                                                 .flags = ElementFlags::NoInput },
+                            state.hint, LayoutOverride{}.Anchored(fieldID, AnchorPlacement::InsideLeft | AnchorPlacement::CenterVert));
+        if (!state.shortcut.empty())
+            RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("key"), .styleRef = theme.commandSearchKeyStyleRef,
+                                                 .flags = ElementFlags::NoInput },
+                            state.shortcut, LayoutOverride{});
+
+        VERIFY(elementStorage.EndChildren());
+
+        // The matches, in a popup under the box that leaves the keyboard with the field.
+        if (matchCount > 0)
+        {
+            auto position = LayoutOverride{}.Anchored(id, AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
+                                                      { 0, int16_t(styleManager.Px(4)) }, AutoFlipMode::FlipAvoidTarget);
+            const ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup
+                                     | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
+            if (BeginWindow(state.listWindowID, std::move(position), theme.commandSearchListStyleRef, flags))
+            {
+                const ID rowsID = idManager.AllocateRangedID(uint32_t(kMaxMatches), "rows");
+                for (int i = 0; i < matchCount; ++i)
+                {
+                    const CommandID command = matches[size_t(i)];
+                    const CommandManager::Command& c = commands[command];
+                    MenuItemRow(idManager.GetSubID(rowsID, uint32_t(i)),
+                                interstice::MakeButtonHandler(guiStateManager, [run, command] { run(command); }),
+                                i == state.current ? theme.commandSearchCurrentRowStyleRef : theme.menuItemRowStyleRef,
+                                /*reserveIcon*/ true, c.icon, c.description,
+                                c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
+                                theme.menuItemShortcutStyleRef, LayoutOverride{});
+                }
+                EndWindow();
+            }
+        }
+
+        if (pushed)
+            (void)idManager.PopParent();
+        return ran;
     }
 
     bool GUIApplication::Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)

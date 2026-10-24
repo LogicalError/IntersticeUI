@@ -158,12 +158,20 @@ namespace interstice
         StyleRef nodeViewOverlayButtonStyleRef {}; // flat button in such a panel
         StyleRef nodeViewMinimapStyleRef {};
         StyleRef breadcrumbStyleRef {};
-        // Vector fields: the X/Y/Z/W label attached to each component, and the component's field.
-        StyleRef axisLabelStyleRefs[4] {};
-        StyleRef vectorComponentStyleRef {};
         StyleRef breadcrumbSegmentStyleRef {};     // a clickable path segment
         StyleRef breadcrumbCurrentStyleRef {};     // the last segment
         StyleRef breadcrumbSeparatorStyleRef {};
+        // Vector fields: the X/Y/Z/W label attached to each component, and the component's field.
+        StyleRef axisLabelStyleRefs[4] {};
+        StyleRef vectorComponentStyleRef {};
+        StyleRef statusBarStyleRef {};
+        StyleRef statusTextStyleRef {};
+        // Command search: the box, its hint and keycap, the list of matches and its highlighted row.
+        StyleRef commandSearchStyleRef {};
+        StyleRef commandSearchHintStyleRef {};
+        StyleRef commandSearchKeyStyleRef {};
+        StyleRef commandSearchListStyleRef {};
+        StyleRef commandSearchCurrentRowStyleRef {};
         StyleRef nodeRowStyleRef {};    // node property row (socket | body | socket)
         StyleRef nodeBodyCenterStyleRef {}; // centred body for full-body content (image previews)
         StyleRef nodeSocketStyleRef {}; // socket hit-target; overflow:visible so the dot + hover halo aren't clipped to its box
@@ -265,6 +273,7 @@ namespace interstice
 
         // Drag-handle grip (≡) for reorderable-list / tree-list thumbs
         IconID dragHandleIcon = IconID::Invalid;
+        IconID searchIcon     = IconID::Invalid;
 
         // Line color styles (CSS custom properties)
         interstice::VisualColorStyleIndex lineGrayStyle;

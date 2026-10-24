@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -292,6 +293,9 @@ namespace interstice
         // one in the Shortcuts panel).
         demo.cmdDocumentation = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
         demo.cmdAbout         = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
+        demo.cmdSearchCommands = cmds.RegisterCommand(interstice::EditMode::Default, demo.findIcon, interstice::KeyCode::KeyK, interstice::KeyModifier::Control,
+                                                       [this]() { FocusCommandSearch(demo.commandSearch); }, "Search Commands");
+        demo.commandSearch.shortcut = cmds.GetCommands()[demo.cmdSearchCommands].displayString;
 
         // --- Further commands so the Shortcuts panel has realistic content.
         // These are panel/keyboard only (not referenced by the menu or toolbar).
@@ -1007,7 +1011,33 @@ namespace interstice
             EndMenu();
         }
 
+        // The command search, centred in the space after the menus.
+        BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
+        EndHorizontal();
+        CommandSearch(demo.commandSearch);
+        BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
+        EndHorizontal();
+
         EndMenuBar();
+    }
+
+    // Status bar: state and graphics API on the left, frame time and theme on the right.
+    void Application::RenderStatusBar()
+    {
+        std::array<FrameTimingSample, kFrameHistoryCount> history{};
+        GetFrameTimingHistory(history);
+        constexpr int kAveraged = 60;
+        float totalMs = 0.0f;
+        for (int i = kFrameHistoryCount - kAveraged; i < kFrameHistoryCount; ++i)
+            totalMs += history[size_t(i)].totalMs;
+        const float frameMs = totalMs / float(kAveraged);
+
+        BeginStatusBar(idManager.AllocateDynamicID("statusBar"));
+        StatusText("Ready");
+        StatusText("Vulkan", LayoutOverride::Auto().FlexGrow(1));
+        StatusText(std::format("{:.2f} ms \u00B7 {:.0f} fps", frameMs, frameMs > 0.0f ? 1000.0f / frameMs : 0.0f));
+        StatusText(GetThemePath());
+        EndStatusBar();
     }
 
     void Application::OnGUI()
@@ -1097,6 +1127,8 @@ namespace interstice
                         LayoutOverride::Auto());
                     EndDockingContainer();
                 }
+
+                RenderStatusBar();
 
                 // Must be emitted inside the main window's scope so main becomes
                 // their OS owner; otherwise SDL's hidden helper owns them and they
