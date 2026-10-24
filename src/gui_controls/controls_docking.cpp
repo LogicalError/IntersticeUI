@@ -73,29 +73,8 @@ namespace interstice
             return r;
         }
 
-        // Is this cached tab's row entirely above the cursor (cursor is on a
-        // lower wrapped row)? / Does the cursor sit on this tab's row?
-        inline bool TabRowAboveCursor(const IntRect& r, int cursorY) { return r.y + r.h <= cursorY; }
-        inline bool TabOnCursorRow  (const IntRect& r, int cursorY) { return r.y <= cursorY && cursorY < r.y + r.h; }
-
-        // Tab insertion index for a cross-container drop (0 = before first, count = after last).
-        // Counts tabs before the cursor in (row, x) order: all tabs on rows above, plus those
-        // on the cursor's row left of their midpoint. Per-tab counting stays stable on a
-        // wrapped row that holds only the phantom (which cachedTabRects excludes).
-        int ComputeTabInsertionIndex(const DockNode* leaf, interstice::int2 mousePos)
-        {
-            const auto& rects = leaf->cachedTabRects;
-            const int count = static_cast<int>(rects.size());
-            int idx = 0;
-            for (int i = 0; i < count; i++)
-            {
-                const IntRect& r = rects[i];
-                if (TabRowAboveCursor(r, mousePos.y)
-                    || (TabOnCursorRow(r, mousePos.y) && mousePos.x >= r.x + r.w / 2))
-                    idx = i + 1;
-            }
-            return idx;
-        }
+        // Does the cursor sit on this tab's row?
+        inline bool TabOnCursorRow(const IntRect& r, int cursorY) { return r.y <= cursorY && cursorY < r.y + r.h; }
 
         // Emit a phantom tab element matching the dragged panel's appearance.
         // Returns the element ref for position offset / render-on-top.
@@ -137,22 +116,25 @@ namespace interstice
 
         // X offset that makes the phantom tab follow the mouse, like within-bar reorder.
         // Flow-X is estimated from the cursor's row, not the previous row's right edge.
-        int16_t ComputePhantomOffsetX(const DockNode* node, int phantomIdx,
+        int16_t ComputePhantomOffsetX(const DockNode* node, int phantomIdx, int phantomWidth,
                                        const ReorderableDragState& drag,
                                        interstice::int2 mousePos)
         {
             const auto& rects = node->cachedTabRects;
 
             // Estimate where layout will place the phantom's left edge. If the
-            // tab just before the insertion point shares the cursor's row, the
-            // phantom flows right after it; otherwise the phantom begins a
+            // tab just before the insertion point shares the cursor's row and the
+            // phantom fits after it, it flows right after it; otherwise it begins a
             // (possibly new) row, which is left-aligned to the bar.
-            const bool predOnCursorRow =
+            const int rowY = TabRowCursor(*node, mousePos).y;
+            const IntRect& bar = node->cachedTabBarRect;
+            const bool flowsAfterPred =
                 phantomIdx > 0 && phantomIdx - 1 < (int)rects.size()
-                && TabOnCursorRow(rects[phantomIdx - 1], mousePos.y);
-            const int estimatedX = predOnCursorRow
+                && TabOnCursorRow(rects[phantomIdx - 1], rowY)
+                && rects[phantomIdx - 1].x + rects[phantomIdx - 1].w + phantomWidth <= bar.x + bar.w;
+            const int estimatedX = flowsAfterPred
                 ? rects[phantomIdx - 1].x + rects[phantomIdx - 1].w
-                : node->cachedTabBarRect.x;
+                : bar.x;
 
             // Grab offset: distance from tab left edge to mouse at drag start
             int grabOffset = drag.draggedIndex < (int)drag.originalRects.size()
@@ -294,7 +276,7 @@ namespace interstice
                 auto tabResult = app.FindDockLeafAtScreenPos(mousePos);
                 if (tabResult.leaf && tabResult.leaf != node)
                 {
-                    int insertIdx = ComputeTabInsertionIndex(tabResult.leaf, mousePos);
+                    int insertIdx = TabInsertionIndex(*tabResult.leaf, mousePos);
                     insertIdx = std::clamp(insertIdx, 0, (int)tabResult.leaf->panelIds.size());
                     GUIApplication::TransferPanel(panelID, node, layout, tabResult.layout);
                     tabResult.leaf->panelIds.insert(tabResult.leaf->panelIds.begin() + insertIdx, panelID);
@@ -421,7 +403,7 @@ namespace interstice
                     && TabBarDropHitRect(node).Contains(mousePos))
                 {
                     emitPhantom = true;
-                    phantomIdx = ComputeTabInsertionIndex(node, mousePos);
+                    phantomIdx = TabInsertionIndex(*node, mousePos);
                     phantomIdx = std::clamp(phantomIdx, 0, count);
                 }
 
@@ -441,7 +423,7 @@ namespace interstice
                 // Phantom follows the mouse and renders on top.
                 if (emitPhantom && app.elementStorage.IsValidRef(phantomRef))
                 {
-                    int16_t offsetX = ComputePhantomOffsetX(node, phantomIdx, drag, mousePos);
+                    int16_t offsetX = ComputePhantomOffsetX(node, phantomIdx, dragInfo.tabWidth, drag, mousePos);
                     auto& elemRect = app.elementStorage.GetElementRectUnsafe(phantomRef);
                     auto pc = LayoutOverride{}.Relative(offsetX, 0);
                     elemRect.constraints.x = pc.x;

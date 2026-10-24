@@ -1235,4 +1235,52 @@ namespace interstice
         }
     }
 
+
+    // ---- Tab drop position ----
+
+    // Two wrapped rows of tabs, 24 high with a 4 px gap: [0 1 2] at y 0, [3 4] at y 28.
+    static interstice::DockNode WrappedTabs()
+    {
+        interstice::DockNode leaf;
+        leaf.cachedTabRects = { { 0, 0, 80, 24 }, { 82, 0, 80, 24 }, { 164, 0, 80, 24 },
+                                { 0, 28, 80, 24 }, { 82, 28, 80, 24 } };
+        return leaf;
+    }
+
+    TEST(TabInsertion, OnARowItGoesBetweenTheTabsAroundTheCursor)
+    {
+        const auto leaf = WrappedTabs();
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 10, 10 }), 0);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 100, 10 }), 1);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 230, 10 }), 3);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 100, 40 }), 4);
+    }
+
+    // The gap between wrapped rows belongs to the nearest row, not to "after the row
+    // above" (which put the drop at the far right of the bar).
+    TEST(TabInsertion, TheGapBetweenRowsCountsAsTheNearestRow)
+    {
+        const auto leaf = WrappedTabs();
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 10, 25 }), 0) << "just under row 1";
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 10, 27 }), 3) << "just over row 2";
+    }
+
+    // Above the first row (the tab bar's top padding) is the first row: dropping over
+    // the second tab's top edge goes next to it, not before the first tab.
+    TEST(TabInsertion, AboveTheFirstRowCountsAsTheFirstRow)
+    {
+        const auto leaf = WrappedTabs();
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 100, -3 }), 1);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 150, -3 }), 2);
+    }
+
+    // Below the last row is the last row: under a tab it goes next to that tab (not to
+    // the far right), and past the last tab after it.
+    TEST(TabInsertion, BelowTheLastRowCountsAsTheLastRow)
+    {
+        const auto leaf = WrappedTabs();
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 10, 60 }),  3);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 100, 60 }), 4);
+        EXPECT_EQ(interstice::TabInsertionIndex(leaf, { 300, 60 }), 5);
+    }
 }

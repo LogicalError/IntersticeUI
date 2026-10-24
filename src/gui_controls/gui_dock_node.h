@@ -148,6 +148,17 @@ namespace interstice
     // None outside the rect.
     DockDropZone ComputeDropZone(IntRect rect, int2 point, float edgeFraction = 0.25f);
 
+    // ---- Tab drop position -----------------------------------------------------
+
+    // The cursor as the tab rows see it: off the rows (above, below, or in a gap
+    // between wrapped rows) it moves to the nearest row, so it is on one.
+    int2 TabRowCursor(const DockNode& leaf, int2 cursor);
+
+    // Where a tab dropped at `cursor` goes (0 = before the first, count = after the
+    // last): after every tab on the rows above, and those on its row it is right of
+    // the middle of. Uses last frame's tab rects.
+    int TabInsertionIndex(const DockNode& leaf, int2 cursor);
+
     // ---- Tree mutation for split-on-drop ---------------------------------------
 
     // The unique_ptr that owns `target`, or nullptr.

@@ -3,6 +3,7 @@
 #include <gui_core/gui_id_manager.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <charconv>
 #include <utility>
 
@@ -280,6 +281,39 @@ namespace interstice
     }
 
     // ---- Drop-zone geometry ----------------------------------------------------
+
+    int2 TabRowCursor(const DockNode& leaf, int2 cursor)
+    {
+        int bestY = cursor.y, bestDistance = -1;
+        for (const IntRect& r : leaf.cachedTabRects)
+        {
+            if (r.y <= cursor.y && cursor.y < r.y + r.h)
+                return cursor;
+            const int nearestY = cursor.y < r.y ? r.y : r.y + r.h - 1;
+            const int distance = std::abs(nearestY - cursor.y);
+            if (bestDistance < 0 || distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestY = nearestY;
+            }
+        }
+        return { cursor.x, bestY };
+    }
+
+    int TabInsertionIndex(const DockNode& leaf, int2 cursor)
+    {
+        const int2 at = TabRowCursor(leaf, cursor);
+        int index = 0;
+        for (int i = 0; i < (int)leaf.cachedTabRects.size(); i++)
+        {
+            const IntRect& r = leaf.cachedTabRects[i];
+            const bool rowAbove = r.y + r.h <= at.y;
+            const bool onRow    = r.y <= at.y && at.y < r.y + r.h;
+            if (rowAbove || (onRow && at.x >= r.x + r.w / 2))
+                index = i + 1;
+        }
+        return index;
+    }
 
     DockDropZone ComputeDropZone(IntRect rect, int2 point, float edgeFraction)
     {
