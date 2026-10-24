@@ -255,11 +255,13 @@
 .vector-component::selection { color: var(--text-1); background-color: var(--accent-soft); }
 
 /* ---- grouped label variants (overflow visible for edge dragger rendering) - */
+/* No margin, like .group-drag-label: the group sizes both to one width, so a
+   margin would shift a row's sizer and field off the others. */
 .group-label {
     border-width: 0px;
     border-radius: 0px;
     padding: 4px 8px;
-    margin: 1px;
+    margin: 0px;
     overflow: visible;
     direction: initial;
     text-wrap: nowrap;
