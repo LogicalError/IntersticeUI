@@ -825,98 +825,98 @@ namespace interstice
                 demo.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
                 demo.folderOpenIcon      = textSystem->RegisterIconFromSVGFile("icons/folder_open.svg"); 
                                          
-                demo.audioOnIcon         = textSystem->RegisterIconFromSVGFile("icons/audio_on.svg");
-                demo.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/audio_off.svg");
+                demo.audioOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-2.svg");
+                demo.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-x.svg");
                                          
-                demo.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/grid_on.svg");
-                demo.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/grid_off.svg");
+                demo.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-3x3.svg");
+                demo.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-2x2-x.svg");
                                          
-                demo.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/light_on.svg");
-                demo.lightOffIcon        = textSystem->RegisterIconFromSVGFile("icons/light_off.svg");
+                demo.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb.svg");
+                demo.lightOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb-off.svg");
                                          
-                demo.toolSelectIcon      = textSystem->RegisterIconFromSVGFile("icons/tool_select.svg");
-                demo.toolMoveIcon        = textSystem->RegisterIconFromSVGFile("icons/tool_move.svg");
-                demo.toolScaleIcon       = textSystem->RegisterIconFromSVGFile("icons/tool_scale.svg");
-                demo.toolRotateIcon      = textSystem->RegisterIconFromSVGFile("icons/tool_rotate.svg");
+                demo.toolSelectIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/square-dashed.svg");
+                demo.toolMoveIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/move.svg");
+                demo.toolScaleIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize-2.svg");
+                demo.toolRotateIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/rotate-cw.svg");
                                          
-                demo.viewWireframe       = textSystem->RegisterIconFromSVGFile("icons/view_wireframe.svg");
-                demo.viewSolid           = textSystem->RegisterIconFromSVGFile("icons/view_solid.svg");
-                demo.viewTextured        = textSystem->RegisterIconFromSVGFile("icons/view_textured.svg");
+                demo.viewWireframe       = textSystem->RegisterIconFromSVGFile("icons/lucide/globe.svg");
+                demo.viewSolid           = textSystem->RegisterIconFromSVGFile("icons/lucide/circle.svg");
+                demo.viewTextured        = textSystem->RegisterIconFromSVGFile("icons/lucide/view-textured.svg");
 
-                demo.panelFilesIcon      = textSystem->RegisterIconFromSVGFile("icons/panel_files.svg");
-				demo.panelGameIcon       = textSystem->RegisterIconFromSVGFile("icons/panel_game.svg");
-                demo.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile("icons/panel_hierarchy.svg");
-				demo.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile("icons/panel_inspector.svg");
-				demo.panelLogIcon        = textSystem->RegisterIconFromSVGFile("icons/panel_log.svg");
-				demo.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile("icons/panel_nodeview.svg");
-				demo.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile("icons/panel_profiler.svg");
-				demo.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile("icons/panel_settings.svg");
-				demo.panelViewportIcon   = textSystem->RegisterIconFromSVGFile("icons/panel_viewport.svg");
-                demo.panelMiscIcon       = textSystem->RegisterIconFromSVGFile("icons/panel_misc.svg");
+                demo.panelFilesIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/folder.svg");
+				demo.panelGameIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/gamepad-2.svg");
+                demo.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/list-tree.svg");
+				demo.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/info.svg");
+				demo.panelLogIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/terminal.svg");
+				demo.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/workflow.svg");
+				demo.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/activity.svg");
+				demo.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sliders-horizontal.svg");
+				demo.panelViewportIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/monitor.svg");
+                demo.panelMiscIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
                 
-				demo.objectIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_object.svg");
-				demo.object2Icon         = textSystem->RegisterIconFromSVGFile("icons/icon_object2.svg");
+				demo.objectIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
+				demo.object2Icon         = textSystem->RegisterIconFromSVGFile("icons/lucide/shapes.svg");
                                          
-				demo.fileImageIcon       = textSystem->RegisterIconFromSVGFile("icons/file_image.svg");
-				demo.fileAudioIcon       = textSystem->RegisterIconFromSVGFile("icons/file_audio.svg");
-                demo.fileVideoIcon       = textSystem->RegisterIconFromSVGFile("icons/file_video.svg");
-				demo.fileModelIcon       = textSystem->RegisterIconFromSVGFile("icons/file_model.svg");
-                demo.fileTextIcon        = textSystem->RegisterIconFromSVGFile("icons/file_text.svg");
-				demo.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile("icons/file_archive.svg");
+				demo.fileImageIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-image.svg");
+				demo.fileAudioIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-audio.svg");
+                demo.fileVideoIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-video.svg");
+				demo.fileModelIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-box.svg");
+                demo.fileTextIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/file-text.svg");
+				demo.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/file-archive.svg");
                                          
                                          
-                demo.openFileIcon        = textSystem->RegisterIconFromSVGFile("icons/icon_open_file.svg");
-                demo.saveIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_save.svg");
-                demo.saveAsIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_save_as.svg");
-                demo.closeIcon           = textSystem->RegisterIconFromSVGFile("icons/icon_close.svg");
-                demo.addIcon             = textSystem->RegisterIconFromSVGFile("icons/icon_add.svg");
-                demo.removeIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_remove.svg");
-                demo.undoIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_undo.svg");
-                demo.redoIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_redo.svg");
-                demo.cutIcon             = textSystem->RegisterIconFromSVGFile("icons/icon_cut.svg");
-                demo.copyIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_copy.svg");
-                demo.pasteIcon           = textSystem->RegisterIconFromSVGFile("icons/icon_paste.svg");
-                demo.blockIcon           = textSystem->RegisterIconFromSVGFile("icons/icon_block.svg");
-                demo.syncIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_sync.svg");
-                demo.downloadIcon        = textSystem->RegisterIconFromSVGFile("icons/icon_download.svg");
-                demo.uploadIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_upload.svg");
-                demo.publishIcon         = textSystem->RegisterIconFromSVGFile("icons/icon_publish.svg");
-                demo.openInWindowIcon    = textSystem->RegisterIconFromSVGFile("icons/icon_open_in_window.svg");
+                demo.openFileIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/folder-open.svg");
+                demo.saveIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/save.svg");
+                demo.saveAsIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/save-all.svg");
+                demo.closeIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/x.svg");
+                demo.addIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/plus.svg");
+                demo.removeIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/minus.svg");
+                demo.undoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/undo-2.svg");
+                demo.redoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/redo-2.svg");
+                demo.cutIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/scissors.svg");
+                demo.copyIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/copy.svg");
+                demo.pasteIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/clipboard-paste.svg");
+                demo.blockIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/ban.svg");
+                demo.syncIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/refresh-cw.svg");
+                demo.downloadIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/download.svg");
+                demo.uploadIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/upload.svg");
+                demo.publishIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/send.svg");
+                demo.openInWindowIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/external-link.svg");
                                          
-                demo.duplicateIcon       = textSystem->RegisterIconFromSVGFile("icons/icon_duplicate.svg");
-                demo.newIcon             = textSystem->RegisterIconFromSVGFile("icons/icon_new.svg");
-                demo.selectAllIcon       = textSystem->RegisterIconFromSVGFile("icons/icon_select_all.svg");
-                demo.deleteIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_delete.svg");
-                demo.zoomInIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_zoom_in.svg");
-                demo.zoomOutIcon         = textSystem->RegisterIconFromSVGFile("icons/icon_zoom_out.svg");
-                demo.findIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_find.svg");
-                demo.playIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_play.svg");
-                demo.stopIcon            = textSystem->RegisterIconFromSVGFile("icons/icon_stop.svg");
-                demo.recenterIcon        = textSystem->RegisterIconFromSVGFile("icons/icon_recenter.svg");
-                demo.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile("icons/icon_frame_selected.svg");
-                demo.brushIcon           = textSystem->RegisterIconFromSVGFile("icons/icon_brush.svg");
-                demo.eraserIcon          = textSystem->RegisterIconFromSVGFile("icons/icon_eraser.svg");
-                demo.draggableIcon       = textSystem->RegisterIconFromSVGFile("icons/icon_draggable.svg");
+                demo.duplicateIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/copy-plus.svg");
+                demo.newIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/file-plus.svg");
+                demo.selectAllIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/text-select.svg");
+                demo.deleteIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/trash-2.svg");
+                demo.zoomInIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-in.svg");
+                demo.zoomOutIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-out.svg");
+                demo.findIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/search.svg");
+                demo.playIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/play.svg");
+                demo.stopIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/square.svg");
+                demo.recenterIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/locate-fixed.svg");
+                demo.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/scan.svg");
+                demo.brushIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/brush.svg");
+                demo.eraserIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/eraser.svg");
+                demo.draggableIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/grip-vertical.svg");
                 
-				demo.darkModeIcon        = textSystem->RegisterIconFromSVGFile("icons/dark_mode.svg");
-                demo.lightModeIcon       = textSystem->RegisterIconFromSVGFile("icons/light_mode.svg");
-                demo.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile("icons/light_mode_auto.svg");
-                demo.fullscreenIcon      = textSystem->RegisterIconFromSVGFile("icons/fullscreen.svg");
-                demo.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile("icons/fullscreen_exit.svg");
-                demo.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile("icons/view_selected.svg");
-                demo.dropperIcon         = textSystem->RegisterIconFromSVGFile("icons/dropper.svg");
-                demo.editIcon            = textSystem->RegisterIconFromSVGFile("icons/edit.svg");
-                demo.tagIcon             = textSystem->RegisterIconFromSVGFile("icons/tag.svg");
-                demo.targetIcon          = textSystem->RegisterIconFromSVGFile("icons/target.svg");
-                demo.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile("icons/visibility_lock.svg");
-                demo.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile("icons/visibility_mixed.svg");
-                demo.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile("icons/visibility_off.svg");
-                demo.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile("icons/visibility_on.svg");
+				demo.darkModeIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/moon.svg");
+                demo.lightModeIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/sun.svg");
+                demo.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sun-moon.svg");
+                demo.fullscreenIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize.svg");
+                demo.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/minimize.svg");
+                demo.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/scan-eye.svg");
+                demo.dropperIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/pipette.svg");
+                demo.editIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/pencil.svg");
+                demo.tagIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/tag.svg");
+                demo.targetIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/target.svg");
+                demo.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/lock.svg");
+                demo.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-dashed.svg");
+                demo.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-off.svg");
+                demo.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/eye.svg");
 
-                demo.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile("icons/dropdown_arrow.svg");
-                demo.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile("icons/icon_collapse_all.svg");
+                demo.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
+                demo.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/chevrons-down-up.svg");
 
-				demo.keyCommandIcon      = textSystem->RegisterIconFromSVGFile("icons/key_command.svg");
+				demo.keyCommandIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/command.svg");
 
                 // Must run after icon registration; the pages capture IconIDs.
                 InitSettingsPages();

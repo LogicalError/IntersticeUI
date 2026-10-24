@@ -79,45 +79,26 @@ namespace interstice
             fieldElementGroupStyleRef = styleManager.Register(newStyle);
         }
 
-        // Built-in icons
+        // Built-in icons: Lucide shapes (ISC), 24-unit strokes with round caps. One
+        // neutral grey, so they draw as masks in the color of where they're shown.
         {
-
-            // Tree expand/collapse arrows (using <path> — <polygon> may not be supported by SVG parser)
-            const char* arrowRightSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M2,1 L7,4 L2,7 Z" fill="#909090"/></svg>)";
-            treeArrowRight = textSystem->RegisterIconFromSVG("tree-arrow-right", arrowRightSvg, strlen(arrowRightSvg));
-
-            const char* arrowDownSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,2 L7,2 L4,7 Z" fill="#909090"/></svg>)";
-            treeArrowDown = textSystem->RegisterIconFromSVG("tree-arrow-down", arrowDownSvg, strlen(arrowDownSvg));
-
-            // Table header sort indicators; bright so they read on the header in both themes.
-            const char* sortArrowUpSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,6 L4,1 L7,6 Z" fill="#e0e0e0"/></svg>)";
-            sortArrowUpIcon = textSystem->RegisterIconFromSVG("sort-arrow-up", sortArrowUpSvg, strlen(sortArrowUpSvg));
-
-            const char* sortArrowDownSvg = R"(<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M1,2 L7,2 L4,7 Z" fill="#e0e0e0"/></svg>)";
-            sortArrowDownIcon = textSystem->RegisterIconFromSVG("sort-arrow-down", sortArrowDownSvg, strlen(sortArrowDownSvg));
-
-            // Tab close "X".
-            const char* tabCloseSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4,5 L5,4 L8,7 L11,4 L12,5 L9,8 L12,11 L11,12 L8,9 L5,12 L4,11 L7,8 Z" fill="#909090"/></svg>)";
-            tabCloseIcon = textSystem->RegisterIconFromSVG("tab-close", tabCloseSvg, strlen(tabCloseSvg));
-
-            // Menu checkmark for the checked item (filled path, like the other chrome icons).
-            const char* menuCheckSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M6,10.78 L3.22,8 L2.27,8.94 L6,12.67 L14,4.67 L13.06,3.73 Z" fill="#c0c0c0"/></svg>)";
-            menuCheckIcon = textSystem->RegisterIconFromSVG("menu-check", menuCheckSvg, strlen(menuCheckSvg));
-
-            // Add / remove buttons of the list & dictionary Field() rows.
-            const char* addSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M7,3 L9,3 L9,7 L13,7 L13,9 L9,9 L9,13 L7,13 L7,9 L3,9 L3,7 L7,7 Z" fill="#909090"/></svg>)";
-            addIcon = textSystem->RegisterIconFromSVG("list-add", addSvg, strlen(addSvg));
-
-            const char* removeSvg = R"(<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M3,7 L13,7 L13,9 L3,9 Z" fill="#909090"/></svg>)";
-            removeIcon = textSystem->RegisterIconFromSVG("list-remove", removeSvg, strlen(removeSvg));
-
-            // Drag-handle grip for reorderable / tree-list thumbs; sized by -interstice-icon-size.
-            const char* dragHandleSvg = R"(<svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M144-264v-72h672v72H144Zm0-180v-72h672v72H144Zm0-180v-72h672v72H144Z" fill="#666666"/></svg>)";
-            dragHandleIcon = textSystem->RegisterIconFromSVG("drag-handle", dragHandleSvg, strlen(dragHandleSvg));
-
-            // Magnifier for the command search.
-            const char* searchSvg = R"(<svg viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M765-144 526-383q-30 22-65.79 34.5-35.79 12.5-76.18 12.5Q284-336 214-406t-70-170q0-100 70-170t170-70q100 0 170 70t70 170.03q0 40.39-12.5 76.18Q599-464 577-434l239 239-51 51ZM384-408q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z" fill="#909090"/></svg>)";
-            searchIcon = textSystem->RegisterIconFromSVG("search", searchSvg, strlen(searchSvg));
+            auto registerIcon = [&](const char* name, const char* shapes) {
+                const std::string svg = std::string(R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#909090" )"
+                                                    R"(stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)") + shapes + "</svg>";
+                return textSystem->RegisterIconFromSVG(name, svg.data(), svg.size());
+            };
+            treeArrowRight  = registerIcon("tree-arrow-right", R"(<path d="m9 18 6-6-6-6"/>)");
+            treeArrowDown   = registerIcon("tree-arrow-down",  R"(<path d="m6 9 6 6 6-6"/>)");
+            sortArrowUpIcon   = registerIcon("sort-arrow-up",   R"(<path d="m18 15-6-6-6 6"/>)");
+            sortArrowDownIcon = registerIcon("sort-arrow-down", R"(<path d="m6 9 6 6 6-6"/>)");
+            tabCloseIcon    = registerIcon("tab-close",  R"(<path d="M18 6 6 18"/><path d="m6 6 12 12"/>)");
+            menuCheckIcon   = registerIcon("menu-check", R"(<path d="M20 6 9 17l-5-5"/>)");
+            addIcon         = registerIcon("list-add",    R"(<path d="M5 12h14"/><path d="M12 5v14"/>)");
+            removeIcon      = registerIcon("list-remove", R"(<path d="M5 12h14"/>)");
+            dragHandleIcon  = registerIcon("drag-handle",
+                R"(<circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/>)"
+                R"(<circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>)");
+            searchIcon      = registerIcon("search", R"(<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>)");
         }
 
         {

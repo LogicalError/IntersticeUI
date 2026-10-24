@@ -927,7 +927,7 @@
     font-size: var(--font-size);
     /* Hit-test wrapper: stretched to full row height for a generous
        click target, flex-centred so the inner .tree-table-arrow-glyph
-       (which owns the actual 10x10 icon RichText) sits in the middle
+       (which owns the actual 12x12 icon RichText) sits in the middle
        both horizontally and vertically. align-items:center overrides
        the default Stretch so the inner keeps its intrinsic size. */
     display: flex;
@@ -941,7 +941,7 @@
 }
 
 .tree-table-arrow-glyph {
-    -interstice-icon-size: 10px;
+    -interstice-icon-size: 12px;
     margin: 0px;
     padding: 0px;
     border-width: 0px;

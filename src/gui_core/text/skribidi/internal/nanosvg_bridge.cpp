@@ -155,13 +155,11 @@ void emitFillPaths(skb_icon_builder_t& b, const NSVGshape* s)
 
 // --- Stroke tessellation -------------------------------------------------
 //
-// Skribidi's icon model has no native strokes — only filled paths. We
-// linearize each NanoSVG cubic-bezier path to a polyline, then offset the
-// polyline by ±halfWidth to form a filled outline. SDF rasterization
-// smooths the linearization.
-//
-// Caps: butt only. Joins: miter, clamped at miterLimit (bevel beyond).
-// No dashes (#67).
+// Skribidi's icon model has no native strokes — only filled paths. Each
+// NanoSVG path is linearized to a polyline, and the stroke becomes a set of
+// polygons: a quad per segment, a wedge per join and a cap per open end.
+// They are all wound the same way, so the non-zero fill paints their union
+// and overlaps never cancel. Dashed strokes are split into open pieces first.
 
 struct Pt { float x, y; };
 
@@ -169,7 +167,9 @@ inline Pt operator+(Pt a, Pt b) { return { a.x + b.x, a.y + b.y }; }
 inline Pt operator-(Pt a, Pt b) { return { a.x - b.x, a.y - b.y }; }
 inline Pt operator*(Pt a, float s) { return { a.x * s, a.y * s }; }
 
-inline float length(Pt v) { return std::sqrt(v.x * v.x + v.y * v.y); }
+inline float dot(Pt a, Pt b)   { return a.x * b.x + a.y * b.y; }
+inline float cross(Pt a, Pt b) { return a.x * b.y - a.y * b.x; }
+inline float length(Pt v) { return std::sqrt(dot(v, v)); }
 
 inline Pt normalize(Pt v)
 {
@@ -180,11 +180,10 @@ inline Pt normalize(Pt v)
 
 inline Pt perp(Pt v) { return { -v.y, v.x }; }
 
+inline bool samePoint(Pt a, Pt b) { return std::fabs(a.x - b.x) < 1e-5f && std::fabs(a.y - b.y) < 1e-5f; }
+
 void flattenCubic(std::vector<Pt>& out, Pt p0, Pt p1, Pt p2, Pt p3, int steps)
 {
-	// Adaptive step count based on chord length; capped to avoid blowups
-	// on degenerate input. Minimum 4 segments per cubic keeps even tiny
-	// curves smooth at icon SDF resolution.
 	if (steps <= 0) steps = 8;
 	for (int i = 1; i <= steps; ++i) {
 		const float t = (float)i / (float)steps;
@@ -202,16 +201,16 @@ void flattenCubic(std::vector<Pt>& out, Pt p0, Pt p1, Pt p2, Pt p3, int steps)
 
 int chooseSteps(Pt p0, Pt p1, Pt p2, Pt p3)
 {
-	// Cheap heuristic: sum of control-polygon segments → step count.
+	// A straight segment (control points on the chord) needs one step;
+	// curves get one per ~2 units of control polygon, 4 to 32.
+	if (std::fabs(cross(p3 - p0, p1 - p0)) < 1e-4f && std::fabs(cross(p3 - p0, p2 - p0)) < 1e-4f)
+		return 1;
 	const float chordLen = length(p1 - p0) + length(p2 - p1) + length(p3 - p2);
-	int steps = (int)std::ceil(chordLen / 2.0f);
-	if (steps < 4) steps = 4;
-	if (steps > 32) steps = 32;
-	return steps;
+	return std::clamp((int)std::ceil(chordLen / 2.0f), 4, 32);
 }
 
-// Builds a polyline from a NanoSVG path. Skips zero-length segments to
-// avoid producing zero-length normals during offset.
+// The polyline of a NanoSVG path, without consecutive duplicates. A closed
+// path doesn't repeat its first point at the end.
 void flattenPath(const NSVGpath* p, std::vector<Pt>& out)
 {
 	out.clear();
@@ -223,119 +222,210 @@ void flattenPath(const NSVGpath* p, std::vector<Pt>& out)
 		const Pt c0 = { c[0], c[1] };
 		const Pt c1 = { c[2], c[3] };
 		const Pt p3 = { c[4], c[5] };
-		const int steps = chooseSteps(p0, c0, c1, p3);
-		flattenCubic(out, p0, c0, c1, p3, steps);
+		flattenCubic(out, p0, c0, c1, p3, chooseSteps(p0, c0, c1, p3));
 	}
-	// Drop consecutive duplicates.
-	out.erase(std::unique(out.begin(), out.end(),
-		[](const Pt& a, const Pt& b) {
-			return std::fabs(a.x - b.x) < 1e-5f && std::fabs(a.y - b.y) < 1e-5f;
-		}), out.end());
+	out.erase(std::unique(out.begin(), out.end(), samePoint), out.end());
+	if (p->closed && out.size() > 1 && samePoint(out.front(), out.back()))
+		out.pop_back();
 }
 
-// Vertex normal at index `i` for an offset of ±halfWidth, given the
-// segment normals before and after the vertex. Returns the outward
-// bisector scaled so that offset edges intersect cleanly. Falls back to
-// bevel (segment-normal directly) when the miter would exceed
-// miterLimit*halfWidth — this matches SVG's miter-clip rule.
-Pt vertexOffset(Pt nPrev, Pt nNext, float halfWidth, float miterLimit, bool& outBevel)
+struct StrokeStyle
 {
-	const Pt sum = nPrev + nNext;
-	const float lenSq = sum.x * sum.x + sum.y * sum.y;
-	outBevel = false;
-	if (lenSq < 1e-8f) {
-		// 180° turn — use the previous normal (bevel).
-		outBevel = true;
-		return nPrev * halfWidth;
+	float halfWidth;
+	float miterLimit;
+	char  join;
+	char  cap;
+};
+
+// Emits a polygon with positive winding, whatever order its points come in.
+void emitPolygon(skb_icon_builder_t& b, const std::vector<Pt>& pts)
+{
+	const int n = (int)pts.size();
+	if (n < 3) return;
+	float area = 0.f;
+	for (int i = 0; i < n; ++i)
+		area += cross(pts[i], pts[(i + 1) % n]);
+	if (std::fabs(area) < 1e-8f) return;
+	const bool forward = area > 0.f;
+	for (int k = 0; k < n; ++k) {
+		const Pt& p = pts[forward ? k : n - 1 - k];
+		if (k == 0) skb_icon_builder_move_to(&b, skb_vec2_t{ p.x, p.y });
+		else        skb_icon_builder_line_to(&b, skb_vec2_t{ p.x, p.y });
 	}
-	// Length of the bisector vector |nPrev+nNext| equals 2*cos(theta/2) where
-	// theta is the exterior angle. The miter length in halfWidths is
-	// 1/cos(theta/2) = 2/|nPrev+nNext|.
-	const float denom = (nPrev.x * nNext.x + nPrev.y * nNext.y) + 1.f;
-	if (denom < 1e-6f) {
-		outBevel = true;
-		return nPrev * halfWidth;
-	}
-	const float scale = halfWidth / denom;
-	Pt off = { sum.x * scale, sum.y * scale };
-	const float miterLen = length(off);
-	if (miterLen > halfWidth * miterLimit) {
-		outBevel = true;
-		return nPrev * halfWidth;
-	}
-	return off;
+	skb_icon_builder_close_path(&b);
 }
 
-void emitStrokeRibbon(skb_icon_builder_t& b,
-                      const std::vector<Pt>& poly,
-                      float halfWidth,
-                      float miterLimit,
-                      bool closed)
+// Points on the circle of radius |from| around `center`, from `from` turning
+// by `angle` radians; the first point is left out.
+void appendArc(std::vector<Pt>& out, Pt center, Pt from, float angle)
 {
+	constexpr float kMaxStep = 3.14159265f / 8.f;
+	const int steps = std::max(1, (int)std::ceil(std::fabs(angle) / kMaxStep));
+	for (int i = 1; i <= steps; ++i) {
+		const float a = angle * (float)i / (float)steps;
+		const float c = std::cos(a), s = std::sin(a);
+		out.push_back(center + Pt{ from.x * c - from.y * s, from.x * s + from.y * c });
+	}
+}
+
+void emitSegment(skb_icon_builder_t& b, Pt p0, Pt p1, float halfWidth, std::vector<Pt>& scratch)
+{
+	const Pt n = perp(normalize(p1 - p0)) * halfWidth;
+	scratch.assign({ p0 + n, p1 + n, p1 - n, p0 - n });
+	emitPolygon(b, scratch);
+}
+
+// Fills the gap on the outer side of the corner at `v` between a segment
+// running along `d0` and the next running along `d1`.
+void emitJoin(skb_icon_builder_t& b, Pt v, Pt d0, Pt d1, const StrokeStyle& style, std::vector<Pt>& scratch)
+{
+	const float turn = cross(d0, d1);
+	if (std::fabs(turn) < 1e-6f && dot(d0, d1) > 0.f)
+		return; // straight on
+	// The outer side is opposite the turn.
+	const float side = turn > 0.f ? -1.f : 1.f;
+	const Pt n0 = perp(d0) * (side * style.halfWidth);
+	const Pt n1 = perp(d1) * (side * style.halfWidth);
+
+	scratch.assign({ v, v + n0 });
+	if (style.join == NSVG_JOIN_ROUND) {
+		appendArc(scratch, v, n0, std::atan2(cross(n0, n1), dot(n0, n1)));
+	} else {
+		const float denom = 1.f + dot(perp(d0), perp(d1));
+		if (style.join == NSVG_JOIN_MITER && denom > 1e-6f) {
+			const Pt miter = (n0 + n1) * (1.f / denom);
+			if (length(miter) <= style.halfWidth * style.miterLimit)
+				scratch.push_back(v + miter);
+		}
+		scratch.push_back(v + n1);
+	}
+	emitPolygon(b, scratch);
+}
+
+// The cap at end point `p` of an open stroke; `out` points away from the stroke.
+void emitCap(skb_icon_builder_t& b, Pt p, Pt out, const StrokeStyle& style, std::vector<Pt>& scratch)
+{
+	const Pt n = perp(out) * style.halfWidth;
+	const Pt e = out * style.halfWidth;
+	if (style.cap == NSVG_CAP_SQUARE) {
+		scratch.assign({ p + n, p + n + e, p - n + e, p - n });
+		emitPolygon(b, scratch);
+	} else if (style.cap == NSVG_CAP_ROUND) {
+		scratch.assign({ p + n });
+		appendArc(scratch, p, n, -3.14159265f);
+		emitPolygon(b, scratch);
+	}
+}
+
+void emitStroke(skb_icon_builder_t& b, const std::vector<Pt>& poly, bool closed, const StrokeStyle& style)
+{
+	std::vector<Pt> scratch;
 	const int n = (int)poly.size();
+	if (n == 1) {
+		// A zero-length stroke shows only its caps: a dot or a square.
+		emitCap(b, poly[0], { 1.f, 0.f }, style, scratch);
+		emitCap(b, poly[0], { -1.f, 0.f }, style, scratch);
+		return;
+	}
 	if (n < 2) return;
 
-	// Per-segment normals (n-1 segments).
-	std::vector<Pt> segNormals(n - 1);
-	for (int i = 0; i < n - 1; ++i)
-		segNormals[i] = perp(normalize(poly[i + 1] - poly[i]));
+	const int segments = closed && n > 2 ? n : n - 1;
+	auto dir = [&](int s) { return normalize(poly[(s + 1) % n] - poly[s]); };
+	for (int s = 0; s < segments; ++s)
+		emitSegment(b, poly[s], poly[(s + 1) % n], style.halfWidth, scratch);
+	for (int s = 1; s < segments; ++s)
+		emitJoin(b, poly[s], dir(s - 1), dir(s), style, scratch);
 
-	auto vertN = [&](int i) -> Pt {
-		// Segment normal at vertex i: bisect the two adjacent segments.
-		// At endpoints of an open path, fall back to the single adjacent
-		// segment normal (butt cap).
-		if (closed) {
-			const Pt nPrev = segNormals[(i - 1 + (n - 1)) % (n - 1)];
-			const Pt nNext = segNormals[i % (n - 1)];
-			bool _b;
-			return vertexOffset(nPrev, nNext, halfWidth, miterLimit, _b);
-		}
-		if (i == 0)         return segNormals[0] * halfWidth;
-		if (i == n - 1)     return segNormals[n - 2] * halfWidth;
-		bool _b;
-		return vertexOffset(segNormals[i - 1], segNormals[i], halfWidth, miterLimit, _b);
-	};
-
-	std::vector<Pt> outer(n), inner(n);
-	for (int i = 0; i < n; ++i) {
-		const Pt off = vertN(i);
-		outer[i] = poly[i] + off;
-		inner[i] = poly[i] - off;
-	}
-
-	if (closed) {
-		// Two closed rings with opposite winding so non-zero fill
-		// (skb_canvas.c) cancels inside the inner ring and paints only
-		// the stroked annulus.
-		skb_icon_builder_move_to(&b, skb_vec2_t{ outer[0].x, outer[0].y });
-		for (int i = 1; i < n; ++i)
-			skb_icon_builder_line_to(&b, skb_vec2_t{ outer[i].x, outer[i].y });
-		skb_icon_builder_close_path(&b);
-
-		skb_icon_builder_move_to(&b, skb_vec2_t{ inner[n - 1].x, inner[n - 1].y });
-		for (int i = n - 2; i >= 0; --i)
-			skb_icon_builder_line_to(&b, skb_vec2_t{ inner[i].x, inner[i].y });
-		skb_icon_builder_close_path(&b);
+	if (segments == n) {
+		emitJoin(b, poly[0], dir(n - 1), dir(0), style, scratch);
 	} else {
-		// Open path: single ribbon polygon (outer forward, inner back).
-		skb_icon_builder_move_to(&b, skb_vec2_t{ outer[0].x, outer[0].y });
-		for (int i = 1; i < n; ++i)
-			skb_icon_builder_line_to(&b, skb_vec2_t{ outer[i].x, outer[i].y });
-		for (int i = n - 1; i >= 0; --i)
-			skb_icon_builder_line_to(&b, skb_vec2_t{ inner[i].x, inner[i].y });
-		skb_icon_builder_close_path(&b);
+		emitCap(b, poly[0],     dir(0) * -1.f,  style, scratch);
+		emitCap(b, poly[n - 1], dir(n - 2),     style, scratch);
 	}
+}
+
+// Splits a polyline into the open pieces a dash pattern keeps.
+void splitDashes(const std::vector<Pt>& poly, bool closed, const float* dashes, int dashCount, float offset,
+                 std::vector<std::vector<Pt>>& out)
+{
+	// An odd-length pattern repeats to even length.
+	std::vector<float> pattern(dashes, dashes + dashCount);
+	if (pattern.size() % 2 == 1)
+		pattern.insert(pattern.end(), dashes, dashes + dashCount);
+	float total = 0.f;
+	for (float d : pattern) total += d;
+
+	std::vector<Pt> path = poly;
+	if (closed && path.size() > 1)
+		path.push_back(path.front());
+
+	float phase = std::fmod(offset, total);
+	if (phase < 0.f) phase += total;
+	size_t index = 0;
+	while (phase >= pattern[index]) {
+		phase -= pattern[index];
+		index = (index + 1) % pattern.size();
+	}
+	float remaining = pattern[index] - phase;
+
+	std::vector<Pt> dash;
+	if (index % 2 == 0)
+		dash.push_back(path[0]);
+	for (size_t i = 0; i + 1 < path.size(); ++i) {
+		const Pt p0 = path[i], p1 = path[i + 1];
+		const float len = length(p1 - p0);
+		if (len <= 0.f) continue;
+		float pos = 0.f;
+		while (pos < len) {
+			const float step = std::min(remaining, len - pos);
+			pos += step;
+			remaining -= step;
+			const Pt at = p0 + (p1 - p0) * (pos / len);
+			if (index % 2 == 0)
+				dash.push_back(at);
+			if (remaining <= 1e-6f) {
+				if (index % 2 == 0) {
+					dash.erase(std::unique(dash.begin(), dash.end(), samePoint), dash.end());
+					out.push_back(std::move(dash));
+				}
+				dash.clear();
+				index = (index + 1) % pattern.size();
+				remaining = pattern[index];
+				if (index % 2 == 0)
+					dash.push_back(at);
+			}
+		}
+	}
+	dash.erase(std::unique(dash.begin(), dash.end(), samePoint), dash.end());
+	if (!dash.empty())
+		out.push_back(std::move(dash));
 }
 
 void emitStrokePaths(skb_icon_builder_t& b, const NSVGshape* s)
 {
-	const float halfWidth  = 0.5f * s->strokeWidth;
-	const float miterLimit = s->miterLimit > 0 ? s->miterLimit : 4.f;
+	const StrokeStyle style {
+		0.5f * s->strokeWidth,
+		s->miterLimit > 0 ? s->miterLimit : 4.f,
+		s->strokeLineJoin,
+		s->strokeLineCap,
+	};
+	float dashTotal = 0.f;
+	for (int i = 0; i < s->strokeDashCount; ++i)
+		dashTotal += s->strokeDashArray[i];
+
 	std::vector<Pt> poly;
+	std::vector<std::vector<Pt>> dashes;
 	for (NSVGpath* p = s->paths; p; p = p->next) {
 		flattenPath(p, poly);
-		if (poly.size() < 2) continue;
-		emitStrokeRibbon(b, poly, halfWidth, miterLimit, p->closed != 0);
+		if (poly.empty()) continue;
+		if (dashTotal <= 0.f) {
+			emitStroke(b, poly, p->closed != 0, style);
+			continue;
+		}
+		dashes.clear();
+		splitDashes(poly, p->closed != 0, s->strokeDashArray, s->strokeDashCount, s->strokeDashOffset, dashes);
+		for (const std::vector<Pt>& dash : dashes)
+			emitStroke(b, dash, /*closed*/ false, style);
 	}
 }
 

@@ -17,6 +17,7 @@ list(APPEND GUI_CORE_TEST_FILES
   node_view_zoom_test.cpp
   vector_field_test.cpp
   command_search_test.cpp
+  svg_stroke_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp
