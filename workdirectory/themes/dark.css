@@ -15,9 +15,10 @@
     --bg-control: #1E2128;  /* buttons, node header */
     --bg-active: #23272F;   /* active tab, hovered control */
     --bg-pressed: #2A2F39;  /* pressed control, selected segment */
+    --bg-menu-hover: #313744; /* hovered or keyboard-selected menu row */
     --bg-keycap: #1A1D23;
     --row-stripe: #14161B;  /* odd rows in large tables */
-    --canvas-dot: #252A33;  /* node view dot grid */
+    --canvas-dot: #39404D;  /* node view dot grid; brighter than the mockup's #252A33, whose soft CSS dots read stronger */
     /* ---- Lines ------------------------------------------------------------ */
     --panel-border: #1C1F25; /* outline around each panel */
     --line-subtle: #23272F;  /* dividers, header bottom border, input border */

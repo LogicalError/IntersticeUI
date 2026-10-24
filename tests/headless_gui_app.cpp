@@ -207,6 +207,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     };
     const interstice::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
 
+    menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
     InvalidateCachedScopesForInput(overID);
 
     // -- Dispatch the queued input events to element handlers.

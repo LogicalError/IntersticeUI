@@ -19,6 +19,11 @@ list(APPEND GUI_CORE_TEST_FILES
   command_search_test.cpp
   svg_stroke_test.cpp
   title_bar_test.cpp
+  theme_metrics_test.cpp
+  node_view_drop_test.cpp
+  node_view_lane_offset_test.cpp
+  node_view_wire_edit_test.cpp
+  node_view_edit_test.cpp
   drag_drop_test.cpp
   harness_self_test.cpp
   frame_pipeline_test.cpp

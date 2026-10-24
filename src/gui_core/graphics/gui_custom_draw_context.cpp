@@ -171,11 +171,15 @@ namespace interstice
             return int2{ (int)std::lround(float(p.x) + d.x * t), (int)std::lround(float(p.y) + d.y * t) };
         };
 
-        // How far each corner's curve reaches along its runs.
+        // How far each corner's curve reaches along its runs; none where the line runs straight on.
         const size_t n = points.size();
         std::vector<float> reach(n, 0.0f);
         for (size_t i = 1; i + 1 < n; ++i)
-            reach[i] = std::min({ cornerRadius, dir(i - 1, i).len * 0.5f, dir(i, i + 1).len * 0.5f });
+        {
+            const Dir in = dir(i - 1, i), out = dir(i, i + 1);
+            if (in.len > 0.0f && out.len > 0.0f && in.x * out.x + in.y * out.y < 0.9999f)
+                reach[i] = std::min({ cornerRadius, in.len * 0.5f, out.len * 0.5f });
+        }
 
         for (size_t i = 0; i + 1 < n; ++i)
         {

@@ -1270,33 +1270,8 @@ namespace interstice
 
             windowBackend->SetCursor(guiStateManager.Cursor().Get());
 
-            // Close menus on a scroll outside them. Windows sends WM_MOUSEWHEEL to the
-            // focused popup, so test the scroll position against the menu rects.
-            if (menuManager.IsOpen() && inputManager)
-            {
-                for (const auto& e : inputManager->GetRecordedEvents())
-                {
-                    if (e.type != EventType::MouseScroll || e.consumed)
-                        continue;
-
-                    bool mouseInMenu = false;
-                    for (int i = 0; i < MenuManager::kMaxDepth; i++)
-                    {
-                        if (!menuManager.levels[i].isOpen) continue;
-                        IntRect menuRect = windowManager->GetWindowRect(menuManager.levels[i].windowID);
-                        if (menuRect.Contains(e.state.screenPos))
-                        {
-                            mouseInMenu = true;
-                            break;
-                        }
-                    }
-                    if (!mouseInMenu)
-                    {
-                        menuManager.CloseAll(guiStateManager);
-                        break;
-                    }
-                }
-            }
+            if (inputManager)
+                menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
 
             InvalidateCachedScopesForInput(overID);
 

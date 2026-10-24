@@ -113,6 +113,7 @@ namespace interstice
             if (hasRightClick && guiStateManager.Interaction().GetHoveredID() == targetID)
             {
                 contextMenuTargetID = targetID;
+                contextMenuScreenPos.reset();
                 if (menuManager.IsOpen())
                     menuManager.CloseAll(guiStateManager);
                 menuManager.OpenMenu(guiStateManager, contextMenuWindowID);
@@ -130,11 +131,12 @@ namespace interstice
 
         auto& level = menuManager.GetOrCreateNextLevel(idManager);
 
-        // Anchored below the target element
-        LayoutOverride pos = LayoutOverride{}.Anchored(targetID,
-            AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
-            {0, 0}, AutoFlipMode::FlipAvoidTarget)
-            ;
+        // Below the target element, or where OpenContextMenu said.
+        LayoutOverride pos = contextMenuScreenPos
+            ? LayoutOverride{}.Position(contextMenuScreenPos->x, contextMenuScreenPos->y)
+            : LayoutOverride{}.Anchored(targetID,
+                  AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
+                  {0, 0}, AutoFlipMode::FlipAvoidTarget);
 
         menuManager.PrepareLevelWindow(level, guiStateManager.GetScrollManagement());
         if (BeginWindow(level.windowID, std::move(pos), theme.menuStyleRef,
@@ -154,6 +156,15 @@ namespace interstice
             contextMenuTargetID = ID::Invalid();
             return false;
         }
+    }
+
+    void GUIApplication::OpenContextMenu(ID targetID, int2 screenPos)
+    {
+        contextMenuTargetID  = targetID;
+        contextMenuScreenPos = screenPos;
+        if (menuManager.IsOpen())
+            menuManager.CloseAll(guiStateManager);
+        menuManager.OpenMenu(guiStateManager, contextMenuWindowID);
     }
 
     void GUIApplication::EndContextMenu()

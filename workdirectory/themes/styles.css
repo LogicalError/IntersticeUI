@@ -388,6 +388,7 @@
 
 /* ---- buttonStyle ---------------------------------------------------------- */
 .button {
+    -interstice-icon-size: 14px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
@@ -461,6 +462,7 @@
    stays clickable with a cursor + subtle hover. Used where a button shouldn't
    read as a button — e.g. the shortcut-rebind cell in the Shortcuts settings. */
 .flat-button {
+    -interstice-icon-size: 14px;
     border-width: 0px;
     border-color: transparent;
     background-color: transparent;
@@ -500,6 +502,7 @@
 }
 
 .first-button {
+    -interstice-icon-size: 14px;
     border-width: var(--border-first);
     border-radius: var(--radius-md-first);
     border-color: var(--line-strong);
@@ -526,6 +529,7 @@
 
 
 .mid-button {
+    -interstice-icon-size: 14px;
     border-width: var(--border-mid);
     border-radius: var(--radius-md-mid);
     border-color: var(--line-strong);
@@ -552,6 +556,7 @@
 
 
 .last-button {
+    -interstice-icon-size: 14px;
     border-width: var(--border-last);
     border-radius: var(--radius-md-last);
     border-color: var(--line-strong);
@@ -1020,6 +1025,7 @@
 
 /* ---- toggleStyle ---------------------------------------------------------- */
 .toggle {
+    -interstice-icon-size: 14px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
@@ -1045,6 +1051,7 @@
 .toggle:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .first-toggle {
+    -interstice-icon-size: 14px;
     border-width: var(--border-first);
     border-radius: var(--radius-md-first);
     border-color: var(--line-strong);
@@ -1070,6 +1077,7 @@
 .first-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .mid-toggle {
+    -interstice-icon-size: 14px;
     border-width: var(--border-mid);
     border-radius: var(--radius-md-mid);
     border-color: var(--line-strong);
@@ -1095,6 +1103,7 @@
 .mid-toggle:focus::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .last-toggle {
+    -interstice-icon-size: 14px;
     border-width: var(--border-last);
     border-radius: var(--radius-md-last);
     border-color: var(--line-strong);
@@ -1467,6 +1476,7 @@
     font-size: var(--font-size);
 }
 .node-view-overlay-button {
+    -interstice-icon-size: 14px;
     border-width: 0px;
     border-radius: var(--radius-md);
     border-color: transparent;
@@ -1643,7 +1653,7 @@
     overflow: visible;
     flex-grow: 0;
     flex-shrink: 0;
-    background-color: var(--bg-active);
+    background-color: var(--bg-menu-hover);
 }
 .command-search-current-row:active { background-color: var(--bg-pressed); }
 
@@ -1890,9 +1900,10 @@
 /* "selected" (current/checked) items are marked with a checkmark in the icon
    column (see MenuItemRow), not a background — so the hover/focus highlight is
    never ambiguous with the current-item cue. */
-.menu-item-row:hover  { background-color: var(--bg-active); }
+/* Hovering a row also focuses it, so hover and focus look the same. */
+.menu-item-row:hover  { background-color: var(--bg-menu-hover); }
+.menu-item-row:focus  { background-color: var(--bg-menu-hover); }
 .menu-item-row:active { background-color: var(--bg-pressed); }
-.menu-item-row:focus  { background-color: var(--bg-control); }
 
 /* Fixed icon column; reserved for every item in a menu that uses icons so the
    labels line up whether or not a given item supplies an icon. Width is the
@@ -3198,6 +3209,7 @@
 
 /* ---- toolbar buttonStyle -------------------------------------------------- */
 .toolbar-button {
+    -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
     border-color: var(--line-strong);
@@ -3224,6 +3236,7 @@
 /* Same compact visuals as .toolbar-button; the ::highlight(selected) state    */
 /* paints the "on" appearance via the accent-blue fill.                        */
 .toolbar-toggle {
+    -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
     border-color: var(--line-strong);

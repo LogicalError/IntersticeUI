@@ -30,12 +30,11 @@ namespace interstice
 
     struct NodeProperty
     {
-        // Left socket, rendered when has_value(); holds the source output feeding it.
+        // Left socket, rendered when has_value(); holds the source output feeding it (one at most).
         std::optional<PropertyEndpoint> input;
 
-        // Right socket. Same conventions as `input`; the contained endpoint
-        // is the target input this output drives. One target only (#66).
-        std::optional<PropertyEndpoint> output;
+        // Right socket, rendered when true. It drives every input that names it as its source.
+        bool output = false;
 
         // Row body, built between the two sockets; may call any widget (Label, Field, ...).
         std::function<void()> renderBody;
@@ -74,6 +73,8 @@ namespace interstice
         bool             active        = false;
         PropertyEndpoint source        = {};
         interstice::int2        currentScreen = {};   // most recent mouse screen pos
+        PropertyEndpoint target        = {};   // this frame: the input it is over and may connect to
+        std::optional<PropertyEndpoint> detachedInput; // the input the wire was pulled off, if any
     };
 
     // Interior lane a drag handle adjusts: the corridor route's vertical lane (LaneX), or the
@@ -88,6 +89,9 @@ namespace interstice
         std::optional<int32_t> exitX;    // detour vertical lane near the output
         std::optional<int32_t> entryX;   // detour vertical lane near the input
         std::optional<int32_t> laneY;    // detour horizontal return-lane Y
+        int32_t                laneOffset = 0; // grid steps right for the default corridor lane
+
+        bool operator==(const WireRouteOverrides&) const = default;
     };
 
     // Draggable interior segment; vertical segments drag horizontally and vice versa.
@@ -115,6 +119,30 @@ namespace interstice
         interstice::int2  a, b;
     };
 
+    // One thing the user did in a node view, as values before and after, so a host can keep
+    // the undo history (NodeView::onEdit) and undo or redo it (ApplyNodeViewEdit).
+    struct NodeViewEdit
+    {
+        struct Move     { int node = -1; interstice::int2 from {}, to {}; };
+        struct Rewire   { PropertyEndpoint input, from, to; };               // the input's source; invalid: none
+        struct Collapse { int node = -1; bool from = false, to = false; };
+        struct Lanes    { uint32_t wireKey = 0; WireRouteOverrides from, to; }; // default: no overrides
+
+        std::vector<Move>     moves;
+        std::vector<Rewire>   rewires;
+        std::vector<Collapse> collapses;
+        std::vector<Lanes>    lanes;
+
+        bool empty() const { return moves.empty() && rewires.empty() && collapses.empty() && lanes.empty(); }
+    };
+
+    // A wire as drawn this frame, for hit-testing (route space, CANVAS_LAY content box).
+    struct DrawnWire
+    {
+        uint32_t                      wireKey = 0;
+        std::vector<interstice::int2> points;
+    };
+
     // Segment drag via mouse capture rather than DnD, so the resize cursor sticks.
     struct WireSegmentDrag
     {
@@ -124,6 +152,7 @@ namespace interstice
         bool       vertical   = false;
         interstice::int2  startScreen = {};
         int32_t    startValue  = 0;   // lane coordinate at drag start (node.pos space)
+        WireRouteOverrides lanesBefore {}; // the wire's overrides at drag start, for the edit
     };
 
 
@@ -172,6 +201,14 @@ namespace interstice
         std::unordered_map<uint32_t, WireRouteOverrides> wireOverrides;
         std::vector<CachedWireHandle>                    wireHandleCache;
         WireSegmentDrag                                  wireDrag;
+
+        // The wire under the mouse (by WireKey), from the last frame: highlighted, removed by
+        // a middle click, and offered for deletion by a right click.
+        std::optional<uint32_t> hoveredWire;
+        // Called once per finished user edit (a whole drag is one), after it is applied.
+        std::function<void(const NodeViewEdit&)> onEdit;
+        std::optional<uint32_t> wireMenuWire;          // the wire the open context menu is for
+        interstice::int2        rightPressScreen {};   // a right press that pans isn't a click
 
         // Whether an output -> input wire is allowed; null allows any. Called only for
         // bounds-checked, cross-node endpoints, so it may index view.nodes directly.

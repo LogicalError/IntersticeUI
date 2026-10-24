@@ -6,6 +6,7 @@
 #include <gui_core/gui_id.h>
 
 #include <span>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -68,13 +69,65 @@ namespace interstice
     //   - else a vertical gap between them          -> detour through the gap;
     //   - else (side-by-side)                       -> around the nearer outside edge.
     // grid <= 0 or an empty rect gives a plain elbow. `overrides` pin interior lanes,
-    // clamped so they never cross a body. All coordinates share one space (CANVAS_LAY).
+    // clamped so they never cross a body; laneOffset moves the unpinned corridor lane.
+    // All coordinates share one space (CANVAS_LAY).
     WireRoute BuildWireRoute(int2 outPt, int2 inPt,
                              IntRect srcRect, IntRect tgtRect,
                              int32_t grid, int2 gridOrigin,
                              const WireRouteOverrides& overrides = {});
 
-    // Single-target on both ends: existing connections of either socket are dropped first.
+    // Stable key for a wire, identified by its target (input) endpoint — each input carries
+    // at most one incoming wire. Keys the per-wire lane overrides and drag handles.
+    constexpr uint32_t WireKey(int targetNode, int targetProp)
+    {
+        return ((uint32_t)targetNode << 16) | (uint32_t)(uint16_t)targetProp;
+    }
+
+    // The input a WireKey names.
+    constexpr PropertyEndpoint WireInput(uint32_t wireKey)
+    {
+        return { int(wireKey >> 16), int(wireKey & 0xFFFFu) };
+    }
+
+    // The wire within `tolerance` of point `p` (the closest when several are); none when no
+    // wire is. Points and tolerance share the wires' space.
+    std::optional<uint32_t> WireAt(std::span<const DrawnWire> wires, int2 p, float tolerance);
+
+    // Edits. The node view makes its changes through these, so what it reports is what it did.
+    // Redoes `edit` (its `to` values), or with `undo` restores its `from` values.
+    void ApplyNodeViewEdit(NodeView& view, const NodeViewEdit& edit, bool undo = false);
+    // Applies `edit` and reports it to view.onEdit.
+    void CommitNodeViewEdit(NodeView& view, const NodeViewEdit& edit);
+    // Wires `output` into `input`; the input's old wire goes, the output keeps its others.
+    NodeViewEdit ConnectEdit(const NodeView& view, PropertyEndpoint output, PropertyEndpoint input);
+    // Removes the wire into `input`, with its lane overrides.
+    NodeViewEdit DisconnectEdit(const NodeView& view, PropertyEndpoint input);
+
+    // Default lane offsets (grid steps) for wires between the same two nodes, so their
+    // lanes don't coincide: k wires, in input order, get (k-1)/2 counting down by one
+    // (one wire: 0; two: 0,-1; three: 1,0,-1; four: 1,0,-1,-2). Keyed by WireKey.
+    // A dragged wire (pendingOut -> pendingIn, both valid) counts as connected, under
+    // pendingIn's key, replacing that input's wire.
+    std::unordered_map<uint32_t, int32_t> ComputeWireLaneOffsets(const NodeView& view,
+                                                                  PropertyEndpoint pendingOut = {},
+                                                                  PropertyEndpoint pendingIn  = {});
+
+    // A wire being dragged from an output: routed as the connection it would make when it is
+    // over an input that accepts it (inPt on tgtRect), else to the cursor as if an input sat there.
+    WireRoute BuildPendingWireRoute(int2 outPt, IntRect srcRect, int2 cursor,
+                                    std::optional<int2> inPt, IntRect tgtRect,
+                                    int32_t grid, int2 gridOrigin, int32_t laneOffset = 0);
+
+    // Whether a wire from output `out` to input `in` is allowed: never a same-node loop,
+    // otherwise the view's canConnect delegate decides (none: allowed). Endpoints are
+    // bounds-checked first, so the delegate can index view.nodes directly.
+    bool ConnectionAllowed(const NodeView& view, PropertyEndpoint out, PropertyEndpoint in);
+
+    // The first input of node `nodeIdx`, top to bottom, that a wire from `output` may
+    // connect to; invalid when there is none.
+    PropertyEndpoint FirstInputAccepting(const NodeView& view, PropertyEndpoint output, int nodeIdx);
+
+    // An input has one source, so its previous wire is replaced; the output keeps its others.
     void ConnectSockets(NodeView& view, PropertyEndpoint output, PropertyEndpoint input);
 
     // Moves `n` to the front (last) of a z-order list, keeping the others' order.

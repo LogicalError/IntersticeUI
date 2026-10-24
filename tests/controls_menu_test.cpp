@@ -105,6 +105,120 @@ namespace interstice
                 EXPECT_EQ(openThenClose(), first);
         }
 
+        TEST_F(ControlsMenuTest, ClickingOutsideClosesTheMenu)
+        {
+            ID menuID   = app.idManager.CreateStaticID();
+            ID buttonID = app.idManager.CreateStaticID();
+            ID areaID   = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.BeginMenuBar();
+                if (app.BeginMenu(menuID, "File", app.theme.menuBarTriggerStyleRef, app.theme.menuStyleRef, app.theme.menuItemRowStyleRef))
+                {
+                    app.MenuItem("New", nullptr);
+                    app.EndMenu();
+                }
+                app.EndMenuBar();
+                app.Button(buttonID, "Other", [] {});
+                app.BeginVertical(areaID, LayoutOverride::Auto().Height(200));
+                app.EndVertical();
+                app.EndRootWindow();
+            };
+
+            for (const ID target : { buttonID, areaID })
+            {
+                app.Frame(draw);
+                app.ClickAt(app.CenterOf(menuID));
+                app.Frame(draw);
+                app.Frame(draw);
+                ASSERT_TRUE(app.menuManager.IsOpen());
+
+                app.ClickAt(app.CenterOf(target));
+                app.Frame(draw);
+                app.Frame(draw);
+                EXPECT_FALSE(app.menuManager.IsOpen()) << (target == buttonID ? "click on a control" : "click on empty space");
+                app.menuManager.CloseAll(app.guiStateManager);
+            }
+        }
+
+        // Hovering a row focuses it the next frame; the row must stay highlighted.
+        TEST_F(ControlsMenuTest, AHoveredRowStaysHighlightedOnceFocused)
+        {
+            const StyleRef row = app.theme.menuItemRowStyleRef;
+            auto background = [&](ElementState state) {
+                const VisualBoxStyle* style = app.styleManager.GetVisualBoxStyle(row.visualBoxStyleIndex, state);
+                return style ? style->backgroundColorIndex : VisualColorStyleIndex{};
+            };
+            EXPECT_NE(background(ElementState::Hover), background(ElementState::None));
+            EXPECT_EQ(background(ElementState::Focused), background(ElementState::Hover));
+            EXPECT_EQ(background(ElementState::Hover | ElementState::Focused), background(ElementState::Hover));
+        }
+
+        // Each menu has its own popup window, so switching never shows another menu's
+        // last frame while the new one renders.
+        TEST_F(ControlsMenuTest, SwitchingMenusUsesEachMenusOwnPopupWindow)
+        {
+            ID fileID = app.idManager.CreateStaticID();
+            ID editID = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.BeginMenuBar();
+                for (const ID id : { fileID, editID })
+                    if (app.BeginMenu(id, id == fileID ? "File" : "Edit", app.theme.menuBarTriggerStyleRef, app.theme.menuStyleRef, app.theme.menuItemRowStyleRef))
+                    {
+                        app.MenuItem(id == fileID ? "New" : "Undo", nullptr);
+                        app.EndMenu();
+                    }
+                app.EndMenuBar();
+                app.EndRootWindow();
+            };
+            auto open = [&](ID trigger) {
+                app.ClickAt(app.CenterOf(trigger));
+                app.Frame(draw);
+                app.Frame(draw);
+                EXPECT_TRUE(app.menuManager.IsOpen());
+                EXPECT_EQ(app.menuManager.levels[0].triggerID, trigger);
+                return app.menuManager.levels[0].windowID;
+            };
+
+            app.Frame(draw);
+            const ID fileWindow = open(fileID);
+            const ID editWindow = open(editID);
+            EXPECT_NE(fileWindow, editWindow);
+            EXPECT_EQ(open(fileID), fileWindow) << "a menu keeps its window";
+        }
+
+        // OpenContextMenu opens a context menu at a point, for something that isn't an
+        // element (a node-view wire); a right-click alone never opens it.
+        TEST_F(ControlsMenuTest, OpenContextMenuOpensAtThePoint)
+        {
+            const ID owner = app.idManager.CreateStaticID();
+            bool built = false;
+            auto draw = [&] {
+                app.BeginRootWindow();
+                built = app.BeginContextMenu(owner);
+                if (built)
+                {
+                    app.MenuItem("Delete", nullptr);
+                    app.EndContextMenu();
+                }
+                app.EndRootWindow();
+            };
+
+            app.Frame(draw);
+            app.ClickAt({ 300, 200 }, MouseButtons::Right);
+            app.Frame(draw);
+            EXPECT_FALSE(built) << "nothing to right-click";
+
+            app.OpenContextMenu(owner, { 300, 200 });
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_TRUE(built);
+            const auto rect = app.GetElementRect(app.menuManager.levels[0].windowID);
+            EXPECT_EQ(rect.x, 300);
+            EXPECT_EQ(rect.y, 200);
+        }
+
         TEST_F(ControlsMenuTest, ClickingOpenTriggerAgainTogglesItClosed)
         {
             ID menuID = app.idManager.CreateStaticID();

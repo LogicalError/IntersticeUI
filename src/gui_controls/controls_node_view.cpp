@@ -28,14 +28,6 @@ namespace interstice
             return PropertyEndpoint{ (int)(int16_t)(v >> 16), (int)(int16_t)(v & 0xFFFF) };
         }
 
-        // Stable key for a wire, identified by its target (input) endpoint —
-        // each input carries at most one incoming wire. Used to look up the
-        // per-wire lane overrides and to match drag-handle elements to a wire.
-        constexpr uint32_t WireKey(int targetNode, int targetProp)
-        {
-            return ((uint32_t)targetNode << 16) | (uint32_t)(uint16_t)targetProp;
-        }
-
         // Pack a colour to an 8-bit-per-channel key, for the wire-colour cache.
         uint32_t PackColor(const interstice::color4f& c)
         {
@@ -47,21 +39,6 @@ namespace interstice
             return (q(c.r) << 24) | (q(c.g) << 16) | (q(c.b) << 8) | q(c.a);
         }
 
-        // Whether a wire from output endpoint `out` to input endpoint `in` is
-        // allowed: never a same-node loop, otherwise the view's canConnect
-        // delegate decides (absent delegate => allow). Endpoints are fully
-        // bounds-checked here so the delegate can index view.nodes directly.
-        bool ConnectionAllowed(const NodeView& view, PropertyEndpoint out, PropertyEndpoint in)
-        {
-            if (out.nodeIdx == in.nodeIdx) return false;
-            const int nodeCount = (int)view.nodes.size();
-            if (out.nodeIdx < 0 || out.nodeIdx >= nodeCount) return false;
-            if (in.nodeIdx  < 0 || in.nodeIdx  >= nodeCount) return false;
-            if (out.propIdx < 0 || out.propIdx >= (int)view.nodes[out.nodeIdx].properties.size()) return false;
-            if (in.propIdx  < 0 || in.propIdx  >= (int)view.nodes[in.nodeIdx].properties.size())  return false;
-            return view.canConnect ? view.canConnect(view, out, in) : true;
-        }
-
         // Round a (possibly negative) coordinate to the nearest multiple of grid.
         constexpr int32_t SnapToGrid(int32_t v, int32_t grid)
         {
@@ -69,6 +46,35 @@ namespace interstice
             const int32_t q = (v >= 0) ? (v + grid / 2) / grid
                                        : (v - grid / 2) / grid;
             return q * grid;
+        }
+
+        // Connects the dragged wire. Pulled off an input and dropped elsewhere, the detach
+        // and the connect are one edit; dropped back where it was, nothing changed.
+        void FinishConnection(NodeView& view, PropertyEndpoint output, PropertyEndpoint input)
+        {
+            const std::optional<PropertyEndpoint> detached = view.pendingConnection.detachedInput;
+            view.pendingConnection = {};
+            NodeViewEdit edit = ConnectEdit(view, output, input);
+            ApplyNodeViewEdit(view, edit);
+            if (detached && *detached == input)
+                return;
+            if (detached)
+                edit.rewires.insert(edit.rewires.begin(), NodeViewEdit::Rewire{ *detached, output, PropertyEndpoint{} });
+            if (view.onEdit && !edit.empty())
+                view.onEdit(edit);
+        }
+
+        // The dragged wire was released nowhere: pulled off an input, it is a disconnect.
+        void CancelConnection(NodeView& view)
+        {
+            const PendingConnection pending = view.pendingConnection;
+            view.pendingConnection = {};
+            if (pending.detachedInput && view.onEdit)
+            {
+                NodeViewEdit edit;
+                edit.rewires.push_back({ *pending.detachedInput, pending.source, PropertyEndpoint{} });
+                view.onEdit(edit);
+            }
         }
 
     }
@@ -113,9 +119,11 @@ namespace interstice
         // A drag that ended without a Drop on us (e.g. released in empty space) leaves
         // a stale pending wire; clear it.
         if (view.pendingConnection.active && !guiStateManager.Drag().IsDragging())
-            view.pendingConnection = {};
+            CancelConnection(view);
+        view.pendingConnection.target = {};
 
         ID canvasID = idManager.AllocateDynamicID();
+        const ID wireMenuID = idManager.AllocateDynamicID("wire-menu");   // owns the wire context menu
 
         // Edit-mode wiring: while this canvas has focus, set the command
         // manager to the view's mode; restore Default when focus leaves.
@@ -132,15 +140,24 @@ namespace interstice
         interstice::Element canvas
         {
             .id = canvasID,
-            .eventHandler = [this, &view, canvasID](ElementEvent&& event)->bool
+            .eventHandler = [this, &view, canvasID, wireMenuID](ElementEvent&& event)->bool
             {
                 switch (event.type)
                 {
                     case interstice::EventType::MouseDown:
                     {
+                        // A middle click removes the wire under the mouse.
+                        if (event.state.MiddlePressed() && view.hoveredWire)
+                        {
+                            CommitNodeViewEdit(view, DisconnectEdit(view, WireInput(*view.hoveredWire)));
+                            view.hoveredWire.reset();
+                            return true;
+                        }
                         if (!event.state.LeftDown() && !event.state.RightDown())
                             return false;
                         this->guiStateManager.Interaction().SetFocusID(canvasID);
+                        if (event.state.RightPressed())
+                            view.rightPressScreen = event.state.screenPos;
                         if (event.state.LeftPressed())
                         {
                             // Begin marquee. Only SCREEN positions are captured here; the
@@ -210,6 +227,18 @@ namespace interstice
                     }
                     case interstice::EventType::MouseUp:
                     {
+                        // A right click (not a pan) on a wire offers to delete it.
+                        if (event.state.RightReleased() && view.hoveredWire)
+                        {
+                            const int2 moved = event.state.screenPos - view.rightPressScreen;
+                            const int32_t slack = styleManager.Px(kDragStartDistance);
+                            if (std::abs(moved.x) <= slack && std::abs(moved.y) <= slack)
+                            {
+                                view.wireMenuWire = view.hoveredWire;
+                                OpenContextMenu(wireMenuID, event.state.screenPos);
+                                return true;
+                            }
+                        }
                         if (view.marqueeActive && event.state.LeftReleased())
                         {
                             if (!view.marqueePastThreshold &&
@@ -300,6 +329,13 @@ namespace interstice
         // Per-frame node refs; the wire pass routes around the node bodies.
         std::vector<ElementRef> nodeRefs(nodeCount);
 
+        // Outputs that drive at least one input, by WireKey of the output's endpoint.
+        std::unordered_set<uint32_t> drivenOutputs;
+        for (const auto& cnode : view.nodes)
+            for (const auto& cprop : cnode.properties)
+                if (cprop.input.has_value() && cprop.input->valid())
+                    drivenOutputs.insert(WireKey(cprop.input->nodeIdx, cprop.input->propIdx));
+
         // -------- Helper: emit one socket Element (circle + drag/drop handler) --------
         auto emitSocket = [&](int n, int propIdx, bool isOutput, bool readonly,
                               LayoutOverride&& layout) -> ElementRef
@@ -346,7 +382,7 @@ namespace interstice
                             case EventType::MouseUp:
                             {
                                 // Cancel (e.g. released on the source); a target's Drop clears it too.
-                                view.pendingConnection = {};
+                                CancelConnection(view);
                                 return true;
                             }
                             default: break;
@@ -376,23 +412,16 @@ namespace interstice
                                 guiStateManager.Drag().UpdateFromInput(event.state);
                                 if (guiStateManager.Drag().GetDraggedID() != sockID) return false;
                                 // First post-threshold move: detach this input from its
-                                // source (clearing the reciprocal output) and hand the
-                                // loose end to the ghost, which originates at the source
-                                // output and now follows the cursor.
+                                // source and hand the loose end to the dragged wire, which
+                                // starts at the source output and follows the cursor.
                                 if (!view.pendingConnection.active)
                                 {
                                     auto& prop = view.nodes[self.nodeIdx].properties[self.propIdx];
                                     if (prop.input.has_value() && prop.input->valid())
                                     {
-                                        PropertyEndpoint srcEp = *prop.input;
-                                        if (srcEp.nodeIdx >= 0 && srcEp.nodeIdx < (int)view.nodes.size())
-                                        {
-                                            auto& srcNode = view.nodes[srcEp.nodeIdx];
-                                            if (srcEp.propIdx >= 0 && srcEp.propIdx < (int)srcNode.properties.size())
-                                                srcNode.properties[srcEp.propIdx].output = PropertyEndpoint{};
-                                        }
+                                        view.pendingConnection.source        = *prop.input;
+                                        view.pendingConnection.detachedInput = self;
                                         prop.input = PropertyEndpoint{};
-                                        view.pendingConnection.source = srcEp;
                                     }
                                     view.pendingConnection.active = true;
                                 }
@@ -402,7 +431,7 @@ namespace interstice
                             case EventType::MouseUp:
                             {
                                 // Ends a detach drag or an armed click; a socket drop is handled by its Drop.
-                                view.pendingConnection = {};
+                                CancelConnection(view);
                                 return true;
                             }
                             case EventType::DragEnter:
@@ -417,8 +446,7 @@ namespace interstice
                                 if (event.state.dragPayloadType != kSocketPayload) return false;
                                 PropertyEndpoint src = DecodeEndpoint(event.state.dragPayloadValue);
                                 if (!ConnectionAllowed(view, src, self)) return false;  // delegate-gated
-                                ConnectSockets(view, src, self);
-                                view.pendingConnection = {};
+                                FinishConnection(view, src, self);
                                 return true;
                             }
                             default: break;
@@ -449,17 +477,18 @@ namespace interstice
             {
                 const auto& p = view.nodes[n].properties[propIdx];
                 const bool connected = p.input.has_value() && p.input->valid();
-                highlight =
-                    (guiStateManager.Drag().IsDropTargetFor(sockID, kSocketPayload) &&
-                     ConnectionAllowed(view, view.pendingConnection.source, self))
-                    || (!readonly && connected && hovered && !view.pendingConnection.active);
+                const bool dropTarget = guiStateManager.Drag().IsDropTargetFor(sockID, kSocketPayload) &&
+                                        ConnectionAllowed(view, view.pendingConnection.source, self);
+                if (dropTarget)
+                    view.pendingConnection.target = self;
+                highlight = dropTarget || (!readonly && connected && hovered && !view.pendingConnection.active);
             }
 
             // A pin on the node's edge: filled when connected, a ring when not, with an
             // outline in the node's color. The hit region is the full element rect.
             const auto& socketProp = view.nodes[n].properties[propIdx];
-            const auto& endpoint   = isOutput ? socketProp.output : socketProp.input;
-            const bool  connected  = endpoint.has_value() && endpoint->valid();
+            const bool  connected  = isOutput ? drivenOutputs.contains(WireKey(n, propIdx))
+                                              : socketProp.input.has_value() && socketProp.input->valid();
             VERIFY(elementStorage.AddCustomDraw(res.ref,
                 [dotColor, highlight, connected, kSocketSize, nodeColor = theme.GetColor("--bg-raised"),
                  inset = styleManager.Px(2.0f), ring = styleManager.Px(2.0f), halo = styleManager.Px(6.0f),
@@ -499,6 +528,8 @@ namespace interstice
             socketInsetR  += nodeLS->borderWidths.right + nodeLS->padding.right;
         }
 
+        std::optional<uint32_t> handleHoveredWire;   // the wire whose lane handle is under the mouse
+
         // ---- Interior wire-segment drag handles ----
         // Invisible grab bands over draggable wire segments, from last frame's route pass
         // (view.wireHandleCache, node.pos space). Emitted before the nodes so nodes win hits,
@@ -521,6 +552,8 @@ namespace interstice
                 if (rw <= 0 || rh <= 0) continue;
 
                 const ID handleID = idManager.GetSubID(handleRange, (uint32_t)hi);
+                if ((guiStateManager.GetCurrentState(handleID) & ElementState::Hover) != ElementState::None)
+                    handleHoveredWire = wh.wireKey;
 
                 const bool dragging = view.wireDrag.active &&
                                       view.wireDrag.wireKey == wh.wireKey &&
@@ -540,10 +573,12 @@ namespace interstice
                             {
                                 if (!event.state.LeftPressed()) return false;
                                 guiStateManager.Interaction().SetFocusID(canvasID);
+                                const auto lanes = view.wireOverrides.find(wireKey);
                                 view.wireDrag = WireSegmentDrag{
                                     .active = true, .wireKey = wireKey, .role = role,
                                     .vertical = vertical, .startScreen = event.state.screenPos,
-                                    .startValue = startValue };
+                                    .startValue = startValue,
+                                    .lanesBefore = lanes != view.wireOverrides.end() ? lanes->second : WireRouteOverrides{} };
                                 return true;
                             }
                             case EventType::MouseMove:
@@ -571,7 +606,15 @@ namespace interstice
                             {
                                 if (view.wireDrag.active && view.wireDrag.wireKey == wireKey &&
                                     view.wireDrag.role == role)
+                                {
+                                    const auto lanes = view.wireOverrides.find(wireKey);
+                                    const WireRouteOverrides after = lanes != view.wireOverrides.end() ? lanes->second : WireRouteOverrides{};
+                                    NodeViewEdit edit;
+                                    if (!(after == view.wireDrag.lanesBefore))
+                                        edit.lanes.push_back({ wireKey, view.wireDrag.lanesBefore, after });
                                     view.wireDrag = {};
+                                    CommitNodeViewEdit(view, edit);
+                                }
                                 return true;
                             }
                             default: break;
@@ -630,7 +673,9 @@ namespace interstice
                             const auto r = view.nodeDoubleClick.Update(outerID);
                             if (r.sameAsPrevious && r.elapsedMs < 300.0f)
                             {
-                                view.nodes[n].collapsed = !view.nodes[n].collapsed;
+                                NodeViewEdit edit;
+                                edit.collapses.push_back({ n, view.nodes[n].collapsed, !view.nodes[n].collapsed });
+                                CommitNodeViewEdit(view, edit);
                                 view.nodeDoubleClick.Reset();
                                 return true;
                             }
@@ -670,7 +715,37 @@ namespace interstice
                         }
                         case EventType::MouseUp:
                         {
+                            // The whole drag is one edit, to the grid-snapped positions.
+                            if (!view.nodes[n].isDragging) return true;
                             view.nodes[n].isDragging = false;
+                            const int32_t grid = theme.nodeGridSize;
+                            NodeViewEdit edit;
+                            for (int i = 0; i < (int)view.nodes.size(); ++i)
+                            {
+                                const NodeModel& other = view.nodes[i];
+                                if (i != n && !view.selectedNodeIDs.count(other.stableID)) continue;
+                                const int2 to = grid > 0 ? int2{ SnapToGrid(other.pos.x, grid), SnapToGrid(other.pos.y, grid) } : other.pos;
+                                if (to.x != other.startPos.x || to.y != other.startPos.y)
+                                    edit.moves.push_back({ i, other.startPos, to });
+                            }
+                            CommitNodeViewEdit(view, edit);
+                            return true;
+                        }
+                        // A wire dropped on the node connects to its first input that takes it.
+                        case EventType::DragEnter:
+                        case EventType::DragOver:
+                        case EventType::Drop:
+                        {
+                            if (event.state.dragPayloadType != kSocketPayload) return false;
+                            const PropertyEndpoint src = DecodeEndpoint(event.state.dragPayloadValue);
+                            const PropertyEndpoint in  = FirstInputAccepting(view, src, n);
+                            if (!in.valid()) return false;
+                            if (event.type == EventType::Drop)
+                            {
+                                FinishConnection(view, src, in);
+                            }
+                            else
+                                view.pendingConnection.target = in;
                             return true;
                         }
                         case EventType::MouseMove:
@@ -818,8 +893,8 @@ namespace interstice
                                     /*resizable=*/false);
                     // A text-only body (NodeText) aligns to its sockets: left
                     // dot ⇒ left, right dot ⇒ right, both ⇒ centre.
-                    nodeRowTextAlign = (prop.input.has_value() && prop.output.has_value()) ? TextAlign::Center
-                                     :  prop.output.has_value()                            ? TextAlign::End
+                    nodeRowTextAlign = (prop.input.has_value() && prop.output) ? TextAlign::Center
+                                     :  prop.output                                ? TextAlign::End
                                      :                                                       TextAlign::Start;
                     // Value-fields fill the body (minus the label) with room to spare.
                     nodeRowFieldMinWidth = theme.nodeGridSize * 4;
@@ -843,7 +918,7 @@ namespace interstice
                     }
                     // Output dot: OUT OF FLOW — absolutely placed straddling the node's
                     // right border at this property's pitch (like the collapsed sockets).
-                    if (prop.output.has_value())
+                    if (prop.output)
                     {
                         const int16_t outY = static_cast<int16_t>((rowPitch * span) / 2 + socketYOffset - kSocketSize / 2);
                         socketRefs[n][p * 2 + 1] = emitSocket(n, p, /*isOutput=*/true, /*readonly=*/false,
@@ -873,7 +948,7 @@ namespace interstice
                         socketRefs[n][p * 2 + 0] = emitSocket(n, p, /*isOutput=*/false, /*readonly=*/true,
                             LayoutOverride{}.FixedSize(kSocketSize, kSocketSize).Absolute(leftX, y));
                     }
-                    if (prop.output.has_value())
+                    if (prop.output)
                     {
                         socketRefs[n][p * 2 + 1] = emitSocket(n, p, /*isOutput=*/true, /*readonly=*/true,
                             LayoutOverride{}.FixedSize(kSocketSize, kSocketSize).Absolute(rightX, y));
@@ -897,7 +972,9 @@ namespace interstice
         // of the frontmost node — and is skipped with that node when it leaves view.
         // Endpoints are CANVAS_LAY, so they pan/zoom with the sockets and clip to the viewport.
         VERIFY(elementStorage.AddCustomDraw(canvasRes.ref,
-            [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs)](interstice::CustomDrawContext& ctx)
+            [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs),
+             canvasHovered = guiStateManager.Interaction().GetHoveredID() == canvasID,
+             handleHoveredWire, mouseScreen = windowManager->GetScreenMousePos()](interstice::CustomDrawContext& ctx)
             {
                 // Nodes are positioned relative to the canvas BORDER box, but this draw's
                 // origin is the CONTENT box; offset the grid by the difference.
@@ -945,12 +1022,21 @@ namespace interstice
                     return ctx.GetElementRect(nodeRefs[idx]);
                 };
 
-                const interstice::LineStyle ghostStyle { .colorStyleIndex = theme.lineGrayStyle,   .lineWidth = styleManager.Px(2.f), .dashSize = styleManager.Px(4.f) };
-
                 // Draggable interior segments collected this frame (node.pos
                 // space) for next frame's grab elements. Replaces the cache at
                 // the end of this pass.
                 std::vector<CachedWireHandle> handleCache;
+
+                // Wires between the same two nodes get their lanes spread apart, counting a
+                // dragged wire over an input as connected.
+                const bool pendingOverInput = view.pendingConnection.active && view.pendingConnection.target.valid();
+                const auto laneOffsets = pendingOverInput
+                    ? ComputeWireLaneOffsets(view, view.pendingConnection.source, view.pendingConnection.target)
+                    : ComputeWireLaneOffsets(view);
+
+                // Routed first, then hit-tested, then drawn, so the hovered wire draws highlighted.
+                std::vector<DrawnWire> drawn;
+                std::vector<interstice::VisualColorStyleIndex> drawnColors;
 
                 const int nodeCount = (int)view.nodes.size();
                 for (int n = 0; n < nodeCount; ++n)
@@ -987,6 +1073,9 @@ namespace interstice
                             if (ov.entryX) *ov.entryX += gridOrigin.x;
                             if (ov.laneY)  *ov.laneY  += gridOrigin.y;
                         }
+                        const bool replaced = pendingOverInput && view.pendingConnection.target == PropertyEndpoint{ n, p };
+                        if (auto it = laneOffsets.find(wireKey); it != laneOffsets.end() && !replaced)
+                            ov.laneOffset = it->second;
 
                         const auto route = BuildWireRoute(socketCenter(srcRefs[srcOutIdx]),
                                                           socketCenter(tgtRefs[tgtInIdx]),
@@ -998,8 +1087,8 @@ namespace interstice
                         interstice::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
                         if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
                             wireColorIdx = cit->second;
-                        const interstice::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f) };
-                        ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle, 0.5f * float(theme.nodeGridSize));
+                        drawn.push_back(DrawnWire{ .wireKey = wireKey, .points = route.points });
+                        drawnColors.push_back(wireColorIdx);
 
                         // Cache draggable segments in node.pos space (subtract
                         // gridOrigin) so next frame's grab elements align with
@@ -1014,31 +1103,71 @@ namespace interstice
                     }
                 }
 
+                // The wire under the mouse: over a lane handle that handle's, over the bare
+                // canvas the nearest within a few pixels; none while something is dragged.
+                view.hoveredWire.reset();
+                if (!view.pendingConnection.active && !view.wireDrag.active && !view.marqueeActive)
+                {
+                    if (handleHoveredWire)
+                        view.hoveredWire = handleHoveredWire;
+                    else if (canvasHovered)
+                        view.hoveredWire = WireAt(drawn, ctx.ScreenToCurrent(mouseScreen),
+                                                  float(styleManager.Px(5)) / NodeViewZoom(view));
+                }
+                for (size_t w = 0; w < drawn.size(); ++w)
+                {
+                    const bool hovered = view.hoveredWire == drawn[w].wireKey;
+                    const interstice::LineStyle wireStyle{ .colorStyleIndex = drawnColors[w],
+                                                           .lineWidth = styleManager.Px(hovered ? 4.f : 2.f) };
+                    ctx.RenderPolyline(drawn[w].points, /*closed=*/false, wireStyle, 0.5f * float(theme.nodeGridSize));
+                }
+
+                // The wire being dragged: dashed, routed like the connection it would make.
                 if (view.pendingConnection.active)
                 {
                     const PropertyEndpoint src = view.pendingConnection.source;
+                    const PropertyEndpoint tgt = view.pendingConnection.target;
                     if (src.nodeIdx >= 0 && src.nodeIdx < (int)socketRefs.size())
                     {
                         const auto& srcRefs = socketRefs[src.nodeIdx];
                         const int srcOutIdx = src.propIdx * 2 + 1;
                         if (srcOutIdx >= 0 && srcOutIdx < (int)srcRefs.size() && srcRefs[srcOutIdx].IsValid())
                         {
-                            const interstice::int2 outPt = socketCenter(srcRefs[srcOutIdx]);
                             const int32_t grid = theme.nodeGridSize;
                             // currentScreen is a screen-space input; ScreenToCurrent brings it
-                            // into CANVAS_LAY, then snap to the grid so the dragged connector
-                            // lands on grid lines just like a committed wire.
+                            // into CANVAS_LAY, snapped to the grid like a socket.
                             interstice::int2 cursorLay = ctx.ScreenToCurrent(view.pendingConnection.currentScreen);
                             if (grid > 0)
                                 cursorLay = { GridLineNearest(cursorLay.x, gridOrigin.x, grid),
                                               GridLineNearest(cursorLay.y, gridOrigin.y, grid) };
-                            // Same right-exit rule as a finished wire — leave the output one
-                            // grid line to the right, then elbow to the (snapped) cursor.
-                            const int32_t exitX = (grid > 0)
-                                ? GridLineGE(outPt.x + grid, gridOrigin.x, grid) : outPt.x;
-                            const interstice::int2 ghost[] = {
-                                outPt, { exitX, outPt.y }, { exitX, cursorLay.y }, cursorLay };
-                            ctx.RenderPolyline(ghost, /*closed=*/false, ghostStyle);
+
+                            std::optional<interstice::int2> inPt;
+                            interstice::IntRect tgtRect {};
+                            if (tgt.valid() && tgt.nodeIdx < (int)socketRefs.size())
+                            {
+                                const auto& tgtRefs = socketRefs[tgt.nodeIdx];
+                                const int tgtInIdx = tgt.propIdx * 2 + 0;
+                                if (tgtInIdx >= 0 && tgtInIdx < (int)tgtRefs.size() && tgtRefs[tgtInIdx].IsValid())
+                                {
+                                    inPt    = socketCenter(tgtRefs[tgtInIdx]);
+                                    tgtRect = nodeRect(tgt.nodeIdx);
+                                }
+                            }
+                            int32_t laneOffset = 0;
+                            if (inPt)
+                                if (auto it = laneOffsets.find(WireKey(tgt.nodeIdx, tgt.propIdx)); it != laneOffsets.end())
+                                    laneOffset = it->second;
+                            const auto route = BuildPendingWireRoute(socketCenter(srcRefs[srcOutIdx]), nodeRect(src.nodeIdx),
+                                                                     cursorLay, inPt, tgtRect, grid, gridOrigin, laneOffset);
+
+                            const interstice::color4f srcColor =
+                                view.nodes[src.nodeIdx].properties[src.propIdx].socketColor;
+                            interstice::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
+                            if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
+                                wireColorIdx = cit->second;
+                            const interstice::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f),
+                                                                   .dashSize = styleManager.Px(4.f) };
+                            ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle, 0.5f * float(grid));
                         }
                     }
                 }
@@ -1074,6 +1203,16 @@ namespace interstice
         VERIFY(elementStorage.EndChildren());
 
         EmitNodeViewOverlays(view, canvasID);
+
+        // The context menu a right click on a wire opened.
+        if (view.wireMenuWire && BeginContextMenu(wireMenuID))
+        {
+            const PropertyEndpoint input = WireInput(*view.wireMenuWire);
+            MenuItem("Delete connection", [&view, input] { CommitNodeViewEdit(view, DisconnectEdit(view, input)); });
+            EndContextMenu();
+        }
+        else
+            view.wireMenuWire.reset();
     }
 
     void GUIApplication::EmitNodeViewOverlays(NodeView& view, ID canvasID)

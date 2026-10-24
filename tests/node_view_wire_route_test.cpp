@@ -290,4 +290,60 @@ namespace interstice
             }
         EXPECT_TRUE(foundReturnLane);
     }
+
+    // A wire dragged over an input that accepts it has exactly the route of the
+    // connection it will make.
+    TEST(NodeViewWireRouteTest, ADraggedWireOverAnInputMatchesTheConnection)
+    {
+        const IntRect src{ 0,  0,   180, 80 };
+        const IntRect tgt{ 40, 200, 180, 80 };   // below, overlapping in X: a detour
+        const int2 outPt{ src.Max(0) - 6, 40 };
+        const int2 inPt { tgt.Min(0) + 6, 240 };
+        const int2 cursor{ inPt.x + 20, inPt.y };
+
+        const auto dragged   = BuildPendingWireRoute(outPt, src, cursor, inPt, tgt, kGrid, kOrigin).points;
+        const auto connected = BuildWireRoute(outPt, inPt, src, tgt, kGrid, kOrigin).points;
+        ASSERT_EQ(dragged.size(), connected.size());
+        for (size_t i = 0; i < dragged.size(); ++i)
+        {
+            EXPECT_EQ(dragged[i].x, connected[i].x) << i;
+            EXPECT_EQ(dragged[i].y, connected[i].y) << i;
+        }
+    }
+
+    // Elsewhere it runs to the cursor as a connection to an input there would: out to
+    // the right, bending on the grid and around the source, never as a plain diagonal.
+    TEST(NodeViewWireRouteTest, ADraggedWireRunsToTheCursorLikeAConnection)
+    {
+        const IntRect src{ 200, 0, 180, 80 };
+        const int2 outPt { src.Max(0) - 6, 40 };
+        for (const int2 cursor : { int2{ 600, 200 }, int2{ 100, 300 }, int2{ 300, 40 } })
+        {
+            const auto route = BuildPendingWireRoute(outPt, src, cursor, std::nullopt, {}, kGrid, kOrigin).points;
+            ExpectEndpoints(route, outPt, cursor);
+            ExpectOrthogonal(route);
+            ASSERT_GE(route.size(), 3u);
+            EXPECT_GT(route[1].x, outPt.x) << "leaves the output to the right";
+            const IntRect atCursor{ cursor.x, cursor.y, 1, 1 };
+            const auto expected = BuildWireRoute(outPt, cursor, src, atCursor, kGrid, kOrigin).points;
+            EXPECT_EQ(route.size(), expected.size());
+        }
+    }
+
+    // Sockets in line with each other: one straight run, no bends that go straight on
+    // (a rounded corner there would cut a gap into the line).
+    TEST(NodeViewWireRouteTest, SocketsInLineGiveOneStraightRun)
+    {
+        const IntRect src{ 0,   0, 180, 80 };
+        const IntRect tgt{ 300, 0, 180, 80 };
+        const int2 outPt{ 174, 40 }, inPt{ 306, 40 };
+        for (const int32_t offset : { 0, -1, 1 })
+        {
+            WireRouteOverrides o;
+            o.laneOffset = offset;
+            const auto route = BuildWireRoute(outPt, inPt, src, tgt, kGrid, kOrigin, o).points;
+            ASSERT_EQ(route.size(), 2u) << offset;
+            ExpectEndpoints(route, outPt, inPt);
+        }
+    }
 }

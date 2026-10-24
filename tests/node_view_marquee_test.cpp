@@ -236,31 +236,29 @@ namespace interstice
         EXPECT_EQ(ordering, (std::vector<int>{ 2, 0, 1 }));
     }
 
-    // ---- ConnectSockets: single-target on both ends ----
+    // ---- ConnectSockets: an output drives any number of inputs, an input has one source ----
 
     static NodeView ThreeNodeView()
     {
         NodeView view;
         view.nodes.resize(3);
-        for (auto& n : view.nodes) n.properties.resize(1);
+        for (auto& n : view.nodes)
+            n.properties.push_back(NodeProperty{ .input = PropertyEndpoint{}, .output = true });
         return view;
     }
 
-    TEST(NodeViewConnectTest, RewiringAnOutputDisconnectsItsOldInput)
+    TEST(NodeViewConnectTest, AnOutputFansOutToSeveralInputs)
     {
         NodeView view = ThreeNodeView();
         const PropertyEndpoint out{ 0, 0 }, x{ 1, 0 }, y{ 2, 0 };
         ConnectSockets(view, out, x);
         ConnectSockets(view, out, y);
 
-        EXPECT_EQ(view.nodes[0].properties[0].output, y);
+        EXPECT_EQ(view.nodes[1].properties[0].input, out);
         EXPECT_EQ(view.nodes[2].properties[0].input, out);
-        EXPECT_FALSE(view.nodes[1].properties[0].input.has_value() &&
-                     view.nodes[1].properties[0].input->valid())
-            << "the old input still points at the output: a fan-out the model can't express";
     }
 
-    TEST(NodeViewConnectTest, RewiringAnInputDisconnectsItsOldOutput)
+    TEST(NodeViewConnectTest, RewiringAnInputReplacesItsSource)
     {
         NodeView view = ThreeNodeView();
         const PropertyEndpoint a{ 0, 0 }, b{ 1, 0 }, in{ 2, 0 };
@@ -268,7 +266,5 @@ namespace interstice
         ConnectSockets(view, b, in);
 
         EXPECT_EQ(view.nodes[2].properties[0].input, b);
-        EXPECT_FALSE(view.nodes[0].properties[0].output.has_value() &&
-                     view.nodes[0].properties[0].output->valid());
     }
 }

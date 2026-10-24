@@ -430,6 +430,7 @@ namespace interstice
                     : pos.MinWidth(triggerRect.w).MaxHeight(workArea.h);
             }();
 
+            level.windowID = menuManager.PopupWindowFor(menuID, idManager);
             menuManager.PrepareLevelWindow(level, guiStateManager.GetScrollManagement());
             if (BeginWindow(level.windowID, std::move(windowConstraints), menuStyle,
                             ElementFlags::IsMenuWindow))

@@ -132,6 +132,168 @@ namespace interstice
         ctx.SetSpace(DrawSpace::Local);
     }
 
+    std::unordered_map<uint32_t, int32_t> ComputeWireLaneOffsets(const NodeView& view,
+                                                                  PropertyEndpoint pendingOut,
+                                                                  PropertyEndpoint pendingIn)
+    {
+        auto pairKey = [](int srcNode, int tgtNode) { return (uint64_t(uint32_t(srcNode)) << 32) | uint32_t(tgtNode); };
+        const bool pending = pendingOut.valid() && pendingIn.valid();
+
+        // Wires per (source node, target node). Connecting replaces the input's wire.
+        std::unordered_map<uint64_t, std::vector<uint32_t>> groups;
+        for (int n = 0; n < (int)view.nodes.size(); ++n)
+            for (int p = 0; p < (int)view.nodes[n].properties.size(); ++p)
+            {
+                const auto& input = view.nodes[n].properties[p].input;
+                if (!input.has_value() || !input->valid())
+                    continue;
+                if (pending && PropertyEndpoint{ n, p } == pendingIn)
+                    continue;
+                groups[pairKey(input->nodeIdx, n)].push_back(WireKey(n, p));
+            }
+        if (pending)
+            groups[pairKey(pendingOut.nodeIdx, pendingIn.nodeIdx)].push_back(WireKey(pendingIn.nodeIdx, pendingIn.propIdx));
+
+        std::unordered_map<uint32_t, int32_t> offsets;
+        for (auto& [pair, wires] : groups)
+        {
+            std::sort(wires.begin(), wires.end());   // input order: same target node, by property
+            const int32_t first = (int32_t(wires.size()) - 1) / 2;
+            for (size_t i = 0; i < wires.size(); ++i)
+                offsets[wires[i]] = first - int32_t(i);
+        }
+        return offsets;
+    }
+
+    std::optional<uint32_t> WireAt(std::span<const DrawnWire> wires, int2 p, float tolerance)
+    {
+        std::optional<uint32_t> best;
+        float bestDistance = tolerance;
+        for (const DrawnWire& wire : wires)
+            for (size_t i = 0; i + 1 < wire.points.size(); ++i)
+            {
+                // Distance from p to the segment.
+                const float ax = float(wire.points[i].x),     ay = float(wire.points[i].y);
+                const float bx = float(wire.points[i + 1].x), by = float(wire.points[i + 1].y);
+                const float dx = bx - ax, dy = by - ay;
+                const float lengthSq = dx * dx + dy * dy;
+                float t = lengthSq > 0.0f ? ((float(p.x) - ax) * dx + (float(p.y) - ay) * dy) / lengthSq : 0.0f;
+                t = std::clamp(t, 0.0f, 1.0f);
+                const float ex = float(p.x) - (ax + t * dx), ey = float(p.y) - (ay + t * dy);
+                const float distance = std::sqrt(ex * ex + ey * ey);
+                if (distance <= bestDistance)
+                {
+                    bestDistance = distance;
+                    best = wire.wireKey;
+                }
+            }
+        return best;
+    }
+
+    namespace
+    {
+        NodeProperty* PropertyAt(NodeView& view, PropertyEndpoint e)
+        {
+            if (e.nodeIdx < 0 || e.nodeIdx >= (int)view.nodes.size()) return nullptr;
+            auto& props = view.nodes[e.nodeIdx].properties;
+            return (e.propIdx >= 0 && e.propIdx < (int)props.size()) ? &props[e.propIdx] : nullptr;
+        }
+    }
+
+    void ApplyNodeViewEdit(NodeView& view, const NodeViewEdit& edit, bool undo)
+    {
+        // Undo walks the changes backwards, so one that builds on another is undone first.
+        auto each = [undo](const auto& changes, auto&& apply)
+        {
+            if (undo) for (auto it = changes.rbegin(); it != changes.rend(); ++it) apply(*it, it->from);
+            else      for (const auto& change : changes)                         apply(change, change.to);
+        };
+        const int nodeCount = (int)view.nodes.size();
+        each(edit.moves, [&](const NodeViewEdit::Move& m, int2 pos)
+        {
+            if (m.node >= 0 && m.node < nodeCount) view.nodes[m.node].pos = pos;
+        });
+        each(edit.collapses, [&](const NodeViewEdit::Collapse& c, bool collapsed)
+        {
+            if (c.node >= 0 && c.node < nodeCount) view.nodes[c.node].collapsed = collapsed;
+        });
+        each(edit.rewires, [&](const NodeViewEdit::Rewire& r, PropertyEndpoint source)
+        {
+            if (NodeProperty* prop = PropertyAt(view, r.input); prop && prop->input.has_value())
+                prop->input = source;
+        });
+        each(edit.lanes, [&](const NodeViewEdit::Lanes& l, const WireRouteOverrides& lanes)
+        {
+            if (lanes == WireRouteOverrides{}) view.wireOverrides.erase(l.wireKey);
+            else                               view.wireOverrides[l.wireKey] = lanes;
+        });
+    }
+
+    void CommitNodeViewEdit(NodeView& view, const NodeViewEdit& edit)
+    {
+        if (edit.empty()) return;
+        ApplyNodeViewEdit(view, edit);
+        if (view.onEdit) view.onEdit(edit);
+    }
+
+    NodeViewEdit ConnectEdit(const NodeView& view, PropertyEndpoint output, PropertyEndpoint input)
+    {
+        NodeViewEdit edit;
+        if (input.nodeIdx < 0 || input.nodeIdx >= (int)view.nodes.size()) return edit;
+        const auto& props = view.nodes[input.nodeIdx].properties;
+        if (input.propIdx < 0 || input.propIdx >= (int)props.size() || !props[input.propIdx].input.has_value()) return edit;
+        const PropertyEndpoint before = *props[input.propIdx].input;
+        if (!(before == output))
+            edit.rewires.push_back({ input, before, output });
+        return edit;
+    }
+
+    NodeViewEdit DisconnectEdit(const NodeView& view, PropertyEndpoint input)
+    {
+        NodeViewEdit edit = ConnectEdit(view, PropertyEndpoint{}, input);
+        if (const auto it = view.wireOverrides.find(WireKey(input.nodeIdx, input.propIdx)); it != view.wireOverrides.end())
+            edit.lanes.push_back({ it->first, it->second, WireRouteOverrides{} });
+        return edit;
+    }
+
+    bool ConnectionAllowed(const NodeView& view, PropertyEndpoint out, PropertyEndpoint in)
+    {
+        if (out.nodeIdx == in.nodeIdx) return false;
+        const int nodeCount = (int)view.nodes.size();
+        if (out.nodeIdx < 0 || out.nodeIdx >= nodeCount) return false;
+        if (in.nodeIdx  < 0 || in.nodeIdx  >= nodeCount) return false;
+        if (out.propIdx < 0 || out.propIdx >= (int)view.nodes[out.nodeIdx].properties.size()) return false;
+        if (in.propIdx  < 0 || in.propIdx  >= (int)view.nodes[in.nodeIdx].properties.size())  return false;
+        return view.canConnect ? view.canConnect(view, out, in) : true;
+    }
+
+    PropertyEndpoint FirstInputAccepting(const NodeView& view, PropertyEndpoint output, int nodeIdx)
+    {
+        if (nodeIdx < 0 || nodeIdx >= (int)view.nodes.size())
+            return {};
+        const auto& properties = view.nodes[nodeIdx].properties;
+        for (int p = 0; p < (int)properties.size(); ++p)
+        {
+            const PropertyEndpoint in{ nodeIdx, p };
+            if (properties[p].input.has_value() && ConnectionAllowed(view, output, in))
+                return in;
+        }
+        return {};
+    }
+
+    WireRoute BuildPendingWireRoute(int2 outPt, IntRect srcRect, int2 cursor,
+                                    std::optional<int2> inPt, IntRect tgtRect,
+                                    int32_t grid, int2 gridOrigin, int32_t laneOffset)
+    {
+        if (inPt)
+        {
+            WireRouteOverrides overrides;
+            overrides.laneOffset = laneOffset;
+            return BuildWireRoute(outPt, *inPt, srcRect, tgtRect, grid, gridOrigin, overrides);
+        }
+        return BuildWireRoute(outPt, cursor, srcRect, IntRect{ cursor.x, cursor.y, 1, 1 }, grid, gridOrigin);
+    }
+
     WireRoute BuildWireRoute(int2 outPt, int2 inPt,
                              IntRect srcRect, IntRect tgtRect,
                              int32_t grid, int2 gridOrigin,
@@ -157,7 +319,7 @@ namespace interstice
             // Corridor between the bodies: one vertical lane, on the grid when it fits.
             // An override is clamped to the corridor.
             int32_t laneX = std::clamp(
-                GridLineNearest((srcR + tgtL) / 2, gridOrigin.x, grid), srcR, tgtL);
+                GridLineNearest((srcR + tgtL) / 2, gridOrigin.x, grid) + overrides.laneOffset * grid, srcR, tgtL);
             if (overrides.laneX)
                 laneX = std::clamp(GridLineNearest(*overrides.laneX, gridOrigin.x, grid), srcR, tgtL);
 
@@ -227,6 +389,15 @@ namespace interstice
         pts.erase(std::unique(pts.begin(), pts.end(),
                               [](int2 a, int2 b){ return a.x == b.x && a.y == b.y; }),
                   pts.end());
+        // Bends that go straight on (sockets in line with a lane) aren't bends.
+        for (size_t i = 1; i + 1 < pts.size(); )
+        {
+            auto between = [](int32_t a, int32_t v, int32_t b) { return std::min(a, b) <= v && v <= std::max(a, b); };
+            const bool straight = (pts[i - 1].x == pts[i].x && pts[i].x == pts[i + 1].x && between(pts[i - 1].y, pts[i].y, pts[i + 1].y))
+                               || (pts[i - 1].y == pts[i].y && pts[i].y == pts[i + 1].y && between(pts[i - 1].x, pts[i].x, pts[i + 1].x));
+            if (straight) pts.erase(pts.begin() + ptrdiff_t(i));
+            else          ++i;
+        }
 
         // A lane can collapse onto a socket (e.g. the sockets share a row), in
         // which case its segment is zero-length and not draggable.
@@ -287,24 +458,7 @@ namespace interstice
 
     void ConnectSockets(NodeView& view, PropertyEndpoint output, PropertyEndpoint input)
     {
-        auto propertyAt = [&view](PropertyEndpoint e) -> NodeProperty*
-        {
-            if (e.nodeIdx < 0 || e.nodeIdx >= (int)view.nodes.size()) return nullptr;
-            auto& props = view.nodes[e.nodeIdx].properties;
-            return (e.propIdx >= 0 && e.propIdx < (int)props.size()) ? &props[e.propIdx] : nullptr;
-        };
-        NodeProperty* srcProp = propertyAt(output);
-        NodeProperty* tgtProp = propertyAt(input);
-        if (!srcProp || !tgtProp) return;
-
-        // Detach the input's previous source and the output's previous target.
-        if (tgtProp->input && tgtProp->input->valid())
-            if (NodeProperty* prev = propertyAt(*tgtProp->input)) prev->output = PropertyEndpoint{};
-        if (srcProp->output && srcProp->output->valid())
-            if (NodeProperty* prev = propertyAt(*srcProp->output)) prev->input = PropertyEndpoint{};
-
-        srcProp->output = input;
-        tgtProp->input  = output;
+        ApplyNodeViewEdit(view, ConnectEdit(view, output, input));
     }
 
     void BringNodeToFront(std::vector<int>& ordering, int n)

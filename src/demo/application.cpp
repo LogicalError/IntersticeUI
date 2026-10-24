@@ -3,6 +3,7 @@
 #include <gui_core/diagnostics/gui_logging.h>
 #include <gui_core/input/gui_command_manager.h> // EditMode enum (why is this defined here?)
 #include <gui_core/diagnostics/gui_profiler.h>  // Diagnostics::IsProfilingEnabled (profiler panel cache opt-out)
+#include <gui_controls/gui_node_view_helpers.h> // ApplyNodeViewEdit (node-view undo)
 
 #include <algorithm>
 #include <array>
@@ -184,8 +185,6 @@ namespace interstice
                 {
                     Button(showGrid ? demo.gridOnIcon : demo.gridOffIcon, [this]() { showGrid = !showGrid; });
 					SetTooltip(showGrid ? "Grid on" : "Grid off");
-
-                    Button("FPS 60",    []() { INTERSTICE_LOG_INFO(kLogDemo, "Toolbar: FPS"); });
                 }
             });
 
@@ -283,8 +282,8 @@ namespace interstice
         demo.cmdSaveAs = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
         demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { applicationQuit = true; },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Undo"); },  "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Redo"); },  "Redo");
+        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ false); }, "Undo");
+        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ true); },  "Redo");
         demo.cmdCut    = cmds.RegisterCommand(interstice::EditMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
         demo.cmdCopy   = cmds.RegisterCommand(interstice::EditMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
         demo.cmdPaste  = cmds.RegisterCommand(interstice::EditMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
@@ -349,19 +348,19 @@ namespace interstice
             src.pos   = { styleManager.Px(-340), styleManager.Px(-140) };
             src.properties.push_back(NodeProperty
             {
-                .output      = PropertyEndpoint{},   // present, unconnected
+                .output      = true,
                 .renderBody  = [this]() { NodeText(demo.nodeName); },   // output ⇒ right-aligned
                 .socketColor = kTeal
             });
             src.properties.push_back(NodeProperty
             {
-                .output      = PropertyEndpoint{},
+                .output      = true,
                 .renderBody  = [this]() { Label("Seed"); Field(demo.nodeSeed); },
                 .socketColor = kAmber
             });
             src.properties.push_back(NodeProperty
             {
-                .output      = PropertyEndpoint{},
+                .output      = true,
                 .renderBody  = [this]() { Label("Enabled"); Field(demo.nodeEnabled, demo.nodeEnabled ? "ON" : "OFF"); },
                 .socketColor = kPurple
             });
@@ -384,13 +383,13 @@ namespace interstice
             mix.properties.push_back(NodeProperty
             {
                 .input       = PropertyEndpoint{},
-                .output      = PropertyEndpoint{},
+                .output      = true,
                 .renderBody  = [this]() { NodeText("Bypass"); },       // both dots ⇒ centred
                 .socketColor = kPurple
             });
             mix.properties.push_back(NodeProperty
             {
-                .output      = PropertyEndpoint{},
+                .output      = true,
                 .renderBody  = [this]() { NodeText("Result"); },       // output ⇒ right-aligned
                 .socketColor = kTeal
             });
@@ -412,7 +411,7 @@ namespace interstice
             });
             out.properties.push_back(NodeProperty
             {
-                .output      = PropertyEndpoint{},
+                .output      = true,
                 .renderBody  = [this]() { NodeText("Level"); },        // output ⇒ right-aligned
                 .socketColor = kAmber    // can feed Mix.Gain (a backward wire)
             });
@@ -431,7 +430,7 @@ namespace interstice
                 const int imgSide  = std::max(theme.nodeGridSize, rowSpan * rowPitch - 2 * margin - 2 * border);
                 tex.properties.push_back(NodeProperty
                 {
-                    .output      = PropertyEndpoint{},   // Color output — the dot sits at the image's bottom grid line
+                    .output      = true,   // Color output — the dot sits at the image's bottom grid line
                     .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(imgSide, imgSide)); },
                     .socketColor = kTeal,                // can feed Mix.Strength / Output.Value
                     .rowSpan     = rowSpan,
@@ -458,9 +457,15 @@ namespace interstice
                          == v.nodes[i.nodeIdx].properties[i.propIdx].socketColor;
                 };
 
-            // One initial connection: Source.Name (0,0).output -> Mix.Strength (1,0).input
-            demo.nodeView.nodes[0].properties[0].output = PropertyEndpoint{ 1, 0 };
-            demo.nodeView.nodes[1].properties[0].input  = PropertyEndpoint{ 0, 0 };
+            // The host keeps the undo history; the view reports each edit once it is made.
+            demo.nodeView.onEdit = [this](const NodeViewEdit& edit)
+            {
+                demo.nodeUndo.push_back(edit);
+                demo.nodeRedo.clear();
+            };
+
+            // One initial connection: Source.Name (0,0) output -> Mix.Strength (1,0) input
+            demo.nodeView.nodes[1].properties[0].input = PropertyEndpoint{ 0, 0 };
         }
 
         return true;
@@ -1022,7 +1027,19 @@ namespace interstice
         EndTitleBar();
     }
 
-    // Status bar: state and graphics API on the left, frame time and theme on the right.
+    // Undo (or redo) the node view's last edit, moving it to the other stack.
+    void Application::UndoNodeEdit(bool redo)
+    {
+        auto& from = redo ? demo.nodeRedo : demo.nodeUndo;
+        auto& to   = redo ? demo.nodeUndo : demo.nodeRedo;
+        if (from.empty())
+            return;
+        ApplyNodeViewEdit(demo.nodeView, from.back(), /*undo*/ !redo);
+        to.push_back(std::move(from.back()));
+        from.pop_back();
+    }
+
+    // Status bar: state on the left, frame time on the right.
     void Application::RenderStatusBar()
     {
         std::array<FrameTimingSample, kFrameHistoryCount> history{};
@@ -1034,10 +1051,8 @@ namespace interstice
         const float frameMs = totalMs / float(kAveraged);
 
         BeginStatusBar(idManager.AllocateDynamicID("statusBar"));
-        StatusText("Ready");
-        StatusText("Vulkan", LayoutOverride::Auto().FlexGrow(1));
+        StatusText("Ready", LayoutOverride::Auto().FlexGrow(1));
         StatusText(std::format("{:.2f} ms \u00B7 {:.0f} fps", frameMs, frameMs > 0.0f ? 1000.0f / frameMs : 0.0f));
-        StatusText(GetThemePath());
         EndStatusBar();
     }
 

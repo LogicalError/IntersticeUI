@@ -48,7 +48,7 @@ namespace interstice
                 a.stableID = nodeA;
                 a.title    = "A";
                 a.pos      = { 100, 80 };
-                a.properties.push_back(NodeProperty{ .output = PropertyEndpoint{} });
+                a.properties.push_back(NodeProperty{ .output = true });
 
                 NodeModel b{};
                 b.stableID = nodeB;

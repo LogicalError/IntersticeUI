@@ -7,6 +7,7 @@
 #include <gui_controls/gui_default_handlers.h>
 
 #include <gui_core/elements/gui_element_storage.h>
+#include <gui_core/input/gui_input_manager.h>
 
 #include <gui_core/windows/gui_os_window_manager.h>
 #include <gui_core/windows/gui_window_backend.h>
@@ -35,6 +36,45 @@ namespace interstice
         return level;
     }
 
+
+    ID MenuManager::PopupWindowFor(ID triggerID, IDManager& idManager)
+    {
+        auto [it, added] = popupWindowIDs.try_emplace(triggerID, ID::Invalid());
+        if (added)
+            it->second = idManager.CreateStaticID();
+        return it->second;
+    }
+
+    void MenuManager::CloseOnInputOutside(const InputManager& inputManager, const ElementStorage& elementStorage,
+                                          GUIStateManager& guiStateManager)
+    {
+        // Not a menu that this frame's input just opened (a context menu's right-click).
+        if (!IsOpen() || skipActivityCheck)
+            return;
+        // Against the menus' own rects: Windows sends the wheel to the focused popup.
+        auto contains = [&](ID id, int2 pos)
+        {
+            const ElementRef ref = elementStorage.FindElementRefByID(id);
+            return ref.IsValid() && elementStorage.GetElementRectUnsafe(ref).rect.Contains(pos);
+        };
+        auto inMenu = [&](int2 pos)
+        {
+            for (int i = 0; i < kMaxDepth; i++)
+                if (levels[i].isOpen && contains(levels[i].windowID, pos))
+                    return true;
+            return contains(levels[0].triggerID, pos);
+        };
+        for (const auto& e : inputManager.GetRecordedEvents())
+        {
+            if ((e.type != EventType::MouseScroll && e.type != EventType::MouseDown) || e.consumed)
+                continue;
+            if (!inMenu(e.state.screenPos))
+            {
+                CloseAll(guiStateManager);
+                return;
+            }
+        }
+    }
 
     void MenuManager::BeginFrame(GUIStateManager& guiStateManager, OSWindowManager& windowManager)
     {

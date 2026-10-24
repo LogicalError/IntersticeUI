@@ -109,6 +109,33 @@ namespace interstice
             EXPECT_EQ(b->snappedPx[3], 40);
         }
 
+        // A rounded polyline runs straight through a point where it doesn't turn: the
+        // runs meet there instead of stopping short for a corner that's never drawn.
+        TEST(PrimitiveScaleTest, RoundedPolylineHasNoGapWhereItRunsStraight)
+        {
+            interstice::GradientManager gradients{ 16 };
+            interstice::StyleManager    styles{ gradients };
+            interstice::ElementStorage  storage{ styles };
+            PrimitiveRenderer    r;
+            r.BeginWindow(interstice::ID::Invalid());
+            interstice::CustomDrawContext ctx{ r, storage, interstice::ElementRef::Invalid(), interstice::IntRect{ 0, 0, 200, 60 },
+                                        interstice::IntRect{ 0, 0, 200, 60 }, interstice::IntRect{ 0, 0, 500, 500 },
+                                        interstice::float3x2{}, interstice::int2{ 0, 0 } };
+            const interstice::int2 points[] = { { 10, 20 }, { 100, 20 }, { 190, 20 } };
+            ctx.RenderPolyline(points, /*closed=*/false, interstice::LineStyle{ .lineWidth = 2.0f }, 10.0f);
+            r.currentTarget->FinishRenderPass();
+
+            const auto& stream = r.currentTarget->streams[size_t(PrimitiveKind::Line)].cpu;
+            const size_t count = stream.size() / sizeof(Line);
+            ASSERT_EQ(count, 2u);
+            const Line* lines = reinterpret_cast<const Line*>(stream.data());
+            EXPECT_EQ(lines[0].p0.x, 10);
+            EXPECT_EQ(lines[0].p3.x, 100) << "the first run reaches the middle point";
+            EXPECT_EQ(lines[1].p0.x, 100);
+            EXPECT_EQ(lines[1].p3.x, 190);
+            r.EndWindow();
+        }
+
         // A box drawn from a custom-draw callback snaps to the element doing the
         // drawing, like element boxes snap to their parent (here under a 1.5x zoom).
         TEST(PrimitiveScaleTest, CustomDrawBoxSnapsToItsOwner)

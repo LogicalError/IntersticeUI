@@ -13,6 +13,7 @@ namespace interstice
 {
     class ElementStorage;
     class GUIStateManager;
+    class InputManager;
     class IDManager;
     class OSWindowManager;
     class ScrollManagement;
@@ -48,7 +49,8 @@ namespace interstice
         // When Left key closes a submenu, suppress auto-reopen until activeItemID changes.
         int   suppressedSubmenuTriggerDepth = -1;
 
-        // Skip auto-close for one frame after opening, before construction updates triggerIDs.
+        // Skip auto-close for one frame after opening, before construction updates triggerIDs,
+        // and the close on input outside for the input that opened it.
         bool  skipActivityCheck  = false;
 
         bool  mouseHiddenForMenu = false;         // set by keyboard nav, cleared on mouse move
@@ -59,6 +61,11 @@ namespace interstice
         // Per trigger ID: whether the menu had icons last time, so a reopen reserves
         // the icon column on its first frame.
         std::unordered_map<ID, bool> menuItemsHaveIcons;
+
+        // Each menu's own popup window (per trigger ID), so switching menus never
+        // shows another menu's last frame while the new one renders.
+        std::unordered_map<ID, ID> popupWindowIDs;
+        ID PopupWindowFor(ID triggerID, IDManager& idManager);
 
         // Menu-bar triggers in order, registered during construction for Left/Right navigation.
         bool              buildingMenuBar = false;
@@ -83,6 +90,11 @@ namespace interstice
         bool IsBalanced() const { return currentDepth == -1; }
 
         void RequestCloseAll();
+
+        // Closes all menus on a press or scroll this frame outside them and the open
+        // menu's trigger (which toggles it itself). Call before the input is dispatched.
+        void CloseOnInputOutside(const InputManager& inputManager, const ElementStorage& elementStorage,
+                                 GUIStateManager& guiStateManager);
 
         // Call before BeginWindow(level.windowID): a reopened level starts at the top
         // (its window ID, and so its scroll offset, persists across close/reopen).

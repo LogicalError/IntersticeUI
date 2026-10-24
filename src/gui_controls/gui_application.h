@@ -415,10 +415,13 @@ namespace interstice
         inline bool BeginTooltip() { return BeginTooltip(elementStorage.GetLastAddedID()); }
         void EndTooltip();
 
-        // Context menu: opens on right-click of the target element.
+        // Context menu: opens on right-click of the target element, below it.
         bool BeginContextMenu(ID targetID);
         inline bool BeginContextMenu() { return BeginContextMenu(elementStorage.GetLastAddedID()); }
         void EndContextMenu();
+        // Opens `targetID`'s context menu at a screen point, e.g. for something that isn't an
+        // element; BeginContextMenu(targetID) then builds it.
+        void OpenContextMenu(ID targetID, int2 screenPos);
 
         // Label group: Labels/DragLabels inside share one width, resizable by dragging
         // any label's right edge. Widths in CSS pixels.
@@ -1303,6 +1306,7 @@ namespace interstice
         ID tooltipWindowID     { ID::Invalid() };
         ID contextMenuWindowID { ID::Invalid() };
         ID contextMenuTargetID { ID::Invalid() }; // element the context menu is attached to
+        std::optional<int2> contextMenuScreenPos; // where OpenContextMenu put it; else below the target
         ID tabDragGhostWindowID{ ID::Invalid() }; // ghost window for dragged dock tab / drop overlay
 
         FrameTimingSample frameTimingHistory[kFrameHistoryCount] = {};

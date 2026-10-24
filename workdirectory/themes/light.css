@@ -14,9 +14,10 @@
     --bg-control: #FFFFFF;
     --bg-active: #E4E7EC;
     --bg-pressed: #EEF0F3;
+    --bg-menu-hover: #E4E7EC;
     --bg-keycap: #FFFFFF;
     --row-stripe: #F6F7F9;
-    --canvas-dot: #CDD2DA;
+    --canvas-dot: #B5BCC7;
     /* ---- Lines ------------------------------------------------------------ */
     --panel-border: #DADDE3;
     --line-subtle: #E3E6EB;
