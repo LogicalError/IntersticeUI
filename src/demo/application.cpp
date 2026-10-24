@@ -27,7 +27,10 @@ namespace interstice
     {
         const std::string_view styleFiles[] = { "styles.css", "demo.css" };
         SetStyleFiles(styleFiles);
-        if (!GUIApplication::Initialize(options))
+        // The demo shows text in many scripts, so it loads the optional Noto fallbacks.
+        InitializeOptions withFallbacks = options;
+        withFallbacks.fallbackFonts = "fonts/Noto-otf";
+        if (!GUIApplication::Initialize(withFallbacks))
             return false;
 
         // Application-specific resources and styles

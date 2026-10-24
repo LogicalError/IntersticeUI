@@ -11,14 +11,24 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_ref.h>
 
+#include <cstddef>
 #include <stdint.h>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace interstice
 {
+    // One face of a font family: a font file, or font data in memory that stays valid
+    // while the family is registered (embedded in the executable, say).
+    struct FontFaceSource
+    {
+        std::string_view           file;
+        std::span<const std::byte> data;
+    };
+
     // Forward declarations
     class GraphicsContext;
     class GUIStateManager;
@@ -283,9 +293,15 @@ namespace interstice
 
         // -------------------- Initialization --------------------
 
-        /// Where the default fonts are (default "fonts/Noto-otf", relative to the working
-        /// directory). Call before Initialize.
+        /// Where the built-in fonts are (default "fonts", relative to the working directory):
+        /// Inter for text and JetBrains Mono for monospace. Empty loads none, for an app that
+        /// registers its own. Initialize fails when they are set but missing. Call before Initialize.
         virtual void SetFontDirectory(std::string_view directory) = 0;
+
+        /// Where the optional fallback fonts are: Noto, for other scripts, emoji and symbols.
+        /// Empty (the default) loads none. Only the files an app ships there are used; missing
+        /// ones are skipped with a warning. Call before Initialize.
+        virtual void SetFallbackFontDirectory(std::string_view directory) = 0;
 
         virtual bool Initialize(GraphicsContext* graphicsContext, StyleManager* styleManager,
                                 TextAtlasManager* textAtlasManager,
@@ -319,7 +335,15 @@ namespace interstice
         /// TextStyle::fontId, or FontID::Invalid if no face could be loaded. Re-registering a
         /// family name with the same faces is a no-op; other faces replace the old ones and all
         /// text is laid out again (a failed re-registration keeps the previous faces).
-        virtual FontID RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> faceFiles) = 0;
+        virtual FontID RegisterFontFamily(std::string_view familyName, std::span<const FontFaceSource> faces) = 0;
+        FontID RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> faceFiles)
+        {
+            std::vector<FontFaceSource> faces;
+            faces.reserve(faceFiles.size());
+            for (std::string_view file : faceFiles)
+                faces.push_back(FontFaceSource{ .file = file });
+            return RegisterFontFamily(familyName, faces);
+        }
 
         // -------------------- Text Registration --------------------
 

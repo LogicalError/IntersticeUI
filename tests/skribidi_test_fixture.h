@@ -123,6 +123,8 @@ namespace GUITest
         void SetUp() override
         {
             textSystem = std::make_unique<interstice::SkribidiTextSystem>();
+            // Shaping tests cover other scripts, so the Noto fallbacks load too.
+            textSystem->SetFallbackFontDirectory("fonts/Noto-otf");
             ASSERT_TRUE(textSystem->Initialize(&graphicsContext,
                                                &styleManager,
                                                &atlasManager,

@@ -38,6 +38,11 @@ option(INTERSTICE_SYSTEM_SDL      "Use the host's SDL3 instead of the bundled on
 option(INTERSTICE_SYSTEM_HARFBUZZ "Use the host's harfbuzz instead of the bundled one"  OFF)
 option(INTERSTICE_SYSTEM_VMA      "Use the host's VulkanMemoryAllocator instead of the bundled one" OFF)
 
+# The Noto fallback fonts (other scripts, emoji, symbols; about 87 MB) are optional:
+# an app loads them with InitializeOptions::fallbackFonts. Off: resources and the
+# package carry only the built-in fonts.
+option(INTERSTICE_FALLBACK_FONTS "Ship the optional Noto fallback fonts with the resources" OFF)
+
 find_package(Vulkan REQUIRED)
 
 include(CompilerOptions)
@@ -90,13 +95,17 @@ if(INTERSTICE_INSTALL)
 
   install(FILES LICENSE THIRD_PARTY_NOTICES.txt DESTINATION share/IntersticeUI)
 
+  set(_interstice_resource_excludes PATTERN demo.css EXCLUDE)
+  if(NOT INTERSTICE_FALLBACK_FONTS)
+    list(APPEND _interstice_resource_excludes PATTERN Noto-otf EXCLUDE)
+  endif()
   install(DIRECTORY
       workdirectory/themes
       workdirectory/fonts
       workdirectory/icons
       "${INTERSTICE_BUILD_RESOURCE_DIR}/shaders_compiled"
     DESTINATION "${INTERSTICE_RESOURCE_INSTALL_DIR}"
-    PATTERN demo.css EXCLUDE)
+    ${_interstice_resource_excludes})
 
   if(INTERSTICE_INSTALL_THIRD_PARTY)
     install(DIRECTORY "${INTERSTICE_TP_INSTALL}/"

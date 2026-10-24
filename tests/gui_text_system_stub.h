@@ -59,9 +59,11 @@ namespace interstice
         // -------------------- Font Registration --------------------
 
         void SetFontDirectory(std::string_view /*directory*/) override {}
+        void SetFallbackFontDirectory(std::string_view /*directory*/) override {}
         void SetLanguage(std::string_view /*languageTag*/) override {}
 
-        FontID RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> /*faceFiles*/) override
+        using ITextSystem::RegisterFontFamily;
+        FontID RegisterFontFamily(std::string_view familyName, std::span<const FontFaceSource> /*faces*/) override
         {
             // Stub: no actual font loading.
             return FontIDFromName(familyName);

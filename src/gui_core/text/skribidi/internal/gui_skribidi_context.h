@@ -228,7 +228,7 @@ namespace interstice
 
 		// Font registration: maps FontID (raw uint32) to skribidi family ID used for font selection.
 		std::unordered_map<uint32_t, uint8_t> m_fontIdToFamilyId;
-		std::unordered_map<uint32_t, std::vector<std::string>> m_fontFamilyFaces; // face files each FontID was registered with
+		std::unordered_map<uint32_t, std::vector<StoredFontFace>> m_fontFamilyFaces; // the faces each FontID was registered with
 		uint8_t					m_nextFamilyId  = 6; // Built-in FontFamily values occupy 0-5
 		FontFallbackState       m_fontFallback;
 		std::string             m_defaultLanguage; // BCP 47; text without a language of its own uses it

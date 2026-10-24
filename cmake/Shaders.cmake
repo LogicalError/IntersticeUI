@@ -58,7 +58,8 @@ if(NOT PROJECT_IS_TOP_LEVEL)
   # file(COPY) skips files that haven't changed, so this is cheap after the first build.
   add_custom_target(interstice_resources ALL
     COMMAND ${CMAKE_COMMAND} "-DSOURCE=${PROJECT_SOURCE_DIR}/workdirectory"
-            "-DDESTINATION=${INTERSTICE_BUILD_RESOURCE_DIR}" -P ${CMAKE_CURRENT_LIST_DIR}/CopyResources.cmake
+            "-DDESTINATION=${INTERSTICE_BUILD_RESOURCE_DIR}" "-DFALLBACK_FONTS=${INTERSTICE_FALLBACK_FONTS}"
+            -P ${CMAKE_CURRENT_LIST_DIR}/CopyResources.cmake
     VERBATIM)
   set_target_properties(interstice_resources PROPERTIES FOLDER "Core")
 endif()

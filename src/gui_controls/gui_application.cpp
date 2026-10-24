@@ -179,7 +179,9 @@ namespace interstice
         windowManager    = std::make_unique<interstice::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
 
         graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
-        textSystem->SetFontDirectory(ResourcePath("fonts/Noto-otf"));
+        textSystem->SetFontDirectory(ResourcePath("fonts"));
+        if (!options.fallbackFonts.empty())
+            textSystem->SetFallbackFontDirectory(ResourcePath(options.fallbackFonts));
 
         if (!graphicsContext->Initialize(windowBackend))
         {

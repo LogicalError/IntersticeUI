@@ -80,7 +80,7 @@ namespace interstice
 
 		if (!skribidi_load_fonts(font_collection, m_fontFallback))
 		{
-			INTERSTICE_LOG_ERROR(kLogText, "could not load the default fonts from {}", m_fontFallback.fontDirectory);
+			INTERSTICE_LOG_ERROR(kLogText, "could not load the built-in fonts from {}", m_fontFallback.defaultDirectory);
 			Shutdown();
 			return false;
 		}

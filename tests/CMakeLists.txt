@@ -68,6 +68,7 @@ list(APPEND GUI_CORE_TEST_FILES
   color_field_test.cpp
   controls_docking_test.cpp
   skribidi_shaping_test.cpp
+  font_set_test.cpp
   skribidi_editor_test.cpp
   table_scrollbar_test.cpp
   controls_table_frozen_test.cpp

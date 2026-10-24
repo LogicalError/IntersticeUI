@@ -55,7 +55,8 @@ namespace interstice
 		m_skribidiContext = new SkribidiContext();
 		if (m_skribidiContext == nullptr)
 			return false;
-		m_skribidiContext->m_fontFallback.fontDirectory = m_fontDirectory;
+		m_skribidiContext->m_fontFallback.defaultDirectory  = m_fontDirectory;
+		m_skribidiContext->m_fontFallback.fallbackDirectory = m_fallbackFontDirectory;
 
 		return m_skribidiContext->Initialize(graphicsContext, styleManager, textAtlasManager, guiStateManager, clipboard);
 	}
@@ -342,6 +343,11 @@ namespace interstice
 		m_fontDirectory = std::string(directory);
 	}
 
+	void SkribidiTextSystem::SetFallbackFontDirectory(std::string_view directory)
+	{
+		m_fallbackFontDirectory = std::string(directory);
+	}
+
 	void SkribidiTextSystem::SetLanguage(std::string_view languageTag)
 	{
 		if (!m_skribidiContext)
@@ -353,7 +359,7 @@ namespace interstice
 		ClearCache();
 	}
 
-	FontID SkribidiTextSystem::RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> faceFiles)
+	FontID SkribidiTextSystem::RegisterFontFamily(std::string_view familyName, std::span<const FontFaceSource> faceList)
 	{
 		if (!m_skribidiContext || !m_skribidiContext->font_collection)
 			return FontID::Invalid;
@@ -362,7 +368,9 @@ namespace interstice
 		if (fontId == FontID::Invalid)
 			return FontID::Invalid;
 		const uint32_t key = static_cast<uint32_t>(fontId);
-		std::vector<std::string> faces(faceFiles.begin(), faceFiles.end());
+		std::vector<StoredFontFace> faces;
+		for (const FontFaceSource& face : faceList)
+			faces.push_back(StoredFontFace{ std::string(face.file), face.data });
 		auto& registeredFaces = m_skribidiContext->m_fontFamilyFaces;
 		if (auto it = registeredFaces.find(key); it != registeredFaces.end())
 		{
@@ -370,7 +378,7 @@ namespace interstice
 				return fontId;
 			// skribidi can't free single fonts without breaking match order, so swapping a
 			// family's faces rebuilds the collection; a failed swap restores the old faces.
-			std::vector<std::string> previous = std::exchange(it->second, std::move(faces));
+			std::vector<StoredFontFace> previous = std::exchange(it->second, std::move(faces));
 			if (RebuildFontCollection(fontId))
 				return fontId;
 			registeredFaces[key] = std::move(previous);
@@ -382,7 +390,7 @@ namespace interstice
 		const uint8_t familyId = m_skribidiContext->m_nextFamilyId;
 		if (familyId == UINT8_MAX)
 			return FontID::Invalid;
-		if (!skribidi_add_font_family(m_skribidiContext->font_collection, familyId, faceFiles, m_skribidiContext->m_fontFallback.fontDirectory))
+		if (!skribidi_add_font_family(m_skribidiContext->font_collection, familyId, faceList, m_skribidiContext->m_fontFallback))
 			return FontID::Invalid;
 
 		m_skribidiContext->m_fontIdToFamilyId[key] = familyId;
@@ -413,10 +421,12 @@ namespace interstice
 			INTERSTICE_LOG_ERROR(kLogText, "could not reload the default fonts");
 
 		bool loaded = false;
-		for (const auto& [key, files] : ctx.m_fontFamilyFaces)
+		for (const auto& [key, stored] : ctx.m_fontFamilyFaces)
 		{
-			const std::vector<std::string_view> views(files.begin(), files.end());
-			const bool ok = skribidi_add_font_family(ctx.font_collection, ctx.m_fontIdToFamilyId.at(key), views, ctx.m_fontFallback.fontDirectory);
+			std::vector<FontFaceSource> faces;
+			for (const StoredFontFace& face : stored)
+				faces.push_back(FontFaceSource{ face.file, face.data });
+			const bool ok = skribidi_add_font_family(ctx.font_collection, ctx.m_fontIdToFamilyId.at(key), faces, ctx.m_fontFallback);
 			if (key == static_cast<uint32_t>(fontId))
 				loaded = ok;
 		}

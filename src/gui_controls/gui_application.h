@@ -209,6 +209,9 @@ namespace interstice
             bool commandShortcuts       = true;  // route keys to commandManager's shortcuts
             bool repaintWhileResizing   = true;  // onGui = OnFrame, unless onGui is already set
             bool closeMenusOnWindowMove = true;  // open menus close when a window moves or resizes
+            // The optional fallback fonts (Noto: other scripts, emoji, symbols), relative to
+            // the resource root, e.g. "fonts/Noto-otf". Empty: only the built-in fonts.
+            std::string_view fallbackFonts {};
         };
 
         virtual bool Initialize(const InitializeOptions& options = {});

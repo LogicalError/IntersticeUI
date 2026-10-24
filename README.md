@@ -153,8 +153,8 @@ An application ships these files, in this layout:
 | Folder | Contents |
 | --- | --- |
 | `shaders_compiled/` | The compiled shaders (built from `workdirectory/shaders`) |
-| `fonts/Noto-otf/` | The default fonts and the fallback fonts for other scripts |
-| `fonts/Inter/` | The UI font the themes use |
+| `fonts/Inter/`, `fonts/JetBrainsMono/` | The built-in fonts: Inter for text, JetBrains Mono for monospace |
+| `fonts/Noto-otf/` | Optional fallback fonts for other scripts, emoji and symbols, loaded with `InitializeOptions::fallbackFonts`; ship only the ones you need |
 | `themes/` | `dark.css` and `light.css` (palettes) and `styles.css` (the rules) |
 
 `GUIApplication::SetResourceRoot` sets the folder they are loaded from; without it
@@ -201,6 +201,7 @@ Release configurations are installed; other configurations need
 `add_subdirectory(<IntersticeUI>)` works too, with the same target names and
 `INTERSTICE_RESOURCE_DIR`. Nothing is written to the IntersticeUI source tree:
 the compiled shaders and copies of the fonts and themes go into the build tree.
+The Noto fallback fonts are copied (and installed) only with `INTERSTICE_FALLBACK_FONTS`.
 `INTERSTICE_SYSTEM_SDL`, `INTERSTICE_SYSTEM_HARFBUZZ` and `INTERSTICE_SYSTEM_VMA`
 use the host's copy of that library instead of the bundled one, either a target
 the host already defined or one `find_package` finds. `tests/subproject_consumer`

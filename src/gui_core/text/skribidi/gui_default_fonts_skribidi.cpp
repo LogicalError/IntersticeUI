@@ -9,6 +9,8 @@
 #include <skribidi/skb_editor.h>
 #include <skribidi/skb_rich_layout.h>
 #include <skribidi/skb_image_atlas.h>
+#include <cstdint>
+#include <initializer_list>
 #include <span>
 #include <string_view>
 #include <unordered_map>
@@ -29,7 +31,7 @@ static std::string font_path(std::string_view directory, const char* filename)
 	return path + filename;
 }
 
-// Maps ISO-15924 uint32_t tag -> list of font filenames (in the font directory).
+// Maps ISO-15924 uint32_t tag -> list of font filenames (in the fallback directory).
 // Built once on first use. Used by the font fallback callback.
 static const std::unordered_map<uint32_t, std::vector<const char*>>& script_font_map()
 {
@@ -139,92 +141,145 @@ static bool add_font(skb_font_collection_t* font_collection, const std::string& 
 	return false;
 }
 
+static bool add_face(skb_font_collection_t* font_collection, const FontFaceSource& face, uint8_t family,
+	const skb_font_create_params_t* params = nullptr)
+{
+	if (face.data.empty())
+		return add_font(font_collection, std::string(face.file), family, params);
+	// Named by its address, so the same data is the same font.
+	const std::string name = "memory:" + std::to_string(reinterpret_cast<uintptr_t>(face.data.data()))
+	                       + ":" + std::to_string(face.data.size());
+	if (skb_font_collection_add_font_from_data(font_collection, name.c_str(), face.data.data(), face.data.size(),
+	                                           nullptr, nullptr, family, params))
+		return true;
+	INTERSTICE_LOG_WARNING(k_log_text, "could not load a font from memory ({} bytes)", face.data.size());
+	return false;
+}
+
+// An optional fallback font: a missing one is reported once and skipped.
+static bool add_optional_font(skb_font_collection_t* font_collection, const std::string& path, uint8_t family,
+	FontFallbackState& fonts, const skb_font_create_params_t* params = nullptr)
+{
+	if (fonts.missing.contains(path))
+		return false;
+	if (skb_font_collection_add_font(font_collection, path.c_str(), family, params))
+		return true;
+	fonts.missing.insert(path);
+	INTERSTICE_LOG_WARNING(k_log_text, "optional fallback font {} is missing; skipped", path);
+	return false;
+}
+
 static bool on_font_fallback(skb_font_collection_t* font_collection, const char* /*lang*/,
 	uint8_t script, uint8_t font_family, void* context)
 {
 	// Keyed per family: each family gets its own copy of the script's fonts.
-	auto* state = static_cast<FontFallbackState*>(context);
+	auto* fonts = static_cast<FontFallbackState*>(context);
 
 	const uint32_t tag = skb_script_to_iso15924_tag(script);
-	if (!state->attempts.insert((uint64_t(font_family) << 32) | tag).second)
+	if (!fonts->attempts.insert((uint64_t(font_family) << 32) | tag).second)
 		return false;
 
 	auto it = script_font_map().find(tag);
 	if (it == script_font_map().end())
 		return false;
-	const std::vector<const char*>& files = it->second;
 
 	// Skip synthetic bold for emoji — color glyphs already carry weight.
 	const bool add_bold = (font_family != SKB_FONT_FAMILY_EMOJI);
 
 	bool any_loaded = false;
-	for (const char* filename : files)
+	for (const char* filename : it->second)
 	{
-		const std::string path = font_path(state->fontDirectory, filename);
-		if (add_font(font_collection, path, font_family))
-			any_loaded = true;
+		const std::string path = font_path(fonts->fallbackDirectory, filename);
+		if (!add_optional_font(font_collection, path, font_family, *fonts))
+			continue;
+		any_loaded = true;
 		if (add_bold)
-			add_font(font_collection, path, font_family, &k_synthetic_bold);
+			add_optional_font(font_collection, path, font_family, *fonts, &k_synthetic_bold);
 	}
 	return any_loaded;
 }
 
-// Latin/Greek/Cyrillic and common symbols; every text family ends with these.
-static bool add_base_fonts(skb_font_collection_t* font_collection, uint8_t family, std::string_view fontDirectory)
+// What backs every family for codepoints its faces lack: Inter, then the fallback
+// set's Latin/Greek/Cyrillic and symbol fonts.
+static void add_base_fonts(skb_font_collection_t* font_collection, uint8_t family, FontFallbackState& fonts)
 {
+	if (!fonts.defaultDirectory.empty())
+	{
+		const std::string path = font_path(fonts.defaultDirectory, "Inter/Inter-Regular.ttf");
+		add_font(font_collection, path, family);
+		add_font(font_collection, path, family, &k_synthetic_bold);
+	}
+	if (fonts.fallbackDirectory.empty())
+		return;
 	for (const char* filename : { "NotoSans-Regular.otf", "NotoSansSymbols-Regular.otf", "NotoSansSymbols2-Regular.otf" })
 	{
-		const std::string path = font_path(fontDirectory, filename);
-		if (!add_font(font_collection, path, family))                    return false;
-		if (!add_font(font_collection, path, family, &k_synthetic_bold)) return false;
+		const std::string path = font_path(fonts.fallbackDirectory, filename);
+		if (add_optional_font(font_collection, path, family, fonts))
+			add_optional_font(font_collection, path, family, fonts, &k_synthetic_bold);
 	}
-	return true;
 }
 
-bool skribidi_add_font_family(skb_font_collection_t* font_collection, uint8_t family, std::span<const std::string_view> faceFiles,
-                              std::string_view fontDirectory)
+bool skribidi_add_font_family(skb_font_collection_t* font_collection, uint8_t family, std::span<const FontFaceSource> faces,
+                              FontFallbackState& fonts)
 {
 	// Insertion order is match priority: the family's own faces, then synthetic
 	// bolds (a real bold face added earlier still wins), then the base fonts for
 	// codepoints the faces lack.
-	std::vector<std::string> loaded;
-	for (std::string_view file : faceFiles)
-	{
-		std::string path(file);
-		if (add_font(font_collection, path, family))
-			loaded.push_back(std::move(path));
-	}
+	std::vector<const FontFaceSource*> loaded;
+	for (const FontFaceSource& face : faces)
+		if (add_face(font_collection, face, family))
+			loaded.push_back(&face);
 	if (loaded.empty())
 		return false;
 
-	for (const std::string& path : loaded)
-		add_font(font_collection, path, family, &k_synthetic_bold);
-	return add_base_fonts(font_collection, family, fontDirectory);
+	for (const FontFaceSource* face : loaded)
+		add_face(font_collection, *face, family, &k_synthetic_bold);
+	add_base_fonts(font_collection, family, fonts);
+	return true;
 }
 
-bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackState& fallback)
+bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackState& fonts)
 {
-	// Everything beyond these loads on demand via on_font_fallback().
-	const std::string_view dir = fallback.fontDirectory;
-	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_DEFAULT, dir)) return false;
-	if (!add_font(font_collection, font_path(dir, "NotoColorEmoji-Regular.ttf"), SKB_FONT_FAMILY_EMOJI)) return false;
-
-	// Generic families: their own face, then the base fonts, so text in a generic
-	// family never comes up empty.
-	if (!add_base_fonts(font_collection, SKB_FONT_FAMILY_SANS_SERIF, dir)) return false;
-	const struct { uint8_t family; const char* file; } generics[] = {
-		{ SKB_FONT_FAMILY_SERIF,     "NotoSerif-Regular.otf" },
-		{ SKB_FONT_FAMILY_MONOSPACE, "NotoSansMono-Regular.otf" },
-		{ SKB_FONT_FAMILY_MATH,      "NotoSansMath-Regular.otf" },
-	};
-	for (const auto& generic : generics)
+	// The built-in families: Inter for text, JetBrains Mono for monospace.
+	if (!fonts.defaultDirectory.empty())
 	{
-		const std::string path = font_path(dir, generic.file);
-		const std::string_view faces[] = { path };
-		if (!skribidi_add_font_family(font_collection, generic.family, faces, dir)) return false;
+		auto paths = [&](std::initializer_list<const char*> files)
+		{
+			std::vector<std::string> result;
+			for (const char* file : files)
+				result.push_back(font_path(fonts.defaultDirectory, file));
+			return result;
+		};
+		auto faces = [](const std::vector<std::string>& files)
+		{
+			std::vector<FontFaceSource> result;
+			for (const std::string& file : files)
+				result.push_back(FontFaceSource{ .file = file });
+			return result;
+		};
+		const auto inter = paths({ "Inter/Inter-Regular.ttf", "Inter/Inter-SemiBold.ttf", "Inter/Inter-Bold.ttf",
+		                           "Inter/Inter-Italic.ttf", "Inter/Inter-BoldItalic.ttf" });
+		const auto mono  = paths({ "JetBrainsMono/JetBrainsMono-Regular.ttf", "JetBrainsMono/JetBrainsMono-Bold.ttf" });
+		for (uint8_t family : { uint8_t(SKB_FONT_FAMILY_DEFAULT), uint8_t(SKB_FONT_FAMILY_SANS_SERIF),
+		                        uint8_t(SKB_FONT_FAMILY_SERIF), uint8_t(SKB_FONT_FAMILY_MATH) })
+			if (!skribidi_add_font_family(font_collection, family, faces(inter), fonts)) return false;
+		if (!skribidi_add_font_family(font_collection, SKB_FONT_FAMILY_MONOSPACE, faces(mono), fonts)) return false;
+	}
+	else
+	{
+		for (uint8_t family : { uint8_t(SKB_FONT_FAMILY_DEFAULT), uint8_t(SKB_FONT_FAMILY_SANS_SERIF),
+		                        uint8_t(SKB_FONT_FAMILY_SERIF), uint8_t(SKB_FONT_FAMILY_MATH),
+		                        uint8_t(SKB_FONT_FAMILY_MONOSPACE) })
+			add_base_fonts(font_collection, family, fonts);
 	}
 
-	skb_font_collection_set_on_font_fallback(font_collection, on_font_fallback, &fallback);
+	// Everything else comes from the optional fallback set, on demand.
+	if (!fonts.fallbackDirectory.empty())
+	{
+		add_optional_font(font_collection, font_path(fonts.fallbackDirectory, "NotoColorEmoji-Regular.ttf"),
+		                  SKB_FONT_FAMILY_EMOJI, fonts);
+		skb_font_collection_set_on_font_fallback(font_collection, on_font_fallback, &fonts);
+	}
 	return true;
 }
 

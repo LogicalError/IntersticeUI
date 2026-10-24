@@ -85,8 +85,10 @@ namespace interstice
         // -------------------- Font Registration --------------------
 
         void SetFontDirectory(std::string_view directory) override;
+        void SetFallbackFontDirectory(std::string_view directory) override;
         void SetLanguage(std::string_view languageTag) override;
-        FontID RegisterFontFamily(std::string_view familyName, std::span<const std::string_view> faceFiles) override;
+        using ITextSystem::RegisterFontFamily;
+        FontID RegisterFontFamily(std::string_view familyName, std::span<const FontFaceSource> faces) override;
 
         // -------------------- Text Registration --------------------
 
@@ -201,7 +203,8 @@ namespace interstice
         ID m_pendingCursorVisibleEditorId = ID::Invalid();
 
         SkribidiContext* m_skribidiContext;
-        std::string      m_fontDirectory { "fonts/Noto-otf" };
+        std::string      m_fontDirectory { "fonts" };
+        std::string      m_fallbackFontDirectory;
     };
 
 } // namespace interstice
