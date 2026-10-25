@@ -289,6 +289,14 @@ namespace interstice
     {
         m_frame.OnEndFrame([this](FrameContext&)
         {
+            if (!m_windowOpen.empty() || !m_menuOpen.empty() || !m_tooltipOpen.empty() || !m_cachedOpen.empty())
+            {
+                ReportMisuse("GUIApplication: a BeginWindow / BeginMenu / BeginTooltip / BeginCached without its End at end of frame (closed)");
+                m_windowOpen.clear();
+                m_menuOpen.clear();
+                m_tooltipOpen.clear();
+                m_cachedOpen.clear();
+            }
             if (m_tableEmit.has_value() || !m_outerTableEmits.empty())
             {
                 ReportMisuse("GUIApplication: unbalanced BeginTable/EndTable at end of frame (closed)");

@@ -117,10 +117,9 @@ namespace interstice
         m_gridViewState = {};
     }
 
-    bool GUIApplication::GridViewItem(ID id, std::string_view text, IconID icon,
-                                   interstice::ElementState extraState, StyleRef itemStyle,
-                                   LayoutOverride&& constraints,
-                                   std::string* renameBuffer)
+    bool GUIApplication::GridViewItem(ID id, IconID icon, std::string_view text,
+                                   interstice::ElementState extraState, std::string* renameBuffer,
+                                   StyleRef itemStyle, LayoutOverride&& constraints)
     {
         int itemIndex = m_gridViewState.nextItemIndex++;
         int* selectedIndex        = m_gridViewState.selectedIndex;

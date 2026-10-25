@@ -5,7 +5,7 @@
 
 namespace interstice
 {
-    enum class EditMode : uint32_t;
+    enum class CommandMode : uint32_t;
 
     // Case-insensitive substring search for the panels' search boxes. Lowercase
     // the query once when it changes, then match each item against it.
@@ -67,7 +67,10 @@ namespace interstice
 		bool            showGrid         = true;
         bool            enableAudio      = true;
 		ViewMode        viewMode         = ViewMode::Default;   // View mode toolbar buttons toggle these flags
-        EditMode        nodeViewEditMode = EditMode::Default;   // named mode for node-view shortcuts; copied into each NodeView's editMode
+        CommandMode     nodeViewMode = CommandMode::Default;   // the node view's shortcuts; copied into each NodeView's commandMode
+        // The transform tool the left toolbar picks (the demo's own, not a library mode).
+        enum class Tool { Select, Move, Rotate, Scale };
+        Tool            tool = Tool::Select;
 
         std::vector<StyleRef> boxStyleRefs;
         StyleRef borderTestStyleRef;
@@ -350,19 +353,19 @@ namespace interstice
 
             // Command handles shared by the main menu and toolbar.
             // cmdDocumentation / cmdAbout have no shortcut key.
-            CommandID cmdNew = 0, cmdOpen = 0, cmdSave = 0, cmdSaveAs = 0, cmdExit = 0;
-            CommandID cmdUndo = 0, cmdRedo = 0, cmdCut = 0, cmdCopy = 0, cmdPaste = 0;
-            CommandID cmdDocumentation = 0, cmdAbout = 0;
+            CommandID cmdNew = {}, cmdOpen = {}, cmdSave = {}, cmdSaveAs = {}, cmdExit = {};
+            CommandID cmdUndo = {}, cmdRedo = {}, cmdCut = {}, cmdCopy = {}, cmdPaste = {};
+            CommandID cmdDocumentation = {}, cmdAbout = {};
             // F11 toggles fullscreen and back to the mode the window had before.
-            CommandID  cmdFullscreen = 0;
+            CommandID  cmdFullscreen = {};
             WindowMode modeBeforeFullscreen = WindowMode::Normal;
-            CommandID cmdSearchCommands = 0;
+            CommandID cmdSearchCommands = {};
             CommandSearchState commandSearch;
-            CommandID cmdDuplicate = 0, cmdSelectAll = 0;
-            CommandID cmdDelete = 0, cmdZoomIn = 0, cmdZoomOut = 0;
-            CommandID cmdFind = 0, cmdPlay = 0, cmdStop = 0;
-            CommandID cmdRecenter = 0, cmdFrameSelected = 0;
-            CommandID cmdBrush = 0, cmdEraser = 0;
+            CommandID cmdDuplicate = {}, cmdSelectAll = {};
+            CommandID cmdDelete = {}, cmdZoomIn = {}, cmdZoomOut = {};
+            CommandID cmdFind = {}, cmdPlay = {}, cmdStop = {};
+            CommandID cmdRecenter = {}, cmdFrameSelected = {};
+            CommandID cmdBrush = {}, cmdEraser = {};
 
             ID smallMenuID{ ID::Invalid() };
             ID cameraMenuID{ ID::Invalid() };

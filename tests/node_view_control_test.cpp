@@ -305,7 +305,7 @@ namespace interstice
 
         TEST_F(NodeViewControlTest, EditModeFollowsCanvasFocus)
         {
-            view.editMode = EditMode::Default;
+            view.commandMode = CommandMode::Default;
             Settle();
             // Focusing the canvas (via a background click) sets the shortcut
             // manager's edit mode to the view's; this exercises the focus/mode
@@ -314,7 +314,7 @@ namespace interstice
             Frame();
             // The default view editMode is Default, so this just verifies the
             // path runs without disturbing the mode.
-            EXPECT_EQ(app.commandManager.GetEditMode(), EditMode::Default);
+            EXPECT_EQ(app.commandManager.GetMode(), CommandMode::Default);
         }
 
     } // namespace

@@ -7,10 +7,12 @@
 #include <unordered_set>
 #include <vector>
 #include <cassert>
+#include <source_location>
 #include <span>
 #include <functional>
 #include <limits>
 #include <string>
+#include <utility>
 
 #include <gui_core/frame/gui_frame_clock.h>
 #include <gui_core/graphics/gui_graphics_context.h>
@@ -359,21 +361,25 @@ namespace interstice
         bool MenuItemImpl(ID id, IconID icon, std::string_view text, std::string_view shortcut,
                           std::function<void()> onClick, StyleRef style, bool destructive, LayoutOverride&& constraints);
 
-        void BeginIndeterminate() { guiStateManager.Construction().PushIndeterminate(); }
+        bool BeginIndeterminate() { guiStateManager.Construction().PushIndeterminate(); return true; }
         void EndIndeterminate()   { guiStateManager.Construction().PopIndeterminate(); }
 
+        // Controls take (id, icon, text, ..., style, constraints), each part optional. A
+        // change is reported twice: input is handled after the frame it arrives in, where the
+        // callback runs; the return value is true in the next frame. Without an id, the
+        // control's ID comes from its call site.
         bool        Button(ID id, IconID icon, std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Button(ID id, IconID icon, std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(id,                            icon,            text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
         inline bool Button(ID id, IconID icon,                        std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return Button(id,                            icon,            std::string_view{}, std::move(onClick), style,                  std::move(constraints)); }
         inline bool Button(ID id, IconID icon,                        std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(id,                            icon,            std::string_view{}, std::move(onClick), theme.controls->button, std::move(constraints)); }
         inline bool Button(ID id,              std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return Button(id,                            IconID::Invalid, text,               std::move(onClick), style,                  std::move(constraints)); }
         inline bool Button(ID id,              std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(id,                            IconID::Invalid, text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
-        inline bool Button(       IconID icon, std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), icon,            text,               std::move(onClick), style,                  std::move(constraints)); }
-        inline bool Button(       IconID icon, std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), icon,            text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
-        inline bool Button(       IconID icon,                        std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), icon,            std::string_view{}, std::move(onClick), style,                  std::move(constraints)); }
-        inline bool Button(       IconID icon,                        std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), icon,            std::string_view{}, std::move(onClick), theme.controls->button, std::move(constraints)); }
-        inline bool Button(                    std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), IconID::Invalid, text,               std::move(onClick), style,                  std::move(constraints)); }
-        inline bool Button(                    std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}) { return Button(idManager.AllocateDynamicID(), IconID::Invalid, text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
+        inline bool Button(       IconID icon, std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), icon,            text,               std::move(onClick), style,                  std::move(constraints)); }
+        inline bool Button(       IconID icon, std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), icon,            text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
+        inline bool Button(       IconID icon,                        std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), icon,            std::string_view{}, std::move(onClick), style,                  std::move(constraints)); }
+        inline bool Button(       IconID icon,                        std::function<void()> onClick,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), icon,            std::string_view{}, std::move(onClick), theme.controls->button, std::move(constraints)); }
+        inline bool Button(                    std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), IconID::Invalid, text,               std::move(onClick), style,                  std::move(constraints)); }
+        inline bool Button(                    std::string_view text, std::function<void()> onClick,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Button(idManager.AllocateDynamicID(site), IconID::Invalid, text,               std::move(onClick), theme.controls->button, std::move(constraints)); }
 
         // Icon button for a command; the tooltip shows its name and shortcut, e.g. "Undo (Ctrl+Z)".
         bool        CommandButton(CommandID command, StyleRef style, LayoutOverride&& constraints = {});
@@ -385,7 +391,7 @@ namespace interstice
         // An on/off switch (track and knob) with an optional label after it, e.g. "On".
         bool        Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Switch(ID id, bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(id,                            value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
-        inline bool Switch(       bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(idManager.AllocateDynamicID(), value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+        inline bool Switch(       bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
 
         bool        Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            text,               onToggle, theme.controls->toggle, std::move(constraints)); }
@@ -393,12 +399,12 @@ namespace interstice
         inline bool Toggle(ID id, bool value, IconID icon,                        std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            std::string_view{}, onToggle, theme.controls->toggle, std::move(constraints)); }
         inline bool Toggle(ID id, bool value,              std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(id,                            value, IconID::Invalid, text,               onToggle, style,                  std::move(constraints)); }
         inline bool Toggle(ID id, bool value,              std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, IconID::Invalid, text,               onToggle, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            text,               onToggle, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            text,               onToggle, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool value, IconID icon,                        std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            std::string_view{}, onToggle, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool value, IconID icon,                        std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            std::string_view{}, onToggle, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool value,              std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, IconID::Invalid, text,               onToggle, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool value,              std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, IconID::Invalid, text,               onToggle, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            text,               onToggle, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            text,               onToggle, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool value, IconID icon,                        std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            std::string_view{}, onToggle, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool value, IconID icon,                        std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            std::string_view{}, onToggle, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool value,              std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, IconID::Invalid, text,               onToggle, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool value,              std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, IconID::Invalid, text,               onToggle, theme.controls->toggle, std::move(constraints)); }
         
         inline bool Toggle(ID id, bool& value, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
         inline bool Toggle(ID id, bool& value, IconID icon, std::string_view text,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
@@ -406,17 +412,17 @@ namespace interstice
         inline bool Toggle(ID id, bool& value, IconID icon,                                        LayoutOverride&& constraints = {}) { return Toggle(id,                            value, icon,            std::string_view{}, [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
         inline bool Toggle(ID id, bool& value,              std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(id,                            value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
         inline bool Toggle(ID id, bool& value,              std::string_view text,                 LayoutOverride&& constraints = {}) { return Toggle(id,                            value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool& value, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool& value, IconID icon, std::string_view text,                 LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool& value, IconID icon,                        StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            std::string_view{}, [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool& value, IconID icon,                                        LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, icon,            std::string_view{}, [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
-        inline bool Toggle(       bool& value,              std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
-        inline bool Toggle(       bool& value,              std::string_view text,                 LayoutOverride&& constraints = {}) { return Toggle(idManager.AllocateDynamicID(), value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool& value, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool& value, IconID icon, std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool& value, IconID icon,                        StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            std::string_view{}, [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool& value, IconID icon,                                        LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, icon,            std::string_view{}, [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
+        inline bool Toggle(       bool& value,              std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, style,                  std::move(constraints)); }
+        inline bool Toggle(       bool& value,              std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, IconID::Invalid, text,               [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
 
         bool        BeginMenu(ID id, std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints = {});
         inline bool BeginMenu(ID id, std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(id, text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
-        inline bool BeginMenu(       std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, buttonStyle, menuStyle, itemStyle, std::move(constraints)); }
-        inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
+        inline bool BeginMenu(       std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenu(idManager.AllocateDynamicID(site), text, buttonStyle, menuStyle, itemStyle, std::move(constraints)); }
+        inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenu(idManager.AllocateDynamicID(site), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
         // A section's name between items, e.g. "View", lined up with the labels.
         void        MenuHeader(std::string_view text);
         // A modal question with verb buttons, centered. Call it every frame while asking; it
@@ -437,21 +443,21 @@ namespace interstice
         bool        MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
 
         inline bool MenuItem(ID id, std::string_view text, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}) { return MenuItem(id, IconID::Invalid, text, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
-        inline bool MenuItem(       std::string_view text, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}) { return MenuItem(idManager.AllocateDynamicID(), IconID::Invalid, text, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        inline bool MenuItem(       std::string_view text, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), IconID::Invalid, text, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
 
         // onClick is required so MenuItem(text, nullptr) stays unambiguous.
         inline bool MenuItem(ID id, std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return MenuItem(id, IconID::Invalid, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
-        inline bool MenuItem(       std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return MenuItem(idManager.AllocateDynamicID(), IconID::Invalid, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        inline bool MenuItem(       std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), IconID::Invalid, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
 
-        inline bool MenuItem(IconID icon, std::string_view text, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}) { return MenuItem(idManager.AllocateDynamicID(), icon, text, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
-        inline bool MenuItem(IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}) { return MenuItem(idManager.AllocateDynamicID(), icon, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        inline bool MenuItem(IconID icon, std::string_view text, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), icon, text, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        inline bool MenuItem(IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), icon, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
         inline bool MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick = nullptr, LayoutOverride&& constraints = {}) { return MenuItem(id, icon, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
 
         // Menu item for a command: icon, label, shortcut and callback come from the command.
         bool MenuItem(CommandID command);
         // An item that destroys something (Delete, Discard), in the error color.
         bool        DestructiveMenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {});
-        inline bool DestructiveMenuItem(       IconID icon, std::string_view text, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return DestructiveMenuItem(idManager.AllocateDynamicID(), icon, text, std::string_view{}, std::move(onClick), std::move(constraints)); }
+        inline bool DestructiveMenuItem(       IconID icon, std::string_view text, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), icon, text, std::string_view{}, std::move(onClick), std::move(constraints)); }
         // Items between BeginDisabled and EndDisabled are dimmed and can't be chosen.
         void EndMenu();
 
@@ -459,7 +465,7 @@ namespace interstice
         // Down enters the dropdown, Up at its first item returns to the trigger.
         bool        BeginMenuBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginMenuBar(ID id, LayoutOverride&& constraints = {}) { return BeginMenuBar(id, theme.menuBarStyleRef, std::move(constraints)); }
-        inline bool BeginMenuBar(       LayoutOverride&& constraints = {}) { return BeginMenuBar(idManager.AllocateDynamicID(), theme.menuBarStyleRef, std::move(constraints)); }
+        inline bool BeginMenuBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenuBar(idManager.AllocateDynamicID(site), theme.menuBarStyleRef, std::move(constraints)); }
         void EndMenuBar();
 
         // ---- Title bar: a menu bar the window is dragged by ----
@@ -468,7 +474,7 @@ namespace interstice
         // EndTitleBar adds the minimize, maximize / restore and close buttons.
         bool        BeginTitleBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginTitleBar(ID id, LayoutOverride&& constraints = {}) { return BeginTitleBar(id, theme.titleBarStyleRef, std::move(constraints)); }
-        inline bool BeginTitleBar(       LayoutOverride&& constraints = {}) { return BeginTitleBar(idManager.AllocateDynamicID(), theme.titleBarStyleRef, std::move(constraints)); }
+        inline bool BeginTitleBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginTitleBar(idManager.AllocateDynamicID(site), theme.titleBarStyleRef, std::move(constraints)); }
         void        EndTitleBar();
 
         // What the OS should do with a screen point of a window with a custom title bar.
@@ -498,27 +504,28 @@ namespace interstice
 
         // Label group: Labels/DragLabels inside share one width, resizable by dragging
         // any label's right edge. Widths in CSS pixels.
-        void        BeginLabelGroup(ID id, int32_t defaultWidth = 120, int32_t minWidth = 40, int32_t maxWidth = 500, bool resizable = true);
-        inline void BeginLabelGroup(int32_t defaultWidth = 120, int32_t minWidth = 40, int32_t maxWidth = 500, bool resizable = true) { BeginLabelGroup(idManager.AllocateDynamicID(), defaultWidth, minWidth, maxWidth, resizable); }
+        bool        BeginLabelGroup(ID id, int32_t defaultWidth = 120, int32_t minWidth = 40, int32_t maxWidth = 500, bool resizable = true);
+        inline bool BeginLabelGroup(int32_t defaultWidth = 120, int32_t minWidth = 40, int32_t maxWidth = 500, bool resizable = true, std::source_location site = std::source_location::current()) { return BeginLabelGroup(idManager.AllocateDynamicID(site), defaultWidth, minWidth, maxWidth, resizable); }
         void        EndLabelGroup();
 
         // Button / toggle group: Buttons / Field(bool) inside are restyled with
         // .first-/.mid-/.last-* so they share borders. A single item keeps its plain style.
-        void        BeginButtonGroup(LayoutOverride&& constraints = {});
+        bool        BeginButtonGroup(LayoutOverride&& constraints = {});
         void        EndButtonGroup();
-        void        BeginToggleGroup(LayoutOverride&& constraints = {});
+        bool        BeginToggleGroup(LayoutOverride&& constraints = {});
         void        EndToggleGroup();
         // Area: scrollable container for grouping any content.
         bool        BeginArea(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginArea(ID id,                 LayoutOverride&& constraints = {}) { return BeginArea(id, theme.collectionStyleRef, std::move(constraints)); }
-        inline bool BeginArea(       StyleRef style, LayoutOverride&& constraints = {}) { return BeginArea(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline bool BeginArea(                       LayoutOverride&& constraints = {}) { return BeginArea(idManager.AllocateDynamicID(), theme.collectionStyleRef, std::move(constraints)); }
+        inline bool BeginArea(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginArea(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginArea(                       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginArea(idManager.AllocateDynamicID(site), theme.collectionStyleRef, std::move(constraints)); }
         void EndArea();
 
         // Cached scope: a grouping container (like BeginArea) whose rendered output is
         // retained. On a hit the body is skipped and the cached primitives are drawn.
-        // Call EndCached only on a miss (or use the Cached() lambda form):
-        //     if (app.BeginCached(id)) { ...build...; app.EndCached(); }
+        // EndCached is called either way (or use the Cached() scope):
+        //     if (app.BeginCached(id)) { ...build... }
+        //     app.EndCached();
         //
         // `id` must be STABLE across frames (static, or salted dynamic). Bump `signature`
         // (or call Invalidate(id)) when the content depends on data the cache can't observe.
@@ -526,8 +533,6 @@ namespace interstice
         bool        BeginCached(ID id, StyleRef style, uint64_t signature = 0, LayoutOverride&& constraints = {});
         inline bool BeginCached(ID id, uint64_t signature = 0, LayoutOverride&& constraints = {}) { return BeginCached(id, theme.collectionStyleRef, signature, std::move(constraints)); }
         void        EndCached();
-        template<class Fn> inline void Cached(ID id, uint64_t signature, Fn&& fn) { if (BeginCached(id, signature)) { fn(); EndCached(); } }
-        template<class Fn> inline void Cached(ID id, Fn&& fn)                      { if (BeginCached(id, 0u))        { fn(); EndCached(); } }
         // Rebuild id's cached scope (and enclosing ones) next time. Safe from event handlers.
         void        Invalidate(ID id);
 
@@ -540,31 +545,31 @@ namespace interstice
         // Undecorated flex containers; the Wrap variants wrap onto further lines/columns.
         bool        BeginHorizontal(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginHorizontal(ID id,                 LayoutOverride&& constraints = {}) { return BeginHorizontal(id, theme.emptyHorzStyleRef, std::move(constraints)); }
-        inline bool BeginHorizontal(       StyleRef style, LayoutOverride&& constraints = {}) { return BeginHorizontal(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline bool BeginHorizontal(                       LayoutOverride&& constraints = {}) { return BeginHorizontal(idManager.AllocateDynamicID(), theme.emptyHorzStyleRef, std::move(constraints)); }
+        inline bool BeginHorizontal(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginHorizontal(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginHorizontal(                       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginHorizontal(idManager.AllocateDynamicID(site), theme.emptyHorzStyleRef, std::move(constraints)); }
         void EndHorizontal();
 
         bool        BeginHorizontalWrap(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginHorizontalWrap(ID id,                 LayoutOverride&& constraints = {}) { return BeginHorizontalWrap(id, theme.emptyHorzWrapStyleRef, std::move(constraints)); }
-        inline bool BeginHorizontalWrap(       StyleRef style, LayoutOverride&& constraints = {}) { return BeginHorizontalWrap(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline bool BeginHorizontalWrap(                       LayoutOverride&& constraints = {}) { return BeginHorizontalWrap(idManager.AllocateDynamicID(), theme.emptyHorzWrapStyleRef, std::move(constraints)); }
+        inline bool BeginHorizontalWrap(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginHorizontalWrap(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginHorizontalWrap(                       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginHorizontalWrap(idManager.AllocateDynamicID(site), theme.emptyHorzWrapStyleRef, std::move(constraints)); }
         void EndHorizontalWrap();
 
         bool        BeginVertical(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginVertical(ID id,                 LayoutOverride&& constraints = {}) { return BeginVertical(id, theme.emptyVertStyleRef, std::move(constraints)); }
-        inline bool BeginVertical(       StyleRef style, LayoutOverride&& constraints = {}) { return BeginVertical(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline bool BeginVertical(                       LayoutOverride&& constraints = {}) { return BeginVertical(idManager.AllocateDynamicID(), theme.emptyVertStyleRef, std::move(constraints)); }
+        inline bool BeginVertical(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginVertical(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginVertical(                       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginVertical(idManager.AllocateDynamicID(site), theme.emptyVertStyleRef, std::move(constraints)); }
         void EndVertical();
 
         bool        BeginVerticalWrap(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginVerticalWrap(ID id,                 LayoutOverride&& constraints = {}) { return BeginVerticalWrap(id, theme.emptyVertWrapStyleRef, std::move(constraints)); }
-        inline bool BeginVerticalWrap(       StyleRef style, LayoutOverride&& constraints = {}) { return BeginVerticalWrap(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline bool BeginVerticalWrap(                       LayoutOverride&& constraints = {}) { return BeginVerticalWrap(idManager.AllocateDynamicID(), theme.emptyVertWrapStyleRef, std::move(constraints)); }
+        inline bool BeginVerticalWrap(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginVerticalWrap(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginVerticalWrap(                       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginVerticalWrap(idManager.AllocateDynamicID(site), theme.emptyVertWrapStyleRef, std::move(constraints)); }
         void EndVerticalWrap();
 
         // Toolbar scope: a wrap container that swaps theme.controls to the toolbar styles,
         // so default-style widgets inside use their toolbar variants.
-        void BeginToolbar(bool horizontal = true);
+        bool BeginToolbar(bool horizontal = true);
         void EndToolbar();
 
         // ---- Scrollbars ----
@@ -610,10 +615,10 @@ namespace interstice
         }
         void EndReorderableGroup();
 
-        void        BeginReorderableItem(ID id, StyleRef style, LayoutOverride&& constraints = {});
-        inline void BeginReorderableItem(ID id, LayoutOverride&& constraints = {}) { BeginReorderableItem(id, theme.reorderableItemStyleRef, std::move(constraints)); }
-        inline void BeginReorderableItem(StyleRef style, LayoutOverride&& constraints = {}) { BeginReorderableItem(idManager.AllocateDynamicID(), style, std::move(constraints)); }
-        inline void BeginReorderableItem(LayoutOverride&& constraints = {}) { BeginReorderableItem(idManager.AllocateDynamicID(), theme.reorderableItemStyleRef, std::move(constraints)); }
+        bool        BeginReorderableItem(ID id, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool BeginReorderableItem(ID id, LayoutOverride&& constraints = {}) { return BeginReorderableItem(id, theme.reorderableItemStyleRef, std::move(constraints)); }
+        inline bool BeginReorderableItem(StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginReorderableItem(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
+        inline bool BeginReorderableItem(LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginReorderableItem(idManager.AllocateDynamicID(site), theme.reorderableItemStyleRef, std::move(constraints)); }
         void EndReorderableItem();
 
         // Non-interactive drag handle for use inside BeginReorderableItem; clicks reach the item.
@@ -623,17 +628,18 @@ namespace interstice
         bool        BeginListView(ID id, int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginListView(ID id, int* selectedIndex, int itemCount, StyleRef style, LayoutOverride&& constraints = {}) { return BeginListView(id, selectedIndex, itemCount, nullptr, style, std::move(constraints)); }
         inline bool BeginListView(ID id, int* selectedIndex, int itemCount, LayoutOverride&& constraints = {}) { return BeginListView(id, selectedIndex, itemCount, nullptr, theme.listViewStyleRef, std::move(constraints)); }
-        inline bool BeginListView(       int* selectedIndex, int itemCount, LayoutOverride&& constraints = {}) { return BeginListView(idManager.AllocateDynamicID(), selectedIndex, itemCount, nullptr, theme.listViewStyleRef, std::move(constraints)); }
+        inline bool BeginListView(       int* selectedIndex, int itemCount, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginListView(idManager.AllocateDynamicID(site), selectedIndex, itemCount, nullptr, theme.listViewStyleRef, std::move(constraints)); }
         inline bool BeginListView(ID id, int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}) { return BeginListView(id, selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
-        inline bool BeginListView(       int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}) { return BeginListView(idManager.AllocateDynamicID(), selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
+        inline bool BeginListView(       int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginListView(idManager.AllocateDynamicID(site), selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
         void EndListView();
 
         int FindListItemIndex(interstice::ID id) const;
 
-        bool        ListItem(ID id, std::string_view text, IconID icon = IconID::Invalid, StyleRef style = {}, LayoutOverride&& constraints = {});
-        inline bool ListItem(ID id, std::string_view text, LayoutOverride&& constraints = {}) { return ListItem(id, text, IconID::Invalid, theme.listItemStyleRef, std::move(constraints)); }
-        inline bool ListItem(       std::string_view text, IconID icon, LayoutOverride&& constraints = {}) { return ListItem(idManager.AllocateDynamicID(), text, icon, theme.listItemStyleRef, std::move(constraints)); }
-        inline bool ListItem(       std::string_view text, LayoutOverride&& constraints = {}) { return ListItem(idManager.AllocateDynamicID(), text, IconID::Invalid, theme.listItemStyleRef, std::move(constraints)); }
+        bool        ListItem(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool ListItem(ID id, IconID icon, std::string_view text, LayoutOverride&& constraints = {}) { return ListItem(id, icon, text, theme.listItemStyleRef, std::move(constraints)); }
+        inline bool ListItem(ID id,              std::string_view text, LayoutOverride&& constraints = {}) { return ListItem(id, IconID::Invalid, text, theme.listItemStyleRef, std::move(constraints)); }
+        inline bool ListItem(       IconID icon, std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ListItem(idManager.AllocateDynamicID(site), icon, text, theme.listItemStyleRef, std::move(constraints)); }
+        inline bool ListItem(                    std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ListItem(idManager.AllocateDynamicID(site), IconID::Invalid, text, theme.listItemStyleRef, std::move(constraints)); }
 
 
         // Recomputes skipCount / ancestorLineMask / isLastSibling from row depths.
@@ -658,10 +664,10 @@ namespace interstice
         ID TreeDropTargetRow() const { return m_treeDropState.targetRowID; }
 
         // Items emitted in between render as selected.
-        void BeginSelected() { guiStateManager.Construction().PushSelected(); }
+        bool BeginSelected() { guiStateManager.Construction().PushSelected(); return true; }
         void EndSelected()   { guiStateManager.Construction().PopSelected(); }
         // Controls emitted in between are disabled: drawn dimmed, and they take no input.
-        void BeginDisabled() { guiStateManager.Construction().PushDisabled(); }
+        bool BeginDisabled() { guiStateManager.Construction().PushDisabled(); return true; }
         void EndDisabled()   { guiStateManager.Construction().PopDisabled(); }
 
         // ---- GridView: 2D icon grid (like file explorer) ----
@@ -671,13 +677,17 @@ namespace interstice
 
         // renameBuffer (optional) enables in-place rename: F2, Ctrl+Shift+Click or a slow
         // re-click opens an editor. Enter commits; Escape or focus loss cancels.
-        bool        GridViewItem(ID id, std::string_view text, IconID icon = IconID::Invalid,
+        bool        GridViewItem(ID id, IconID icon, std::string_view text,
                                  interstice::ElementState extraState = interstice::ElementState::None,
+                                 std::string* renameBuffer = nullptr,
                                  StyleRef itemStyle = {},
-                                 LayoutOverride&& constraints = {},
-                                 std::string* renameBuffer = nullptr);
-        inline bool GridViewItem(std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
-            { return GridViewItem(idManager.AllocateDynamicID(), text, icon, interstice::ElementState::None, {}, std::move(constraints)); }
+                                 LayoutOverride&& constraints = {});
+        inline bool GridViewItem(ID id, std::string_view text, LayoutOverride&& constraints = {})
+            { return GridViewItem(id, IconID::Invalid, text, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
+        inline bool GridViewItem(IconID icon, std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return GridViewItem(idManager.AllocateDynamicID(site), icon, text, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
+        inline bool GridViewItem(std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return GridViewItem(idManager.AllocateDynamicID(site), IconID::Invalid, text, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
 
 
         // generateItem(index, itemID) must emit exactly one cell, typically GridViewItem(itemID, ...).
@@ -715,7 +725,7 @@ namespace interstice
             { return BeginTable(id, columns, N, state, theme.tableStyleRef, std::move(constraints)); }
         void EndTable();
 
-        void BeginRow();
+        bool BeginRow();
         void EndRow();
 
         // Cells auto-advance to the next column.
@@ -751,41 +761,36 @@ namespace interstice
         //                   the array reorders headers and cells together. A C array
         //                   converts to the span.
         //   rowHeight     : row-height floor; 0 uses the style's natural row height.
-        //   showHeaders   : false omits the header row (and with it reorder, resize and sort).
-        //   cellStyle     : body-cell style override (default theme.tableCellStyleRef);
-        //                   the row height follows it.
+        // Headers, cell style and separators are TableState options.
         void VirtualTable(ID id, TableState& state,
                           std::span<VirtualTableColumn> columns,
                           int totalRowCount,
                           int32_t rowHeight = 0,
                           StyleRef style = {},
-                          LayoutOverride&& constraints = {},
-                          bool showHeaders = true,
-                          StyleRef cellStyle = {},
-                          bool columnSeparators = true);
+                          LayoutOverride&& constraints = {});
 
         // ---- Breadcrumb: a path such as Graphs > Terrain material ----
         // Segments are separated by chevrons; the last is the current one. Clicking another
         // segment calls onSelect(index) and returns true that frame.
         bool        Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, StyleRef style, LayoutOverride&& constraints = {});
         inline bool Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(id, segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
-        inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(idManager.AllocateDynamicID(), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
+        inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Breadcrumb(idManager.AllocateDynamicID(site), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
 
         // ---- Status bar: a strip of short status texts, usually along a window's bottom edge ----
         // Give one StatusText FlexGrow(1) to push the texts after it to the right.
         bool        BeginStatusBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
         inline bool BeginStatusBar(ID id, LayoutOverride&& constraints = {}) { return BeginStatusBar(id, theme.statusBarStyleRef, std::move(constraints)); }
-        inline bool BeginStatusBar(       LayoutOverride&& constraints = {}) { return BeginStatusBar(idManager.AllocateDynamicID(), theme.statusBarStyleRef, std::move(constraints)); }
+        inline bool BeginStatusBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginStatusBar(idManager.AllocateDynamicID(site), theme.statusBarStyleRef, std::move(constraints)); }
         void        EndStatusBar();
         void        StatusText(ID id, std::string_view text, LayoutOverride&& constraints = {});
-        inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}) { StatusText(idManager.AllocateDynamicID(), text, std::move(constraints)); }
+        inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { StatusText(idManager.AllocateDynamicID(site), text, std::move(constraints)); }
 
         // ---- Command search: finds and runs commandManager's commands ----
         // Focused, it lists the commands whose description contains the query; Up / Down
         // move through them and Enter or a click runs one. Escape leaves the search.
         // `state` must outlive the frame. Returns true when a command ran since the last call.
         bool        CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints = {});
-        inline bool CommandSearch(       CommandSearchState& state, LayoutOverride&& constraints = {}) { return CommandSearch(idManager.AllocateDynamicID(), state, std::move(constraints)); }
+        inline bool CommandSearch(       CommandSearchState& state, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return CommandSearch(idManager.AllocateDynamicID(site), state, std::move(constraints)); }
         // Puts the keyboard in the search next frame; bind it to a command such as Ctrl+K.
         static void FocusCommandSearch(CommandSearchState& state) { state.focusRequested = true; }
 
@@ -807,36 +812,36 @@ namespace interstice
                          LayoutOverride&& constraints = {});
         void EndTabBar();
 
-        bool Tab(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints = {});
-        inline bool Tab(ID id, std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
-        { return Tab(id, text, icon, theme.tabStyleRef, std::move(constraints)); }
-        inline bool Tab(std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
-            { return Tab(idManager.AllocateDynamicID(), text, icon, std::move(constraints)); }
+        bool        Tab(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool Tab(ID id, IconID icon, std::string_view text, LayoutOverride&& constraints = {}) { return Tab(id, icon, text, theme.tabStyleRef, std::move(constraints)); }
+        inline bool Tab(ID id,              std::string_view text, LayoutOverride&& constraints = {}) { return Tab(id, IconID::Invalid, text, theme.tabStyleRef, std::move(constraints)); }
+        inline bool Tab(       IconID icon, std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Tab(idManager.AllocateDynamicID(site), icon, text, theme.tabStyleRef, std::move(constraints)); }
+        inline bool Tab(                    std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Tab(idManager.AllocateDynamicID(site), IconID::Invalid, text, theme.tabStyleRef, std::move(constraints)); }
 
         // ---- DockingContainer ----
-        void BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints = {});
-        inline void BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {})
-            { BeginDockingContainer(id, layout, theme.dockContainerStyleRef, std::move(constraints)); }
+        bool BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {})
+            { return BeginDockingContainer(id, layout, theme.dockContainerStyleRef, std::move(constraints)); }
         void EndDockingContainer();
 
         bool        Field(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
-        inline bool Field(       bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, text, style, std::move(constraints)); }
+        inline bool Field(       bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, text, style, std::move(constraints)); }
         inline bool Field(ID id, bool& value, std::string_view text,                 LayoutOverride&& constraints = {}) { return Field(id,                            value, text, theme.controls->toggle, std::move(constraints)); }
-        inline bool Field(       bool& value, std::string_view text,                 LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, text, theme.controls->toggle, std::move(constraints)); }
+        inline bool Field(       bool& value, std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, text, theme.controls->toggle, std::move(constraints)); }
 
         bool        Field(ID id, std::string& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {});
-        inline bool Field(       std::string& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, textEditBehavior, style, std::move(constraints)); }
+        inline bool Field(       std::string& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, textEditBehavior, style, std::move(constraints)); }
         inline bool Field(ID id, std::string& value, StyleRef style, LayoutOverride&& constraints = {}) { return Field(id, value, TextEditBehavior::ContinuousUpdate, style, std::move(constraints)); }
-        inline bool Field(       std::string& value, StyleRef style, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, style, std::move(constraints)); }
+        inline bool Field(       std::string& value, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, style, std::move(constraints)); }
         inline bool Field(ID id, std::string& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}) { return Field(id,                            value, textEditBehavior, theme.controls->textbox, std::move(constraints)); }
-        inline bool Field(       std::string& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, textEditBehavior, theme.controls->textbox, std::move(constraints)); }
+        inline bool Field(       std::string& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->textbox, std::move(constraints)); }
         inline bool Field(ID id, std::string& value, LayoutOverride&& constraints = {}) { return Field(id,                            value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, std::move(constraints)); }
-        inline bool Field(       std::string& value, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, std::move(constraints)); }
+        inline bool Field(       std::string& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, std::move(constraints)); }
 
         // A Field with a leading icon inside its border.
         bool        SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {})
         { return SearchField(id, value, icon, textEditBehavior, std::move(constraints), nullptr); }
-        inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}) { return SearchField(idManager.AllocateDynamicID(), value, icon, textEditBehavior, std::move(constraints)); }
+        inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, std::move(constraints)); }
 
 
 
@@ -899,19 +904,19 @@ namespace interstice
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
         inline bool Field(ID id, T& value, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, textEditBehavior, style, config, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, style, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(T& value, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, style, config, std::move(constraints)); }
+        inline bool Field(T& value, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, style, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, textEditBehavior, style, {}, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, style, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, textEditBehavior, theme.controls->textbox, config, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->textbox, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(T& value, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, config, std::move(constraints)); }
+        inline bool Field(T& value, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, textEditBehavior, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->textbox, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, LayoutOverride&& constraints = {}) { return Field<T>(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(       T& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
         
 
         // A number's type as a short tag: f32, f64, i8 ... u64 (empty for other types).
@@ -944,13 +949,13 @@ namespace interstice
             return changed;
         }
         template<typename T>
-        bool TypedField(T& value, LayoutOverride&& constraints = {}) { return TypedField(idManager.AllocateDynamicID(), value, std::move(constraints)); }
+        bool TypedField(T& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return TypedField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
 
         // A reorderable list: each row a grip, its index, the field (numbers with their type)
         // and a remove button; "Add item" after the rows. groupID must be stable so the
         // reorder state survives across frames.
         template<typename T>
-        void Field(ID groupID, std::vector<T>& items, StyleRef style, LayoutOverride layoutOverride = {})
+        void Field(ID groupID, std::vector<T>& items, StyleRef style, LayoutOverride layoutOverride = {}, std::source_location site = std::source_location::current())
         {
             if (BeginArea(style, std::move(layoutOverride)))
             {
@@ -968,7 +973,7 @@ namespace interstice
                 {
                     for (int i = 0; i < (int)items.size(); i++)
                     {
-                        BeginReorderableItem(idManager.AllocateDynamicID(), theme.collectionRowStyleRef,
+                        BeginReorderableItem(idManager.AllocateDynamicID(site), theme.collectionRowStyleRef,
                                              interstice::LayoutOverride{}.FlexGrow(1));
                         {
                             EmitDragHandle();
@@ -1065,48 +1070,51 @@ namespace interstice
 
 
         // ---- ColorField: swatch + color picker popup ----
-        bool ColorField(interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
-        bool ColorField(interstice::color4b& value, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, interstice::color4b& value, LayoutOverride&& constraints = {});
+        inline bool ColorField(       interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, std::move(constraints)); }
+        inline bool ColorField(       interstice::color4b& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())                        { return ColorField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
 
         // ---- GradientField: gradient swatch + editor popup ----
-        bool GradientField(interstice::Gradient& value, LayoutOverride&& constraints = {});
+        bool        GradientField(ID id, interstice::Gradient& value, LayoutOverride&& constraints = {});
+        inline bool GradientField(       interstice::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
 
         // ---- SliderField: DragLabel + horizontal slider track + numeric textbox ----
         bool        SliderField(ID id, float& value, float minVal, float maxVal,
-                                std::string_view label, LayoutOverride&& constraints = {});
+                                std::string_view text, LayoutOverride&& constraints = {});
         inline bool SliderField(float& value, float minVal, float maxVal,
-                                std::string_view label, LayoutOverride&& constraints = {}) { return SliderField(idManager.AllocateDynamicID(), value, minVal, maxVal, label, std::move(constraints)); }
+                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, std::move(constraints)); }
 
         // Integer variant: snaps to whole numbers.
         bool        SliderField(ID id, int& value, int minVal, int maxVal,
-                                std::string_view label, LayoutOverride&& constraints = {});
+                                std::string_view text, LayoutOverride&& constraints = {});
         inline bool SliderField(int& value, int minVal, int maxVal,
-                                std::string_view label, LayoutOverride&& constraints = {}) { return SliderField(idManager.AllocateDynamicID(), value, minVal, maxVal, label, std::move(constraints)); }
+                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, std::move(constraints)); }
 
         // Groove + knob without value text; drag-only, integer-valued.
         bool        Slider(ID id, int& value, int minVal, int maxVal, LayoutOverride&& constraints = {});
-        inline bool Slider(int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}) { return Slider(idManager.AllocateDynamicID(), value, minVal, maxVal, std::move(constraints)); }
+        inline bool Slider(int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Slider(idManager.AllocateDynamicID(site), value, minVal, maxVal, std::move(constraints)); }
 
 
 
-        void        DragLabel(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints = {});
-        inline void DragLabel(ID id, std::string_view title,                 LayoutOverride&& constraints = {}) { DragLabel(id, title, theme.dragLabelStyleRef, std::move(constraints)); }
-        inline void DragLabel(       std::string_view title, StyleRef style, LayoutOverride&& constraints = {}) { DragLabel(idManager.AllocateDynamicID(), title, style, std::move(constraints)); }
-        inline void DragLabel(       std::string_view title,                 LayoutOverride&& constraints = {}) { DragLabel(idManager.AllocateDynamicID(), title, theme.dragLabelStyleRef, std::move(constraints)); }
+        void        DragLabel(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        inline void DragLabel(ID id, std::string_view text,                 LayoutOverride&& constraints = {}) { DragLabel(id, text, theme.dragLabelStyleRef, std::move(constraints)); }
+        inline void DragLabel(       std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { DragLabel(idManager.AllocateDynamicID(site), text, style, std::move(constraints)); }
+        inline void DragLabel(       std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { DragLabel(idManager.AllocateDynamicID(site), text, theme.dragLabelStyleRef, std::move(constraints)); }
 
-        void        Label(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints = {});
+        void        Label(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
         // A label over a field taller than a row (a list): at the top, with a caption under
         // it such as "3 items".
-        void        Label(ID id, std::string_view title, std::string_view caption, LayoutOverride&& constraints = {});
-        inline void Label(       std::string_view title, std::string_view caption, LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, caption, std::move(constraints)); }
-        inline void Label(ID id, std::string_view title,                 LayoutOverride&& constraints = {}) { Label(id, title, theme.labelStyleRef, std::move(constraints)); }
-        inline void Label(       std::string_view title, StyleRef style, LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, style, std::move(constraints)); }
-        inline void Label(       std::string_view title,                 LayoutOverride&& constraints = {}) { Label(idManager.AllocateDynamicID(), title, theme.labelStyleRef, std::move(constraints)); }
+        void        Label(ID id, std::string_view text, std::string_view caption, LayoutOverride&& constraints = {});
+        inline void Label(       std::string_view text, std::string_view caption, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, caption, std::move(constraints)); }
+        inline void Label(ID id, std::string_view text,                 LayoutOverride&& constraints = {}) { Label(id, text, theme.labelStyleRef, std::move(constraints)); }
+        inline void Label(       std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, style, std::move(constraints)); }
+        inline void Label(       std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, theme.labelStyleRef, std::move(constraints)); }
 
-        void        Text(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints = {});
-        inline void Text(ID id, std::string_view title,                 LayoutOverride&& constraints = {}) { Text(id, title, theme.staticTextStyleRef, std::move(constraints)); }
-        inline void Text(       std::string_view title, StyleRef style, LayoutOverride&& constraints = {}) { Text(idManager.AllocateDynamicID(), title, style, std::move(constraints)); }
-        inline void Text(       std::string_view title,                 LayoutOverride&& constraints = {}) { Text(idManager.AllocateDynamicID(), title, theme.staticTextStyleRef, std::move(constraints)); }
+        void        Text(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        inline void Text(ID id, std::string_view text,                 LayoutOverride&& constraints = {}) { Text(id, text, theme.staticTextStyleRef, std::move(constraints)); }
+        inline void Text(       std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Text(idManager.AllocateDynamicID(site), text, style, std::move(constraints)); }
+        inline void Text(       std::string_view text,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Text(idManager.AllocateDynamicID(site), text, theme.staticTextStyleRef, std::move(constraints)); }
 
         // Read-only rich text with links, mouse selection and Ctrl+C. `onLinkActivate` (optional)
         // gets a clicked link's contentId. Pass a STABLE id so selection survives across frames.
@@ -1119,15 +1127,15 @@ namespace interstice
         // Draws `image` (from graphicsContext->RegisterImage) stretched over the element's box.
         void        Image(ID id, ImageIndex image, StyleRef style, LayoutOverride&& constraints = {});
         inline void Image(ID id, ImageIndex image,                 LayoutOverride&& constraints = {}) { Image(id, image, theme.imageStyleRef, std::move(constraints)); }
-        inline void Image(       ImageIndex image, StyleRef style, LayoutOverride&& constraints = {}) { Image(idManager.AllocateDynamicID(), image, style, std::move(constraints)); }
-        inline void Image(       ImageIndex image,                 LayoutOverride&& constraints = {}) { Image(idManager.AllocateDynamicID(), image, theme.imageStyleRef, std::move(constraints)); }
+        inline void Image(       ImageIndex image, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, style, std::move(constraints)); }
+        inline void Image(       ImageIndex image,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, theme.imageStyleRef, std::move(constraints)); }
 
         // Aspect-preserving: sizes the element to the largest sourceSize-aspect rect that fits
         // the constraints. sourceSize is the image's pixel size.
         void        Image(ID id, ImageIndex image, uint2 sourceSize, StyleRef style, LayoutOverride&& constraints = {});
         inline void Image(ID id, ImageIndex image, uint2 sourceSize,                 LayoutOverride&& constraints = {}) { Image(id, image, sourceSize, theme.imageStyleRef, std::move(constraints)); }
-        inline void Image(       ImageIndex image, uint2 sourceSize, StyleRef style, LayoutOverride&& constraints = {}) { Image(idManager.AllocateDynamicID(), image, sourceSize, style, std::move(constraints)); }
-        inline void Image(       ImageIndex image, uint2 sourceSize,                 LayoutOverride&& constraints = {}) { Image(idManager.AllocateDynamicID(), image, sourceSize, theme.imageStyleRef, std::move(constraints)); }
+        inline void Image(       ImageIndex image, uint2 sourceSize, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, sourceSize, style, std::move(constraints)); }
+        inline void Image(       ImageIndex image, uint2 sourceSize,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, sourceSize, theme.imageStyleRef, std::move(constraints)); }
 
         bool BeginGhostWindow(ID windowLayoutID, int2 position)
         {
@@ -1139,13 +1147,14 @@ namespace interstice
         {
             if (windowManager->GetWindowState(windowLayoutID) == WindowState::Closing)
             {
+                m_windowOpen.push_back(false);   // its EndGhostWindow is still called
                 return false;
             }
 
             auto&& constraints = LayoutOverride::FixedSize(size.x, size.y).Position(position.x, position.y);
 
             ElementFlags elementFlags = interstice::ElementFlags::WindowNoCaption | interstice::ElementFlags::WindowIsTransparent;
-            return BeginWindow(windowLayoutID, std::move(constraints), styleRef, elementFlags);
+            return BeginWindow(windowLayoutID, styleRef, std::move(constraints), elementFlags);
         }
 
         bool BeginGhostWindow(ID windowLayoutID, int2 position, int2 size)
@@ -1157,10 +1166,13 @@ namespace interstice
         bool BeginGhostWindow(ID windowLayoutID, int2 position, StyleRef styleRef)
         {
             if (windowManager->GetWindowState(windowLayoutID) == WindowState::Closing)
+            {
+                m_windowOpen.push_back(false);   // its EndGhostWindow is still called
                 return false;
+            }
             auto&& constraints = LayoutOverride{}.Position(position.x, position.y);
             ElementFlags elementFlags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsTransparent;
-            return BeginWindow(windowLayoutID, std::move(constraints), styleRef, elementFlags);
+            return BeginWindow(windowLayoutID, styleRef, std::move(constraints), elementFlags);
         }
 
         // Ghost offset from the cursor so the preview doesn't sit under the OS cursor.
@@ -1182,9 +1194,9 @@ namespace interstice
             return BeginGhostWindow(windowLayoutID, cursorPos + CursorGhostOffset(), styleRef);
         }
 
-        void AddGhostIcon(IconID icon)
+        void AddGhostIcon(IconID icon, std::source_location site = std::source_location::current())
         {
-            auto dragGhostIconID = idManager.AllocateDynamicID();
+            auto dragGhostIconID = idManager.AllocateDynamicID(site);
             interstice::Element ghostIcon
             {
                 .id       = dragGhostIconID,
@@ -1206,44 +1218,57 @@ namespace interstice
 
         bool BeginWindow(ID windowLayoutID, std::string_view title, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, title, LayoutOverride{}, theme.windowStyleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, title, theme.windowStyleRef, LayoutOverride{}, flags, monitorIndex);
         }
 
         bool BeginWindow(ID windowLayoutID, std::string_view title, StyleRef styleRef, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, title, LayoutOverride{}, styleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, title, styleRef, LayoutOverride{}, flags, monitorIndex);
         }
 
         bool BeginWindow(ID windowLayoutID, std::string_view title, LayoutOverride&& constraints, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, title, std::move(constraints), theme.windowStyleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, title, theme.windowStyleRef, std::move(constraints), flags, monitorIndex);
         }
 
 
         bool BeginWindow(ID windowLayoutID, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, LayoutOverride{}, theme.windowStyleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, theme.windowStyleRef, LayoutOverride{}, flags, monitorIndex);
         }
 
         bool BeginWindow(ID windowLayoutID, StyleRef styleRef, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, LayoutOverride{}, styleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, styleRef, LayoutOverride{}, flags, monitorIndex);
         }
 
         bool BeginWindow(ID windowLayoutID, LayoutOverride&& constraints, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, std::move(constraints), theme.windowStyleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, theme.windowStyleRef, std::move(constraints), flags, monitorIndex);
         }
 
-        bool BeginWindow(ID windowLayoutID, LayoutOverride&& constraints, StyleRef styleRef, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
+        bool BeginWindow(ID windowLayoutID, StyleRef styleRef, LayoutOverride&& constraints, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            return BeginWindow(windowLayoutID, "", std::move(constraints), styleRef, flags, monitorIndex);
+            return BeginWindow(windowLayoutID, "", styleRef, std::move(constraints), flags, monitorIndex);
         }
 
 
-        bool BeginWindow(ID windowLayoutID, std::string_view title, LayoutOverride&& constraints, StyleRef styleRef, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
+        // Every BeginWindow has its EndWindow, called whether or not the window is open (the
+        // result says whether to build its content).
+        bool BeginWindow(ID windowLayoutID, std::string_view title, StyleRef styleRef, LayoutOverride&& constraints, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
         {
-            assert(windowLayoutID != ID::Invalid());
+            const bool open = OpenWindow(windowLayoutID, title, styleRef, std::move(constraints), flags, monitorIndex);
+            m_windowOpen.push_back(open);
+            return open;
+        }
+
+        bool OpenWindow(ID windowLayoutID, std::string_view title, StyleRef styleRef, LayoutOverride&& constraints, ElementFlags flags, int monitorIndex)
+        {
+            if (windowLayoutID == ID::Invalid())
+            {
+                ReportMisuse("GUIApplication: BeginWindow with an invalid ID (not shown)");
+                return false;
+            }
 
             // Closed by the user since last frame.
             if (windowManager->GetWindowState(windowLayoutID) == WindowState::Closing
@@ -1288,6 +1313,78 @@ namespace interstice
 
         void EndWindow()
         {
+            if (m_windowOpen.empty())
+            {
+                ReportMisuse("GUIApplication: EndWindow without BeginWindow (ignored)");
+                return;
+            }
+            const bool open = m_windowOpen.back();
+            m_windowOpen.pop_back();
+            if (open)
+                CloseWindow();
+        }
+
+        // A container's scope: its End runs when the scope leaves (or at End()). True when
+        // the container's content is to be built, as its Begin returned.
+        //     if (auto menu = app.Menu("File")) { ...items... }
+        template<void (GUIApplication::*EndFn)()>
+        class [[nodiscard]] Scope
+        {
+        public:
+            Scope(GUIApplication& app, bool open) : m_app(&app), m_open(open) {}
+            Scope(Scope&& other) noexcept : m_app(std::exchange(other.m_app, nullptr)), m_open(other.m_open) {}
+            Scope(const Scope&)            = delete;
+            Scope& operator=(const Scope&) = delete;
+            Scope& operator=(Scope&&)      = delete;
+            ~Scope() { End(); }
+
+            void End()
+            {
+                if (GUIApplication* app = std::exchange(m_app, nullptr))
+                    (app->*EndFn)();
+            }
+            explicit operator bool() const { return m_open; }
+
+        private:
+            GUIApplication* m_app;
+            bool            m_open;
+        };
+
+        // Scopes for the Begin / End pairs, taking the Begin's arguments.
+        template<class... A> auto Window(A&&... a)           { return Scope<&GUIApplication::EndWindow>(*this, BeginWindow(std::forward<A>(a)...)); }
+        template<class... A> auto GhostWindow(A&&... a)      { return Scope<&GUIApplication::EndGhostWindow>(*this, BeginGhostWindow(std::forward<A>(a)...)); }
+        template<class... A> auto CursorGhostWindow(A&&... a){ return Scope<&GUIApplication::EndGhostWindow>(*this, BeginCursorGhostWindow(std::forward<A>(a)...)); }
+        template<class... A> auto Menu(A&&... a)             { return Scope<&GUIApplication::EndMenu>(*this, BeginMenu(std::forward<A>(a)...)); }
+        template<class... A> auto MenuBar(A&&... a)          { return Scope<&GUIApplication::EndMenuBar>(*this, BeginMenuBar(std::forward<A>(a)...)); }
+        template<class... A> auto ContextMenu(A&&... a)      { return Scope<&GUIApplication::EndContextMenu>(*this, BeginContextMenu(std::forward<A>(a)...)); }
+        template<class... A> auto Tooltip(A&&... a)          { return Scope<&GUIApplication::EndTooltip>(*this, BeginTooltip(std::forward<A>(a)...)); }
+        template<class... A> auto Cached(A&&... a)           { return Scope<&GUIApplication::EndCached>(*this, BeginCached(std::forward<A>(a)...)); }
+        template<class... A> auto Horizontal(A&&... a)       { return Scope<&GUIApplication::EndHorizontal>(*this, BeginHorizontal(std::forward<A>(a)...)); }
+        template<class... A> auto Vertical(A&&... a)         { return Scope<&GUIApplication::EndVertical>(*this, BeginVertical(std::forward<A>(a)...)); }
+        template<class... A> auto HorizontalWrap(A&&... a)   { return Scope<&GUIApplication::EndHorizontalWrap>(*this, BeginHorizontalWrap(std::forward<A>(a)...)); }
+        template<class... A> auto VerticalWrap(A&&... a)     { return Scope<&GUIApplication::EndVerticalWrap>(*this, BeginVerticalWrap(std::forward<A>(a)...)); }
+        template<class... A> auto Area(A&&... a)             { return Scope<&GUIApplication::EndArea>(*this, BeginArea(std::forward<A>(a)...)); }
+        template<class... A> auto LabelGroup(A&&... a)       { return Scope<&GUIApplication::EndLabelGroup>(*this, BeginLabelGroup(std::forward<A>(a)...)); }
+        template<class... A> auto ButtonGroup(A&&... a)      { return Scope<&GUIApplication::EndButtonGroup>(*this, BeginButtonGroup(std::forward<A>(a)...)); }
+        template<class... A> auto ToggleGroup(A&&... a)      { return Scope<&GUIApplication::EndToggleGroup>(*this, BeginToggleGroup(std::forward<A>(a)...)); }
+        template<class... A> auto Table(A&&... a)            { return Scope<&GUIApplication::EndTable>(*this, BeginTable(std::forward<A>(a)...)); }
+        template<class... A> auto Row(A&&... a)              { return Scope<&GUIApplication::EndRow>(*this, BeginRow(std::forward<A>(a)...)); }
+        template<class... A> auto ListView(A&&... a)         { return Scope<&GUIApplication::EndListView>(*this, BeginListView(std::forward<A>(a)...)); }
+        template<class... A> auto GridView(A&&... a)         { return Scope<&GUIApplication::EndGridView>(*this, BeginGridView(std::forward<A>(a)...)); }
+        template<class... A> auto TabBar(A&&... a)           { return Scope<&GUIApplication::EndTabBar>(*this, BeginTabBar(std::forward<A>(a)...)); }
+        template<class... A> auto Toolbar(A&&... a)          { return Scope<&GUIApplication::EndToolbar>(*this, BeginToolbar(std::forward<A>(a)...)); }
+        template<class... A> auto StatusBar(A&&... a)        { return Scope<&GUIApplication::EndStatusBar>(*this, BeginStatusBar(std::forward<A>(a)...)); }
+        template<class... A> auto TitleBar(A&&... a)         { return Scope<&GUIApplication::EndTitleBar>(*this, BeginTitleBar(std::forward<A>(a)...)); }
+        template<class... A> auto ReorderableGroup(A&&... a) { return Scope<&GUIApplication::EndReorderableGroup>(*this, BeginReorderableGroup(std::forward<A>(a)...)); }
+        template<class... A> auto ReorderableItem(A&&... a)  { return Scope<&GUIApplication::EndReorderableItem>(*this, BeginReorderableItem(std::forward<A>(a)...)); }
+        template<class... A> auto Disabled(A&&... a)         { return Scope<&GUIApplication::EndDisabled>(*this, BeginDisabled(std::forward<A>(a)...)); }
+        template<class... A> auto Selected(A&&... a)         { return Scope<&GUIApplication::EndSelected>(*this, BeginSelected(std::forward<A>(a)...)); }
+        template<class... A> auto Indeterminate(A&&... a)    { return Scope<&GUIApplication::EndIndeterminate>(*this, BeginIndeterminate(std::forward<A>(a)...)); }
+        template<class... A> auto DockingContainer(A&&... a) { return Scope<&GUIApplication::EndDockingContainer>(*this, BeginDockingContainer(std::forward<A>(a)...)); }
+        template<class... A> auto DockingFrame(A&&... a)     { return Scope<&GUIApplication::EndDockingFrame>(*this, BeginDockingFrame(std::forward<A>(a)...)); }
+
+        void CloseWindow()
+        {
             tabChainManager.EndWindow();
             if (!m_windowIdScopeStack.empty() && m_windowIdScopeStack.back())
                 (void)idManager.PopParent();
@@ -1313,9 +1410,9 @@ namespace interstice
             VERIFY(windowRegistry.Add(childB1.ref));
         }
 
-        void AddBox(int2 size, StyleRef styleRef, TextID textID = TextID::Invalid)
+        void AddBox(int2 size, StyleRef styleRef, TextID textID = TextID::Invalid, std::source_location site = std::source_location::current())
         {
-            AddBox(idManager.AllocateDynamicID(), size, styleRef, textID);
+            AddBox(idManager.AllocateDynamicID(site), size, styleRef, textID);
         }
 
         void AddBox(ID id, int2 size, StyleRef styleRef, std::string_view text)
@@ -1365,14 +1462,14 @@ namespace interstice
             VERIFY(windowRegistry.Add(childB1.ref));
         }
 
-        void AddBox(StyleRef styleRef, std::string_view text)
+        void AddBox(StyleRef styleRef, std::string_view text, std::source_location site = std::source_location::current())
         {
-            AddBox(idManager.AllocateDynamicID(), styleRef, IconID::Invalid, text);
+            AddBox(idManager.AllocateDynamicID(site), styleRef, IconID::Invalid, text);
         }
 
-        void AddBox(int2 size, StyleRef styleRef, std::string_view text)
+        void AddBox(int2 size, StyleRef styleRef, std::string_view text, std::source_location site = std::source_location::current())
         {
-            AddBox(idManager.AllocateDynamicID(), size, styleRef, text);
+            AddBox(idManager.AllocateDynamicID(site), size, styleRef, text);
         }
 
         // ------------------------------------------------------------------
@@ -1512,6 +1609,12 @@ namespace interstice
         void RegisterFrameBalanceChecks();
         // API misuse (e.g. an End without its Begin): logged once, and the caller carries on.
         static void ReportMisuse(const char* message);
+        // The bodies of the conditional Begin / End pairs (the public ones keep the open stacks).
+        bool OpenMenu(ID menuID, std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints);
+        void CloseMenu();
+        bool OpenTooltip(ID targetID);
+        bool OpenContextMenuWindow(ID targetID);
+        bool OpenCached(ID id, StyleRef style, uint64_t signature, LayoutOverride&& constraints);
         static void ReportInvalidControlID(ID id);
 
         // Rebuilds the styles when a reload is pending or the main window's
@@ -1534,6 +1637,9 @@ namespace interstice
         std::string m_themePath     { "themes/dark.css" };
         bool        m_initialized = false;   // Initialize succeeded; Cleanup clears it
         bool        m_inFrame     = false;   // inside OnFrame (a frame can't run inside another)
+        // Begin/End contract: whether each open BeginWindow / BeginMenu (and BeginContextMenu)
+        // / BeginTooltip / BeginCached scope is showing; its End pops it.
+        std::vector<bool> m_windowOpen, m_menuOpen, m_tooltipOpen, m_cachedOpen;
         // The theme that last loaded, for a reload that fails to fall back to.
         std::string m_loadedThemePath;
         float       m_loadedFontScale { 1.0f };
@@ -1560,7 +1666,7 @@ namespace interstice
         // Set by RenderNodeView around each renderBody; 0 elsewhere.
         int32_t nodeRowFieldMinWidth = 0;
 
-        void BeginDockingFrame();
+        bool BeginDockingFrame();
         void EndDockingFrame();
 
         ID activeWindowID { ID::Invalid() };
@@ -1570,8 +1676,8 @@ namespace interstice
         void EmitNodeViewOverlays(NodeView& view, ID canvasID);
 
         // Each window's title bar, from its last BeginTitleBar / EndTitleBar.
-        struct TitleBar { ID barID = ID::Invalid(); ID maximizeID = ID::Invalid(); std::vector<ID> captions; };
-        std::unordered_map<ID, TitleBar> m_titleBars;
+        struct TitleBarInfo { ID barID = ID::Invalid(); ID maximizeID = ID::Invalid(); std::vector<ID> captions; };
+        std::unordered_map<ID, TitleBarInfo> m_titleBars;
         std::vector<ID> m_titleBarStack;    // bar IDs between BeginTitleBar and EndTitleBar
         std::vector<ID> m_titleBarCaptions; // controls in the open title bar whose background drags the window
         std::unordered_set<ID> m_closeRequests;   // ConfirmClose windows whose title-bar close was clicked

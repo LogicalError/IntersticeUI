@@ -2659,7 +2659,7 @@
     background-color: transparent;
     border-color: transparent;
     overflow: visible;
-    align-self: flex-start;
+    align-self: stretch;        /* the row's height, so the sizer runs to its bottom; the text stays on top */
     break-after: avoid;
 }
 .group-label-title {

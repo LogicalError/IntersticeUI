@@ -126,8 +126,8 @@ public:
             Button("Greet", [this] { greeting = "Hello, " + name + "!"; });
             Text(greeting);
             EndVertical();
-            EndWindow();
         }
+        EndWindow();
     }
 
 private:
@@ -144,6 +144,15 @@ int main()
         app.Run();   // until the last window closes
     app.Cleanup();
 }
+```
+
+Every `Begin*` has its `End*`, called whether or not the `Begin*` returned true; the result
+only says whether to build the content. Each pair also has a scope that ends it when it
+leaves, taking the same arguments:
+
+```cpp
+if (auto menu = Menu("File"))
+    MenuItem("Quit", [this] { RequestExit(); });
 ```
 
 ## Runtime files
@@ -302,12 +311,12 @@ Use it to put the UI inside an engine viewport, composite it into the host's
 frame, or render it without anything appearing on screen, as the GPU tests do.
 
 ```cpp
-if (BeginWindow(windowID, "Panel", interstice::LayoutOverride{}.Size(400, 300), theme.windowStyleRef,
+if (BeginWindow(windowID, "Panel", theme.windowStyleRef, interstice::LayoutOverride{}.Size(400, 300),
                 interstice::ElementFlags::WindowRenderToImage))
 {
     // controls as usual
-    EndWindow();
 }
+EndWindow();
 
 // Each frame of the window is copied into the host's image (may be set before the window exists):
 vk.SetWindowImageTarget(windowID, hostImage, VkExtent2D{ 400, 300 });

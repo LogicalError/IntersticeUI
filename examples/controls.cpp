@@ -17,7 +17,9 @@ public:
 
     void OnGUI() override
     {
-        if (!BeginWindow(windowID, "Controls", interstice::LayoutOverride{}.Size(480, 560)))
+        // The scope ends the window when it leaves, open or not.
+        auto window = Window(windowID, "Controls", interstice::LayoutOverride{}.Size(480, 560));
+        if (!window)
             return;
         BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
 
@@ -67,8 +69,8 @@ public:
         {
             for (const char* item : { "Apple", "Banana", "Cherry" })
                 MenuItem(item, [this, item] { choice = item; });
-            EndMenu();
         }
+        EndMenu();
 
         Label("Chosen");
         Text(choice);
@@ -83,7 +85,6 @@ public:
         Text(selectedTab == 0 ? "Content of the first tab" : "Content of the second tab");
 
         EndVertical();
-        EndWindow();
     }
 
 private:

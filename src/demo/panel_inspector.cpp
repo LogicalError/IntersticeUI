@@ -53,8 +53,8 @@ namespace interstice
             if (BeginContextMenu())
             {
                 MenuItem("Reset counter", [this]() { demo.buttonClickCount = 0; });
-                EndContextMenu();
             }
+            EndContextMenu();
             Text(idManager.AllocateDynamicID("buttonClicks"), "Clicks: " + std::to_string(demo.buttonClickCount),
                  inspectorCaptionStyleRef);
             EndHorizontal();
@@ -107,8 +107,8 @@ namespace interstice
                 MenuItem("Copy",       "Ctrl+C", []() { INTERSTICE_LOG_INFO(kLogDemo, "Copy"); });
                 MenuItem("Paste",      "Ctrl+V", []() { INTERSTICE_LOG_INFO(kLogDemo, "Paste"); });
                 MenuItem("Select All", "Ctrl+A", []() { INTERSTICE_LOG_INFO(kLogDemo, "Select All"); });
-                EndContextMenu();
             }
+            EndContextMenu();
         });
 
         add("Text box 2", [this]() {
@@ -208,16 +208,16 @@ namespace interstice
                 {
                     MenuItem(subItem1ID, "Sub 1", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 1"); });
                     MenuItem(subItem2ID, "Sub 2", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 2"); });
-                    EndMenu();
                 }
+                EndMenu();
                 if (BeginMenu(more2ID, "More 2..."))
                 {
                     MenuItem(subItem3ID, "Sub 3", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 3"); });
                     MenuItem(subItem4ID, "Sub 4", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 4"); });
-                    EndMenu();
                 }
                 EndMenu();
             }
+            EndMenu();
         });
 
         // Scroll test: menu with 100 items
@@ -233,8 +233,8 @@ namespace interstice
                     int idx = i;
                     MenuItem(label, [idx]() { INTERSTICE_LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
                 }
-                EndMenu();
             }
+            EndMenu();
         });
 
         if (inspectorLabelGroupID == ID::Invalid())

@@ -13,6 +13,7 @@
 #include <gui_core/graphics/gui_render_primitives.h>
 #include <gui_core/gui_base_types.h>
 
+#include <cstdint>
 #include <cstring>
 
 namespace interstice
@@ -107,6 +108,25 @@ namespace interstice
             EXPECT_EQ(b->snappedPx[1], 24);
             EXPECT_EQ(b->snappedPx[2], 28);
             EXPECT_EQ(b->snappedPx[3], 40);
+        }
+
+        // A box past the 16-bit range (a table sizer stretched to the table's height) keeps
+        // its far edge at the end of the range; wrapped, it drew as a 1px stripe at the top.
+        TEST(PrimitiveScaleTest, ASnappedRectPastTheRangeSaturates)
+        {
+            PrimitiveRenderTarget src;
+            src.RenderBox(interstice::IntRect{ 211, 11, 4, 32768 }, interstice::IntRect{ 0, 0, 800, 600 }, 1, 1, 1.0f, {},
+                          interstice::ImageIndex::Invalid, interstice::IntRect{ 211, 11, 4, 32768 });
+            src.FinishRenderPass();
+            const Box* b = reinterpret_cast<const Box*>(src.streams[size_t(PrimitiveKind::Box)].cpu.data());
+            EXPECT_EQ(b->snappedPx[1], 11);
+            EXPECT_EQ(b->snappedPx[3], INT16_MAX);
+
+            PrimitiveRenderTarget dst;
+            dst.AppendCaptured(src, interstice::int2{ 0, 20 });
+            const Box* moved = reinterpret_cast<const Box*>(dst.streams[size_t(PrimitiveKind::Box)].cpu.data());
+            EXPECT_EQ(moved->snappedPx[1], 31);
+            EXPECT_EQ(moved->snappedPx[3], INT16_MAX) << "a moved cached box saturates too";
         }
 
         // A rounded polyline runs straight through a point where it doesn't turn: the

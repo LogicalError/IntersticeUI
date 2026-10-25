@@ -74,8 +74,8 @@ namespace interstice
                 });
                 if (isCurrent) EndSelected();
             }
-            EndMenu();
         }
+        EndMenu();
 
         // Font size (percent), snapped to steps of 10 in [100, 300] before
         // SliderField so knob and textbox show the quantized value. SliderField's
@@ -122,7 +122,7 @@ namespace interstice
         Text(idManager.AllocateDynamicID("settingsTitle"), "Shortcuts", settingsTitleStyleRef);
 
         const auto& entries      = commandManager.GetCommands();
-        const uint32_t modeCount = commandManager.GetEditModeCount();
+        const uint32_t modeCount = commandManager.GetModeCount();
 
         // The dynamic-ID counter makes repeated calls with one hint unique and
         // stable frame to frame.
@@ -195,7 +195,7 @@ namespace interstice
         {
             TreeViewRow r{};
             r.id   = catIDs[m];
-            r.name = commandManager.GetEditModeName(interstice::EditMode(m));
+            r.name = commandManager.GetModeName(interstice::CommandMode(m));
             r.icon = interstice::IconID::Invalid;
             catRows.push_back(std::move(r));
         }
@@ -286,8 +286,9 @@ namespace interstice
             {
                 if (!allSelected && selection.selectedIDs.count(catIDs[mode]) == 0)
                     continue;
-                for (uint32_t i : commandManager.GetCommandsForMode(interstice::EditMode(mode)))
+                for (const CommandID id : commandManager.GetCommandsForMode(interstice::CommandMode(mode)))
                 {
+                    const uint32_t i = uint32_t(CommandManager::IndexOf(id));
                     const auto& e = entries[i];
                     std::string_view desc = e.description.empty()
                         ? std::string_view("(no description)")
@@ -351,13 +352,13 @@ namespace interstice
             cols[1].sortAscending = [this](int a, int b) {
                 const auto& vr = demo.settingsShortcutsVisRows;
                 return CaseInsensitiveLess(
-                    commandManager.GetEditModeName(interstice::EditMode(vr[a].mode)),
-                    commandManager.GetEditModeName(interstice::EditMode(vr[b].mode)));
+                    commandManager.GetModeName(interstice::CommandMode(vr[a].mode)),
+                    commandManager.GetModeName(interstice::CommandMode(vr[b].mode)));
             };
             cols[1].generateCell = [this](int rowIdx) {
                 auto& vr = demo.settingsShortcutsVisRows;
                 if (rowIdx < 0 || rowIdx >= int(vr.size())) return;
-                Cell(commandManager.GetEditModeName(interstice::EditMode(vr[rowIdx].mode)));
+                Cell(commandManager.GetModeName(interstice::CommandMode(vr[rowIdx].mode)));
             };
 
             // Shortcut - the bound key combo (a flat rebind button).
@@ -373,7 +374,7 @@ namespace interstice
                 if (rowIdx < 0 || rowIdx >= int(vr.size())) return;
                 const uint32_t i = vr[rowIdx].entryIdx;
                 const auto& e = commandManager.GetCommands()[i];
-                const bool rebinding = (commandManager.RebindIndex() == int32_t(i));
+                const bool rebinding = (commandManager.RebindTarget() == CommandManager::IDAt(i));
                 // Unbound commands show an empty cell (rather than the
                 // formatted "(unbound)" string) until a key is bound.
                 const bool unset = !rebinding && !e.HasShortcut();
@@ -384,10 +385,10 @@ namespace interstice
                     Button(idManager.AllocateDynamicID("shortcutBtn"),
                            label,
                            [this, i]() {
-                               if (commandManager.RebindIndex() == int32_t(i))
+                               if (commandManager.RebindTarget() == CommandManager::IDAt(i))
                                    commandManager.CancelRebind();
                                else
-                                   commandManager.BeginRebind(i);
+                                   commandManager.BeginRebind(CommandManager::IDAt(i));
                            },
                            theme.flatButtonStyleRef);
                 });
@@ -429,14 +430,14 @@ namespace interstice
             demo.shortcutsTableState.InvalidateRowOrder();
         }
 
+        demo.shortcutsTableState.cellStyle = shortcutCellStyleRef;
         VirtualTable(idManager.AllocateDynamicID("shortcutTable"),
                      demo.shortcutsTableState,
                      std::span<VirtualTableColumn>(active.data(), colCount),
                      int(visRows.size()),
                      /*rowHeight*/0,
                      shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
-                     interstice::LayoutOverride{}.FlexGrow(1),
-                     /*showHeaders*/ true, shortcutCellStyleRef);
+                     interstice::LayoutOverride{}.FlexGrow(1));
 
         EndHorizontal();  // shortcutGridCol
         EndHorizontal();  // shortcutSplit

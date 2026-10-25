@@ -1046,11 +1046,11 @@ namespace interstice
                                       int totalRowCount,
                                       int32_t rowHeight,
                                       StyleRef style,
-                                      LayoutOverride&& constraints,
-                                      bool showHeaders,
-                                      StyleRef cellStyle,
-                                      bool columnSeparators)
+                                      LayoutOverride&& constraints)
     {
+        const bool     showHeaders      = state.showHeaders;
+        const bool     columnSeparators = state.columnSeparators;
+        const StyleRef cellStyle        = state.cellStyle;
         const size_t columnCount = columns.size();
         state.internal.hasHeaders = showHeaders;
 

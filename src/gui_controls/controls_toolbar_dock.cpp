@@ -109,13 +109,11 @@ namespace interstice
         void EmitDropZoneOverlayRect(GUIApplication& app, ID windowID, IntRect overlay)
         {
             if (overlay.w <= 0 || overlay.h <= 0) return;
-            if (app.BeginGhostWindow(windowID,
-                                     { overlay.x, overlay.y },
-                                     { overlay.w, overlay.h },
-                                     app.theme.panelDropVisualizationStyleRef))
-            {
-                app.EndGhostWindow();
-            }
+            app.BeginGhostWindow(windowID,
+                                 { overlay.x, overlay.y },
+                                 { overlay.w, overlay.h },
+                                 app.theme.panelDropVisualizationStyleRef);   // the window itself is the overlay
+            app.EndGhostWindow();
         }
 
         void RenderToolbarSide(GUIApplication&                  app,
@@ -210,8 +208,8 @@ namespace interstice
                                              app.theme.toolbarFloatingWindowStyleRef))
                     {
                         EmitFloatingToolbarContents(app, item, /*eventHandler=*/{});
-                        app.EndGhostWindow();
                     }
+                    app.EndGhostWindow();
                 }
             };
 
@@ -389,10 +387,9 @@ namespace interstice
                                      | ElementFlags::WindowCanMove
                                      | ElementFlags::WindowCloseWithParent;
 
-            if (BeginWindow(fw.windowID, title,
-                            std::move(constraints),
-                            theme.toolbarFloatingWindowStyleRef,
-                            flags))
+            const bool open = BeginWindow(fw.windowID, title, theme.toolbarFloatingWindowStyleRef,
+                                          std::move(constraints), flags);
+            if (open)
             {
                 // ---- Drag-from-handle ----
                 // Moves the OS window; on release over a dock side, docks back (if enabled).
@@ -449,9 +446,10 @@ namespace interstice
                     return false;
                 };
                 EmitFloatingToolbarContents(*this, fw.item, std::move(moveHandler));
-                EndWindow();
-                ++i;
             }
+            EndWindow();
+            if (open)
+                ++i;
             else if (dockBack)
             {
                 // The window closed (OS close, Alt+F4, its parent closing): the item goes

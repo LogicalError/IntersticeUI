@@ -3,6 +3,8 @@
 #include <gui_core/gui_platform.h>
 
 #include <stdint.h>
+#include <source_location>
+#include <unordered_map>
 #include <vector>
 #include <string_view>
 
@@ -155,11 +157,13 @@ namespace interstice
         struct ParentData
         {
             ID id;
-            uint32_t counter = 0;
         };
 
         // Parent stack for hierarchical hashing
         std::vector<ParentData> m_parent_stack;
+        // Dynamic IDs made so far this frame per call site (or hint) and parent: only a
+        // repeat of the same site renumbers, so a widget appearing elsewhere doesn't.
+        std::unordered_map<uint64_t, uint32_t> m_site_counts;
         
         // Static ID management (slot map with generations)
         std::vector<int32_t> m_static_slots;

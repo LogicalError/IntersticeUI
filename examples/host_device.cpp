@@ -243,8 +243,8 @@ public:
             Text("Rendered by the host:");
             Image(hostImage, interstice::uint2{ Host::kImageSize.width, Host::kImageSize.height });
             EndVertical();
-            EndWindow();
         }
+        EndWindow();
     }
 
 private:

@@ -99,15 +99,16 @@ namespace interstice
     }
 
 
-    void GUIApplication::BeginRow()
+    bool GUIApplication::BeginRow()
     {
         if (!m_tableEmit.has_value())
         {
             ReportMisuse("GUIApplication: BeginRow outside a table (ignored)");
-            return;
+            return true;
         }
         m_tableEmit->currentCol = 0;
         m_tableEmit->rowCount++;
+        return true;
     }
 
 

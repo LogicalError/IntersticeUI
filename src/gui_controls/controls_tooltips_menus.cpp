@@ -22,7 +22,7 @@ namespace interstice
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 
-        if (BeginWindow(tooltipWindowID, std::move(pos), theme.tooltipStyleRef, flags))
+        if (BeginWindow(tooltipWindowID, theme.tooltipStyleRef, std::move(pos), flags))
         {
             // Set NoInput on the window element so it's passthrough for hit-testing
             {
@@ -33,9 +33,8 @@ namespace interstice
 
             auto textID = idManager.AllocateDynamicID();
             RegisterElement(interstice::Element{ .id = textID, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
-
-            EndWindow();
         }
+        EndWindow();
     }
 
     void GUIApplication::SetTooltip(ID targetID, IconID icon, std::string_view text)
@@ -50,7 +49,7 @@ namespace interstice
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 
-        if (BeginWindow(tooltipWindowID, std::move(pos), theme.tooltipStyleRef, flags))
+        if (BeginWindow(tooltipWindowID, theme.tooltipStyleRef, std::move(pos), flags))
         {
             auto winRef = elementStorage.FindElementRefByID(tooltipWindowID);
             if (winRef.IsValid())
@@ -58,11 +57,18 @@ namespace interstice
 
             auto contentID = idManager.AllocateDynamicID();
             RegisterElement(interstice::Element{ .id = contentID, .iconID = icon, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
-            EndWindow();
         }
+        EndWindow();
     }
 
     bool GUIApplication::BeginTooltip(ID targetID)
+    {
+        const bool open = OpenTooltip(targetID);
+        m_tooltipOpen.push_back(open);
+        return open;
+    }
+
+    bool GUIApplication::OpenTooltip(ID targetID)
     {
         if (!tooltipManager.ShouldShow(targetID))
             return false;
@@ -74,19 +80,29 @@ namespace interstice
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 
-        if (BeginWindow(tooltipWindowID, std::move(pos), theme.tooltipStyleRef, flags))
+        if (BeginWindow(tooltipWindowID, theme.tooltipStyleRef, std::move(pos), flags))
         {
             auto winRef = elementStorage.FindElementRefByID(tooltipWindowID);
             if (winRef.IsValid())
                 elementStorage.GetElementUnsafe(winRef).flags |= ElementFlags::NoInput;
             return true;
         }
+        EndWindow();   // the window's skipped scope
         return false;
     }
 
+    // Called for every BeginTooltip, shown or not.
     void GUIApplication::EndTooltip()
     {
-        EndWindow();
+        if (m_tooltipOpen.empty())
+        {
+            ReportMisuse("GUIApplication: EndTooltip without BeginTooltip (ignored)");
+            return;
+        }
+        const bool open = m_tooltipOpen.back();
+        m_tooltipOpen.pop_back();
+        if (open)
+            EndWindow();
     }
 
 
@@ -95,6 +111,13 @@ namespace interstice
     // ---------------------------------------------------------------------------
 
     bool GUIApplication::BeginContextMenu(ID targetID)
+    {
+        const bool open = OpenContextMenuWindow(targetID);
+        m_menuOpen.push_back(open);   // EndContextMenu is EndMenu
+        return open;
+    }
+
+    bool GUIApplication::OpenContextMenuWindow(ID targetID)
     {
         // Detect right-click from recorded input events.
         // Match against the previous frame's hovered element (GetHoveredID is set
@@ -139,7 +162,7 @@ namespace interstice
                   {0, 0}, AutoFlipMode::FlipAvoidTarget);
 
         menuManager.PrepareLevelWindow(level, guiStateManager.GetScrollManagement());
-        if (BeginWindow(level.windowID, std::move(pos), theme.menuStyleRef,
+        if (BeginWindow(level.windowID, theme.menuStyleRef, std::move(pos),
                         ElementFlags::IsMenuWindow))
         {
             menuManager.currentDepth = level.depth;
@@ -152,6 +175,7 @@ namespace interstice
         }
         else
         {
+            EndWindow();   // the popup window's skipped scope
             menuManager.CloseAll(guiStateManager);
             contextMenuTargetID = ID::Invalid();
             return false;

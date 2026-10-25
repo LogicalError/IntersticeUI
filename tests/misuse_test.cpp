@@ -148,9 +148,9 @@ namespace
             if (app.BeginMenu(menuID, "File"))
             {
                 app.MenuItem(itemID, "Open");
-                if (!leak)
-                    app.EndMenu();
             }
+            if (!leak)
+                app.EndMenu();
             app.EndRootWindow();
         };
         app.Frame(draw);
@@ -176,7 +176,7 @@ namespace
         MisuseReports reports;
         app.Frame([&] {
             if (app.BeginWindow(windowID, "Leaky"))
-                app.Label("inside");
+                app.Label("inside");   // and no EndWindow
         });
         EXPECT_GE(reports.Count(), 1u);
         ExpectTheNextFrameWorks(app);
@@ -430,7 +430,9 @@ namespace
         const ID windowID = app.idManager.CreateStaticID();
         bool open = true, closeNow = false;
         auto draw = [&] {
-            if (open && app.BeginWindow(windowID, "Closes itself", LayoutOverride{}.Size(300, 200)))
+            if (!open)
+                return;
+            if (app.BeginWindow(windowID, "Closes itself", LayoutOverride{}.Size(300, 200)))
             {
                 app.Label("inside");
                 if (closeNow)
@@ -438,8 +440,8 @@ namespace
                     (void)app.windowManager->RequestUserClose(windowID);
                     open = false;
                 }
-                app.EndWindow();
             }
+            app.EndWindow();
         };
         app.Frame(draw);
         app.Frame(draw);
@@ -546,11 +548,11 @@ namespace
         for (int i = 0; i < 3; i++)
             app.Frame([&] {
                 for (int w = 0; w < 2; w++)
+                {
                     if (app.BeginWindow(windowID, "Twice", LayoutOverride{}.Size(200, 100)))
-                    {
                         app.Label("inside");
-                        app.EndWindow();
-                    }
+                    app.EndWindow();
+                }
             });
         ExpectTheNextFrameWorks(app);
         app.Cleanup();

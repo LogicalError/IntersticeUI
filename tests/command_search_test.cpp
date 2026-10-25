@@ -93,8 +93,8 @@ namespace
                               app.theme.menuBarTriggerStyleRef, app.theme.menuStyleRef, app.theme.menuItemRowStyleRef))
             {
                 app.MenuItem("New");
-                app.EndMenu();
             }
+            app.EndMenu();
             app.CommandSearch(searchID, state);
             app.EndMenuBar();
             app.EndRootWindow();
@@ -172,11 +172,11 @@ namespace
 
     TEST_F(CommandSearchTest, OtherModesCommandsAreLeftOut)
     {
-        const EditMode sculpt = app.commandManager.RegisterEditMode("Sculpt");
+        const CommandMode sculpt = app.commandManager.RegisterMode("Sculpt");
         app.commandManager.RegisterCommand(sculpt, KeyCode::KeyB, KeyModifier::None, [] {}, "Brush");
         Focus();
         EXPECT_EQ(Rows().size(), 4u);
-        app.commandManager.SetEditMode(sculpt);
+        app.commandManager.SetMode(sculpt);
         Frame();
         EXPECT_EQ(Rows().size(), 5u);
     }

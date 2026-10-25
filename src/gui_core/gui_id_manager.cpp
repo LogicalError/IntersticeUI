@@ -28,8 +28,9 @@ namespace interstice
         m_debug_dynamic_ids.clear();
         m_debug_ranges.clear();
 #endif
+        m_site_counts.clear();
         m_parent_stack.clear(); // for release mode safety
-        m_parent_stack.push_back(ParentData{ .id = ID::Invalid(), .counter = 0 });
+        m_parent_stack.push_back(ParentData{ .id = ID::Invalid() });
         return true;
     }
         
@@ -52,7 +53,7 @@ namespace interstice
             Diagnostics::ReportMisuse(kLogID, "IDManager: Pushing Invalid ID as parent");
             return false;
         }
-        m_parent_stack.push_back(ParentData{ .id = parent_id, .counter = 0 });
+        m_parent_stack.push_back(ParentData{ .id = parent_id });
         return true;
     }
 
@@ -173,11 +174,9 @@ namespace interstice
             return ID::Invalid();
         }
         m_dynamic_id_total++;
-        ParentData& parentData = m_parent_stack.back();
-        parentData.counter++;
-        //*
-        hash = Hash::Combine(hash, parentData.counter, parentData.id.value.integer);
-        
+        const uint64_t site = Hash::Combine(hash, m_parent_stack.back().id.value.integer);
+        hash = Hash::Combine(site, ++m_site_counts[site]);
+
         // Ensure non-zero
         if (hash == 0) hash = 1;
 
@@ -187,21 +186,6 @@ namespace interstice
                         .mode = IDMode::Dynamic,
                         .hashValue = hash
                     }};
-        /*/
-        hash = Hash::Combine(hash, parentData.id.value.integer);
-
-        uint32_t hash32 = (uint32_t)(hash ^ (hash >> 32));
-
-        // Ensure non-zero
-        if (hash32 == 0) hash32 = 1;
-
-        ID id = ID::Invalid();
-        id.value = { .dynamicParts =
-                    {
-                        .mode = IDMode::Dynamic,
-                        .hashValue = hash32 | ((uint64_t)parentData.counter << 32)
-                    } };
-        //*/
 #ifdef INTERSTICE_ID_DEBUG
         m_debug_dynamic_ids.push_back(id);
 #endif

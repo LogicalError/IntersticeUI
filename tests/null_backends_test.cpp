@@ -27,14 +27,14 @@ namespace
         void OnGUI() override
         {
             if (script) script(frame);
-            if (BeginWindow(windowID, "Null", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+            if (BeginWindow(windowID, "Null", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
                             interstice::ElementFlags::WindowRenderToImage))
             {
                 BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
                 Button(buttonID, "Click", [this] { ++clicks; });
                 EndVertical();
-                EndWindow();
             }
+            EndWindow();
             if (++frame >= frames)
                 applicationQuit = true;
         }

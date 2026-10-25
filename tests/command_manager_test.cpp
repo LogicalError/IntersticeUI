@@ -7,7 +7,7 @@
 
 using interstice::CommandManager;
 using interstice::CommandID;
-using interstice::EditMode;
+using interstice::CommandMode;
 using interstice::IconID;
 using interstice::KeyCode;
 using interstice::KeyModifier;
@@ -69,13 +69,13 @@ TEST(CommandManager, ConsumedEventBypassesDispatch)
 TEST(CommandManager, ModeSpecificCommandFallsThroughToDefault)
 {
     CommandManager m;
-    EditMode sculpt = m.RegisterEditMode("Sculpt");
+    CommandMode sculpt = m.RegisterMode("Sculpt");
 
     int defaultFired = 0, sculptFired = 0;
     m.RegisterCommand(KeyCode::KeyD, KeyModifier::Control,          [&]() { defaultFired++; });
     m.RegisterCommand(sculpt, KeyCode::KeyG, KeyModifier::None,     [&]() { sculptFired++; });
 
-    m.SetEditMode(sculpt);
+    m.SetMode(sculpt);
     EXPECT_TRUE(Dispatch(m, KeyCode::KeyG));                                  // mode match
     EXPECT_TRUE(Dispatch(m, KeyCode::KeyD, KeyModifier::Control));            // default fallback
     EXPECT_EQ(sculptFired, 1);
@@ -103,21 +103,21 @@ TEST(CommandManager, ReregisteringSameBindingUpdatesInPlace)
 TEST(CommandManager, FindCommandIgnoresChordCommands)
 {
     CommandManager m;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     []() {});
 
     // A chord's prefix is not a single-key command; FindCommand returning it would
     // make conflict detection replace the chord.
-    EXPECT_EQ(m.FindCommand(EditMode::Default, KeyCode::KeyK, KeyModifier::Control), -1);
+    EXPECT_FALSE(m.FindCommand(CommandMode::Default, KeyCode::KeyK, KeyModifier::Control));
 }
 
 TEST(CommandManager, ChordDispatchFiresOnFullSequence)
 {
     CommandManager m;
     int fired = 0;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     [&]() { fired++; }, "Save All");
@@ -136,7 +136,7 @@ TEST(CommandManager, ChordDispatchFiresOnFullSequence)
 TEST(CommandManager, ChordWithoutCallbackCompletesSafely)
 {
     CommandManager m;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     nullptr, "Placeholder");
@@ -149,7 +149,7 @@ TEST(CommandManager, ChordWrongSecondKeySwallowsButDoesNotFire)
 {
     CommandManager m;
     int chord = 0, single = 0;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     [&]() { chord++; });
@@ -169,7 +169,7 @@ TEST(CommandManager, EscapeCancelsPendingChord)
 {
     CommandManager m;
     int fired = 0;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     [&]() { fired++; });
@@ -186,15 +186,15 @@ TEST(CommandManager, EscapeCancelsPendingChord)
 TEST(CommandManager, SetEditModeCancelsPendingChord)
 {
     CommandManager m;
-    EditMode sculpt = m.RegisterEditMode("Sculpt");
+    CommandMode sculpt = m.RegisterMode("Sculpt");
     int fired = 0;
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     [&]() { fired++; });
 
     Dispatch(m, KeyCode::KeyK, KeyModifier::Control);
-    m.SetEditMode(sculpt);
+    m.SetMode(sculpt);
     // Pending was in Default; mode switch clears it.
     EXPECT_FALSE(Dispatch(m, KeyCode::KeyS, KeyModifier::Control));
     EXPECT_EQ(fired, 0);
@@ -205,7 +205,7 @@ TEST(CommandManager, SingleKeyShadowsChordWithSamePrefix)
     CommandManager m;
     int single = 0, chord = 0;
     m.RegisterCommand(KeyCode::KeyK, KeyModifier::Control,         [&]() { single++; });
-    m.RegisterChord(EditMode::Default,
+    m.RegisterChord(CommandMode::Default,
                     KeyCode::KeyK, KeyModifier::Control,
                     KeyCode::KeyS, KeyModifier::Control,
                     [&]() { chord++; });
@@ -226,10 +226,10 @@ TEST(CommandManager, RebindToConflictingBindingUnbindsOldOwner)
     m.BeginRebind(undo);
     EXPECT_TRUE(Dispatch(m, KeyCode::KeyS, KeyModifier::Control));
 
-    EXPECT_EQ(m.GetCommands()[save].key, KeyCode::None);
-    EXPECT_EQ(m.GetCommands()[save].displayString, "(unbound)");
-    EXPECT_EQ(m.GetCommands()[undo].key, KeyCode::KeyS);
-    EXPECT_EQ(m.GetCommands()[undo].modifiers, KeyModifier::Control);
+    EXPECT_EQ(m.GetCommand(save)->key, KeyCode::None);
+    EXPECT_EQ(m.GetCommand(save)->displayString, "(unbound)");
+    EXPECT_EQ(m.GetCommand(undo)->key, KeyCode::KeyS);
+    EXPECT_EQ(m.GetCommand(undo)->modifiers, KeyModifier::Control);
 }
 
 TEST(CommandManager, UnboundCommandNeverDispatches)
@@ -243,7 +243,7 @@ TEST(CommandManager, UnboundCommandNeverDispatches)
     m.BeginRebind(other);
     Dispatch(m, KeyCode::KeyS, KeyModifier::Control); // rebinds other to Ctrl+S, unbinds idx
 
-    EXPECT_EQ(m.GetCommands()[idx].key, KeyCode::None);
+    EXPECT_EQ(m.GetCommand(idx)->key, KeyCode::None);
     // Re-firing Ctrl+S now goes to 'other', not idx.
     EXPECT_FALSE(Dispatch(m, KeyCode::KeyX, KeyModifier::Control));
     EXPECT_EQ(fired, 0);
@@ -255,7 +255,7 @@ TEST(CommandManager, NoShortcutCommandNeverDispatches)
     int fired = 0;
     // A command with no shortcut key (menu / toolbar only).
     CommandID id = m.RegisterCommand(IconID::Invalid, [&]() { fired++; }, "Menu Only");
-    EXPECT_FALSE(m.GetCommands()[id].HasShortcut());
+    EXPECT_FALSE(m.GetCommand(id)->HasShortcut());
 
     // No real keypress ever matches a None-keyed command.
     EXPECT_FALSE(Dispatch(m, KeyCode::KeyA, KeyModifier::None));
@@ -278,9 +278,9 @@ TEST(CommandManager, IconRoundTripsThroughRegistration)
     const IconID icon = static_cast<IconID>(7);
     CommandID withKey = m.RegisterCommand(icon, KeyCode::KeyS, KeyModifier::Control, []() {}, "Save");
     CommandID noKey   = m.RegisterCommand(icon, []() {}, "Refresh");
-    EXPECT_EQ(m.GetCommands()[withKey].icon, icon);
-    EXPECT_EQ(m.GetCommands()[noKey].icon, icon);
-    EXPECT_EQ(m.GetCommands()[noKey].key, KeyCode::None);
+    EXPECT_EQ(m.GetCommand(withKey)->icon, icon);
+    EXPECT_EQ(m.GetCommand(noKey)->icon, icon);
+    EXPECT_EQ(m.GetCommand(noKey)->key, KeyCode::None);
 }
 
 TEST(CommandManager, FormatShortcutProducesReadableText)
@@ -376,4 +376,49 @@ TEST(CommandManager, FormatChordShortcutJoinsKeysWithSpace)
                   KeyCode::KeyK, KeyModifier::Control,
                   KeyCode::None, KeyModifier::None),
               "Ctrl+K");
+}
+
+// #53: the zero CommandID is invalid ("unset"), and real commands start at 1, so a
+// zero-initialized struct of IDs holds no command.
+TEST(CommandManager, TheZeroCommandIDIsInvalid)
+{
+    CommandManager m;
+    const CommandID unset{};
+    EXPECT_FALSE(unset.IsValid());
+    EXPECT_EQ(m.GetCommand(unset), nullptr);
+
+    const CommandID first = m.RegisterCommand(KeyCode::KeyS, KeyModifier::Control, []() {}, "Save");
+    EXPECT_TRUE(first.IsValid());
+    EXPECT_NE(first, unset);
+    ASSERT_NE(m.GetCommand(first), nullptr);
+    EXPECT_EQ(m.GetCommand(first)->description, "Save");
+    EXPECT_EQ(CommandManager::IDAt(0), first);
+    EXPECT_EQ(m.GetCommand(CommandID{ 99 }), nullptr) << "an unknown ID";
+
+    m.BeginRebind(unset);
+    EXPECT_FALSE(m.IsRebinding()) << "nothing to rebind";
+}
+
+// #53: modes are only what the app registers: each name gets its own value, none of them
+// the Default fallback (the library has no fixed modes a registered one could collide with).
+TEST(CommandManager, RegisteredModesAreDistinct)
+{
+    CommandManager m;
+    const CommandMode nodeView = m.RegisterMode("NodeView");
+    const CommandMode sculpt   = m.RegisterMode("Sculpt");
+    EXPECT_NE(nodeView, CommandMode::Default);
+    EXPECT_NE(sculpt, CommandMode::Default);
+    EXPECT_NE(nodeView, sculpt);
+    EXPECT_EQ(m.RegisterMode("NodeView"), nodeView) << "the same name, the same mode";
+    EXPECT_EQ(m.GetModeName(sculpt), "Sculpt");
+    EXPECT_EQ(m.GetModeCount(), 3u);
+
+    int fired = 0;
+    m.RegisterCommand(sculpt, KeyCode::KeyG, KeyModifier::None, [&]() { fired++; }, "Grab");
+    m.SetMode(nodeView);
+    m.ProcessInput(MakeKey(KeyCode::KeyG));
+    EXPECT_EQ(fired, 0) << "another mode's shortcut";
+    m.SetMode(sculpt);
+    m.ProcessInput(MakeKey(KeyCode::KeyG));
+    EXPECT_EQ(fired, 1);
 }

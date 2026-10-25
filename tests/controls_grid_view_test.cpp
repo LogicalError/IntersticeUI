@@ -48,9 +48,9 @@ namespace interstice
                                           LayoutOverride{}.Size(400, 300)))
                     {
                         for (int i = 0; i < n; ++i)
-                            app.GridViewItem(ids[i], "item", IconID::Invalid,
-                                             ElementState::None, StyleRef{},
-                                             LayoutOverride{}.Size(80, 80));
+                            app.GridViewItem(ids[i], IconID::Invalid, "item",
+                                             ElementState::None, nullptr,
+                                             StyleRef{}, LayoutOverride{}.Size(80, 80));
                         app.EndGridView();
                     }
                     app.EndRootWindow();
@@ -209,9 +209,9 @@ namespace interstice
                                           /*dragDrop*/ nullptr, LayoutOverride{}.Size(400, 300)))
                     {
                         for (int i = 0; i < 4; ++i)
-                            app.GridViewItem(ids[i], names[i], IconID::Invalid,
-                                             ElementState::None, StyleRef{},
-                                             LayoutOverride{}.Size(80, 80), &names[i]);
+                            app.GridViewItem(ids[i], IconID::Invalid, names[i],
+                                             ElementState::None, &names[i],
+                                             StyleRef{}, LayoutOverride{}.Size(80, 80));
                         app.EndGridView();
                     }
                     app.EndRootWindow();
@@ -269,15 +269,15 @@ namespace interstice
                                           /*dragDrop*/ nullptr, LayoutOverride{}.Size(400, 300)))
                     {
                         for (int i = 0; i < 4; ++i)
-                            app.GridViewItem(ids[i], names[i], IconID::Invalid,
-                                             ElementState::None, StyleRef{},
-                                             LayoutOverride{}.Size(80, 80), &names[i]);
+                            app.GridViewItem(ids[i], IconID::Invalid, names[i],
+                                             ElementState::None, &names[i],
+                                             StyleRef{}, LayoutOverride{}.Size(80, 80));
                         app.EndGridView();
                     }
                     if (app.BeginGridView(otherGrid, &otherSel, nullptr, nullptr, LayoutOverride{}.Size(400, 100)))
                     {
-                        app.GridViewItem(otherItem, "other", IconID::Invalid,
-                                         ElementState::None, StyleRef{}, LayoutOverride{}.Size(80, 80));
+                        app.GridViewItem(otherItem, IconID::Invalid, "other",
+                                         ElementState::None, nullptr, StyleRef{}, LayoutOverride{}.Size(80, 80));
                         app.EndGridView();
                     }
                     app.EndRootWindow();
@@ -360,10 +360,10 @@ namespace interstice
                                         /*itemCount*/5, interstice::int2{ 80, 80 },
                                         [&](int, interstice::ID itemID) {
                                             const int w = std::max(80, int(vstate.cellStretchedW));
-                                            app.GridViewItem(itemID, "file_with_a_long_name.txt",
-                                                             IconID::Invalid, ElementState::None,
-                                                             StyleRef{},
-                                                             LayoutOverride{}.Size(w, 80));
+                                            app.GridViewItem(itemID, IconID::Invalid,
+                                                             "file_with_a_long_name.txt", ElementState::None,
+                                                             nullptr,
+                                                             StyleRef{}, LayoutOverride{}.Size(w, 80));
                                         },
                                         nullptr, nullptr, nullptr, {}, {},
                                         LayoutOverride{}.FlexGrow(1));
@@ -406,8 +406,8 @@ namespace interstice
                     if (app.BeginGridView(gridID, &selected, nullptr, nullptr, LayoutOverride{}.FlexGrow(1)))
                     {
                         for (auto& id : items)
-                            app.GridViewItem(id, "item", IconID::Invalid, ElementState::None, StyleRef{},
-                                             LayoutOverride{}.Size(100, 40));
+                            app.GridViewItem(id, IconID::Invalid, "item", ElementState::None, nullptr,
+                                             StyleRef{}, LayoutOverride{}.Size(100, 40));
                         app.EndGridView();
                     }
                     app.EndArea();
@@ -460,9 +460,9 @@ namespace interstice
                     app.VirtualGridView(gridID, vstate, kItems, interstice::int2{ 100, 50 },
                                         [&](int idx, interstice::ID itemID) {
                                             itemIDs[size_t(idx)] = itemID;
-                                            app.GridViewItem(itemID, "item", IconID::Invalid,
-                                                             ElementState::None, StyleRef{},
-                                                             LayoutOverride{}.Size(100, 50));
+                                            app.GridViewItem(itemID, IconID::Invalid, "item",
+                                                             ElementState::None, nullptr,
+                                                             StyleRef{}, LayoutOverride{}.Size(100, 50));
                                         },
                                         useMulti ? nullptr : &selected,
                                         useMulti ? &multi : nullptr,

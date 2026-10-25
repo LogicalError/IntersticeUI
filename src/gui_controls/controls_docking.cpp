@@ -199,21 +199,18 @@ namespace interstice
                 content.styleRef = app.theme.dockContentStyleRef;
                 content.state    = app.guiStateManager.GetCurrentState(contentID);
                 app.RegisterElement(std::move(content), interstice::LayoutOverride{}.FlexGrow(1));
-
-                app.EndGhostWindow();
             }
+            app.EndGhostWindow();
         }
 
         // Render a drop-zone overlay as a ghost window at the given rect.
         void EmitDropZoneOverlayRect(GUIApplication& app, IntRect overlay)
         {
             if (overlay.w <= 0 || overlay.h <= 0) return;
-            if (app.BeginGhostWindow(GUIApplicationInternals::TabDragGhostWindowID(app),
-                                     { overlay.x, overlay.y },
-                                     { overlay.w, overlay.h }, app.theme.panelDropVisualizationStyleRef))
-            {
-                app.EndGhostWindow();
-            }
+            app.BeginGhostWindow(GUIApplicationInternals::TabDragGhostWindowID(app),
+                                 { overlay.x, overlay.y },
+                                 { overlay.w, overlay.h }, app.theme.panelDropVisualizationStyleRef);   // the window itself is the overlay
+            app.EndGhostWindow();
         }
 
         // A torn-off window's resize grip: two diagonal strokes in the bottom-right corner.
@@ -449,7 +446,7 @@ namespace interstice
 
                     auto it = layout->panels.find(node->panelIds[i]);
                     if (it == layout->panels.end()) continue;
-                    app.Tab(it->second.id, it->second.title, it->second.icon,
+                    app.Tab(it->second.id, it->second.icon, it->second.title,
                             inTitleBar ? app.theme.titleBarTabStyleRef : app.theme.tabStyleRef);
                 }
 
@@ -519,8 +516,8 @@ namespace interstice
                     {
                         if (panelIt != layout->panels.end() && panelIt->second.onPanelGUI)
                             panelIt->second.onPanelGUI();
-                        app.EndCached();
                     }
+                    app.EndCached();
                 }
                 else if (app.BeginArea(contentID, app.theme.dockContentStyleRef, {}))
                 {
@@ -630,12 +627,13 @@ namespace interstice
     // Per-frame docking bookkeeping
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::BeginDockingFrame()
+    bool GUIApplication::BeginDockingFrame()
     {
         m_dockingLayoutsThisFrame.clear();
         m_toolbarDocksThisFrame.clear();
         if (!m_reorderable->Drag().isDragging)
             m_dockTabDragSub->Info() = {};
+        return true;
     }
 
     void GUIApplication::EndDockingFrame()
@@ -712,7 +710,7 @@ namespace interstice
     // Application API
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::BeginDockingContainer(ID id, DockingLayout* layout, StyleRef style, LayoutOverride&& constraints)
     {
         m_dockingState = {};
         m_dockingState.containerID = id;
@@ -733,7 +731,7 @@ namespace interstice
         RegisterElement(std::move(container), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
 
-        if (!layout) return;
+        if (!layout) return true;
 
         CollapseEmptyLeaves(layout->root, &idManager);
         AssignMissingNodeIDs(layout->root.get(), idManager);
@@ -744,6 +742,7 @@ namespace interstice
 
         if (layout->root && !(layout->root->isLeaf && layout->root->panelIds.empty()))
             EmitDockNode(*this, layout, layout->root.get());
+        return true;
     }
 
     void GUIApplication::EndDockingContainer()
@@ -1028,9 +1027,9 @@ namespace interstice
                     static_cast<int16_t>(fw.spawnPosition.y));
                 fw.positioned = true;
             }
-            if (BeginWindow(fw.windowID, title,
-                            std::move(constraints), theme.dockWindowStyleRef,
-                            ElementFlags::WindowUserControlled | ElementFlags::WindowCustomTitleBar | ElementFlags::WindowCloseWithParent))
+            const bool open = BeginWindow(fw.windowID, title, theme.dockWindowStyleRef, std::move(constraints),
+                                          ElementFlags::WindowUserControlled | ElementFlags::WindowCustomTitleBar | ElementFlags::WindowCloseWithParent);
+            if (open)
             {
                 // Custom chrome: a lone leaf puts its tabs in the title bar; a split gets a bar
                 // with the window's name over it.
@@ -1049,14 +1048,12 @@ namespace interstice
                     BeginDockingContainer(containerID, &fw.layout, theme.dockWindowBodyStyleRef);
                 }
                 EndDockingContainer();
-                EndWindow();
+            }
+            EndWindow();
+            if (open)
                 ++i;
-            }
             else
-            {
-                // Window closed by user
-                CloseFloatingDockWindow(i);
-            }
+                CloseFloatingDockWindow(i);   // closed by the user
         }
     }
 

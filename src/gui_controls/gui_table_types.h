@@ -187,6 +187,9 @@ namespace interstice
         bool                  sortDescending   = false;
         bool                  selectionBar     = false;           // row mode: an accent bar on a selected row's left
         StyleRef              rowStyle         = StyleRef::Invalid(); // every row's backdrop, in place of the striped .table-row pair
+        StyleRef              cellStyle        = StyleRef::Invalid(); // every body cell, in place of .table-cell (the row height follows it)
+        bool                  showHeaders      = true;            // false omits the header row (and with it reorder, resize and sort)
+        bool                  columnSeparators = true;            // 1px lines between the columns of a headerless table
 
         LazyReorderFn                  onReorderColumns;           // headers become drag-to-reorder when set
         // Replaces the default double-click branch toggle (the chevron still toggles).

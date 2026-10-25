@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_base_types.h>     // int2, float3x2, color4f
 #include <gui_core/gui_id.h>
-#include <gui_core/input/gui_command_manager.h>          // EditMode
+#include <gui_core/input/gui_command_manager.h>          // CommandMode
 #include <gui_core/graphics/gui_custom_draw_context.h>   // VisualColorStyleIndex
 
 #include <gui_controls/gui_widget_state_types.h>          // DoubleClickTracker
@@ -168,7 +168,7 @@ namespace interstice
 
 
     // All state of one node-view widget; no global state.
-    // editMode is registered while the view has focus, for per-view shortcuts.
+    // commandMode is active while the view has focus, for per-view shortcuts.
     struct NodeView
     {
         std::vector<NodeModel>  nodes;
@@ -188,7 +188,7 @@ namespace interstice
         PendingConnection       pendingConnection;
         interstice::float3x2           transform;                  // identity = centered view (no pan/zoom)
         interstice::int2               lastInnerSize{ 0, 0 };      // for centering
-        EditMode                editMode  = EditMode::Default;
+        CommandMode             commandMode = CommandMode::Default;
         std::vector<int>        ordering;                   // z-order, last == front (a clicked node moves there)
 
         // Selected node stableIDs.

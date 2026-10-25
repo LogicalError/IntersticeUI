@@ -1,8 +1,15 @@
 #include <gui_core/graphics/gui_primitive_renderer.h>
 #include <gui_core/diagnostics/gui_profiler.h>
 
+#include <algorithm>
+#include <cstdint>
+
 namespace interstice
 {
+
+// Snapped edges are 16-bit: an edge past the range (a sizer stretched to kStretchHeight)
+// saturates, it doesn't wrap around to the other side.
+static int16_t SaturateInt16(int32_t v) { return int16_t(std::clamp<int32_t>(v, INT16_MIN, INT16_MAX)); }
 
 void PrimitiveRenderer::Render(interstice::ID id, RHI::RenderCommandList& cmdList,
                                const PipelineSet& pipelines, GPUDrawPushConstants& push_constants)
@@ -78,8 +85,8 @@ void PrimitiveRenderTarget::RenderBox(interstice::IntRect rect, interstice::IntR
                         .colorIndex   = int16_t(colorStyleIndex),
                         .styleIndexTo = toStyleIndex,
                         .blendT       = blendT,
-                        .snappedPx    = { int16_t(snappedPx.x), int16_t(snappedPx.y),
-                                          int16_t(snappedPx.x + snappedPx.w), int16_t(snappedPx.y + snappedPx.h) }
+                        .snappedPx    = { SaturateInt16(snappedPx.x), SaturateInt16(snappedPx.y),
+                                          SaturateInt16(snappedPx.x + snappedPx.w), SaturateInt16(snappedPx.y + snappedPx.h) }
                     });
 }
 
@@ -253,10 +260,10 @@ void PrimitiveRenderTarget::AppendCaptured(const PrimitiveRenderTarget& src, int
                     Box* box = reinterpret_cast<Box*>(hdr);
                     if (box->snappedPx[2] > box->snappedPx[0] || box->snappedPx[3] > box->snappedPx[1])
                     {
-                        box->snappedPx[0] = int16_t(box->snappedPx[0] + delta.x);
-                        box->snappedPx[1] = int16_t(box->snappedPx[1] + delta.y);
-                        box->snappedPx[2] = int16_t(box->snappedPx[2] + delta.x);
-                        box->snappedPx[3] = int16_t(box->snappedPx[3] + delta.y);
+                        box->snappedPx[0] = SaturateInt16(box->snappedPx[0] + delta.x);
+                        box->snappedPx[1] = SaturateInt16(box->snappedPx[1] + delta.y);
+                        box->snappedPx[2] = SaturateInt16(box->snappedPx[2] + delta.x);
+                        box->snappedPx[3] = SaturateInt16(box->snappedPx[3] + delta.y);
                     }
                 }
             }

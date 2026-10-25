@@ -941,15 +941,17 @@ namespace interstice
         };
     }
 
-    bool GUIApplication::ColorField(color4f& value, bool allowHDR, LayoutOverride&& constraints)
+    bool GUIApplication::ColorField(ID id, color4f& value, bool allowHDR, LayoutOverride&& constraints)
     {
         const color4f before = value;
 
         // A swatch (opens the picker), the color as hex, and its alpha in percent.
-        BeginHorizontal(idManager.AllocateDynamicID("color_field"), theme.colorFieldStyleRef, std::move(constraints));
+        BeginHorizontal(id, theme.colorFieldStyleRef, std::move(constraints));
 
         // ---- Swatch button ----
-        ID swatchID = idManager.AllocateDynamicID("color_swatch");
+        (void)idManager.PushParent(id);
+        const ID swatchID = idManager.AllocateDynamicID("color_swatch");
+        (void)idManager.PopParent();
         const std::string context = PendingLabelText();
         auto& cp = m_colorPickerSub->State();
 
@@ -1043,22 +1045,22 @@ namespace interstice
                 AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
                 {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
 
-            if (BeginWindow(cp.windowID, "Color Picker", std::move(popupPos), theme.colorPickerStyleRef,
+            if (BeginWindow(cp.windowID, "Color Picker", theme.colorPickerStyleRef, std::move(popupPos),
                             ElementFlags::WindowCanMove | ElementFlags::WindowNoCaption | ElementFlags::Shadows))
             {
                 EmitColorPicker(value, allowHDR);
-                EndWindow();
             } else
             {
                 // Window was closed (click outside / focus lost)
                 cp.triggerID = ID::Invalid();
             }
+            EndWindow();
         }
 
         return value != before;
     }
 
-    bool GUIApplication::ColorField(color4b& value, LayoutOverride&& constraints)
+    bool GUIApplication::ColorField(ID id, color4b& value, LayoutOverride&& constraints)
     {
         color4f f {
             value.r / 255.0f,
@@ -1066,7 +1068,7 @@ namespace interstice
             value.b / 255.0f,
             value.a / 255.0f
         };
-        bool changed = ColorField(f, false, std::move(constraints));
+        bool changed = ColorField(id, f, false, std::move(constraints));
         if (changed)
         {
             value.r = static_cast<byte>(std::clamp(int(f.r * 255.0f + 0.5f), 0, 255));

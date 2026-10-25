@@ -153,8 +153,8 @@ namespace interstice
             if (BeginCursorGhostWindow(demo.dragGhostWindowID, visual.screenPos))
             {
                 AddGhostIcon(icon);
-                EndGhostWindow();
             }
+            EndGhostWindow();
         };
         hierDnD.onReorder = [this](uintptr_t srcPayload, interstice::ID targetID,
                                    TreeDropPosition pos) {
@@ -356,10 +356,11 @@ namespace interstice
             // tableFill (flex-basis:0 + grow:1) bounds the table to the remaining
             // panel height so its body scrolls; flex-basis:auto would grow to fit
             // every row and never scroll.
+            state.showHeaders = false;
+            state.cellStyle   = hierarchyVizCellStyleRef;
             VirtualTable(id, state, std::span<VirtualTableColumn>(cols, 2),
                          int(visibleIdx.size()), 0, theme.tableFillStyleRef,
-                         interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0), /*showHeaders*/false,
-                         /*cellStyle*/hierarchyVizCellStyleRef);
+                         interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
         };
 
         if (searching)

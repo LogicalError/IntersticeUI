@@ -34,14 +34,14 @@ public:
 
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "Docking", interstice::LayoutOverride::FixedSize(900, 600).Centered(), theme.mainWindowStyleRef))
+        if (BeginWindow(windowID, "Docking", theme.mainWindowStyleRef, interstice::LayoutOverride::FixedSize(900, 600).Centered()))
         {
             BeginDockingContainer(dockID, &layout, interstice::LayoutOverride::Auto());
             EndDockingContainer();
             // Panels dragged out of the window get their own OS windows, owned by this one.
             EmitFloatingDockWindows();
-            EndWindow();
         }
+        EndWindow();
     }
 
 private:

@@ -324,8 +324,8 @@ namespace interstice
             if (BeginCursorGhostWindow(demo.dragGhostWindowID, visual.screenPos))
             {
                 AddGhostIcon(icon);
-                EndGhostWindow();
             }
+            EndGhostWindow();
         };
 
         gridDnD.payloadType = kGridPayload;
@@ -642,20 +642,20 @@ namespace interstice
                             }
 
                             if (listMode)
-                                GridViewItem(itemID, name, icon, interstice::ElementState::None,
+                                GridViewItem(itemID, icon, name, interstice::ElementState::None,
+                                             renameBuffer,
                                              theme.gridViewListItemStyleRef,
-                                             LayoutOverride{}.Height(rowH).FlexGrow(1),
-                                             renameBuffer);
+                                             LayoutOverride{}.Height(rowH).FlexGrow(1));
                             else
                                 // Stretched width: the grid's columns split the
                                 // viewport evenly, so the cells fill each row
                                 // instead of leaving a gap on the right.
-                                GridViewItem(itemID, name, icon, interstice::ElementState::None,
+                                GridViewItem(itemID, icon, name, interstice::ElementState::None,
+                                             renameBuffer,
                                              itemStyleFor(icon),
                                              LayoutOverride{}.Size(
                                                  std::max(cellW, int(gridScrollState.cellStretchedW)),
-                                                 cellH),
-                                             renameBuffer);
+                                                 cellH));
                         },
                         nullptr,                   // selectedIndex (multi-select used instead)
                         &demo.gridViewMultiSelect,

@@ -15,24 +15,32 @@
 
 namespace interstice
 {
-    // Opaque edit-mode identifier. Values are indices vended by CommandManager::RegisterEditMode.
-    // EditMode::Default (0) is always pre-registered and acts as a fallback when no
-    // mode-specific command matches the active mode.
-    enum class EditMode : uint32_t
+    // A set of shortcuts that is active while the app says so (e.g. a node view's while it has
+    // the focus). Opaque: other values come from CommandManager::RegisterMode. Default is
+    // always registered and is the fallback when the active mode has no matching command.
+    enum class CommandMode : uint32_t
     {
-        Select, Move, Rotate, Scale,
-        Default = Select
+        Default = 0
     };
 
-    // Handle to a registered command, stable for the manager's lifetime.
-    using CommandID = uint32_t;
+    // Handle to a registered command, stable for the manager's lifetime. The zero value is
+    // invalid, so structs holding one can be zero-initialized; real IDs start at 1.
+    struct CommandID
+    {
+        uint32_t value = 0;
+
+        constexpr bool IsValid() const { return value != 0; }
+        constexpr explicit operator bool() const { return value != 0; }
+        constexpr bool operator==(const CommandID&) const = default;
+        static constexpr CommandID Invalid() { return {}; }
+    };
 
     // A named action with an optional icon and an optional shortcut key, firing
     // one callback when invoked (clicked from a menu / toolbar, or via its key).
-    // Commands are organized by named edit modes.
+    // Commands are organized by named modes.
     //
-    // Modes are registered by name and return an opaque EditMode index:
-    //   EditMode sculpt = commandManager.RegisterEditMode("Sculpt");
+    // Modes are registered by name and return an opaque CommandMode:
+    //   CommandMode sculpt = commandManager.RegisterMode("Sculpt");
     //   commandManager.RegisterCommand(sculpt, KeyCode::KeyG, KeyModifier::None, []{ ... }, "Grab");
     //
     // A command may have no shortcut key (KeyCode::None): it never dispatches from
@@ -47,7 +55,7 @@ namespace interstice
     public:
         struct Command
         {
-            EditMode              mode;
+            CommandMode           mode;
             IconID                icon = IconID::Invalid; // optional
             KeyCode               key;
             KeyModifier           modifiers;
@@ -76,53 +84,53 @@ namespace interstice
             m_byMode.emplace_back(); // bucket for Default
         }
 
-        // Register a named edit mode. Returns the EditMode value to use when registering
-        // commands or calling SetEditMode. Registering the same name twice returns the
-        // existing value without adding a duplicate.
-        EditMode RegisterEditMode(std::string_view name)
+        // Register a named mode. Returns the CommandMode to use when registering commands or
+        // calling SetMode. Registering the same name twice returns the existing value
+        // without adding a duplicate.
+        CommandMode RegisterMode(std::string_view name)
         {
             for (uint32_t i = 0; i < uint32_t(m_modeNames.size()); i++)
-                if (m_modeNames[i] == name) return EditMode(i);
+                if (m_modeNames[i] == name) return CommandMode(i);
             m_modeNames.emplace_back(name);
             m_byMode.emplace_back();
-            return EditMode(m_modeNames.size() - 1);
+            return CommandMode(m_modeNames.size() - 1);
         }
 
-        std::string_view GetEditModeName(EditMode mode) const
+        std::string_view GetModeName(CommandMode mode) const
         {
             uint32_t index = uint32_t(mode);
             return (index < m_modeNames.size()) ? std::string_view(m_modeNames[index]) : std::string_view{};
         }
 
-        uint32_t GetEditModeCount() const { return uint32_t(m_modeNames.size()); }
+        uint32_t GetModeCount() const { return uint32_t(m_modeNames.size()); }
 
         // Cancels any pending chord prefix.
-        void     SetEditMode(EditMode mode)
+        void        SetMode(CommandMode mode)
         {
             m_currentMode       = mode;
             m_pendingChord.key  = KeyCode::None;
             m_pendingChord.mods = KeyModifier::None;
         }
-        EditMode GetEditMode() const        { return m_currentMode; }
+        CommandMode GetMode() const { return m_currentMode; }
 
         // key may be KeyCode::None (menu / toolbar only). Re-registering an existing
         // (mode, key, modifiers) updates that slot in place instead of adding a
         // command that could never dispatch. No-shortcut commands never collide.
-        CommandID RegisterCommand(EditMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
+        CommandID RegisterCommand(CommandMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
-            if (int32_t existing = FindCommand(mode, key, modifiers); existing >= 0)
+            if (const CommandID existing = FindCommand(mode, key, modifiers))
             {
                 INTERSTICE_LOG_DEBUG(::interstice::Diagnostics::MakeLogCategory("input"), "updating existing command: {}", description);
-                Command& s    = m_commands[uint32_t(existing)];
+                Command& s    = At(existing);
                 s.icon        = icon;
                 s.description = std::string(description);
                 s.callback    = std::move(callback);
                 s.onEnd       = {}; // re-registering as instant drops any prior held delegate
-                return uint32_t(existing);
+                return existing;
             }
 
-            CommandID index = CommandID(m_commands.size());
+            const CommandID id{ uint32_t(m_commands.size()) + 1 };
             m_commands.push_back({
                 mode, icon, key, modifiers,
                 KeyCode::None, KeyModifier::None, // single-key: no chord2
@@ -131,8 +139,8 @@ namespace interstice
                 std::move(callback)
             });
             if (uint32_t(mode) < m_byMode.size())
-                m_byMode[uint32_t(mode)].push_back(index);
-            return index;
+                m_byMode[uint32_t(mode)].push_back(id);
+            return id;
         }
 
         // Convenience overloads forwarding to the master registration above.
@@ -141,11 +149,11 @@ namespace interstice
         CommandID RegisterCommand(IconID icon, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
-            return RegisterCommand(EditMode::Default, icon, key, modifiers, std::move(callback), description);
+            return RegisterCommand(CommandMode::Default, icon, key, modifiers, std::move(callback), description);
         }
 
         // Specific mode, no icon.
-        CommandID RegisterCommand(EditMode mode, KeyCode key, KeyModifier modifiers,
+        CommandID RegisterCommand(CommandMode mode, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(mode, IconID::Invalid, key, modifiers, std::move(callback), description);
@@ -155,11 +163,11 @@ namespace interstice
         CommandID RegisterCommand(KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
-            return RegisterCommand(EditMode::Default, IconID::Invalid, key, modifiers, std::move(callback), description);
+            return RegisterCommand(CommandMode::Default, IconID::Invalid, key, modifiers, std::move(callback), description);
         }
 
         // Specific mode, with icon, no shortcut key.
-        CommandID RegisterCommand(EditMode mode, IconID icon,
+        CommandID RegisterCommand(CommandMode mode, IconID icon,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(mode, icon, KeyCode::None, KeyModifier::None, std::move(callback), description);
@@ -169,17 +177,17 @@ namespace interstice
         CommandID RegisterCommand(IconID icon,
                                   std::function<void()> callback, std::string_view description = {})
         {
-            return RegisterCommand(EditMode::Default, icon, KeyCode::None, KeyModifier::None, std::move(callback), description);
+            return RegisterCommand(CommandMode::Default, icon, KeyCode::None, KeyModifier::None, std::move(callback), description);
         }
 
         // Hold-to-act command (pan, orbit, ...): onBegin on press, onEnd on release.
         // Single-key only; OS key-repeat doesn't re-fire onBegin. Otherwise as RegisterCommand.
-        CommandID RegisterHeldCommand(EditMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
+        CommandID RegisterHeldCommand(CommandMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
         {
-            CommandID id = RegisterCommand(mode, icon, key, modifiers, std::move(onBegin), description);
-            m_commands[id].onEnd = std::move(onEnd);
+            const CommandID id = RegisterCommand(mode, icon, key, modifiers, std::move(onBegin), description);
+            At(id).onEnd = std::move(onEnd);
             return id;
         }
 
@@ -188,12 +196,12 @@ namespace interstice
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
         {
-            return RegisterHeldCommand(EditMode::Default, IconID::Invalid, key, modifiers,
+            return RegisterHeldCommand(CommandMode::Default, IconID::Invalid, key, modifiers,
                                        std::move(onBegin), std::move(onEnd), description);
         }
 
         // Specific mode, no icon.
-        CommandID RegisterHeldCommand(EditMode mode, KeyCode key, KeyModifier modifiers,
+        CommandID RegisterHeldCommand(CommandMode mode, KeyCode key, KeyModifier modifiers,
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
         {
@@ -202,56 +210,55 @@ namespace interstice
         }
 
         // Find a single-key command by (mode, key, modifiers). Does NOT fall through
-        // to Default and does NOT match chord commands. Returns -1 if none.
-        int32_t FindCommand(EditMode mode, KeyCode key, KeyModifier modifiers) const
+        // to Default and does NOT match chord commands. Invalid if none.
+        CommandID FindCommand(CommandMode mode, KeyCode key, KeyModifier modifiers) const
         {
-            if (key == KeyCode::None) return -1;
-            uint32_t modeIdx = uint32_t(mode);
-            if (modeIdx >= m_byMode.size()) return -1;
-            for (uint32_t i : m_byMode[modeIdx])
+            if (key == KeyCode::None) return {};
+            const uint32_t modeIdx = uint32_t(mode);
+            if (modeIdx >= m_byMode.size()) return {};
+            for (const CommandID id : m_byMode[modeIdx])
             {
-                const Command& s = m_commands[i];
-                if (!s.IsChord() && s.key == key && s.modifiers == modifiers) return int32_t(i);
+                const Command& s = At(id);
+                if (!s.IsChord() && s.key == key && s.modifiers == modifiers) return id;
             }
-            return -1;
+            return {};
         }
 
-        // Find a chord command whose full (key1,mods1,key2,mods2) matches.
-        // Returns -1 if none.
-        int32_t FindChord(EditMode mode, KeyCode k1, KeyModifier m1,
-                          KeyCode k2, KeyModifier m2) const
+        // Find a chord command whose full (key1,mods1,key2,mods2) matches. Invalid if none.
+        CommandID FindChord(CommandMode mode, KeyCode k1, KeyModifier m1,
+                            KeyCode k2, KeyModifier m2) const
         {
-            if (k1 == KeyCode::None || k2 == KeyCode::None) return -1;
-            uint32_t modeIdx = uint32_t(mode);
-            if (modeIdx >= m_byMode.size()) return -1;
-            for (uint32_t i : m_byMode[modeIdx])
+            if (k1 == KeyCode::None || k2 == KeyCode::None) return {};
+            const uint32_t modeIdx = uint32_t(mode);
+            if (modeIdx >= m_byMode.size()) return {};
+            for (const CommandID id : m_byMode[modeIdx])
             {
-                const Command& s = m_commands[i];
+                const Command& s = At(id);
                 if (s.IsChord()
                     && s.key == k1 && s.modifiers  == m1
                     && s.chord2Key == k2 && s.chord2Mods == m2)
-                    return int32_t(i);
+                    return id;
             }
-            return -1;
+            return {};
         }
 
         // 2-key chord command (e.g. Ctrl+K then Ctrl+S). Re-registering the same
         // sequence updates it in place. A single-key command sharing the first key
         // always wins at dispatch, so treat them as mutually exclusive.
-        CommandID RegisterChord(EditMode mode,
+        CommandID RegisterChord(CommandMode mode,
                                 KeyCode key1, KeyModifier mods1,
                                 KeyCode key2, KeyModifier mods2,
                                 std::function<void()> callback, std::string_view description = {})
         {
-            if (int32_t existing = FindChord(mode, key1, mods1, key2, mods2); existing >= 0)
+            if (const CommandID existing = FindChord(mode, key1, mods1, key2, mods2))
             {
-                Command& s    = m_commands[uint32_t(existing)];
+                Command& s    = At(existing);
                 s.description = std::string(description);
                 s.callback    = std::move(callback);
-                return uint32_t(existing);
+                return existing;
             }
 
-            CommandID index = CommandID(m_commands.size());
+            const CommandID id{ uint32_t(m_commands.size()) + 1 };
             m_commands.push_back({
                 mode, IconID::Invalid, key1, mods1,
                 key2, mods2,
@@ -260,8 +267,8 @@ namespace interstice
                 std::move(callback)
             });
             if (uint32_t(mode) < m_byMode.size())
-                m_byMode[uint32_t(mode)].push_back(index);
-            return index;
+                m_byMode[uint32_t(mode)].push_back(id);
+            return id;
         }
 
         // Returns an EventHandler to push onto the InputManager as a global handler.
@@ -279,10 +286,19 @@ namespace interstice
 
         // --- Inspection API (for command/shortcut viewer UI) ---
 
+        // Every command, in registration order: the one at index i has CommandID{ i + 1 }.
         const std::vector<Command>& GetCommands() const { return m_commands; }
+        static CommandID IDAt(size_t index) { return CommandID{ uint32_t(index) + 1 }; }
+        static size_t    IndexOf(CommandID id) { return size_t(id.value) - 1; }   // a valid ID's index
+
+        // The command, or null for an invalid or unknown ID.
+        const Command* GetCommand(CommandID id) const
+        {
+            return (id.value >= 1 && id.value <= m_commands.size()) ? &m_commands[id.value - 1] : nullptr;
+        }
 
         // Handles for a given mode, in registration order.
-        const std::vector<CommandID>& GetCommandsForMode(EditMode mode) const
+        const std::vector<CommandID>& GetCommandsForMode(CommandMode mode) const
         {
             static const std::vector<CommandID> empty;
             uint32_t index = uint32_t(mode);
@@ -293,10 +309,10 @@ namespace interstice
         //
         // While active, the next non-modifier keydown becomes the target command's
         // shortcut instead of firing anything. Escape cancels.
-        void    BeginRebind(CommandID index) { m_rebindIndex = (index < m_commands.size()) ? int32_t(index) : -1; }
-        void    CancelRebind()                { m_rebindIndex = -1; }
-        bool    IsRebinding() const           { return m_rebindIndex >= 0; }
-        int32_t RebindIndex() const           { return m_rebindIndex; }
+        void      BeginRebind(CommandID id) { m_rebinding = GetCommand(id) ? id : CommandID{}; }
+        void      CancelRebind()            { m_rebinding = {}; }
+        bool      IsRebinding() const       { return m_rebinding.IsValid(); }
+        CommandID RebindTarget() const      { return m_rebinding; }
 
         // A chord prefix was pressed and awaits its second key.
         bool IsChordPending() const { return m_pendingChord.key != KeyCode::None; }
@@ -400,18 +416,21 @@ namespace interstice
                 || k == KeyCode::LeftCommand  || k == KeyCode::RightCommand;
         }
 
-        void RebindCommand(CommandID index, KeyCode key, KeyModifier modifiers)
+        Command&       At(CommandID id)       { return m_commands[id.value - 1]; }
+        const Command& At(CommandID id) const { return m_commands[id.value - 1]; }
+
+        void RebindCommand(CommandID id, KeyCode key, KeyModifier modifiers)
         {
-            if (index >= m_commands.size()) return;
-            Command& s = m_commands[index];
+            if (!GetCommand(id)) return;
+            Command& s = At(id);
 
             // Most recent wins: another command in this mode owning (key, mods) becomes unbound.
             if (key != KeyCode::None)
             {
-                int32_t existing = FindCommand(s.mode, key, modifiers);
-                if (existing >= 0 && uint32_t(existing) != index)
+                const CommandID existing = FindCommand(s.mode, key, modifiers);
+                if (existing && existing != id)
                 {
-                    Command& other      = m_commands[uint32_t(existing)];
+                    Command& other      = At(existing);
                     other.key           = KeyCode::None;
                     other.modifiers     = KeyModifier::None;
                     other.displayString = FormatShortcut(KeyCode::None, KeyModifier::None);
@@ -432,12 +451,12 @@ namespace interstice
                 return false;
 
             // Before the state.consumed check so a focused textbox can't swallow the rebind key.
-            if (m_rebindIndex >= 0)
+            if (m_rebinding)
             {
                 if (IsModifierKey(state.lastKey)) return false;
                 if (state.lastKey != KeyCode::Escape)
-                    RebindCommand(CommandID(m_rebindIndex), state.lastKey, state.modifiers);
-                m_rebindIndex = -1;
+                    RebindCommand(m_rebinding, state.lastKey, state.modifiers);
+                m_rebinding = {};
                 return true;
             }
 
@@ -456,21 +475,21 @@ namespace interstice
                     return true;
 
                 if (TryCompleteChord(m_currentMode, pending, state)) return true;
-                if (m_currentMode != EditMode::Default
-                    && TryCompleteChord(EditMode::Default, pending, state)) return true;
+                if (m_currentMode != CommandMode::Default
+                    && TryCompleteChord(CommandMode::Default, pending, state)) return true;
 
                 // Swallow a non-completing key so it doesn't fire an unrelated command.
                 return true;
             }
 
             if (TryDispatchMode(m_currentMode, state)) return true;
-            if (m_currentMode != EditMode::Default
-                && TryDispatchMode(EditMode::Default, state)) return true;
+            if (m_currentMode != CommandMode::Default
+                && TryDispatchMode(CommandMode::Default, state)) return true;
 
             // A chord prefix enters pending state.
             if (HasChordPrefix(m_currentMode, state.lastKey, state.modifiers)
-                || (m_currentMode != EditMode::Default
-                    && HasChordPrefix(EditMode::Default, state.lastKey, state.modifiers)))
+                || (m_currentMode != CommandMode::Default
+                    && HasChordPrefix(CommandMode::Default, state.lastKey, state.modifiers)))
             {
                 m_pendingChord = { state.lastKey, state.modifiers };
                 return true;
@@ -488,23 +507,23 @@ namespace interstice
             for (size_t j = 0; j < m_activeHeld.size(); )
             {
                 if (m_activeHeld[j].key != state.lastKey) { ++j; continue; }
-                CommandID cmd = m_activeHeld[j].cmd;
+                const CommandID cmd = m_activeHeld[j].cmd;
                 m_activeHeld.erase(m_activeHeld.begin() + j);
-                if (cmd < m_commands.size() && m_commands[cmd].onEnd)
-                    m_commands[cmd].onEnd();
+                if (const Command* c = GetCommand(cmd); c && c->onEnd)
+                    c->onEnd();
                 fired = true;
             }
             return fired;
         }
 
     private:
-        bool TryDispatchMode(EditMode mode, const InputState& state)
+        bool TryDispatchMode(CommandMode mode, const InputState& state)
         {
             uint32_t index = uint32_t(mode);
             if (index >= m_byMode.size()) return false;
-            for (uint32_t i : m_byMode[index])
+            for (const CommandID i : m_byMode[index])
             {
-                const Command& s = m_commands[i];
+                const Command& s = At(i);
                 if (s.IsChord()) continue; // chord commands only fire via the pending-prefix path
                 if (s.key == state.lastKey && s.modifiers == state.modifiers)
                 {
@@ -519,7 +538,7 @@ namespace interstice
         // are swallowed while active so onBegin fires once per press.
         void BeginCommand(CommandID i)
         {
-            const Command& s = m_commands[i];
+            const Command& s = At(i);
             if (s.IsHeld())
             {
                 if (IsHeldActive(i)) return;
@@ -535,13 +554,13 @@ namespace interstice
             return false;
         }
 
-        bool TryCompleteChord(EditMode mode, KeyChord prefix, const InputState& state)
+        bool TryCompleteChord(CommandMode mode, KeyChord prefix, const InputState& state)
         {
             uint32_t index = uint32_t(mode);
             if (index >= m_byMode.size()) return false;
-            for (uint32_t i : m_byMode[index])
+            for (const CommandID i : m_byMode[index])
             {
-                const Command& s = m_commands[i];
+                const Command& s = At(i);
                 if (!s.IsChord()) continue;
                 if (s.key == prefix.key && s.modifiers == prefix.mods
                     && s.chord2Key == state.lastKey && s.chord2Mods == state.modifiers)
@@ -553,13 +572,13 @@ namespace interstice
             return false;
         }
 
-        bool HasChordPrefix(EditMode mode, KeyCode key, KeyModifier mods) const
+        bool HasChordPrefix(CommandMode mode, KeyCode key, KeyModifier mods) const
         {
             uint32_t index = uint32_t(mode);
             if (index >= m_byMode.size()) return false;
-            for (uint32_t i : m_byMode[index])
+            for (const CommandID i : m_byMode[index])
             {
-                const Command& s = m_commands[i];
+                const Command& s = At(i);
                 if (s.IsChord() && s.key == key && s.modifiers == mods)
                     return true;
             }
@@ -572,9 +591,9 @@ namespace interstice
 
         std::vector<std::string>           m_modeNames;
         std::vector<Command>               m_commands;
-        std::vector<std::vector<CommandID>> m_byMode;      // m_byMode[mode] = handles into m_commands
-        EditMode                           m_currentMode = EditMode::Default;
-        int32_t                            m_rebindIndex = -1; // index into m_commands, or -1
+        std::vector<std::vector<CommandID>> m_byMode;      // m_byMode[mode] = the mode's commands
+        CommandMode                        m_currentMode = CommandMode::Default;
+        CommandID                          m_rebinding;       // the command taking the next key, if any
         KeyChord                           m_pendingChord {}; // prefix waiting for completion (key=None = no pending)
         std::vector<HeldActive>            m_activeHeld;      // held commands with key currently down
     };

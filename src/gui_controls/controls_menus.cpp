@@ -206,7 +206,7 @@ namespace interstice
         const bool        ownsChrome = elementStorage.IsValidRef(windowRef)
             && (elementStorage.GetElementUnsafe(windowRef).flags & ElementFlags::WindowCustomTitleBar) != ElementFlags::None;
 
-        TitleBar bar{ .barID = barID, .captions = std::move(m_titleBarCaptions) };
+        TitleBarInfo bar{ .barID = barID, .captions = std::move(m_titleBarCaptions) };
         m_titleBarCaptions.clear();
         if (ownsChrome)
         {
@@ -323,6 +323,13 @@ namespace interstice
 
 
     bool GUIApplication::BeginMenu(ID menuID, std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints)
+    {
+        const bool open = OpenMenu(menuID, text, buttonStyle, menuStyle, itemStyle, std::move(constraints));
+        m_menuOpen.push_back(open);
+        return open;
+    }
+
+    bool GUIApplication::OpenMenu(ID menuID, std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints)
     {
         auto& level = menuManager.GetOrCreateNextLevel(idManager);
 	    assert(level.windowID != ID::Invalid()); // must have a valid window ID for scroll buttons
@@ -456,7 +463,7 @@ namespace interstice
 
             level.windowID = menuManager.PopupWindowFor(menuID, idManager);
             menuManager.PrepareLevelWindow(level, guiStateManager.GetScrollManagement());
-            if (BeginWindow(level.windowID, std::move(windowConstraints), menuStyle,
+            if (BeginWindow(level.windowID, menuStyle, std::move(windowConstraints),
                             ElementFlags::IsMenuWindow))
             {
                 // Snapshot the popup rect for next frame's side-placement check.
@@ -488,6 +495,7 @@ namespace interstice
                 return true;
             } else
             {
+                EndWindow();   // the popup window's skipped scope
                 if (menuManager.currentDepth == -1)
                 {
                     menuManager.justClosedTriggerID = level.triggerID;
@@ -626,9 +634,9 @@ namespace interstice
 
     bool GUIApplication::MenuItem(CommandID command)
     {
-        const auto& commands = commandManager.GetCommands();
-        if (command >= commands.size()) return false;
-        const CommandManager::Command& c = commands[command];
+        const CommandManager::Command* found = commandManager.GetCommand(command);
+        if (found == nullptr) return false;
+        const CommandManager::Command& c = *found;
         // No shortcut key -> empty trailing column.
         return MenuItem(c.icon, c.description,
                         c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
@@ -637,9 +645,9 @@ namespace interstice
 
     bool GUIApplication::CommandButton(CommandID command, StyleRef style, LayoutOverride&& constraints)
     {
-        const auto& commands = commandManager.GetCommands();
-        if (command >= commands.size()) return false;
-        const CommandManager::Command& c = commands[command];
+        const CommandManager::Command* found = commandManager.GetCommand(command);
+        if (found == nullptr) return false;
+        const CommandManager::Command& c = *found;
         // Icon-only when the command has an icon; fall back to the label otherwise.
         const std::string_view text = (c.icon != IconID::Invalid)
             ? std::string_view{} : std::string_view(c.description);
@@ -651,7 +659,21 @@ namespace interstice
         return clicked;
     }
 
+    // Called for every BeginMenu / BeginContextMenu, open or not.
     void GUIApplication::EndMenu()
+    {
+        if (m_menuOpen.empty())
+        {
+            ReportMisuse("GUIApplication: EndMenu without BeginMenu (ignored)");
+            return;
+        }
+        const bool open = m_menuOpen.back();
+        m_menuOpen.pop_back();
+        if (open)
+            CloseMenu();
+    }
+
+    void GUIApplication::CloseMenu()
     {
         if (menuManager.currentDepth < 0)
         {

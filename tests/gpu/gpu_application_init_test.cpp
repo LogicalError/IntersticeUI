@@ -116,8 +116,8 @@ namespace
             if (BeginWindow(windowID, "Allocations", interstice::LayoutOverride{}.Size(200, 100)))
             {
                 Label("Counting allocations");
-                EndWindow();
             }
+            EndWindow();
         }
     };
 
@@ -170,14 +170,14 @@ namespace
         void OnGUI() override
         {
             if (script) script(frame);
-            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
                             interstice::ElementFlags::WindowRenderToImage))
             {
                 BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
                 Button(buttonID, "Click", [this] { ++clicks; });
                 EndVertical();
-                EndWindow();
             }
+            EndWindow();
             if (++frame >= frames)
                 applicationQuit = true;
         }
@@ -265,7 +265,7 @@ namespace
         {
             // Give the cache time to settle and capture (it waits for transitions).
             std::this_thread::sleep_for(std::chrono::milliseconds(25));
-            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
                             interstice::ElementFlags::WindowRenderToImage))
             {
                 BeginArea(outerID, interstice::LayoutOverride{}.FlexGrow(1));
@@ -274,11 +274,11 @@ namespace
                 if (BeginCached(cachedID, 0, interstice::LayoutOverride{}.FlexGrow(1)))
                 {
                     Text("cached content");
-                    EndCached();
                 }
+                EndCached();
                 EndArea();
-                EndWindow();
             }
+            EndWindow();
             if (++frame >= frames)
                 applicationQuit = true;
         }
@@ -328,7 +328,7 @@ namespace
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
                             interstice::ElementFlags::WindowRenderToImage))
             {
                 // A clipping area too small for its rows: the last ones (a row with a child
@@ -342,8 +342,8 @@ namespace
                 Text("last row");
                 EndHorizontal();
                 EndArea();
-                EndWindow();
             }
+            EndWindow();
             if (++frame >= frames)
                 applicationQuit = true;
         }

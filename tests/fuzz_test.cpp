@@ -377,10 +377,10 @@ namespace
         const CommandID nothing = app.commandManager.RegisterCommand(KeyCode::KeyQ, KeyModifier::Control, nullptr, "Nothing");
         app.commandManager.RegisterCommand(KeyCode::KeyW, KeyModifier::Control, [&] { fired++; }, "First");
         app.commandManager.RegisterCommand(KeyCode::KeyW, KeyModifier::Control, [&] { fired++; }, "Second, same key");
-        app.commandManager.BeginRebind(CommandID(99999));   // no such command: nothing to rebind
+        app.commandManager.BeginRebind(CommandID{ 99999 });   // no such command: nothing to rebind
         auto draw = [&] {
             app.BeginRootWindow();
-            app.CommandButton(CommandID(99999));
+            app.CommandButton(CommandID{ 99999 });
             app.CommandButton(nothing);
             app.EndRootWindow();
         };

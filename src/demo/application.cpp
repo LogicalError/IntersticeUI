@@ -1,7 +1,7 @@
 #include "application.h"
 
 #include <gui_core/diagnostics/gui_logging.h>
-#include <gui_core/input/gui_command_manager.h> // EditMode enum (why is this defined here?)
+#include <gui_core/input/gui_command_manager.h> // CommandMode enum (why is this defined here?)
 #include <gui_core/diagnostics/gui_profiler.h>  // Diagnostics::IsProfilingEnabled (profiler panel cache opt-out)
 #include <gui_controls/gui_node_view_helpers.h> // ApplyNodeViewEdit (node-view undo)
 
@@ -180,8 +180,8 @@ namespace interstice
                         MenuFilter();
                         for (int i = 0; i < int(std::size(kCameraViews)); ++i)
                             MenuItem(kCameraViews[i], [this, i]() { demo.cameraView = i; });
-                        EndMenu();
                     }
+                    EndMenu();
                     SetTooltip("Camera view");
                 }
             });
@@ -190,13 +190,13 @@ namespace interstice
                 .id = idManager.CreateStaticID(), .debugName = "Tools",
                 .renderBody = [this]()
                 {
-                    Toggle(nodeViewEditMode == EditMode::Select, demo.toolSelectIcon, [this](bool value) { if (value) nodeViewEditMode = EditMode::Select; });
+                    Toggle(tool == Tool::Select, demo.toolSelectIcon, [this](bool value) { if (value) tool = Tool::Select; });
 					SetTooltip("Select mode");
-                    Toggle(nodeViewEditMode == EditMode::Move,   demo.toolMoveIcon,   [this](bool value) { if (value) nodeViewEditMode = EditMode::Move;   });
+                    Toggle(tool == Tool::Move,   demo.toolMoveIcon,   [this](bool value) { if (value) tool = Tool::Move;   });
 					SetTooltip("Move mode");
-                    Toggle(nodeViewEditMode == EditMode::Rotate, demo.toolRotateIcon, [this](bool value) { if (value) nodeViewEditMode = EditMode::Rotate; });
+                    Toggle(tool == Tool::Rotate, demo.toolRotateIcon, [this](bool value) { if (value) tool = Tool::Rotate; });
 					SetTooltip("Rotate mode");
-                    Toggle(nodeViewEditMode == EditMode::Scale,  demo.toolScaleIcon,  [this](bool value) { if (value) nodeViewEditMode = EditMode::Scale;  });
+                    Toggle(tool == Tool::Scale,  demo.toolScaleIcon,  [this](bool value) { if (value) tool = Tool::Scale;  });
 					SetTooltip("Scale mode");
                 }
             });
@@ -268,9 +268,9 @@ namespace interstice
         demo.textBox1 = "Editable text...";
         demo.textBox2 = "Multiline\nEditable\ntext2...";
 
-        nodeViewEditMode = commandManager.RegisterEditMode("NodeView");
+        nodeViewMode = commandManager.RegisterMode("NodeView");
         commandManager.RegisterCommand(
-            nodeViewEditMode,
+            nodeViewMode,
             interstice::KeyCode::Home,
             interstice::KeyModifier::None,
             [this]()
@@ -282,7 +282,7 @@ namespace interstice
         );
 
         // Example edit mode registration
-        [[maybe_unused]] interstice::EditMode sculptMode = commandManager.RegisterEditMode("Sculpt");
+        [[maybe_unused]] interstice::CommandMode sculptMode = commandManager.RegisterMode("Sculpt");
 
         // Example: Ctrl+D fires in every edit mode (Default fallback)
         commandManager.RegisterCommand(
@@ -298,31 +298,31 @@ namespace interstice
         // Callbacks just print for now. A command may have no shortcut key (still
         // listed in the panel, where the user can bind one).
         auto& cmds = commandManager;
-        demo.cmdNew    = cmds.RegisterCommand(interstice::EditMode::Default, demo.newIcon,      interstice::KeyCode::KeyN, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: New"); },     "New");
-        demo.cmdOpen   = cmds.RegisterCommand(interstice::EditMode::Default, demo.openFileIcon, interstice::KeyCode::KeyO, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
-        demo.cmdSave   = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveIcon,     interstice::KeyCode::KeyS, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
-        demo.cmdSaveAs = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
-        demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
+        demo.cmdNew    = cmds.RegisterCommand(interstice::CommandMode::Default, demo.newIcon,      interstice::KeyCode::KeyN, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: New"); },     "New");
+        demo.cmdOpen   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.openFileIcon, interstice::KeyCode::KeyO, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
+        demo.cmdSave   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.saveIcon,     interstice::KeyCode::KeyS, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
+        demo.cmdSaveAs = cmds.RegisterCommand(interstice::CommandMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
+        demo.cmdExit   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
-        demo.cmdCut    = cmds.RegisterCommand(interstice::EditMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
-        demo.cmdCopy   = cmds.RegisterCommand(interstice::EditMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
-        demo.cmdPaste  = cmds.RegisterCommand(interstice::EditMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
+        demo.cmdUndo   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
+        demo.cmdRedo   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
+        demo.cmdCut    = cmds.RegisterCommand(interstice::CommandMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
+        demo.cmdCopy   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
+        demo.cmdPaste  = cmds.RegisterCommand(interstice::CommandMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
 
         // Commands shown on a menu but with NO shortcut key (the user can assign
         // one in the Shortcuts panel).
-        demo.cmdFullscreen = cmds.RegisterCommand(interstice::EditMode::Default, demo.fullscreenIcon, interstice::KeyCode::F11, interstice::KeyModifier::None,
+        demo.cmdFullscreen = cmds.RegisterCommand(interstice::CommandMode::Default, demo.fullscreenIcon, interstice::KeyCode::F11, interstice::KeyModifier::None,
                                                   [this]() { ToggleFullscreen(WindowMode::Fullscreen); }, "Fullscreen");
-        demo.cmdDocumentation = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
-        demo.cmdAbout         = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
-        demo.cmdSearchCommands = cmds.RegisterCommand(interstice::EditMode::Default, demo.findIcon, interstice::KeyCode::KeyK, interstice::KeyModifier::Control,
+        demo.cmdDocumentation = cmds.RegisterCommand(interstice::CommandMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
+        demo.cmdAbout         = cmds.RegisterCommand(interstice::CommandMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
+        demo.cmdSearchCommands = cmds.RegisterCommand(interstice::CommandMode::Default, demo.findIcon, interstice::KeyCode::KeyK, interstice::KeyModifier::Control,
                                                        [this]() { FocusCommandSearch(demo.commandSearch); }, "Search Commands");
-        demo.commandSearch.shortcut = cmds.GetCommands()[demo.cmdSearchCommands].displayString;
+        demo.commandSearch.shortcut = cmds.GetCommand(demo.cmdSearchCommands)->displayString;
 
         // --- Further commands so the Shortcuts panel has realistic content.
         // These are panel/keyboard only (not referenced by the menu or toolbar).
-        auto dummy = [this](interstice::EditMode mode, interstice::KeyCode key, interstice::KeyModifier mods,
+        auto dummy = [this](interstice::CommandMode mode, interstice::KeyCode key, interstice::KeyModifier mods,
             const char* desc)
             {
                 commandManager.RegisterCommand(mode, key, mods,
@@ -330,22 +330,22 @@ namespace interstice
             };
 
         // Default (global).
-        commandManager.RegisterCommand(interstice::EditMode::Default, demo.selectAllIcon, interstice::KeyCode::KeyA,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
-        commandManager.RegisterCommand(interstice::EditMode::Default, demo.deleteIcon, interstice::KeyCode::Delete, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
-        commandManager.RegisterCommand(interstice::EditMode::Default, demo.findIcon, interstice::KeyCode::KeyF,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
-        commandManager.RegisterCommand(interstice::EditMode::Default, demo.playIcon, interstice::KeyCode::F5,     interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
-        commandManager.RegisterCommand(interstice::EditMode::Default, demo.stopIcon, interstice::KeyCode::F5,     interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
+        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.selectAllIcon, interstice::KeyCode::KeyA,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
+        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.deleteIcon, interstice::KeyCode::Delete, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
+        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.findIcon, interstice::KeyCode::KeyF,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
+        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.playIcon, interstice::KeyCode::F5,     interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
+        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.stopIcon, interstice::KeyCode::F5,     interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
         // Held shortcut: onBegin fires on press, onEnd on release.
-        commandManager.RegisterHeldCommand(interstice::EditMode::Default, interstice::KeyCode::Space, interstice::KeyModifier::None,
+        commandManager.RegisterHeldCommand(interstice::CommandMode::Default, interstice::KeyCode::Space, interstice::KeyModifier::None,
             []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
             []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
             "Pan View (hold)");
 
         // NodeView - graph navigation
-        commandManager.RegisterCommand(nodeViewEditMode, demo.frameSelectedIcon, interstice::KeyCode::KeyF,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
-        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyA,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
-        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::Space, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
-        commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyG,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
+        commandManager.RegisterCommand(nodeViewMode, demo.frameSelectedIcon, interstice::KeyCode::KeyF,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
+        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::KeyA,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
+        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::Space, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
+        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::KeyG,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
 
         // Sculpt - brush operations.
         commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::LeftBracket,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
@@ -357,7 +357,7 @@ namespace interstice
         // Seed the demo node-view. Each renderBody fills the row's middle slot;
         // sockets come from input/output presence.
         {
-            demo.nodeView.editMode = nodeViewEditMode;
+            demo.nodeView.commandMode = nodeViewMode;
 
             // Socket colours double as the connection type: canConnect below only
             // allows wires between same-coloured sockets.
@@ -1014,8 +1014,8 @@ namespace interstice
             MenuItem(demo.cmdSaveAs);
             MenuSeparator();
             MenuItem(demo.cmdExit);
-            EndMenu();
         }
+        EndMenu();
 
         // ---- Edit ----
         if (BeginMenu(idManager.AllocateDynamicID("menuEdit"), "Edit",
@@ -1035,8 +1035,8 @@ namespace interstice
             MenuItem(demo.cmdPaste);
             MenuSeparator();
             DestructiveMenuItem(theme.deleteIcon, "Delete", [] {});
-            EndMenu();
         }
+        EndMenu();
 
         // ---- View ----
         if (BeginMenu(idManager.AllocateDynamicID("menuView"), "View",
@@ -1059,8 +1059,8 @@ namespace interstice
                     });
                     if (isCurrent) EndSelected();
                 }
-                EndMenu();
             }
+            EndMenu();
 
             MenuSeparator();
 
@@ -1088,8 +1088,8 @@ namespace interstice
                 MenuItem(demo.cmdFullscreen);
                 MenuItem("Exclusive Fullscreen", [this]() { ToggleFullscreen(WindowMode::ExclusiveFullscreen); });
             }
-            EndMenu();
         }
+        EndMenu();
 
         // ---- Help ---- (commands with no shortcut key)
         if (BeginMenu(idManager.AllocateDynamicID("menuHelp"), "Help",
@@ -1097,8 +1097,8 @@ namespace interstice
         {
             MenuItem(demo.cmdDocumentation);
             MenuItem(demo.cmdAbout);
-            EndMenu();
         }
+        EndMenu();
 
         // The command search, centred in the space after the menus.
         BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
@@ -1173,133 +1173,133 @@ namespace interstice
         {
             interstice::int2 size{ styleManager.Px(100), styleManager.Px(50) };
             static bool mainWindowClosed = false;
-            if (mainWindowClosed)
+            // Closed by the user; reset mainWindowClosed to reopen.
+            if (!mainWindowClosed)
             {
-                // Closed by the user; reset mainWindowClosed to reopen.
-            } else if (BeginWindow(demo.windowLayoutID2, "Test", std::move(sizeConstraints.Centered()), theme.mainWindowStyleRef,
-                                   ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar
-                                   | ElementFlags::WindowConfirmClose))
-            {
-                if (CloseRequested(demo.windowLayoutID2))
-                    RequestExit();
-                AskBeforeExit();
-
-                RenderMainMenu();
-
-                // ---- DockingContainer demo ----
+                if (BeginWindow(demo.windowLayoutID2, "Test", theme.mainWindowStyleRef, std::move(sizeConstraints.Centered()),
+                                ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar
+                                | ElementFlags::WindowConfirmClose))
                 {
-                    if (!demo.dockInitialized)
+                    if (CloseRequested(demo.windowLayoutID2))
+                        RequestExit();
+                    AskBeforeExit();
+
+                    RenderMainMenu();
+
+                    // ---- DockingContainer demo ----
                     {
-                        auto hierarchyPanelID   = CreatePanel(demo.dockingLayout.panels, "Hierarchy",   demo.panelHierarchyIcon, [this]() { RenderHierarchyPanel(); }, {}, [this]() { EnableHierarchyPanel(); }, [this]() { DisableHierarchyPanel(); });
-                        auto inspectorPanelID   = CreatePanel(demo.dockingLayout.panels, "Inspector",   demo.panelInspectorIcon, [this]() { RenderInspectorPanel(); }, {}, [this]() { EnableInspectorPanel(); }, [this]() { DisableInspectorPanel(); });
-                        auto consolePanelID     = CreatePanel(demo.dockingLayout.panels, "Log",         demo.panelLogIcon,       [this]() { RenderLogPanel(); },       {}, [this]() { EnableLogPanel(); },       [this]() { DisableLogPanel(); });
-                        auto filesPanelID       = CreatePanel(demo.dockingLayout.panels, "Files",       demo.panelFilesIcon,     [this]() { RenderFilesPanel(); }, {}, [this]() { EnableFilesPanel(); }, [this]() { DisableFilesPanel(); });
-                        auto nodeViewPanelID    = CreatePanel(demo.dockingLayout.panels, "NodeView",    demo.panelNodeViewIcon,  [this]() { RenderNodeViewPanel(); });
-                        auto viewportPanelID    = CreatePanel(demo.dockingLayout.panels, "Viewport",    demo.panelViewportIcon,  [this]() { RenderViewportPanel(); });
-                        auto profilerPanelID    = CreatePanel(demo.dockingLayout.panels, "Profiler",    demo.panelProfilerIcon,  [this]() { RenderProfilerTreePanel(); }, {}, [this]() { EnableProfilerTreePanel(); });
-                        // Panels are cached by default; the profiler opts out while profiling is on.
-                        demo.dockingLayout.panels[profilerPanelID].cacheSignature =
-                            []() -> std::optional<uint64_t> { return Diagnostics::IsProfilingEnabled() ? std::nullopt : std::optional<uint64_t>(0); };
+                        if (!demo.dockInitialized)
+                        {
+                            auto hierarchyPanelID   = CreatePanel(demo.dockingLayout.panels, "Hierarchy",   demo.panelHierarchyIcon, [this]() { RenderHierarchyPanel(); }, {}, [this]() { EnableHierarchyPanel(); }, [this]() { DisableHierarchyPanel(); });
+                            auto inspectorPanelID   = CreatePanel(demo.dockingLayout.panels, "Inspector",   demo.panelInspectorIcon, [this]() { RenderInspectorPanel(); }, {}, [this]() { EnableInspectorPanel(); }, [this]() { DisableInspectorPanel(); });
+                            auto consolePanelID     = CreatePanel(demo.dockingLayout.panels, "Log",         demo.panelLogIcon,       [this]() { RenderLogPanel(); },       {}, [this]() { EnableLogPanel(); },       [this]() { DisableLogPanel(); });
+                            auto filesPanelID       = CreatePanel(demo.dockingLayout.panels, "Files",       demo.panelFilesIcon,     [this]() { RenderFilesPanel(); }, {}, [this]() { EnableFilesPanel(); }, [this]() { DisableFilesPanel(); });
+                            auto nodeViewPanelID    = CreatePanel(demo.dockingLayout.panels, "NodeView",    demo.panelNodeViewIcon,  [this]() { RenderNodeViewPanel(); });
+                            auto viewportPanelID    = CreatePanel(demo.dockingLayout.panels, "Viewport",    demo.panelViewportIcon,  [this]() { RenderViewportPanel(); });
+                            auto profilerPanelID    = CreatePanel(demo.dockingLayout.panels, "Profiler",    demo.panelProfilerIcon,  [this]() { RenderProfilerTreePanel(); }, {}, [this]() { EnableProfilerTreePanel(); });
+                            // Panels are cached by default; the profiler opts out while profiling is on.
+                            demo.dockingLayout.panels[profilerPanelID].cacheSignature =
+                                []() -> std::optional<uint64_t> { return Diagnostics::IsProfilingEnabled() ? std::nullopt : std::optional<uint64_t>(0); };
 
-                        auto treeTablePanelID   = CreatePanel(demo.dockingLayout.panels, "TreeTable",   demo.panelMiscIcon, [this]() { RenderTreeTablePanel(); });
-                        auto tablePanelID       = CreatePanel(demo.dockingLayout.panels, "Table",       demo.panelMiscIcon, [this]() { RenderTablePanel(); });
-                        auto splitScrollPanelID = CreatePanel(demo.dockingLayout.panels, "FrozenTable", demo.panelMiscIcon, [this]() { RenderSplitScrollPanel(); });
-                        auto reorderablePanelID = CreatePanel(demo.dockingLayout.panels, "Reorderable", demo.panelMiscIcon, [this]() { RenderReorderablePanel(); });
-                        auto boxTestPanelID     = CreatePanel(demo.dockingLayout.panels, "BoxTest",     demo.panelMiscIcon, [this]() { RenderBoxTestPanel(); });
-                        auto miscPanelID        = CreatePanel(demo.dockingLayout.panels, "Misc",        demo.panelMiscIcon, [this]() { RenderMiscPanel(); });
-                        // Misc animates during construction (rotating triangle, cycling hue), so it
-                        // must rebuild every frame - opt out of caching.
-                        demo.dockingLayout.panels[miscPanelID].cacheSignature =
-                            []() -> std::optional<uint64_t> { return std::nullopt; };
+                            auto treeTablePanelID   = CreatePanel(demo.dockingLayout.panels, "TreeTable",   demo.panelMiscIcon, [this]() { RenderTreeTablePanel(); });
+                            auto tablePanelID       = CreatePanel(demo.dockingLayout.panels, "Table",       demo.panelMiscIcon, [this]() { RenderTablePanel(); });
+                            auto splitScrollPanelID = CreatePanel(demo.dockingLayout.panels, "FrozenTable", demo.panelMiscIcon, [this]() { RenderSplitScrollPanel(); });
+                            auto reorderablePanelID = CreatePanel(demo.dockingLayout.panels, "Reorderable", demo.panelMiscIcon, [this]() { RenderReorderablePanel(); });
+                            auto boxTestPanelID     = CreatePanel(demo.dockingLayout.panels, "BoxTest",     demo.panelMiscIcon, [this]() { RenderBoxTestPanel(); });
+                            auto miscPanelID        = CreatePanel(demo.dockingLayout.panels, "Misc",        demo.panelMiscIcon, [this]() { RenderMiscPanel(); });
+                            // Misc animates during construction (rotating triangle, cycling hue), so it
+                            // must rebuild every frame - opt out of caching.
+                            demo.dockingLayout.panels[miscPanelID].cacheSignature =
+                                []() -> std::optional<uint64_t> { return std::nullopt; };
 
-                        // Pages are registered once in InitSettingsPages.
-                        auto settingsPanelID    = CreatePanel(demo.dockingLayout.panels, "Settings", demo.panelSettingsIcon, [this]() { RenderSettingsPanel(demo.settings); });
+                            // Pages are registered once in InitSettingsPages.
+                            auto settingsPanelID    = CreatePanel(demo.dockingLayout.panels, "Settings", demo.panelSettingsIcon, [this]() { RenderSettingsPanel(demo.settings); });
                         
-                        // bottom
-                        auto&& filesLeaf         = MakeLeaf({ filesPanelID });
-                        auto&& consolePanelLeaf  = MakeLeaf({ consolePanelID });
-						// left / center / right
-                        auto&& leftPanelGroup    = MakeLeaf({ hierarchyPanelID });
-                        auto&& centerPanelGroup  = MakeLeaf({ nodeViewPanelID, viewportPanelID, settingsPanelID });
-                        auto&& rightPanelGroup   = MakeLeaf({ profilerPanelID, inspectorPanelID,
-                                    reorderablePanelID, miscPanelID, boxTestPanelID, treeTablePanelID,
-                                    tablePanelID, splitScrollPanelID });
+                            // bottom
+                            auto&& filesLeaf         = MakeLeaf({ filesPanelID });
+                            auto&& consolePanelLeaf  = MakeLeaf({ consolePanelID });
+    						// left / center / right
+                            auto&& leftPanelGroup    = MakeLeaf({ hierarchyPanelID });
+                            auto&& centerPanelGroup  = MakeLeaf({ nodeViewPanelID, viewportPanelID, settingsPanelID });
+                            auto&& rightPanelGroup   = MakeLeaf({ profilerPanelID, inspectorPanelID,
+                                        reorderablePanelID, miscPanelID, boxTestPanelID, treeTablePanelID,
+                                        tablePanelID, splitScrollPanelID });
 
-                        // Build tree:  Vsplit( Hsplit( left, Hsplit(center, right) ), Hsplit(files, console) )
-                        // Resize semantics:
-                        //  - outer Vsplit:  bottom row pinned -> top group absorbs vertical resize
-                        //  - top Hsplit:    left pinned       -> (center+right) absorbs horizontal resize
-                        //  - inner Hsplit:  right pinned      -> center absorbs horizontal resize
-                        //  - bottom Hsplit: left (files) pinned
-                        demo.dockingLayout.root =
-                            MakeSplit(DockSplitMode::BottomPinned, 280,
-                                MakeSplit(DockSplitMode::LeftPinned, 320,
-                                    // left panel group
-                                    std::move(leftPanelGroup),
-                                    MakeSplit(DockSplitMode::RightPinned, 540,
-                                        // center panel group
-                                        std::move(centerPanelGroup),
-                                        // right panel group
-                                        std::move(rightPanelGroup)
-                                    )
-                                ),
-                                // bottom panel group
-                                MakeSplit(DockSplitMode::LeftPinned, 500,
-                                    std::move(filesLeaf),
-                                    std::move(consolePanelLeaf)
-                                ),
-                                120, // minFirst
-                                160  // minSecond
-                            );
-                        demo.dockInitialized = true;
+                            // Build tree:  Vsplit( Hsplit( left, Hsplit(center, right) ), Hsplit(files, console) )
+                            // Resize semantics:
+                            //  - outer Vsplit:  bottom row pinned -> top group absorbs vertical resize
+                            //  - top Hsplit:    left pinned       -> (center+right) absorbs horizontal resize
+                            //  - inner Hsplit:  right pinned      -> center absorbs horizontal resize
+                            //  - bottom Hsplit: left (files) pinned
+                            demo.dockingLayout.root =
+                                MakeSplit(DockSplitMode::BottomPinned, 280,
+                                    MakeSplit(DockSplitMode::LeftPinned, 320,
+                                        // left panel group
+                                        std::move(leftPanelGroup),
+                                        MakeSplit(DockSplitMode::RightPinned, 540,
+                                            // center panel group
+                                            std::move(centerPanelGroup),
+                                            // right panel group
+                                            std::move(rightPanelGroup)
+                                        )
+                                    ),
+                                    // bottom panel group
+                                    MakeSplit(DockSplitMode::LeftPinned, 500,
+                                        std::move(filesLeaf),
+                                        std::move(consolePanelLeaf)
+                                    ),
+                                    120, // minFirst
+                                    160  // minSecond
+                                );
+                            demo.dockInitialized = true;
 
-                        // --panel: bring that panel to the front of its tab group.
-                        auto selectStartPanel = [this](auto& self, DockNode* node) -> void {
-                            if (!node) return;
-                            for (size_t t = 0; t < node->panelIds.size(); ++t)
-                            {
-                                const auto it = demo.dockingLayout.panels.find(node->panelIds[t]);
-                                if (it != demo.dockingLayout.panels.end()
-                                    && std::find(m_startPanels.begin(), m_startPanels.end(), it->second.title) != m_startPanels.end())
-                                    node->selectedTab = int(t);
-                            }
-                            self(self, node->first.get());
-                            self(self, node->second.get());
-                        };
-                        if (!m_startPanels.empty())
-                            selectStartPanel(selectStartPanel, demo.dockingLayout.root.get());
-
-                        // --float: those panels start in their own windows.
-                        int2 floatAt{ styleManager.Px(200), styleManager.Px(200) };
-                        for (const std::string& title : m_floatPanels)
-                            for (const auto& [id, panel] : demo.dockingLayout.panels)
-                                if (panel.title == title)
+                            // --panel: bring that panel to the front of its tab group.
+                            auto selectStartPanel = [this](auto& self, DockNode* node) -> void {
+                                if (!node) return;
+                                for (size_t t = 0; t < node->panelIds.size(); ++t)
                                 {
-                                    (void)FloatPanel(demo.dockingLayout, id, floatAt);
-                                    floatAt += int2{ styleManager.Px(40), styleManager.Px(40) };
-                                    break;
+                                    const auto it = demo.dockingLayout.panels.find(node->panelIds[t]);
+                                    if (it != demo.dockingLayout.panels.end()
+                                        && std::find(m_startPanels.begin(), m_startPanels.end(), it->second.title) != m_startPanels.end())
+                                        node->selectedTab = int(t);
                                 }
+                                self(self, node->first.get());
+                                self(self, node->second.get());
+                            };
+                            if (!m_startPanels.empty())
+                                selectStartPanel(selectStartPanel, demo.dockingLayout.root.get());
+
+                            // --float: those panels start in their own windows.
+                            int2 floatAt{ styleManager.Px(200), styleManager.Px(200) };
+                            for (const std::string& title : m_floatPanels)
+                                for (const auto& [id, panel] : demo.dockingLayout.panels)
+                                    if (panel.title == title)
+                                    {
+                                        (void)FloatPanel(demo.dockingLayout, id, floatAt);
+                                        floatAt += int2{ styleManager.Px(40), styleManager.Px(40) };
+                                        break;
+                                    }
+                        }
+
+                        demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");
+                        BeginDockingContainer(demo.dockContainerID, &demo.dockingLayout,
+                            theme.dockContainerMainStyleRef, LayoutOverride::Auto());
+                        EndDockingContainer();
                     }
 
-                    demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");
-                    BeginDockingContainer(demo.dockContainerID, &demo.dockingLayout,
-                        theme.dockContainerMainStyleRef, LayoutOverride::Auto());
-                    EndDockingContainer();
+                    RenderStatusBar();
+
+                    // Must be emitted inside the main window's scope so main becomes
+                    // their OS owner; otherwise SDL's hidden helper owns them and they
+                    // die when it is torn down.
+                    EmitFloatingDockWindows();
+                    EmitFloatingToolbarWindows(toolbars.floatingItems, &toolbarOpts);
+                } else
+                {
+                    // BeginWindow returned false - window is closing
+                    mainWindowClosed = true;
                 }
-
-                RenderStatusBar();
-
-                // Must be emitted inside the main window's scope so main becomes
-                // their OS owner; otherwise SDL's hidden helper owns them and they
-                // die when it is torn down.
-                EmitFloatingDockWindows();
-                EmitFloatingToolbarWindows(toolbars.floatingItems, &toolbarOpts);
-
                 EndWindow();
-            } else
-            {
-                // BeginWindow returned false - window is closing
-                mainWindowClosed = true;
             }
         }
     }

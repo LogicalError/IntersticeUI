@@ -28,6 +28,10 @@ list(APPEND GUI_CORE_TEST_FILES
   message_dialog_test.cpp
   undo_history_test.cpp
   misuse_test.cpp
+  begin_end_test.cpp
+  id_stability_test.cpp
+  control_reporting_test.cpp
+  frame_cost_bench.cpp
   fuzz_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp

@@ -149,7 +149,7 @@ namespace interstice
 		return Toggle(id, value, text, style, std::move(constraints));
     }
 
-    void GUIApplication::DragLabel(ID id, std::string_view title, StyleRef style, LayoutOverride&& constraints)
+    void GUIApplication::DragLabel(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
         interstice::EventHandler handler;
@@ -175,7 +175,7 @@ namespace interstice
         {
             handler = MakeDraggableLabelHandler(guiStateManager, elementStorage);
         }
-        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, title,
+        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
                         std::move(constraints));
         if (gs)
         {
@@ -480,22 +480,22 @@ namespace interstice
         // The current mode's and Default's commands whose description contains the query.
         constexpr size_t kMaxMatches = 12;
         const auto& commands = commandManager.GetCommands();
-        const EditMode mode = commandManager.GetEditMode();
+        const CommandMode mode = commandManager.GetMode();
         std::vector<CommandID> matches;
         if (focused)
         {
             const auto sameLetter = [](char a, char b)
                 { return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); };
-            for (CommandID i = 0; i < CommandID(commands.size()) && matches.size() < kMaxMatches; ++i)
+            for (size_t i = 0; i < commands.size() && matches.size() < kMaxMatches; ++i)
             {
                 const CommandManager::Command& c = commands[i];
                 if (c.description.empty() || !c.callback || c.IsHeld())
                     continue;
-                if (c.mode != EditMode::Default && c.mode != mode)
+                if (c.mode != CommandMode::Default && c.mode != mode)
                     continue;
                 if (std::search(c.description.begin(), c.description.end(),
                                 state.query.begin(), state.query.end(), sameLetter) != c.description.end())
-                    matches.push_back(i);
+                    matches.push_back(CommandManager::IDAt(i));
             }
         }
         const int matchCount = int(matches.size());
@@ -511,10 +511,10 @@ namespace interstice
         };
         auto run = [this, &state, leave](CommandID command)
         {
-            const auto& all = commandManager.GetCommands();
-            if (command >= all.size())
+            const CommandManager::Command* found = commandManager.GetCommand(command);
+            if (found == nullptr)
                 return;
-            const std::function<void()> callback = all[command].callback;
+            const std::function<void()> callback = found->callback;
             leave();
             state.ranCommand = true;
             if (callback)
@@ -543,7 +543,7 @@ namespace interstice
                         LayoutOverride{});
 
         // Up / Down / Enter / Escape drive the list; every other key edits the query.
-        const CommandID currentCommand = matchCount > 0 ? matches[size_t(state.current)] : CommandID(~0u);
+        const CommandID currentCommand = matchCount > 0 ? matches[size_t(state.current)] : CommandID::Invalid();
         auto textBoxHandler = MakeTextBoxHandler(guiStateManager);
         auto fieldHandler = [this, &state, textBoxHandler, matchCount, currentCommand, run, leave](ElementEvent&& event) -> bool
         {
@@ -601,13 +601,13 @@ namespace interstice
                                                       { 0, int16_t(styleManager.Px(4)) }, AutoFlipMode::FlipAvoidTarget);
             const ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup
                                      | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
-            if (BeginWindow(state.listWindowID, std::move(position), theme.commandSearchListStyleRef, flags))
+            if (BeginWindow(state.listWindowID, theme.commandSearchListStyleRef, std::move(position), flags))
             {
                 const ID rowsID = idManager.AllocateRangedID(uint32_t(kMaxMatches), "rows");
                 for (int i = 0; i < matchCount; ++i)
                 {
                     const CommandID command = matches[size_t(i)];
-                    const CommandManager::Command& c = commands[command];
+                    const CommandManager::Command& c = *commandManager.GetCommand(command);
                     MenuItemRow(idManager.GetSubID(rowsID, uint32_t(i)),
                                 interstice::MakeButtonHandler(guiStateManager, [run, command] { run(command); }),
                                 i == state.current ? theme.commandSearchCurrentRowStyleRef : theme.menuItemRowStyleRef,
@@ -615,8 +615,8 @@ namespace interstice
                                 c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
                                 theme.menuItemShortcutStyleRef, LayoutOverride{});
                 }
-                EndWindow();
             }
+            EndWindow();
         }
 
         if (pushed)
@@ -779,9 +779,10 @@ namespace interstice
     // Label Groups (logical grouping for shared label width)
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::BeginLabelGroup(ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
+    bool GUIApplication::BeginLabelGroup(ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
     {
         m_labelGroup->BeginGroup(id, defaultWidth, minWidth, maxWidth, resizable);
+        return true;
     }
 
     void GUIApplication::EndLabelGroup()
@@ -793,7 +794,7 @@ namespace interstice
     // Button / Toggle groups (tight horizontal pack with shared borders)
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::BeginButtonGroup(LayoutOverride&& constraints)
+    bool GUIApplication::BeginButtonGroup(LayoutOverride&& constraints)
     {
         interstice::ID groupID = idManager.AllocateDynamicID("button_group");
         interstice::Element wrap{};
@@ -808,6 +809,7 @@ namespace interstice
             .lastStyleRef  = theme.lastButtonStyleRef,
             .soloStyleRef  = theme.regularControls.button
         });
+        return true;
     }
 
     void GUIApplication::EndButtonGroup()
@@ -816,7 +818,7 @@ namespace interstice
         VERIFY(elementStorage.EndChildren());
     }
 
-    void GUIApplication::BeginToggleGroup(LayoutOverride&& constraints)
+    bool GUIApplication::BeginToggleGroup(LayoutOverride&& constraints)
     {
         interstice::ID groupID = idManager.AllocateDynamicID("toggle_group");
         interstice::Element wrap{};
@@ -831,6 +833,7 @@ namespace interstice
             .lastStyleRef  = theme.lastToggleStyleRef,
             .soloStyleRef  = theme.regularControls.toggle
         });
+        return true;
     }
 
     void GUIApplication::EndToggleGroup()
@@ -866,6 +869,13 @@ namespace interstice
     // ---------------------------------------------------------------------------
 
     bool GUIApplication::BeginCached(ID id, StyleRef style, uint64_t signature, LayoutOverride&& constraints)
+    {
+        const bool miss = OpenCached(id, style, signature, std::move(constraints));
+        m_cachedOpen.push_back(miss);
+        return miss;
+    }
+
+    bool GUIApplication::OpenCached(ID id, StyleRef style, uint64_t signature, LayoutOverride&& constraints)
     {
         // Scope the dynamic-ID counter so skipping the body on a hit can't shift later siblings' IDs.
         [[maybe_unused]] bool pushed = idManager.PushParent(id);
@@ -904,7 +914,7 @@ namespace interstice
             VERIFY(elementStorage.EndChildren()); // close the empty container
             [[maybe_unused]] bool popped = idManager.PopParent();
             assert(popped);
-            return false; // hit - caller skips the body and EndCached
+            return false; // hit - the caller skips the body (EndCached is still called)
         }
 
         // Miss: the caller builds the body. Track the parent scope so invalidation propagates upward.
@@ -921,8 +931,18 @@ namespace interstice
             m_uiCache->GetOrCreate(scopeID).claimedSwatches.push_back(swatchID);
     }
 
+    // Called for every BeginCached, hit or miss.
     void GUIApplication::EndCached()
     {
+        if (m_cachedOpen.empty())
+        {
+            ReportMisuse("GUIApplication: EndCached without BeginCached (ignored)");
+            return;
+        }
+        const bool miss = m_cachedOpen.back();
+        m_cachedOpen.pop_back();
+        if (!miss)
+            return;   // a hit closed its container in BeginCached
         if (m_cacheRecordStack.empty())
         {
             ReportMisuse("GUIApplication: EndCached without a matching BeginCached (ignored)");
@@ -1013,12 +1033,13 @@ namespace interstice
     bool GUIApplication::BeginVerticalWrap(ID id, StyleRef style, LayoutOverride&& constraints)   { return BeginArea(id, style, std::move(constraints)); }
     void GUIApplication::EndVerticalWrap()                                                        { EndArea(); }
 
-    void GUIApplication::BeginToolbar(bool horizontal)
+    bool GUIApplication::BeginToolbar(bool horizontal)
     {
         controlStylesStack.push_back(theme.controls);
         theme.controls = &theme.toolbarControls;
         if (horizontal) BeginHorizontalWrap();
         else            BeginVerticalWrap();
+        return true;
     }
     void GUIApplication::EndToolbar()
     {
@@ -1039,7 +1060,7 @@ namespace interstice
     // numeric Field. Optional `label` is rendered as text overlay on the bar.
     // ---------------------------------------------------------------------------
     bool GUIApplication::SliderField(ID id, float& value, float minVal, float maxVal,
-                                  std::string_view label, LayoutOverride&& constraints)
+                                  std::string_view text, LayoutOverride&& constraints)
     {
         if (maxVal < minVal) std::swap(minVal, maxVal);
         value = std::clamp(value, minVal, maxVal);
@@ -1160,14 +1181,14 @@ namespace interstice
             // Text overlays as flex children, centered by the track's justify-content.
             // NoInput so clicks pass through to the track's slider handler.
             VERIFY(elementStorage.BeginChildren());
-            if (!label.empty())
+            if (!text.empty())
             {
                 const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
                 const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
                 RegisterElement(
                     interstice::Element {
                         .id       = lblID,
-                        .textID   = textSystem->RegisterText(lblID, label, theme.sliderFieldTextStyleRef, lblState),
+                        .textID   = textSystem->RegisterText(lblID, text, theme.sliderFieldTextStyleRef, lblState),
                         .styleRef = theme.sliderFieldTextStyleRef,
                         .flags    = interstice::ElementFlags::NoInput,
                         .state    = lblState
@@ -1248,7 +1269,7 @@ namespace interstice
     // Integer SliderField - same bar as the float version, drag-only (a click just focuses).
     // ---------------------------------------------------------------------------
     bool GUIApplication::SliderField(ID id, int& value, int minVal, int maxVal,
-                                     std::string_view label, LayoutOverride&& constraints)
+                                     std::string_view text, LayoutOverride&& constraints)
     {
         if (maxVal < minVal) std::swap(minVal, maxVal);
         value = std::clamp(value, minVal, maxVal);
@@ -1299,14 +1320,14 @@ namespace interstice
             });
 
         VERIFY(elementStorage.BeginChildren());
-        if (!label.empty())
+        if (!text.empty())
         {
             const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
             const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
             RegisterElement(
                 interstice::Element {
                     .id       = lblID,
-                    .textID   = textSystem->RegisterText(lblID, label, theme.sliderFieldTextStyleRef, lblState),
+                    .textID   = textSystem->RegisterText(lblID, text, theme.sliderFieldTextStyleRef, lblState),
                     .styleRef = theme.sliderFieldTextStyleRef,
                     .flags    = interstice::ElementFlags::NoInput,
                     .state    = lblState

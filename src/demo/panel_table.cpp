@@ -116,11 +116,11 @@ namespace interstice
 
         // Fills the panel and scrolls: sized to its 50k rows it would be past the
         // 16-bit layout range and not show at all.
+        demo.tablePanelVirtualTableState.cellStyle = dataTableCellStyleRef;
         VirtualTable(idManager.AllocateDynamicID("tablePanelVirtual"),
                      demo.tablePanelVirtualTableState,
                      columnSpan, kTotalRows, 0, theme.tableFillStyleRef,
-                     LayoutOverride::Auto().FlexGrow(1).MinHeight(0),
-                     /*showHeaders*/ true, dataTableCellStyleRef);
+                     LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
     }
 
 }

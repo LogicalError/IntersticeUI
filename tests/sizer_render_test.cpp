@@ -38,4 +38,28 @@ namespace interstice
         labelHasCustomDraw = (customDraw != nullptr) && (bool)customDraw->callback;
         EXPECT_TRUE(labelHasCustomDraw) << "Label should have an AddCustomDraw callback for the sizer line";
     }
+
+    // A two-line label next to a tall field (a list) runs the row's height, so its sizer
+    // line, hover and drag reach the bottom of the row, not just its text.
+    TEST_F(SizerRenderTest, ATwoLineLabelRunsItsRowsHeight)
+    {
+        const ID rowID   = app.idManager.CreateStaticID();
+        const ID labelID = app.idManager.CreateStaticID();
+        const ID fieldID = app.idManager.CreateStaticID();
+        for (int i = 0; i < 2; i++)
+            app.Frame([&] {
+                app.BeginRootWindow({ 800, 600 });
+                app.BeginLabelGroup(120, 40, 300);
+                app.BeginHorizontal(rowID);
+                app.Label(labelID, "String list", "3 items");
+                app.AddBox(fieldID, { 300, 200 }, app.theme.collectionStyleRef);
+                app.EndHorizontal();
+                app.EndLabelGroup();
+                app.EndRootWindow();
+            });
+        const IntRect label = app.GetElementRect(labelID);
+        const IntRect field = app.GetElementRect(fieldID);
+        EXPECT_GE(label.y + label.h, field.y + field.h) << "label " << label.y << "+" << label.h
+                                                         << ", field " << field.y << "+" << field.h;
+    }
 }

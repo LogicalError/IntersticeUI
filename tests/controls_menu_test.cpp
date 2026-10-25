@@ -39,7 +39,7 @@ namespace interstice
 
             app.Frame([&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             });
 
@@ -53,7 +53,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             };
 
@@ -80,8 +80,8 @@ namespace interstice
                 if (app.BeginMenu(menuID, "File"))
                 {
                     app.MenuItem(itemID, "Open");
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -116,8 +116,8 @@ namespace interstice
                 if (app.BeginMenu(menuID, "File", app.theme.menuBarTriggerStyleRef, app.theme.menuStyleRef, app.theme.menuItemRowStyleRef))
                 {
                     app.MenuItem("New", nullptr);
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndMenuBar();
                 app.Button(buttonID, "Other", [] {});
                 app.BeginVertical(areaID, LayoutOverride::Auto().Height(200));
@@ -157,8 +157,8 @@ namespace interstice
                     app.MenuItem(disabledID, "Undo", [&] { ++disabledRuns; });
                     app.EndDisabled();
                     app.DestructiveMenuItem(deleteID, app.theme.deleteIcon, "Delete", {}, [&] { ++deleteRuns; });
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -204,8 +204,8 @@ namespace interstice
                 {
                     app.MenuItem(keepID, "Copy", [] {});
                     app.MenuItem(moveID, "Undo", [&] { app.guiStateManager.Interaction().SetFocusID(fieldID); });
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.Field(fieldID, text);
                 app.EndRootWindow();
             };
@@ -249,8 +249,8 @@ namespace interstice
                         app.MenuItem(itemIDs[i], views[i], [] {});
                         if (i == 1) app.MenuSeparator();
                     }
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -295,11 +295,11 @@ namespace interstice
                 app.BeginRootWindow();
                 app.BeginMenuBar();
                 for (const ID id : { fileID, editID })
+                {
                     if (app.BeginMenu(id, id == fileID ? "File" : "Edit", app.theme.menuBarTriggerStyleRef, app.theme.menuStyleRef, app.theme.menuItemRowStyleRef))
-                    {
                         app.MenuItem(id == fileID ? "New" : "Undo", nullptr);
-                        app.EndMenu();
-                    }
+                    app.EndMenu();
+                }
                 app.EndMenuBar();
                 app.EndRootWindow();
             };
@@ -329,10 +329,8 @@ namespace interstice
                 app.BeginRootWindow();
                 built = app.BeginContextMenu(owner);
                 if (built)
-                {
                     app.MenuItem("Delete", nullptr);
-                    app.EndContextMenu();
-                }
+                app.EndContextMenu();
                 app.EndRootWindow();
             };
 
@@ -355,7 +353,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -374,7 +372,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -389,7 +387,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -410,7 +408,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "File")) app.EndMenu();
+                app.BeginMenu(menuID, "File"); app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -434,7 +432,7 @@ namespace interstice
             // Allocate a window ID for the level by calling BeginMenu once.
             app.Frame([&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "M")) app.EndMenu();
+                app.BeginMenu(menuID, "M"); app.EndMenu();
                 app.EndRootWindow();
             });
 
@@ -450,7 +448,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             app.Frame([&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "M")) app.EndMenu();
+                app.BeginMenu(menuID, "M"); app.EndMenu();
                 app.EndRootWindow();
             });
 
@@ -467,7 +465,7 @@ namespace interstice
             ID menuID = app.idManager.CreateStaticID();
             auto draw = [&] {
                 app.BeginRootWindow();
-                if (app.BeginMenu(menuID, "M")) app.EndMenu();
+                app.BeginMenu(menuID, "M"); app.EndMenu();
                 app.EndRootWindow();
             };
             app.Frame(draw);
@@ -591,8 +589,8 @@ namespace interstice
                         snprintf(label, sizeof(label), "Item %d", i + 1);
                         app.MenuItem(label, nullptr);
                     }
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndRootWindow();
             };
 
@@ -634,8 +632,8 @@ namespace interstice
                     app.MenuItem("Item 1", nullptr);
                     app.MenuItem("Item 2", nullptr);
                     app.MenuItem("Item 3", nullptr);
-                    app.EndMenu();
                 }
+                app.EndMenu();
                 app.EndRootWindow();
             };
 

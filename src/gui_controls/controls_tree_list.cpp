@@ -326,7 +326,7 @@ namespace interstice
         m_treeState = {};
     }
 
-    bool GUIApplication::ListItem(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::ListItem(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         if (m_treeState.containerID == ID::Invalid())
         {
@@ -651,10 +651,11 @@ namespace interstice
         const StyleRef callerRowStyle = state.rowStyle;
         if (callerRowStyle.layoutStyleIndex == LayoutStyleIndex::Invalid)
             state.rowStyle = theme.listRowStyleRef;
+        state.showHeaders = !header.empty();
         VirtualTable(id, state,
                      std::span<VirtualTableColumn>(cols, 1),
                      int(visibleIdx.size()), 0, tableStyle,
-                     std::move(constraints), /*showHeaders*/!header.empty());
+                     std::move(constraints));
         state.rowStyle = callerRowStyle;
     }
 

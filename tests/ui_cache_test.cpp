@@ -54,8 +54,8 @@ namespace interstice
                         bodyRuns++;
                         app.Button(btnA, "A", [] {});
                         app.Button(btnB, "B", [] {});
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             }
@@ -131,8 +131,8 @@ namespace interstice
                         app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -166,8 +166,8 @@ namespace interstice
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [&] { clicks++; });
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -270,8 +270,8 @@ namespace interstice
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [&] { clicks++; });
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -312,10 +312,10 @@ namespace interstice
                         {
                             innerRuns++;
                             app.Button(btnA, "A", [] {});
-                            app.EndCached();
                         }
                         app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -343,10 +343,12 @@ namespace interstice
                     app.BeginRootWindow();
                     if (app.BeginCached(s1, app.theme.emptyVertStyleRef, 0,
                                         interstice::LayoutOverride{}.Width(400).Height(150)))
-                    { r1++; app.Button(btnA, "A", [] {}); app.EndCached(); }
+                    { r1++; app.Button(btnA, "A", [] {}); }
+                    app.EndCached();
                     if (app.BeginCached(s2, app.theme.emptyVertStyleRef, 0,
                                         interstice::LayoutOverride{}.Width(400).Height(150)))
-                    { r2++; app.Button(btnB, "B", [] {}); app.EndCached(); }
+                    { r2++; app.Button(btnB, "B", [] {}); }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -392,8 +394,8 @@ namespace interstice
                         app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -428,8 +430,8 @@ namespace interstice
                         app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
                         app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -464,8 +466,8 @@ namespace interstice
                         e.styleRef = app.theme.collectionStyleRef;
                         const interstice::ElementRef ref = app.RegisterElement(std::move(e), {});
                         (void)app.elementStorage.AddPostLayout(ref, [](interstice::PostLayoutContext&) {});
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };
@@ -490,8 +492,8 @@ namespace interstice
                     {
                         bodyRuns++;
                         app.Field(btnA, text); // editable text field
-                        app.EndCached();
                     }
+                    app.EndCached();
                     app.EndRootWindow();
                 });
             };

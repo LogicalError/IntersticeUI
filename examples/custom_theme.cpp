@@ -20,7 +20,9 @@ public:
 
     void OnGUI() override
     {
-        if (!BeginWindow(windowID, "Custom theme", interstice::LayoutOverride{}.Size(400, 220)))
+        // The scope ends the window when it leaves, open or not.
+        auto window = Window(windowID, "Custom theme", interstice::LayoutOverride{}.Size(400, 220));
+        if (!window)
             return;
         BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
 
@@ -39,7 +41,6 @@ public:
 
         Button("Careful!", [] {}, theme.GetStyle("warning-button"));
         EndVertical();
-        EndWindow();
     }
 
 private:

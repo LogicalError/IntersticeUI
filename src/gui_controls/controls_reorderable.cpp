@@ -36,7 +36,7 @@ namespace interstice
         return true;
     }
 
-    void GUIApplication::BeginReorderableItem(ID id, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::BeginReorderableItem(ID id, StyleRef style, LayoutOverride&& constraints)
     {
         // Outside a group it is built as a plain item (its EndReorderableItem still closes it).
         if (m_reorderable->Construction().groupID == ID::Invalid())
@@ -363,6 +363,7 @@ namespace interstice
         m_reorderable->Construction().itemRefs.push_back(itemRef);
 
         VERIFY(elementStorage.BeginChildren());
+        return true;
     }
 
     void GUIApplication::EndReorderableItem()

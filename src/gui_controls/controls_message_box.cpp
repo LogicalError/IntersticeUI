@@ -52,9 +52,12 @@ namespace interstice
         if (self.w <= 0 || self.h <= 0) self.size = { styleManager.Px(456), styleManager.Px(160) };
         const int2 at = ownerRect.position + int2{ (ownerRect.w - self.w) / 2, (ownerRect.h - self.h) / 2 };
 
-        if (!BeginWindow(id, desc.title, LayoutOverride{}.Position(at), theme.messageBoxStyleRef,
+        if (!BeginWindow(id, desc.title, theme.messageBoxStyleRef, LayoutOverride{}.Position(at),
                          ElementFlags::WindowNoCaption | ElementFlags::WindowIsModal | ElementFlags::Shadows))
+        {
+            EndWindow();
             return cancelButton;   // closed from outside: as cancelled
+        }
 
         [[maybe_unused]] const bool pushed = idManager.PushParent(id);
         const ID buttonRange = idManager.AllocateRangedID(uint32_t(count), "message_box_button");

@@ -152,7 +152,7 @@ namespace interstice
     // GradientField - gradient swatch + editor popup
     // ---------------------------------------------------------------------------
 
-    bool GUIApplication::GradientField(Gradient& value, LayoutOverride&& constraints)
+    bool GUIApplication::GradientField(ID id, Gradient& value, LayoutOverride&& constraints)
     {
         if (value.stopCount > Gradient::kMaxStops)
         {
@@ -162,7 +162,7 @@ namespace interstice
         const Gradient before = value;
 
         // ---- Gradient swatch (inline preview bar) ----
-        ID swatchID = idManager.AllocateDynamicID("gradient_swatch");
+        const ID swatchID = id;
         const std::string context = PendingLabelText();
         auto& ge = m_gradientEditorSub->State();
         // OK keeps the gradient; Cancel and the close button restore the original.
@@ -241,16 +241,16 @@ namespace interstice
                 AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
                 {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
 
-            if (BeginWindow(ge.windowID, "Gradient Editor", std::move(popupPos), theme.gradientEditorStyleRef,
+            if (BeginWindow(ge.windowID, "Gradient Editor", theme.gradientEditorStyleRef, std::move(popupPos),
                             ElementFlags::WindowCanMove | ElementFlags::WindowNoCaption | ElementFlags::Shadows))
             {
                 EmitGradientEditor(value);
-                EndWindow();
             }
             else
             {
                 ge.triggerID = ID::Invalid();
             }
+            EndWindow();
         }
 
         return !(value == before);

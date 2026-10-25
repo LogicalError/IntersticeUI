@@ -37,7 +37,7 @@ namespace interstice
         m_tabBarState = {};
     }
 
-    bool GUIApplication::Tab(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::Tab(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         if (m_tabBarState.barID == ID::Invalid())
         {
@@ -100,9 +100,10 @@ namespace interstice
         EndReorderableItem();
 
         // Right-click a tab -> "Close Panel".
-        if (onClose != nullptr && BeginContextMenu(bodyID))
+        if (onClose != nullptr)
         {
-            MenuItem("Close Panel", [onClose, capturedIndex]() { onClose(capturedIndex); });
+            if (BeginContextMenu(bodyID))
+                MenuItem("Close Panel", [onClose, capturedIndex]() { onClose(capturedIndex); });
             EndContextMenu();
         }
 

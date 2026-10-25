@@ -1533,6 +1533,21 @@ namespace interstice
             EXPECT_NE(app.guiStateManager.GetCurrentState(sizer) & ElementState::Hover, ElementState::None);
         }
 
+        // A column sizer runs the table's full height, not a sliver at its top.
+        TEST_F(TableVirtualScrollTest, AColumnSizerRunsTheTablesHeight)
+        {
+            interstice::TableState state;
+            app.Frame([&] { Emit(state); });
+            app.Frame([&] { Emit(state); });
+            const interstice::ID sizer = columns[0].internal.sizerID;
+            ASSERT_TRUE(app.HasElement(sizer));
+            const IntRect sizerRect  = app.GetElementRect(sizer);
+            const IntRect headerRect = app.GetElementRect(app.elementStorage.GetElementUnsafe(columns[0].internal.headerRef).id);
+            EXPECT_GT(sizerRect.w, 0);
+            EXPECT_GE(sizerRect.h, headerRect.h) << "sizer " << sizerRect.y << "+" << sizerRect.h
+                                                 << ", header " << headerRect.y << "+" << headerRect.h;
+        }
+
         // 50k rows sized to their content would be over a million pixels tall, past the
         // 16-bit layout range, and not show at all (the demo's Table panel did that).
         // Filling its panel, the table stays inside it and scrolls.

@@ -129,11 +129,11 @@ namespace interstice
         // manager to the view's mode; restore Default when focus leaves.
         if (guiStateManager.Interaction().GetFocusedID() == canvasID)
         {
-            if (commandManager.GetEditMode() != view.editMode)
-                commandManager.SetEditMode(view.editMode);
+            if (commandManager.GetMode() != view.commandMode)
+                commandManager.SetMode(view.commandMode);
         } else
-        if (commandManager.GetEditMode() == view.editMode)
-            commandManager.SetEditMode(EditMode::Default);
+        if (commandManager.GetMode() == view.commandMode)
+            commandManager.SetMode(CommandMode::Default);
 
         // ---- Canvas: pan/zoom + focus capture. Everything below renders as
         //      children of this element under the view's content transform.
@@ -1205,14 +1205,17 @@ namespace interstice
         EmitNodeViewOverlays(view, canvasID);
 
         // The context menu a right click on a wire opened.
-        if (view.wireMenuWire && BeginContextMenu(wireMenuID))
+        if (view.wireMenuWire)
         {
-            const PropertyEndpoint input = WireInput(*view.wireMenuWire);
-            MenuItem("Delete connection", [&view, input] { CommitNodeViewEdit(view, DisconnectEdit(view, input)); });
+            if (BeginContextMenu(wireMenuID))
+            {
+                const PropertyEndpoint input = WireInput(*view.wireMenuWire);
+                MenuItem("Delete connection", [&view, input] { CommitNodeViewEdit(view, DisconnectEdit(view, input)); });
+            }
+            else
+                view.wireMenuWire.reset();
             EndContextMenu();
         }
-        else
-            view.wireMenuWire.reset();
     }
 
     void GUIApplication::EmitNodeViewOverlays(NodeView& view, ID canvasID)

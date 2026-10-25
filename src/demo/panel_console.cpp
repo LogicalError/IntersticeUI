@@ -393,14 +393,14 @@ namespace interstice
         BeginHorizontal(idManager.AllocateDynamicID("consoleFill"),
                         theme.flexFillRowStyleRef,
                         LayoutOverride::Auto().FlexGrow(1));
-        logTableState.rowStyle = theme.listRowStyleRef;
+        logTableState.rowStyle         = theme.listRowStyleRef;
+        logTableState.cellStyle        = logCellStyleRef;
+        logTableState.showHeaders      = false;
+        logTableState.columnSeparators = false;
         VirtualTable(idManager.AllocateDynamicID("consoleLog"),
                      logTableState,
                      columnSpan, int(logVisible.size()), 0, logTableStyleRef,
-                     LayoutOverride{}.FlexGrow(1),
-                     /*showHeaders*/ false,
-                     /*cellStyle*/ logCellStyleRef,
-                     /*columnSeparators*/ false);
+                     LayoutOverride{}.FlexGrow(1));
         EndHorizontal();
 
         // The detail pane sits after the sizer, so the drag delta is inverted.

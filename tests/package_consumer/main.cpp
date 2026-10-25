@@ -22,8 +22,8 @@ namespace
             if (BeginWindow(windowID, "Package consumer", interstice::LayoutOverride{}.Size(320, 200)))
             {
                 Label("IntersticeUI package consumer");
-                EndWindow();
             }
+            EndWindow();
             if (++framesBuilt >= 3)
                 applicationQuit = true;
         }

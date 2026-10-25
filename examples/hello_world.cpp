@@ -37,8 +37,8 @@ public:
 
             Text(greeting);
             EndVertical();
-            EndWindow();
         }
+        EndWindow();
     }
 
 private:
