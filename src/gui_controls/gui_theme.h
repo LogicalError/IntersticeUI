@@ -264,6 +264,7 @@ namespace interstice
         StyleRef dockWindowPanelStyleRef {};    // the panel inset under a torn-off window's title bar
         StyleRef dockWindowBodyStyleRef {};     // a torn-off window's split layout, inset the same
         StyleRef titleBarTabBarStyleRef {};     // the tab strip in a torn-off window's title bar
+        StyleRef titleBarTabStyleRef {};        // a tab in it
         StyleRef titleBarGripStyleRef {};       // the grip before it
         StyleRef titleBarTitleStyleRef {};      // the window's name when the tabs aren't in the bar
         StyleRef titleBarTextButtonStyleRef {}; // a text button in a title bar (Dock)

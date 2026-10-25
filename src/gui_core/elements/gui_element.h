@@ -179,8 +179,7 @@ namespace interstice
     {
         CustomDrawCallback callback;                       // fires before this element's children
         uint32_t           afterHead = UINT32_MAX;         // head of after-draw list (set during construction)
-        uint32_t           afterTail = UINT32_MAX;         // tail, for O(1) prepend at render time
-        uint32_t           postDrawHead = UINT32_MAX;      // head of post-draw list (built during render loop)
+        uint32_t           afterTail = UINT32_MAX;         // tail, for O(1) append
 
         IntRect            afterDrawClipRectScreen     = {};  // SCREEN-space scissor
         IntRect            afterDrawElementRectLayout  = {};  // LAYOUT-space border-box

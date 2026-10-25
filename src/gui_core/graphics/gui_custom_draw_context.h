@@ -149,6 +149,8 @@ namespace interstice
                             ImageIndex textureIndex = ImageIndex::Invalid) const;
 
         void RenderCircle(int2 center, float radius, const LineStyle& style) const;
+        // A filled, anti-aliased disc (a quad rounded to a circle).
+        void RenderDisc(int2 center, float radius, VisualColorStyleIndex colorStyleIndex) const;
 
         // Filled convex polygon via fan triangulation.
         void RenderFilledPolygon(std::span<const float2> points,

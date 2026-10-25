@@ -23,6 +23,10 @@ namespace interstice
         float                 radius      = 3.0f;   // of the drawn area (half its side draws a circle)
     };
 
+    // The color picker's hue strip in a color space, top (0) to bottom (1): around the
+    // whole hue circle, back to where it started.
+    Gradient HueStripGradient(ColorSpace space);
+
     // A transparency checkerboard over `area` of `rect` (pieces keep rect's rounded corners).
     inline void DrawCheckerboard(const CustomDrawContext& ctx, IntRect rect, IntRect area, const ColorSwatchLook& look)
     {

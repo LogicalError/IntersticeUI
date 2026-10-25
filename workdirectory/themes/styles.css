@@ -1938,6 +1938,30 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
+.title-bar-tab {
+    height: 26px;
+    border-radius: var(--radius-md);
+    border-width: 0px;
+    padding: 0px 10px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+    vertical-align: middle;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    font-weight: 500;
+    flex-grow: 0;
+    flex-shrink: 0;
+    -interstice-icon-size: 14px;
+    -interstice-icon-text-gap: 6px;
+}
+.title-bar-tab:hover  { background-color: var(--bg-header); color: var(--text-1); }
+.title-bar-tab:active { background-color: var(--title-bar-tab); color: var(--text-1); }
+.title-bar-tab::highlight(selected) { background-color: var(--title-bar-tab); border-color: transparent; color: var(--text-1); }
 .title-bar-grip {
     width: 12px;
     margin: 0px 2px 0px 0px;

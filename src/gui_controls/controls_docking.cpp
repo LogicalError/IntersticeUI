@@ -353,25 +353,7 @@ namespace interstice
                 }
 
                 // 3. No valid target -> tear off into a floating window
-                GUIApplication::TransferPanel(panelID, node, layout, nullptr);
-
-                auto fw = std::make_unique<interstice::FloatingDockWindow>();
-                fw->windowID      = app.idManager.CreateStaticID();
-                fw->spawnPosition = mousePos;
-                fw->layout.root   = MakeLeaf({ panelID });
-                // Dock returns it here; torn from another torn-off window, to that one's home.
-                fw->home       = layout;
-                fw->homeLeafID = node->nodeID;
-                for (const auto& other : GUIApplicationInternals::FloatingDockWindows(app))
-                    if (&other->layout == layout) { fw->home = other->home; fw->homeLeafID = other->homeLeafID; }
-                // Move Panel object to the floating layout
-                auto panelIt = layout->panels.find(panelID);
-                if (panelIt != layout->panels.end())
-                {
-                    fw->layout.panels[panelID] = std::move(panelIt->second);
-                    layout->panels.erase(panelIt);
-                }
-                GUIApplicationInternals::FloatingDockWindows(app).push_back(std::move(fw));
+                app.FloatPanel(*layout, panelID, mousePos);
             };
 
             // ----- dragVisualizer: drop-zone overlay OR ghost tab -----
@@ -467,7 +449,8 @@ namespace interstice
 
                     auto it = layout->panels.find(node->panelIds[i]);
                     if (it == layout->panels.end()) continue;
-                    app.Tab(it->second.id, it->second.title, it->second.icon);
+                    app.Tab(it->second.id, it->second.title, it->second.icon,
+                            inTitleBar ? app.theme.titleBarTabStyleRef : app.theme.tabStyleRef);
                 }
 
                 if (emitPhantom && phantomIdx >= count)
@@ -922,6 +905,40 @@ namespace interstice
         ReleaseDockTreeIDs(fw.layout.root.get(), &idManager);
         idManager.ReleaseStaticID(fw.windowID);
         m_floatingDockWindows.erase(m_floatingDockWindows.begin() + (ptrdiff_t)index);
+    }
+
+    bool GUIApplication::FloatPanel(DockingLayout& layout, ID panelID, int2 screenPos)
+    {
+        DockNode* leaf = nullptr;
+        auto find = [&](auto& self, DockNode* node) -> void
+        {
+            if (!node || leaf) return;
+            if (node->isLeaf)
+            {
+                if (std::find(node->panelIds.begin(), node->panelIds.end(), panelID) != node->panelIds.end()) leaf = node;
+                return;
+            }
+            self(self, node->first.get());
+            self(self, node->second.get());
+        };
+        find(find, layout.root.get());
+        auto panelIt = layout.panels.find(panelID);
+        if (!leaf || panelIt == layout.panels.end()) return false;
+
+        TransferPanel(panelID, leaf, &layout, nullptr);
+        auto fw = std::make_unique<FloatingDockWindow>();
+        fw->windowID      = idManager.CreateStaticID();
+        fw->spawnPosition = screenPos;
+        fw->layout.root   = MakeLeaf({ panelID });
+        fw->layout.panels[panelID] = std::move(panelIt->second);
+        layout.panels.erase(panelIt);
+        // Dock returns it here; floated from another torn-off window, to that one's home.
+        fw->home       = &layout;
+        fw->homeLeafID = leaf->nodeID;
+        for (const auto& other : m_floatingDockWindows)
+            if (&other->layout == &layout) { fw->home = other->home; fw->homeLeafID = other->homeLeafID; }
+        m_floatingDockWindows.push_back(std::move(fw));
+        return true;
     }
 
     void GUIApplication::DockFloatingWindow(FloatingDockWindow& fw)

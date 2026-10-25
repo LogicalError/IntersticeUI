@@ -132,7 +132,7 @@ namespace interstice
         ctx.SetSpace(DrawSpace::Local);
     }
 
-    std::unordered_map<uint32_t, int32_t> ComputeWireLaneOffsets(const NodeView& view,
+    std::unordered_map<uint32_t, WireLane> ComputeWireLaneOffsets(const NodeView& view,
                                                                   PropertyEndpoint pendingOut,
                                                                   PropertyEndpoint pendingIn)
     {
@@ -154,13 +154,16 @@ namespace interstice
         if (pending)
             groups[pairKey(pendingOut.nodeIdx, pendingIn.nodeIdx)].push_back(WireKey(pendingIn.nodeIdx, pendingIn.propIdx));
 
-        std::unordered_map<uint32_t, int32_t> offsets;
+        std::unordered_map<uint32_t, WireLane> offsets;
         for (auto& [pair, wires] : groups)
         {
             std::sort(wires.begin(), wires.end());   // input order: same target node, by property
+            const int srcNode = int(pair >> 32), tgtNode = int(uint32_t(pair));
+            const bool up = view.nodes[size_t(tgtNode)].pos.y < view.nodes[size_t(srcNode)].pos.y;
             const int32_t first = (int32_t(wires.size()) - 1) / 2;
             for (size_t i = 0; i < wires.size(); ++i)
-                offsets[wires[i]] = first - int32_t(i);
+                offsets[wires[i]] = WireLane{ .offset = up ? int32_t(i) - first : first - int32_t(i),
+                                              .index  = int32_t(i), .count = int32_t(wires.size()) };
         }
         return offsets;
     }
@@ -283,12 +286,12 @@ namespace interstice
 
     WireRoute BuildPendingWireRoute(int2 outPt, IntRect srcRect, int2 cursor,
                                     std::optional<int2> inPt, IntRect tgtRect,
-                                    int32_t grid, int2 gridOrigin, int32_t laneOffset)
+                                    int32_t grid, int2 gridOrigin, WireLane lane)
     {
         if (inPt)
         {
             WireRouteOverrides overrides;
-            overrides.laneOffset = laneOffset;
+            overrides.lane = lane;
             return BuildWireRoute(outPt, *inPt, srcRect, tgtRect, grid, gridOrigin, overrides);
         }
         return BuildWireRoute(outPt, cursor, srcRect, IntRect{ cursor.x, cursor.y, 1, 1 }, grid, gridOrigin);
@@ -319,7 +322,7 @@ namespace interstice
             // Corridor between the bodies: one vertical lane, on the grid when it fits.
             // An override is clamped to the corridor.
             int32_t laneX = std::clamp(
-                GridLineNearest((srcR + tgtL) / 2, gridOrigin.x, grid) + overrides.laneOffset * grid, srcR, tgtL);
+                GridLineNearest((srcR + tgtL) / 2, gridOrigin.x, grid) + overrides.lane.offset * grid, srcR, tgtL);
             if (overrides.laneX)
                 laneX = std::clamp(GridLineNearest(*overrides.laneX, gridOrigin.x, grid), srcR, tgtL);
 
@@ -332,6 +335,16 @@ namespace interstice
         {
             // No corridor: exit a cell right of the output, enter a cell left of the input,
             // joined by a return lane clear of both bodies. Overrides are clamped likewise.
+            // Wires between the same nodes nest: the outermost wire (the top one going down,
+            // the bottom one going up) takes the outer exit and return lane; its entry is
+            // the inner one where the lane passes between the bodies, the outer one when it
+            // goes round them.
+            const int32_t count = std::max(1, overrides.lane.count);
+            const int32_t index = std::clamp(overrides.lane.index, 0, count - 1);
+            const int32_t first = (count - 1) / 2;
+            // Steps out from the innermost wire: going down the top wire is outermost, going up the bottom one.
+            const int32_t outerDown = count - 1 - index, outerUp = index;
+            int32_t outer  = tgtRect.Min(1) < srcRect.Min(1) ? outerUp : outerDown;
             int32_t exitX  = GridLineGE(srcR + grid, gridOrigin.x, grid);
             int32_t entryX = GridLineLE(tgtL - grid, gridOrigin.x, grid);
             if (overrides.exitX)
@@ -342,17 +355,20 @@ namespace interstice
                                   GridLineLE(tgtL - 1, gridOrigin.x, grid));
 
             int32_t laneY;
+            const int32_t between = (first - index) * grid;   // spread across the gap, outer nearer the target
             if (srcRect.Max(1) < tgtRect.Min(1))        // source fully above target
             {
                 const int32_t lo = srcRect.Max(1), hi = tgtRect.Min(1);
-                laneY = std::clamp(GridLineNearest((lo + hi) / 2, gridOrigin.y, grid), lo, hi);
+                if (!overrides.entryX) entryX -= (count - 1 - outer) * grid;
+                laneY = std::clamp(GridLineNearest((lo + hi) / 2, gridOrigin.y, grid) + between, lo, hi);
                 if (overrides.laneY)
                     laneY = std::clamp(GridLineNearest(*overrides.laneY, gridOrigin.y, grid), lo, hi);
             }
             else if (tgtRect.Max(1) < srcRect.Min(1))   // target fully above source
             {
                 const int32_t lo = tgtRect.Max(1), hi = srcRect.Min(1);
-                laneY = std::clamp(GridLineNearest((lo + hi) / 2, gridOrigin.y, grid), lo, hi);
+                if (!overrides.entryX) entryX -= (count - 1 - outer) * grid;
+                laneY = std::clamp(GridLineNearest((lo + hi) / 2, gridOrigin.y, grid) + between, lo, hi);
                 if (overrides.laneY)
                     laneY = std::clamp(GridLineNearest(*overrides.laneY, gridOrigin.y, grid), lo, hi);
             }
@@ -364,7 +380,10 @@ namespace interstice
                 const int32_t topY = GridLineLE(minTop - grid, gridOrigin.y, grid);
                 const int32_t botY = GridLineGE(maxBot + grid, gridOrigin.y, grid);
                 const int32_t ref  = (outPt.y + inPt.y) / 2;
-                laneY = (ref - topY <= botY - ref) ? topY : botY;
+                const bool over = ref - topY <= botY - ref;   // round the top: the wires go up
+                outer  = over ? outerUp : outerDown;
+                laneY  = over ? topY - outer * grid : botY + outer * grid;
+                if (!overrides.entryX) entryX -= outer * grid;
                 if (overrides.laneY)
                 {
                     // Keep the lane outside the bodies' combined vertical span;
@@ -376,6 +395,8 @@ namespace interstice
                 }
             }
 
+            if (!overrides.exitX)
+                exitX += outer * grid;
             pts.push_back({ exitX,  outPt.y });
             pts.push_back({ exitX,  laneY   });
             pts.push_back({ entryX, laneY   });

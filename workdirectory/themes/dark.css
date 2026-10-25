@@ -14,6 +14,7 @@
     --bg-raised: #181B20;   /* nodes, tooltips, menus */
     --bg-control: #1E2128;  /* buttons, node header */
     --bg-active: #23272F;   /* active tab, hovered control */
+    --title-bar-tab: #23272F; /* a torn-off window's active tab (in its title bar) */
     --bg-pressed: #2A2F39;  /* pressed control, selected segment */
     --bg-menu-hover: #273146; /* hovered or keyboard-selected menu row: the accent at 16% over the popup */
     --bg-keycap: #1A1D23;

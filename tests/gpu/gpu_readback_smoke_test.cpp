@@ -12,6 +12,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <string>
 #include <thread>
@@ -90,6 +91,61 @@ namespace
         const uint32_t outside = PixelAt(ctx, kSize.x * 3 / 4, kSize.y / 2);
         EXPECT_NE(inside, outside)
             << "a solid quad must change the pixels it covers";
+    }
+
+    // A quad shows its color as given, like a box would: the quad shader used to convert
+    // every color as if it were linear, which lightened anything custom-drawn.
+    TEST_F(GpuReadbackTest, QuadKeepsItsColor)
+    {
+        auto* ctx = CreateReadbackWindow();
+        if (ctx == nullptr)
+            GTEST_SKIP() << "no Vulkan device available";
+        const interstice::VisualColorStyleIndex color = styleManager.RegisterColorStyle(
+            interstice::ColorStyle::Create(interstice::color4b{ 128, 64, 32, 255 }));
+
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, color);
+        });
+
+        const uint32_t px = PixelAt(ctx, kSize.x / 2, kSize.y / 2);   // BGRA8
+        const int b = int(px & 0xFF), g = int((px >> 8) & 0xFF), rr = int((px >> 16) & 0xFF);
+        EXPECT_NEAR(rr, 128, 2);
+        EXPECT_NEAR(g,  64, 2);
+        EXPECT_NEAR(b,  32, 2);
+    }
+
+    // A quad rounded to half its size is a disc (CustomDrawContext::RenderDisc, switch
+    // knobs, slider thumbs): covered at every angle just inside its radius, empty just
+    // outside, and the same in mirrored spots.
+    TEST_F(GpuReadbackTest, QuadRoundedToHalfItsSizeIsADisc)
+    {
+        auto* ctx = CreateReadbackWindow();
+        if (ctx == nullptr)
+            GTEST_SKIP() << "no Vulkan device available";
+        RegisterColorStyles();
+
+        constexpr int kD = 24, cx = 100, cy = 100;
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderQuad(interstice::IntRect{ cx - kD / 2, cy - kD / 2, kD, kD }, kFullClip, solidColor, float(kD) / 2.0f);
+        });
+
+        const uint32_t empty = PixelAt(ctx, 10, 10);
+        // Pixel centres sit at +0.5; sample at radius 9 (inside) and 11.5 along the diagonals
+        // (inside a square's corner, outside the circle).
+        for (int a = 0; a < 16; ++a)
+        {
+            const float t = float(a) * 3.14159265f / 8.0f;
+            const int x = cx + int(std::floor(9.0f * std::cos(t))), y = cy + int(std::floor(9.0f * std::sin(t)));
+            EXPECT_NE(PixelAt(ctx, x, y), empty) << "inside the disc at angle step " << a;
+        }
+        const int d = int(11.5f / 1.41421356f) + 1;
+        EXPECT_EQ(PixelAt(ctx, cx + d,     cy + d),     empty);
+        EXPECT_EQ(PixelAt(ctx, cx - d - 1, cy + d),     empty);
+        EXPECT_EQ(PixelAt(ctx, cx + d,     cy - d - 1), empty);
+        EXPECT_EQ(PixelAt(ctx, cx - d - 1, cy - d - 1), empty);
+        // Mirrored edge pixels match.
+        EXPECT_EQ(PixelAt(ctx, cx + 11, cy), PixelAt(ctx, cx - 12, cy));
+        EXPECT_EQ(PixelAt(ctx, cx, cy + 11), PixelAt(ctx, cx, cy - 12));
     }
 
     TEST_F(GpuReadbackTest, DotRendersAtKnownPosition)

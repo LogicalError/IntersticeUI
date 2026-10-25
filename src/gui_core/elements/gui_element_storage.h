@@ -264,7 +264,7 @@ namespace interstice
         {
             if (!IsValidRef(elementRef)) return nullptr;
             const auto& cd = m_depths[elementRef.depth].elementCustomDraws[elementRef.index];
-            return (cd.callback || cd.afterHead != UINT32_MAX || cd.postDrawHead != UINT32_MAX) ? &cd : nullptr;
+            return (cd.callback || cd.afterHead != UINT32_MAX) ? &cd : nullptr;
         }
 
         // Fired in registration order between layout and rendering.

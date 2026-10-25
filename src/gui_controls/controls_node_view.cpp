@@ -1075,7 +1075,7 @@ namespace interstice
                         }
                         const bool replaced = pendingOverInput && view.pendingConnection.target == PropertyEndpoint{ n, p };
                         if (auto it = laneOffsets.find(wireKey); it != laneOffsets.end() && !replaced)
-                            ov.laneOffset = it->second;
+                            ov.lane = it->second;
 
                         const auto route = BuildWireRoute(socketCenter(srcRefs[srcOutIdx]),
                                                           socketCenter(tgtRefs[tgtInIdx]),
@@ -1153,12 +1153,12 @@ namespace interstice
                                     tgtRect = nodeRect(tgt.nodeIdx);
                                 }
                             }
-                            int32_t laneOffset = 0;
+                            WireLane lane;
                             if (inPt)
                                 if (auto it = laneOffsets.find(WireKey(tgt.nodeIdx, tgt.propIdx)); it != laneOffsets.end())
-                                    laneOffset = it->second;
+                                    lane = it->second;
                             const auto route = BuildPendingWireRoute(socketCenter(srcRefs[srcOutIdx]), nodeRect(src.nodeIdx),
-                                                                     cursorLay, inPt, tgtRect, grid, gridOrigin, laneOffset);
+                                                                     cursorLay, inPt, tgtRect, grid, gridOrigin, lane);
 
                             const interstice::color4f srcColor =
                                 view.nodes[src.nodeIdx].properties[src.propIdx].socketColor;

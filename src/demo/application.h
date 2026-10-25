@@ -49,6 +49,7 @@ namespace interstice
     public:
         // Panels to bring to the front of their tab groups at startup, by title.
         void AddStartPanel(std::string title) { m_startPanels.push_back(std::move(title)); }
+        void AddFloatPanel(std::string title) { m_floatPanels.push_back(std::move(title)); }
 
         // ---- Toolbar model (used by the View panel) -----------------------------
         struct ToolbarLayoutModel
@@ -482,6 +483,7 @@ namespace interstice
         void DisableLogPanel();
     private:
         std::vector<std::string> m_startPanels;
+        std::vector<std::string> m_floatPanels;   // --float: start in their own windows
     };
 
 } // namespace interstice

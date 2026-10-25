@@ -1212,6 +1212,17 @@ namespace interstice
                         };
                         if (!m_startPanels.empty())
                             selectStartPanel(selectStartPanel, demo.dockingLayout.root.get());
+
+                        // --float: those panels start in their own windows.
+                        int2 floatAt{ styleManager.Px(200), styleManager.Px(200) };
+                        for (const std::string& title : m_floatPanels)
+                            for (const auto& [id, panel] : demo.dockingLayout.panels)
+                                if (panel.title == title)
+                                {
+                                    (void)FloatPanel(demo.dockingLayout, id, floatAt);
+                                    floatAt += int2{ styleManager.Px(40), styleManager.Px(40) };
+                                    break;
+                                }
                     }
 
                     demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");

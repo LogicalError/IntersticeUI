@@ -69,7 +69,8 @@ namespace interstice
     //   - else a vertical gap between them          -> detour through the gap;
     //   - else (side-by-side)                       -> around the nearer outside edge.
     // grid <= 0 or an empty rect gives a plain elbow. `overrides` pin interior lanes,
-    // clamped so they never cross a body; laneOffset moves the unpinned corridor lane.
+    // clamped so they never cross a body; `lane` spreads the unpinned lanes of wires
+    // between the same two nodes so they nest.
     // All coordinates share one space (CANVAS_LAY).
     WireRoute BuildWireRoute(int2 outPt, int2 inPt,
                              IntRect srcRect, IntRect tgtRect,
@@ -105,10 +106,13 @@ namespace interstice
 
     // Default lane offsets (grid steps) for wires between the same two nodes, so their
     // lanes don't coincide: k wires, in input order, get (k-1)/2 counting down by one
-    // (one wire: 0; two: 0,-1; three: 1,0,-1; four: 1,0,-1,-2). Keyed by WireKey.
+    // (one wire: 0; two: 0,-1; three: 1,0,-1; four: 1,0,-1,-2), so wires running down
+    // nest instead of crossing. Wires running up (target node above the source) get them
+    // in reverse, for the same reason. Also each wire's index in its group and the group's
+    // size, for the detour routes. Keyed by WireKey.
     // A dragged wire (pendingOut -> pendingIn, both valid) counts as connected, under
     // pendingIn's key, replacing that input's wire.
-    std::unordered_map<uint32_t, int32_t> ComputeWireLaneOffsets(const NodeView& view,
+    std::unordered_map<uint32_t, WireLane> ComputeWireLaneOffsets(const NodeView& view,
                                                                   PropertyEndpoint pendingOut = {},
                                                                   PropertyEndpoint pendingIn  = {});
 
@@ -116,7 +120,7 @@ namespace interstice
     // over an input that accepts it (inPt on tgtRect), else to the cursor as if an input sat there.
     WireRoute BuildPendingWireRoute(int2 outPt, IntRect srcRect, int2 cursor,
                                     std::optional<int2> inPt, IntRect tgtRect,
-                                    int32_t grid, int2 gridOrigin, int32_t laneOffset = 0);
+                                    int32_t grid, int2 gridOrigin, WireLane lane = {});
 
     // Whether a wire from output `out` to input `in` is allowed: never a same-node loop,
     // otherwise the view's canConnect delegate decides (none: allowed). Endpoints are

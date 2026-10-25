@@ -138,6 +138,13 @@ namespace interstice
         m_renderer->RenderCircle(center, radius, m_clipRect, style);
     }
 
+    void CustomDrawContext::RenderDisc(int2 center, float radius, VisualColorStyleIndex colorStyleIndex) const
+    {
+        const int size = std::max(1, int(std::lround(radius * 2.0f)));
+        const IntRect rect{ .position = { center.x - size / 2, center.y - size / 2 }, .size = { size, size } };
+        m_renderer->RenderQuad(rect, m_clipRect, colorStyleIndex, float(size) * 0.5f);
+    }
+
     void CustomDrawContext::RenderFilledPolygon(std::span<const float2> points,
                                                 VisualColorStyleIndex colorStyleIndex,
                                                 ImageIndex textureIndex) const

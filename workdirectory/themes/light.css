@@ -13,6 +13,7 @@
     --bg-raised: #FFFFFF;
     --bg-control: #FFFFFF;
     --bg-active: #E4E7EC;
+    --title-bar-tab: #FBFBFC;   /* the panel's color, so the tab joins the panel */
     --bg-pressed: #EEF0F3;
     --bg-menu-hover: #E6EEFD;
     --bg-keycap: #FFFFFF;

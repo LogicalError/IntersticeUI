@@ -4,6 +4,10 @@
 
 #include "headless_gui_app.h"
 
+#include <gui_controls/controls_color_internal.h>
+#include <gui_controls/gui_application_internal.h>
+#include <gui_controls/subsystems/gui_color_picker_subsystem.h>
+
 namespace
 {
     using namespace interstice;
@@ -122,5 +126,41 @@ namespace
         Click(app.theme.dialogPrimaryButtonStyleRef);
         EXPECT_EQ(color.r, picked.r);
         EXPECT_EQ(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "and closed the dialog";
+    }
+
+    // The header is the dialog's title bar: it drags the window, its close button doesn't.
+    TEST_F(ColorPickerDialog, TheHeaderDragsTheDialog)
+    {
+        Open();
+        const ID window = GUIApplicationInternals::ColorPicker(app).State().windowID;
+        const IntRect header = app.GetElementRect(FindByStyle(app.theme.dialogHeaderStyleRef));
+        EXPECT_EQ(app.TitleBarHitTest(window, { header.x + header.w / 2, header.y + header.h / 2 }), WindowHitArea::Caption);
+        EXPECT_EQ(app.TitleBarHitTest(window, app.CenterOf(FindByStyle(app.theme.dialogCloseStyleRef))), WindowHitArea::Client);
+    }
+
+    // A theme reload frees every style; the open picker must create its own again rather
+    // than keep writing through indices the new theme now uses (here: the accent's).
+    TEST_F(ColorPickerDialog, AThemeReloadRecreatesItsStyles)
+    {
+        Open();
+        auto& cp = GUIApplicationInternals::ColorPicker(app).State();
+        cp.hueStrip = app.theme.accentColor;
+        GUIApplicationInternals::ReloadThemeNextFrame(app);
+        Emit();
+        ASSERT_NE(cp.hueStrip, VisualColorStyleIndex::Invalid);
+        EXPECT_NE(cp.hueStrip, app.theme.accentColor);
+    }
+
+    // The hue strip goes around the whole hue circle, red back to red, within the
+    // gradient's stop limit (more stops used to be dropped, cutting it off at cyan).
+    TEST(ColorPickerHueStrip, GoesAllTheWayAround)
+    {
+        const Gradient g = HueStripGradient(ColorSpace::HSV);
+        ASSERT_GE(g.stopCount, 2);
+        const color4f first = g.stops[0].GetColor4f();
+        const color4f last  = g.stops[size_t(g.stopCount - 1)].GetColor4f();
+        EXPECT_FLOAT_EQ(g.stops[size_t(g.stopCount - 1)].GetOffset(), 1.0f);
+        EXPECT_EQ(first.r, 1.0f); EXPECT_EQ(first.g, 0.0f); EXPECT_EQ(first.b, 0.0f);
+        EXPECT_EQ(last.r,  1.0f); EXPECT_EQ(last.g,  0.0f); EXPECT_EQ(last.b,  0.0f);
     }
 }

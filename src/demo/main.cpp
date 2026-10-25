@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
     // --theme <palette>: start with another palette, e.g. themes/light.css.
     // --panel <title>: bring that panel to the front of its tab group, e.g. Inspector
     //                  (repeatable).
+    // --float <title>: start with that panel in its own window (repeatable).
     for (int i = 1; i + 1 < argc; ++i)
     {
         if (std::string_view(argv[i]) == "--ui-scale")
@@ -27,6 +28,8 @@ int main(int argc, char* argv[])
             application->RequestReloadTheme(argv[i + 1], application->GetGlobalFontScale());
         else if (std::string_view(argv[i]) == "--panel")
             application->AddStartPanel(argv[i + 1]);
+        else if (std::string_view(argv[i]) == "--float")
+            application->AddFloatPanel(argv[i + 1]);
     }
 
     int returnCode = EXIT_FAILURE;

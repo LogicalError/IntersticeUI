@@ -56,5 +56,8 @@ namespace interstice
         static DockNode* FindDockLeafTabBarCachedAtScreenPos(GUIApplication& app, int2 screenPos) { return app.FindDockLeafTabBarCachedAtScreenPos(screenPos); }
         static void      NotePanelContentID(GUIApplication& app, ID panelId, ID contentID)       { app.NotePanelContentID(panelId, contentID); }
         static void      TitleBarCaption(GUIApplication& app, ID id)                              { app.TitleBarCaption(id); }
+        static ColorPickerSubsystem&    ColorPicker(GUIApplication& app)    { return *app.m_colorPickerSub; }
+        static GradientEditorSubsystem& GradientEditor(GUIApplication& app) { return *app.m_gradientEditorSub; }
+        static void      ReloadThemeNextFrame(GUIApplication& app)                                 { app.m_themeReloadPending = true; }
     };
 }

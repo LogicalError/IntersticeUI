@@ -40,4 +40,15 @@ namespace interstice
             m_prevSwatchStyles.erase(prev);
         }
     }
+
+    void GradientEditorSubsystem::ForgetStyles()
+    {
+        // ClearAll freed every style: drop the indices (without destroying them) so
+        // they're created anew.
+        m_swatchStyles.clear();
+        m_prevSwatchStyles.clear();
+        GradientEditorState& s = m_state;
+        for (auto* idx : { &s.previewGradientStyle, &s.stopEdgeColor, &s.stopOutlineColor, &s.stopHaloColor })
+            *idx = VisualColorStyleIndex::Invalid;
+    }
 }

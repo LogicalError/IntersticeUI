@@ -40,4 +40,18 @@ namespace interstice
             m_prevSwatchStyles.erase(prev);
         }
     }
+
+    void ColorPickerSubsystem::ForgetStyles()
+    {
+        // ClearAll freed every style: drop the indices (without destroying them) so
+        // they're created anew.
+        m_swatchStyles.clear();
+        m_prevSwatchStyles.clear();
+        ColorPickerState& s = m_state;
+        for (auto* idx : { &s.svQuadColor, &s.hueStrip, &s.alphaStrip, &s.hueColor, &s.whiteColor,
+                           &s.outlineColor, &s.newColor, &s.originalStyle })
+            *idx = VisualColorStyleIndex::Invalid;
+        for (auto& idx : s.gradientStyles)
+            idx = VisualColorStyleIndex::Invalid;
+    }
 }

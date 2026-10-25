@@ -643,6 +643,7 @@ namespace interstice
         dockWindowPanelStyleRef           = registerCSS("dock-window-panel");
         dockWindowBodyStyleRef            = registerCSS("dock-window-body");
         titleBarTabBarStyleRef            = registerCSS("title-bar-tab-bar");
+        titleBarTabStyleRef               = registerCSS("title-bar-tab");
         titleBarGripStyleRef              = registerCSS("title-bar-grip");
         titleBarTitleStyleRef             = registerCSS("title-bar-title");
         titleBarTextButtonStyleRef        = registerCSS("title-bar-text-button");

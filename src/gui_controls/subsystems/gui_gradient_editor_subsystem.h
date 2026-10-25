@@ -57,6 +57,9 @@ namespace interstice
         // doesn't re-claim its swatches, but its blitted primitives still use them.
         void KeepSwatchAlive(interstice::ID swatchID);
 
+        // After a theme reload (StyleManager::ClearAll): every style it held is gone.
+        void ForgetStyles();
+
     private:
         GradientEditorState m_state{};
         std::unordered_map<interstice::ID, interstice::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;

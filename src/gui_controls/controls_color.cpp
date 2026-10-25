@@ -150,9 +150,9 @@ namespace interstice
             }
         }
 
-        // A top-to-bottom gradient sampled at N points.
+        // A gradient sampled at N points (at most Gradient::kMaxStops), evenly over [0, 1].
         template <typename Fn>
-        void SetVerticalGradient(StyleManager& sm, VisualColorStyleIndex& idx, Fn&& sampleFn, int numStops)
+        Gradient SampledGradient(Fn&& sampleFn, int numStops)
         {
             Gradient g;
             g.type = GradientType::Linear;
@@ -161,9 +161,20 @@ namespace interstice
                 const float t = float(i) / float(numStops - 1);
                 g.AddStop(sampleFn(t), t);
             }
+            return g;
+        }
+
+        // A top-to-bottom gradient.
+        void SetVerticalGradient(StyleManager& sm, VisualColorStyleIndex& idx, const Gradient& g)
+        {
             const ColorStyle cs = ColorStyle::Create(g, ColorType::LinearGradient);
             if (idx == VisualColorStyleIndex::Invalid) idx = sm.CreateColorStyle(cs);
             else                                       sm.UpdateColorStyle(idx, cs);
+        }
+        template <typename Fn>
+        void SetVerticalGradient(StyleManager& sm, VisualColorStyleIndex& idx, Fn&& sampleFn, int numStops)
+        {
+            SetVerticalGradient(sm, idx, SampledGradient(std::forward<Fn>(sampleFn), numStops));
         }
 
         // Rebuilds h/s/v from a hue position on the strip, keeping the space's other axes.
@@ -246,11 +257,11 @@ namespace interstice
             ctx.RenderCircle(center, radius, LineStyle{ .colorStyleIndex = ring, .lineWidth = width });
         }
 
-        // A filled disc (a circle stroked as wide as it is), which stays round at small sizes.
-        void DrawDisc(const CustomDrawContext& ctx, int2 center, float radius, VisualColorStyleIndex color)
-        {
-            ctx.RenderCircle(center, radius * 0.5f, LineStyle{ .colorStyleIndex = color, .lineWidth = radius });
-        }
+    }
+
+    Gradient HueStripGradient(ColorSpace space)
+    {
+        return SampledGradient([space](float t) { return SpaceHueColor(space, t); }, Gradient::kMaxStops);
     }
 
     void GUIApplication::EmitColorPicker(color4f& outColor, bool allowHDR)
@@ -360,7 +371,7 @@ namespace interstice
             SetQuadColorStyle(styleManager, cp.svQuadColor, corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1));
         }
         const ColorSpace space = cp.activeSpace;
-        SetVerticalGradient(styleManager, cp.hueStrip, [space](float t) { return SpaceHueColor(space, t); }, Gradient::kMaxStops);
+        SetVerticalGradient(styleManager, cp.hueStrip, HueStripGradient(space));
         SetVerticalGradient(styleManager, cp.alphaStrip, [&](float t) { return color4f{ curR, curG, curB, 1.0f - t }; }, 2);
         SetColorStyle(styleManager, cp.hueColor, SpaceHueColor(space, stripHue));
         SetColorStyle(styleManager, cp.whiteColor, { 1.0f, 1.0f, 1.0f, 1.0f });
@@ -657,8 +668,8 @@ namespace interstice
                         }
                         ctx.RenderQuad(track, fill, radius);
                         const int2 at{ track.x + int(std::lround(t * float(track.w))), track.y + trackH / 2 };
-                        DrawDisc(ctx, at, thumb + edge, outline);
-                        DrawDisc(ctx, at, thumb, white);
+                        ctx.RenderDisc(at, thumb + edge, outline);
+                        ctx.RenderDisc(at, thumb, white);
                     }));
 
                 // The value, rounded to what the range shows.

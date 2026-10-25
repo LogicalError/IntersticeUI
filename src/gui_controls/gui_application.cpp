@@ -464,6 +464,8 @@ namespace interstice
             if (layout) DisableAllPanels(*layout);
 
         styleManager.ClearAll();
+        m_colorPickerSub->ForgetStyles();
+        m_gradientEditorSub->ForgetStyles();
         if (textSystem) textSystem->ClearCache();
         if (!InitializeStyles())
             INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
@@ -610,16 +612,48 @@ namespace interstice
             // While capturing, a cached scope's children render into its capture (until captureEndIdx).
             bool     capturing     = false;
             uint32_t captureEndIdx = 0;
+            size_t   captureAfterBase = 0;   // pending after-draws below this belong outside the capture
             interstice::ID  captureScopeId = interstice::ID::Invalid();
+
+            // AddCustomDrawAfter callbacks wait here until the walk passes the end of their
+            // owner's subtree, however it gets there: rendered, culled, or replayed from a
+            // cache. Nested subtrees end no later than their ancestors', so it's a stack.
+            auto& pendingAfter = m_pendingAfterDraws;
+            pendingAfter.clear();
+            auto fireAfterDraws = [&](uint32_t passed, size_t keep)
+            {
+                while (pendingAfter.size() > keep && pendingAfter.back().endIdx <= passed)
+                {
+                    const ElementRef owner = pendingAfter.back().owner;
+                    pendingAfter.pop_back();
+                    const auto& ownerDraw = elementStorage.GetElementCustomDrawUnsafe(owner);
+                    guiRenderer->SetTransform(ownerDraw.afterDrawRenderTransform);
+                    for (uint32_t idx = ownerDraw.afterHead; idx != UINT32_MAX; )
+                    {
+                        auto& entry = elementStorage.GetPostDrawEntryUnsafe(idx);
+                        CustomDrawContext ctx{ *guiRenderer, elementStorage, owner,
+                                               ownerDraw.afterDrawElementRectLayout,
+                                               ownerDraw.afterDrawInnerRectLayout,
+                                               ownerDraw.afterDrawClipRectScreen,
+                                               ownerDraw.afterDrawRenderTransform, offset, textSystem,
+                                               ownerDraw.afterDrawPixelRect, ownerDraw.afterDrawSnappedRect };
+                        entry.callback(ctx);
+                        idx = entry.nextIndex;
+                    }
+                }
+            };
+
             for (uint32_t i = 0; i < static_cast<uint32_t>(nodes.size()); )
             {
                 const interstice::WindowRegistry::RenderNode& node = nodes[i];
                 if (capturing && i >= captureEndIdx)
                 {
+                    fireAfterDraws(i, captureAfterBase); // the scope's own content, captured with it
                     guiRenderer->EndScopeCapture(captureScopeId);
                     textSystem->EndAtlasRecord();
                     capturing = false;
                 }
+                fireAfterDraws(i, 0);
                 const ElementRef childRef  = node.ref;
                 const uint32_t   depth     = childRef.depth;
                 assert(depth > 0 && depth < kMaxRenderDepth);
@@ -668,22 +702,7 @@ namespace interstice
                     IntRect isect = cullCheckRectScreen.Intersection(parentState.clipRectScreen);
                     if (isect.w == 0 || isect.h == 0)
                     {
-                        // Still fire post-draw callbacks linked here: their owner may be visible.
-                        auto& cullDraw = elementStorage.GetElementCustomDrawUnsafe(childRef);
-                        for (uint32_t idx = cullDraw.postDrawHead; idx != UINT32_MAX; )
-                        {
-                            auto& entry     = elementStorage.GetPostDrawEntryUnsafe(idx);
-                            auto& ownerDraw = elementStorage.GetElementCustomDrawUnsafe(entry.ownerRef);
-                            guiRenderer->SetTransform(ownerDraw.afterDrawRenderTransform);
-                            CustomDrawContext ctx{ *guiRenderer, elementStorage, entry.ownerRef,
-                                                   ownerDraw.afterDrawElementRectLayout,
-                                                   ownerDraw.afterDrawInnerRectLayout,
-                                                   ownerDraw.afterDrawClipRectScreen,
-                                                   ownerDraw.afterDrawRenderTransform, offset, textSystem,
-                                                   ownerDraw.afterDrawPixelRect, ownerDraw.afterDrawSnappedRect };
-                            entry.callback(ctx);
-                            idx = entry.nextIndex;
-                        }
+                        // Culled; ancestors' after-draws still fire as the walk passes their end.
                         i = node.subtreeSkip;
                         continue;
                     }
@@ -877,37 +896,9 @@ namespace interstice
                     }
                 }
 
-                // Link afterHead onto the subtree's last node (also for display:none).
-                // Prepended, so inner elements fire before outer ones.
-                {
-                    auto& draw = elementStorage.GetElementCustomDrawUnsafe(childRef);
-                    if (draw.afterHead != UINT32_MAX)
-                    {
-                        const ElementRef lastRef = nodes[node.subtreeSkip - 1].ref;
-                        auto& lastDraw = elementStorage.GetElementCustomDrawUnsafe(lastRef);
-                        elementStorage.GetPostDrawEntryUnsafe(draw.afterTail).nextIndex = lastDraw.postDrawHead;
-                        lastDraw.postDrawHead = draw.afterHead;
-                    }
-                }
-
-                // Fire postDrawHead - each entry replays its OWNER's captured render transform.
-                {
-                    auto& draw = elementStorage.GetElementCustomDrawUnsafe(childRef);
-                    for (uint32_t idx = draw.postDrawHead; idx != UINT32_MAX; )
-                    {
-                        auto& entry     = elementStorage.GetPostDrawEntryUnsafe(idx);
-                        auto& ownerDraw = elementStorage.GetElementCustomDrawUnsafe(entry.ownerRef);
-                        guiRenderer->SetTransform(ownerDraw.afterDrawRenderTransform);
-                        CustomDrawContext ctx{ *guiRenderer, elementStorage, entry.ownerRef,
-                                               ownerDraw.afterDrawElementRectLayout,
-                                               ownerDraw.afterDrawInnerRectLayout,
-                                               ownerDraw.afterDrawClipRectScreen,
-                                               ownerDraw.afterDrawRenderTransform, offset, textSystem,
-                                               ownerDraw.afterDrawPixelRect, ownerDraw.afterDrawSnappedRect };
-                        entry.callback(ctx);
-                        idx = entry.nextIndex;
-                    }
-                }
+                // After-draws fire once the walk passes this subtree (also for display:none).
+                if (elementStorage.GetElementCustomDrawUnsafe(childRef).afterHead != UINT32_MAX)
+                    pendingAfter.push_back({ node.subtreeSkip, childRef });
 
                 // Retained-render cache: a rebuilt scope captures its children as they render;
                 // a clean (empty) one blits its capture at the container's current position.
@@ -926,6 +917,7 @@ namespace interstice
                             textSystem->BeginAtlasRecord(cachedEl.id);
                             capturing      = true;
                             captureEndIdx  = node.subtreeSkip;
+                            captureAfterBase = pendingAfter.size();
                             captureScopeId = cachedEl.id;
                             scope->drawCapturePos = containerPos;
                             m_uiCache->RecordDrawCapture();
@@ -955,12 +947,15 @@ namespace interstice
                 i++;
             }
 
+            const uint32_t end = static_cast<uint32_t>(nodes.size());
             if (capturing) // close a capture that ran to the end of the member list
             {
+                fireAfterDraws(end, captureAfterBase);
                 guiRenderer->EndScopeCapture(captureScopeId);
                 textSystem->EndAtlasRecord();
                 capturing = false;
             }
+            fireAfterDraws(end, 0);
 
             guiRenderer->EndWindow();
         }

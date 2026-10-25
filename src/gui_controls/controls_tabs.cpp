@@ -37,7 +37,7 @@ namespace interstice
         m_tabBarState = {};
     }
 
-    bool GUIApplication::Tab(ID id, std::string_view text, IconID icon, LayoutOverride&& constraints)
+    bool GUIApplication::Tab(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints)
     {
         int         tabIndex      = m_tabBarState.nextTabIndex++;
         int*        selectedIndex = m_tabBarState.selectedIndex;
@@ -69,7 +69,7 @@ namespace interstice
                     }
                     return false;
                 },
-                .styleRef = theme.tabStyleRef,
+                .styleRef = style,
                 .flags    = ElementFlags::PropagatesDescendantState,
                 .state    = state
             }, LayoutOverride{}.FlexGrow(1));

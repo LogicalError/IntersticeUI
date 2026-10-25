@@ -5,6 +5,9 @@
 
 #include "headless_gui_app.h"
 
+#include <gui_controls/gui_application_internal.h>
+#include <gui_controls/subsystems/gui_gradient_editor_subsystem.h>
+
 namespace
 {
     using namespace interstice;
@@ -93,5 +96,26 @@ namespace
         ClickAt(app.CenterOf(FindByStyle(app.theme.dialogPrimaryButtonStyleRef)));
         EXPECT_EQ(gradient.stopCount, 3);
         EXPECT_EQ(FindByStyle(app.theme.gradientEditorBarStyleRef), ID::Invalid()) << "and closed the dialog";
+    }
+
+    TEST_F(GradientEditorDialog, TheHeaderDragsTheDialog)
+    {
+        Open();
+        const ID window = GUIApplicationInternals::GradientEditor(app).State().windowID;
+        const IntRect header = app.GetElementRect(FindByStyle(app.theme.dialogHeaderStyleRef));
+        EXPECT_EQ(app.TitleBarHitTest(window, { header.x + header.w / 2, header.y + header.h / 2 }), WindowHitArea::Caption);
+        EXPECT_EQ(app.TitleBarHitTest(window, app.CenterOf(FindByStyle(app.theme.dialogCloseStyleRef))), WindowHitArea::Client);
+    }
+
+    // As for the color picker: after a theme reload it creates its styles again.
+    TEST_F(GradientEditorDialog, AThemeReloadRecreatesItsStyles)
+    {
+        Open();
+        auto& ge = GUIApplicationInternals::GradientEditor(app).State();
+        ge.stopHaloColor = app.theme.accentColor;
+        GUIApplicationInternals::ReloadThemeNextFrame(app);
+        Emit();
+        ASSERT_NE(ge.stopHaloColor, VisualColorStyleIndex::Invalid);
+        EXPECT_NE(ge.stopHaloColor, app.theme.accentColor);
     }
 }

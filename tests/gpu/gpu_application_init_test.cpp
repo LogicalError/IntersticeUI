@@ -5,13 +5,16 @@
 
 #include <gui_controls/gui_application_internal.h>
 #include <gui_controls/controls_toolbar_dock.h>
+#include <gui_controls/subsystems/gui_ui_cache_subsystem.h>
 #include <gui_core/memory/gui_tracking_allocator.h>
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 
+#include <chrono>
 #include <filesystem>
 #include <functional>
+#include <thread>
 #include <vector>
 
 namespace
@@ -218,6 +221,135 @@ namespace
         };
         app.Run();
         EXPECT_EQ(app.clicks, 1);
+        app.Cleanup();
+    }
+
+    // An element whose subtree ends in a cached area: its after-draw fires on every
+    // rendered frame, also when the area is replayed from the cache instead of walked.
+    class AfterDrawOverCacheApp : public interstice::GUIApplicationInternals
+    {
+    public:
+        interstice::ID windowID = interstice::ID::Invalid();
+        interstice::ID outerID  = interstice::ID::Invalid();
+        interstice::ID cachedID = interstice::ID::Invalid();
+        int frame = 0, frames = 20;
+        int afterDrawsThisFrame = 0;
+        int replayFrames = 0, replayFramesWithAfterDraw = 0;
+
+        void OnGUI() override
+        {
+            // Give the cache time to settle and capture (it waits for transitions).
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
+            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+                            interstice::ElementFlags::WindowRenderToImage))
+            {
+                BeginArea(outerID, interstice::LayoutOverride{}.FlexGrow(1));
+                (void)elementStorage.AddCustomDrawAfter(elementStorage.FindElementRefByID(outerID),
+                    [this](interstice::CustomDrawContext&) { ++afterDrawsThisFrame; });
+                if (BeginCached(cachedID, 0, interstice::LayoutOverride{}.FlexGrow(1)))
+                {
+                    Text("cached content");
+                    EndCached();
+                }
+                EndArea();
+                EndWindow();
+            }
+            if (++frame >= frames)
+                applicationQuit = true;
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            windowID = idManager.CreateStaticID();
+            outerID  = idManager.CreateStaticID();
+            cachedID = idManager.CreateStaticID();
+            m_frame.OnPreRender([this](interstice::FrameContext&) { afterDrawsThisFrame = 0; });
+            m_frame.OnPostRender([this](interstice::FrameContext&)
+            {
+                if (m_uiCache->FrameDrawReplays() == 0) return;
+                ++replayFrames;
+                if (afterDrawsThisFrame > 0) ++replayFramesWithAfterDraw;
+            });
+            return true;
+        }
+    };
+
+    TEST(GpuApplicationInit, AfterDrawsFireOverACachedArea)
+    {
+        AfterDrawOverCacheApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        app.Run();
+        ASSERT_GT(app.replayFrames, 0) << "test setup: the area was replayed from the cache";
+        EXPECT_EQ(app.replayFramesWithAfterDraw, app.replayFrames);
+        app.Cleanup();
+    }
+
+    // The same when the subtree ends in content clipped away (scrolled out of a panel): the
+    // culled part is skipped as a whole, and the after-draw used to hang on its last node.
+    class AfterDrawOverCulledApp : public interstice::GUIApplicationInternals
+    {
+    public:
+        interstice::ID windowID = interstice::ID::Invalid();
+        interstice::ID outerID  = interstice::ID::Invalid();
+        int frame = 0, frames = 6;
+        int afterDrawsThisFrame = 0;
+        int renderedFrames = 0, renderedFramesWithAfterDraw = 0;
+
+        void OnGUI() override
+        {
+            if (BeginWindow(windowID, "Image", interstice::LayoutOverride{}.Size(240, 120), theme.windowStyleRef,
+                            interstice::ElementFlags::WindowRenderToImage))
+            {
+                // A clipping area too small for its rows: the last ones (a row with a child
+                // at the very end) are culled.
+                BeginArea(outerID, interstice::LayoutOverride{}.Size(200, 60));
+                (void)elementStorage.AddCustomDrawAfter(elementStorage.FindElementRefByID(outerID),
+                    [this](interstice::CustomDrawContext&) { ++afterDrawsThisFrame; });
+                for (int i = 0; i < 20; ++i)
+                    Text("row");
+                BeginHorizontal();
+                Text("last row");
+                EndHorizontal();
+                EndArea();
+                EndWindow();
+            }
+            if (++frame >= frames)
+                applicationQuit = true;
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            windowID = idManager.CreateStaticID();
+            outerID  = idManager.CreateStaticID();
+            m_frame.OnPreRender([this](interstice::FrameContext&) { afterDrawsThisFrame = 0; });
+            m_frame.OnPostRender([this](interstice::FrameContext&)
+            {
+                ++renderedFrames;
+                if (afterDrawsThisFrame > 0) ++renderedFramesWithAfterDraw;
+            });
+            return true;
+        }
+    };
+
+    TEST(GpuApplicationInit, AfterDrawsFireOverCulledContent)
+    {
+        AfterDrawOverCulledApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        app.Run();
+        ASSERT_GT(app.renderedFrames, 0);
+        EXPECT_EQ(app.renderedFramesWithAfterDraw, app.renderedFrames);
         app.Cleanup();
     }
 

@@ -1,5 +1,5 @@
 // Wires between the same two nodes get their default corridor lanes spread apart
-// (ComputeWireLaneOffsets and WireRouteOverrides::laneOffset in gui_node_view_helpers).
+// (ComputeWireLaneOffsets and WireRouteOverrides::lane in gui_node_view_helpers).
 
 #include <gtest/gtest.h>
 
@@ -33,7 +33,7 @@ namespace
         for (int i = 0; i < wires; ++i)
         {
             const auto it = offsets.find(WireKey(1, i));
-            result.push_back(it != offsets.end() ? it->second : 999);
+            result.push_back(it != offsets.end() ? it->second.offset : 999);
         }
         return result;
     }
@@ -47,6 +47,18 @@ namespace
         EXPECT_EQ(Offsets(WiredPair(5), 5), (std::vector<int32_t>{ 2, 1, 0, -1, -2 }));
     }
 
+    // Wires running up (the target node above the source) take the lanes in reverse, so
+    // they nest instead of crossing: the top wire turns first.
+    TEST(NodeViewLaneOffset, WiresRunningUpTakeTheLanesInReverse)
+    {
+        NodeView view = WiredPair(3);
+        view.nodes[0].pos = { 0, 200 };
+        view.nodes[1].pos = { 300, 0 };
+        EXPECT_EQ(Offsets(view, 3), (std::vector<int32_t>{ -1, 0, 1 }));
+        view.nodes[1].pos = { 300, 400 };
+        EXPECT_EQ(Offsets(view, 3), (std::vector<int32_t>{ 1, 0, -1 })) << "running down, as before";
+    }
+
     TEST(NodeViewLaneOffset, WiresToDifferentNodesAreSeparateGroups)
     {
         NodeView view;
@@ -57,8 +69,8 @@ namespace
         view.nodes[1].properties[0].input = PropertyEndpoint{ 0, 0 };
         view.nodes[2].properties[0].input = PropertyEndpoint{ 0, 1 };
         const auto offsets = ComputeWireLaneOffsets(view);
-        EXPECT_EQ(offsets.at(WireKey(1, 0)), 0);
-        EXPECT_EQ(offsets.at(WireKey(2, 0)), 0);
+        EXPECT_EQ(offsets.at(WireKey(1, 0)).offset, 0);
+        EXPECT_EQ(offsets.at(WireKey(2, 0)).offset, 0);
     }
 
     TEST(NodeViewLaneOffset, MovesTheDefaultCorridorLaneByGridSteps)
@@ -69,7 +81,7 @@ namespace
         const int2 outPt{ 174, 40 }, inPt{ 306, 240 };
         auto laneX = [&](int32_t offset) {
             WireRouteOverrides o;
-            o.laneOffset = offset;
+            o.lane.offset = offset;
             return BuildWireRoute(outPt, inPt, src, tgt, grid, {}, o).points[1].x;
         };
         EXPECT_EQ(laneX(1),  laneX(0) + grid);
@@ -82,7 +94,7 @@ namespace
     {
         WireRouteOverrides o;
         o.laneX      = 240;
-        o.laneOffset = 2;
+        o.lane.offset = 2;
         const auto route = BuildWireRoute({ 174, 40 }, { 306, 240 }, { 0, 0, 180, 80 }, { 300, 200, 180, 80 }, 20, {}, o);
         EXPECT_EQ(route.points[1].x, 240);
     }
@@ -97,9 +109,9 @@ namespace
         view.nodes[1].properties[2].input = PropertyEndpoint{};   // free input
 
         const auto offsets = ComputeWireLaneOffsets(view, PropertyEndpoint{ 0, 2 }, PropertyEndpoint{ 1, 2 });
-        EXPECT_EQ(offsets.at(WireKey(1, 0)),  1);
-        EXPECT_EQ(offsets.at(WireKey(1, 1)),  0);
-        EXPECT_EQ(offsets.at(WireKey(1, 2)), -1) << "the dragged wire";
+        EXPECT_EQ(offsets.at(WireKey(1, 0)).offset,  1);
+        EXPECT_EQ(offsets.at(WireKey(1, 1)).offset,  0);
+        EXPECT_EQ(offsets.at(WireKey(1, 2)).offset, -1) << "the dragged wire";
     }
 
     TEST(NodeViewLaneOffset, ADraggedWireReplacesTheInputsWire)
@@ -108,8 +120,8 @@ namespace
         view.nodes[0].properties.resize(3);
         // Output 2 dragged onto input 1, which output 1 feeds now.
         const auto offsets = ComputeWireLaneOffsets(view, PropertyEndpoint{ 0, 2 }, PropertyEndpoint{ 1, 1 });
-        EXPECT_EQ(offsets.at(WireKey(1, 0)),  0);
-        EXPECT_EQ(offsets.at(WireKey(1, 1)), -1);
+        EXPECT_EQ(offsets.at(WireKey(1, 0)).offset,  0);
+        EXPECT_EQ(offsets.at(WireKey(1, 1)).offset, -1);
         EXPECT_EQ(offsets.size(), 2u);
     }
 
@@ -120,8 +132,8 @@ namespace
         view.nodes[1].properties[2].input = PropertyEndpoint{};
         // Output 0 (wired to input 0) dragged onto input 2: outputs fan out, so input 0 keeps it.
         const auto offsets = ComputeWireLaneOffsets(view, PropertyEndpoint{ 0, 0 }, PropertyEndpoint{ 1, 2 });
-        EXPECT_EQ(offsets.at(WireKey(1, 0)),  1);
-        EXPECT_EQ(offsets.at(WireKey(1, 1)),  0);
-        EXPECT_EQ(offsets.at(WireKey(1, 2)), -1);
+        EXPECT_EQ(offsets.at(WireKey(1, 0)).offset,  1);
+        EXPECT_EQ(offsets.at(WireKey(1, 1)).offset,  0);
+        EXPECT_EQ(offsets.at(WireKey(1, 2)).offset, -1);
     }
 }

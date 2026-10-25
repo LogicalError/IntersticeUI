@@ -187,6 +187,9 @@ namespace interstice
 
         // Call from OnGUI after the main docking container. Empty windows are closed.
         void EmitFloatingDockWindows();
+        // Moves a docked panel into its own window at a screen position, as tearing its tab
+        // off does; the window's Dock button returns it. False if the layout hasn't the panel.
+        bool FloatPanel(DockingLayout& layout, ID panelID, int2 screenPos);
 
         // Closes the window for good: its panels are disabled and destroyed.
         void CloseFloatingDockWindow(size_t index);
@@ -745,7 +748,9 @@ namespace interstice
                          LayoutOverride&& constraints = {});
         void EndTabBar();
 
-        bool Tab(ID id, std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {});
+        bool Tab(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints = {});
+        inline bool Tab(ID id, std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
+        { return Tab(id, text, icon, theme.tabStyleRef, std::move(constraints)); }
         inline bool Tab(std::string_view text, IconID icon = IconID::Invalid, LayoutOverride&& constraints = {})
             { return Tab(idManager.AllocateDynamicID(), text, icon, std::move(constraints)); }
 
@@ -1500,6 +1505,9 @@ namespace interstice
         std::unordered_map<ID, TitleBar> m_titleBars;
         std::vector<ID> m_titleBarStack;    // bar IDs between BeginTitleBar and EndTitleBar
         std::vector<ID> m_titleBarCaptions; // controls in the open title bar whose background drags the window
+        // Render: AddCustomDrawAfter owners waiting for the walk to pass their subtree.
+        struct PendingAfterDraw { uint32_t endIdx; ElementRef owner; };
+        std::vector<PendingAfterDraw> m_pendingAfterDraws;
         // A control in the open title bar whose own background is caption (e.g. a tab strip).
         void TitleBarCaption(ID id) { m_titleBarCaptions.push_back(id); }
         void DockFloatingWindow(FloatingDockWindow& fw);

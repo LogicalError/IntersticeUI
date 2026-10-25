@@ -697,8 +697,7 @@ namespace interstice
             const LayoutStyle* knobLayout = styleManager.GetLayoutStyle(theme.switchKnobStyleRef.layoutStyleIndex);
             const int knobSize = (knobLayout && knobLayout->layoutData.width != LayoutData::kAutoSize)
                                ? int(knobLayout->layoutData.width) : styleManager.Px(12);
-            // Drawn as a disc (a circle stroked as wide as it is), which stays round at
-            // this size, in the knob style's background color.
+            // Drawn as a disc in the knob style's background color.
             const interstice::ElementState knobState = value ? (state | interstice::ElementState::Selected) : state;
             const VisualBoxStyle* knobBox = styleManager.GetVisualBoxStyle(theme.switchKnobStyleRef.visualBoxStyleIndex, knobState);
             const VisualColorStyleIndex knobColor = knobBox ? knobBox->backgroundColorIndex : VisualColorStyleIndex::Invalid;
@@ -708,9 +707,8 @@ namespace interstice
                     const auto outer = ctx.ElementRect();
                     const int inset = std::max(0, (outer.h - knobSize) / 2);
                     const int x = value ? outer.x + outer.w - inset - knobSize : outer.x + inset;
-                    const float size = float(knobSize);
-                    ctx.RenderCircle({ x + knobSize / 2, outer.y + inset + knobSize / 2 }, size / 4.0f,
-                                     interstice::LineStyle{ .colorStyleIndex = knobColor, .lineWidth = size / 2.0f });
+                    ctx.RenderQuad({ .position = { x, outer.y + inset }, .size = { knobSize, knobSize } },
+                                   knobColor, float(knobSize) * 0.5f);
                 }));
 
             if (!text.empty())

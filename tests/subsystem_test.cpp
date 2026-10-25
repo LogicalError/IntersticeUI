@@ -8,6 +8,8 @@
 #include <gui_controls/subsystems/gui_button_group_subsystem.h>
 #include <gui_controls/subsystems/gui_subsystem_state.h>
 #include <gui_controls/subsystems/gui_reorderable_subsystem.h>
+#include <gui_controls/subsystems/gui_color_picker_subsystem.h>
+#include <gui_controls/subsystems/gui_gradient_editor_subsystem.h>
 #include <gui_controls/gui_menu_manager.h>
 #include <gui_core/state/gui_state_atomic_values.h>
 #include <gui_core/state/gui_state_manager.h>
@@ -44,6 +46,41 @@ namespace interstice
                 .elapsedTimeSecs   = 0.0f,
             };
         }
+    }
+
+    // ---------------------------------------------------------------------
+    // Color dialogs after a theme reload: ClearAll freed every style, so the
+    // indices they held must be dropped, or they'd draw (and write) through
+    // slots the new theme reuses.
+    // ---------------------------------------------------------------------
+    TEST(ColorPickerSubsystemTest, ForgetStylesDropsEveryHeldStyle)
+    {
+        FramePipeline frame;
+        ColorPickerSubsystem sub(frame);
+        const ID swatch = ID{ .value{ .integer = 42 } };
+        sub.ClaimSwatchStyle(swatch) = VisualColorStyleIndex(5);
+        sub.State().hueStrip = VisualColorStyleIndex(7);
+        sub.State().gradientStyles[2] = VisualColorStyleIndex(9);
+
+        sub.ForgetStyles();
+
+        EXPECT_EQ(sub.ClaimSwatchStyle(swatch), VisualColorStyleIndex::Invalid);
+        EXPECT_EQ(sub.State().hueStrip, VisualColorStyleIndex::Invalid);
+        EXPECT_EQ(sub.State().gradientStyles[2], VisualColorStyleIndex::Invalid);
+    }
+
+    TEST(GradientEditorSubsystemTest, ForgetStylesDropsEveryHeldStyle)
+    {
+        FramePipeline frame;
+        GradientEditorSubsystem sub(frame);
+        const ID swatch = ID{ .value{ .integer = 42 } };
+        sub.ClaimSwatchStyle(swatch) = VisualColorStyleIndex(5);
+        sub.State().stopHaloColor = VisualColorStyleIndex(7);
+
+        sub.ForgetStyles();
+
+        EXPECT_EQ(sub.ClaimSwatchStyle(swatch), VisualColorStyleIndex::Invalid);
+        EXPECT_EQ(sub.State().stopHaloColor, VisualColorStyleIndex::Invalid);
     }
 
     // ---------------------------------------------------------------------

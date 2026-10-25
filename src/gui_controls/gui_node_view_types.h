@@ -81,6 +81,17 @@ namespace interstice
     // detour route's verticals (ExitX, EntryX) and horizontal return lane (LaneY).
     enum class WireHandle : uint8_t { None, LaneX, ExitX, EntryX, LaneY };
 
+    // A wire's place among the wires between the same two nodes, so their default lanes
+    // nest instead of coinciding or crossing (ComputeWireLaneOffsets).
+    struct WireLane
+    {
+        int32_t offset = 0;   // grid steps right for the corridor lane
+        int32_t index  = 0;   // by input, top first
+        int32_t count  = 1;   // wires in the group
+
+        bool operator==(const WireLane&) const = default;
+    };
+
     // User-pinned lanes of one wire (unset = default), in the route's space. BuildWireRoute
     // clamps them clear of the bodies, so stale values never cross a node.
     struct WireRouteOverrides
@@ -89,7 +100,7 @@ namespace interstice
         std::optional<int32_t> exitX;    // detour vertical lane near the output
         std::optional<int32_t> entryX;   // detour vertical lane near the input
         std::optional<int32_t> laneY;    // detour horizontal return-lane Y
-        int32_t                laneOffset = 0; // grid steps right for the default corridor lane
+        WireLane               lane;     // where the unpinned lanes go in its group
 
         bool operator==(const WireRouteOverrides&) const = default;
     };

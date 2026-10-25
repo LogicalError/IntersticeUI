@@ -340,10 +340,82 @@ namespace interstice
         for (const int32_t offset : { 0, -1, 1 })
         {
             WireRouteOverrides o;
-            o.laneOffset = offset;
+            o.lane.offset = offset;
             const auto route = BuildWireRoute(outPt, inPt, src, tgt, kGrid, kOrigin, o).points;
             ASSERT_EQ(route.size(), 2u) << offset;
             ExpectEndpoints(route, outPt, inPt);
         }
+    }
+
+    // Three wires between two nodes, routed the way back round (the target left of the
+    // source): they nest, so no two cross or run on top of each other.
+    namespace
+    {
+        struct Seg { int2 a, b; };
+
+        std::vector<Seg> Segments(const std::vector<int2>& pts)
+        {
+            std::vector<Seg> segs;
+            for (size_t i = 0; i + 1 < pts.size(); ++i)
+                segs.push_back({ pts[i], pts[i + 1] });
+            return segs;
+        }
+
+        bool Touch(const Seg& s, const Seg& t)
+        {
+            auto lo = [](int32_t a, int32_t b) { return std::min(a, b); };
+            auto hi = [](int32_t a, int32_t b) { return std::max(a, b); };
+            const bool sh = s.a.y == s.b.y, th = t.a.y == t.b.y;
+            if (sh && th)   // both horizontal: on one line and overlapping
+                return s.a.y == t.a.y && lo(s.a.x, s.b.x) <= hi(t.a.x, t.b.x) && lo(t.a.x, t.b.x) <= hi(s.a.x, s.b.x);
+            if (!sh && !th) // both vertical
+                return s.a.x == t.a.x && lo(s.a.y, s.b.y) <= hi(t.a.y, t.b.y) && lo(t.a.y, t.b.y) <= hi(s.a.y, s.b.y);
+            const Seg& h = sh ? s : t;
+            const Seg& v = sh ? t : s;
+            return lo(h.a.x, h.b.x) <= v.a.x && v.a.x <= hi(h.a.x, h.b.x)
+                && lo(v.a.y, v.b.y) <= h.a.y && h.a.y <= hi(v.a.y, v.b.y);
+        }
+
+        // Wires from the source's outputs (rows at srcRows) to the target's inputs (tgtRows), in order.
+        void ExpectNested(IntRect src, std::vector<int32_t> srcRows, IntRect tgt, std::vector<int32_t> tgtRows)
+        {
+            const int32_t count = int32_t(srcRows.size());
+            std::vector<std::vector<Seg>> wires;
+            for (int32_t i = 0; i < count; ++i)
+            {
+                WireRouteOverrides o;
+                o.lane = WireLane{ .offset = 0, .index = i, .count = count };
+                const auto route = BuildWireRoute({ src.Max(0) - 6, srcRows[size_t(i)] }, { tgt.Min(0) + 6, tgtRows[size_t(i)] },
+                                                  src, tgt, kGrid, kOrigin, o);
+                wires.push_back(Segments(route.points));
+            }
+            for (int32_t a = 0; a < count; ++a)
+                for (int32_t b = a + 1; b < count; ++b)
+                    for (const Seg& s : wires[size_t(a)])
+                        for (const Seg& t : wires[size_t(b)])
+                            EXPECT_FALSE(Touch(s, t)) << "wires " << a << " and " << b << " meet at ("
+                                                      << s.a.x << "," << s.a.y << ")-(" << s.b.x << "," << s.b.y << ") and ("
+                                                      << t.a.x << "," << t.a.y << ")-(" << t.b.x << "," << t.b.y << ")";
+        }
+    }
+
+    TEST(NodeViewWireRouteTest, WiresBackDownToATargetNest)
+    {
+        ExpectNested({ 400, 0, 180, 120 }, { 20, 60, 100 }, { 0, 300, 180, 120 }, { 320, 360, 400 });
+    }
+
+    TEST(NodeViewWireRouteTest, WiresBackUpToATargetNest)
+    {
+        ExpectNested({ 400, 0, 180, 120 }, { 20, 60, 100 }, { 0, -300, 180, 120 }, { -280, -240, -200 });
+    }
+
+    TEST(NodeViewWireRouteTest, WiresRoundBelowBothNodesNest)
+    {
+        ExpectNested({ 400, 0, 180, 240 }, { 120, 160, 200 }, { 0, 100, 180, 120 }, { 120, 160, 200 });
+    }
+
+    TEST(NodeViewWireRouteTest, WiresRoundAboveBothNodesNest)
+    {
+        ExpectNested({ 400, 0, 180, 240 }, { 20, 60, 100 }, { 0, -40, 180, 120 }, { -20, 20, 60 });
     }
 }

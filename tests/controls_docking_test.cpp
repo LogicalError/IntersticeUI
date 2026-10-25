@@ -293,6 +293,34 @@ namespace interstice
             EXPECT_TRUE(app.m_floatingDockWindows.empty());
         }
 
+        // A torn-off window's tab takes the title bar's tab style (in the light theme it joins
+        // the panel); docked tabs keep theirs.
+        TEST_F(DockingTest, TornOffTabsUseTheTitleBarTabStyle)
+        {
+            auto fw = std::make_unique<FloatingDockWindow>();
+            fw->windowID = app.idManager.CreateStaticID();
+            const ID floating = app.CreatePanel(fw->layout.panels, "F", IconID::Invalid, [] {}, {}, {}, {});
+            fw->layout.root = MakeLeaf({ floating });
+            app.m_floatingDockWindows.push_back(std::move(fw));
+
+            auto frame = [&] { app.Frame([&] { EmitDock(); app.EmitFloatingDockWindows(); }); };
+            frame();
+            frame();
+
+            int titleBarTabs = 0, dockedTabs = 0;
+            const auto& storage = app.elementStorage;
+            for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+                for (const Element& e : it->GetChildren(storage))
+                {
+                    if (e.styleRef.visualBoxStyleIndex == app.theme.titleBarTabStyleRef.visualBoxStyleIndex
+                        && e.styleRef.layoutStyleIndex == app.theme.titleBarTabStyleRef.layoutStyleIndex) ++titleBarTabs;
+                    if (e.styleRef.visualBoxStyleIndex == app.theme.tabStyleRef.visualBoxStyleIndex
+                        && e.styleRef.layoutStyleIndex == app.theme.tabStyleRef.layoutStyleIndex) ++dockedTabs;
+                }
+            EXPECT_EQ(titleBarTabs, 1);
+            EXPECT_EQ(dockedTabs, 3) << "A, B and C stay docked tabs";
+        }
+
         // A torn-off window's tabs are its title bar: the strip between and after the tabs
         // drags the window, the tabs themselves stay the GUI's.
         TEST_F(DockingTest, TornOffTabsSitInTheTitleBar)
