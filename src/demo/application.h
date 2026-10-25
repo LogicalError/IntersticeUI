@@ -184,6 +184,8 @@ namespace interstice
             NodeView nodeView;
             // The node view's edits, for Undo / Redo (the demo's only undoable changes).
             std::vector<NodeViewEdit> nodeUndo, nodeRedo;
+            bool exitRequested = false;   // Exit with node edits: asking
+            ID   exitDialogID  = ID::Invalid();
 
             // Values bound by the node properties' renderBody lambdas.
             float       nodeStrength = 0.5f;
@@ -469,6 +471,8 @@ namespace interstice
         void RenderMainMenu();
         void RenderStatusBar();
         void UndoNodeEdit(bool redo);
+        void RequestExit();
+        void AskBeforeExit();
 
         void EnableFilesPanel();
         void DisableFilesPanel();

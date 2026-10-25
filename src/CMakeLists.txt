@@ -302,6 +302,7 @@ list(APPEND GUI_CONTROLS_FILES
   gui_controls/controls.cpp
   gui_controls/controls_color_internal.h
   gui_controls/controls_color.cpp
+  gui_controls/controls_message_box.cpp
   gui_controls/controls_gradient.cpp
   gui_controls/controls_menus.cpp
   gui_controls/controls_node_view.cpp

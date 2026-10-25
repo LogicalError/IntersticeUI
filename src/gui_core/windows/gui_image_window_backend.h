@@ -42,6 +42,7 @@ namespace interstice
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override;
         std::optional<color4b> ReadScreenPixel(int2 screenPos) override { return m_os.ReadScreenPixel(screenPos); }
+        bool TakeCloseRequest(OSWindowHandle window) override { return m_os.TakeCloseRequest(window); }
         MouseButtons GetMouseButtons() override;
         void SetCursor(MouseCursor cursor) override;
         void SetTextInputArea(OSWindowHandle window, IntRect rect) override;

@@ -60,6 +60,7 @@ namespace interstice
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override;
         std::optional<color4b> ReadScreenPixel(int2 screenPos) override;
+        bool TakeCloseRequest(OSWindowHandle window) override;
         MouseButtons GetMouseButtons() override;
         
         void SetCursor(MouseCursor cursor) override;
@@ -115,6 +116,7 @@ namespace interstice
 
         // track windows scheduled for destruction when received from events
         std::unordered_set<SDL_Window*> m_pendingDestroy;
+        std::unordered_set<SDL_Window*> m_closeRequests;   // ConfirmClose windows the OS asked to close
         bool m_sdlInitialized = false;
         bool m_ownsSDL        = false; // we started SDL, so we shut it down
         bool m_routesSDLMemory = false; // SDL allocates through the allocation hooks

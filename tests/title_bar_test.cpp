@@ -83,6 +83,21 @@ namespace
         EXPECT_EQ(HitAt(children[5]), WindowHitArea::Client);
     }
 
+    // A window that confirms closing: its close button only asks (CloseRequested, once);
+    // the window stays for the app to close.
+    TEST_F(TitleBarTest, ConfirmCloseMakesTheCloseButtonAsk)
+    {
+        const ElementFlags flags = ElementFlags::WindowCustomTitleBar | ElementFlags::WindowConfirmClose;
+        Frame(flags);
+        const auto children = ChildIDs(app, barID);
+        ASSERT_EQ(children.size(), 6u);
+        app.ClickAt(app.CenterOf(children[5]));
+        Frame(flags);
+        EXPECT_TRUE(app.CloseRequested(app.RootWindowID()));
+        EXPECT_FALSE(app.CloseRequested(app.RootWindowID())) << "once per request";
+        EXPECT_FALSE(app.windowManager->WasUserClosed(app.RootWindowID()));
+    }
+
     TEST_F(TitleBarTest, OtherWindowsGetNoWindowButtons)
     {
         Frame(ElementFlags::None);

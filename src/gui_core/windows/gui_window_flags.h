@@ -44,6 +44,10 @@ namespace interstice
         // title bar, which the window draws itself (GUIApplication::BeginTitleBar).
         CustomTitleBar  = 32768,
 
+        // A close from the OS (its close button, Alt+F4, quitting) is only recorded for the
+        // app to decide on (IWindowBackend::TakeCloseRequest); the window stays.
+        ConfirmClose    = 65536,
+
 
 		DefaultFlags = AllowHighDPI
     };

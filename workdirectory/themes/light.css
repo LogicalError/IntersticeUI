@@ -54,6 +54,21 @@
     --warn: #D99A2B;
     --warn-text: #8E5D11;
     --error: #D64545;
+    --danger: #C93C3C;
+    --on-danger: #FFFFFF;
+    --warn-soft: #D99A2B29;
+    --info-soft: #2F6FEB1F;
+    --error-circle: #D645451F;
+    --bg-well: #F6F7F9;
+    --dialog-bg: #FFFFFF;
+    --dialog-header: #F6F7F9;
+    --dialog-border: #C3C9D2;
+    --dialog-divider: #E6E8EC;
+    --dialog-well: #F6F7F9;
+    --dialog-input: #FFFFFF;
+    --dialog-control: #FFFFFF;
+    --dialog-control-border: #C9CED6;
+    --scrim: #1018284D;         /* navy at 30% */
     --info: #2F6FEB;
     --folder: #E3AE4C;
     --window-close: #C42B1C;      /* a title bar's close button, hovered */

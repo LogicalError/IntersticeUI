@@ -40,6 +40,7 @@ public:
         (std::function<void(interstice::OSWindowHandle, interstice::IWindowContext*)>), (override));
     MOCK_METHOD(interstice::int2, GetScreenMousePos, (), (override));
     MOCK_METHOD(std::optional<interstice::color4b>, ReadScreenPixel, (interstice::int2), (override));
+    MOCK_METHOD(bool, TakeCloseRequest, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(interstice::MouseButtons, GetMouseButtons, (), (override));
     MOCK_METHOD(void, SwapBuffers, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(interstice::IntRect, GetWindowRect, (interstice::OSWindowHandle), (override));

@@ -216,8 +216,12 @@ namespace interstice
                        if (maximized) windowManager->RestoreWindow(windowID);
                        else           windowManager->MaximizeWindow(windowID);
                    }, theme.titleBarButtonStyleRef);
+            const bool confirmClose = (elementStorage.GetElementUnsafe(windowRef).flags & ElementFlags::WindowConfirmClose) != ElementFlags::None;
             Button(idManager.AllocateDynamicID("close"), theme.tabCloseIcon,
-                   [this, windowID] { (void)windowManager->RequestUserClose(windowID); }, theme.titleBarCloseButtonStyleRef);
+                   [this, windowID, confirmClose] {
+                       if (confirmClose) m_closeRequests.insert(windowID);   // the app decides (CloseRequested)
+                       else              (void)windowManager->RequestUserClose(windowID);
+                   }, theme.titleBarCloseButtonStyleRef);
             if (pushed)
                 (void)idManager.PopParent();
         }

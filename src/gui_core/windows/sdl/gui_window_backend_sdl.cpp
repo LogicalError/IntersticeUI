@@ -812,6 +812,8 @@ namespace interstice
 
         // Track whether this SDL window is modal.
         SDL_SetBooleanProperty(props, "IsModal", isModal);
+        SDL_SetBooleanProperty(props, "ConfirmClose",
+            (windowFlags & interstice::WindowFlags::ConfirmClose) != interstice::WindowFlags::None);
 
 #ifdef _WIN32
         HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
@@ -1253,6 +1255,11 @@ namespace interstice
             m_lastFocusableWindow = focused;
     }
 
+    bool SDLWindowBackend::TakeCloseRequest(OSWindowHandle h)
+    {
+        return m_closeRequests.erase(ToSDL(h)) > 0;
+    }
+
     std::optional<color4b> SDLWindowBackend::ReadScreenPixel([[maybe_unused]] int2 screenPos)
     {
 #ifdef _WIN32
@@ -1655,13 +1662,25 @@ namespace interstice
         {
             case SDL_EVENT_QUIT:
                 // Only when the GUI runs the event loop; otherwise quitting is the host's call.
+                // Windows that confirm closing are asked instead.
                 if (backend->m_options.pumpEvents)
-                    for (SDL_Window* window : backend->m_windows) backend->m_pendingDestroy.insert(window);
+                    for (SDL_Window* window : backend->m_windows)
+                    {
+                        if (SDL_GetBooleanProperty(SDL_GetWindowProperties(window), "ConfirmClose", false))
+                            backend->m_closeRequests.insert(window);
+                        else
+                            backend->m_pendingDestroy.insert(window);
+                    }
                 break;
 
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
                 if (SDL_Window* window = SDL_GetWindowFromID(event->window.windowID); backend->m_windows.contains(window))
-                    backend->m_pendingDestroy.insert(window);
+                {
+                    if (SDL_GetBooleanProperty(SDL_GetWindowProperties(window), "ConfirmClose", false))
+                        backend->m_closeRequests.insert(window);
+                    else
+                        backend->m_pendingDestroy.insert(window);
+                }
                 break;
 
             case SDL_EVENT_WINDOW_FOCUS_GAINED:

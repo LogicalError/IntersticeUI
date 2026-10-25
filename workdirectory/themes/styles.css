@@ -3749,8 +3749,8 @@
     align-items: stretch;
     border-width: 1px;
     border-radius: var(--radius-dialog);
-    border-color: var(--panel-border);
-    background-color: var(--bg-panel);
+    border-color: var(--dialog-border);
+    background-color: var(--dialog-bg);
     overflow: hidden;
 }
 
@@ -3936,8 +3936,8 @@
     padding: 0px 8px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-node);
-    background-color: var(--bg-input);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-input);
     color: var(--text-1);
     font-family: monospace;
     font-size: 11.5px;
@@ -3987,8 +3987,8 @@
     padding: 0px 0px 0px 8px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-node);
-    background-color: var(--bg-input);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-input);
     overflow: hidden;
 }
 .color-picker-hdr-value {
@@ -4019,7 +4019,7 @@
     margin: 0px;
     padding: 12px 16px 14px 16px;
     border-width: 1px 0px 0px 0px;
-    border-color: var(--line-subtle);
+    border-color: var(--dialog-divider);
     background-color: transparent;
 }
 .color-picker-swatch-row {
@@ -4107,8 +4107,8 @@
     margin: 0px;
     padding: 0px 8px 0px 16px;
     border-width: 0px 0px 1px 0px;
-    border-color: var(--line-subtle);
-    background-color: var(--bg-header);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-header);
 }
 .dialog-title {
     margin: 0px;
@@ -4161,8 +4161,8 @@
     margin: 0px;
     padding: 0px 16px;
     border-width: 1px 0px 0px 0px;
-    border-color: var(--line-subtle);
-    background-color: var(--bg-header);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-header);
 }
 .dialog-status {
     margin: 0px;
@@ -4193,8 +4193,8 @@
     padding: 0px 14px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-control);
     color: var(--text-1);
     font-size: var(--font-size);
     text-align: center;
@@ -4204,6 +4204,8 @@
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
+    text-underline-color: var(--text-1);
+    text-underline-offset: 2px;
 }
 .dialog-button:hover  { background-color: var(--bg-active); }
 .dialog-button:active { background-color: var(--bg-pressed); }
@@ -4225,8 +4227,240 @@
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
+    text-underline-color: var(--on-accent);
+    text-underline-offset: 2px;
 }
 .dialog-button-primary:hover  { background-color: var(--divider-hover); }
+/* The default button (focused): a ring. */
+.dialog-button:focus         { border-color: var(--accent); }
+.dialog-button-primary:focus { border-width: 1px; border-color: var(--text-1); }
+/* A destructive button (Quit, Delete). */
+.dialog-button-danger {
+    height: 28px;
+    margin: 0px;
+    padding: 0px 14px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    border-color: transparent;
+    background-color: var(--danger);
+    color: var(--on-danger);
+    font-size: var(--font-size);
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+    text-wrap: nowrap;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+    text-underline-color: var(--on-danger);
+    text-underline-offset: 2px;
+}
+.dialog-button-danger:focus { border-width: 1px; border-color: var(--text-1); }
+
+/* ---- MessageDialog: a modal question, 456 wide ------------------------------ */
+.message-box {
+    width: 456px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0px;
+    gap: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-dialog);
+    border-color: var(--dialog-border);
+    background-color: var(--dialog-bg);
+    overflow: hidden;
+}
+.message-box-close {
+    width: 24px;
+    height: 24px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    -interstice-icon-size: 14px;
+    cursor: pointer;
+}
+.message-box-close:hover { background-color: var(--bg-active); color: var(--text-1); }
+.message-box-body {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0px;
+    padding: 20px 40px 16px 20px;   /* clear of the close button */
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.message-box-warning {
+    width: 32px;
+    height: 32px;
+    margin: 0px;
+    padding: 8px;   /* a 16 px glyph */
+    border-width: 0px;
+    border-radius: 16px;
+    background-color: var(--warn-soft);
+    color: var(--warn);
+    -interstice-icon-color: var(--warn);
+    -interstice-icon-size: 16px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-shrink: 0;
+}
+.message-box-question {
+    width: 32px;
+    height: 32px;
+    margin: 0px;
+    padding: 8px;   /* a 16 px glyph */
+    border-width: 0px;
+    border-radius: 16px;
+    background-color: var(--info-soft);
+    color: var(--accent);
+    -interstice-icon-color: var(--accent);
+    -interstice-icon-size: 16px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-shrink: 0;
+}
+.message-box-error {
+    width: 32px;
+    height: 32px;
+    margin: 0px;
+    padding: 8px;   /* a 16 px glyph */
+    border-width: 0px;
+    border-radius: 16px;
+    background-color: var(--error-circle);
+    color: var(--error);
+    -interstice-icon-color: var(--error);
+    -interstice-icon-size: 16px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    flex-shrink: 0;
+}
+.message-box-text {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.message-box-title {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-1);
+    font-size: 14px;
+    font-weight: 600;
+    text-wrap: wrap;
+}
+.message-box-message {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    text-wrap: wrap;
+}
+.message-box-well {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px;
+    margin: 6px 0px 0px 0px;
+    padding: 4px 0px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-well);
+}
+.message-box-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    margin: 0px;
+    padding: 0px 10px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+}
+.message-box-item-dot {
+    width: 8px;
+    height: 8px;
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    flex-shrink: 0;
+}
+.message-box-item-name {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-1);
+    text-wrap: nowrap;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+}
+.message-box-item-meta {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-3);
+    font-size: 11px;
+    text-wrap: nowrap;
+    vertical-align: middle;
+    -interstice-vertical-text-align: middle;
+}
+.message-box-details-toggle {
+    margin: 6px 0px 0px 0px;
+    padding: 0px;
+    border-width: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    font-size: var(--font-size);
+    text-align: start;
+    -interstice-icon-side: left;
+    -interstice-icon-size: 12px;
+    -interstice-icon-text-gap: 4px;
+    text-wrap: nowrap;
+    cursor: pointer;
+}
+.message-box-details-toggle:hover { color: var(--text-1); }
+.message-box-details {
+    margin: 0px;
+    padding: 8px 10px;
+    border-width: 1px;
+    border-radius: var(--radius-lg);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-well);
+    color: var(--text-2);
+    font-family: monospace;
+    font-size: 11px;
+    text-wrap: wrap;
+}
 
 /* ---- Checkbox: a box with a tick when checked, and its label ---------------- */
 .checkbox {
@@ -4301,8 +4535,8 @@
     align-items: stretch;
     border-width: 1px;
     border-radius: var(--radius-dialog);
-    border-color: var(--panel-border);
-    background-color: var(--bg-panel);
+    border-color: var(--dialog-border);
+    background-color: var(--dialog-bg);
     overflow: hidden;
 }
 .gradient-editor-presets {
@@ -4456,8 +4690,8 @@
     padding: 0px 8px 0px 0px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-node);
-    background-color: var(--bg-input);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-input);
     overflow: hidden;
 }
 .gradient-editor-location-input {
@@ -4497,7 +4731,7 @@
     margin: 4px 0px;
     padding: 0px;
     border-width: 0px;
-    background-color: var(--line-subtle);
+    background-color: var(--dialog-divider);
     border-color: transparent;
 }
 .gradient-editor-actions {
@@ -4523,8 +4757,8 @@
     padding: 0px;
     border-width: 1px;
     border-radius: var(--radius-lg);
-    border-color: var(--line-subtle);
-    background-color: var(--bg-input);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-input);
     overflow: hidden;
     flex-basis: 0;
 }
@@ -4537,8 +4771,8 @@
     margin: 0px;
     padding: 0px 10px;
     border-width: 0px 0px 1px 0px;
-    border-color: var(--line-subtle);
-    background-color: var(--bg-header);
+    border-color: var(--dialog-divider);
+    background-color: var(--dialog-header);
 }
 .gradient-editor-table-row {
     display: flex;
@@ -4647,8 +4881,8 @@
     padding: 0px 10px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-control);
     color: var(--text-1);
     font-size: var(--font-size);
     vertical-align: middle;
@@ -4687,8 +4921,8 @@
     padding: 0px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-control);
     color: var(--text-1);
     text-align: center;
     -interstice-vertical-text-align: middle;
@@ -4704,8 +4938,8 @@
     padding: 0px;
     border-width: 1px;
     border-radius: var(--radius-md);
-    border-color: var(--line-strong);
-    background-color: var(--bg-control);
+    border-color: var(--dialog-control-border);
+    background-color: var(--dialog-control);
     color: var(--error);
     text-align: center;
     -interstice-vertical-text-align: middle;

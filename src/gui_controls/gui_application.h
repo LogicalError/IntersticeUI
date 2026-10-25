@@ -82,6 +82,41 @@ namespace interstice
     void VERIFY(RequestCloseResult result);
 
 
+    // ---- MessageDialog: a modal question (GUIApplication::MessageDialog) ----
+    enum class MessageIcon : uint8_t { Warning, Quit, Question, Info, Error };
+    enum class MessageButtonKind : uint8_t { Secondary, Primary, Danger };
+
+    struct MessageButton
+    {
+        std::string_view  label;        // a verb that says what happens ("Quit", "Keep mine"), never Yes / No;
+                                        // its first letter is the Alt mnemonic
+        MessageButtonKind kind      = MessageButtonKind::Secondary;
+        bool              alignLeft = false;   // the alternative to the main choice ("Don't save")
+    };
+
+    // An affected item, listed in a well: a name, an optional color dot and note, and a
+    // checkbox when `checked` is set.
+    struct MessageDialogItem
+    {
+        std::string_view name;
+        std::string_view meta;             // e.g. "12 edits"
+        color4f          color {};         // alpha 0: no dot
+        bool*            checked = nullptr;
+    };
+
+    struct MessageDialogDesc
+    {
+        MessageIcon                        icon = MessageIcon::Question;
+        std::string_view                   title;      // a question: "Quit Test?"
+        std::string_view                   message;    // one or two sentences on what happens
+        std::span<const MessageButton>     buttons;
+        int                                defaultButton = 0;    // focused at first; Enter
+        int                                cancelButton  = -1;   // Esc and the close button; -1: the default one
+        std::span<const MessageDialogItem> items;
+        bool*                              dontAskAgain = nullptr;   // shows "Don't ask again" when set
+        std::string_view                   details;    // collapsible technical details (mono)
+    };
+
     class GUIApplication
     {
     public:
@@ -384,6 +419,15 @@ namespace interstice
         inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
         // A section's name between items, e.g. "View", lined up with the labels.
         void        MenuHeader(std::string_view text);
+        // A modal question with verb buttons, centered. Call it every frame while asking; it
+        // returns the index of the button chosen (once, on the frame after), else -1. Esc and
+        // the close button choose desc.cancelButton; Alt + a button's first letter chooses it.
+        int         MessageDialog(ID id, const MessageDialogDesc& desc);
+        // Whether the user asked to close a window flagged WindowConfirmClose (its close
+        // button, Alt+F4, the OS quitting) since last asked. The window stays until the app
+        // closes it, e.g. after asking with a MessageDialog.
+        bool        CloseRequested(ID windowID);
+
         // A filter field for a big menu, first in it: it takes the keyboard when the menu
         // opens, and while it holds text the items (and headers and separators) that
         // don't contain it are left out.
@@ -1521,6 +1565,8 @@ namespace interstice
         std::unordered_map<ID, TitleBar> m_titleBars;
         std::vector<ID> m_titleBarStack;    // bar IDs between BeginTitleBar and EndTitleBar
         std::vector<ID> m_titleBarCaptions; // controls in the open title bar whose background drags the window
+        std::unordered_set<ID> m_closeRequests;   // ConfirmClose windows whose title-bar close was clicked
+        std::vector<TextStyle> m_mnemonicStyles;  // this frame's underlined mnemonic letters (MessageDialog)
         // Render: AddCustomDrawAfter owners waiting for the walk to pass their subtree.
         struct PendingAfterDraw { uint32_t endIdx; ElementRef owner; };
         std::vector<PendingAfterDraw> m_pendingAfterDraws;

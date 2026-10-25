@@ -36,6 +36,8 @@ namespace interstice
                 windowFlags |= WindowFlags::CloseWithParent;
             if ((elementFlags & ElementFlags::WindowCustomTitleBar) != ElementFlags::None)
                 windowFlags |= WindowFlags::CustomTitleBar;
+            if ((elementFlags & ElementFlags::WindowConfirmClose) != ElementFlags::None)
+                windowFlags |= WindowFlags::ConfirmClose;
 
             if (noCaption)
             {

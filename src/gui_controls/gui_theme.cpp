@@ -102,6 +102,12 @@ namespace interstice
             distributeIcon    = registerIcon("distribute", R"(<path d="M4 4v16"/><path d="M20 4v16"/><rect x="9" y="7" width="6" height="10" rx="1"/>)");
             addIcon         = registerIcon("list-add",    R"(<path d="M5 12h14"/><path d="M12 5v14"/>)");
             removeIcon      = registerIcon("list-remove", R"(<path d="M5 12h14"/>)");
+            alertIcon       = registerIcon("alert", R"(<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3ZM12 9v4M12 17h.01"/>)");
+            powerIcon       = registerIcon("power", R"(<path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>)");
+            questionIcon    = registerIcon("question", R"(<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>)");
+            infoIcon        = registerIcon("info", R"(<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 16v-4M12 8h.01"/>)");
+            errorIcon       = registerIcon("error", R"(<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM15 9l-6 6M9 9l6 6"/>)");
+            chevronRightIcon = registerIcon("chevron-right", R"(<path d="m9 18 6-6-6-6"/>)");
             eyedropperIcon  = registerIcon("eyedropper", R"(<path d="m2 22 1-1h3l9-9M3 21v-3l9-9M15 6l3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3Z"/>)");
             dockIcon        = registerIcon("dock", R"(<path d="M3 5h18v14H3ZM15 5v14M8 12h4M10 10l2 2-2 2"/>)");
             dragHandleIcon  = registerIcon("drag-handle",
@@ -259,6 +265,7 @@ namespace interstice
         if (textSystem)
             textSystem->SetCaretColor(lineColorFromCSS("--caret", color4f{ 0.42f, 0.61f, 1.0f, 1.0f }));
         nanTextColor          = lineColorFromCSS("--warn-text", color4f{ 0.9f, 0.7f, 0.33f, 1.0f });
+        scrimColor            = lineColorFromCSS("--scrim", color4f{ 0.0f, 0.0f, 0.0f, 0.55f });
         checkerAColor         = lineColorFromCSS("--checker-a", color4f{ 0.16f, 0.18f, 0.22f, 1.0f });
         checkerBColor         = lineColorFromCSS("--checker-b", color4f{ 0.12f, 0.13f, 0.16f, 1.0f });
         alphaTrackColor       = lineColorFromCSS("--alpha-track", color4f{ 0.04f, 0.05f, 0.06f, 1.0f });
@@ -408,6 +415,23 @@ namespace interstice
         dialogStatusDotStyleRef           = registerCSS("dialog-status-dot");
         dialogButtonStyleRef              = registerCSS("dialog-button");
         dialogPrimaryButtonStyleRef       = registerCSS("dialog-button-primary");
+        dialogDangerButtonStyleRef        = registerCSS("dialog-button-danger");
+        messageBoxStyleRef                = registerCSS("message-box");
+        messageBoxCloseStyleRef           = registerCSS("message-box-close");
+        messageBoxBodyStyleRef            = registerCSS("message-box-body");
+        messageBoxWarningStyleRef         = registerCSS("message-box-warning");
+        messageBoxQuestionStyleRef        = registerCSS("message-box-question");
+        messageBoxErrorStyleRef           = registerCSS("message-box-error");
+        messageBoxTextStyleRef            = registerCSS("message-box-text");
+        messageBoxTitleStyleRef           = registerCSS("message-box-title");
+        messageBoxMessageStyleRef         = registerCSS("message-box-message");
+        messageBoxWellStyleRef            = registerCSS("message-box-well");
+        messageBoxItemStyleRef            = registerCSS("message-box-item");
+        messageBoxItemDotStyleRef         = registerCSS("message-box-item-dot");
+        messageBoxItemNameStyleRef        = registerCSS("message-box-item-name");
+        messageBoxItemMetaStyleRef        = registerCSS("message-box-item-meta");
+        messageBoxDetailsToggleStyleRef   = registerCSS("message-box-details-toggle");
+        messageBoxDetailsStyleRef         = registerCSS("message-box-details");
         checkboxStyleRef                  = registerCSS("checkbox");
         checkboxBoxStyleRef               = registerCSS("checkbox-box");
         checkboxLabelStyleRef             = registerCSS("checkbox-label");

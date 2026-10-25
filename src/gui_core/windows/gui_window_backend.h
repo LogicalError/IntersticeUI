@@ -107,6 +107,8 @@ namespace interstice
         // The color of a screen pixel, anywhere on the desktop (an eyedropper);
         // nothing where the platform can't read the screen.
         virtual std::optional<color4b> ReadScreenPixel(int2 /*screenPos*/) { return std::nullopt; }
+        // Whether the OS asked to close a WindowFlags::ConfirmClose window since last asked.
+        virtual bool TakeCloseRequest(OSWindowHandle /*window*/) { return false; }
         
         virtual void SetCursor(MouseCursor cursor) = 0;
 

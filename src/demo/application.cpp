@@ -100,6 +100,7 @@ namespace interstice
     {
         demo.windowLayoutID1 = idManager.CreateStaticID();
         demo.windowLayoutID2 = idManager.CreateStaticID();
+        demo.exitDialogID    = idManager.CreateStaticID();
         demo.dragGhostWindowID = idManager.CreateStaticID();
 
         demo.smallMenuID = idManager.CreateStaticID();
@@ -301,7 +302,7 @@ namespace interstice
         demo.cmdOpen   = cmds.RegisterCommand(interstice::EditMode::Default, demo.openFileIcon, interstice::KeyCode::KeyO, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
         demo.cmdSave   = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveIcon,     interstice::KeyCode::KeyS, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
         demo.cmdSaveAs = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
-        demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { applicationQuit = true; },   "Exit");
+        demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
 
         demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ false); }, "Undo");
         demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ true); },  "Redo");
@@ -1015,11 +1016,13 @@ namespace interstice
         if (BeginMenu(idManager.AllocateDynamicID("menuEdit"), "Edit",
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
-            // Nothing to undo in the demo.
-            BeginDisabled();
+            // Node-view edits; disabled with nothing to undo or redo.
+            if (demo.nodeUndo.empty()) BeginDisabled();
             MenuItem(demo.cmdUndo);
+            if (demo.nodeUndo.empty()) EndDisabled();
+            if (demo.nodeRedo.empty()) BeginDisabled();
             MenuItem(demo.cmdRedo);
-            EndDisabled();
+            if (demo.nodeRedo.empty()) EndDisabled();
             MenuSeparator();
             MenuItem(demo.cmdCut);
             MenuItem(demo.cmdCopy);
@@ -1093,6 +1096,30 @@ namespace interstice
     }
 
     // Undo (or redo) the node view's last edit, moving it to the other stack.
+    // Quitting loses the node edits: ask first when there are any.
+    void Application::RequestExit()
+    {
+        if (demo.nodeUndo.empty()) applicationQuit = true;
+        else                       demo.exitRequested = true;
+    }
+
+    void Application::AskBeforeExit()
+    {
+        if (!demo.exitRequested) return;
+        static constexpr MessageButton kButtons[] = {
+            { .label = "Cancel" },
+            { .label = "Quit", .kind = MessageButtonKind::Danger },
+        };
+        const std::string message = std::format("The node graph has {} unsaved edit{}. Quitting discards {}.",
+                                                demo.nodeUndo.size(), demo.nodeUndo.size() == 1 ? "" : "s",
+                                                demo.nodeUndo.size() == 1 ? "it" : "them");
+        const int choice = MessageDialog(demo.exitDialogID, MessageDialogDesc{
+            .icon = MessageIcon::Quit, .title = "Quit Test?", .message = message, .buttons = kButtons,
+            .defaultButton = 0, .cancelButton = 0 });   // Cancel: quitting destroys work
+        if (choice == 1) applicationQuit = true;
+        if (choice >= 0) demo.exitRequested = false;
+    }
+
     void Application::UndoNodeEdit(bool redo)
     {
         auto& from = redo ? demo.nodeRedo : demo.nodeUndo;
@@ -1132,8 +1159,13 @@ namespace interstice
             {
                 // Closed by the user; reset mainWindowClosed to reopen.
             } else if (BeginWindow(demo.windowLayoutID2, "Test", std::move(sizeConstraints.Centered()), theme.mainWindowStyleRef,
-                                   ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar))
+                                   ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar
+                                   | ElementFlags::WindowConfirmClose))
             {
+                if (CloseRequested(demo.windowLayoutID2))
+                    RequestExit();
+                AskBeforeExit();
+
                 RenderMainMenu();
 
                 // ---- DockingContainer demo ----

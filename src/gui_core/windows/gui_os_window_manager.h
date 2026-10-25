@@ -180,6 +180,13 @@ namespace interstice
             return windowBackendManager->ReadScreenPixel(screenPos);
         }
 
+        // Whether the OS asked to close this (ConfirmClose) window since last asked.
+        bool TakeCloseRequest(ID id)
+        {
+            const int32_t index = IndexOf(id);
+            return index >= 0 && windowBackendManager->TakeCloseRequest(windows[size_t(index)].GetWindowHandle());
+        }
+
         int2 GetScreenMousePos()
         {
             return windowBackendManager->GetScreenMousePos();

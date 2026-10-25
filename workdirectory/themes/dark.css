@@ -55,6 +55,22 @@
     --warn: #E5B454;          /* also NaN values, over-budget frames */
     --warn-text: #E5B454;
     --error: #EF6A6A;
+    --danger: #EF6A6A;      /* destructive buttons */
+    --on-danger: #0B0C0F;
+    --warn-soft: #E5B45424; /* severity circles: the severity at 14-16% */
+    --info-soft: #6B9BFF29;
+    --error-circle: #EF6A6A29;
+    --bg-well: #0D0F12;     /* recessed lists and details in a dialog */
+    /* Dialogs: their own surface, a step lighter than the panels, so they stand out. */
+    --dialog-bg: #1B1E25;
+    --dialog-header: #20242C;   /* title bar and footer */
+    --dialog-border: #3A404C;
+    --dialog-divider: #2A2F39;
+    --dialog-well: #13151A;     /* lists, details */
+    --dialog-input: #0F1115;
+    --dialog-control: #272B34;  /* buttons */
+    --dialog-control-border: #3A404C;
+    --scrim: #0000008C;         /* black at 55%: dims a window under its modal dialog */
     --info: #6B9BFF;
     --folder: #D9A443;
     --window-close: #C42B1C;      /* a title bar's close button, hovered */

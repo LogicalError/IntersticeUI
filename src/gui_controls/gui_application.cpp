@@ -620,6 +620,17 @@ namespace interstice
             // cache. Nested subtrees end no later than their ancestors', so it's a stack.
             auto& pendingAfter = m_pendingAfterDraws;
             pendingAfter.clear();
+            // The window's own after-draws (e.g. a modal dialog's scrim) go over everything in it.
+            if (auto& windowDraw = elementStorage.GetElementCustomDrawUnsafe(windowRef); windowDraw.afterHead != UINT32_MAX)
+            {
+                windowDraw.afterDrawClipRectScreen    = windowRect;
+                windowDraw.afterDrawElementRectLayout = windowElementRect.rect;
+                windowDraw.afterDrawInnerRectLayout   = windowElementRect.innerRect;
+                windowDraw.afterDrawRenderTransform   = float3x2::Identity();
+                windowDraw.afterDrawPixelRect         = windowPixelRect;
+                windowDraw.afterDrawSnappedRect       = windowSnappedRect;
+                pendingAfter.push_back({ static_cast<uint32_t>(nodes.size()), windowRef });
+            }
             auto fireAfterDraws = [&](uint32_t passed, size_t keep)
             {
                 while (pendingAfter.size() > keep && pendingAfter.back().endIdx <= passed)

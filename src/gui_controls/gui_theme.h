@@ -129,6 +129,23 @@ namespace interstice
         StyleRef dialogStatusDotStyleRef {};            // dialog: the dot before it
         StyleRef dialogButtonStyleRef {};               // dialog: a secondary button (Cancel)
         StyleRef dialogPrimaryButtonStyleRef {};        // dialog: the primary button (OK)
+        StyleRef dialogDangerButtonStyleRef {};         // dialog: a destructive button (Quit, Delete)
+        StyleRef messageBoxStyleRef {};                 // MessageDialog: the window
+        StyleRef messageBoxCloseStyleRef {};            // its close button, top right
+        StyleRef messageBoxBodyStyleRef {};             // icon | text
+        StyleRef messageBoxWarningStyleRef {};          // the severity circle: warning / quit
+        StyleRef messageBoxQuestionStyleRef {};         // question / info
+        StyleRef messageBoxErrorStyleRef {};            // error
+        StyleRef messageBoxTextStyleRef {};             // title, message and extras
+        StyleRef messageBoxTitleStyleRef {};
+        StyleRef messageBoxMessageStyleRef {};
+        StyleRef messageBoxWellStyleRef {};             // the affected items
+        StyleRef messageBoxItemStyleRef {};
+        StyleRef messageBoxItemDotStyleRef {};
+        StyleRef messageBoxItemNameStyleRef {};
+        StyleRef messageBoxItemMetaStyleRef {};
+        StyleRef messageBoxDetailsToggleStyleRef {};    // "Details" with its chevron
+        StyleRef messageBoxDetailsStyleRef {};          // the details, mono in a well
         StyleRef checkboxStyleRef {};                   // Checkbox: the control
         StyleRef checkboxBoxStyleRef {};                // Checkbox: the box
         StyleRef checkboxLabelStyleRef {};              // Checkbox: its label
@@ -393,6 +410,12 @@ namespace interstice
         IconID dragHandleIcon = IconID::Invalid;
         IconID dockIcon = IconID::Invalid;        // returns a torn-off panel to its dock
         IconID eyedropperIcon = IconID::Invalid;  // picks a color from the screen
+        IconID alertIcon      = IconID::Invalid;  // message severities: warning,
+        IconID powerIcon      = IconID::Invalid;  // quitting,
+        IconID questionIcon   = IconID::Invalid;  // a question,
+        IconID infoIcon       = IconID::Invalid;  // information,
+        IconID errorIcon      = IconID::Invalid;  // an error
+        IconID chevronRightIcon = IconID::Invalid; // collapsed
         IconID searchIcon     = IconID::Invalid;
         IconID windowMinimizeIcon = IconID::Invalid;
         IconID windowMaximizeIcon = IconID::Invalid;
@@ -406,6 +429,7 @@ namespace interstice
         interstice::VisualColorStyleIndex treeGuideLineStyle;
         interstice::VisualColorStyleIndex dividerHoverLineStyle; // a hovered divider drawn as a line (label sizer)
         interstice::VisualColorStyleIndex nanTextColor;          // a number field's NaN
+        interstice::VisualColorStyleIndex scrimColor;            // dims a window under its modal dialog
         interstice::VisualColorStyleIndex checkerAColor, checkerBColor;     // transparency checkerboard
         interstice::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  // a color's alpha bar
         interstice::VisualColorStyleIndex accentColor, panelColor;          // a selected swatch's ring and gap
