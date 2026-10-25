@@ -3,7 +3,7 @@
 # On first configure (or when a config's stamp is missing) this runs a nested
 # CMake against `third_party/CMakeLists.txt`, builds it, and installs to
 # `${PROJECT_BINARY_DIR}/third_party/install`. From then on the main build just
-# does find_package() against that prefix — third-party is never recompiled
+# does find_package() against that prefix - third-party is never recompiled
 # just because our code changes. Deleting the root `build/` tree does wipe
 # the cache, so a clean reconfigure pays the third-party build cost once.
 #
@@ -28,7 +28,7 @@ endif()
 # Which configs do we need to have installed?
 # Multi-config generators (VS, Ninja Multi-Config) let the user pick at build
 # time, so we need every listed configuration available in the install prefix.
-# Default to Debug;Release — rebuilding MinSizeRel/RelWithDebInfo too would
+# Default to Debug;Release - rebuilding MinSizeRel/RelWithDebInfo too would
 # double first-configure time for little benefit. Users who want those can
 # override INTERSTICE_TP_CONFIGS at configure time.
 set(INTERSTICE_TP_CONFIGS "Debug;Release" CACHE STRING
@@ -129,7 +129,7 @@ list(PREPEND CMAKE_PREFIX_PATH "${INTERSTICE_TP_INSTALL}")
 
 # RelWithDebInfo and MinSizeRel use the RELEASE runtime (MD), but the cache only
 # prebuilds Debug + Release. Without an explicit mapping CMake resolves their
-# imported targets to the DEBUG libraries (gmockd, vkbootstrapd, …), causing
+# imported targets to the DEBUG libraries (gmockd, vkbootstrapd, ...), causing
 # _ITERATOR_DEBUG_LEVEL / RuntimeLibrary (MDd vs MD) link mismatches. Map both to
 # the Release dependency build. Must be set before the find_package() calls so it
 # applies to the imported targets they create.
@@ -142,7 +142,7 @@ if(INTERSTICE_SDL AND NOT TARGET SDL3::SDL3)
 endif()
 
 # skribidi's exported config references its dependencies as imported targets
-# but doesn't call find_dependency() on them — load them first so the targets
+# but doesn't call find_dependency() on them - load them first so the targets
 # exist when skribidiConfig.cmake is parsed.
 if(NOT TARGET harfbuzz::harfbuzz)
   find_package(harfbuzz CONFIG REQUIRED)

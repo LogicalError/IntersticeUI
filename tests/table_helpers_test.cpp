@@ -11,7 +11,7 @@ namespace interstice
     using TableHelpers::VirtualRowRange;
 
     // ===========================================================================
-    // ComputeVirtualRowRange — the visibility window used by VirtualTable to
+    // ComputeVirtualRowRange - the visibility window used by VirtualTable to
     // decide which rows to emit this frame given the current scroll offset.
     // ===========================================================================
 
@@ -57,7 +57,7 @@ namespace interstice
 
     TEST_F(VirtualRowRangeTest, TopOfListNoScrollRendersLeadingSlice)
     {
-        // scrollY=0, viewport=200, rowHeight=20 → visible rows 0..10.
+        // scrollY=0, viewport=200, rowHeight=20 -> visible rows 0..10.
         // With a 5-row buffer below: last = 200/20 + 1 + 5 = 16.
         // first clamped to 0.
         auto r = TableHelpers::ComputeVirtualRowRange(0, 200, 20, 50000, 5);
@@ -89,7 +89,7 @@ namespace interstice
     TEST_F(VirtualRowRangeTest, OverScrollClampsToValidBounds)
     {
         // If something asks for a scroll offset past the end, both bounds
-        // should clamp to totalRowCount — no rows emitted, no negative counts.
+        // should clamp to totalRowCount - no rows emitted, no negative counts.
         auto r = TableHelpers::ComputeVirtualRowRange(/*scrollY*/1'000'000,
             /*viewportH*/400,
             /*rowHeight*/20,
@@ -102,7 +102,7 @@ namespace interstice
     TEST_F(VirtualRowRangeTest, NegativeScrollYTreatedAsStart)
     {
         // Scroll offsets below 0 shouldn't be reachable, but the helper must
-        // stay safe — first is clamped to 0, last to a small leading slice.
+        // stay safe - first is clamped to 0, last to a small leading slice.
         auto r = TableHelpers::ComputeVirtualRowRange(-500, 200, 20, 1000, 5);
         EXPECT_EQ(r.firstVisible, 0);
         EXPECT_GE(r.lastVisible, 0);
@@ -136,7 +136,7 @@ namespace interstice
     }
 
     // ===========================================================================
-    // ComputeColumnInsertionIndex — the drag-to-reorder target column, computed
+    // ComputeColumnInsertionIndex - the drag-to-reorder target column, computed
     // via edge-crossing on the snapshot of header rects taken at drag start.
     // ===========================================================================
 
@@ -155,14 +155,14 @@ namespace interstice
 
     TEST_F(ColumnInsertionIndexTest, NoMovementReturnsFromCol)
     {
-        // Mouse at the center of column 2 (dragged column) → still column 2.
+        // Mouse at the center of column 2 (dragged column) -> still column 2.
         int to = TableHelpers::ComputeColumnInsertionIndex(250, /*fromCol*/2, rects);
         EXPECT_EQ(to, 2);
     }
 
     TEST_F(ColumnInsertionIndexTest, CrossingRightNeighborLeftEdgeSnapsIntoIt)
     {
-        // Dragging col 0. Mouse at x=100 (exactly col 1's left edge) → target 1.
+        // Dragging col 0. Mouse at x=100 (exactly col 1's left edge) -> target 1.
         int to = TableHelpers::ComputeColumnInsertionIndex(100, /*fromCol*/0, rects);
         EXPECT_EQ(to, 1);
     }
@@ -176,7 +176,7 @@ namespace interstice
 
     TEST_F(ColumnInsertionIndexTest, DraggingFarRightPinsToLastColumn)
     {
-        // Mouse way past the rightmost column → target = last column index.
+        // Mouse way past the rightmost column -> target = last column index.
         int to = TableHelpers::ComputeColumnInsertionIndex(10'000, 0, rects);
         EXPECT_EQ(to, 3);
     }
@@ -190,7 +190,7 @@ namespace interstice
 
     TEST_F(ColumnInsertionIndexTest, DraggingFarLeftPinsToFirstColumn)
     {
-        // Mouse way to the left of the leftmost column → target = 0.
+        // Mouse way to the left of the leftmost column -> target = 0.
         int to = TableHelpers::ComputeColumnInsertionIndex(-500, 3, rects);
         EXPECT_EQ(to, 0);
     }
@@ -231,11 +231,11 @@ namespace interstice
         // Dragging col 0. Mouse at x=49 (one px inside col 0): no neighbor
         // crossing, target = 0.
         EXPECT_EQ(TableHelpers::ComputeColumnInsertionIndex(49, 0, nonuniform), 0);
-        // Mouse at x=50 (col 1's left edge): past → target 1.
+        // Mouse at x=50 (col 1's left edge): past -> target 1.
         EXPECT_EQ(TableHelpers::ComputeColumnInsertionIndex(50, 0, nonuniform), 1);
         // Mouse at x=249 (inside col 1, before col 2's left): still 1.
         EXPECT_EQ(TableHelpers::ComputeColumnInsertionIndex(249, 0, nonuniform), 1);
-        // Mouse at x=250 (col 2's left edge): past → target 2.
+        // Mouse at x=250 (col 2's left edge): past -> target 2.
         EXPECT_EQ(TableHelpers::ComputeColumnInsertionIndex(250, 0, nonuniform), 2);
     }
 
@@ -259,7 +259,7 @@ namespace interstice
     }
 
     // ===========================================================================
-    // RotateColumns — the reorder swap applied by onReorderColumns callbacks.
+    // RotateColumns - the reorder swap applied by onReorderColumns callbacks.
     // Keeps columns and their persisted widths in lockstep.
     // ===========================================================================
 
@@ -276,7 +276,7 @@ namespace interstice
 
     TEST_F(RotateColumnsTest, MoveLeftToRightRotatesBoth)
     {
-        // Move index 0 to index 2: [A,B,C,D] → [B,C,A,D]
+        // Move index 0 to index 2: [A,B,C,D] -> [B,C,A,D]
         std::vector<char>    cols{ 'A','B','C','D' };
         std::vector<int32_t> widths{ 80, 120, 100, 90 };
         RotateColumns(cols, widths, 0, 2);
@@ -286,7 +286,7 @@ namespace interstice
 
     TEST_F(RotateColumnsTest, MoveRightToLeftRotatesBoth)
     {
-        // Move index 3 to index 1: [A,B,C,D] → [A,D,B,C]
+        // Move index 3 to index 1: [A,B,C,D] -> [A,D,B,C]
         std::vector<char>    cols{ 'A','B','C','D' };
         std::vector<int32_t> widths{ 80, 120, 100, 90 };
         RotateColumns(cols, widths, 3, 1);
@@ -306,7 +306,7 @@ namespace interstice
     TEST_F(RotateColumnsTest, MismatchedSizesLeavesSecondUntouched)
     {
         // If the widths vector is out of sync with columns, only the primary
-        // moves — matches the defensive guard in the demo's callback.
+        // moves - matches the defensive guard in the demo's callback.
         std::vector<char>    cols{ 'A','B','C' };
         std::vector<int32_t> widths{ 10, 20 };  // shorter
         RotateColumns(cols, widths, 0, 2);
@@ -335,7 +335,7 @@ namespace interstice
         std::vector<char>    cols{ 'A','B','C','D','E' };
         std::vector<int32_t> widths{ 10, 20, 30, 40, 50 };
 
-        // Move A → end.
+        // Move A -> end.
         RotateColumns(cols, widths, 0, 4);
         EXPECT_EQ(cols, (std::vector<char>   {'B', 'C', 'D', 'E', 'A'}));
         EXPECT_EQ(widths, (std::vector<int32_t>{ 20, 30, 40, 50, 10 }));

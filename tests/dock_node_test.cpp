@@ -876,7 +876,7 @@ namespace interstice
         EXPECT_FALSE(root->second->isLeaf);
         EXPECT_EQ(root->second->mode, DockSplitMode::LeftPinned);
 
-        // The inner split's first child is the new leaf (zone=Left → newIsFirst)
+        // The inner split's first child is the new leaf (zone=Left -> newIsFirst)
         EXPECT_EQ(root->second->first.get(), newLeaf);
         EXPECT_EQ(newLeaf->panelIds.size(), 1u);
         EXPECT_EQ(newLeaf->panelIds[0], draggedPanel);
@@ -929,7 +929,7 @@ namespace interstice
         EXPECT_FALSE(root->first->isLeaf);
         EXPECT_EQ(root->first->mode, DockSplitMode::RightPinned);
 
-        // Right zone → existing is first, new is second
+        // Right zone -> existing is first, new is second
         EXPECT_EQ(root->first->first.get(), leftLeaf);
         EXPECT_EQ(root->first->second.get(), newLeaf);
         EXPECT_EQ(leftLeaf->panelIds.size(), 2u);
@@ -945,7 +945,7 @@ namespace interstice
         ExpectNoDuplicatePanels(root.get());
     }
 
-    // Scenario: drag the LAST panel from a leaf → leaf becomes empty → collapse
+    // Scenario: drag the LAST panel from a leaf -> leaf becomes empty -> collapse
     TEST(DockScenario, DragLastPanelCollapsesLeaf)
     {
         ID p1 = MakePanelID(1), p2 = MakePanelID(2), p3 = MakePanelID(3);
@@ -969,7 +969,7 @@ namespace interstice
         EXPECT_EQ(CountTotalPanels(root.get()), 3);
     }
 
-    // Scenario: self-split on a leaf with only 1 panel → source becomes empty → collapse
+    // Scenario: self-split on a leaf with only 1 panel -> source becomes empty -> collapse
     TEST(DockScenario, SelfSplitSinglePanelCollapsesToNewLeaf)
     {
         ID p1 = MakePanelID(1);
@@ -984,20 +984,20 @@ namespace interstice
         ASSERT_NE(ownerPtr, nullptr);
         SplitLeafAtZone(*ownerPtr, p1, DockDropZone::Bottom);
 
-        // Bottom zone: existing is first, new is second →
+        // Bottom zone: existing is first, new is second ->
         // first=empty_leaf, second=new_leaf(p1)
         EXPECT_FALSE(root->isLeaf);
         EXPECT_EQ(root->second->panelIds.size(), 1u);
         EXPECT_TRUE(root->first->panelIds.empty());
 
-        // Collapse: empty first child → promote second
+        // Collapse: empty first child -> promote second
         CollapseEmptyLeaves(root);
         EXPECT_TRUE(root->isLeaf);
         EXPECT_EQ(root->panelIds.size(), 1u);
         EXPECT_EQ(root->panelIds[0], p1);
     }
 
-    // Scenario: nested split, then split again — verify deep nesting works
+    // Scenario: nested split, then split again - verify deep nesting works
     TEST(DockScenario, DoubleNestedSplit)
     {
         ID p1 = MakePanelID(1), p2 = MakePanelID(2), p3 = MakePanelID(3);

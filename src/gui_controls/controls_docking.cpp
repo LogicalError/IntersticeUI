@@ -317,7 +317,7 @@ namespace interstice
 
                 interstice::ID panelID = node->panelIds[tabIndex];
 
-                // 1. Tab-bar drop — insert as tab at the hovered position.
+                // 1. Tab-bar drop - insert as tab at the hovered position.
                 //    TransferPanel moves the Panel object too when crossing layouts.
                 auto tabResult = app.FindDockLeafAtScreenPos(mousePos);
                 if (tabResult.leaf && tabResult.leaf != node)
@@ -334,7 +334,7 @@ namespace interstice
                     return;
                 }
 
-                // 2. Content-area edge drop → split the target leaf.
+                // 2. Content-area edge drop -> split the target leaf.
                 //    Center is not a target, so a floating window can always be made.
                 auto dropResult = app.FindDockDropTargetAtScreenPos(mousePos);
                 if (dropResult.target.leaf
@@ -352,7 +352,7 @@ namespace interstice
                     return;
                 }
 
-                // 3. No valid target → tear off into a floating window
+                // 3. No valid target -> tear off into a floating window
                 GUIApplication::TransferPanel(panelID, node, layout, nullptr);
 
                 auto fw = std::make_unique<interstice::FloatingDockWindow>();
@@ -384,7 +384,7 @@ namespace interstice
                 auto panelIt = layout->panels.find(panelID);
                 if (panelIt == layout->panels.end()) return;
 
-                // 1. Tab-bar hover → the target bar's phantom tab is the visual.
+                // 1. Tab-bar hover -> the target bar's phantom tab is the visual.
                 DockNode* tabTarget = GUIApplicationInternals::FindDockLeafTabBarCachedAtScreenPos(app, mousePos);
                 if (tabTarget && tabTarget != node && !tabTarget->cachedTabRects.empty())
                 {
@@ -392,7 +392,7 @@ namespace interstice
                     return;
                 }
 
-                // 2. Content-area edge drop zone → animated overlay
+                // 2. Content-area edge drop zone -> animated overlay
                 auto dropResult = app.FindDockDropTargetAtScreenPos(mousePos);
                 if (dropResult.target.leaf
                     && dropResult.target.zone != DockDropZone::None
@@ -411,7 +411,7 @@ namespace interstice
                     }
                     else
                     {
-                        // First frame with a drop zone — snap immediately
+                        // First frame with a drop zone - snap immediately
                         GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().currentRect = targetRect;
                     }
                     GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().targetRect = targetRect;
@@ -422,7 +422,7 @@ namespace interstice
                 }
                 else
                 {
-                    // Center zone or no target → ghost panel (drop makes a floating window)
+                    // Center zone or no target -> ghost panel (drop makes a floating window)
                     GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget = false;
                     EmitGhostTab(app, panelIt->second, mousePos);
                 }
@@ -507,7 +507,7 @@ namespace interstice
                 (void)app.idManager.PopParent();
                 node->lastContentID      = contentID;
                 node->lastContentPanelID = selectedPanelID;
-                // Record panel→content so InvalidatePanel(panelId) can resolve it.
+                // Record panel->content so InvalidatePanel(panelId) can resolve it.
                 GUIApplicationInternals::NotePanelContentID(app, selectedPanelID, contentID);
 
                 auto panelIt = layout->panels.find(selectedPanelID);
@@ -520,7 +520,7 @@ namespace interstice
 
                 // Panels are cached by default; a panel's cacheSignature can
                 // version the cache (return a value) or opt out (return nullopt).
-                std::optional<uint64_t> cacheKey; // nullopt → not cached (plain BeginArea)
+                std::optional<uint64_t> cacheKey; // nullopt -> not cached (plain BeginArea)
                 if (panelIt != layout->panels.end())
                 {
                     cacheKey = uint64_t(0); // default: cache with a constant signature
@@ -669,7 +669,7 @@ namespace interstice
     {
         // Walk the dock tree, calling visit(panelId) for each leaf's currently
         // selected tab. Panels in non-selected tabs and panels not in the tree
-        // at all are skipped — those are the "hidden" ones.
+        // at all are skipped - those are the "hidden" ones.
         template <typename F>
         void ForEachVisiblePanelID(const DockNode* node, F&& visit)
         {

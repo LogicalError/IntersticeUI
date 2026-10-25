@@ -146,7 +146,7 @@ namespace interstice
 
     TEST(StyleSheet, RgbaFunctionFloat)
     {
-        // alpha 0.5 → 128 (rounded)
+        // alpha 0.5 -> 128 (rounded)
         auto s = ParseStyleSheet(".a { color: rgba(100, 150, 200, 0.5); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
         const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
@@ -158,7 +158,7 @@ namespace interstice
 
     TEST(StyleSheet, RgbaFunctionByte)
     {
-        // alpha > 1 → treated as 0-255
+        // alpha > 1 -> treated as 0-255
         auto s = ParseStyleSheet(".a { color: rgba(100, 150, 200, 64); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
         EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color.a, 64);
@@ -1454,27 +1454,27 @@ namespace interstice
         )");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        // State 0 (normal, no hover) → should have red
+        // State 0 (normal, no hover) -> should have red
         auto& c0 = s.GetStyle("a")->states[0].textStyle.color;
         EXPECT_EQ(c0.r, 255); EXPECT_EQ(c0.g, 0); EXPECT_EQ(c0.b, 0);
-        // State kHover (2) → should still have black (not overridden by :not(:hover))
+        // State kHover (2) -> should still have black (not overridden by :not(:hover))
         auto& ch = s.GetStyle("a")->states[Style::kHover].textStyle.color;
         EXPECT_EQ(ch.r, 0); EXPECT_EQ(ch.g, 0); EXPECT_EQ(ch.b, 0);
     }
 
     TEST(StyleSheet, NotCombinedWithPositive)
     {
-        // :active:not(:hover) → active bit set, hover bit NOT set
+        // :active:not(:hover) -> active bit set, hover bit NOT set
         auto s = ParseStyleSheet(R"(
             .a                     { color: #000000; }
             .a:active:not(:hover)  { color: #00ff00; }
         )");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        // State kActive (1) → active set, hover not set → green
+        // State kActive (1) -> active set, hover not set -> green
         auto& ca = s.GetStyle("a")->states[Style::kActive].textStyle.color;
         EXPECT_EQ(ca.r, 0); EXPECT_EQ(ca.g, 255); EXPECT_EQ(ca.b, 0);
-        // State kActive|kHover (3) → active set, hover set → should be black (not matched by :not(:hover))
+        // State kActive|kHover (3) -> active set, hover set -> should be black (not matched by :not(:hover))
         auto& cah = s.GetStyle("a")->states[Style::kActive | Style::kHover].textStyle.color;
         EXPECT_EQ(cah.r, 0); EXPECT_EQ(cah.g, 0); EXPECT_EQ(cah.b, 0);
     }

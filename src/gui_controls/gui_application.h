@@ -249,7 +249,7 @@ namespace interstice
         void InjectText(ID windowID, std::string_view utf8);
 
         // The last rendered frame of a render-to-image window: BGRA8, tightly packed
-        // rows, bgra holding width × height × 4 bytes of its pixel size.
+        // rows, bgra holding width x height x 4 bytes of its pixel size.
         bool ReadWindowPixels(ID windowID, std::span<uint8_t> bgra);
 
         // The graphics backend Initialize uses; without one it creates a
@@ -578,7 +578,7 @@ namespace interstice
 
 
         // Recomputes skipCount / ancestorLineMask / isLastSibling from row depths.
-        // Call after any structural change. O(n²) worst case.
+        // Call after any structural change. O(n^2) worst case.
         static void RebuildTreeViewIndex(std::vector<TreeViewRow>& rows);
 
         // Writes the flat indices of visible rows (honoring isOpen) to visibleIdx.
@@ -631,7 +631,7 @@ namespace interstice
                              StyleRef rowStyle = {},
                              LayoutOverride&& constraints = {});
 
-        // ---- Table: row × column data grid ----
+        // ---- Table: row x column data grid ----
         //
         // Columns are described each frame; widths, selection and sort state persist in
         // the user-owned TableState. Rows use BeginRow/EndRow with Cell(text) or Cell(lambda).
@@ -670,7 +670,7 @@ namespace interstice
         //   icon               optional leading icon rendered between arrow and text.
         //   ancestorLineMask   bit d set iff the ancestor at depth d+1 has a next sibling
         //                      (its guide line passes through this row at column d).
-        //   isLastSibling      true → own-depth L-tick stops at row center.
+        //   isLastSibling      true -> own-depth L-tick stops at row center.
         //   renameBuffer       optional; enables in-place rename (F2 / Ctrl+Shift+Click / slow re-click).
         //   reserveExpander    false drops the arrow slot for leaves (for flat trees).
         //
@@ -731,8 +731,8 @@ namespace interstice
         // All state lives in `view`, so several views can coexist.
         void RenderNodeView(NodeView& view);
 
-        // Text property body aligned by the row's sockets: left ⇒ left, right ⇒ right,
-        // both ⇒ centre. Call inside NodeProperty::renderBody.
+        // Text property body aligned by the row's sockets: left => left, right => right,
+        // both => centre. Call inside NodeProperty::renderBody.
         void NodeText(std::string_view text);
 
         // ---- TabBar: reorderable tabs ----
@@ -1370,7 +1370,7 @@ namespace interstice
         // How color swatches draw a color (the theme's checkerboard and alpha bar).
         struct ColorSwatchLook SwatchLook() const;
 
-        // Panel id → its dock content (cached scope) id, for InvalidatePanel.
+        // Panel id -> its dock content (cached scope) id, for InvalidatePanel.
         std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
 
         // Save-stack for nested BeginToolbar/EndToolbar.

@@ -29,10 +29,10 @@ namespace interstice
             LogLevel    level;
             std::string timestamp;
             std::string message;  // single line shown in the list
-            std::string details;  // full text shown in the detail pane (empty → use message)
+            std::string details;  // full text shown in the detail pane (empty -> use message)
         };
 
-        // Panel data — built by EnableLogPanel, torn down by DisableLogPanel.
+        // Panel data - built by EnableLogPanel, torn down by DisableLogPanel.
         // logEntries mirrors the log records pulled so far (Clear empties only
         // the panel); logLastSequence is the newest record already pulled.
         std::vector<ConsoleLogEntry>            logEntries;
@@ -42,8 +42,8 @@ namespace interstice
         std::string                             logSearch;
 
         // One entry per visible row, rebuilt only when the filter changes:
-        //   logVisible[r] — logEntries index of the row's first matching entry.
-        //   logRepeat[r]  — entries this row stands for; > 1 shows a count bubble.
+        //   logVisible[r] - logEntries index of the row's first matching entry.
+        //   logRepeat[r]  - entries this row stands for; > 1 shows a count bubble.
         std::vector<int> logVisible;
         std::vector<int> logRepeat;
         bool             logCollapse    = false; // fold identical lines into one + count (off by default)
@@ -210,14 +210,14 @@ namespace interstice
         // refilters; the lambdas only capture `this`.
         logColumns.clear();
         logColumns.resize(3);
-        // Timestamp — fixed-width, first column.
+        // Timestamp - fixed-width, first column.
         logColumns[0].column = { .initialWidth = 112, .minWidth = 112, .maxWidth = 112,
                                  .sizing = ColumnSizing::Fixed };
         logColumns[0].generateCell = [this](int rowIdx) {
             if (rowIdx < 0 || rowIdx >= int(logVisible.size())) return;
             Cell(logEntries[logVisible[rowIdx]].timestamp.c_str());
         };
-        // Level icon — fixed-width landmark, after the timestamp.
+        // Level icon - fixed-width landmark, after the timestamp.
         logColumns[1].column = { .initialWidth = 32, .minWidth = 32, .maxWidth = 32,
                                  .sizing = ColumnSizing::Fixed };
         logColumns[1].generateCell = [this](int rowIdx) {
@@ -240,13 +240,13 @@ namespace interstice
                 VERIFY(windowRegistry.Add(res.ref));
             });
         };
-        // Message — stretches to fill the remaining width, single line. A
+        // Message - stretches to fill the remaining width, single line. A
         // collapsed row (repeat > 1) trails a count bubble pushed to the right.
         logColumns[2].column = { .initialWidth = 240, .minWidth = 120,
                                  .sizing = ColumnSizing::Stretch };
         logColumns[2].generateCell = [this](int rowIdx) {
             if (rowIdx < 0 || rowIdx >= int(logVisible.size())) return;
-            // Copy into the cell lambda — Cell may defer it for record/replay.
+            // Copy into the cell lambda - Cell may defer it for record/replay.
             Cell([this, msg = logEntries[logVisible[rowIdx]].message,
                         count = logRepeat[rowIdx]]() {
                 // Message text fills the cell so the bubble lands at the right edge.
@@ -308,7 +308,7 @@ namespace interstice
                     logEntries.clear();
                     RecountLogLevels();
                     logFilterDirty = true;
-                    // Drop the detail too — its runs reference the entries we
+                    // Drop the detail too - its runs reference the entries we
                     // just cleared, so leaving them would render freed memory.
                     logDetailRuns.clear();
                     logDetailLinks.clear();
@@ -333,7 +333,7 @@ namespace interstice
                                              "Show or hide warnings",
                                              "Show or hide errors" };
                 const int levelCount = int(sizeof(logShowLevel) / sizeof(logShowLevel[0])) - 1;
-                for (int lvl = levelCount; lvl >= 0; --lvl) // error, warning, info — most severe first
+                for (int lvl = levelCount; lvl >= 0; --lvl) // error, warning, info - most severe first
                 {
                     Toggle(idManager.AllocateDynamicID("logLevelToggle"),
                         logShowLevel[lvl], demo.dotIcon, logCountText[lvl],
@@ -362,7 +362,7 @@ namespace interstice
             const std::string q = SearchToLower(logSearch);
             logVisible.clear();
             logRepeat.clear();
-            std::unordered_map<std::string, int> group; // level+message key → logVisible index
+            std::unordered_map<std::string, int> group; // level+message key -> logVisible index
             for (int i = 0; i < int(logEntries.size()); ++i)
             {
                 if (!logShowLevel[int(logEntries[i].level)]
@@ -426,7 +426,7 @@ namespace interstice
             const int sel = SelectedLogEntry();
             if (sel != logDetailSel) RebuildLogDetail(sel);
 
-            // No selection (or the entry has no text) → leave the pane empty.
+            // No selection (or the entry has no text) -> leave the pane empty.
             if (!logDetailRuns.empty())
             {
                 // Selectable + copyable read-only rich text, keeping the styled, clickable

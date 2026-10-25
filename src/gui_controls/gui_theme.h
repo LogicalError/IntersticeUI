@@ -31,7 +31,7 @@ namespace interstice
         ControlStyles toolbarControls {};
         const ControlStyles* controls = &regularControls;
 
-        StyleRef emptyHorzStyleRef;     // horizontal flex, no wrap — used for grouping elements w/o drawing anything
+        StyleRef emptyHorzStyleRef;     // horizontal flex, no wrap - used for grouping elements w/o drawing anything
         StyleRef emptyHorzWrapStyleRef; // horizontal flex, wrap
         StyleRef emptyVertStyleRef;     // vertical flex, no wrap
         StyleRef emptyVertWrapStyleRef; // vertical flex, wrap
@@ -85,7 +85,7 @@ namespace interstice
         StyleRef iconTopStyleRef {};    // Icon at top, text below
         StyleRef iconBottomStyleRef {}; // Text at top, icon at bottom
 
-        // Demo: 4 icon sides × 3 block vertical alignments, used by the
+        // Demo: 4 icon sides x 3 block vertical alignments, used by the
         // panel_misc vertical-align demo grid. [side][valign] where
         //   side  = 0:Left, 1:Right, 2:Top, 3:Bottom
         //   valign = 0:Top,  1:Middle, 2:Bottom
@@ -190,7 +190,7 @@ namespace interstice
         StyleRef gradientEditorValueCellStyleRef {};        // gradient editor: the stop's hex
         StyleRef gradientEditorLocationCellStyleRef {};     // gradient editor: the stop's location
         StyleRef tableStyleRef {};
-        StyleRef tableFillStyleRef {};       // table bounded to its flex container (flex-basis:0) — overflows scroll, table doesn't grow
+        StyleRef tableFillStyleRef {};       // table bounded to its flex container (flex-basis:0) - overflows scroll, table doesn't grow
         // Header grid, a sibling of the body so it doesn't scroll with the rows.
         StyleRef tableHeaderSectionStyleRef {};
         StyleRef tableBodiesRowStyleRef {};
@@ -259,7 +259,7 @@ namespace interstice
         StyleRef itemStyleRef {};
         StyleRef mainWindowStyleRef{};
         StyleRef windowStyleRef {};
-        StyleRef dockWindowStyleRef {}; // floating dock window — no internal padding
+        StyleRef dockWindowStyleRef {}; // floating dock window - no internal padding
         StyleRef dockWindowLeafStyleRef {};     // a torn-off window's root leaf: the title bar over the panel
         StyleRef dockWindowPanelStyleRef {};    // the panel inset under a torn-off window's title bar
         StyleRef dockWindowBodyStyleRef {};     // a torn-off window's split layout, inset the same
@@ -287,8 +287,8 @@ namespace interstice
         StyleRef groupLabelTopStyleRef {};              // Label with a caption: the container
         StyleRef groupLabelTitleStyleRef {};            // Label with a caption: the title
         StyleRef groupLabelCaptionStyleRef {};          // Label with a caption: the caption
-        StyleRef iconButtonStyleRef {}; // compact flat icon button — list/dict delete (in-row)
-        StyleRef iconButtonEndStyleRef {}; // same, end-aligned — the trailing add button
+        StyleRef iconButtonStyleRef {}; // compact flat icon button - list/dict delete (in-row)
+        StyleRef iconButtonEndStyleRef {}; // same, end-aligned - the trailing add button
         StyleRef menuStyleRef {};
         StyleRef menuItemStyleRef{};
         StyleRef menuScrollButtonStyleRef{};
@@ -317,8 +317,8 @@ namespace interstice
         StyleRef listViewStyleRef {};
         StyleRef listItemStyleRef {};
         StyleRef listItemRowStyleRef {};      // reorderable list item outer container
-        StyleRef listItemDragKnobHorzStyleRef {}; // reorderable list item drag handle (horizontal list — drag along x)
-        StyleRef listItemDragKnobVertStyleRef {}; // reorderable list item drag handle (vertical list — drag along y)
+        StyleRef listItemDragKnobHorzStyleRef {}; // reorderable list item drag handle (horizontal list - drag along x)
+        StyleRef listItemDragKnobVertStyleRef {}; // reorderable list item drag handle (vertical list - drag along y)
         StyleRef listItemBodyStyleRef {};     // reorderable list item text/icon body
         StyleRef treeViewStyleRef {};
         StyleRef gridViewStyleRef {};
@@ -359,7 +359,7 @@ namespace interstice
         StyleRef dockContentStyleRef {};     // content area holding the selected panel's draw()
 
         StyleRef settingsPageSelectionRef {};
-        StyleRef settingsPageStyleRef     {};   // settings page body — dock-content layout + left padding off the sizer
+        StyleRef settingsPageStyleRef     {};   // settings page body - dock-content layout + left padding off the sizer
 
         // Arrow icons for tree expand/collapse
         IconID treeArrowRight    = IconID::Invalid;
@@ -384,7 +384,7 @@ namespace interstice
         IconID addIcon    = IconID::Invalid;
         IconID removeIcon = IconID::Invalid;
 
-        // Drag-handle grip (≡) for reorderable-list / tree-list thumbs
+        // Drag-handle grip (three-bar) for reorderable-list / tree-list thumbs
         IconID dragHandleIcon = IconID::Invalid;
         IconID dockIcon = IconID::Invalid;        // returns a torn-off panel to its dock
         IconID searchIcon     = IconID::Invalid;
@@ -405,7 +405,7 @@ namespace interstice
         interstice::VisualColorStyleIndex accentColor, panelColor;          // a selected swatch's ring and gap
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
-        interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent → semi-opaque black, for drop shadows
+        interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent -> semi-opaque black, for drop shadows
         interstice::VisualColorStyleIndex marqueeFillColorStyle; // translucent accent for selection-marquee fill
 
         // Table row height in pixels, measured from real font metrics in ComputeRowMetrics.

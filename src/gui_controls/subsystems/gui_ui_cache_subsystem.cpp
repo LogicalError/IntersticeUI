@@ -27,7 +27,7 @@ namespace interstice
 
     bool UICacheManager::EvaluateHit(const Scope& s, uint64_t signature, const HitInput& input) const
     {
-        if (!m_drawCacheEnabled)          return false; // caching off → always rebuild
+        if (!m_drawCacheEnabled)          return false; // caching off -> always rebuild
         if (!s.captured)                  return false;
         if (s.nonCacheable)               return false;
         if (s.dirty)                      return false;
@@ -53,7 +53,7 @@ namespace interstice
         if (MemberOrNull(s, I.GetFocusedID()) != s.snapFocus) return false;
 
         // A focused text editor in the scope rebuilds every frame (re-registers
-        // editable text for live typing/caret) — focus alone doesn't change which
+        // editable text for live typing/caret) - focus alone doesn't change which
         // element is focused, so the focus transition check above wouldn't catch it.
         const ID focused = I.GetFocusedID();
         if (focused != ID::Invalid() && s.textEditorIds.find(focused) != s.textEditorIds.end())
@@ -185,7 +185,7 @@ namespace interstice
         };
         recurse(recurse, s.lastContainerRef);
 
-        // A scope using AddPostLayout (deferred size measurement — virtual tables,
+        // A scope using AddPostLayout (deferred size measurement - virtual tables,
         // node view) reads last frame's size, so it needs the EvaluateHit settle.
         for (const auto& entry : m_storage.GetPostLayoutEntries())
         {

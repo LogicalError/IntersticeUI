@@ -50,7 +50,7 @@ bool nsvgXformInverse(float* out, const float* in)
 	return true;
 }
 
-// NanoSVG xform[6] layout: [xx, yx, xy, yy, dx, dy] — same field order as
+// NanoSVG xform[6] layout: [xx, yx, xy, yy, dx, dy] - same field order as
 // skb_mat2_t, so this is a direct field copy.
 inline skb_mat2_t nsvgXformToSkb(const float* x)
 {
@@ -93,9 +93,9 @@ void applyPaint(skb_icon_builder_t& b, const NSVGpaint& paint, float opacity)
 	    paint.type == NSVG_PAINT_RADIAL_GRADIENT)
 	{
 		const NSVGgradient* g = paint.gradient;
-		// NanoSVG stores the inverse xform on the gradient (user-space →
+		// NanoSVG stores the inverse xform on the gradient (user-space ->
 		// gradient-space). Skribidi pushes the xform onto its transform
-		// stack to map gradient-space → user-space, so invert back.
+		// stack to map gradient-space -> user-space, so invert back.
 		float fwd[6];
 		nsvgXformInverse(fwd, g->xform);
 		const skb_mat2_t skbXform = nsvgXformToSkb(fwd);
@@ -155,7 +155,7 @@ void emitFillPaths(skb_icon_builder_t& b, const NSVGshape* s)
 
 // --- Stroke tessellation -------------------------------------------------
 //
-// Skribidi's icon model has no native strokes — only filled paths. Each
+// Skribidi's icon model has no native strokes - only filled paths. Each
 // NanoSVG path is linearized to a polyline, and the stroke becomes a set of
 // polygons: a quad per segment, a wedge per join and a cap per open end.
 // They are all wound the same way, so the non-zero fill paints their union
@@ -475,7 +475,7 @@ skb_icon_handle_t RegisterNanoSVG(skb_icon_collection_t* collection,
 	if (!collection || !svg_data || svg_size == 0)
 		return 0;
 
-	// nsvgParse mutates the buffer — copy into a writable null-terminated
+	// nsvgParse mutates the buffer - copy into a writable null-terminated
 	// string. Icon SVGs are small (a few hundred bytes); the copy is free.
 	std::string buf(svg_data, svg_size);
 

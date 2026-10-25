@@ -134,7 +134,7 @@ namespace interstice
     }
 
     // ------------------------------------------------------------------
-    // VisualColorStyle::Create factories — each acquires a fresh handle
+    // VisualColorStyle::Create factories - each acquires a fresh handle
     // and returns it through outHandle. Owner is responsible for Release.
     // ------------------------------------------------------------------
 

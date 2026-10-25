@@ -28,7 +28,7 @@ namespace interstice
         // Static so column drag-reorder rotations persist across frames.
         static std::vector<VirtualTableColumn> columns =
         {
-            // ---- Section 0 (2 columns, fit-content — no H scrollbar) ----
+            // ---- Section 0 (2 columns, fit-content - no H scrollbar) ----
             {
                 .column = { .header = "#",     .initialWidth =  60, .minWidth = 40, .maxWidth = 160, .locked = true },
                 .generateCell = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); Cell(b); },
@@ -57,7 +57,7 @@ namespace interstice
                 .sectionId = 1
             },
             // ---- Section 2 (2 columns) ----------------------------------
-            // Tag is Stretch — its trailing boundary becomes a 1px
+            // Tag is Stretch - its trailing boundary becomes a 1px
             // separator (Stretch columns stop sizers).
             {
                 .column = { .header = "Tag",    .initialWidth = 60, .minWidth = 40, .maxWidth = 200, .locked = true, .sizing = ColumnSizing::Stretch },

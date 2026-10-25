@@ -153,7 +153,7 @@ namespace interstice
         ASSERT_TRUE(gm.Release(h));
         EXPECT_FALSE(gm.IsValid(stale));
 
-        // Reacquiring may reuse the same slot but a new generation — the old
+        // Reacquiring may reuse the same slot but a new generation - the old
         // stale handle must NOT resolve to the new slot.
         GradientHandle h2 = gm.AcquireSolidColor(color4b{ 99, 99, 99, 99 });
         EXPECT_TRUE(gm.IsValid(h2));
@@ -261,7 +261,7 @@ namespace interstice
         GradientHandle h0 = gm.AcquireSolidColor(c); // ours; refcount 1
         ASSERT_TRUE(gm.IsValid(h0));
 
-        // 65535 leaked acquires — enough to wrap uint16_t back to 0.
+        // 65535 leaked acquires - enough to wrap uint16_t back to 0.
         for (int i = 0; i < 65535; ++i)
             (void)gm.AcquireSolidColor(c);
 

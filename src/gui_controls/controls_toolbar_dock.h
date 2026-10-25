@@ -1,7 +1,7 @@
 #pragma once
 
 // ---------------------------------------------------------------------------
-// Toolbar dock — frames a central content area with up to four sides of
+// Toolbar dock - frames a central content area with up to four sides of
 // reorderable toolbar items, which can also be dragged between sides. Drop
 // feedback matches the dock-tab drop indicator (controls_docking.cpp).
 //

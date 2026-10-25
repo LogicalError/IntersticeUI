@@ -108,7 +108,7 @@ interstice_precompile_headers(gui_core_tests <gtest/gtest.h> <gui_controls/gui_a
 
 # gmock's templated actions trip a benign C4702 (unreachable code). With /GL
 # the test exe is code-generated at LINK time (/LTCG), so that warning is
-# emitted during whole-program codegen — past the point where /external:W0 (a
+# emitted during whole-program codegen - past the point where /external:W0 (a
 # front-end, per-include mechanism) can see it. Disabling C4702 on the test
 # target is what actually reaches the LTCG phase (the flag rides along in the
 # /GL objects); the only thing lost is unreachable-code detection in test code.

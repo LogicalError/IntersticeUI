@@ -12,7 +12,7 @@
 namespace interstice
 {
     // subClip arrives in the current space; m_clipRect is in window-local SCREEN space.
-    // Map the subClip corners through the current space → window-local transform and take
+    // Map the subClip corners through the current space -> window-local transform and take
     // their AABB so the two are comparable before intersection.
     static IntRect MapSubClipToScreen(const float3x2& renderTransform, IntRect subClip) noexcept
     {
@@ -208,7 +208,7 @@ namespace interstice
     {
         if (!m_textSystem || textId == TextID::Invalid) return;
         // The text system positions glyphs at rect.position then draws through the
-        // renderer's current transform — make sure that matches our current space.
+        // renderer's current transform - make sure that matches our current space.
         m_renderer->SetTransform(m_currentTransform);
         const float scale = std::sqrt(m_currentTransform.r0.x * m_currentTransform.r0.x +
                                       m_currentTransform.r0.y * m_currentTransform.r0.y);
@@ -245,7 +245,7 @@ namespace interstice
     int2 CustomDrawContext::ScreenToCurrent(int2 screenPoint) const
     {
         // screenPoint is absolute layout (window offset included); m_currentTransform maps
-        // current-space → window-local. Strip the offset to reach window-local, then invert.
+        // current-space -> window-local. Strip the offset to reach window-local, then invert.
         const float2 wl{ (float)(screenPoint.x - m_windowOffset.x),
                          (float)(screenPoint.y - m_windowOffset.y) };
         const float2 cp = m_currentTransform.Inverse().TransformPoint(wl);

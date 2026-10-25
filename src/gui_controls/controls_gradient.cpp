@@ -149,7 +149,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // GradientField — gradient swatch + editor popup
+    // GradientField - gradient swatch + editor popup
     // ---------------------------------------------------------------------------
 
     bool GUIApplication::GradientField(Gradient& value, LayoutOverride&& constraints)

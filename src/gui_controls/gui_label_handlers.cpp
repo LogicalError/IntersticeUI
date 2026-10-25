@@ -144,7 +144,7 @@ namespace interstice
 
     static constexpr int32_t kLabelResizeEdge = 5; // CSS pixels from the right edge that trigger resize
 
-    // Pixels → the group's stored CSS-pixel width. Measured widths round up so the
+    // Pixels -> the group's stored CSS-pixel width. Measured widths round up so the
     // laid-out width still fits them.
     static int32_t ToGroupWidth(const LabelGroupVisualState& gv, int32_t pixels, bool roundUp = false)
     {

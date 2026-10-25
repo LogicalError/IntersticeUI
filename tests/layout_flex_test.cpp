@@ -1324,7 +1324,7 @@ namespace interstice
 
         layoutEngine.Layout(*osWindowManager, storage);
 
-        // Both should keep their 60px width — c2 wraps to next line
+        // Both should keep their 60px width - c2 wraps to next line
         EXPECT_EQ(storage.GetElementRectUnsafe(c1.ref).rect.w, 60);
         EXPECT_EQ(storage.GetElementRectUnsafe(c2.ref).rect.w, 60);
     }

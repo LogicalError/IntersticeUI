@@ -47,7 +47,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------
-    // LabelGroupSubsystem — verify per-frame reset semantics.
+    // LabelGroupSubsystem - verify per-frame reset semantics.
     //
     // OnPreConstruct: clears the transient anyLabelHovered flag and the
     //                 labelTextIDs scratch vector. labelWidth/min/max and
@@ -75,7 +75,7 @@ namespace interstice
         state->anyLabelHovered = true;
         state->labelTextIDs.push_back(interstice::TextID{});
         state->labelTextIDs.push_back(interstice::TextID{});
-        // And a persistent field — must survive the reset.
+        // And a persistent field - must survive the reset.
         state->edgeHovered = true;
         sub.EndGroup();
 
@@ -120,17 +120,17 @@ namespace interstice
             return v;
         };
 
-        // Mouse has left the group → edgeHovered should be cleared.
+        // Mouse has left the group -> edgeHovered should be cleared.
         setup(/*anyHovered*/ false, /*dragging*/ false, /*edgeHovered*/ true);
         pipeline.RunStage(FrameStage::PostConstruct, ctx);
         EXPECT_FALSE(readEdgeHovered());
 
-        // A label is hovered → edgeHovered preserved (user may move onto edge).
+        // A label is hovered -> edgeHovered preserved (user may move onto edge).
         setup(true, false, true);
         pipeline.RunStage(FrameStage::PostConstruct, ctx);
         EXPECT_TRUE(readEdgeHovered());
 
-        // Edge is being dragged → edgeHovered preserved regardless of hover.
+        // Edge is being dragged -> edgeHovered preserved regardless of hover.
         setup(false, true, true);
         pipeline.RunStage(FrameStage::PostConstruct, ctx);
         EXPECT_TRUE(readEdgeHovered());
@@ -154,7 +154,7 @@ namespace interstice
         auto* state = sub.GetActiveGroup();
         ASSERT_NE(state, nullptr);
         EXPECT_FALSE(state->resizable);
-        state->maxLabelWidthThisFrame = 200;  // larger than maxW — must NOT be clamped
+        state->maxLabelWidthThisFrame = 200;  // larger than maxW - must NOT be clamped
         sub.EndGroup();
 
         pipeline.RunStage(FrameStage::PostConstruct, ctx);
@@ -187,7 +187,7 @@ namespace interstice
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        // Empty stack → nullptr.
+        // Empty stack -> nullptr.
         EXPECT_EQ(sub.GetActiveGroup(), nullptr);
 
         sub.BeginGroup(app.idManager.CreateStaticID(), 120, 40, 500);
@@ -234,13 +234,13 @@ namespace interstice
 #endif
 
     // ---------------------------------------------------------------------
-    // ButtonGroupSubsystem — verify the first/mid/last/solo style cycle.
+    // ButtonGroupSubsystem - verify the first/mid/last/solo style cycle.
     //
-    // Item 1   → first
-    // Item 2   → last (item 1 stays as first)
-    // Item 3   → last (item 2 demoted to mid via storage mutation)
-    // Item 4+  → last (item N-1 demoted to mid)
-    // EndGroup → if itemCount == 1, item 1 reverted to solo.
+    // Item 1   -> first
+    // Item 2   -> last (item 1 stays as first)
+    // Item 3   -> last (item 2 demoted to mid via storage mutation)
+    // Item 4+  -> last (item N-1 demoted to mid)
+    // EndGroup -> if itemCount == 1, item 1 reverted to solo.
     // ---------------------------------------------------------------------
 
     TEST(ButtonGroupSubsystemTest, NextItemStyleRefCyclesFirstThenLast)
@@ -301,7 +301,7 @@ namespace interstice
         ButtonGroupSubsystem::ItemState s{};
         sub.BeginButtonGroup(s);
         // Simulate one item registered but with Invalid firstRef (test setup
-        // shortcut — production registers a real element here).
+        // shortcut - production registers a real element here).
         auto* active = sub.GetActiveButton();
         ASSERT_NE(active, nullptr);
         active->itemCount = 1;
@@ -354,11 +354,11 @@ namespace interstice
 #endif
 
     // ---------------------------------------------------------------------
-    // RenameSubsystem — verify the Start/Cancel state machine.
+    // RenameSubsystem - verify the Start/Cancel state machine.
     //
     // Start writes all four fields atomically (targetID, isActive,
     // firstFrame, editBuffer) and seeds the buffer text. Cancel resets the
-    // first three and nulls the buffer pointer — but does NOT scrub the
+    // first three and nulls the buffer pointer - but does NOT scrub the
     // buffer contents, since the caller still owns the string.
     // ---------------------------------------------------------------------
 
@@ -444,7 +444,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------
-    // GUIApplication frame-end balance — verifies the OnEndFrame callback
+    // GUIApplication frame-end balance - verifies the OnEndFrame callback
     // registered by RegisterFrameBalanceChecks() catches unmatched
     // BeginWindow / BeginToolbar at end of frame.
     // ---------------------------------------------------------------------
@@ -457,7 +457,7 @@ namespace interstice
             ASSERT_TRUE(app.Initialize());
             app.Frame([&]{
                 app.BeginRootWindow();
-                app.BeginToolbar();        // leak — no EndToolbar before frame end
+                app.BeginToolbar();        // leak - no EndToolbar before frame end
                 app.EndRootWindow();
             });
         }, ".*");
@@ -508,7 +508,7 @@ namespace interstice
             app.Frame([&]{
                 app.BeginRootWindow();
                 int sel = 0;
-                app.BeginListView(&sel, 0);  // leak — no EndListView
+                app.BeginListView(&sel, 0);  // leak - no EndListView
                 app.EndRootWindow();
             });
         }, ".*");
@@ -523,7 +523,7 @@ namespace interstice
                 app.BeginRootWindow();
                 int sel = 0;
                 const interstice::ID gridID = app.idManager.CreateStaticID();
-                app.BeginGridView(gridID, &sel);   // leak — no EndGridView
+                app.BeginGridView(gridID, &sel);   // leak - no EndGridView
                 app.EndRootWindow();
             });
         }, ".*");
@@ -538,7 +538,7 @@ namespace interstice
                 app.BeginRootWindow();
                 const interstice::ID groupID = app.idManager.CreateStaticID();
                 app.BeginReorderableGroup(groupID, interstice::ReorderDirection::Vertical,
-                                          [](int, int){});      // leak — no End
+                                          [](int, int){});      // leak - no End
                 app.EndRootWindow();
             });
         }, ".*");
@@ -563,7 +563,7 @@ namespace interstice
     // BeginWindow is protected on GUIApplication, so a leak case can't be
     // built from outside (#68). The same balance check
     // (m_windowIdScopeStack non-empty at EndFrame) is wired up alongside
-    // controlStylesStack — exercising the toolbar case above covers the
+    // controlStylesStack - exercising the toolbar case above covers the
     // OnEndFrame callback's overall mechanism.
 #endif
 
@@ -579,7 +579,7 @@ namespace interstice
         const ID buttonID = app.idManager.CreateStaticID();
         app.Frame([&]{
             app.BeginRootWindow();
-            app.BeginArea();   // leak — no EndArea
+            app.BeginArea();   // leak - no EndArea
             app.EndRootWindow();
         });
         app.Frame([&]{
@@ -625,7 +625,7 @@ namespace interstice
             IDManager       idm;
             ASSERT_TRUE(sm.BeginFrame());
             ASSERT_TRUE(idm.BeginFrame());
-            sm.Construction().PushDisabled();   // leak — no matching Pop
+            sm.Construction().PushDisabled();   // leak - no matching Pop
             sm.EndFrame({}, idm);
         }, ".*");
     }

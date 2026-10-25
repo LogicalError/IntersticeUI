@@ -207,7 +207,7 @@ namespace interstice
         float2x2 operator*(float2x2 const& m2);
     };
 
-    // 2D affine transform matrix (2 rows × 3 columns):
+    // 2D affine transform matrix (2 rows x 3 columns):
     //   x' = r0.x*x + r0.y*y + r0.z
     //   y' = r1.x*x + r1.y*y + r1.z
     struct float3x2

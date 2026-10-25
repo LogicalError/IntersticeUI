@@ -337,13 +337,13 @@ namespace interstice
             []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
             "Pan View (hold)");
 
-        // NodeView — graph navigation
+        // NodeView - graph navigation
         commandManager.RegisterCommand(nodeViewEditMode, demo.frameSelectedIcon, interstice::KeyCode::KeyF,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
         commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyA,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
         commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::Space, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
         commandManager.RegisterCommand(nodeViewEditMode,                         interstice::KeyCode::KeyG,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
 
-        // Sculpt — brush operations.
+        // Sculpt - brush operations.
         commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::LeftBracket,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
         commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::RightBracket, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
         commandManager.RegisterCommand(sculptMode, demo.brushIcon,  interstice::KeyCode::KeyB,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
@@ -361,15 +361,15 @@ namespace interstice
             const interstice::color4f kAmber { 0.95f, 0.62f, 0.20f, 1.0f };
             const interstice::color4f kPurple{ 0.62f, 0.45f, 0.92f, 1.0f };
 
-            // NodeText aligns to its socket (output ⇒ right, input ⇒ left,
-            // pass-through ⇒ centred); editable rows use Label + Field.
+            // NodeText aligns to its socket (output => right, input => left,
+            // pass-through => centred); editable rows use Label + Field.
             NodeModel src;
             src.title = "Source";
             src.pos   = { styleManager.Px(-340), styleManager.Px(-140) };
             src.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { NodeText(demo.nodeName); },   // output ⇒ right-aligned
+                .renderBody  = [this]() { NodeText(demo.nodeName); },   // output => right-aligned
                 .socketColor = kTeal
             });
             src.properties.push_back(NodeProperty
@@ -391,7 +391,7 @@ namespace interstice
             mix.properties.push_back(NodeProperty
             {
                 .input       = PropertyEndpoint{},
-                .renderBody  = [this]() { NodeText("Strength"); },     // input ⇒ left-aligned
+                .renderBody  = [this]() { NodeText("Strength"); },     // input => left-aligned
                 .socketColor = kTeal
             });
             mix.properties.push_back(NodeProperty
@@ -404,13 +404,13 @@ namespace interstice
             {
                 .input       = PropertyEndpoint{},
                 .output      = true,
-                .renderBody  = [this]() { NodeText("Bypass"); },       // both dots ⇒ centred
+                .renderBody  = [this]() { NodeText("Bypass"); },       // both dots => centred
                 .socketColor = kPurple
             });
             mix.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { NodeText("Result"); },       // output ⇒ right-aligned
+                .renderBody  = [this]() { NodeText("Result"); },       // output => right-aligned
                 .socketColor = kTeal
             });
 
@@ -420,7 +420,7 @@ namespace interstice
             out.properties.push_back(NodeProperty
             {
                 .input       = PropertyEndpoint{},
-                .renderBody  = [this]() { NodeText("Value"); },        // input ⇒ left-aligned
+                .renderBody  = [this]() { NodeText("Value"); },        // input => left-aligned
                 .socketColor = kTeal     // accepts Mix.Result / Source.Name
             });
             out.properties.push_back(NodeProperty
@@ -432,7 +432,7 @@ namespace interstice
             out.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { NodeText("Level"); },        // output ⇒ right-aligned
+                .renderBody  = [this]() { NodeText("Level"); },        // output => right-aligned
                 .socketColor = kAmber    // can feed Mix.Gain (a backward wire)
             });
 
@@ -450,7 +450,7 @@ namespace interstice
                 const int imgSide  = std::max(theme.nodeGridSize, rowSpan * rowPitch - 2 * margin - 2 * border);
                 tex.properties.push_back(NodeProperty
                 {
-                    .output      = true,   // Color output — the dot sits at the image's bottom grid line
+                    .output      = true,   // Color output - the dot sits at the image's bottom grid line
                     .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(imgSide, imgSide)); },
                     .socketColor = kTeal,                // can feed Mix.Strength / Output.Value
                     .rowSpan     = rowSpan,
@@ -817,7 +817,7 @@ namespace interstice
             }
 
             // Sample gradient image to showcase the Image() element (image fields,
-            // node thumbnails, …).
+            // node thumbnails, ...).
             {
                 constexpr int W = 64, H = 64;
                 std::array<interstice::color4b, W * H> pixels{};
@@ -852,7 +852,7 @@ namespace interstice
                 const char* starSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L14.5 9 L22 9.5 L16.5 14 L18 22 L12 17.5 L6 22 L7.5 14 L2 9.5 L9.5 9 Z" fill="#F39C12"/></svg>)";
                 demo.starIcon = textSystem->RegisterIconFromSVG("star", starSvg, strlen(starSvg));
 
-                // Console log-level icons — coloured badge with a white glyph.
+                // Console log-level icons - coloured badge with a white glyph.
                 const char* infoSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#4A90E2"/><circle cx="12" cy="7.5" r="1.6" fill="#ffffff"/><rect x="10.4" y="10.5" width="3.2" height="7.5" rx="1.6" fill="#ffffff"/></svg>)";
                 demo.infoIcon = textSystem->RegisterIconFromSVG("info", infoSvg, strlen(infoSvg));
 
@@ -879,7 +879,7 @@ namespace interstice
                 const char* chevronRightSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>)";
                 demo.chevronRightIcon = textSystem->RegisterIconFromSVG("chevron-right", chevronRightSvg, strlen(chevronRightSvg));
 
-                // Folder icons for GridView demo — closed and open variants
+                // Folder icons for GridView demo - closed and open variants
                 demo.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
                 demo.folderOpenIcon      = textSystem->RegisterIconFromSVGFile("icons/folder_open.svg"); 
                                          
@@ -1027,7 +1027,7 @@ namespace interstice
         if (BeginMenu(idManager.AllocateDynamicID("menuView"), "View",
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
-            // Theme submenu — mirrors the Appearance settings page; both mutate
+            // Theme submenu - mirrors the Appearance settings page; both mutate
             // demo.settingsThemeIndex so the two stay in sync.
             static const char* const themeNames[] = { "Dark", "Light" };
             static const char* const themePaths[] = { "themes/dark.css", "themes/light.css" };
@@ -1152,7 +1152,7 @@ namespace interstice
                         auto boxTestPanelID     = CreatePanel(demo.dockingLayout.panels, "BoxTest",     demo.panelMiscIcon, [this]() { RenderBoxTestPanel(); });
                         auto miscPanelID        = CreatePanel(demo.dockingLayout.panels, "Misc",        demo.panelMiscIcon, [this]() { RenderMiscPanel(); });
                         // Misc animates during construction (rotating triangle, cycling hue), so it
-                        // must rebuild every frame — opt out of caching.
+                        // must rebuild every frame - opt out of caching.
                         demo.dockingLayout.panels[miscPanelID].cacheSignature =
                             []() -> std::optional<uint64_t> { return std::nullopt; };
 
@@ -1231,7 +1231,7 @@ namespace interstice
                 EndWindow();
             } else
             {
-                // BeginWindow returned false — window is closing
+                // BeginWindow returned false - window is closing
                 mainWindowClosed = true;
             }
         }

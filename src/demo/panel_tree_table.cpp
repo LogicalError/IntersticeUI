@@ -14,7 +14,7 @@
 //
 // Data model: a flat row vector plus a per-row `skipCount` (descendants), so
 // the visibility walk skips a closed subtree in one step. Each frame
-// `visibleIdx` maps visible row → flat row and its size is the row count.
+// `visibleIdx` maps visible row -> flat row and its size is the row count.
 //
 // `skipCount` / `ancestorLineMask` / `isLastSibling` are derived from `depth`
 // by TreeUtils::RebuildTreeIndex after adding or removing rows; toggling

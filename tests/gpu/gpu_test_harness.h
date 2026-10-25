@@ -133,7 +133,7 @@ namespace GpuTestHarness
             interstice::OSWindowHandle          osHandle = nullptr;
         };
         std::vector<OwnedWindowContext> m_windowContexts;
-        uint32_t                        m_nextWindowId = 7000; // monotonic — never reused
+        uint32_t                        m_nextWindowId = 7000; // monotonic - never reused
 
         // When set, TearDown asserts the validation layer reported no leaked
         // Vulkan objects at device destroy. Opt-in, so leak-sensitive tests can

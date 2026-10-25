@@ -28,7 +28,7 @@ namespace interstice
             }
             void TearDown() override { app.Cleanup(); }
 
-            // The slider's outer element IS the interactive track — `sliderID`
+            // The slider's outer element IS the interactive track - `sliderID`
             // owns the event handler, custom-draw, and SliderState.
             ID FindTrackID() { return sliderID; }
 

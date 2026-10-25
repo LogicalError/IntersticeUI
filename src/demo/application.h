@@ -213,9 +213,9 @@ namespace interstice
                 // Descendant count. Recomputed by RebuildTreeTableIndex() after edits.
                 int          skipCount   = 0;
                 // Guide-line metadata (also recomputed by RebuildTreeTableIndex):
-                //   ancestorLineMask — bit d set iff the ancestor at depth d+1 has
+                //   ancestorLineMask - bit d set iff the ancestor at depth d+1 has
                 //       a next sibling, so its connector line passes this row at column d.
-                //   isLastSibling    — last child of its parent; the own-depth guide
+                //   isLastSibling    - last child of its parent; the own-depth guide
                 //       line ends at the row center as an L-tick.
                 uint32_t     ancestorLineMask = 0;
                 bool         isLastSibling    = true;

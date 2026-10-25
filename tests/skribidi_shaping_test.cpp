@@ -1,5 +1,5 @@
 // Real-shaping tests for SkribidiTextSystem (HarfBuzz + bidi via the actual
-// font stack). Assertions are STRUCTURAL — monotonicity, non-zero, ordering —
+// font stack). Assertions are STRUCTURAL - monotonicity, non-zero, ordering -
 // never absolute pixel goldens, so they hold across font versions and the
 // available glyph coverage. (Wrap-mode measurement is tested in
 // skribidi_text_measurement_test.cpp.)
@@ -82,7 +82,7 @@ namespace interstice
             StyleRef style = MakeTextStyle();
             // Latin + digits + an Arabic word. Even where the loaded fonts lack
             // full coverage (tofu boxes), the run must shape to a positive,
-            // bounded width — never the layout-box width and never zero.
+            // bounded width - never the layout-box width and never zero.
             const int32_t w = MeasureWidth(U8(u8"abc 123 مرحبا"), style, 50);
             EXPECT_GT(w, 0);
             EXPECT_LT(w, 16000) << "must be the natural extent, not the layout box";
@@ -124,7 +124,7 @@ namespace interstice
 
         TEST_F(SkribidiHeadlessTest, CommonSymbolsHaveGlyphs)
         {
-            // Missing glyphs all draw as the same box, so a real ★ / ✓ measures
+            // Missing glyphs all draw as the same box, so a real U+2605 / U+2713 measures
             // differently from a run of unassigned codepoints (U+0378).
             StyleRef style = MakeTextStyle(28.0f);
             const int32_t missing = MeasureWidth(U8(u8"͸͸͸"), style, 210);
@@ -416,7 +416,7 @@ namespace interstice { namespace {
             return glyph;
         };
 
-        // 次 has a distinct form in each of the four regions.
+        // U+6B21 has a distinct form in each of the four regions.
         const uint32_t ja = glyphFor(0x6B21, "ja"), hans = glyphFor(0x6B21, "zh-Hans");
         const uint32_t hant = glyphFor(0x6B21, "zh-Hant"), ko = glyphFor(0x6B21, "ko");
         EXPECT_NE(ja, hans);
@@ -425,7 +425,7 @@ namespace interstice { namespace {
         EXPECT_NE(hans, hant);
         EXPECT_NE(hans, ko);
         EXPECT_NE(hant, ko);
-        // 直 has its own Hong Kong form.
+        // U+76F4 has its own Hong Kong form.
         EXPECT_NE(glyphFor(0x76F4, "zh-HK"), glyphFor(0x76F4, "zh-Hant"));
 
         hb_font_destroy(font);

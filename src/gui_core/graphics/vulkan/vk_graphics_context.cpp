@@ -362,7 +362,7 @@ void VulkanGraphicsContext::Cleanup()
         deviceContext.WaitIdle();
         static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
 
-        // mainDeletionQueue captures atlas font textures by pointer — they must
+        // mainDeletionQueue captures atlas font textures by pointer - they must
         // outlive Flush/Destroy.
         deviceContext.Flush();
         deviceContext.Destroy();

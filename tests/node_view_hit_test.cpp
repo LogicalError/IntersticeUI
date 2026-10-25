@@ -62,8 +62,8 @@ namespace interstice
                 ASSERT_EQ(app.windowRegistry.Add(nodeRes.ref), interstice::RegistryResult::Success);
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
-                // Body row inside the node — same nesting depth as the
-                // demo (BeginHorizontal → BeginHorizontal → Field).
+                // Body row inside the node - same nesting depth as the
+                // demo (BeginHorizontal -> BeginHorizontal -> Field).
                 app.BeginHorizontal(LayoutOverride{}.Auto());
                 app.BeginHorizontal(LayoutOverride{}.FlexGrow(1));
                 app.Button(fieldID, "Field", [&clickCounter]() { clickCounter++; });
@@ -73,7 +73,7 @@ namespace interstice
                 ASSERT_EQ(app.elementStorage.EndChildren(), ElementStorageResult::Success);
             }
 
-            // Root window → canvas (overflow:auto, centring contentTransform) → nodes at
+            // Root window -> canvas (overflow:auto, centring contentTransform) -> nodes at
             // (-340, -60) and (200, 80), each with a body row holding a clickable field.
             // `negClicks` / `posClicks` count handler invocations.
             void BuildScene(int& negClicks, int& posClicks)
@@ -92,7 +92,7 @@ namespace interstice
 
                 // Hand-computed half-size (no lastInnerSize round-trip) so every
                 // frame, including the first, uses the same transform.
-                const float halfW = (float)((kCanvasW - 8) / 2);  // -8 = 4px padding × 2
+                const float halfW = (float)((kCanvasW - 8) / 2);  // -8 = 4px padding x 2
                 const float halfH = (float)((kCanvasH - 8) / 2);
                 app.elementStorage.SetContentTransform(canvasRes.ref,
                     float3x2::Translate(float2{ halfW, halfH }));
@@ -294,11 +294,11 @@ namespace interstice
             const int2 dragEnd  { rightEdgeScreen.x - 2 + 25, rightEdgeScreen.y };
 
             app.InjectMouseMove(dragStart);
-            app.Frame(build);            // frame 1 — handler sets edgeHovered
+            app.Frame(build);            // frame 1 - handler sets edgeHovered
             app.InjectMouseDown(dragStart);
-            app.Frame(build);            // frame 2 — handler starts drag
+            app.Frame(build);            // frame 2 - handler starts drag
             app.InjectMouseMove(dragEnd, MouseButtons::Left);
-            app.Frame(build);            // frame 3 — handler updates labelWidth
+            app.Frame(build);            // frame 3 - handler updates labelWidth
             app.InjectMouseUp(dragEnd);
             app.Frame(build);
 

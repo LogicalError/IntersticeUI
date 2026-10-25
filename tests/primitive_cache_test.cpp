@@ -24,7 +24,7 @@ namespace interstice
             PrimitiveRenderTarget src;
             src.SetTransform(interstice::float3x2::Translate(100.0f, 50.0f));
             src.RenderBox(interstice::IntRect{ 10, 20, 30, 40 }, interstice::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
-            // Different kind → a second pass.
+            // Different kind -> a second pass.
             src.RenderGlyph(interstice::float2{ 5, 6 }, interstice::float2{ 7, 8 }, interstice::float2{ 0, 0 }, interstice::float2{ 1, 1 },
                             1.0f, 1, 0, interstice::VisualColorStyleIndex{}, interstice::IntRect{ 0, 0, 200, 200 });
             src.FinishRenderPass();

@@ -268,7 +268,7 @@ namespace interstice
 
         {
             // Distance-from-edge gradient (the quad shader feeds the rounded-box
-            // SDF in): transparent at the edge → black just inside, giving the
+            // SDF in): transparent at the edge -> black just inside, giving the
             // offset shadow a soft edge. Early dark stop keeps the ramp a few px
             // wide rather than spanning half the box.
             Gradient shadowGradient = Gradient::Linear(0.0f);
@@ -605,7 +605,7 @@ namespace interstice
         
 
         // -------------------------------------------------------------------------
-        // Table styles (row × column data grid)
+        // Table styles (row x column data grid)
         // -------------------------------------------------------------------------
         tableStyleRef                     = registerCSS("table");
         tableFillStyleRef                 = registerCSS("table-fill");

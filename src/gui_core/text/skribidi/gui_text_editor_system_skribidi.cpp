@@ -813,7 +813,7 @@ namespace interstice
         if (!entry)
             return std::nullopt;
 
-        // Editor-local caret (as in GetCursorRect) → absolute layout → screen.
+        // Editor-local caret (as in GetCursorRect) -> absolute layout -> screen.
         const skb_caret_info_t caret = skb_editor_get_caret_info_at(ctx->editor, SKB_CURRENT_SELECTION_END);
         const float2 origin = entry->EditorOrigin();
         const float3x2 layoutToScreen = entry->screenToLayout.Inverse();

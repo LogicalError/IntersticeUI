@@ -102,7 +102,7 @@ namespace interstice
         //
         //   SCREEN     : absolute pixels on the OS window. Mouse events (event.state.screenPos)
         //                and ElementRect rects (event.rect->innerRect.position/size) are here.
-        //   CANVAS_LAY : "canvas-local LAYOUT" — pixels relative to the canvas's inner-rect
+        //   CANVAS_LAY : "canvas-local LAYOUT" - pixels relative to the canvas's inner-rect
         //                top-left, pre-contentTransform. This is the space `node.pos` lives in.
         //                In custom-draws it is the default (DrawSpace::Local) space:
         //                ctx.GetElementRect(ref) returns CANVAS_LAY, Render* takes CANVAS_LAY
@@ -161,7 +161,7 @@ namespace interstice
                         if (event.state.LeftPressed())
                         {
                             // Begin marquee. Only SCREEN positions are captured here; the
-                            // screen→CANVAS_LAY conversion is done from the LIVE canvas
+                            // screen->CANVAS_LAY conversion is done from the LIVE canvas
                             // rect each MouseMove (see screenToCanvasLay below).
                             view.marqueeActive        = true;
                             view.marqueePastThreshold = false;
@@ -244,7 +244,7 @@ namespace interstice
                             if (!view.marqueePastThreshold &&
                                 !view.marqueeShift && !view.marqueeCtrl)
                             {
-                                // Bare click on empty background — clear selection.
+                                // Bare click on empty background - clear selection.
                                 view.selectedNodeIDs.clear();
                             }
                             view.marqueeActive = false;
@@ -873,7 +873,7 @@ namespace interstice
                         VERIFY(sp.status);
                         VERIFY(windowRegistry.Add(sp.ref));
                     }
-                    // Input dot: OUT OF FLOW — absolutely placed straddling the node's
+                    // Input dot: OUT OF FLOW - absolutely placed straddling the node's
                     // left border at this property's FIRST pitch, mirroring the output
                     // dot on the right. Y is taken from the FULL pitch so it lands on a
                     // grid line even on the chrome-shortened last row.
@@ -892,7 +892,7 @@ namespace interstice
                                     /*minWidth=*/30, /*maxWidth=*/120,
                                     /*resizable=*/false);
                     // A text-only body (NodeText) aligns to its sockets: left
-                    // dot ⇒ left, right dot ⇒ right, both ⇒ centre.
+                    // dot => left, right dot => right, both => centre.
                     nodeRowTextAlign = (prop.input.has_value() && prop.output) ? TextAlign::Center
                                      :  prop.output                                ? TextAlign::End
                                      :                                                       TextAlign::Start;
@@ -916,7 +916,7 @@ namespace interstice
                         VERIFY(rp.status);
                         VERIFY(windowRegistry.Add(rp.ref));
                     }
-                    // Output dot: OUT OF FLOW — absolutely placed straddling the node's
+                    // Output dot: OUT OF FLOW - absolutely placed straddling the node's
                     // right border at this property's pitch (like the collapsed sockets).
                     if (prop.output)
                     {
@@ -968,8 +968,8 @@ namespace interstice
 
         // Axis lines + wires draw in the canvas's OWN (pre-children) pass, so they sit
         // behind the nodes and keep drawing when a node is culled off-screen. An
-        // AddCustomDrawAfter anchors to the last element of the canvas subtree — a child
-        // of the frontmost node — and is skipped with that node when it leaves view.
+        // AddCustomDrawAfter anchors to the last element of the canvas subtree - a child
+        // of the frontmost node - and is skipped with that node when it leaves view.
         // Endpoints are CANVAS_LAY, so they pan/zoom with the sockets and clip to the viewport.
         VERIFY(elementStorage.AddCustomDraw(canvasRes.ref,
             [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs),
@@ -1011,7 +1011,7 @@ namespace interstice
                 auto socketCenter = [&](const ElementRef& ref) -> interstice::int2
                 {
                     // Socket centre in CANVAS_LAY. Rows are two grid cells tall, so
-                    // this sits on a grid line — wires run the lattice to the dot.
+                    // this sits on a grid line - wires run the lattice to the dot.
                     return ctx.GetElementRect(ref).Center();
                 };
 
@@ -1175,7 +1175,7 @@ namespace interstice
                 view.wireHandleCache = std::move(handleCache);
             }));
 
-        // Marquee rectangle — drawn after the nodes so it sits on top of them.
+        // Marquee rectangle - drawn after the nodes so it sits on top of them.
         VERIFY(elementStorage.AddCustomDrawAfter(canvasRes.ref,
             [this, &view](interstice::CustomDrawContext& ctx)
             {

@@ -9,14 +9,14 @@ namespace interstice
     //
     // The placement model: icons sit ADJACENT to their text (not anchored to
     // rect edges). Vertical centering for Left/Right icons is around the
-    // text height, and Bottom icons sit iconTextGap below the text — so a
+    // text height, and Bottom icons sit iconTextGap below the text - so a
     // stretched cell keeps the icon next to its label rather than letting
     // the label and icon drift apart.
     //
     // Conventions for readable assertions:
     //   * rect origin is (0, 0) unless otherwise noted
-    //   * text is 40 × 17 (shorter than typical icon)
-    //   * icon is 24 × 24 (SVG natural size)
+    //   * text is 40 x 17 (shorter than typical icon)
+    //   * icon is 24 x 24 (SVG natural size)
     //   * gap is 8
     // ---------------------------------------------------------------------
 
@@ -120,7 +120,7 @@ namespace interstice
                                                 IconSide::Bottom, kGap, TextAlign::Start);
 
         EXPECT_EQ(p.textRect.y, rect.y);
-        // Icon sits one gap below the text's natural height — adjacent to
+        // Icon sits one gap below the text's natural height - adjacent to
         // the text, not anchored to rect's bottom edge.
         EXPECT_EQ(p.iconRect.y, rect.y + kTextH + kGap);
     }
@@ -170,7 +170,7 @@ namespace interstice
                                                 IconSide::Bottom, kGap, TextAlign::Start);
 
         // Icon is placed immediately under the text regardless of extra
-        // vertical space — it doesn't float to the bottom of the cell.
+        // vertical space - it doesn't float to the bottom of the cell.
         EXPECT_EQ(p.iconRect.y, rect.y + kTextH + kGap);
     }
 
@@ -185,7 +185,7 @@ namespace interstice
         EXPECT_FALSE(RectsOverlap(p.textRect, p.iconRect));
     }
 
-    // Right icon + text-align: end in a stretched cell — the icon must not
+    // Right icon + text-align: end in a stretched cell - the icon must not
     // overlap the text horizontally.
     TEST(IconTextPlacement, RightIcon_Stretched_AlignEnd_NoHorizontalOverlap)
     {
@@ -203,7 +203,7 @@ namespace interstice
         EXPECT_GE(p.iconRect.x, p.textRect.x + p.textRect.w);
     }
 
-    // Left icon + text-align: end — mirror of the above. Text must not be
+    // Left icon + text-align: end - mirror of the above. Text must not be
     // placed beneath the icon.
     TEST(IconTextPlacement, LeftIcon_Stretched_AlignEnd_NoHorizontalOverlap)
     {
@@ -240,7 +240,7 @@ namespace interstice
                   rect.x + (rect.w - combined) / 2 + combined);
     }
 
-    // Rect with a non-zero origin — make sure rect.x / rect.y are honored.
+    // Rect with a non-zero origin - make sure rect.x / rect.y are honored.
     TEST(IconTextPlacement, RightIcon_NonZeroOrigin_CoordinatesOffsetCorrectly)
     {
         const IntRect rect{ .x = 100, .y = 50, .w = 72, .h = 24 };
@@ -348,7 +348,7 @@ namespace interstice
         EXPECT_GE(p.iconRect.x, p.textRect.x + p.textRect.w);
     }
 
-    // Left box: mirror — the icon must not be drawn over the text.
+    // Left box: mirror - the icon must not be drawn over the text.
     TEST(IconTextPlacement, Regression_MiscPanelLeftBox_IconDoesNotCoverText)
     {
         const IntRect rect{ .x = 0, .y = 0, .w = 400, .h = 24 };
@@ -364,7 +364,7 @@ namespace interstice
 
     TEST(IconTextPlacement, IconOnly_FillsRect_NoOffset)
     {
-        // 24px icon, 24x24 rect → fills it exactly, origin at (0,0).
+        // 24px icon, 24x24 rect -> fills it exactly, origin at (0,0).
         const IntRect rect{ .x = 0, .y = 0, .w = 24, .h = 24 };
         const auto p = ComputeIconTextPlacement(rect, /*textW*/0, /*textH*/0, kIcon,
                                                 IconSide::Left, kGap,

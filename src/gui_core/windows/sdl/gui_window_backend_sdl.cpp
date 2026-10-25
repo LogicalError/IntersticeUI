@@ -512,7 +512,7 @@ namespace interstice
 
     // Show a window, applying the classic Win32 popup shadow when it asked for
     // one ("WantsDropShadow" property, set at creation). CS_DROPSHADOW is a
-    // CLASS style evaluated at show time, and SDL windows share one class — so
+    // CLASS style evaluated at show time, and SDL windows share one class - so
     // the bit is set just for the Show call and restored after; the shadow the
     // window-manager created persists for this window while it stays visible.
     static void ShowSDLWindowWithShadow(SDL_Window* window)

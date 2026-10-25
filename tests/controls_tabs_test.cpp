@@ -233,7 +233,7 @@ namespace interstice
         TEST_F(ControlsTabsTest, ClickInRightHalfOfWideTabSelectsIt)
         {
             int sel = 0;
-            // Force a wide tab — text content "Tab" is ~24 px, so 200 px
+            // Force a wide tab - text content "Tab" is ~24 px, so 200 px
             // leaves a large right-side dead zone if the body doesn't grow.
             ID barID2 = app.idManager.CreateStaticID();
             std::vector<ID> tabIDs;
@@ -259,7 +259,7 @@ namespace interstice
             app.Frame(draw);
 
             const auto r2 = app.GetElementRect(tabIDs[2]);
-            // Click in the right portion of the tab — visually inside the
+            // Click in the right portion of the tab - visually inside the
             // 200px-wide tab but past the auto-sized body's content width.
             const int2 clickPos{ r2.x + r2.w - 20, r2.y + r2.h / 2 };
             app.ClickAt(clickPos);

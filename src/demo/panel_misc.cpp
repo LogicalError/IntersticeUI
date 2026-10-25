@@ -287,7 +287,7 @@ namespace interstice
                 if (event.type != interstice::EventType::MouseMove && event.type != interstice::EventType::MouseDown)
                     return false;
 
-                // event.rect->innerRect is in layout space — use LocalCursor so the
+                // event.rect->innerRect is in layout space - use LocalCursor so the
                 // subtract stays in the same space under any ancestor contentTransform.
                 int2 pos = (event.rect != nullptr)
                     ? event.LocalCursor(elementStorage) - event.rect->innerRect.position
@@ -308,7 +308,7 @@ namespace interstice
             VERIFY(windowRegistry.Add(addRes.ref));
         }
 
-        // Image element — drop an image straight into the flow. Two display
+        // Image element - drop an image straight into the flow. Two display
         // sizes, then a clickable one standing in for an image-selection field.
         {
             Image(demoImageIndex, interstice::LayoutOverride::FixedSize(styleManager.Px(96), styleManager.Px(96)));
@@ -448,7 +448,7 @@ namespace interstice
         }
 
         // --- Vertical-align demo matrix -----------------------------------------
-        // 4 icon sides × 3 vertical alignments (-interstice-vertical-text-align). The
+        // 4 icon sides x 3 vertical alignments (-interstice-vertical-text-align). The
         // boxes share an 80px min-height so the alignment differences show.
         {
             static const interstice::IconID kSideIcon[4] = {

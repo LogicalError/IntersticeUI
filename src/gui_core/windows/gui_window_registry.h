@@ -33,12 +33,12 @@ namespace interstice
         static constexpr uint32_t kInvalidIndex = ~(uint32_t)0;
 
         // A single entry in the flat pre-order render list for a window.
-        // subtreeSkip is the flat-list index past this element's entire subtree — jump there to cull.
+        // subtreeSkip is the flat-list index past this element's entire subtree - jump there to cull.
         struct RenderNode
         {
             ElementRef ref;
             uint32_t   subtreeSkip = 0; // flat-list index past this subtree
-            uint32_t   _pad        = 0; // explicit padding → 16 bytes, 4 nodes per cache line
+            uint32_t   _pad        = 0; // explicit padding -> 16 bytes, 4 nodes per cache line
         };
 
         struct WindowEntry
@@ -180,7 +180,7 @@ namespace interstice
 
         // Move an element's subtree to render last among its siblings (renders on top).
         // Safe to call during construction before BuildRenderSkipLinks runs.
-        // subtreeSkip values are NOT updated here — BuildRenderSkipLinks() handles that.
+        // subtreeSkip values are NOT updated here - BuildRenderSkipLinks() handles that.
         void MoveSubtreeToEnd(const ElementRef& nodeRef)
         {
             if (m_windowStack.empty()) return;
@@ -257,7 +257,7 @@ namespace interstice
 
         // Compute subtreeSkip for every RenderNode in every window.
         // Call once after construction + layout are complete, before rendering.
-        // O(n) per window using a monotone stack — no per-frame allocations
+        // O(n) per window using a monotone stack - no per-frame allocations
         // (m_skipLinkStack is a reused scratch buffer).
         void BuildRenderSkipLinks()
         {
@@ -270,7 +270,7 @@ namespace interstice
                 for (uint32_t i = 0; i < count; i++)
                 {
                     const uint32_t myDepth = nodes[i].ref.depth;
-                    // Close any open ancestors that are at the same depth or deeper —
+                    // Close any open ancestors that are at the same depth or deeper -
                     // their subtrees end here.
                     while (!m_skipLinkStack.empty() &&
                            nodes[m_skipLinkStack.back()].ref.depth >= myDepth)

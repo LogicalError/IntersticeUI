@@ -94,7 +94,7 @@ namespace interstice
 
         EndReorderableItem();
 
-        // Right-click a tab → "Close Panel".
+        // Right-click a tab -> "Close Panel".
         if (onClose != nullptr && BeginContextMenu(bodyID))
         {
             MenuItem("Close Panel", [onClose, capturedIndex]() { onClose(capturedIndex); });

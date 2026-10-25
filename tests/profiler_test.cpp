@@ -89,7 +89,7 @@ namespace interstice::Diagnostics
     {
         BeginFrame(c);
         EnterScope(c, H("R"), "R");   // depth 0
-        EnterScope(c, H("R"), "R");   // depth 1 — same name, different path
+        EnterScope(c, H("R"), "R");   // depth 1 - same name, different path
         ExitScope(c);
         ExitScope(c);
         EndFrame(c);
@@ -115,7 +115,7 @@ namespace interstice::Diagnostics
         EndFrame(c);
 
         const auto s = LastFrameSamples(c);
-        ASSERT_EQ(s.size(), 1u);                // same path → one node
+        ASSERT_EQ(s.size(), 1u);                // same path -> one node
         EXPECT_STREQ(s[0].name, "Loop");
         EXPECT_EQ(s[0].callCount, 3);
     }

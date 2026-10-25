@@ -91,7 +91,7 @@ void main()
 
 	outData.UV = clipped_uv;
 	outSurface.lineSize = size;
-	// Endpoints in quad-local screen space — same space as inData.UV — so the
+	// Endpoints in quad-local screen space - same space as inData.UV - so the
 	// fragment shader's curve/line distance math stays consistent.
 	outSurface.p0 = p0s - pos;
 	outSurface.p1 = p1s - pos;

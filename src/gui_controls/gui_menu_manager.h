@@ -124,7 +124,7 @@ namespace interstice
         void EnterMenuFromTrigger(GUIStateManager& guiStateManager, ID triggerID);
     };
 
-    // Menu item event handler — fires the onClick callback on click/activation.
+    // Menu item event handler - fires the onClick callback on click/activation.
     EventHandler MakeMenuItemHandler(IDManager& idManager,
                                      GUIStateManager& guiStateManager,
                                      ElementStorage& elementStorage,

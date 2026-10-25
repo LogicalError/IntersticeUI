@@ -157,11 +157,11 @@ namespace interstice
                 state.dropAnimHasTarget = false;
 
                 int targetSide = FindToolbarSideAt(state, mousePos);
-                if (targetSide == sideIdx) return; // dropped back on source — snap back
+                if (targetSide == sideIdx) return; // dropped back on source - snap back
 
                 if (targetSide < 0)
                 {
-                    // No side hit → tear off into a floating window.
+                    // No side hit -> tear off into a floating window.
                     if (tearOffCb) tearOffCb(side, fromIdx, mousePos);
                     return;
                 }
@@ -203,7 +203,7 @@ namespace interstice
                 }
                 else
                 {
-                    // No target → preview of the floating window, top-left at the
+                    // No target -> preview of the floating window, top-left at the
                     // cursor where the real one will spawn.
                     state.dropAnimHasTarget = false;
                     if (app.BeginGhostWindow(state.ghostWindowID, mousePos,
@@ -313,7 +313,7 @@ namespace interstice
         std::function<void(ID, ToolbarSide)> dockBack = options ? options->onDockBack : nullptr;
 
         // The drag ends in the thumb's MouseUp handler. If that never runs (the window was
-        // closed mid-drag), drop the drag here — button up and no release still queued —
+        // closed mid-drag), drop the drag here - button up and no release still queued -
         // or the drop overlay would keep showing.
         if (m_toolbarWindowDrag.active && inputManager
             && (inputManager->GetCurrentButtons() & MouseButtons::Left) == MouseButtons::None)

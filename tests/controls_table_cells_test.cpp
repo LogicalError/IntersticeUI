@@ -45,7 +45,7 @@ namespace interstice
         };
 
         // ---------------------------------------------------------------------
-        // Cell(lambda) — child scope for embedded widgets
+        // Cell(lambda) - child scope for embedded widgets
         // ---------------------------------------------------------------------
 
         TEST_F(TableCellsTest, CellLambdaEmitsLabelAsChildAndCellIsHittable)
@@ -145,7 +145,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Sizer double-click — auto-size the column to its widest content.
+        // Sizer double-click - auto-size the column to its widest content.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, SizerDoubleClickSnapsColumnToMaxContentWidth)
         {
@@ -197,11 +197,11 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // TreeCell — depth + isOpen registration on the user TableState
+        // TreeCell - depth + isOpen registration on the user TableState
         // ---------------------------------------------------------------------
 
         // ---------------------------------------------------------------------
-        // TreeCell scroll — the tree cell and its inner content (indent / arrow /
+        // TreeCell scroll - the tree cell and its inner content (indent / arrow /
         // icon / text) must shift by the same amount, on both axes, and only along
         // the scrolled axis.
         // ---------------------------------------------------------------------
@@ -424,7 +424,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // TreeCell — row-mode double-click on the cell toggles isOpen.
+        // TreeCell - row-mode double-click on the cell toggles isOpen.
         //
         // In row mode the click lands on the row backdrop, which handles the toggle.
         // ---------------------------------------------------------------------
@@ -453,7 +453,7 @@ namespace interstice
             ASSERT_EQ(state.internal.totalRowCount, 1);
             const interstice::ID branchID = state.RowIDForIndex(0);
 
-            // Row backdrops carry the rowID — derive the click point from it.
+            // Row backdrops carry the rowID - derive the click point from it.
             ASSERT_TRUE(app.HasElement(branchID));
             const auto rowCenter = app.CenterOf(branchID);
 
@@ -471,7 +471,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Cell-mode selection — clicking a cell writes selectedRowID + selectedColumn
+        // Cell-mode selection - clicking a cell writes selectedRowID + selectedColumn
         // ---------------------------------------------------------------------
 
         TEST_F(TableCellsTest, CellModeClickingCellSelectsRowAndColumn)
@@ -510,7 +510,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // MultiSelect — Ctrl-click toggles individual rows
+        // MultiSelect - Ctrl-click toggles individual rows
         // ---------------------------------------------------------------------
 
         TEST_F(TableCellsTest, MultiSelectCtrlClickTogglesIndividualRows)
@@ -540,7 +540,7 @@ namespace interstice
             const interstice::ID row0ID = state.RowIDForIndex(0);
             const interstice::ID row2ID = state.RowIDForIndex(2);
 
-            // Ctrl-click row 0 → selectedIDs = {row0}
+            // Ctrl-click row 0 -> selectedIDs = {row0}
             const auto r0c = app.CenterOf(row0ID);
             app.InjectMouseMove(r0c, MouseButtons::None, KeyModifier::Control);
             app.InjectMouseDown(r0c, MouseButtons::Left, KeyModifier::Control);
@@ -550,7 +550,7 @@ namespace interstice
             EXPECT_EQ(ms.selectedIDs.size(), 1u);
             EXPECT_EQ(ms.selectedIDs.count(row0ID), 1u);
 
-            // Ctrl-click row 2 → adds → {row0, row2}
+            // Ctrl-click row 2 -> adds -> {row0, row2}
             const auto r2c = app.CenterOf(row2ID);
             app.InjectMouseMove(r2c, MouseButtons::None, KeyModifier::Control);
             app.InjectMouseDown(r2c, MouseButtons::Left, KeyModifier::Control);
@@ -561,7 +561,7 @@ namespace interstice
             EXPECT_EQ(ms.selectedIDs.count(row0ID), 1u);
             EXPECT_EQ(ms.selectedIDs.count(row2ID), 1u);
 
-            // Ctrl-click row 0 again → toggles it off → {row2}
+            // Ctrl-click row 0 again -> toggles it off -> {row2}
             app.InjectMouseMove(r0c, MouseButtons::None, KeyModifier::Control);
             app.InjectMouseDown(r0c, MouseButtons::Left, KeyModifier::Control);
             app.InjectMouseUp  (r0c, MouseButtons::Left, KeyModifier::Control);
@@ -572,7 +572,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // MultiSelect — Shift-click selects the inclusive range from anchor to target
+        // MultiSelect - Shift-click selects the inclusive range from anchor to target
         // ---------------------------------------------------------------------
 
         TEST_F(TableCellsTest, MultiSelectShiftClickSelectsRange)
@@ -615,7 +615,7 @@ namespace interstice
             ASSERT_EQ(ms.lastClickedID, r1);
             ASSERT_EQ(ms.selectedIDs.size(), 1u);
 
-            // Shift-click row 3 → selects inclusive {r1, r2, r3}.
+            // Shift-click row 3 -> selects inclusive {r1, r2, r3}.
             const auto r3c = app.CenterOf(r3);
             app.InjectMouseMove(r3c, MouseButtons::None, KeyModifier::Shift);
             app.InjectMouseDown(r3c, MouseButtons::Left, KeyModifier::Shift);
@@ -688,7 +688,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Standard table — headers are sticky-pinned INSIDE the section grid,
+        // Standard table - headers are sticky-pinned INSIDE the section grid,
         // so a horizontal scroll moves header and cells together natively
         // (there is no separate header strip to mirror).
         // ---------------------------------------------------------------------
@@ -739,7 +739,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Standard table — H scrollbar drag writes the body's X offset.
+        // Standard table - H scrollbar drag writes the body's X offset.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableHScrollbarDragWritesXOffset)
         {
@@ -790,7 +790,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Standard table — V scrollbar drag writes the body's Y offset.
+        // Standard table - V scrollbar drag writes the body's Y offset.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableVScrollbarDragWritesYOffset)
         {
@@ -836,7 +836,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Standard table — with both scrollbars visible, a 12×12 corner cap sits at
+        // Standard table - with both scrollbars visible, a 12x12 corner cap sits at
         // the body's bottom-right inside corner.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, StandardTableBothScrollbarsEmitCornerCap)
@@ -884,7 +884,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Sizer X invariant — the sizer for boundary c sits at the right edge of
+        // Sizer X invariant - the sizer for boundary c sits at the right edge of
         // header cell c.
         // ---------------------------------------------------------------------
         TEST_F(TableCellsTest, SizerXAlignsWithHeaderCellRightEdgeStandard)

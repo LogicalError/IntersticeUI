@@ -45,7 +45,7 @@ void main()
 
     float distance, t, totalLen;
 
-    // Check if all four control points are collinear — covers both the degenerate
+    // Check if all four control points are collinear - covers both the degenerate
     // 2-point case (P1==P0, P3==P4) and any manually-placed straight-line bezier.
     vec2  v1    = P1 - P0;
     vec2  v2    = P4 - P0;

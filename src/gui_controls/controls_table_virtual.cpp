@@ -140,13 +140,13 @@ namespace interstice
                                     const auto& bodyRect = elementStorage.GetElementRectUnsafe(bodyRef);
                                     const int kEdgeZoneWidth      = styleManager.Px(30);
                                     const int kAutoScrollPerEvent = styleManager.Px(12);
-                                    // bodyRect.innerRect is in layout space — convert cursor too.
+                                    // bodyRect.innerRect is in layout space - convert cursor too.
                                     const int32_t mouseX    = event.LocalCursor(elementStorage).x;
                                     const int32_t innerLeft  = bodyRect.innerRect.x;
                                     const int32_t innerRight = bodyRect.innerRect.x + bodyRect.innerRect.w;
                                     int32_t scrollDelta = 0;
                                     if (mouseX < innerLeft + kEdgeZoneWidth)
-                                        scrollDelta = +kAutoScrollPerEvent; // scroll content right (offset → 0)
+                                        scrollDelta = +kAutoScrollPerEvent; // scroll content right (offset -> 0)
                                     else if (mouseX > innerRight - kEdgeZoneWidth)
                                         scrollDelta = -kAutoScrollPerEvent; // scroll content left
 
@@ -379,7 +379,7 @@ namespace interstice
 
                 interstice::LineStyle indStyle { .colorStyleIndex = lineColor, .lineWidth = float(kThick) };
 
-                // InsideLast → rectangle around the row (drop as last child).
+                // InsideLast -> rectangle around the row (drop as last child).
                 if (m_treeDropState.position == TreeDropPosition::InsideLast)
                 {
                     const int32_t leftL  = depthX;
@@ -514,7 +514,7 @@ namespace interstice
     // scroll magnitude is within ~half a row of the max. It pins (scroll + select
     // last) on the very first laid-out frame, and again whenever the row count
     // grows while still pinned; scrolling up clears the pin, scrolling back sets
-    // it. Scroll offset Y is ≤ 0 (content shifts up), so -y is the magnitude.
+    // it. Scroll offset Y is <= 0 (content shifts up), so -y is the magnitude.
     void GUIApplication::UpdateTableFollowTail(TableState& state, int32_t viewportH, int32_t contentH)
     {
         auto& sm = guiStateManager.GetScrollManagement();
@@ -532,12 +532,12 @@ namespace interstice
         bool pin = false;
         if (!state.internal.followInit && viewportH > 0 && state.internal.totalRowCount > 0)
         {
-            state.internal.followInit = true;        // first laid-out frame → initial scroll-to-bottom
+            state.internal.followInit = true;        // first laid-out frame -> initial scroll-to-bottom
             pin = true;
         }
         else if (state.internal.followInit && state.internal.followPinned && grew)
         {
-            pin = true;                      // new rows while still at the bottom → follow
+            pin = true;                      // new rows while still at the bottom -> follow
         }
 
         if (pin)
@@ -642,7 +642,7 @@ namespace interstice
         }
 
         // 3) Sizer for the dragged column's right boundary (if any).
-        // Sizers ride along with headers — no headers, no sizers.
+        // Sizers ride along with headers - no headers, no sizers.
         if (emit.showHeaders && draggedCol + 1 < colEnd)
         {
             // A 2-column slice emits exactly this one sizer.
@@ -701,7 +701,7 @@ namespace interstice
         const StyleRef rowStyleOdd  = customRows ? state->rowStyle : theme.tableRowAltStyleRef;
         const interstice::EventHandler& sharedHandler = emit.sharedRowHandler;
 
-        // Section grid rows: [header] · [top spacer] · visible rows · [bottom spacer].
+        // Section grid rows: [header] | [top spacer] | visible rows | [bottom spacer].
         // Cells of one logical row share a GridRow, which keeps column-major emission aligned.
         const int headerRowOffset = emit.showHeaders ? 1 : 0;
         const int gridRowFirst    = headerRowOffset + (firstVisible > 0 ? 1 : 0);
@@ -850,7 +850,7 @@ namespace interstice
                 if (count > bestCount) { bestCount = count; targetY = offsets[i].y; }
             }
             // If exactly one section disagrees with the majority, that's the
-            // user's scroll — adopt its Y instead of the majority's stale one.
+            // user's scroll - adopt its Y instead of the majority's stale one.
             int oddCount = 0;
             int32_t oddY = targetY;
             for (int i = 0; i < n; i++)
@@ -1371,14 +1371,14 @@ namespace interstice
             };
         }
 
-        // The arrow points opposite to the sort direction: ascending (a→z)
-        // shows a down arrow, descending (z→a) shows an up arrow.
+        // The arrow points opposite to the sort direction: ascending (a->z)
+        // shows a down arrow, descending (z->a) shows an up arrow.
         const IconID sortIcon = (effectiveSortCol < 0) ? IconID::Invalid
                                     : (statePtr->sortDescending ? theme.sortArrowUpIcon : theme.sortArrowDownIcon);
 
         // Build the shared row-backdrop handler once. The handler reads the
         // row's id from event.id, so a single instance covers every row.
-        // (Empty in cell-selection mode — cell backdrops are NoInput.)
+        // (Empty in cell-selection mode - cell backdrops are NoInput.)
         if (!emit.cellMode)
             emit.sharedRowHandler = BuildRowBackdropHandler(statePtr, id);
 
@@ -1461,7 +1461,7 @@ namespace interstice
                 }
                 else
                 {
-                    // No header row → no sizers, but column boundaries should
+                    // No header row -> no sizers, but column boundaries should
                     // still read. Emit thin static separators at each internal
                     // boundary (unless the caller opted out).
                     if (emit.columnSeparators)

@@ -11,7 +11,7 @@ namespace interstice
     {
         BeginHorizontalWrap();
 
-        // Reorderable tabs demo (horizontal) — items stretch to fill the bar's vertical space
+        // Reorderable tabs demo (horizontal) - items stretch to fill the bar's vertical space
         {
             Label("Reorderable Tabs");
 

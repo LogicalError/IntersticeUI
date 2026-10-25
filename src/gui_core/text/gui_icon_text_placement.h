@@ -97,7 +97,7 @@ namespace interstice
 
         const int32_t textAlignmentOffsetX = HorizontalAlignOffset(horizontalAlignment, rect.w, combinedWidth);
 
-        // Block vertical offset — shifts iconRect.y AND textRect.y by the
+        // Block vertical offset - shifts iconRect.y AND textRect.y by the
         // same amount so the icon/text pair tracks its alignment together.
         const int32_t blockY = rect.y + VerticalAlignOffset(verticalAlignment, rect.h, combinedHeight);
 

@@ -1,7 +1,7 @@
 // Pixel-level smoke tests on render-to-image windows: RenderWindowFrame renders
 // offscreen (BGRA8) and ReadPixels copies the frame back, with no OS window.
-// Assertions are structural only — a pixel inside a primitive
-// must differ from one outside it, sampled from the same frame — never
+// Assertions are structural only - a pixel inside a primitive
+// must differ from one outside it, sampled from the same frame - never
 // golden-image comparisons, so they hold across drivers and formats.
 
 #include "gpu_test_harness.h"

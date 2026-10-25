@@ -87,7 +87,7 @@ namespace interstice
         {
             auto rows = MakeTree();
             TreeUtils::RebuildTreeIndex(rows);
-            // Move F before B → F becomes A's first child position-wise but
+            // Move F before B -> F becomes A's first child position-wise but
             // keeps B's depth (reparent to depth 1).
             const int newIdx = TreeUtils::ReorderTreeRow(rows, 5, 1, DropPos::Before);
             EXPECT_EQ(newIdx, 1);
@@ -99,7 +99,7 @@ namespace interstice
         {
             auto rows = MakeTree();
             TreeUtils::RebuildTreeIndex(rows);
-            // Move F after B → lands past B's whole subtree (C,D), before E.
+            // Move F after B -> lands past B's whole subtree (C,D), before E.
             const int newIdx = TreeUtils::ReorderTreeRow(rows, 5, 1, DropPos::After);
             EXPECT_EQ(newIdx, 4);
             EXPECT_EQ(Names(rows), (std::vector<std::string>{ "A", "B", "C", "D", "F", "E" }));
@@ -153,7 +153,7 @@ namespace interstice
         {
             auto rows = MakeTree();
             TreeUtils::RebuildTreeIndex(rows);
-            // Move B's subtree (B,C,D) after F → B reparents to depth 0 and
+            // Move B's subtree (B,C,D) after F -> B reparents to depth 0 and
             // its children shift by the same delta.
             const int newIdx = TreeUtils::ReorderTreeRow(rows, 1, 5, DropPos::After);
             EXPECT_EQ(newIdx, 3);

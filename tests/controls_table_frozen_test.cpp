@@ -52,7 +52,7 @@ namespace interstice
 
             // Render N rows of dummy data inside a container small enough that
             // both axes overflow. Width 400 is ~100 short of the columns'
-            // intrinsic 480; height 200 with ~30 rows × 24px overflows Y.
+            // intrinsic 480; height 200 with ~30 rows x 24px overflows Y.
             void EmitFrozen(interstice::TableState& state, int rowCount = 30,
                             int width = 400, int height = 200)
             {
@@ -113,7 +113,7 @@ namespace interstice
 
         // -------------------------------------------------------------------
         // Section separators only emit between two adjacent sections; header and
-        // body share the section grid, so 1 boundary → 1 separator.
+        // body share the section grid, so 1 boundary -> 1 separator.
         // -------------------------------------------------------------------
 
         // Count elements in storage whose styleRef matches the table separator.
@@ -137,7 +137,7 @@ namespace interstice
             return count;
         }
 
-        // Two sections (no leading single-column section): one boundary →
+        // Two sections (no leading single-column section): one boundary ->
         // one separator in storage (header + body share the section grid).
         TEST_F(FrozenTableTest, NoSeparatorWhenLeftFrozenIsZero)
         {
@@ -193,7 +193,7 @@ namespace interstice
                 << "One boundary → 1 separator (header lives inside the section grid).";
         }
 
-        // Three sections (default kColumns layout) — both boundaries non-empty.
+        // Three sections (default kColumns layout) - both boundaries non-empty.
         TEST_F(FrozenTableTest, BothSeparatorsEmittedWhenAllSectionsNonEmpty)
         {
             interstice::TableState state{};
@@ -219,7 +219,7 @@ namespace interstice
         }
 
         // Sizer X for an interior boundary lines up with that column's
-        // header cell right edge — same invariant in every section.
+        // header cell right edge - same invariant in every section.
         TEST_F(FrozenTableTest, SizerXAlignsWithHeaderCellRightEdge)
         {
             interstice::TableState state{};
@@ -239,7 +239,7 @@ namespace interstice
         }
 
         // -------------------------------------------------------------------
-        // Mouse wheel — every section scrolls naturally
+        // Mouse wheel - every section scrolls naturally
         // -------------------------------------------------------------------
 
         TEST_F(FrozenTableTest, VerticalWheelOverMiddleScrollsY)
@@ -367,7 +367,7 @@ namespace interstice
         }
 
         // -------------------------------------------------------------------
-        // Mirror — vertical scroll propagates Y to every section's body
+        // Mirror - vertical scroll propagates Y to every section's body
         // -------------------------------------------------------------------
 
         TEST_F(FrozenTableTest, VerticalScrollIsMirroredToFrozenSides)
@@ -412,14 +412,14 @@ namespace interstice
         }
 
         // -------------------------------------------------------------------
-        // Sizer drag — from the header AND from the body
+        // Sizer drag - from the header AND from the body
         // -------------------------------------------------------------------
 
         // A fresh press sets activeID without capture, so the drag's MouseMove must
         // land while the button is still held. One frame per phase:
-        //   Frame N:   Move(from) + Down(from) — activeID := sizer
-        //   Frame N+1: Move(to, Left held)     — handler updates width
-        //   Frame N+2: Up(to)                  — drag teardown
+        //   Frame N:   Move(from) + Down(from) - activeID := sizer
+        //   Frame N+1: Move(to, Left held)     - handler updates width
+        //   Frame N+2: Up(to)                  - drag teardown
         static void DragSizer(HeadlessGUIApp& app, interstice::TableState& state,
                               interstice::int2 from, interstice::int2 to,
                               std::function<void()> emitFn)
@@ -669,7 +669,7 @@ namespace interstice
         }
 
         // -------------------------------------------------------------------
-        // Scrollbar drag — both axes
+        // Scrollbar drag - both axes
         // -------------------------------------------------------------------
 
         TEST_F(FrozenTableTest, VerticalScrollbarDragWritesYOffset)

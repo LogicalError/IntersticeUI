@@ -99,7 +99,7 @@ namespace interstice
                     {
                         guiStateManager.Interaction().SetClicked(event.id);
                         // No held button drives the Active state on keyboard
-                        // activation — flash it for a frame so the press shows.
+                        // activation - flash it for a frame so the press shows.
                         guiStateManager.Interaction().FlashActive(event.id);
                         if (onClick) onClick();
                         return true;
@@ -224,7 +224,7 @@ namespace interstice
                             ? DivRound(static_cast<int64_t>(currentScroll) * geom.maxThumbOffset, geom.scrollRange)
                             : 0;
 
-                        // trackPos is in layout space (taken from rect.position) — convert
+                        // trackPos is in layout space (taken from rect.position) - convert
                         // the cursor through any ancestor contentTransform first.
                         const int2 lc = event.LocalCursor(elementStorage);
                         const int32_t mousePos = vertical ? lc.y : lc.x;

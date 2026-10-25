@@ -1272,7 +1272,7 @@ namespace interstice
         EXPECT_EQ(rect.constraints.x.type, PositionType::Absolute);
         EXPECT_EQ(rect.constraints.y.type, PositionType::Relative);
         EXPECT_EQ(rect.rect.x, 37); // pinned by absolute X
-        EXPECT_EQ(rect.rect.y, 0);  // relative Y, no inset → unchanged
+        EXPECT_EQ(rect.rect.y, 0);  // relative Y, no inset -> unchanged
         EXPECT_EQ(rect.rect.w, 30);
         EXPECT_EQ(rect.rect.h, 12);
     }
@@ -1299,7 +1299,7 @@ namespace interstice
         const ElementRect& rect = storage.GetElementRectUnsafe(addResult.ref);
         EXPECT_EQ(rect.constraints.x.type, PositionType::Relative);
         EXPECT_EQ(rect.constraints.y.type, PositionType::Absolute);
-        EXPECT_EQ(rect.rect.x, 0);  // relative X, no inset → unchanged
+        EXPECT_EQ(rect.rect.x, 0);  // relative X, no inset -> unchanged
         EXPECT_EQ(rect.rect.y, 53); // pinned by absolute Y
         EXPECT_EQ(rect.rect.w, 30);
         EXPECT_EQ(rect.rect.h, 12);
@@ -1584,7 +1584,7 @@ namespace interstice
     TEST_F(LayoutEngineTest, StickyChildIsInFlowAndConsumesSpace)
     {
         // Sibling below the sticky element must sit BELOW the sticky's bottom
-        // edge — distinguishes Sticky (in-flow) from Fixed/Absolute.
+        // edge - distinguishes Sticky (in-flow) from Fixed/Absolute.
         Style parentStyle;
         parentStyle.display = Display::Flex;
         parentStyle.layoutData.flex.direction = FlexDirection::Column;

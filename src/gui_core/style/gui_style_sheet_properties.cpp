@@ -87,7 +87,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     // --- Grid column/row shorthand: span N, <start>, or <start> / span <N> --
     if (ICEq(p,"grid-column") || ICEq(p,"grid-row"))
     {
-        // "span N" → sets span only
+        // "span N" -> sets span only
         if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "span"))
         {
             m_lex.Consume(); // consume "span"
@@ -118,7 +118,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         return true;
     }
 
-    // --- Grid placement (integer or "auto" → -1) ----------------------------
+    // --- Grid placement (integer or "auto" -> -1) ----------------------------
     if (ICEq(p,"grid-column-start") || ICEq(p,"grid-row-start"))
     {
         if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text,"auto"))
@@ -261,7 +261,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     }
     if (ICEq(p,"border-style"))
     {
-        // border-style: solid | dashed | dotted — sets dash-size defaults
+        // border-style: solid | dashed | dotted - sets dash-size defaults
         if      (ICEq(v,"solid"))  { d.enumVal = 0; return true; }
         else if (ICEq(v,"dashed")) { d.enumVal = 1; return true; }
         else if (ICEq(v,"dotted")) { d.enumVal = 2; return true; }

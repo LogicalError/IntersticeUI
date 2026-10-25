@@ -15,9 +15,9 @@ namespace interstice
 
     // Opaque handle to a reference-counted atlas slot.
     //
-    // Encoding:  value == 0    → invalid
-    //            high 24 bits  → 1-based slot index (1..2^24-1)
-    //            low 8 bits    → generation (wraps)
+    // Encoding:  value == 0    -> invalid
+    //            high 24 bits  -> 1-based slot index (1..2^24-1)
+    //            low 8 bits    -> generation (wraps)
     //
     // Each Acquire* (a new slot at refcount 1, or the existing handle on dedup)
     // pairs with exactly one Release. At refcount 0 the slot goes to a per-width
@@ -220,7 +220,7 @@ namespace interstice
         static constexpr uint32_t kFreeListCount = 6;
         std::vector<uint32_t>       m_freeLists[kFreeListCount]; // slot indices
 
-        // Dedup: content hash → slot index.
+        // Dedup: content hash -> slot index.
         std::unordered_map<uint64_t, uint32_t> m_contentDedup;
 
         bool m_pageTableDirty = true; // true whenever page count / mapping changes

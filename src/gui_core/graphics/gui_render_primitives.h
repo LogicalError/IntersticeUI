@@ -3,7 +3,7 @@
 // GPU primitive formats for the GUI renderer. The structs are std430 buffer
 // layouts shared verbatim with the shaders, so they are graphics-API-neutral:
 // any backend (Vulkan today; D3D12/Metal/WebGPU later) consumes the same
-// bytes. The per-kind spec table drives pipeline creation and dispatch —
+// bytes. The per-kind spec table drives pipeline creation and dispatch -
 // adding a primitive kind is one enum value, one table row, one shader pair
 // and one emit method.
 
@@ -166,7 +166,7 @@ namespace interstice
     };
 
     // Push-constant slot order matches the GLSL push block (box, glyph, dot,
-    // line, triangle). The block is exactly 128 bytes — there is no room for
+    // line, triangle). The block is exactly 128 bytes - there is no room for
     // a sixth address, so Quad aliases the Triangle slot; the dispatch loop
     // writes each pass's own buffer address into its slot before drawing,
     // and box/quad never share a draw call.

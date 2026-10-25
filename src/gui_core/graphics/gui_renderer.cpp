@@ -12,7 +12,7 @@ namespace interstice
         uint32_t styleIndexValue = 0;
         if (boxStyleIndex != interstice::VisualBoxStyleIndex::Invalid)
         {
-            // Match StyleManager::GetVisualBoxStyle — collapse Disabled so the
+            // Match StyleManager::GetVisualBoxStyle - collapse Disabled so the
             // GPU pool lookup stays inside this style's 33-slot block.
             state &= interstice::ElementState::VisualMask;
             if ((state & interstice::ElementState::Disabled) != interstice::ElementState::None)

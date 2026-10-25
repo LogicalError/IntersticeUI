@@ -56,7 +56,7 @@ namespace interstice
             auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
             {
                 if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
-                // rect is layout-space — convert cursor through any ancestor
+                // rect is layout-space - convert cursor through any ancestor
                 // contentTransform first (e.g. a node-view canvas).
                 const int32_t cursorY = event.LocalCursor(elementStorage).y;
                 int relY = cursorY - rect.position.y;
@@ -65,9 +65,9 @@ namespace interstice
                 if (rowHasChildren)
                 {
                     // Branch zones (thirds):
-                    //   top    → Before
-                    //   middle → InsideLast (append child)
-                    //   bottom → Inside (prepend child) when open, After when closed
+                    //   top    -> Before
+                    //   middle -> InsideLast (append child)
+                    //   bottom -> Inside (prepend child) when open, After when closed
                     const bool openBranch = isOpen && *isOpen;
                     if (relY <  h / 3)       return TreeDropPosition::Before;
                     if (relY < (2 * h) / 3)  return TreeDropPosition::InsideLast;
@@ -161,7 +161,7 @@ namespace interstice
                 if (drawGuideLine)
                 {
                     // The tree indent sits halfway into the PARENT's left padding, which isn't
-                    // derivable from this element's own rect — look up the parent.
+                    // derivable from this element's own rect - look up the parent.
                     interstice::ElementRef parentRef       = ctx.GetParentRef(ctx.Ref());
                     interstice::IntRect    parentRect      = ctx.GetElementRect(parentRef);
                     interstice::IntRect    parentInnerRect = ctx.GetInnerRect(parentRef);
@@ -194,7 +194,7 @@ namespace interstice
                     const int32_t half    = thick / 2;         // insets that keep the line inside the row
                     interstice::LineStyle indStyle { .colorStyleIndex = indicatorColor, .lineWidth = float(thick) };
 
-                    // InsideLast → rectangle around the row (drop as last child).
+                    // InsideLast -> rectangle around the row (drop as last child).
                     if (m_treeDropState.position == TreeDropPosition::InsideLast)
                     {
                         const int32_t leftX  = left;
@@ -259,7 +259,7 @@ namespace interstice
                 return textSystem->RegisterEditableText(element.id, *renameBuffer, interstice::TextEditBehavior::None, element.styleRef, element.state, modified);
             }, interstice::LayoutOverride::Auto());
 
-        // Skip commit check on first frame — SetActiveTextEditor(Invalid) from a
+        // Skip commit check on first frame - SetActiveTextEditor(Invalid) from a
         // previous deactivation leaves a stale pending_text_committed.
         if ((*m_renameSub).firstFrame)
             (*m_renameSub).firstFrame = false;
@@ -384,8 +384,8 @@ namespace interstice
         //
         // Structure:
         //   [row  listItemRowStyleRef, handles drop-target + selection fallback]
-        //     ├── [knob listItemDragKnobStyleRef, MouseDown primes drag, MouseMove promotes drag]
-        //     └── [body listItemBodyStyleRef, textID, handles selection click]
+        //     +-- [knob listItemDragKnobStyleRef, MouseDown primes drag, MouseMove promotes drag]
+        //     +-- [body listItemBodyStyleRef, textID, handles selection click]
         //
         // Selection background and drop target are on the row; child drag events bubble up to it.
         // ---------------------------------------------------------------------
@@ -472,7 +472,7 @@ namespace interstice
                                 guiStateManager.TextEditorFocus().Clear();
                             }
                         }
-                        // Don't consume — the drag system also wants to see MouseUp.
+                        // Don't consume - the drag system also wants to see MouseUp.
                         break;
                     }
                     default: break;
@@ -529,7 +529,7 @@ namespace interstice
 
 
     // -----------------------------------------------------------------------
-    // VirtualTreeView — flat-data, virtualized hierarchical view backed by a
+    // VirtualTreeView - flat-data, virtualized hierarchical view backed by a
     // single-column VirtualTable. The caller owns the row vector; mutations
     // call RebuildTreeViewIndex to refresh derived fields. Selection,
     // scroll, and drag-and-drop live on the supplied TableState.

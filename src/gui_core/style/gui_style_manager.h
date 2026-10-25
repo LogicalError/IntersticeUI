@@ -107,7 +107,7 @@ namespace interstice
         VisualColorStyleIndex RegisterVisualColorStyle(const VisualColorStyle& s,
                                                        GradientHandle incomingHandle) noexcept;
 
-        // Bake a ColorStyle and register it — the preferred wrapper for most
+        // Bake a ColorStyle and register it - the preferred wrapper for most
         // call sites. Handles dedup + handle ownership in one call.
         VisualColorStyleIndex RegisterColorStyle(const ColorStyle& s,
                                                  ImageIndex textureIndex = ImageIndex::Invalid) noexcept;
@@ -128,7 +128,7 @@ namespace interstice
         void DestroyColorStyle(VisualColorStyleIndex idx) noexcept;
 
         // Releases every handle and clears every style. Intended for theme
-        // hot-reload — external holders (e.g. skribidi caret) must re-register
+        // hot-reload - external holders (e.g. skribidi caret) must re-register
         // afterwards. Does NOT destroy the gradient atlas' GPU images.
         void ClearAll() noexcept;
 

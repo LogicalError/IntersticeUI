@@ -2,7 +2,7 @@
 
 // API-neutral GUI primitive renderer: per-window targets accumulate per-kind
 // primitive streams, then Render() uploads each stream and replays the pass
-// list through the RHI. No graphics-API types appear here — a backend
+// list through the RHI. No graphics-API types appear here - a backend
 // supplies a RenderCommandList with a fence-protected transient upload arena
 // and the pipeline set built from kPrimitiveSpecs.
 

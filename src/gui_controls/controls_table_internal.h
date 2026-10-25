@@ -1,7 +1,7 @@
 #pragma once
 
 // Helpers shared between controls_table.cpp, controls_table_cells.cpp and
-// controls_table_handlers.cpp. Internal — not in gui_application.h.
+// controls_table_handlers.cpp. Internal - not in gui_application.h.
 
 #include <gui_controls/gui_application.h>
 
@@ -83,7 +83,7 @@ namespace interstice::TableInternal
 
 namespace interstice
 {
-    // Tree-cell flex-row children — emitted at drain time by EndTable's
+    // Tree-cell flex-row children - emitted at drain time by EndTable's
     // body-section drain. Defined in controls_table_cells.cpp.
     void EmitTreeCellIndent(GUIApplication& app, int depth);
     void EmitTreeCellArrowOrLeafSpacer(GUIApplication& app, bool* isOpen);

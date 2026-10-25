@@ -265,7 +265,7 @@ namespace interstice
 
         VERIFY(elementStorage.BeginChildren());
 
-        // Left column — present for every item in a menu that uses icons or has a
+        // Left column - present for every item in a menu that uses icons or has a
         // checkable (selected) item, so labels line up. A selected item shows a
         // checkmark here; otherwise the item's own icon, if any.
         if (reserveIcon)
@@ -338,7 +338,7 @@ namespace interstice
                 "\xE2\x80\xBA" /* U+203A single right angle quote */, theme.menuItemArrowStyleRef,
                 LayoutOverride{});
 
-            // Auto-select only when focus moves into the menu (see MenuItem) — keeps
+            // Auto-select only when focus moves into the menu (see MenuItem) - keeps
             // a menu-bar dropdown from cascading this submenu open before navigation.
             if (parentLevel.isOpen && parentLevel.activeItemID == ID::Invalid() && menuManager.focusSubmenuOnOpen)
             {
@@ -359,7 +359,7 @@ namespace interstice
 
             // Open submenu when this trigger is the active item.
             // The submenu is always shown when navigating to a trigger (mouse or keyboard),
-            // but focus only moves into it on mouse hover — keyboard requires Right arrow.
+            // but focus only moves into it on mouse hover - keyboard requires Right arrow.
             if (parentLevel.activeItemID == menuID)
             {
                 bool suppressed = (menuManager.suppressedSubmenuTriggerDepth == level.depth);
@@ -376,7 +376,7 @@ namespace interstice
             }
             else if (level.isOpen && level.triggerID == menuID)
             {
-                // Active item moved away from this trigger — close our submenu
+                // Active item moved away from this trigger - close our submenu
                 // (but only if no child level has an active item, i.e. we're not in a deeper submenu)
                 bool childHasActive = false;
                 for (int i = level.depth; i < MenuManager::kMaxDepth && menuManager.levels[i].isOpen; i++)
@@ -423,14 +423,14 @@ namespace interstice
 
                 const interstice::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
                 if (!triggerRectPtr)
-                    return pos.MaxHeight(workArea.h); // no button rect yet — safest is content-width
+                    return pos.MaxHeight(workArea.h); // no button rect yet - safest is content-width
 
                 const interstice::IntRect& triggerRect = *triggerRectPtr;
                 bool sidePlacedLastFrame = false;
                 if (const interstice::IntRect* windowRectPtr = m_menuRects->FindWindowRect(menuID))
                 {
                     const interstice::IntRect& windowRect = *windowRectPtr;
-                    // Side-placed ⇔ the X ranges of the popup and the trigger button
+                    // Side-placed <=> the X ranges of the popup and the trigger button
                     // don't overlap. Below/above keeps them X-aligned.
                     const int32_t triggerLeft  = triggerRect.x;
                     const int32_t triggerRight = triggerRect.x + triggerRect.w;

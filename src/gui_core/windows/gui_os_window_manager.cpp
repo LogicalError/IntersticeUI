@@ -137,7 +137,7 @@ namespace interstice
             // Destroy the context here, while its native window still exists.
             // We cannot rely on the 'Update' cleanup callback because:
             //  (a) SDL_SetWindowParent means destroying a parent SDL window
-            //      invalidates child windows — Update sees a null context
+            //      invalidates child windows - Update sees a null context
             //      for the child and skips it.
             //  (b) If this is the last window, bQuit is set and Update
             //      never runs again.
@@ -293,7 +293,7 @@ namespace interstice
             if (existing_window->state == WindowState::Hidden)
             {
                 existing_window->state = WindowState::Alive;
-                // Reposition/resize before showing — the menu may have moved
+                // Reposition/resize before showing - the menu may have moved
                 if (existing_window->GetWindowHandle() != nullptr)
                 {
                     windowBackendManager->SetWindowRect(existing_window->GetWindowHandle(), rect);

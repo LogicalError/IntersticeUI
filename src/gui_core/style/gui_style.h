@@ -38,8 +38,8 @@ namespace interstice
         Hover     = 1 << 1,
         Focused   = 1 << 2,
         Selected  = 1 << 3,
-        Selection = 1 << 4,  // Text-selection highlight modifier — combines with Active/Hover/Focused/Selected
-        Disabled  = 1 << 5,  // Exclusive — collapses any other visual bits
+        Selection = 1 << 4,  // Text-selection highlight modifier - combines with Active/Hover/Focused/Selected
+        Disabled  = 1 << 5,  // Exclusive - collapses any other visual bits
 
         VisualMask = Active | Hover | Focused | Selected | Selection | Disabled
     };
@@ -171,8 +171,8 @@ namespace interstice
     {
         Relative,   // Normal flow, relative to natural position
         Anchored,   // Anchored to another element
-        Absolute,   // Out of flow, content space — scrolls with parent (like CSS position:absolute)
-        Fixed,      // Out of flow, overlay space — immune to parent scroll (like CSS position:fixed)
+        Absolute,   // Out of flow, content space - scrolls with parent (like CSS position:absolute)
+        Fixed,      // Out of flow, overlay space - immune to parent scroll (like CSS position:fixed)
 		Centered,   // Centered in parent container
 		Sticky      // In-flow like Relative; clamped against the parent's scroll viewport edge (like CSS position:sticky)
     };
@@ -261,7 +261,7 @@ namespace interstice
         OutsideMax = 7, // Outside far edge (right/bottom)
     };
 
-    // Flip a single-axis placement (Min↔Max)
+    // Flip a single-axis placement (Min<->Max)
     constexpr AnchorPlacementAxis FlipAxis(AnchorPlacementAxis p)
     {
         switch (p)
@@ -527,7 +527,7 @@ namespace interstice
         }
 
         // Factory helpers. Each allocates a gradient-atlas slot via the supplied
-        // manager and returns the handle through outHandle — the caller owns it.
+        // manager and returns the handle through outHandle - the caller owns it.
         static VisualColorStyle Create(GradientManager& gradientManager, color4b color, GradientHandle& outHandle);
         static VisualColorStyle Create(GradientManager& gradientManager, color4f color, GradientHandle& outHandle);
         static VisualColorStyle Create(GradientManager& gradientManager, color4b color1, color4b color2, ColorType type, GradientHandle& outHandle);
@@ -554,7 +554,7 @@ namespace interstice
         ColorStyle textColor {};
         ColorStyle iconColor {};        // -interstice-icon-color; none = the text color
 
-        // Shorthand helper — sets all four edges to the same color.
+        // Shorthand helper - sets all four edges to the same color.
         void SetBorderColor(const ColorStyle& c) { borderColors[0] = borderColors[1] = borderColors[2] = borderColors[3] = c; }
         void SetBorderColor(const ColorStyle& t, const ColorStyle& r, const ColorStyle& b, const ColorStyle& l)
         { 
@@ -573,8 +573,8 @@ namespace interstice
         static constexpr int kHover     = 2;
         static constexpr int kFocus     = 4;
         static constexpr int kSelected  = 8;
-        static constexpr int kSelection = 16; // Text-selection highlight modifier — combines with the bits above (slots 16..31)
-        static constexpr int kDisabled  = 32; // Exclusive — slot 32 only; cannot be mixed with other bits
+        static constexpr int kSelection = 16; // Text-selection highlight modifier - combines with the bits above (slots 16..31)
+        static constexpr int kDisabled  = 32; // Exclusive - slot 32 only; cannot be mixed with other bits
 
         static constexpr int kStateCount = kDisabled + 1;
 

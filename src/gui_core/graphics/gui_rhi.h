@@ -1,6 +1,6 @@
 #pragma once
 
-// Thin render-hardware-interface for the GUI primitive renderer — deliberately
+// Thin render-hardware-interface for the GUI primitive renderer - deliberately
 // minimal: pipeline creation from a PrimitiveSpec, transient batch upload to
 // fence-protected storage, and draw. Textures, samplers, descriptor
 // sets, render passes and the swapchain are NOT part of this interface; they

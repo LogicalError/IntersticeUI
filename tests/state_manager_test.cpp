@@ -156,7 +156,7 @@ namespace interstice
     TEST_F(StateManagerTest, DynamicIDScrollOffsetPersistsIfSeenThisFrame)
     {
         // Use a string hint so the ID is derived from the same hash on both
-        // calls — otherwise __LINE__ differs between the two call sites.
+        // calls - otherwise __LINE__ differs between the two call sites.
         ID dynamicID = idManager.AllocateDynamicID("persists-dyn");
         ScrollOffsetHandle handle = GetScrollOffsetHandle(dynamicID);
         EXPECT_TRUE(IsHandleValid(handle));
@@ -165,8 +165,8 @@ namespace interstice
 
         AdvanceFrame();
 
-        // Create the same dynamic ID again (same hint → same counter=1 under
-        // the root parent → same hash).
+        // Create the same dynamic ID again (same hint -> same counter=1 under
+        // the root parent -> same hash).
         ID dynamicID2 = idManager.AllocateDynamicID("persists-dyn");
         EXPECT_EQ(dynamicID, dynamicID2);
 
@@ -192,7 +192,7 @@ namespace interstice
 
         stateManager.GetScrollManagement().SetScrollOffset(handle, int2{ 5, 15 });
 
-        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame — cleanup is
+        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame - cleanup is
         // deferred one frame.
         AdvanceFrame();
         AdvanceFrame();
@@ -204,7 +204,7 @@ namespace interstice
     TEST_F(StateManagerTest, RangedIDScrollOffsetPersistsIfSeenThisFrame)
     {
         // Use a string hint so the ID is derived from the same hash on both
-        // calls — otherwise __LINE__ differs between the two call sites.
+        // calls - otherwise __LINE__ differs between the two call sites.
         ID rangedID = idManager.AllocateRangedID(10, "persists-ranged");
         ScrollOffsetHandle handle = GetScrollOffsetHandle(rangedID);
         EXPECT_TRUE(IsHandleValid(handle));
@@ -239,7 +239,7 @@ namespace interstice
 
         stateManager.GetScrollManagement().SetScrollOffset(handle, int2{ 7, 14 });
 
-        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame — cleanup is
+        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame - cleanup is
         // deferred one frame.
         AdvanceFrame();
         AdvanceFrame();
@@ -267,7 +267,7 @@ namespace interstice
         stateManager.GetScrollManagement().SetScrollOffset(dynamicHandle, int2{ 2, 2 });
         stateManager.GetScrollManagement().SetScrollOffset(rangedHandle, int2{ 3, 3 });
 
-        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame — cleanup is
+        // See DynamicIDScrollOffsetCleanedUpIfNotSeenThisFrame - cleanup is
         // deferred one frame.
         AdvanceFrame();
         AdvanceFrame();

@@ -2,8 +2,8 @@
 
 // Headless test harness for GUIApplication.
 //
-// Stands up enough of the framework to drive a full frame (construction →
-// layout → input dispatch) without SDL, Vulkan, or any OS window. Use this
+// Stands up enough of the framework to drive a full frame (construction ->
+// layout -> input dispatch) without SDL, Vulkan, or any OS window. Use this
 // to integration-test widgets whose behaviour lives inside event-handler
 // lambdas (Table sort/select/reorder, Tabs, TreeView, etc).
 //
@@ -11,7 +11,7 @@
 //     HeadlessGUIApp app;
 //     app.Initialize();
 //     // Set up one or more frames. Each Frame() runs:
-//     //   BeginFrame on managers  →  your onGuiFn()  →  layout  →  dispatch.
+//     //   BeginFrame on managers  ->  your onGuiFn()  ->  layout  ->  dispatch.
 //     app.Frame([&](){
 //         app.BeginRootWindow();
 //         /* widgets here */
@@ -56,7 +56,7 @@ public:
     bool Initialize(const InitializeOptions& options = {}) override;
     void Cleanup() override;
 
-    // The harness never calls OnGUI — tests pass their widget callback
+    // The harness never calls OnGUI - tests pass their widget callback
     // directly into Frame().
     void OnGUI() override {}
 
@@ -88,7 +88,7 @@ public:
                    interstice::KeyAction action = interstice::KeyAction::KeyDown,
                    interstice::KeyModifier mods = interstice::KeyModifier::None);
 
-    // Wheel/scroll. scrollOffset is in "ticks" — the engine multiplies by
+    // Wheel/scroll. scrollOffset is in "ticks" - the engine multiplies by
     // kWheelScrollStep at the UI scale (see TryDispatchHierarchicalScroll). Use {0, +1} to
     // scroll down one notch, {0, -1} to scroll up.
     void InjectMouseScroll(interstice::int2 pos,
@@ -130,7 +130,7 @@ public:
     interstice::int2    CenterOf(interstice::ID id) const;
     interstice::ID      RootWindowID() const { return m_rootWindowID; }
 
-    // Mock backend & owned systems — exposed so tests can tune monitor
+    // Mock backend & owned systems - exposed so tests can tune monitor
     // configuration or read recorded events.
     ::testing::NiceMock<MockWindowBackend> mockBackend{};
     interstice::StubTextSystem                    ownedTextSystem{};

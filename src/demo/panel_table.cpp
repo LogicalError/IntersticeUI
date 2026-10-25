@@ -53,7 +53,7 @@ namespace interstice
 
         static std::vector<VirtualTableColumn> columns =
         {
-            // The row-index column is locked — fixed landmark on the
+            // The row-index column is locked - fixed landmark on the
             // left, and other columns can't be dragged past it.
             {
                 .column = { .header = "#", .initialWidth = 80,  .minWidth = 40, .maxWidth = 160, .locked = true },

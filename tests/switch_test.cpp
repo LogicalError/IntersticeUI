@@ -33,7 +33,7 @@ namespace
         ID switchID{};
     };
 
-    // The track is 28 × 16, the control 24 high so it lines up with fields.
+    // The track is 28 x 16, the control 24 high so it lines up with fields.
     TEST_F(SwitchTest, HasTheSpecSizes)
     {
         bool on = false;

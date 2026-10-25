@@ -280,7 +280,7 @@ namespace interstice
         // label, the dictionary row's intrinsic widths can equal or exceed
         // the area's content width, leaving no `remaining > 0` space for
         // flex-grow to distribute, and the column-flex KeepWithNext path has
-        // no shrink handling — so trailing children (value, X) end up past
+        // no shrink handling - so trailing children (value, X) end up past
         // the area's right edge and get clipped invisible.
 
         // Headless test passes with 308px each for key and value. But in the

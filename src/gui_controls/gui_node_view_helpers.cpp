@@ -358,7 +358,7 @@ namespace interstice
             }
             else
             {
-                // Bodies overlap vertically — go around the nearer outside edge.
+                // Bodies overlap vertically - go around the nearer outside edge.
                 const int32_t minTop = std::min(srcRect.Min(1), tgtRect.Min(1));
                 const int32_t maxBot = std::max(srcRect.Max(1), tgtRect.Max(1));
                 const int32_t topY = GridLineLE(minTop - grid, gridOrigin.y, grid);
@@ -418,7 +418,7 @@ namespace interstice
     {
         std::unordered_set<ID> hits;
 
-        // SCREEN → CANVAS_LAY via the inverse of the canvas's contentTransform,
+        // SCREEN -> CANVAS_LAY via the inverse of the canvas's contentTransform,
         // which is T(innerSize/2) * viewTransform. So:
         //   CANVAS_LAY = inverse(viewTransform)(SCREEN - innerRect.position - innerSize/2)
         const int2 canvasCenter = canvasInnerRectScreen.position

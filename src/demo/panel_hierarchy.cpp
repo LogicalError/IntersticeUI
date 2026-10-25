@@ -17,7 +17,7 @@ namespace interstice
 
     namespace {
 
-    // Panel data — built by EnableHierarchyPanel, torn down by DisableHierarchyPanel.
+    // Panel data - built by EnableHierarchyPanel, torn down by DisableHierarchyPanel.
     std::vector<interstice::TreeViewRow> treeRows;
     std::vector<int>                         treeVisibleIdx;
     interstice::TableState               treeViewState;
@@ -46,7 +46,7 @@ namespace interstice
     std::unordered_map<interstice::ID, int> idToFlat;
 
     constexpr int      kVizColWidth     = 24;
-    constexpr uint32_t kVizPayloadType  = 0x56495A21; // 'VIZ!' — paint-drag, not item reorder
+    constexpr uint32_t kVizPayloadType  = 0x56495A21; // 'VIZ!' - paint-drag, not item reorder
 
     enum class VizAgg { On, Off, Mixed };
 
@@ -59,8 +59,8 @@ namespace interstice
     }
 
     // Aggregate visibility of the subtree rooted at `id`, over its leaf
-    // descendants (a leaf is its own subtree). All visible → On, all
-    // invisible → Off, otherwise → Mixed. Unknown / empty → On.
+    // descendants (a leaf is its own subtree). All visible -> On, all
+    // invisible -> Off, otherwise -> Mixed. Unknown / empty -> On.
     VizAgg HierComputeAgg(interstice::ID id)
     {
         auto it = idToFlat.find(id);
@@ -231,7 +231,7 @@ namespace interstice
                 if (!keep[i]) continue;
                 TreeViewRow r  = treeRows[i];
                 r.isOpen       = true;
-                r.renameBuffer = nullptr; // copies don't write back — no rename
+                r.renameBuffer = nullptr; // copies don't write back - no rename
                 filteredRows.push_back(std::move(r));
             }
             RebuildTreeViewIndex(filteredRows);
@@ -259,7 +259,7 @@ namespace interstice
 
             VirtualTableColumn cols[2];
 
-            // Col 0 — visibility toggle. Shows the "on" eye only on hover (so
+            // Col 0 - visibility toggle. Shows the "on" eye only on hover (so
             // a fully-visible tree shows no icons); "off"/"mixed" show always.
             cols[0].column = TableColumn{ .header = {},
                 .initialWidth = kVizColWidth, .minWidth = kVizColWidth,
@@ -304,7 +304,7 @@ namespace interstice
                     el.styleRef = hierarchyVisibilityStyleRef;
                     if (icon != interstice::IconID::Invalid)
                         el.textID = textSystem->RegisterText(vizID, icon, "", el.styleRef, el.state);
-                    // Click toggles (hidden→show, otherwise hide); dragging paints that
+                    // Click toggles (hidden->show, otherwise hide); dragging paints that
                     // value over every row crossed (a VIZ-payload drag, not a reorder).
                     el.eventHandler = [this, nodeId](interstice::ElementEvent&& ev) -> bool
                     {
@@ -341,7 +341,7 @@ namespace interstice
                 });
             };
 
-            // Col 1 — the tree (mirrors VirtualTreeView's single column).
+            // Col 1 - the tree (mirrors VirtualTreeView's single column).
             cols[1].column = TableColumn{ .header = {} };
             cols[1].generateCell = [this, &rows, &visibleIdx, anyExpandable](int rowIdx)
             {
@@ -365,7 +365,7 @@ namespace interstice
         if (searching)
         {
             // Filtered view: own state, no drag-drop (a reorder of the copy
-            // couldn't be mapped back unambiguously). Visibility still works —
+            // couldn't be mapped back unambiguously). Visibility still works -
             // aggregation/application run over the master tree by node ID.
             renderTree(idManager.AllocateDynamicID(),
                        filteredRows, filteredVisibleIdx, filteredState);

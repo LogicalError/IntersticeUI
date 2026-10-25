@@ -157,8 +157,8 @@ namespace interstice
 	// Enum describing which font metrics define the line bounds for vertical alignment.
 	enum class VerticalTrim : uint8_t
 	{
-		Default = 0,    // Ascender to descender — preserves room for accents/diacritics.
-		CapToBaseline,  // Cap height to baseline — tight, visually centered for UI widgets.
+		Default = 0,    // Ascender to descender - preserves room for accents/diacritics.
+		CapToBaseline,  // Cap height to baseline - tight, visually centered for UI widgets.
 	};
 
 	enum class WordWrap : uint8_t

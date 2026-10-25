@@ -7,7 +7,7 @@
 
 //
 // This file is a file system visualization panel demo, meant to test and
-// demonstrate the grid view and drag & drop features — including dragging
+// demonstrate the grid view and drag & drop features - including dragging
 // files and folders between the grid and the folder tree.
 //
 
@@ -55,8 +55,8 @@ namespace interstice
     static int                                       currentFolder   = 0;
 
     // Search state, rebuilt only when the query, grid or selected folder changes.
-    //   gridVisible      — indices into gridEntries that match.
-    //   filteredFolder*  — folder tree reduced to folders with a matching item
+    //   gridVisible      - indices into gridEntries that match.
+    //   filteredFolder*  - folder tree reduced to folders with a matching item
     //                      (plus ancestors), shown while a query is active.
     static std::vector<int>                          gridVisible;
     static std::string                               filesSearch;
@@ -65,7 +65,7 @@ namespace interstice
     static std::vector<interstice::TreeViewRow>  filteredFolderRows;
     static std::vector<int>                          filteredFolderVisibleIdx;
     static interstice::TableState                filteredFolderState;
-    static std::vector<int>                          filteredToMaster; // filtered flat idx → master flat idx
+    static std::vector<int>                          filteredToMaster; // filtered flat idx -> master flat idx
 
     static std::vector<GridDemoItem>& CurrentItems()
     {
@@ -162,7 +162,7 @@ namespace interstice
 
         for (int i = 0; i < int(folderRows.size()); ++i)
             if (folderRows[i].id == curID) { currentFolder = i; break; }
-        // Visible indices shifted — the render pass re-selects currentFolder.
+        // Visible indices shifted - the render pass re-selects currentFolder.
         folderTreeState.selectedRowID = interstice::ID::Invalid();
         gridFilterDirty = true;
     }
@@ -193,7 +193,7 @@ namespace interstice
             if (!keep[i]) continue;
             interstice::TreeViewRow r = folderRows[i];
             r.isOpen       = true;
-            r.renameBuffer = nullptr; // copies don't write back — no rename
+            r.renameBuffer = nullptr; // copies don't write back - no rename
             filteredFolderRows.push_back(std::move(r));
             filteredToMaster.push_back(i);
         }
@@ -383,7 +383,7 @@ namespace interstice
                 items.erase(items.begin() + from);
                 if (from < to) to--;
                 items.insert(items.begin() + to, std::move(item));
-                gridFilterDirty = true; // indices shifted — rebuild the filtered view
+                gridFilterDirty = true; // indices shifted - rebuild the filtered view
             }
         };
 

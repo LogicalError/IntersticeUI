@@ -259,7 +259,7 @@ namespace interstice::vulkan
         void DestroyBuffer(const Buffer& buffer) const;
 
         // Host-visible, persistently-mapped, shader-device-address storage buffer
-        // written with a direct memcpy — no staging buffer and no blocking
+        // written with a direct memcpy - no staging buffer and no blocking
         // immediate_submit. Returns an empty buffer (outAddress = 0) for size 0.
         Buffer CreateMappedStorageBuffer(const void* data, size_t size, VkDeviceAddress& outAddress) const;
 

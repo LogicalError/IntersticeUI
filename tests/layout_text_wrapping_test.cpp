@@ -24,7 +24,7 @@ namespace interstice
     using ::testing::NiceMock;
     using GUITest::MockWindowBackend;
 
-    // charWidth=8, lineHeight=16 — the StubTextSystem defaults used throughout these tests.
+    // charWidth=8, lineHeight=16 - the StubTextSystem defaults used throughout these tests.
     static constexpr int32_t kCharWidth = 8;
     static constexpr int32_t kLineHeight = 16;
 
@@ -154,7 +154,7 @@ namespace interstice
 
         const ElementRect& rect = storage.GetElementRectUnsafe(r.ref);
         EXPECT_EQ(rect.rect.w, 80);
-        // Height is still one line — wrapping does not inflate the element rect
+        // Height is still one line - wrapping does not inflate the element rect
         EXPECT_EQ(rect.rect.h, kLineHeight);
     }
 
@@ -172,7 +172,7 @@ namespace interstice
         StyleRef styleRef = styleManager.Register(style);
 
         // "Hello World Hello World" = 23 chars = 184px unwrapped.
-        // constrained to 100px → charsPerLine = 100/8 = 12 → ceil(23/12) = 2 lines → 32px tall.
+        // constrained to 100px -> charsPerLine = 100/8 = 12 -> ceil(23/12) = 2 lines -> 32px tall.
         ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
         ID id{ .value{.integer = 5} };
         auto r = storage.Add(MakeTextElement(styleRef, id, "Hello World Hello World"),
@@ -217,7 +217,7 @@ namespace interstice
         style.borderWidths = BoxEdges(0);
         StyleRef styleRef = styleManager.Register(style);
 
-        // Short text, large element — content fits comfortably inside
+        // Short text, large element - content fits comfortably inside
         ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
         ID id{ .value{.integer = 7} };
         auto r = storage.Add(MakeTextElement(styleRef, id, "Hi"),
@@ -313,7 +313,7 @@ namespace interstice
 
         layoutEngine.Layout(*osWindowManager, storage);
 
-        // Both items have the same minimum width (one char) — their text length
+        // Both items have the same minimum width (one char) - their text length
         // does not affect the element width without explicit size constraints.
         const ElementRect& r0 = storage.GetElementRectUnsafe(itemRefs[0]);
         const ElementRect& r1 = storage.GetElementRectUnsafe(itemRefs[1]);
@@ -362,7 +362,7 @@ namespace interstice
 
         layoutEngine.Layout(*osWindowManager, storage);
 
-        // All items are one line tall — wrap mode does not auto-size element height
+        // All items are one line tall - wrap mode does not auto-size element height
         for (ElementRef ref : itemRefs)
         {
             const ElementRect& item = storage.GetElementRectUnsafe(ref);

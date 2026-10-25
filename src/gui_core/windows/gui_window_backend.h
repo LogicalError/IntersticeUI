@@ -60,8 +60,8 @@ namespace interstice
         virtual void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) = 0;
         virtual void UpdateTransparentWindow(int2 /*screenPos*/) {}
 
-        // The last rendered frame, BGRA8 with tightly packed rows; bgra holds width ×
-        // height × 4 bytes of the window's pixel size. False when it can't be read.
+        // The last rendered frame, BGRA8 with tightly packed rows; bgra holds width x
+        // height x 4 bytes of the window's pixel size. False when it can't be read.
         virtual bool ReadPixels(std::span<uint8_t> /*bgra*/) { return false; }
 
     };

@@ -191,7 +191,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // Recording — IPlatformInputHandler implementation
+    // Recording - IPlatformInputHandler implementation
     // ---------------------------------------------------------------------------
 
     static void AppendUtf8(std::string& out, uint32_t cp)
@@ -408,7 +408,7 @@ namespace interstice
             }
             else
             {
-                // ID resolved to nothing — treat as empty space so we still defocus.
+                // ID resolved to nothing - treat as empty space so we still defocus.
                 overIsControlOrEmpty = true;
             }
         }
@@ -574,7 +574,7 @@ namespace interstice
                     if (type == EventType::MouseUp && state.buttons == MouseButtons::None &&
                         guiStateManager.Interaction().GetCaptureID() == captureID)
                         guiStateManager.Interaction().ReleaseCaptureID();
-                    return; // exclusive — no other element sees this event while capture is held
+                    return; // exclusive - no other element sees this event while capture is held
                 }
                 // The captured element vanished mid-gesture: release the stale capture and
                 // route normally, or every mouse event is lost until all buttons are up.
@@ -597,7 +597,7 @@ namespace interstice
 
             const ID hovered = guiStateManager.Interaction().GetHoveredID();
 
-            // Hover chain — input handlers run before hierarchical scroll so they can consume
+            // Hover chain - input handlers run before hierarchical scroll so they can consume
             // wheel events (e.g. for zooming) and prevent the default scroll from also firing.
             // MouseScroll stops at the hovered element's window so it never reaches the window behind.
             if (hovered != ID::Invalid())

@@ -169,7 +169,7 @@ namespace interstice
         InputState down = MakeMouseDownState(0, 0);
         handler(MakeEvent(sliderID, EventType::MouseDown, down));
 
-        // +50 px on width 100, range = 10 → delta = 5.
+        // +50 px on width 100, range = 10 -> delta = 5.
         InputState move = MakeMouseMoveState(50, 0);
         handler(MakeEvent(sliderID, EventType::MouseMove, move));
         EXPECT_FLOAT_EQ(v, 15.0f);
@@ -240,7 +240,7 @@ namespace interstice
 
         guiStateManager.Interaction().SetFocusID(sliderID);
 
-        // Step is 1.0; 99.8 + 1.0 = 100.8 → clamped to 100.0.
+        // Step is 1.0; 99.8 + 1.0 = 100.8 -> clamped to 100.0.
         InputState right = MakeKeyState(KeyCode::Right);
         handler(MakeEvent(sliderID, EventType::KeyDown, right));
         EXPECT_FLOAT_EQ(v, 100.0f);
@@ -267,7 +267,7 @@ namespace interstice
         float v = 0.5f;
         auto handler = MakeSliderHandler(guiStateManager, elementStorage, &v, /*elementWidth*/100);
 
-        // Down @ 50, Up @ 50 — no movement → click semantics.
+        // Down @ 50, Up @ 50 - no movement -> click semantics.
         InputState down = MakeMouseDownState(50, 0);
         handler(MakeEvent(sliderID, EventType::MouseDown, down));
         EXPECT_FLOAT_EQ(v, 0.5f) << "MouseDown alone must not move the value";
@@ -287,7 +287,7 @@ namespace interstice
         float v = 0.5f;
         auto handler = MakeSliderHandler(guiStateManager, elementStorage, &v, /*elementWidth*/100);
 
-        // Down @ 50, Move @ 51 (delta=1 < 3px threshold), Up @ 51 → still a click.
+        // Down @ 50, Move @ 51 (delta=1 < 3px threshold), Up @ 51 -> still a click.
         InputState down = MakeMouseDownState(50, 0);
         handler(MakeEvent(sliderID, EventType::MouseDown, down));
 
@@ -306,7 +306,7 @@ namespace interstice
 
     TEST_F(SliderHandlerTest, InvertedRangeIsSwappedInternally)
     {
-        // Caller mistakenly passes max < min — handler swaps them rather than
+        // Caller mistakenly passes max < min - handler swaps them rather than
         // producing a degenerate clamp range.
         float v = 0.0f;
         auto handler = MakeSliderHandler(guiStateManager, elementStorage, &v, /*width*/100,

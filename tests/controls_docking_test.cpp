@@ -40,7 +40,7 @@ namespace interstice
                                          [this] { drawsC++; }, {},
                                          [this] { enables[2]++; }, [this] { disables[2]++; });
 
-                // [A] | [B, C] — left pane pinned at 250px.
+                // [A] | [B, C] - left pane pinned at 250px.
                 layout.root = MakeSplit(DockSplitMode::LeftPinned, 250,
                                         MakeLeaf({ panelA }),
                                         MakeLeaf({ panelB, panelC }));

@@ -2,8 +2,8 @@
 
 // Context objects passed to callbacks registered via ElementStorage:
 //
-//   - CustomDrawContext  — render-time callback (AddCustomDraw / AddCustomDrawAfter).
-//   - PostLayoutContext  — post-layout, pre-render callback (AddPostLayout).
+//   - CustomDrawContext  - render-time callback (AddCustomDraw / AddCustomDrawAfter).
+//   - PostLayoutContext  - post-layout, pre-render callback (AddPostLayout).
 //
 // Coordinate spaces for CustomDrawContext:
 //   The context renders into a CURRENT SPACE that the callback can switch at will. All
@@ -12,26 +12,26 @@
 //   transform per draw-call, so a callback may change space between primitives.
 //
 //   Spaces (set via SetSpace / SetSpaceRaw):
-//     - DrawSpace::Local (DEFAULT): the registered element's content space — (0,0) is the
+//     - DrawSpace::Local (DEFAULT): the registered element's content space - (0,0) is the
 //       top-left of its PADDING-BOX, and the element's own contentTransform (e.g. a
 //       node-view's pan/zoom) plus every ancestor transform is applied at draw.
-//     - DrawSpace::Screen: absolute layout pixels — the same space as stored element rects
+//     - DrawSpace::Screen: absolute layout pixels - the same space as stored element rects
 //       and event.state.screenPos. The window offset is handled internally.
-//     - SetSpaceRaw(M): an arbitrary space; M maps current-space → window-local.
+//     - SetSpaceRaw(M): an arbitrary space; M maps current-space -> window-local.
 //
-//   Accessors — ElementRect(), ElementInnerRect(), GetElementRect(ref), GetInnerRect(ref) —
+//   Accessors - ElementRect(), ElementInnerRect(), GetElementRect(ref), GetInnerRect(ref) -
 //   return rects already expressed in the current space, so they pass straight to Render*.
 //   (In Local space a rect is its layout position with the registered element's inner-rect
 //   origin removed; pan/zoom is applied at draw, not by the accessor. In Screen/Raw space
 //   rects are returned in absolute layout, which only matches on-screen position for
 //   elements with no transformed ancestor.)
 //
-//   ScreenToCurrent(screenPos) converts a screen-space input (cursor position — absolute
+//   ScreenToCurrent(screenPos) converts a screen-space input (cursor position - absolute
 //   layout, post-transform) into the current space. Use it for foreign inputs that are NOT
 //   rendering values; do not pass screenPos straight to Render*.
 //
 //   ClipRect() is the GPU scissor in window-local SCREEN space (unaffected by the current
-//   space). CurrentTransform() exposes the current space → window-local matrix.
+//   space). CurrentTransform() exposes the current space -> window-local matrix.
 
 #include <gui_core/gui_base_types.h>
 #include <gui_core/elements/gui_element.h>            // ElementRef (member by value)
@@ -90,10 +90,10 @@ namespace interstice
         // Re-points the renderer transform for subsequent Render* calls.
         void SetSpace(DrawSpace space);
 
-        // Set an arbitrary current space; spaceToWindowLocal maps current-space → window-local.
+        // Set an arbitrary current space; spaceToWindowLocal maps current-space -> window-local.
         void SetSpaceRaw(float3x2 spaceToWindowLocal);
 
-        // The current space → window-local transform.
+        // The current space -> window-local transform.
         inline float3x2 CurrentTransform() const noexcept { return m_currentTransform; }
 
         // Convert a SCREEN-space input (e.g. cursor position, in absolute layout) into the
@@ -118,7 +118,7 @@ namespace interstice
                        VisualColorStyleIndex colorStyleIndex = {},
                        ImageIndex textureIndex = ImageIndex::Invalid) const;
 
-        // RenderBox variants with a sub-clip. Final scissor = ClipRect() ∩ subClip.
+        // RenderBox variants with a sub-clip. Final scissor = ClipRect() & subClip.
         // subClip is in the same space as `rect`.
         void RenderBox(IntRect rect, IntRect subClip,
                        VisualBoxStyleIndex styleIndex, ElementState state,
@@ -181,8 +181,8 @@ namespace interstice
         IntRect         m_elementRect;
         IntRect         m_innerRect;
         IntRect         m_clipRect;
-        float3x2        m_renderTransform;   // immutable Local space → window-local
-        float3x2        m_currentTransform;  // current space → window-local
+        float3x2        m_renderTransform;   // immutable Local space -> window-local
+        float3x2        m_currentTransform;  // current space -> window-local
         int2            m_windowOffset;
         ITextSystem*    m_textSystem = nullptr;
         // The registered element's border box in window pixels, unsnapped and
@@ -194,7 +194,7 @@ namespace interstice
     };
 
     // Context for post-layout callbacks (AddPostLayout). Fires once per registered
-    // element AFTER layout completes and BEFORE rendering starts. Read-only — no
+    // element AFTER layout completes and BEFORE rendering starts. Read-only - no
     // drawing primitives.
     //
     // Use this for state updates that depend on final geometry. For example:

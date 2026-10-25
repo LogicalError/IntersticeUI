@@ -194,7 +194,7 @@ inline int HexDigit(char c)
 }
 
 // ============================================================================
-// StyleDecl — flat parsed declaration value (file-scope so all methods see it)
+// StyleDecl - flat parsed declaration value (file-scope so all methods see it)
 // ============================================================================
 
 struct StyleDecl
@@ -629,10 +629,10 @@ private:
             else
             {
                 // Apply to every state slot whose bits are a superset of the selector.
-                // e.g. :hover         → slots 2,3,6,7,10,11,14,15 (all with hover bit set)
-                //     :hover:selected → slots 10,11,14,15
-                //     ::selection     → slots 16..31 (all selection-modifier slots)
-                //     :focus::selection → slots 20,21,22,23,28,29,30,31
+                // e.g. :hover         -> slots 2,3,6,7,10,11,14,15 (all with hover bit set)
+                //     :hover:selected -> slots 10,11,14,15
+                //     ::selection     -> slots 16..31 (all selection-modifier slots)
+                //     :focus::selection -> slots 20,21,22,23,28,29,30,31
                 // Ordering in the CSS file is what controls priority.
                 for (int i = 0; i < Style::kDisabled; ++i)
                 {
@@ -1062,7 +1062,7 @@ private:
             if      (ICEq(unit, "fr")) { m_lex.Consume(); out = GridTrack::Fractional(val); return true; }
             else if (ICEq(unit, "px")) { m_lex.Consume(); out = GridTrack::Fixed(val);       return true; }
         }
-        out = GridTrack::Fixed(val); // bare number → pixels
+        out = GridTrack::Fixed(val); // bare number -> pixels
         return true;
     }
 

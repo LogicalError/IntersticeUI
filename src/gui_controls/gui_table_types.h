@@ -25,7 +25,7 @@
 
 namespace interstice
 {
-    // ---- Table widget: row × column data grid ----
+    // ---- Table widget: row x column data grid ----
     //
     // TableColumn describes a column; callers pass an array each frame.
     // TableState is user-owned and persists widths and selection/sort state;
@@ -136,7 +136,7 @@ namespace interstice
         };
         using TreeRowMap = std::unordered_map<interstice::ID, TreeRowInfo>;
 
-        // Cell-mode click dispatch: cell-element ID → (rowID, columnIdx).
+        // Cell-mode click dispatch: cell-element ID -> (rowID, columnIdx).
         // Populated only when selectionMode == Cell.
         struct CellLookupEntry { interstice::ID rowID; int columnIdx; };
         using CellLookupMap = std::unordered_map<interstice::ID, CellLookupEntry>;
@@ -219,7 +219,7 @@ namespace interstice
 
             // Mode-specific, lazy-allocated.
             std::unique_ptr<TreeRowMap>    treeRowInfo;               // populated by TreeCell()
-            std::vector<int>               treeVisibleIdx;            // VirtualTreeView: last frame's visible → flat rows
+            std::vector<int>               treeVisibleIdx;            // VirtualTreeView: last frame's visible -> flat rows
             std::unique_ptr<CellLookupMap> cellLookup;                // populated in cell mode
 
             // Per-table gesture state, so tables don't share click detection.
@@ -227,7 +227,7 @@ namespace interstice
             DoubleClickTracker treeCellClickTracker;
             PendingRowClick    pendingRowClick;
 
-            // Visual → dataset row permutation while sorted, else null. Rebuilt only when the
+            // Visual -> dataset row permutation while sorted, else null. Rebuilt only when the
             // sort state or row count changes (or rowOrderDirty).
             std::unique_ptr<std::vector<int>> rowOrder;
             int                               sortedColumn     = -2;     // -2 = unbuilt; -1 = built-as-identity
@@ -367,7 +367,7 @@ namespace interstice
         int               targetDepth  = 0;
     };
 
-    // ---- Table: row × column data grid ----
+    // ---- Table: row x column data grid ----
     //
     // Transient state of one VirtualTable call. Event handlers run at end of frame and
     // must never read it; they capture TableState pointers instead.

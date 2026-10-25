@@ -132,7 +132,7 @@ namespace interstice
             m_numericEditElementId = elementId;
             m_numericEditMode = type;
 
-            // Default NaN/Infinity to 0 for editing — "nan"/"inf" aren't usable as starting text.
+            // Default NaN/Infinity to 0 for editing - "nan"/"inf" aren't usable as starting text.
             bool isNonFinite = (type == NumericType::TypeFloat  && !std::isfinite(value.value_float))
                            || (type == NumericType::TypeDouble && !std::isfinite(value.value_double));
             if (isNonFinite)

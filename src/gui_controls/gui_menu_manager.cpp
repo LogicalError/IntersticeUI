@@ -315,7 +315,7 @@ namespace interstice
         auto& level = levels[0];
         if (!level.isOpen || level.triggerID != triggerID)
         {
-            // Dropdown not showing yet — open it and drop focus into the first item.
+            // Dropdown not showing yet - open it and drop focus into the first item.
             OpenMenu(guiStateManager, triggerID, /*focusIntoMenu*/ true);
         }
         else

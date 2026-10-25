@@ -1,7 +1,7 @@
 /* =============================================================================
    Style rules for IntersticeUI. Reads CSS custom properties (--accent,
    --bg-content, etc.) that are defined by a palette file (dark.css or
-   light.css). Always load a palette file BEFORE this file — var() lookups
+   light.css). Always load a palette file BEFORE this file - var() lookups
    are resolved at parse time against whatever has been defined so far.
    ============================================================================= */
 
@@ -419,7 +419,7 @@
 .button::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
 /* ---- iconButtonStyle: compact icon-only action button (list/dict add & delete).
-   Flat by default — transparent background, no border — so it reads as just the
+   Flat by default - transparent background, no border - so it reads as just the
    glyph until hovered. Centres the glyph on both axes and pins its render size so
    the button can be stretched to a row's height without the icon drifting up. */
 .icon-button {
@@ -468,7 +468,7 @@
 
 /* Flat button: looks like plain left-aligned text (no border/background), but
    stays clickable with a cursor + subtle hover. Used where a button shouldn't
-   read as a button — e.g. the shortcut-rebind cell in the Shortcuts settings. */
+   read as a button - e.g. the shortcut-rebind cell in the Shortcuts settings. */
 .flat-button {
     -interstice-icon-size: 14px;
     border-width: 0px;
@@ -589,7 +589,7 @@
 /* ---- menuTriggerStyle ----------------------------------------------------- */
 /* Dropdown / menu trigger. Visually matches .button, but its label is left-
    aligned (text-align: start) because dropdowns display a current value that
-   should read from the left edge — a centered label looks like a plain button. */
+   should read from the left edge - a centered label looks like a plain button. */
 .menu-trigger {
     min-width: 160px;
     height: 24px;
@@ -642,9 +642,9 @@
 .dashed:focus  { border-color: var(--accent); background-color: var(--bg-control); }
 .dashed::highlight(selected) { border-color: var(--line-strong); background-color: var(--bg-pressed); }
 
-/* ---- Table (row × column data grid) --------------------------------------
+/* ---- Table (row x column data grid) --------------------------------------
    Outer wrapper: flex column hosting the header + body sections. Does NOT
-   scroll — both axes are owned by the body section (.table-scrollable-body);
+   scroll - both axes are owned by the body section (.table-scrollable-body);
    the header section mirrors the body's X scroll each frame so header + body
    slide together. */
 .table {
@@ -694,7 +694,7 @@
     flex-basis: 0;
 }
 
-/* Header section grid — sibling of the body section so header rows don't
+/* Header section grid - sibling of the body section so header rows don't
    scroll with data rows. */
 .table-header-section {
     display: grid;
@@ -714,7 +714,7 @@
     background-color: var(--bg-panel);
 }
 
-/* Middle-scrollable body — MASTER scroll source for both axes. Single grid
+/* Middle-scrollable body - MASTER scroll source for both axes. Single grid
    level so cells (direct children) shift correctly with X-scroll.
    flex-basis:auto: sections start from their column widths and shrink in
    proportion, so a narrow frozen section stays narrow (basis 0 would split
@@ -731,7 +731,7 @@
     background-color: var(--bg-panel);
 }
 
-/* Fit-content section body — pinned to the sum of its column widths
+/* Fit-content section body - pinned to the sum of its column widths
    via a Width override in VirtualTable's section loop. No flex grow/shrink
    so it doesn't fight other sections for space. overflow-x:hidden because
    it's sized to exactly fit; overflow-y:auto matches .table-scrollable-body
@@ -767,7 +767,7 @@
 
 /* Locked-column header variant. Same look as .table-header but with a
    default arrow cursor (not pointer) since the column can't be dragged.
-   Sort still toggles on click for sortable locked columns — the hover
+   Sort still toggles on click for sortable locked columns - the hover
    background highlight stays so the click affordance isn't lost. */
 .table-header-locked {
     margin: 0px;
@@ -796,7 +796,7 @@
     color: var(--text-2);
     font-size: var(--font-size);
     /* Transparent so the row backdrop (a sibling grid item spanning all
-       columns, painted behind the cells) shows through — that's where
+       columns, painted behind the cells) shows through - that's where
        the row hover / selection / alternating bg actually lives. In cell
        mode the cell's own :hover/::highlight(selected) rules below take
        over per-cell. */
@@ -825,7 +825,7 @@
 .table-cell-number:hover { background-color: var(--bg-header); }
 .table-cell-number::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
-/* Compact cell — like .table-cell with tighter vertical padding, for dense
+/* Compact cell - like .table-cell with tighter vertical padding, for dense
    tables such as the console log. Opt in per table via VirtualTable's cellStyle
    (or per cell via Cell(text, style)); the row height tracks it automatically. */
 .table-cell-compact {
@@ -845,7 +845,7 @@
 /* ---- Table row backdrop ---------------------------------------------------
    One element per data row, placed as a grid item spanning every column and
    painted BEFORE the cells so it sits behind them. In row-selection mode
-   it owns the row's hover, selected and focused states — the framework's
+   it owns the row's hover, selected and focused states - the framework's
    transition system animates the background colour naturally because the
    backdrop's ID becomes m_hoveredID whenever the mouse is over any NoInput
    cell above it. The -alt variant is swapped in on every other row for a
@@ -900,8 +900,8 @@
 .table-sizer:hover  { background-color: var(--divider-hover); cursor: col-resize; }
 .table-sizer:active { background-color: var(--divider-hover); cursor: col-resize; }
 
-/* Section divider — 1px grey strip between body sections.
-   Non-interactive — no cursor change, no event handler. */
+/* Section divider - 1px grey strip between body sections.
+   Non-interactive - no cursor change, no event handler. */
 .table-separator {
     margin: 0px;
     width: 2px;
@@ -912,7 +912,7 @@
 
 /* ---- TreeTable widgets (hierarchical first column inside a Table) --------
    The tree-cell is a flex-row container holding [indent][arrow][icon][text].
-   Subclass of .table-cell — same padding, typography and hover/selection
+   Subclass of .table-cell - same padding, typography and hover/selection
    rules. overflow:hidden clips children to the cell's padding-box so
    icons/text don't bleed into the next column when the column is narrowed;
    guide-line custom-draws render in border-box space and are unaffected. */
@@ -922,14 +922,14 @@
        transparent border on the inner .tree-table-text element. Keeps
        the tree-cell's outer height equal to .table-cell's, so plain
        and tree rows mix in the same VirtualTable without spacer drift
-       — see the matching note on .tree-table-text. */
+       - see the matching note on .tree-table-text. */
     padding: 2px 8px;
     overflow: hidden;
     vertical-align: baseline;
     text-wrap: nowrap;
     color: var(--text-2);
     font-size: var(--font-size);
-    /* Transparent — the row backdrop sibling provides the row-level
+    /* Transparent - the row backdrop sibling provides the row-level
        hover/selected/alternating background. */
     background-color: transparent;
     gap: 0px;
@@ -957,7 +957,7 @@
 .tree-table-cell-row-mode:hover { background-color: transparent; }
 .tree-table-cell-row-mode::highlight(selected) { background-color: transparent; color: var(--text-1); }
 
-/* Inner elements — each defined in ONE rule only so no accidental duplicate
+/* Inner elements - each defined in ONE rule only so no accidental duplicate
    selector chains where the parser would merge conflicting declarations.
    All four carry transparent background + border so the row's hover/selected
    background (from .tree-table-cell) shows through cleanly. */
@@ -1036,7 +1036,7 @@
     /* Transparent 1px border so the element's outer size matches
        .tree-table-text-edit (which has a visible 1px border). Keeps
        the text at the same pixel position whether or not the row is
-       being renamed — cell padding is shrunk 1px vertically to absorb
+       being renamed - cell padding is shrunk 1px vertically to absorb
        this. */
     border-width: 1px;
     background-color: transparent;
@@ -1444,7 +1444,7 @@
     cursor: pointer;
 }
 /* Hover = neutral light-grey border; active/focus/selected = accent blue.
-   The background never changes in any state — only the border. */
+   The background never changes in any state - only the border. */
 .node:hover  { border-color: var(--text-3); }
 .node:active { border-color: var(--accent); }
 .node:focus  { border-color: var(--accent); }
@@ -1744,7 +1744,7 @@
 }
 
 /* ---- node-socket (the dot hit-target) ------------------------------------ */
-/* overflow:visible so the dot — and especially its larger hover halo — is not
+/* overflow:visible so the dot - and especially its larger hover halo - is not
    scissored to the socket's own 12px box (an element's custom-draw is clipped
    to its border box when its own overflow isn't visible). */
 .node-socket {
@@ -2069,7 +2069,7 @@
     background-color: transparent;
 }
 /* "selected" (current/checked) items are marked with a checkmark in the icon
-   column (see MenuItemRow), not a background — so the hover/focus highlight is
+   column (see MenuItemRow), not a background - so the hover/focus highlight is
    never ambiguous with the current-item cue. */
 /* Hovering a row also focuses it, so hover and focus look the same. */
 .menu-item-row:hover  { background-color: var(--bg-menu-hover); }
@@ -2082,7 +2082,7 @@
    glyph vertical room so its bottom isn't clipped after centering. -interstice-icon-
    size renders the glyph to fit (0 would draw at natural size and clip).
    Centering uses the text-system alignment properties (text-align +
-   -interstice-vertical-text-align), not flex — the icon is drawn by the text system,
+   -interstice-vertical-text-align), not flex - the icon is drawn by the text system,
    not laid out as a child. */
 .menu-item-icon {
     width: 16px;
@@ -2172,7 +2172,7 @@
     border-color: var(--line-strong);
 }
 
-/* Flat top-level trigger — no border/background until hover, so the bar reads
+/* Flat top-level trigger - no border/background until hover, so the bar reads
    as a strip of labels rather than a row of buttons. */
 .menu-bar-trigger {
     border-width: var(--border-thin);
@@ -2745,7 +2745,7 @@
    left/right (cursor ew-resize), -vert drags up/down (cursor ns-resize).
    Uses ew-/ns-resize rather than col-/row-resize because the knob is moved
    freely along an axis, not anchored to an edge between rows or columns.
-   Has its own event handler that primes and promotes a drag — clicks on
+   Has its own event handler that primes and promotes a drag - clicks on
    the knob enter a drag, clicks on the body select without dragging. */
 .list-item-drag-knob-horz {
     border-width: 0px;
@@ -2985,7 +2985,7 @@
     border-color: var(--panel-border);
     flex-grow: 1;
     flex-shrink: 1;
-    /* flex-basis:0 — size from the parent's available space, NOT from the
+    /* flex-basis:0 - size from the parent's available space, NOT from the
        (virtually huge) content. Without this the viewport grows to the full
        content height and the scroll never kicks in. */
     flex-basis: 0px;
@@ -3016,7 +3016,7 @@
 /* Column counterpart of .flex-fill-row: flex-basis:0 + flex-grow:1 so a pane  */
 /* holding a scroll child (e.g. the files panel's grid + slider stack inside   */
 /* the tree|grid split) is bounded to the parent's WIDTH instead of being      */
-/* floored at its content width — without basis:0, content stretched to        */
+/* floored at its content width - without basis:0, content stretched to        */
 /* exactly the viewport wedges the pane and it can never shrink.               */
 .flex-fill-col {
     border-width: 0px;
@@ -3250,13 +3250,13 @@
 
 /* Dock-content fills the leaf's remaining vertical space (after the tab bar)
    via flex-grow: 1, and shrinks (default flex-shrink: 1) when the panel's
-   natural content overflows — which is what gives it a bounded innerRect
+   natural content overflows - which is what gives it a bounded innerRect
    so vertical scrolling works.
    align-content: stretch + align-items: stretch let panel children that
    have no fixed cross-axis size (e.g. a single TreeView with flex-grow:1)
    fill the panel's full height. For multi-row panels (Inspector etc.) the
    rows' total natural height usually exceeds the panel so there's no
-   extra space to distribute — this setting only kicks in when it should. */
+   extra space to distribute - this setting only kicks in when it should. */
 .dock-content {
     border-width: 0px;
     padding: 2px;
@@ -3311,7 +3311,7 @@
     border-color: transparent;
     /* NOT a scroll container: it's a fixed-height pane and each page manages
        its own overflow (the Shortcuts grid scrolls internally). If this were
-       overflow:auto it would absorb the grid's overflow itself — the page
+       overflow:auto it would absorb the grid's overflow itself - the page
        would scroll and the table would never bound to show its own scrollbar. */
     overflow: hidden;
     flex-shrink: 1;
@@ -4652,7 +4652,7 @@
 
 
 /* Empty-and-no-drag variants. Same flex structure so layout slot is */
-/* preserved, but zero min thickness, no background, no border —     */
+/* preserved, but zero min thickness, no background, no border -     */
 /* effectively invisible until the dock swaps back to the normal     */
 /* style during a drag.                                              */
 .toolbar-side-horz-empty {
@@ -4695,7 +4695,7 @@
 .toolbar-item-horz:hover { border-color: var(--line-strong); }
 .toolbar-item-horz:active { border-color: var(--line-strong); }
 
-/* Vertical toolbar item — used by Left/Right sides. Flex-column so the */
+/* Vertical toolbar item - used by Left/Right sides. Flex-column so the */
 /* drag thumb sits ABOVE the buttons instead of to the left.            */
 .toolbar-item-vert {
     display: flex;
@@ -4712,7 +4712,7 @@
 .toolbar-item-vert:hover { border-color: var(--line-strong); }
 .toolbar-item-vert:active { border-color: var(--line-strong); }
 
-/* Drag thumb (no gripper dots) — reads as a button at rest, turns the         */
+/* Drag thumb (no gripper dots) - reads as a button at rest, turns the         */
 /* selected-tab accent (--accent-blue) on hover. Horizontal sides round the    */
 /* left (leading) edge.                                                        */
 .toolbar-thumb-horz {
@@ -4834,7 +4834,7 @@
 .toolbar-textbox::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- toolbar menuTriggerStyle --------------------------------------------- */
-/* Like .toolbar-button but text-aligned to start — menu triggers usually     */
+/* Like .toolbar-button but text-aligned to start - menu triggers usually     */
 /* show a current value that should read from the left edge.                   */
 .toolbar-menu-trigger {
     height: 24px;

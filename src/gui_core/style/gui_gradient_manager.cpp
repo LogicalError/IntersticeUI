@@ -36,7 +36,7 @@ namespace interstice
         // Refcounts saturate here instead of wrapping: a wrap would make the
         // slot read as unreferenced and the next release would free it while
         // live handles still point at its pixels. A pinned slot is leaked
-        // deliberately — the count can no longer be trusted.
+        // deliberately - the count can no longer be trusted.
         constexpr uint16_t kPinnedRefcount = 0xFFFF;
     } // anonymous namespace
 
@@ -225,7 +225,7 @@ namespace interstice
             Slot& s = m_slots[slotIdx];
             s.inUse = true;
             s.refcount = 0;
-            // row/col/page/width are retained from prior use — content will be overwritten
+            // row/col/page/width are retained from prior use - content will be overwritten
             return int32_t(slotIdx);
         }
 
@@ -441,7 +441,7 @@ namespace interstice
         Slot* s = GetSlot(handle);
         if (s == nullptr) return false;
         assert(s->refcount > 0);
-        if (s->refcount == kPinnedRefcount) return false; // pinned — count no longer trustworthy
+        if (s->refcount == kPinnedRefcount) return false; // pinned - count no longer trustworthy
         if (--s->refcount == 0)
         {
             ReleaseSlot(handle.SlotIndex());

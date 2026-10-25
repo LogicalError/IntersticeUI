@@ -890,7 +890,7 @@ namespace interstice
                     }
                 }
 
-                // Fire postDrawHead — each entry replays its OWNER's captured render transform.
+                // Fire postDrawHead - each entry replays its OWNER's captured render transform.
                 {
                     auto& draw = elementStorage.GetElementCustomDrawUnsafe(childRef);
                     for (uint32_t idx = draw.postDrawHead; idx != UINT32_MAX; )

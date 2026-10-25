@@ -23,7 +23,7 @@ namespace interstice
         }
 
         // ===================================================================
-        // Drop target — payload type filter, callback routing.
+        // Drop target - payload type filter, callback routing.
         // ===================================================================
 
         TEST(DropTargetHandler, AcceptsMatchingPayloadType)
@@ -93,7 +93,7 @@ namespace interstice
         }
 
         // ===================================================================
-        // Drag source — primes a drag in GUIStateManager.Drag() on MouseDown
+        // Drag source - primes a drag in GUIStateManager.Drag() on MouseDown
         // and reacts to Left-button MouseMove for drag-update.
         // ===================================================================
 
@@ -115,7 +115,7 @@ namespace interstice
             down.screenPos   = { 10, 20 };
             EXPECT_TRUE(handler(MakeEvent(src, EventType::MouseDown, down)));
             EXPECT_EQ(payloadFnCalls, 1);
-            // Still pending — the drag has not been promoted yet.
+            // Still pending - the drag has not been promoted yet.
             EXPECT_EQ(sm.Drag().GetDraggedID(), ID::Invalid());
             EXPECT_FALSE(sm.Drag().IsDragging());
 
@@ -140,7 +140,7 @@ namespace interstice
             down.prevButtons = MouseButtons::None;
             handler(MakeEvent(src, EventType::MouseDown, down));
 
-            // Move with NO button held — UpdateFromInput should cancel.
+            // Move with NO button held - UpdateFromInput should cancel.
             InputState move{};
             move.buttons = MouseButtons::None;
             handler(MakeEvent(src, EventType::MouseMove, move));

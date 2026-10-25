@@ -18,7 +18,7 @@ namespace interstice
                                             bool invertMouseDelta, float pixelsPerUnit)
     {
         const int sign = invertMouseDelta ? -1 : 1;
-        // Screen pixels → the stored size's units.
+        // Screen pixels -> the stored size's units.
         const float unit = pixelsPerUnit > 0.0f ? pixelsPerUnit : 1.0f;
         auto toUnits = [unit](int pixels) { return int(std::lround(float(pixels) / unit)); };
         auto fitUnits = [unit](int pixels) { return int(std::ceil(float(pixels) / unit)); };   // still fits the pixels
@@ -131,7 +131,7 @@ namespace interstice
                                           bool invertMouseDelta, float pixelsPerUnit)
     {
         const int sign = invertMouseDelta ? -1 : 1;
-        // Screen pixels → the stored size's units.
+        // Screen pixels -> the stored size's units.
         const float unit = pixelsPerUnit > 0.0f ? pixelsPerUnit : 1.0f;
         auto toUnits = [unit](int pixels) { return int(std::lround(float(pixels) / unit)); };
         auto fitUnits = [unit](int pixels) { return int(std::ceil(float(pixels) / unit)); };   // still fits the pixels
@@ -332,7 +332,7 @@ namespace interstice
                         }
                         else
                         {
-                            // Clean click → SliderField swaps the bar for an in-place textbox next frame.
+                            // Clean click -> SliderField swaps the bar for an in-place textbox next frame.
                             state->editMode = true;
                         }
                         state->draggingID = ID::Invalid();

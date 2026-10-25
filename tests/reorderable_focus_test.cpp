@@ -51,7 +51,7 @@ namespace interstice
         void TearDown() override { app.Cleanup(); }
 
         // Three rows, each [drag-thumb, Button(IsControl)]. Vertical group so
-        // a drag down past row 1's midpoint reorders row 0 → row 1.
+        // a drag down past row 1's midpoint reorders row 0 -> row 1.
         void EmitGroup()
         {
             app.BeginRootWindow();
@@ -145,7 +145,7 @@ namespace interstice
 
         FocusExternalControl();
 
-        // Press, then release on the same spot — under the drag-activation
+        // Press, then release on the same spot - under the drag-activation
         // threshold, so the reorderable handler treats this as a click.
         app.InjectMouseMove(thumbCenter);
         app.InjectMouseDown(thumbCenter);
@@ -193,7 +193,7 @@ namespace interstice
         app.InjectMouseMove(dropPos, interstice::MouseButtons::Left);
         app.Frame([&] { EmitGroup(); });
 
-        // Release — fires onReorder and focuses the destination slot's button.
+        // Release - fires onReorder and focuses the destination slot's button.
         app.InjectMouseUp(dropPos);
         app.Frame([&] { EmitGroup(); });
 

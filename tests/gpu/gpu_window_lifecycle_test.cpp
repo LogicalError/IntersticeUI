@@ -135,7 +135,7 @@ TEST_F(GpuTest, PrimitiveUploadArenaGrowsAndThenStaysStable)
 
 // Present mode: prefer MAILBOX (vsync, no tearing, lowest latency) with a third
 // image to render ahead; otherwise FIFO double-buffered. Either way the image
-// count stays minimal — not vk-bootstrap's larger default — to keep present-queue
+// count stays minimal - not vk-bootstrap's larger default - to keep present-queue
 // latency down.
 TEST_F(GpuTest, SwapchainUsesLowLatencyPresentMode)
 {

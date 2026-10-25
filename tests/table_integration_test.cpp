@@ -35,7 +35,7 @@ namespace interstice
             void SetUp() override
             {
                 app.Initialize();
-                // Stable ID for the table across frames — a dynamic id would churn
+                // Stable ID for the table across frames - a dynamic id would churn
                 // every frame and nuke the persisted selection state.
                 tableID = app.idManager.CreateStaticID();
             }
@@ -189,7 +189,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // Sort — clicking a header with `sortable` set toggles sort state.
+        // Sort - clicking a header with `sortable` set toggles sort state.
         // ---------------------------------------------------------------------------
 
         TEST_F(TableIntegrationTest, ClickingDifferentColumnHeaderChangesSortColumn)
@@ -222,7 +222,7 @@ namespace interstice
 
             // Helper: click-and-release on column 0's header. Two distinct events
             // (Down + Up) so each click is actually a fresh press (LeftPressed()
-            // needs prevButtons == None ≠ buttons == Left).
+            // needs prevButtons == None != buttons == Left).
             auto tableRect = app.GetElementRect(tableID);
             interstice::int2 col0HeaderPos{ tableRect.x + 40, tableRect.y + 8 };
             auto clickAtCol0 = [&] {
@@ -231,13 +231,13 @@ namespace interstice
                 app.InjectMouseUp(col0HeaderPos);
                 };
 
-            // Click once → descending.
+            // Click once -> descending.
             clickAtCol0();
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.sortColumn, 0);
             EXPECT_TRUE(state.sortDescending);
 
-            // Click again → ascending.
+            // Click again -> ascending.
             clickAtCol0();
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.sortColumn, 0);
@@ -245,7 +245,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // Row selection — clicking a row backdrop sets selectedRowID.
+        // Row selection - clicking a row backdrop sets selectedRowID.
         // ---------------------------------------------------------------------------
 
         TEST_F(TableIntegrationTest, ClickingRowSelectsIt)
@@ -258,7 +258,7 @@ namespace interstice
             ASSERT_EQ(state.internal.totalRowCount, 3);
             const interstice::ID row1ID = state.RowIDForIndex(1);
 
-            // Derive the hit position from the row backdrop's actual rect — row
+            // Derive the hit position from the row backdrop's actual rect - row
             // heights depend on font metrics so hard-coding a y-offset is fragile.
             auto row1Center = app.CenterOf(row1ID);
             app.InjectMouseMove(row1Center);
@@ -270,7 +270,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // Column reorder — dragging a header past another column's edge fires
+        // Column reorder - dragging a header past another column's edge fires
         // onReorderColumns(from, to).
         // ---------------------------------------------------------------------------
 
@@ -296,7 +296,7 @@ namespace interstice
             app.InjectMouseMove(dragTo, MouseButtons::Left);
             app.Frame([&] { EmitSimpleTable(state); });
 
-            // Release — should fire onReorderColumns(0, target).
+            // Release - should fire onReorderColumns(0, target).
             app.InjectMouseUp(dragTo);
             app.Frame([&] { EmitSimpleTable(state); });
 
@@ -308,7 +308,7 @@ namespace interstice
         TEST_F(TableIntegrationTest, ClickWithoutDragStillTriggersSort)
         {
             // When onReorderColumns is set, a simple click (no drag) on a sortable
-            // header still toggles sort state — the threshold check distinguishes
+            // header still toggles sort state - the threshold check distinguishes
             // the gestures.
             interstice::TableState state{};
             bool reorderCalled = false;
@@ -321,7 +321,7 @@ namespace interstice
             interstice::int2 click{ tableRect.x + 40 + 120 + 10, tableRect.y + 8 }; // column 1
             app.InjectMouseMove(click);
             app.InjectMouseDown(click);
-            app.InjectMouseUp(click);  // no mouse move → below threshold
+            app.InjectMouseUp(click);  // no mouse move -> below threshold
             app.Frame([&] { EmitSimpleTable(state); });
 
             EXPECT_EQ(state.sortColumn, 1);
@@ -349,7 +349,7 @@ namespace interstice
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
 
-            // Drag far to the right — well past column 1's and column 2's left
+            // Drag far to the right - well past column 1's and column 2's left
             // edges so the target column is the last one. One Frame commits the
             // drag state in dispatch; the NEXT frame's construction reads it and
             // applies the preview offsets before layout runs.
@@ -366,7 +366,7 @@ namespace interstice
                 "dragged column. Before=" << col1X_before
                 << " during=" << col1X_during;
 
-            // Release — next frame should snap back to natural positions.
+            // Release - next frame should snap back to natural positions.
             app.InjectMouseUp({ tableRect.x + 350, tableRect.y + 8 });
             app.Frame([&] { EmitSimpleTable(state); });
         }
@@ -400,7 +400,7 @@ namespace interstice
                 };
             app.Frame(build);
 
-            // Drag the locked column far to the right — should be inert for
+            // Drag the locked column far to the right - should be inert for
             // reorder purposes.
             auto tableRect = app.GetElementRect(tableID);
             interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
@@ -442,7 +442,7 @@ namespace interstice
                 };
             app.Frame(build);
 
-            // Drag column 2 ("C") as far left as possible — should stop at 1,
+            // Drag column 2 ("C") as far left as possible - should stop at 1,
             // not 0 (the locked pinned column keeps the left edge fixed).
             auto tableRect = app.GetElementRect(tableID);
             // Column 2 starts after 80 + gap + 100 + gap = ~188 from table edge.
@@ -486,7 +486,7 @@ namespace interstice
                 };
             app.Frame(build);
 
-            // Drag column 0 ("A") all the way to the right — should stop at 1,
+            // Drag column 0 ("A") all the way to the right - should stop at 1,
             // not 2 (the locked column pins the right edge).
             auto tableRect = app.GetElementRect(tableID);
             interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
@@ -520,7 +520,7 @@ namespace interstice
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
 
-            // Commit to drag via a small right-ward motion — past the 4px threshold
+            // Commit to drag via a small right-ward motion - past the 4px threshold
             // but not past column 1's left edge (at x=120 from the table's origin).
             interstice::int2 nudge{ tableRect.x + 50, tableRect.y + 8 };
             app.InjectMouseMove(nudge, MouseButtons::Left);
@@ -552,11 +552,11 @@ namespace interstice
             app.InjectMouseMove({ tableRect.x + 300, tableRect.y + 8 }, MouseButtons::Left);
             app.Frame([&] { EmitSimpleTable(state); });
 
-            // Escape — should cancel the drag AND release capture.
+            // Escape - should cancel the drag AND release capture.
             app.InjectKey(KeyCode::Escape);
             app.Frame([&] { EmitSimpleTable(state); });
 
-            // Subsequent MouseUp must NOT trigger the reorder callback — the drag
+            // Subsequent MouseUp must NOT trigger the reorder callback - the drag
             // was cancelled, not completed.
             app.InjectMouseUp({ tableRect.x + 300, tableRect.y + 8 });
             app.Frame([&] { EmitSimpleTable(state); });
@@ -565,7 +565,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // VirtualTable — the virtual row slice is driven by state.internal.lastViewportH and
+        // VirtualTable - the virtual row slice is driven by state.internal.lastViewportH and
         // the persistent scroll offset. Without any scroll, only leading rows render.
         // ---------------------------------------------------------------------------
 
@@ -590,8 +590,8 @@ namespace interstice
                 app.EndRootWindow();
                 });
 
-            // Far less than 50 000 rows × 2 cols. On frame 1 viewportH is still 0
-            // so only a small kBufferRows slice is emitted (6 rows × 2 cols = 12).
+            // Far less than 50 000 rows x 2 cols. On frame 1 viewportH is still 0
+            // so only a small kBufferRows slice is emitted (6 rows x 2 cols = 12).
             EXPECT_LT(cellsEmitted, 50);
             EXPECT_GT(cellsEmitted, 0);
         }
@@ -630,8 +630,8 @@ namespace interstice
             EXPECT_EQ(bodyRect1.h, bodyRect2.h);
             EXPECT_EQ(bodyRect2.h, bodyRect3.h);
             // Sanity: body height must be a SMALL fraction of the virtual content
-            // (50 000 × 28 = 1.4M px). If flex-basis isn't honoured the body would
-            // report ≥ 1M px here.
+            // (50 000 x 28 = 1.4M px). If flex-basis isn't honoured the body would
+            // report >= 1M px here.
             EXPECT_LT(bodyRect1.h, 500);
             EXPECT_GT(bodyRect1.h, 0);
         }
@@ -642,7 +642,7 @@ namespace interstice
             // at least its initialWidth and absorbs the leftover width.
             interstice::TableState state{};
             // Three columns with configured widths summing to 80+100+120 = 300.
-            // Table width 600 → 300px of leftover width should go to the last col.
+            // Table width 600 -> 300px of leftover width should go to the last col.
             interstice::VirtualTableColumn cols[] = {
                 { {.header = "A", .initialWidth = 80 } },
                 { {.header = "B", .initialWidth = 100 } },
@@ -669,7 +669,7 @@ namespace interstice
             const auto lastHeaderRect = app.GetElementRect(lastHeaderID);
 
             // The last column should be at least its configured initialWidth
-            // (120) and visibly wider — it took the leftover width.
+            // (120) and visibly wider - it took the leftover width.
             EXPECT_GE(lastHeaderRect.w, 120);
             EXPECT_GT(lastHeaderRect.w, 120)
                 << "Last column should absorb leftover width, not just fit its "
@@ -679,7 +679,7 @@ namespace interstice
         TEST_F(TableIntegrationTest, LastColumnNeverShrinksBelowConfiguredWidth)
         {
             // Symmetric: even when the table is NARROWER than the sum of fixed
-            // columns, the last column must not collapse — it uses its configured
+            // columns, the last column must not collapse - it uses its configured
             // width as a floor and the outer wrapper handles horizontal overflow.
             interstice::TableState state{};
             interstice::VirtualTableColumn cols[] = {
@@ -688,7 +688,7 @@ namespace interstice
                 { {.header = "C", .initialWidth = 200 } },
             };
 
-            // Table width 400 — less than sum of 600.
+            // Table width 400 - less than sum of 600.
             app.Frame([&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, cols, state, LayoutOverride{}.Size(400, 200)))
@@ -881,7 +881,7 @@ namespace interstice
                 app.EndRootWindow();
                 };
 
-            // Frame 1: viewport height not yet known → leading buffer only.
+            // Frame 1: viewport height not yet known -> leading buffer only.
             cellsEmitted = 0;
             app.Frame(build);
             const int frame1Cells = cellsEmitted;
@@ -889,7 +889,7 @@ namespace interstice
             // Simulate the custom-draw hook sampling the container's viewport.
             state.internal.lastViewportH = 400;
 
-            // Frame 2 now has a viewport → should emit far more rows.
+            // Frame 2 now has a viewport -> should emit far more rows.
             cellsEmitted = 0;
             app.Frame(build);
             const int frame2Cells = cellsEmitted;
@@ -900,7 +900,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // Keyboard navigation — Down arrow moves selection to the next row.
+        // Keyboard navigation - Down arrow moves selection to the next row.
         // ---------------------------------------------------------------------------
 
         TEST_F(TableIntegrationTest, DownArrowAdvancesSelectedRow)
@@ -910,7 +910,7 @@ namespace interstice
             ASSERT_EQ(state.internal.totalRowCount, 3);
 
             // Click row 0 to establish selection + focus on the table container.
-            // Hit position comes from the row backdrop's actual rect — row
+            // Hit position comes from the row backdrop's actual rect - row
             // heights depend on font metrics so a hard-coded y-offset is fragile.
             auto row0Pos = app.CenterOf(state.RowIDForIndex(0));
             app.InjectMouseMove(row0Pos);
@@ -919,17 +919,17 @@ namespace interstice
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.selectedRowID, state.RowIDForIndex(0));
 
-            // Press Down — should advance to row 1.
+            // Press Down - should advance to row 1.
             app.InjectKey(KeyCode::Down);
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.selectedRowID, state.RowIDForIndex(1));
 
-            // Down again → row 2.
+            // Down again -> row 2.
             app.InjectKey(KeyCode::Down);
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.selectedRowID, state.RowIDForIndex(2));
 
-            // Down at the bottom is clamped — still row 2.
+            // Down at the bottom is clamped - still row 2.
             app.InjectKey(KeyCode::Down);
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.selectedRowID, state.RowIDForIndex(2));
@@ -958,12 +958,12 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------------
-        // Keyboard navigation — Page Up / Page Down jump by the visible row count.
+        // Keyboard navigation - Page Up / Page Down jump by the visible row count.
         // The handler reads the body's inner rect and walks _orderedRowIDs to find
         // which rows fully fit; cursor advances/retreats by that count.
         // ---------------------------------------------------------------------------
 
-        // 30 rows × 3 cols, 200px tall body — wide enough for clicks to land.
+        // 30 rows x 3 cols, 200px tall body - wide enough for clicks to land.
         // Row count is chosen so PageDown advances by more than one but the
         // table still fits in a few pages.
         struct PagingTable
@@ -1060,7 +1060,7 @@ namespace interstice
             state.internal.lastViewportH = 200;   // simulate render-time sampling
 
             // Click first row to focus the container, then point the cursor
-            // at the last row by hand — the last row is offscreen so a click
+            // at the last row by hand - the last row is offscreen so a click
             // there won't dispatch.
             const interstice::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);

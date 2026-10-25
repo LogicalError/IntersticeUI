@@ -209,7 +209,7 @@ namespace interstice
                 app.EndRootWindow();
             });
 
-            // MakeButtonHandler only reacts to LeftPressed — Right should be ignored.
+            // MakeButtonHandler only reacts to LeftPressed - Right should be ignored.
             app.ClickAt(app.CenterOf(buttonID), MouseButtons::Right);
             app.Frame([&] {
                 app.BeginRootWindow();
@@ -268,7 +268,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Field(bool&) — Toggle
+        // Field(bool&) - Toggle
         // ---------------------------------------------------------------------
 
         TEST_F(ControlsBasicTest, ToggleFieldFlipsValueOnClick)
@@ -352,7 +352,7 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // Field(string&) — Text edit. StubTextSystem routes typed characters into
+        // Field(string&) - Text edit. StubTextSystem routes typed characters into
         // the bound string via RegisterEditableText.
         // ---------------------------------------------------------------------
 
@@ -443,7 +443,7 @@ namespace interstice
             };
             app.Frame(draw);
 
-            // No click → no focus → no active text editor.
+            // No click -> no focus -> no active text editor.
             app.InjectText("xyz");
             app.Frame(draw);
 
@@ -468,11 +468,11 @@ namespace interstice
         }
 
         // Focusing (e.g. tabbing into) a numeric field that holds NaN/Inf must
-        // not mutate the bound value — only a real edit may change it.
+        // not mutate the bound value - only a real edit may change it.
         TEST_F(ControlsBasicTest, FocusingNonFiniteNumericFieldDoesNotChangeValue)
         {
             ID id = app.idManager.CreateStaticID();
-            // Call through the base interface — the derived stub's non-template
+            // Call through the base interface - the derived stub's non-template
             // override otherwise hides the templated convenience wrapper.
             ITextSystem& ts = app.ownedTextSystem;
             for (float v0 : { std::numeric_limits<float>::quiet_NaN(),

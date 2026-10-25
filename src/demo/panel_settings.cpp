@@ -201,7 +201,7 @@ namespace interstice
         }
         RebuildTreeViewIndex(catRows);
 
-        // Reverse sync (catInternal → selection) must run before the forward
+        // Reverse sync (catInternal -> selection) must run before the forward
         // sync: clicks only mutate catInternal, and the forward sync would
         // clobber them.
         selection.selectedIDs.clear();
@@ -218,7 +218,7 @@ namespace interstice
         if (selection.selectedIDs.empty())
             selection.selectedIDs.insert(allCatID);
 
-        // Forward sync (selection → catInternal). Row IDs exist once the table
+        // Forward sync (selection -> catInternal). Row IDs exist once the table
         // has run once.
         if (catTableState.RowIDInRange(0) != interstice::ID::Invalid())
         {
@@ -296,7 +296,7 @@ namespace interstice
                     visRows.push_back({ mode, i });
                 }
             }
-            // Filtered set changed → the table's cached sort permutation is stale.
+            // Filtered set changed -> the table's cached sort permutation is stale.
             demo.shortcutsTableState.InvalidateRowOrder();
         }
 
@@ -309,7 +309,7 @@ namespace interstice
         {
             cols.resize(4);
 
-            // Command — optional per-command icon shown inline before the name.
+            // Command - optional per-command icon shown inline before the name.
             cols[0].column = { .header = "Command", .initialWidth = 180, .minWidth = 80, .maxWidth = 600 };
             cols[0].sortAscending = [this](int a, int b) {
                 const auto& vr   = demo.settingsShortcutsVisRows;
@@ -325,7 +325,7 @@ namespace interstice
                 auto& vr = demo.settingsShortcutsVisRows;
                 if (rowIdx < 0 || rowIdx >= int(vr.size())) return;
                 const auto& e = commandManager.GetCommands()[vr[rowIdx].entryIdx];
-                // Copy the label into the cell lambda — Cell may defer it for
+                // Copy the label into the cell lambda - Cell may defer it for
                 // record/replay. Commands without an icon use the indented
                 // style so their labels line up with the icon'd ones.
                 std::string label = e.description.empty() ? "(no description)" : e.description;
@@ -346,7 +346,7 @@ namespace interstice
                 });
             };
 
-            // Context — the edit mode the command belongs to.
+            // Context - the edit mode the command belongs to.
             cols[1].column = { .header = "Context", .initialWidth = 110, .minWidth = 60, .maxWidth = 400 };
             cols[1].sortAscending = [this](int a, int b) {
                 const auto& vr = demo.settingsShortcutsVisRows;
@@ -360,7 +360,7 @@ namespace interstice
                 Cell(commandManager.GetEditModeName(interstice::EditMode(vr[rowIdx].mode)));
             };
 
-            // Shortcut — the bound key combo (a flat rebind button).
+            // Shortcut - the bound key combo (a flat rebind button).
             cols[2].column = { .header = "Shortcut", .initialWidth = 140, .minWidth = 80, .maxWidth = 400 };
             cols[2].sortAscending = [this](int a, int b) {
                 const auto& vr   = demo.settingsShortcutsVisRows;
@@ -393,7 +393,7 @@ namespace interstice
                 });
             };
 
-            // Type — how the shortcut fires: an instant action (one callback on
+            // Type - how the shortcut fires: an instant action (one callback on
             // press) or a held begin/end action (RegisterHeldCommand).
             cols[3].column = { .header = "Type", .initialWidth = 80, .minWidth = 56, .maxWidth = 200 };
             cols[3].sortAscending = [this](int a, int b) {

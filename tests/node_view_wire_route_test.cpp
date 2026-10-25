@@ -39,7 +39,7 @@ namespace interstice
                    a.y < b.y + b.h && b.y < a.y + a.h;
         }
 
-        // Every segment must be horizontal or vertical — never diagonal.
+        // Every segment must be horizontal or vertical - never diagonal.
         void ExpectOrthogonal(const std::vector<int2>& route)
         {
             for (size_t i = 1; i < route.size(); ++i)
@@ -131,7 +131,7 @@ namespace interstice
 
     TEST(NodeViewWireRouteTest, TargetLeftSameHeight_RoutesAroundBothBodies)
     {
-        // Target sits entirely to the LEFT and overlaps in Y — there is no gap
+        // Target sits entirely to the LEFT and overlaps in Y - there is no gap
         // to thread, so the wire must go around the outside of both bodies.
         const IntRect src{ 0,    0, 180, 80 };
         const IntRect tgt{ -300, 20, 180, 80 };

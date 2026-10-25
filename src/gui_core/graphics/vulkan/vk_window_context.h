@@ -43,7 +43,7 @@ namespace interstice::vulkan
 
         // Per-slot draw + depth images: the FRAME_OVERLAP in-flight frames must
         // not share these (frame N's blit reads drawImage while frame N+1 would
-        // transition/write it — a cross-frame hazard). The slot's renderFence
+        // transition/write it - a cross-frame hazard). The slot's renderFence
         // wait in BeginWindowFrame already gates reuse of this slot's images.
         VulkanImage drawImage = {};
         VulkanImage depthImage = {};

@@ -10,7 +10,7 @@
 namespace interstice 
 {
     // ============================================================================
-    // StyleSheet — result of parsing a CSS-inspired style file
+    // StyleSheet - result of parsing a CSS-inspired style file
     // ============================================================================
 
     struct ParseError
@@ -158,7 +158,7 @@ namespace interstice
     //                         demi-bold | semi-bold | bold | extra-bold | black |
     //                         heavy | extra-black  (or numeric 100-950)
     //     font-style        : normal | italic | oblique
-    //     font-family       : [<family-name> | <generic>]#  — first family name is the font,
+    //     font-family       : [<family-name> | <generic>]#  - first family name is the font,
     //                         first generic (default | emoji | sans-serif | serif |
     //                         monospace | math) the fallback while it isn't registered
     //     font-stretch      : normal | condensed | expanded | ...

@@ -231,7 +231,7 @@ namespace interstice
 
             if (skb_key != SKB_KEY_NONE)
             {
-                // Enter/backspace/delete mutate the text — block them for read-only editors,
+                // Enter/backspace/delete mutate the text - block them for read-only editors,
                 // but let caret movement (arrows, home/end, with or without shift) through.
                 const bool mutatingKey = (skb_key == SKB_KEY_ENTER || skb_key == SKB_KEY_BACKSPACE || skb_key == SKB_KEY_DELETE);
                 if (readOnly && mutatingKey)
@@ -587,7 +587,7 @@ namespace interstice
 
         if (action == interstice::MouseAction::MouseDown)
         {
-            // Read-only editors never drag their text — pressing (even on selected text) starts
+            // Read-only editors never drag their text - pressing (even on selected text) starts
             // a new selection, so click-drag always selects instead of moving text.
             if (!m_skribidiContext->active_read_only &&
                 IsHoveringSelectedText(m_skribidiContext->active_element_id, windowId, screenPos))
@@ -612,7 +612,7 @@ namespace interstice
             }
 
             // Read-only: a press on a link activates the link (handled by the control), it must
-            // NOT move the caret — skip the click so the caret/selection stays put.
+            // NOT move the caret - skip the click so the caret/selection stays put.
             if (m_skribidiContext->active_read_only && IsActiveEditorPosOnLink(localPos.x, localPos.y))
             {
                 m_skribidiContext->editor_drag_active = false;

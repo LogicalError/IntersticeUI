@@ -59,10 +59,10 @@ namespace interstice
         DragOut,
         Drop,
 
-        LabelDragBegin,   // label → control: drag starting; state.scroll.x = 0
-        LabelDrag,        // label → control: drag in progress; state.scroll.x = cumulative pixel delta from start
-        LabelDragEnd,     // label → control: drag committed
-        LabelDragCancel,  // label → control: drag cancelled (Escape)
+        LabelDragBegin,   // label -> control: drag starting; state.scroll.x = 0
+        LabelDrag,        // label -> control: drag in progress; state.scroll.x = cumulative pixel delta from start
+        LabelDragEnd,     // label -> control: drag committed
+        LabelDragCancel,  // label -> control: drag cancelled (Escape)
     };
 
     enum class KeyCode : uint32_t

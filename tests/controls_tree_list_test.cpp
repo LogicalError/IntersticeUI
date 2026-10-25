@@ -1,7 +1,7 @@
 // Integration tests for VirtualTreeView (the flat-data tree-view widget,
 // backed by VirtualTable + TreeCell). Selection and scroll live on
 // TableState; the widget exposes sub-range row IDs as TableState.selectedRowID
-// — translate to the dataset (flat) index via visibleIdx.
+// - translate to the dataset (flat) index via visibleIdx.
 
 #include <gtest/gtest.h>
 
@@ -102,7 +102,7 @@ namespace interstice
             // After construction:  Branch0 / Leaf / Leaf / Branch1 / Leaf / Leaf.
             EXPECT_EQ(int(rows.size()), 6);
 
-            // Close the first branch — its two children should drop out
+            // Close the first branch - its two children should drop out
             // of the visible-index walk.
             rows[0].isOpen = false;
             RenderFrame();
@@ -320,7 +320,7 @@ namespace interstice
                 << "B=(" << ptB.x << "," << ptB.y << ")";
             ASSERT_TRUE(rowsB[0].isOpen);
 
-            // B click 1 → A click → B click 2. A consumed MouseDown captures the mouse
+            // B click 1 -> A click -> B click 2. A consumed MouseDown captures the mouse
             // until a frame after button-up, so each click settles before the next.
             auto clickAndSettle = [&](interstice::int2 pt) {
                 app.ClickAt(pt);

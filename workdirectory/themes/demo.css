@@ -326,12 +326,12 @@
     flex-grow: 1;
     align-self: stretch;
 }
-/* Selection highlight — without this the selection is made but painted with no
+/* Selection highlight - without this the selection is made but painted with no
    colour (invisible). Any selectable text style needs a ::selection rule. */
 .log-detail-text::selection { color: var(--text-1); background-color: var(--selection); }
 
 /* ---- Vertical-align demo boxes -------------------------------------------
-   12 styles: 4 icon-sides × 3 block vertical alignments. Fixed min-height
+   12 styles: 4 icon-sides x 3 block vertical alignments. Fixed min-height
    so the alignment effect is visible in panel_misc's demo grid. Rules are
    cumulative (the parser's GetOrCreate reuses the same Style object per
    class name), so the three blocks below stack onto each other without
@@ -368,7 +368,7 @@
 
 /* ---- hierarchy eye-toggle (visibility column) ---------------------------- */
 /* The cell wrapper: zero horizontal padding (unlike .table-cell) so the eye
-   element fills the whole narrow column edge-to-edge — no dead side strips
+   element fills the whole narrow column edge-to-edge - no dead side strips
    that would hover differently from the eye. Vertical metrics mirror
    .table-cell so the row height stays in step with the tree column. */
 .hierarchy-viz-cell {
@@ -385,8 +385,8 @@
 }
 
 /* Full-height strip painted behind the eye column (TableColumn::
-   columnBackground). Translucent so it darkens whatever shows through —
-   the zebra rows, the row-hover highlight, the selection — by a constant
+   columnBackground). Translucent so it darkens whatever shows through -
+   the zebra rows, the row-hover highlight, the selection - by a constant
    amount, and carries that same shade on past the last row. */
 .hierarchy-viz-bg {
     margin: 0px;
@@ -396,7 +396,7 @@
 }
 /* The eye element itself: fills the cell in both axes (so even the icon-less
    "visible" state keeps a full hit area) and centres a 16px icon. No hover
-   background of its own — that would paint a flat colour over the alternating
+   background of its own - that would paint a flat colour over the alternating
    row stripes; the hover affordance is the eye appearing. */
 .hierarchy-visibility {
     margin: 0px;
@@ -415,7 +415,7 @@
 }
 
 /* ---- Settings page title -------------------------------------------------- */
-/* Header line above each settings page's body — larger font, bold-ish, with
+/* Header line above each settings page's body - larger font, bold-ish, with
    a bottom margin so it visually separates from the field rows. */
 .settings-title {
     border-width: 0px;

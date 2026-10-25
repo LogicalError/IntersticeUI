@@ -2,7 +2,7 @@
 
 // Shared headless fixture for real-SkribidiTextSystem tests. Boots the actual
 // text system (real font loading + HarfBuzz shaping + bidi) with a stub atlas
-// manager and clipboard and a nullptr GraphicsContext — the shaping /
+// manager and clipboard and a nullptr GraphicsContext - the shaping /
 // measurement / editing paths never deref the renderer. Tests must run from
 // workdirectory/ (CMake's gtest_discover_tests sets that) so fonts resolve.
 

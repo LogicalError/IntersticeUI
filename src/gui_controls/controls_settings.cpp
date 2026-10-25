@@ -18,7 +18,7 @@ namespace interstice
         // translated to/from state.selectedID. Consume a click into selectedID before
         // seeding selectedRowID from it, or the seed overwrites the click.
         {
-            // Sync page list → flat rows. depth=0 throughout.
+            // Sync page list -> flat rows. depth=0 throughout.
             state.internal.rows.clear();
             state.internal.rows.reserve(state.pages.size());
             for (size_t i = 0; i < state.pages.size(); ++i)

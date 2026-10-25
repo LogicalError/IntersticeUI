@@ -173,7 +173,7 @@ namespace interstice
                             // Check if mouse is within this row's cross-axis bounds
                             if (mouseCross >= itemCross && mouseCross < itemCross + itemCrossSize)
                             {
-                                // Mouse is in this row — scan to end of row
+                                // Mouse is in this row - scan to end of row
                                 for (int j = i + 1; j < count; j++)
                                 {
                                     if (drag.originalRects[j].position[crossAxis] != prevCross)
@@ -251,7 +251,7 @@ namespace interstice
                         }
                     };
 
-                    // Threshold never crossed → treat as a click, not a drag.
+                    // Threshold never crossed -> treat as a click, not a drag.
                     if (!drag.dragActivated)
                     {
                         guiStateManager.Interaction().ReleaseCaptureID();

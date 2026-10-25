@@ -76,7 +76,7 @@ namespace interstice
                              int32_t grid, int2 gridOrigin,
                              const WireRouteOverrides& overrides = {});
 
-    // Stable key for a wire, identified by its target (input) endpoint — each input carries
+    // Stable key for a wire, identified by its target (input) endpoint - each input carries
     // at most one incoming wire. Keys the per-wire lane overrides and drag handles.
     constexpr uint32_t WireKey(int targetNode, int targetProp)
     {

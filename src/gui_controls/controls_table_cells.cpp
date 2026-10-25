@@ -1,7 +1,7 @@
 // Body cells:
-//   - Cell(text), Cell(lambda), TreeCell — called from a column's generateCell;
+//   - Cell(text), Cell(lambda), TreeCell - called from a column's generateCell;
 //     allocate IDs, resolve selection, and emit into the open body section.
-//   - EmitDirectCell{Text,Custom,Tree} — emit one cell element (plus children).
+//   - EmitDirectCell{Text,Custom,Tree} - emit one cell element (plus children).
 //
 // Header cells, row backdrops, sizers and the surrounding section/scrollbar
 // geometry live in controls_table_virtual.cpp.
@@ -18,7 +18,7 @@ namespace interstice
 
     namespace
     {
-        // 300 ms double-click toggle for `*isOpen`. Cell mode only — in
+        // 300 ms double-click toggle for `*isOpen`. Cell mode only - in
         // row mode the equivalent lives in BuildRowBackdropHandler (the
         // tree cell shares rowID with the backdrop, which catches dispatch first).
         interstice::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, interstice::EventHandler inner)
@@ -99,7 +99,7 @@ namespace interstice
                 glyph.styleRef = app.theme.treeTableArrowGlyphStyleRef;
                 glyph.flags    = interstice::ElementFlags::NoInput;
                 glyph.state    = app.guiStateManager.GetCurrentState(glyphID);
-                // Explicit size — the arrow SVG is 8×8 intrinsic.
+                // Explicit size - the arrow SVG is 8x8 intrinsic.
                 const float glyphSize = static_cast<float>(app.theme.treeTableArrowGlyphSize);
                 interstice::ContentRun arrowRun[] = {
                     { .type = interstice::ContentRun::Icon,
@@ -236,8 +236,8 @@ namespace interstice
         const interstice::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        // Row-mode cells are NoInput (click → select row), except columns that
-        // host their own widget — those stay hittable so the widget gets input.
+        // Row-mode cells are NoInput (click -> select row), except columns that
+        // host their own widget - those stay hittable so the widget gets input.
         const bool cellInteractive = cellMode || emit.columns[c].column.interactiveContent;
         const interstice::ElementFlags cellFlags =
             cellInteractive ? interstice::ElementFlags::None : interstice::ElementFlags::NoInput;

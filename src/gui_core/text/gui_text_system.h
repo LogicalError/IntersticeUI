@@ -415,7 +415,7 @@ namespace interstice
 
         /// Render text at the specified position with clipping.
         /// `rect` is in renderer space (layout / window-local) and is where the
-        /// text actually paints — it may be larger than `innerRect` when the
+        /// text actually paints - it may be larger than `innerRect` when the
         /// element scrolls its text content.
         /// `innerRect` is the visible content area in absolute layout coordinates
         /// (the element's ElementRect::innerRect). The text system hit-tests
@@ -528,7 +528,7 @@ namespace interstice
 
         /// Signal that the cursor has moved and should be scrolled into view.
         /// Called internally when the user navigates with keyboard or mouse.
-        /// Does not perform scrolling itself — call GetCursorRect() to consume
+        /// Does not perform scrolling itself - call GetCursorRect() to consume
         /// the pending request and perform the actual scroll externally.
         virtual void EnsureCursorVisible(ID textEditorId) = 0;
 

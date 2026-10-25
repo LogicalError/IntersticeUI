@@ -1,6 +1,6 @@
 // Table row and header heights from the Graphite spec: 22 for the profiler (the
 // default cell), 24 for the data table and the log, 27 for the shortcuts list,
-// headers 26–28.
+// headers 26-28.
 
 #include <gtest/gtest.h>
 

@@ -1,5 +1,5 @@
 // Public table API: BeginTable/EndTable + BeginRow/EndRow. Thin recording
-// shell — the real work happens when EndTable hands the recorded cells to
+// shell - the real work happens when EndTable hands the recorded cells to
 // VirtualTable (controls_table_virtual.cpp).
 //
 // Cell record-builders live in controls_table_cells.cpp; event-handler

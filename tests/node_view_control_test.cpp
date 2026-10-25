@@ -1,13 +1,13 @@
 // Tests for the node-view widget (GUIApplication::RenderNodeView,
 // controls_node_view.cpp) through the headless harness.
 //
-// HARNESS LIMITATION (#68) — read before adding node-level interaction tests:
+// HARNESS LIMITATION (#68) - read before adding node-level interaction tests:
 // the node-view canvas uses overflow:auto + flex-grow:1 with no flex-basis:0,
 // and the engine does not zero a scroll container's min-content height (see
 // the project memory on flex-basis bounding). With no height-giving dock
 // parent (absent in the harness) the canvas collapses to ~0 height. Its nodes
 // are Absolute-positioned, so they render at their `pos` but fall OUTSIDE the
-// collapsed canvas's hit region — clicks/drags on nodes and sockets never
+// collapsed canvas's hit region - clicks/drags on nodes and sockets never
 // dispatch. So this file covers only what the harness can reach: layout and
 // the CANVAS-level interactions (pan, zoom, marquee activation, background
 // click). Node-level math (socket wiring routes, marquee containment, hit

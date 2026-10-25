@@ -3,7 +3,7 @@
 // Production gates each bar on TableState's overflow flags, which a
 // POST-LAYOUT sampler on the section body sets (contentSize vs innerRect).
 // The harness skips per-element post-layout, so this fixture fires the
-// registered entries manually after each frame — the same loop production
+// registered entries manually after each frame - the same loop production
 // runs in gui_application.cpp after Layout(). That makes the real emission
 // path observable headless: frame N samples, frame N+1 emits the bars.
 
@@ -132,7 +132,7 @@ namespace interstice
         TEST_F(TableScrollbarTest, FixedSizeTableEmitsVerticalScrollbar)
         {
             Frame([&] { BuildFixedSize(); });   // frame 1: sampler runs
-            Frame([&] { BuildFixedSize(); });   // frame 2: overflow flags consumed → bar emitted
+            Frame([&] { BuildFixedSize(); });   // frame 2: overflow flags consumed -> bar emitted
             Frame([&] { BuildFixedSize(); });   // frame 3: bar laid out with sampled viewport
 
             ASSERT_TRUE(app.HasElement(state.internal.vertScrollbarID))
@@ -237,7 +237,7 @@ namespace interstice
             {
                 app.BeginRootWindow();
                 // Faithful dock hosting: a fixed-size leaf stand-in, then the
-                // UNSIZED dock-content (flex-grow:1, no explicit size — it gets
+                // UNSIZED dock-content (flex-grow:1, no explicit size - it gets
                 // its height from the leaf via flex-shrink), exactly as
                 // EmitDockLeaf wraps a panel's onPanelGUI.
                 app.BeginArea(app.idManager.AllocateDynamicID("leaf"),

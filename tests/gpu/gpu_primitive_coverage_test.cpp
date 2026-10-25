@@ -47,7 +47,7 @@ namespace
                            /*scale*/1.0f, /*bpp*/8, /*mode*/0, solidColor, clip);
         }
 
-        // One full window frame emitting every primitive kind — the all-kinds
+        // One full window frame emitting every primitive kind - the all-kinds
         // analogue of the harness's RenderOneFrameWithDot.
         void RenderOneFrameAllKinds(interstice::vulkan::VulkanWindowContext* ctx, interstice::int2 size)
         {

@@ -165,7 +165,7 @@ namespace interstice
             EmitGrid(5, sel, &multi);
             ASSERT_EQ(multi.lastClickedID, ids[1]);
 
-            // Shift+Click 3 → range {1, 2, 3}.
+            // Shift+Click 3 -> range {1, 2, 3}.
             app.ClickAt(app.CenterOf(ids[3]), MouseButtons::Left, KeyModifier::Shift);
             EmitGrid(5, sel, &multi);
 
@@ -309,11 +309,11 @@ namespace interstice
         }
 
         // ---------------------------------------------------------------------
-        // VirtualGridView viewport tracking — files-panel shaped structure.
+        // VirtualGridView viewport tracking - files-panel shaped structure.
         // ---------------------------------------------------------------------
 
-        // Mirrors the Files panel: fixed outer pane → split with a fixed left column
-        // → grid pane → VirtualGridView with stretched cells. Shrinking the pane must
+        // Mirrors the Files panel: fixed outer pane -> split with a fixed left column
+        // -> grid pane -> VirtualGridView with stretched cells. Shrinking the pane must
         // shrink the viewport; a content-derived min width would lock it at the old size.
         class GridViewShrinkTest : public ::testing::Test
         {

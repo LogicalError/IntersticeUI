@@ -26,7 +26,7 @@ namespace interstice::TreeUtils
 
     // Recompute derived index fields (skipCount, ancestorLineMask,
     // isLastSibling) from each row's depth. Call once after structural
-    // edits; toggling isOpen does not need a rebuild. O(n²) worst case;
+    // edits; toggling isOpen does not need a rebuild. O(n^2) worst case;
     // fine for the hundreds-of-rows datasets these views target.
     template <TreeRowLike Row>
     void RebuildTreeIndex(std::vector<Row>& rows)

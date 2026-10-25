@@ -68,14 +68,14 @@ namespace interstice
         {
             app.SetDrawCacheEnabled(true);
 
-            RunFrame(); // frame 1: miss → body runs, content built into main storage
+            RunFrame(); // frame 1: miss -> body runs, content built into main storage
             EXPECT_EQ(bodyRuns, 1);
             EXPECT_TRUE(app.HasElement(btnA));
             EXPECT_TRUE(app.HasElement(btnB));
 
-            RunFrame(); // frame 2: hit → body skipped AND content NOT rebuilt
+            RunFrame(); // frame 2: hit -> body skipped AND content NOT rebuilt
             EXPECT_EQ(bodyRuns, 1);
-            EXPECT_FALSE(app.HasElement(btnA)); // content absent — never traversed
+            EXPECT_FALSE(app.HasElement(btnA)); // content absent - never traversed
             EXPECT_FALSE(app.HasElement(btnB));
             EXPECT_TRUE(app.HasElement(scopeID)); // container placeholder remains
 
@@ -90,27 +90,27 @@ namespace interstice
         {
             app.SetDrawCacheEnabled(true);
 
-            RunFrame(); // miss → content built
+            RunFrame(); // miss -> content built
             const int2 aCenter = app.CenterOf(btnA);
-            RunFrame(); // hit → content absent (clean)
+            RunFrame(); // hit -> content absent (clean)
             EXPECT_FALSE(app.HasElement(btnA));
 
-            // Cursor enters the panel → it wakes (rebuilds) so content is hit-testable.
+            // Cursor enters the panel -> it wakes (rebuilds) so content is hit-testable.
             app.InjectMouseMove(aCenter);
             RunFrame(); // clean frame; cursor-inside invalidates the scope
-            RunFrame(); // rebuilt → content live
+            RunFrame(); // rebuilt -> content live
             EXPECT_TRUE(app.HasElement(btnA));
             const int hoveredRuns = bodyRuns;
             RunFrame(); // stays live while cursor inside (rebuilds each frame)
             EXPECT_GT(bodyRuns, hoveredRuns);
             EXPECT_TRUE(app.HasElement(btnA));
 
-            // Cursor leaves → the panel settles back to clean (content absent).
+            // Cursor leaves -> the panel settles back to clean (content absent).
             app.InjectMouseMove({ 1900, 1000 });
             for (int i = 0; i < 5; i++) RunFrame();
             const int settledRuns = bodyRuns;
             RunFrame();
-            EXPECT_EQ(bodyRuns, settledRuns); // no more rebuilds — clean again
+            EXPECT_EQ(bodyRuns, settledRuns); // no more rebuilds - clean again
             EXPECT_FALSE(app.HasElement(btnA)); // content absent
         }
 
@@ -123,7 +123,7 @@ namespace interstice
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    // Inner 100px, content 3×80px → overflows → gets a scroll handle.
+                    // Inner 100px, content 3x80px -> overflows -> gets a scroll handle.
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
                                         interstice::LayoutOverride{}.Width(200).Height(100)))
                     {
@@ -137,11 +137,11 @@ namespace interstice
                 });
             };
 
-            frame(); // miss → content built; container gets a scroll handle
+            frame(); // miss -> content built; container gets a scroll handle
             auto& sm = app.guiStateManager.GetScrollManagement();
             ASSERT_TRUE(sm.IsScrollOffsetHandleValid(sm.GetScrollOffsetHandle(scopeID)));
 
-            frame(); // hit → content absent, but the scroll handle is kept alive
+            frame(); // hit -> content absent, but the scroll handle is kept alive
             EXPECT_EQ(bodyRuns, 1);
             EXPECT_FALSE(app.HasElement(btnA));
             EXPECT_TRUE(sm.IsScrollOffsetHandleValid(sm.GetScrollOffsetHandle(scopeID)));
@@ -223,10 +223,10 @@ namespace interstice
             RunFrame(7);
             EXPECT_EQ(bodyRuns, 1);
 
-            RunFrame(8); // signature changed → rebuild
+            RunFrame(8); // signature changed -> rebuild
             EXPECT_EQ(bodyRuns, 2);
 
-            RunFrame(8); // stable again → cached
+            RunFrame(8); // stable again -> cached
             EXPECT_EQ(bodyRuns, 2);
         }
 
@@ -276,13 +276,13 @@ namespace interstice
                 });
             };
 
-            frame(); // miss → button present
+            frame(); // miss -> button present
             const int2 c = app.CenterOf(btnA);
-            frame(); // hit → button absent (clean)
+            frame(); // hit -> button absent (clean)
             EXPECT_FALSE(app.HasElement(btnA));
 
-            app.InjectMouseMove(c); // cursor over the panel → wakes it
-            frame(); frame();       // rebuilt → button live
+            app.InjectMouseMove(c); // cursor over the panel -> wakes it
+            frame(); frame();       // rebuilt -> button live
             EXPECT_TRUE(app.HasElement(btnA));
 
             app.InjectMouseDown(c);
@@ -321,7 +321,7 @@ namespace interstice
             };
 
             frame(); // both miss
-            frame(); // outer hit → inner content replayed, inner body not run
+            frame(); // outer hit -> inner content replayed, inner body not run
             EXPECT_EQ(outerRuns, 1);
             EXPECT_EQ(innerRuns, 1);
 
@@ -384,7 +384,7 @@ namespace interstice
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    // Container 100px tall, content 240px → overflows → it scrolls.
+                    // Container 100px tall, content 240px -> overflows -> it scrolls.
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
                                         interstice::LayoutOverride{}.Width(200).Height(100)))
                     {
@@ -407,9 +407,9 @@ namespace interstice
             ASSERT_TRUE(sm.IsScrollOffsetHandleValid(h));
             sm.SetScrollOffset(h, int2{ 0, 30 });
 
-            frame(); // scroll changed → rebuild
+            frame(); // scroll changed -> rebuild
             EXPECT_EQ(bodyRuns, 2);
-            frame(); // stable again → cached
+            frame(); // stable again -> cached
             EXPECT_EQ(bodyRuns, 2);
         }
 
@@ -470,9 +470,9 @@ namespace interstice
                 });
             };
 
-            frame(); // miss (build 1) — first capture
-            frame(); // warmup → miss (build 2)
-            frame(); // settled → hit
+            frame(); // miss (build 1) - first capture
+            frame(); // warmup -> miss (build 2)
+            frame(); // settled -> hit
             frame(); // hit
             EXPECT_EQ(bodyRuns, 2); // built twice (warmup), then served from cache
         }
@@ -496,11 +496,11 @@ namespace interstice
                 });
             };
 
-            frame(); // miss → field present
+            frame(); // miss -> field present
             const int2 c = app.CenterOf(btnA);
-            frame(); // hit → field absent (clean)
+            frame(); // hit -> field absent (clean)
 
-            app.InjectMouseMove(c); frame(); frame(); // wake → field live
+            app.InjectMouseMove(c); frame(); frame(); // wake -> field live
             app.ClickAt(c);                           // focus the field
             frame();
 
@@ -604,7 +604,7 @@ namespace interstice
             };
 
             frame(); frame(); frame();
-            EXPECT_EQ(draws, 3); // opted out → rebuilds every frame
+            EXPECT_EQ(draws, 3); // opted out -> rebuilds every frame
             app.Cleanup();
         }
 
@@ -632,7 +632,7 @@ namespace interstice
 
             frame(); frame();
             EXPECT_EQ(draws, 1);        // cached by default
-            app.InvalidatePanel(panel); // data changed → force a rebuild
+            app.InvalidatePanel(panel); // data changed -> force a rebuild
             frame();
             EXPECT_EQ(draws, 2);        // rebuilt
             frame();

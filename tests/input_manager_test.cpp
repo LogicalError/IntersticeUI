@@ -197,7 +197,7 @@ namespace interstice
     {
         manager.OnMouseMove(ID::Invalid(), interstice::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None);
 
-        manager.ConsumeKey(); // no keyboard event — should be a no-op
+        manager.ConsumeKey(); // no keyboard event - should be a no-op
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 1u);
@@ -298,7 +298,7 @@ namespace interstice
         manager.PushGlobalHandler([&](ElementEvent&& event) -> bool
             {
                 receivedKeys.push_back(event.state.lastKey);
-                return false; // don't consume — let next event through
+                return false; // don't consume - let next event through
             });
 
         Dispatch();
@@ -312,7 +312,7 @@ namespace interstice
     // so mouse events fall through to normal routing instead of being swallowed.
     TEST_F(InputManagerTest, DanglingCaptureIsReleasedOnMouseEvent)
     {
-        // Empty storage — the captured ID does not resolve to any element.
+        // Empty storage - the captured ID does not resolve to any element.
         ASSERT_EQ(elementStorage.BeginConstruction(), ElementStorageResult::Success);
         ASSERT_EQ(elementStorage.EndConstruction(), ElementStorageResult::Success);
 
@@ -469,7 +469,7 @@ namespace interstice
 
     TEST_F(InputManagerDefocusTest, ClickOnEmptySpaceDefocusesTextEditor)
     {
-        // No tree needed — overID = Invalid is treated as empty space.
+        // No tree needed - overID = Invalid is treated as empty space.
         ASSERT_EQ(elementStorage.BeginConstruction(), ElementStorageResult::Success);
         ASSERT_EQ(elementStorage.EndConstruction(), ElementStorageResult::Success);
 

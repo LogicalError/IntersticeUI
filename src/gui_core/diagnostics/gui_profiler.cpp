@@ -254,7 +254,7 @@ namespace interstice::Diagnostics
         const uint64_t tsc = ProfTicks();
         if (!m_calStarted) { m_calNs0 = ns; m_calTicks0 = tsc; m_calStarted = true; return; }
         const int64_t dns = ns - m_calNs0;
-        if (dns > 50'000'000)   // ≥50ms baseline → stable ratio
+        if (dns > 50'000'000)   // >=50ms baseline -> stable ratio
         {
             const double ratio = double(tsc - m_calTicks0) / double(dns);
             if (ratio > 0.0) m_tscPerNs = ratio;

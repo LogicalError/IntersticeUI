@@ -581,7 +581,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------
-    // ScreenToElementSpace — maps screen pixels through the ancestors'
+    // ScreenToElementSpace - maps screen pixels through the ancestors'
     // contentTransforms into an element's own rect space.
     // ---------------------------------------------------------------------
 
@@ -597,7 +597,7 @@ namespace interstice
         auto& rootRect = storage.GetElementRectUnsafe(rootResult.ref);
         rootRect.rect = IntRect{ 0, 0, 200, 200 };
         rootRect.innerRect = rootRect.rect;
-        // No contentTransform set → identity.
+        // No contentTransform set -> identity.
 
         // Cursor at (50, 75) maps to (50, 75) in child's space (no transforms).
         const int2 mapped = storage.ScreenToElementSpace(int2{ 50, 75 }, childResult.ref);
@@ -620,7 +620,7 @@ namespace interstice
         // Centring transform: content (0, 0) maps to screen (400, 300).
         rootRect.contentTransform = float3x2::Translate(float2{ 400.f, 300.f });
 
-        // Cursor at screen (60, 240) maps to child space (-340, -60) —
+        // Cursor at screen (60, 240) maps to child space (-340, -60) -
         // the same inverse that GetElementIDAt applies during descent.
         const int2 mapped = storage.ScreenToElementSpace(int2{ 60, 240 }, childResult.ref);
         EXPECT_EQ(mapped.x, -340);
@@ -629,7 +629,7 @@ namespace interstice
 
     TEST_F(ElementStorageTest, ScreenToElementSpace_StacksTransformsAcrossMultipleAncestors)
     {
-        // root (T1 = Translate(100, 0)) → middle (T2 = Translate(50, 0)) → leaf
+        // root (T1 = Translate(100, 0)) -> middle (T2 = Translate(50, 0)) -> leaf
         // Leaf-space x = screen x - 150.
         ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
         auto rootResult = storage.Add(CreateElement(1));
@@ -649,7 +649,7 @@ namespace interstice
         m.rect = m.innerRect = IntRect{ 0, 0, 1000, 1000 };
         m.contentTransform = float3x2::Translate(float2{ 50.f, 0.f });
 
-        // Cursor at screen 200 → after T1^-1 around pivot (0,0): 100 → after
+        // Cursor at screen 200 -> after T1^-1 around pivot (0,0): 100 -> after
         // T2^-1 around pivot (0,0): 50. So leaf-space x = 50.
         const int2 mapped = storage.ScreenToElementSpace(int2{ 200, 0 }, leafResult.ref);
         EXPECT_EQ(mapped.x, 50);
@@ -658,10 +658,10 @@ namespace interstice
 
     TEST_F(ElementStorageTest, ScreenToElementSpace_RoundTripsWithGetElementIDAt)
     {
-        // Build root (centring contentTransform) → child at a negative-layout
+        // Build root (centring contentTransform) -> child at a negative-layout
         // position. The screen coord where the child renders, when fed through
         // ScreenToElementSpace and compared to child.rect, must land INSIDE
-        // child.rect — this is the exact invariant event handlers depend on.
+        // child.rect - this is the exact invariant event handlers depend on.
         ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
         auto rootResult = storage.Add(CreateElement(1));
         ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);

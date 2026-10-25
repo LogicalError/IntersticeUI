@@ -223,7 +223,7 @@ namespace interstice
 
         // ---- Selection: capture a tree-row click -------------------------
         // The table writes selectedRowID during input (after this build). If it
-        // changed since we last forced it, the user clicked a row — adopt it as
+        // changed since we last forced it, the user clicked a row - adopt it as
         // the shared selection. (Flame clicks set s_selectedKey directly.)
         if (tableState.selectedRowID != prevSelectedRow
             && tableState.selectedRowID.GetMode() == interstice::IDMode::SubRange)
@@ -427,7 +427,7 @@ namespace interstice
             // inner width for next frame's pixel layout.
             interstice::Element flameRoot{};
             flameRoot.id       = flameRootID;
-            flameRoot.styleRef = flameClipStyle;   // column + overflow:hidden → clips the bottom, no scaling
+            flameRoot.styleRef = flameClipStyle;   // column + overflow:hidden -> clips the bottom, no scaling
             const auto flameRef = RegisterElement(std::move(flameRoot),
                                                   LayoutOverride{}.Height(styleManager.Px(flameHeight)).FlexShrink(1));
             VERIFY(elementStorage.AddCustomDraw(flameRef,
@@ -466,8 +466,8 @@ namespace interstice
                     box.eventHandler = [key, file, line](interstice::ElementEvent&& e) -> bool {
                         if (e.type == interstice::EventType::MouseDown && e.state.LeftPressed())
                         {
-                            if (s_selectedKey == key) OpenSourceFile(file, line);             // re-click → jump
-                            else { s_selectedKey = key; s_flameSelectPending = true; }    // first click → select
+                            if (s_selectedKey == key) OpenSourceFile(file, line);             // re-click -> jump
+                            else { s_selectedKey = key; s_flameSelectPending = true; }    // first click -> select
                             return true;
                         }
                         return false;

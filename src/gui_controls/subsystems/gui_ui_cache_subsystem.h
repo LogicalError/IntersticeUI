@@ -38,7 +38,7 @@ namespace interstice
             std::unordered_set<ID> scopeIDs;  // every element id in the subtree (membership tests)
             // Scroll offsets of scroll containers in the scope at capture time. A
             // change (wheel/drag scroll) invalidates the cache so virtual content
-            // re-emits its visible rows — scroll isn't an interaction-state change.
+            // re-emits its visible rows - scroll isn't an interaction-state change.
             std::vector<std::pair<ID, int2>> scrollSnapshot;
             // Text-editor element ids in the scope (recorded at capture). A focused
             // editor must rebuild every frame so its per-frame editable-text
@@ -57,10 +57,10 @@ namespace interstice
             int2       cachedSize {};
             IntRect    cachedContentBounds {}; // the built content's bounds, restored on clean frames
             bool       hasCachedSize    = false;
-            bool       usesPostLayout   = false; // subtree uses AddPostLayout → needs the deferred-measurement settle
+            bool       usesPostLayout   = false; // subtree uses AddPostLayout -> needs the deferred-measurement settle
 
             bool     captured        = false; // a snapshot exists
-            bool     nonCacheable    = false; // subtree opened a window etc. → always rebuild
+            bool     nonCacheable    = false; // subtree opened a window etc. -> always rebuild
             bool     dirty           = false; // forced rebuild (Invalidate / size change / propagation)
             bool     missedThisFrame = false; // rebuilt (not replayed) this frame
             uint64_t firstCaptureFrame = 0;   // frame of first capture (for the deferred-measurement settle)

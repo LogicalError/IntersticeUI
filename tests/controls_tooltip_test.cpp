@@ -40,11 +40,11 @@ namespace interstice
             tm.BeginFrame(target, ID::Invalid(), 0.0f, true, false, false, false, false);
             EXPECT_FALSE(tm.ShouldShow(target));
 
-            // 0.4s — still under threshold.
+            // 0.4s - still under threshold.
             tm.BeginFrame(target, ID::Invalid(), 0.4f, false, false, false, false, false);
             EXPECT_FALSE(tm.ShouldShow(target));
 
-            // 0.6s — past threshold, should show now.
+            // 0.6s - past threshold, should show now.
             tm.BeginFrame(target, ID::Invalid(), 0.6f, false, false, false, false, false);
             EXPECT_TRUE(tm.ShouldShow(target));
         }
@@ -61,7 +61,7 @@ namespace interstice
             tm.BeginFrame(first, ID::Invalid(), 0.6f, false, false, false, false, false);
             ASSERT_TRUE(tm.ShouldShow(first));
 
-            // Move hover to second — visibility resets, no immediate show.
+            // Move hover to second - visibility resets, no immediate show.
             tm.BeginFrame(second, ID::Invalid(), 0.7f, true, false, false, false, false);
             EXPECT_FALSE(tm.ShouldShow(second));
 
@@ -80,7 +80,7 @@ namespace interstice
             tm.BeginFrame(target, ID::Invalid(), 0.6f, false, false, false, false, false);
             ASSERT_TRUE(tm.ShouldShow(target));
 
-            // hasMousePress = true → dismiss.
+            // hasMousePress = true -> dismiss.
             tm.BeginFrame(target, ID::Invalid(), 0.7f, false, true, false, false, false);
             EXPECT_FALSE(tm.ShouldShow(target));
         }
@@ -117,7 +117,7 @@ namespace interstice
         TEST_F(ControlsTooltipTest, KeyboardFocusChangeShowsTooltipImmediately)
         {
             // When focus moves to a new element via keyboard (no mouse press),
-            // the tooltip for that element shows immediately — no hover delay.
+            // the tooltip for that element shows immediately - no hover delay.
             TooltipManager tm;
             tm.delaySeconds = 0.5f;
             ID focused{}; focused.value.dynamicParts.hashValue = 9;

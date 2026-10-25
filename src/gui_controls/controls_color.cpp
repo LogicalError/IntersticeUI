@@ -50,7 +50,7 @@ namespace
                            interstice::color4f c0, interstice::color4f c1)
     {
         interstice::ColorStyle cs = interstice::ColorStyle::Create(c0, c1, interstice::ColorType::LinearGradient);
-        // Rotate 90° so gradient goes left→right instead of top→bottom
+        // Rotate 90 degrees so gradient goes left->right instead of top->bottom
         cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0));
         if (idx == interstice::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
@@ -125,7 +125,7 @@ namespace interstice
     {
         constexpr float kPi = 3.14159265f;
 
-        // Hue position [0,1] → color, for the hue strip of each space.
+        // Hue position [0,1] -> color, for the hue strip of each space.
         color4f SpaceHueColor(ColorSpace space, float hue)
         {
             switch (space)
@@ -830,7 +830,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // ColorField — swatch + optional picker popup
+    // ColorField - swatch + optional picker popup
     // ---------------------------------------------------------------------------
 
     namespace

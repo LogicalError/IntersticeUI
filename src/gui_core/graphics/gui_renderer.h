@@ -70,7 +70,7 @@ namespace interstice
                                  VisualColorStyleIndex colorIndex,
                                  interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
 
-        // Outlined polyline. closed=true adds a closing segment from last→first point.
+        // Outlined polyline. closed=true adds a closing segment from last->first point.
         void RenderPolyline(std::span<const interstice::int2> points, bool closed,
                             interstice::IntRect clipRect, const LineStyle& style);
 

@@ -291,7 +291,7 @@ namespace interstice
         EXPECT_EQ(crossDrops.back().srcIdx,  0);
         EXPECT_EQ(crossDrops.back().tgtSide, ToolbarSide::Bottom);
 
-        // Backing data: itemTop0 moved from Top → Bottom.
+        // Backing data: itemTop0 moved from Top -> Bottom.
         EXPECT_EQ(sideItems[(int)ToolbarSide::Top].size(), 1u);
         EXPECT_EQ(sideItems[(int)ToolbarSide::Top][0], itemTop1);
         EXPECT_EQ(sideItems[(int)ToolbarSide::Bottom].size(), 2u);
@@ -299,7 +299,7 @@ namespace interstice
     }
 
     // -------------------------------------------------------------------------
-    // 6. Releasing outside ALL sides fires onTearOff — caller is expected to
+    // 6. Releasing outside ALL sides fires onTearOff - caller is expected to
     //    move the toolbar from sides[srcSide] into their own floating list.
     //    The reorder/cross-drop callbacks must NOT fire.
     // -------------------------------------------------------------------------

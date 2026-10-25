@@ -1,7 +1,7 @@
 // Event-handler builders attached by BeginTable / BeginRow:
 //   - BuildTableContainerHandler: MouseDown (focus), MouseScroll (routed to the
 //     section body under the cursor), KeyDown (keyboard nav).
-//   - BuildRowBackdropHandler: row click — single/double-click,
+//   - BuildRowBackdropHandler: row click - single/double-click,
 //     Ctrl+Shift / slow re-click (rename), Shift / Ctrl multi-select.
 //
 // Cell-emission: controls_table_cells.cpp. Structural emission:
@@ -47,7 +47,7 @@ namespace interstice
                     if (delta.x == 0 && delta.y == 0) return false;
 
                     interstice::ID targetBodyID = interstice::ID::Invalid();
-                    // Compare against rect coords in layout space — convert the
+                    // Compare against rect coords in layout space - convert the
                     // screen cursor through any ancestor contentTransform first.
                     const int2 localCursor = event.LocalCursor(elementStorage);
                     for (int i = 0; i < n; i++)
@@ -442,7 +442,7 @@ namespace interstice
                 {
                     applyClickSelection(rowID, state->internal.pendingRowClick.mods);
                 }
-                // Always clear on any LeftReleased — the click is over.
+                // Always clear on any LeftReleased - the click is over.
                 state->internal.pendingRowClick = {};
                 return false;
             }
@@ -454,7 +454,7 @@ namespace interstice
                 auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
                 {
                     if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
-                    // rect is in layout space — convert cursor through any
+                    // rect is in layout space - convert cursor through any
                     // ancestor contentTransform first.
                     const int32_t cursorY = event.LocalCursor(elementStorage).y;
                     int relY = cursorY - rect.position.y;
@@ -465,9 +465,9 @@ namespace interstice
                     if (branch)
                     {
                         // Branch zones (thirds):
-                        //   top    → Before
-                        //   middle → InsideLast (append child)
-                        //   bottom → Inside (prepend child) when open, After when closed
+                        //   top    -> Before
+                        //   middle -> InsideLast (append child)
+                        //   bottom -> Inside (prepend child) when open, After when closed
                         const bool openBranch = info->isOpen && *info->isOpen;
                         if (relY <  h / 3)      return TreeDropPosition::Before;
                         if (relY < (2 * h) / 3) return TreeDropPosition::InsideLast;
@@ -493,7 +493,7 @@ namespace interstice
                         ? std::max<int32_t>(0, state->internal.actualRowHeight) : 0;
                     const int32_t hPad    = state->internal.anyHorzOverflow
                         ? theme.scrollbarThickness : 0;
-                    // bodyRect.innerRect is layout-space — convert cursor too.
+                    // bodyRect.innerRect is layout-space - convert cursor too.
                     const int32_t mouseY    = event.LocalCursor(elementStorage).y;
                     const int32_t innerTop  = bodyRect.innerRect.y + headerH;
                     const int32_t innerBot  = bodyRect.innerRect.y + bodyRect.innerRect.h - hPad;
@@ -598,7 +598,7 @@ namespace interstice
             const auto* info = state->FindTreeRow(rowID);
             const bool hasRename = (info && info->renameBuf);
 
-            // Ctrl+Shift+Click — start rename. Don't touch focus here:
+            // Ctrl+Shift+Click - start rename. Don't touch focus here:
             // next frame's TreeItemRenameCheck moves focus to the editor.
             if (hasRename && ctrlShift)
             {
@@ -607,7 +607,7 @@ namespace interstice
                 return true;
             }
 
-            // Double-click → caller's row handler (if set) else toggle tree branch.
+            // Double-click -> caller's row handler (if set) else toggle tree branch.
             if (sameDbl && dblMs < 300.0f)
             {
                 if (state->onRowDoubleClick)
@@ -626,7 +626,7 @@ namespace interstice
                 }
             }
 
-            // Slow re-click (500-3000ms) on a selected renameable row → rename.
+            // Slow re-click (500-3000ms) on a selected renameable row -> rename.
             // Off with drag-and-drop (it would fire before the drag threshold);
             // F2 and Ctrl+Shift+Click still work.
             if (hasRename && wasSelected && sameDbl
@@ -660,7 +660,7 @@ namespace interstice
             }
             else
             {
-                // No drag-and-drop → select immediately on MouseDown.
+                // No drag-and-drop -> select immediately on MouseDown.
                 applyClickSelection(rowID, event.state.modifiers);
             }
             return true;

@@ -52,7 +52,7 @@ namespace interstice
         auto ctx = MakeCtx(app);
 
         FramePipeline pipeline;
-        // No callbacks registered — every stage must run cleanly.
+        // No callbacks registered - every stage must run cleanly.
         pipeline.RunStage(FrameStage::PreFrame,      ctx);
         pipeline.RunStage(FrameStage::PreConstruct,  ctx);
         pipeline.RunStage(FrameStage::PostConstruct, ctx);

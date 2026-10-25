@@ -31,7 +31,7 @@ namespace interstice
         InputManager() = default;
         ~InputManager() = default;
 
-        // IPlatformInputHandler — called by the platform backend when OS events arrive.
+        // IPlatformInputHandler - called by the platform backend when OS events arrive.
         void OnKeyboard(interstice::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
         void OnMouseMove(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override;
         void OnMouseButton(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;

@@ -90,7 +90,7 @@ namespace interstice
         }
 
         // ===================================================================
-        // interstice::Chain — composing two handlers.
+        // interstice::Chain - composing two handlers.
         // ===================================================================
 
         TEST(ChainHandler, FirstHandlerShortCircuits)

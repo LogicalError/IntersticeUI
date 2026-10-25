@@ -44,8 +44,8 @@ namespace interstice
             }
             void TearDown() override { app.Cleanup(); }
 
-            // Body container 400×300; columns total ~800 → overflow X.
-            // 200 rows × ~24 px → overflow Y.
+            // Body container 400x300; columns total ~800 -> overflow X.
+            // 200 rows x ~24 px -> overflow Y.
             void Emit(interstice::TableState& state, int rowCount = 200,
                       int width = 400, int height = 300)
             {
@@ -255,7 +255,7 @@ namespace interstice
             const int2 atMax = SectionScroll(state);
             ASSERT_LT(atMax.y, 0);
 
-            // Sustained wheel-down at max — verify no oscillation across many frames.
+            // Sustained wheel-down at max - verify no oscillation across many frames.
             for (int i = 0; i < 10; ++i)
             {
                 app.InjectMouseMove(center);
@@ -366,7 +366,7 @@ namespace interstice
         {
             // Same table with and without X overflow.
 
-            // Scenario A: NO X-overflow — flag false, no pad expected.
+            // Scenario A: NO X-overflow - flag false, no pad expected.
             interstice::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/false); };
             pinA();
@@ -375,7 +375,7 @@ namespace interstice
             const int32_t rangeNoOverflow = SectionScrollRange(app, stateA.SectionBodyID(0));
             ASSERT_GT(rangeNoOverflow, 0);
 
-            // Scenario B: X-overflow — flag true, pad expected.
+            // Scenario B: X-overflow - flag true, pad expected.
             interstice::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true); };
             pinB();
@@ -661,7 +661,7 @@ namespace interstice
                 << "dragging into the right edge zone must scroll content "
                 << "LEFT (offset.x decreases)";
 
-            // Now move near LEFT edge — should scroll content right.
+            // Now move near LEFT edge - should scroll content right.
             // First scroll the section back so there's room to scroll right.
             sm.SetScrollOffset(handle, int2{ -100, 0 });
             app.Frame([&]{ Emit(state); pin(); });
@@ -721,7 +721,7 @@ namespace interstice
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index), 0)
                 << "Home must select dataset row 0, not the topmost visible row";
 
-            // Press End — selection must jump to row totalRowCount-1.
+            // Press End - selection must jump to row totalRowCount-1.
             app.InjectKey(interstice::KeyCode::End);
             app.Frame([&]{ Emit(state); pin(); });
 
@@ -856,7 +856,7 @@ namespace interstice
 
         // ---------------------------------------------------------------
         // Pressing Up must scroll so the new selected row's TOP clears
-        // the sticky header — otherwise the header paints over the
+        // the sticky header - otherwise the header paints over the
         // row's top edge and the user can't see what's selected.
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardUpScrollsSelectedRowBelowStickyHeader)
@@ -1152,8 +1152,8 @@ namespace interstice
         // Click-to-sort builds a visual-order permutation from sortAscending;
         // selection is keyed by dataset row, so it follows the row.
         // ---------------------------------------------------------------
-        // followTail selects the row shown at the bottom — under a sort that is
-        // not the last dataset row — and with multi-select the selection must
+        // followTail selects the row shown at the bottom - under a sort that is
+        // not the last dataset row - and with multi-select the selection must
         // land in the multi-select set (that is what row highlighting reads).
         TEST_F(TableVirtualScrollTest, FollowTailSelectsTheBottomRowWhenSortedAndMultiSelect)
         {
@@ -1330,7 +1330,7 @@ namespace interstice
             EXPECT_EQ(state.DatasetToVisual(2), 4)
                 << "row 2 (value 50) is now at visual position 4";
 
-            // Flip to descending — same lambda, the widget swaps args.
+            // Flip to descending - same lambda, the widget swaps args.
             state.sortDescending = true;
             app.Frame([&]{ emitSorted(); });
             const std::vector<int> expectedDesc = { 2, 4, 0, 3, 1 };
@@ -1338,7 +1338,7 @@ namespace interstice
             EXPECT_EQ(state.DatasetToVisual(2), 0)
                 << "row 2 (value 50, the largest) is now at visual position 0";
 
-            // Drop the sort — permutation goes away.
+            // Drop the sort - permutation goes away.
             state.sortColumn = -1;
             app.Frame([&]{ emitSorted(); });
             EXPECT_FALSE(state.internal.rowOrder) << "no active sort -> permutation released";

@@ -271,7 +271,7 @@ namespace interstice
                 fmant = 0;
             } else
             {
-                // Subnormal → normalize
+                // Subnormal -> normalize
                 int shift = 0;
                 while ((mant & 0x400) == 0)
                 {

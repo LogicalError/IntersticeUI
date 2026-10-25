@@ -18,8 +18,8 @@ namespace interstice
     // Labels and DragLabels in a label group share a width; dragging any label's right
     // edge resizes them all. Per-group state persists across frames, keyed by group ID.
     //
-    //   OnPreConstruct  → reset transient per-group fields
-    //   OnPostConstruct → finalize edge state once all labels have emitted
+    //   OnPreConstruct  -> reset transient per-group fields
+    //   OnPostConstruct -> finalize edge state once all labels have emitted
     class LabelGroupSubsystem
     {
     public:

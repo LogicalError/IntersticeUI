@@ -216,7 +216,7 @@ namespace interstice
                 
         // totalContentSize includes the gaps between in-flow children. `reverse`
         // places children from the far edge (row-/column-reverse), whose main
-        // start is that edge — so flex-end packs toward the near one.
+        // start is that edge - so flex-end packs toward the near one.
         template <int axis, bool reverse> requires(axis == 0 || axis == 1)
         static const void JustifyChildren(std::span<ElementRect> childRects, 
                                           JustifyContent justify, int16_t gap, const IntRect &parentContentRect,

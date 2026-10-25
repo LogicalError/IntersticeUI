@@ -1,12 +1,12 @@
 // Unit tests for the node-view marquee selection math (panel_node_view.cpp's
-// rect-drag → selected-node-set computation). The helper lives in
+// rect-drag -> selected-node-set computation). The helper lives in
 // gui_node_view_helpers.h and is pure (no GUI pipeline / framework state),
 // so these tests just construct inputs and check the output set.
 //
 // Coordinate spaces (see panel_node_view.cpp top-of-function docs):
 //   SCREEN     : absolute window pixels (mouse positions).
 //   CANVAS_LAY : canvas-local LAYOUT, where NodeModel::pos lives.
-// The helper converts the marquee corners SCREEN → CANVAS_LAY using the
+// The helper converts the marquee corners SCREEN -> CANVAS_LAY using the
 // canvas's inner-rect screen position + view.transform, then strict-contains.
 
 #include <gtest/gtest.h>
@@ -43,7 +43,7 @@ namespace interstice
     TEST(NodeViewMarqueeTest, ScreenToCanvasLayMapsCenterToOrigin)
     {
         std::vector<NodeModel> nodes;
-        // Node at CANVAS_LAY (0, 0), 100×100. Renders at SCREEN (500..600, 400..500).
+        // Node at CANVAS_LAY (0, 0), 100x100. Renders at SCREEN (500..600, 400..500).
         nodes.push_back(MakeNode(1, { 0, 0 }, { 100, 100 }));
 
         // Marquee in SCREEN: just covering the node's rendered area.
@@ -58,7 +58,7 @@ namespace interstice
 
     TEST(NodeViewMarqueeTest, MarqueeFarFromAllNodes_SelectsNothing)
     {
-        // Node at CANVAS_LAY (-340, -60), 180×80. Renders at SCREEN around
+        // Node at CANVAS_LAY (-340, -60), 180x80. Renders at SCREEN around
         // (160..340, 340..420). A marquee in the bottom-right corner of the
         // canvas is nowhere near it.
         std::vector<NodeModel> nodes;
@@ -77,8 +77,8 @@ namespace interstice
     {
         // Two nodes, one negative-positioned and one positive.
         std::vector<NodeModel> nodes;
-        nodes.push_back(MakeNode(1, { -340, -60 }, { 180, 80 }));  // SCREEN ≈ (160..340, 340..420)
-        nodes.push_back(MakeNode(2, {  200,  80 }, { 180, 80 }));  // SCREEN ≈ (700..880, 480..560)
+        nodes.push_back(MakeNode(1, { -340, -60 }, { 180, 80 }));  // SCREEN ~ (160..340, 340..420)
+        nodes.push_back(MakeNode(2, {  200,  80 }, { 180, 80 }));  // SCREEN ~ (700..880, 480..560)
 
         // Marquee fully around node 1's rendered position.
         const auto hits = ComputeNodesInMarquee(
@@ -205,7 +205,7 @@ namespace interstice
 
         const float3x2 zoomHalf = float3x2::Scale(0.5f);
 
-        // Marquee covering most of the screen — at zoom 0.5, this corresponds
+        // Marquee covering most of the screen - at zoom 0.5, this corresponds
         // to a CANVAS_LAY rect twice as wide, easily containing both nodes.
         const auto hits = ComputeNodesInMarquee(
             nodes, kCanvasInner, zoomHalf,

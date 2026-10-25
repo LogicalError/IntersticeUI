@@ -90,7 +90,7 @@ TEST(CommandManager, ReregisteringSameBindingUpdatesInPlace)
     CommandID a = m.RegisterCommand(KeyCode::KeyS, KeyModifier::Control, [&]() { callsA++; }, "Save");
     CommandID b = m.RegisterCommand(KeyCode::KeyS, KeyModifier::Control, [&]() { callsB++; }, "Save Updated");
 
-    EXPECT_EQ(a, b); // replaced in place — no dead command
+    EXPECT_EQ(a, b); // replaced in place - no dead command
 
     Dispatch(m, KeyCode::KeyS, KeyModifier::Control);
     EXPECT_EQ(callsA, 0); // original callback discarded
@@ -298,11 +298,11 @@ TEST(CommandManager, HeldCommandFiresBeginOnDownAndEndOnUp)
     m.RegisterHeldCommand(KeyCode::Space, KeyModifier::None,
                           [&]() { begins++; }, [&]() { ends++; }, "Pan");
 
-    EXPECT_TRUE(Dispatch(m, KeyCode::Space));   // press → begin
+    EXPECT_TRUE(Dispatch(m, KeyCode::Space));   // press -> begin
     EXPECT_EQ(begins, 1);
     EXPECT_EQ(ends, 0);
 
-    EXPECT_TRUE(DispatchUp(m, KeyCode::Space)); // release → end
+    EXPECT_TRUE(DispatchUp(m, KeyCode::Space)); // release -> end
     EXPECT_EQ(begins, 1);
     EXPECT_EQ(ends, 1);
 }
@@ -314,7 +314,7 @@ TEST(CommandManager, HeldCommandDoesNotRefireBeginOnKeyRepeat)
     m.RegisterHeldCommand(KeyCode::Space, KeyModifier::None, [&]() { begins++; }, [&]() { ends++; });
 
     EXPECT_TRUE(Dispatch(m, KeyCode::Space)); // begin
-    EXPECT_TRUE(Dispatch(m, KeyCode::Space)); // OS key-repeat — swallowed, no second begin
+    EXPECT_TRUE(Dispatch(m, KeyCode::Space)); // OS key-repeat - swallowed, no second begin
     EXPECT_EQ(begins, 1);
 
     DispatchUp(m, KeyCode::Space);
@@ -331,7 +331,7 @@ TEST(CommandManager, HeldCommandEndMatchesKeyIgnoringModifiers)
     int ends = 0;
     m.RegisterHeldCommand(KeyCode::KeyZ, KeyModifier::Control, []() {}, [&]() { ends++; });
 
-    EXPECT_TRUE(Dispatch(m, KeyCode::KeyZ, KeyModifier::Control)); // Ctrl+Z press → begin
+    EXPECT_TRUE(Dispatch(m, KeyCode::KeyZ, KeyModifier::Control)); // Ctrl+Z press -> begin
     // Releasing Ctrl before Z means the Z keyup carries no modifiers, but
     // letting go of the key still ends the hold.
     EXPECT_TRUE(DispatchUp(m, KeyCode::KeyZ));
@@ -345,7 +345,7 @@ TEST(CommandManager, InstantCommandIgnoresKeyUp)
     m.RegisterCommand(KeyCode::KeyD, KeyModifier::Control, [&]() { fired++; });
 
     EXPECT_TRUE(Dispatch(m, KeyCode::KeyD, KeyModifier::Control));
-    EXPECT_FALSE(DispatchUp(m, KeyCode::KeyD)); // nothing held → keyup not consumed
+    EXPECT_FALSE(DispatchUp(m, KeyCode::KeyD)); // nothing held -> keyup not consumed
     EXPECT_EQ(fired, 1);
 }
 
@@ -371,7 +371,7 @@ TEST(CommandManager, FormatChordShortcutJoinsKeysWithSpace)
                   KeyCode::KeyK, KeyModifier::Control,
                   KeyCode::KeyS, KeyModifier::Control),
               "Ctrl+K Ctrl+S");
-    // No second key → degenerates to single-key format.
+    // No second key -> degenerates to single-key format.
     EXPECT_EQ(CommandManager::FormatChordShortcut(
                   KeyCode::KeyK, KeyModifier::Control,
                   KeyCode::None, KeyModifier::None),

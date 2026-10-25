@@ -315,7 +315,7 @@ namespace interstice
         EXPECT_EQ(size, 120);
         EXPECT_EQ(changedCount, 1);
 
-        // Y movement only — X delta must not affect size.
+        // Y movement only - X delta must not affect size.
         InputState moveXOnly = MakeMouseMoveState(500, 140);
         handler(MakeEvent(sizerID, EventType::MouseMove, moveXOnly));
         EXPECT_EQ(size, 120);

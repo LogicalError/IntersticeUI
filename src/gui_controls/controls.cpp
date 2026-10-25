@@ -894,7 +894,7 @@ namespace interstice
             VERIFY(elementStorage.EndChildren()); // close the empty container
             [[maybe_unused]] bool popped = idManager.PopParent();
             assert(popped);
-            return false; // hit — caller skips the body and EndCached
+            return false; // hit - caller skips the body and EndCached
         }
 
         // Miss: the caller builds the body. Track the parent scope so invalidation propagates upward.
@@ -1016,7 +1016,7 @@ namespace interstice
 
 
     // ---------------------------------------------------------------------------
-    // SliderField — Blender-style filled bar. The bar IS the textbox: dragging
+    // SliderField - Blender-style filled bar. The bar IS the textbox: dragging
     // anywhere on it updates value; a clean click swaps it for an in-place
     // numeric Field. Optional `label` is rendered as text overlay on the bar.
     // ---------------------------------------------------------------------------
@@ -1227,7 +1227,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // Integer SliderField — same bar as the float version, drag-only (a click just focuses).
+    // Integer SliderField - same bar as the float version, drag-only (a click just focuses).
     // ---------------------------------------------------------------------------
     bool GUIApplication::SliderField(ID id, int& value, int minVal, int maxVal,
                                      std::string_view label, LayoutOverride&& constraints)
@@ -1315,7 +1315,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // Slider — groove + knob without value text; drag-only, integer-valued.
+    // Slider - groove + knob without value text; drag-only, integer-valued.
     // ---------------------------------------------------------------------------
     bool GUIApplication::Slider(ID id, int& value, int minVal, int maxVal,
                                 LayoutOverride&& constraints)

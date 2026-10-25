@@ -347,7 +347,7 @@ void HeadlessGUIApp::InjectText(std::string_view text)
     for (char c : text)
     {
         // Map ASCII to KeyCode payload exactly the way SDL does
-        // (gui_window_backend_sdl.cpp: cast text byte → KeyCode).
+        // (gui_window_backend_sdl.cpp: cast text byte -> KeyCode).
         InjectKey(static_cast<interstice::KeyCode>(static_cast<unsigned char>(c)),
                   interstice::KeyAction::KeyChar);
     }

@@ -29,7 +29,7 @@ namespace interstice
         }
 
         // ===================================================================
-        // MakeMouseWheelScrollHandler — pure ScrollManagement plumbing.
+        // MakeMouseWheelScrollHandler - pure ScrollManagement plumbing.
         // ===================================================================
 
         TEST(MouseWheelScrollHandler, WheelScrollUpdatesScrollOffset)
@@ -44,7 +44,7 @@ namespace interstice
 
             auto handle = scroll.GetScrollOffsetHandle(id);
             ASSERT_TRUE(scroll.IsScrollOffsetHandleValid(handle));
-            EXPECT_EQ(scroll.GetScrollOffset(handle).y, 30); // 1 tick × 30 px step
+            EXPECT_EQ(scroll.GetScrollOffset(handle).y, 30); // 1 tick x 30 px step
         }
 
         TEST(MouseWheelScrollHandler, NegativeYScrollsDown)
@@ -73,8 +73,8 @@ namespace interstice
 
             auto handle = scroll.GetScrollOffsetHandle(id);
             const auto offset = scroll.GetScrollOffset(handle);
-            EXPECT_EQ(offset.x, 60);  // 2 × 30
-            EXPECT_EQ(offset.y, -30); // -1 × 30
+            EXPECT_EQ(offset.x, 60);  // 2 x 30
+            EXPECT_EQ(offset.y, -30); // -1 x 30
         }
 
         TEST(MouseWheelScrollHandler, NonScrollEventTypeIgnored)
@@ -176,8 +176,8 @@ namespace interstice
         }
 
         // ===================================================================
-        // MakeScrollbarHandler — track click and thumb drag. The handler reads its
-        // parent's rect, so tests build container → scrollbar.
+        // MakeScrollbarHandler - track click and thumb drag. The handler reads its
+        // parent's rect, so tests build container -> scrollbar.
         // ===================================================================
 
         class ScrollbarHandlerTest : public ::testing::Test

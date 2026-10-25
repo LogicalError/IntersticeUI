@@ -43,8 +43,8 @@ namespace interstice
         std::function<void()> onPanelGUI;
 
         // Docked panels are cached by default (rebuilt on resize and input inside them).
-        //   • return a value → also rebuild whenever it changes (data the cache can't observe);
-        //   • return nullopt → don't cache this frame (e.g. a live profiler).
+        //   - return a value -> also rebuild whenever it changes (data the cache can't observe);
+        //   - return nullopt -> don't cache this frame (e.g. a live profiler).
         std::function<std::optional<uint64_t>()> cacheSignature;
 
         // onEnable when the panel becomes visible (a leaf's selectedTab), onDisable when hidden.

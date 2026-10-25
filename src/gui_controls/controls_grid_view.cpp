@@ -45,7 +45,7 @@ namespace interstice
 
                 case interstice::EventType::KeyDown:
                 {
-                    // F2 — rename the last-clicked item (multi-select grids).
+                    // F2 - rename the last-clicked item (multi-select grids).
                     if (event.state.lastKey == interstice::KeyCode::F2 && multiSelect)
                     {
                         auto it = m_gridItemRenameByID.find(multiSelect->lastClickedID);
@@ -225,7 +225,7 @@ namespace interstice
                     bool ctrl  = (event.state.modifiers & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
                     bool shift = (event.state.modifiers & interstice::KeyModifier::Shift) != interstice::KeyModifier::None;
 
-                    // Ctrl+Shift+Click — start rename (same as table rows).
+                    // Ctrl+Shift+Click - start rename (same as table rows).
                     if (canRename && ctrl && shift)
                     {
                         auto it = m_gridItemRenameByID.find(id);
@@ -380,7 +380,7 @@ namespace interstice
     }
 
     // ---------------------------------------------------------------------------
-    // VirtualGridView — GridViewItems in a virtualized, self-scrolling viewport.
+    // VirtualGridView - GridViewItems in a virtualized, self-scrolling viewport.
     // Only visible rows are emitted; spacers stand in for the rest so the
     // content height (and scrollbar) spans the whole grid.
     // ---------------------------------------------------------------------------
@@ -476,7 +476,7 @@ namespace interstice
 
                     case interstice::EventType::KeyDown:
                     {
-                        // F2 — rename the selected item (only while it's within the emitted window).
+                        // F2 - rename the selected item (only while it's within the emitted window).
                         if (event.state.lastKey == interstice::KeyCode::F2)
                         {
                             interstice::ID target = interstice::ID::Invalid();
@@ -613,7 +613,7 @@ namespace interstice
 
         emitSpacer((totalRows - lastRow) * rowStride);
 
-        // Vertical scrollbar overlay — self-hides when there's no overflow.
+        // Vertical scrollbar overlay - self-hides when there's no overflow.
         VerticalScrollbar(scrollbarID, id);
 
         VERIFY(elementStorage.EndChildren());

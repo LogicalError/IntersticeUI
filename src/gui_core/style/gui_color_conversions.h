@@ -193,7 +193,7 @@ namespace interstice::ColorConvert
         if (!isfinite(b)) b = 0.0f;
 
         // a and b are signed opponent-color channels (green<->red, blue<->yellow)
-        // and are legitimately negative — only lightness L is clamped to >= 0.
+        // and are legitimately negative - only lightness L is clamped to >= 0.
         L = std::max(L, 0.0f);
 
         auto finv = [](float t) {
@@ -241,7 +241,7 @@ namespace interstice::ColorConvert
         if (!isfinite(b)) b = 0.0f;
 
         // a and b are signed opponent-color channels (green<->red, blue<->yellow)
-        // and are legitimately negative — only lightness L is clamped to >= 0.
+        // and are legitimately negative - only lightness L is clamped to >= 0.
         L = std::max(L, 0.0f);
 
         float l_ = L + 0.3963377774f * a + 0.2158037573f * b;

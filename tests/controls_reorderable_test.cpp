@@ -108,7 +108,7 @@ namespace interstice
         TEST_F(ReorderableTest, DragPastNeighborReordersDown)
         {
             app.Frame([&] { EmitGroup(); });
-            // Drag item 0 down past item 1's midpoint → reorder (0 → 1).
+            // Drag item 0 down past item 1's midpoint -> reorder (0 -> 1).
             const auto row1 = ItemRect(itemIDs[1]);
             DragItemTo(itemIDs[0], row1.y + row1.h * 3 / 4);
 
@@ -120,7 +120,7 @@ namespace interstice
         TEST_F(ReorderableTest, DragUpwardReordersToEarlierSlot)
         {
             app.Frame([&] { EmitGroup(); });
-            // Drag item 2 up past item 0's midpoint → reorder (2 → 0).
+            // Drag item 2 up past item 0's midpoint -> reorder (2 -> 0).
             const auto row0 = ItemRect(itemIDs[0]);
             DragItemTo(itemIDs[2], row0.y + row0.h / 4);
 
@@ -132,7 +132,7 @@ namespace interstice
         TEST_F(ReorderableTest, DragBeyondEndClampsToLastSlot)
         {
             app.Frame([&] { EmitGroup(); });
-            // Drag item 0 far below the last row → clamps to the last slot (3).
+            // Drag item 0 far below the last row -> clamps to the last slot (3).
             const auto last = ItemRect(itemIDs[3]);
             DragItemTo(itemIDs[0], last.y + last.h + 500);
 
@@ -184,7 +184,7 @@ namespace interstice
         TEST_F(ReorderableTest, DropInOriginalSlotDoesNotReorder)
         {
             app.Frame([&] { EmitGroup(); });
-            // Drag item 1 down a little but release still within its own row →
+            // Drag item 1 down a little but release still within its own row ->
             // no slot change, no callback.
             const auto row1 = ItemRect(itemIDs[1]);
             DragItemTo(itemIDs[1], row1.y + row1.h / 2 + 6);

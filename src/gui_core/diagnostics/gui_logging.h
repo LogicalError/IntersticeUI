@@ -1,7 +1,7 @@
 #pragma once
 
 // Structured logging (engine design docs 02 and 28): each message is a fixed-size
-// record — category, severity, a static message template with `{}` placeholders and
+// record - category, severity, a static message template with `{}` placeholders and
 // up to kMaxLogArgs typed arguments. Formatting happens lazily, at the sink.
 //
 // Records land in an in-memory ring of recent history (read by the editor's console,

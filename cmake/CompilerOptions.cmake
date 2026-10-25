@@ -2,15 +2,15 @@
 # Third-party targets keep whatever flags their own build systems select.
 #
 # MSVC Release-mode choices aim for debuggable/profileable builds:
-#   /GL + /LTCG   — whole-program optimisation, only with INTERSTICE_LTCG: it makes
+#   /GL + /LTCG   - whole-program optimisation, only with INTERSTICE_LTCG: it makes
 #                   every link redo code generation, and /GL objects in the
 #                   installed libraries force /LTCG and the exact compiler version
 #                   on consumers
-#   /Zi           — emit a PDB for Release
-#   /Zo           — enhanced debug info for optimised code (locals/inlined frames)
-#   /d2Zi+        — richer optimised-code debug info (undocumented; widely used)
-#   /DEBUG        — linker: keep emitting the PDB
-#   /OPT:REF,ICF  — linker: still strip unused and fold duplicate COMDATs despite /DEBUG
+#   /Zi           - emit a PDB for Release
+#   /Zo           - enhanced debug info for optimised code (locals/inlined frames)
+#   /d2Zi+        - richer optimised-code debug info (undocumented; widely used)
+#   /DEBUG        - linker: keep emitting the PDB
+#   /OPT:REF,ICF  - linker: still strip unused and fold duplicate COMDATs despite /DEBUG
 
 option(INTERSTICE_LTCG "Whole-program optimisation (/GL + /LTCG) in Release" OFF)
 option(INTERSTICE_PRECOMPILED_HEADERS "Precompile the headers most sources include" ON)
@@ -33,12 +33,12 @@ function(interstice_apply_compile_options target)
       /utf-8                             # sources and narrow literals are UTF-8 (default is the system code page)
 
       # Keep /W4 on our code but silence FRONT-END warnings from third-party
-      # headers (gmock, SDL, Vulkan, VMA, …). CMake marks imported/SYSTEM
+      # headers (gmock, SDL, Vulkan, VMA, ...). CMake marks imported/SYSTEM
       # include dirs with /external:I; /external:W0 sets their warning level to
-      # 0. Only header dirs CMake classifies as external are affected — our own
+      # 0. Only header dirs CMake classifies as external are affected - our own
       # /W4 is untouched. NOTE: this is a front-end, per-include mechanism, so
       # it cannot suppress warnings emitted during /LTCG whole-program code
-      # generation (those carry no include context) — gmock's C4702 is one such
+      # generation (those carry no include context) - gmock's C4702 is one such
       # case, handled by /wd4702 on the test targets instead.
       /external:W0
 

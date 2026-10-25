@@ -36,7 +36,7 @@ static std::string font_path(std::string_view directory, const char* filename)
 static const std::unordered_map<uint32_t, std::vector<const char*>>& script_font_map()
 {
 	static const std::unordered_map<uint32_t, std::vector<const char*>> map = {
-		// Common / inherited scripts — triggered for math/symbol chars not in NotoSansSymbols
+		// Common / inherited scripts - triggered for math/symbol chars not in NotoSansSymbols
 		{ SKB_TAG_STR("Zyyy"), { "NotoSansMath-Regular.otf", "NotoMusic-Regular.otf" } },
 
 		// Scripts in use today, sorted by ISO-15924 tag. Historic, epigraphic and
@@ -183,7 +183,7 @@ static bool on_font_fallback(skb_font_collection_t* font_collection, const char*
 	if (it == script_font_map().end())
 		return false;
 
-	// Skip synthetic bold for emoji — color glyphs already carry weight.
+	// Skip synthetic bold for emoji - color glyphs already carry weight.
 	const bool add_bold = (font_family != SKB_FONT_FAMILY_EMOJI);
 
 	bool any_loaded = false;

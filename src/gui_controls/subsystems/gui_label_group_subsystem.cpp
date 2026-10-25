@@ -66,7 +66,7 @@ namespace interstice
         for (auto& [id, gs] : m_states)
         {
             // If no label in the group was hovered this frame and we're not
-            // dragging the edge, the mouse has left the group — clear edge state.
+            // dragging the edge, the mouse has left the group - clear edge state.
             if (!gs.anyLabelHovered && !gs.edgeDragging)
                 gs.edgeHovered = false;
 
