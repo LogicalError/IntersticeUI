@@ -353,6 +353,9 @@ namespace interstice
             CommandID cmdNew = 0, cmdOpen = 0, cmdSave = 0, cmdSaveAs = 0, cmdExit = 0;
             CommandID cmdUndo = 0, cmdRedo = 0, cmdCut = 0, cmdCopy = 0, cmdPaste = 0;
             CommandID cmdDocumentation = 0, cmdAbout = 0;
+            // F11 toggles fullscreen and back to the mode the window had before.
+            CommandID  cmdFullscreen = 0;
+            WindowMode modeBeforeFullscreen = WindowMode::Normal;
             CommandID cmdSearchCommands = 0;
             CommandSearchState commandSearch;
             CommandID cmdDuplicate = 0, cmdSelectAll = 0;
@@ -471,6 +474,8 @@ namespace interstice
         void RenderStatusBar();
         void RequestExit();
         void AskBeforeExit();
+        // Into `fullscreen` (Fullscreen or ExclusiveFullscreen), or out of fullscreen when in it.
+        void ToggleFullscreen(WindowMode fullscreen);
 
         void EnableFilesPanel();
         void DisableFilesPanel();

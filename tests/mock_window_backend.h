@@ -48,6 +48,8 @@ public:
     MOCK_METHOD(interstice::int2, GetWindowSize, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(bool, SetWindowRect, (interstice::OSWindowHandle, const interstice::IntRect&), (override));
     MOCK_METHOD(void, SetWindowVisible, (interstice::OSWindowHandle, bool), (override));
+    MOCK_METHOD(void, SetWindowMode, (interstice::OSWindowHandle, interstice::WindowMode), (override));
+    MOCK_METHOD(interstice::WindowMode, GetWindowMode, (interstice::OSWindowHandle), (const, override));
 
     MOCK_METHOD(std::vector<interstice::MonitorInfo>, GetMonitors, (), (const, override));
     MOCK_METHOD(int, GetMonitorAt, (interstice::int2), (const, override));

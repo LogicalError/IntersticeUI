@@ -93,6 +93,9 @@ namespace interstice
         // Text editors draw the IME composition themselves (OnTextComposition);
         // the OS still draws the candidate list, placed via SetTextInputArea.
         SDL_SetHint(SDL_HINT_IME_IMPLEMENTED_UI, "composition");
+        // SDL minimizes an exclusive fullscreen window whenever it loses the focus, also to the
+        // app's own menus and dialogs. PollEvents does it only when the focus leaves the app.
+        SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
         if (!SDL_WasInit(SDL_INIT_VIDEO))
         {
@@ -602,6 +605,10 @@ namespace interstice
         }
     }
 
+    // Undocumented: the themed caption and frame painting.
+    constexpr UINT kWmNcUahDrawCaption = 0x00AE;
+    constexpr UINT kWmNcUahDrawFrame   = 0x00AF;
+
     static LRESULT CALLBACK CustomTitleBarProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         const WNDPROC prev   = reinterpret_cast<WNDPROC>(GetPropW(hwnd, kPrevWndProcProp));
@@ -612,6 +619,9 @@ namespace interstice
         switch (msg)
         {
             case WM_NCCALCSIZE:
+                // Fullscreen (SDL drops the caption style): the client is the whole window.
+                if (wParam == TRUE && (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_CAPTION) != WS_CAPTION)
+                    return 0;
                 if (wParam == TRUE)
                 {
                     // The client area takes the caption. Maximized, the frame hangs off the
@@ -631,7 +641,8 @@ namespace interstice
             case WM_NCHITTEST:
             {
                 const LRESULT hit = CallWindowProcW(prev, hwnd, msg, wParam, lParam);
-                if (hit != HTCLIENT)
+                // Fullscreen has no frame to resize nor caption to drag.
+                if (hit != HTCLIENT || (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_CAPTION) != WS_CAPTION)
                 {
                     setButtonHover(false);
                     return hit;
@@ -686,6 +697,14 @@ namespace interstice
             case WM_NCMOUSELEAVE:
                 setButtonHover(false);
                 break;
+
+            // The window draws its own title bar, so Windows mustn't paint its caption: it does on
+            // hover and activation, which shows whenever DWM doesn't compose the window (fullscreen).
+            case kWmNcUahDrawCaption:
+            case kWmNcUahDrawFrame:
+                return 0;
+            case WM_NCACTIVATE:
+                return CallWindowProcW(prev, hwnd, msg, wParam, -1);   // -1: the new state, no repaint
 
             case WM_NCDESTROY:
                 RemovePropW(hwnd, kPrevWndProcProp);
@@ -822,8 +841,11 @@ namespace interstice
 
         if (hwnd)
         {
-            // Borderless: strip caption/sizing/system-menu styles and use WS_POPUP while
-            // still hidden, or some Windows versions briefly show a native caption.
+            // Borderless: strip caption/sizing/system-menu styles, leaving WS_POPUP. SDL's own
+            // borderless style keeps WS_CAPTION (and WS_THICKFRAME when resizable), so DWM would
+            // draw its frame on every borderless window, menus and tooltips included: shadow,
+            // rounded corners, border. Stripped, only Shadow windows get them (below). Done while
+            // still hidden.
             if ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None)
             {
                 LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
@@ -1194,6 +1216,20 @@ namespace interstice
     {
         if (!m_sdlInitialized) return;
 
+        // A focus lost since the last poll: if no window of the app took it over (by now, so a
+        // menu or dialog has had its focus event too), exclusive fullscreen gives the display back.
+        if (m_checkFocusLeftApp)
+        {
+            m_checkFocusLeftApp = false;
+            m_suppressLiveResize = true;
+            if (SDL_GetKeyboardFocus() == nullptr)
+                for (SDL_Window* window : m_windows)
+                    if ((SDL_GetWindowFlags(window) & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_MINIMIZED)) == SDL_WINDOW_FULLSCREEN
+                        && SDL_GetWindowFullscreenMode(window) != nullptr)
+                        SDL_MinimizeWindow(window);
+            m_suppressLiveResize = false;
+        }
+
         // The watches have already seen every event; the queue is only emptied
         // when the GUI runs SDL's event loop.
         if (m_options.pumpEvents)
@@ -1446,43 +1482,60 @@ namespace interstice
         m_suppressLiveResize = false;
     }
 
-    void SDLWindowBackend::MinimizeWindow(OSWindowHandle h)
-    {
-        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
-        {
-            // Called mid-frame (a title bar button): no live-resize frame inside it.
-            m_suppressLiveResize = true;
-            SDL_MinimizeWindow(window);
-            m_suppressLiveResize = false;
-        }
-    }
-
-    void SDLWindowBackend::MaximizeWindow(OSWindowHandle h)
-    {
-        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
-        {
-            // Called mid-frame (a title bar button): no live-resize frame inside it.
-            m_suppressLiveResize = true;
-            SDL_MaximizeWindow(window);
-            m_suppressLiveResize = false;
-        }
-    }
-
-    void SDLWindowBackend::RestoreWindow(OSWindowHandle h)
-    {
-        if (SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr)
-        {
-            // Called mid-frame (a title bar button): no live-resize frame inside it.
-            m_suppressLiveResize = true;
-            SDL_RestoreWindow(window);
-            m_suppressLiveResize = false;
-        }
-    }
-
-    bool SDLWindowBackend::IsWindowMaximized(OSWindowHandle h) const
+    void SDLWindowBackend::SetWindowMode(OSWindowHandle h, WindowMode mode)
     {
         SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr;
-        return window != nullptr && (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0;
+        if (window == nullptr)
+            return;
+        // Called mid-frame (a title bar button, a menu): no live-resize frame inside it.
+        m_suppressLiveResize = true;
+        const bool fullscreen = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != 0;
+        switch (mode)
+        {
+            case WindowMode::Fullscreen:
+            case WindowMode::ExclusiveFullscreen:
+            {
+                // No display mode: borderless at the desktop resolution. Exclusive: the
+                // monitor's own mode closest to its desktop one.
+                SDL_DisplayMode exclusive {};
+                const SDL_DisplayMode* displayMode = nullptr;
+                if (mode == WindowMode::ExclusiveFullscreen)
+                {
+                    const SDL_DisplayID display = SDL_GetDisplayForWindow(window);
+                    if (const SDL_DisplayMode* desktop = SDL_GetDesktopDisplayMode(display))
+                        if (SDL_GetClosestFullscreenDisplayMode(display, desktop->w, desktop->h, desktop->refresh_rate, false, &exclusive))
+                            displayMode = &exclusive;
+                }
+                SDL_SetWindowFullscreenMode(window, displayMode);
+                SDL_SetWindowFullscreen(window, true);
+                break;
+            }
+            case WindowMode::Minimized:
+                SDL_MinimizeWindow(window);
+                break;
+            case WindowMode::Maximized:
+                if (fullscreen) SDL_SetWindowFullscreen(window, false);
+                SDL_MaximizeWindow(window);
+                break;
+            case WindowMode::Normal:
+                if (fullscreen) SDL_SetWindowFullscreen(window, false);
+                SDL_RestoreWindow(window);
+                break;
+        }
+        m_suppressLiveResize = false;
+    }
+
+    WindowMode SDLWindowBackend::GetWindowMode(OSWindowHandle h) const
+    {
+        SDL_Window* window = m_sdlInitialized ? ToSDL(h) : nullptr;
+        if (window == nullptr)
+            return WindowMode::Normal;
+        const SDL_WindowFlags flags = SDL_GetWindowFlags(window);
+        if ((flags & SDL_WINDOW_MINIMIZED) != 0)  return WindowMode::Minimized;
+        if ((flags & SDL_WINDOW_FULLSCREEN) != 0)
+            return SDL_GetWindowFullscreenMode(window) != nullptr ? WindowMode::ExclusiveFullscreen : WindowMode::Fullscreen;
+        if ((flags & SDL_WINDOW_MAXIMIZED) != 0)  return WindowMode::Maximized;
+        return WindowMode::Normal;
     }
 
     void* SDLWindowBackend::GetNativeHandle(OSWindowHandle h)
@@ -1696,7 +1749,11 @@ namespace interstice
             case SDL_EVENT_WINDOW_FOCUS_GAINED:
             case SDL_EVENT_WINDOW_FOCUS_LOST:
                 if (backend->m_windows.contains(SDL_GetWindowFromID(event->window.windowID)))
+                {
                     ++backend->m_focusChanges;
+                    if (event->type == SDL_EVENT_WINDOW_FOCUS_LOST)
+                        backend->m_checkFocusLeftApp = true;
+                }
                 break;
 
             // Render right away for smooth resizing. Suppressed during programmatic window
@@ -1719,11 +1776,14 @@ namespace interstice
             }
 
             // A non-popup window moved or resized; fires inside the OS modal loop, where the frame loop is blocked.
+            // Not for the app's own changes (suppressed, as above): those come mid-frame, e.g. from a
+            // menu item, and closing the menus there pulls them out from under their own click.
             case SDL_EVENT_WINDOW_MOVED:
             case SDL_EVENT_WINDOW_RESIZED:
             {
                 SDL_Window* window = SDL_GetWindowFromID(event->window.windowID);
-                if (backend->m_windows.contains(window) && !(SDL_GetWindowFlags(window) & SDL_WINDOW_UTILITY)
+                if (!backend->m_suppressLiveResize
+                    && backend->m_windows.contains(window) && !(SDL_GetWindowFlags(window) & SDL_WINDOW_UTILITY)
                     && backend->m_onWindowMoved)
                     backend->m_onWindowMoved();
                 break;

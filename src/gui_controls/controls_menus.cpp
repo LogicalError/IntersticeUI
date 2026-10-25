@@ -208,13 +208,13 @@ namespace interstice
         {
             [[maybe_unused]] const bool pushed = idManager.PushParent(barID);
             Button(idManager.AllocateDynamicID("minimize"), theme.windowMinimizeIcon,
-                   [this, windowID] { windowManager->MinimizeWindow(windowID); }, theme.titleBarButtonStyleRef);
-            const bool maximized = windowManager->IsWindowMaximized(windowID);
+                   [this, windowID] { windowManager->SetWindowMode(windowID, WindowMode::Minimized); }, theme.titleBarButtonStyleRef);
+            // Maximized restores; otherwise (fullscreen too) it maximizes.
+            const bool maximized = windowManager->GetWindowMode(windowID) == WindowMode::Maximized;
             bar.maximizeID = idManager.AllocateDynamicID("maximize");
             Button(bar.maximizeID, maximized ? theme.windowRestoreIcon : theme.windowMaximizeIcon,
                    [this, windowID, maximized] {
-                       if (maximized) windowManager->RestoreWindow(windowID);
-                       else           windowManager->MaximizeWindow(windowID);
+                       windowManager->SetWindowMode(windowID, maximized ? WindowMode::Normal : WindowMode::Maximized);
                    }, theme.titleBarButtonStyleRef);
             const bool confirmClose = (elementStorage.GetElementUnsafe(windowRef).flags & ElementFlags::WindowConfirmClose) != ElementFlags::None;
             Button(idManager.AllocateDynamicID("close"), theme.tabCloseIcon,

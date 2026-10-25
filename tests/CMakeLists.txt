@@ -145,6 +145,7 @@ if(INTERSTICE_SDL)
     gpu/gpu_descriptor_test.cpp
     gpu/gpu_image_set_test.cpp
     gpu/gpu_window_lifecycle_test.cpp
+    gpu/gpu_window_style_test.cpp
     gpu/gpu_primitive_coverage_test.cpp
     gpu/gpu_readback_smoke_test.cpp
     gpu/gpu_external_device_test.cpp

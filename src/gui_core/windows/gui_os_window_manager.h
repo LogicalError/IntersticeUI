@@ -346,13 +346,11 @@ namespace interstice
             return index == -1 ? ID::Invalid() : windows[index].id;
         }
 
-        void MinimizeWindow(ID id) { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->MinimizeWindow(h); }
-        void MaximizeWindow(ID id) { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->MaximizeWindow(h); }
-        void RestoreWindow(ID id)  { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->RestoreWindow(h); }
-        bool IsWindowMaximized(ID id) const
+        void SetWindowMode(ID id, WindowMode mode) { if (OSWindowHandle h = GetWindowHandle(id)) windowBackendManager->SetWindowMode(h, mode); }
+        WindowMode GetWindowMode(ID id) const
         {
             const OSWindowHandle h = GetWindowHandle(id);
-            return h != nullptr && windowBackendManager->IsWindowMaximized(h);
+            return h != nullptr ? windowBackendManager->GetWindowMode(h) : WindowMode::Normal;
         }
 
         IntRect GetWindowRect(ID id) const

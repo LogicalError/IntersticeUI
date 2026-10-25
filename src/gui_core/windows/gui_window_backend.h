@@ -51,6 +51,16 @@ namespace interstice
         MaximizeButton, // the GUI's maximize button, so the OS can offer its snap layouts
     };
 
+    // A window's state (IWindowBackend::SetWindowMode). Any window can go fullscreen.
+    enum class WindowMode : uint8_t
+    {
+        Normal,               // as placed (restored)
+        Minimized,
+        Maximized,
+        Fullscreen,           // borderless, covering its monitor at the desktop resolution
+        ExclusiveFullscreen,  // takes the monitor over, in its desktop display mode
+    };
+
     class IWindowContext
     {
     public:
@@ -146,11 +156,9 @@ namespace interstice
         // Timing - get current time in milliseconds
         virtual uint32_t GetTicks() const = 0;
 
-        // The states the OS caption buttons give a window.
-        virtual void MinimizeWindow(OSWindowHandle) {}
-        virtual void MaximizeWindow(OSWindowHandle) {}
-        virtual void RestoreWindow(OSWindowHandle) {}
-        virtual bool IsWindowMaximized(OSWindowHandle) const { return false; }
+        // A window's state: the OS caption buttons' (minimize, maximize, restore) and fullscreen.
+        virtual void       SetWindowMode(OSWindowHandle, WindowMode) {}
+        virtual WindowMode GetWindowMode(OSWindowHandle) const { return WindowMode::Normal; }
 
         // The user's preferred language as a BCP 47 tag ("ja", "en-US"), or empty
         // when the platform doesn't say.

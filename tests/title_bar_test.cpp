@@ -83,6 +83,32 @@ namespace
         EXPECT_EQ(HitAt(children[5]), WindowHitArea::Client);
     }
 
+    // The window buttons set the window's mode: minimize; maximize, or restore when it is
+    // maximized (from fullscreen too, maximize).
+    TEST_F(TitleBarTest, TheWindowButtonsSetTheWindowMode)
+    {
+        using ::testing::_;
+        using ::testing::Return;
+        const ElementFlags flags = ElementFlags::WindowCustomTitleBar;
+        // The headless root has no OS window: give it one (a mocked handle) to set the mode of.
+        app.Frame([&] { (void)app.windowManager->GetOrCreateWindow(app.RootWindowID(), "root", IntRect{ 0, 0, 1200, 600 }, nullptr); });
+        ASSERT_NE(app.windowManager->GetWindowHandle(app.RootWindowID()), nullptr);
+        auto clickButton = [&](size_t index, WindowMode current, WindowMode expected) {
+            ON_CALL(app.mockBackend, GetWindowMode(_)).WillByDefault(Return(current));
+            Frame(flags);
+            const auto children = ChildIDs(app, barID);
+            ASSERT_EQ(children.size(), 6u);
+            EXPECT_CALL(app.mockBackend, SetWindowMode(_, expected)).Times(1);
+            app.ClickAt(app.CenterOf(children[index]));
+            Frame(flags);
+            ::testing::Mock::VerifyAndClearExpectations(&app.mockBackend);
+        };
+        clickButton(3, WindowMode::Normal,     WindowMode::Minimized);
+        clickButton(4, WindowMode::Normal,     WindowMode::Maximized);
+        clickButton(4, WindowMode::Maximized,  WindowMode::Normal);
+        clickButton(4, WindowMode::Fullscreen, WindowMode::Maximized);
+    }
+
     // A window that confirms closing: its close button only asks (CloseRequested, once);
     // the window stays for the app to close.
     TEST_F(TitleBarTest, ConfirmCloseMakesTheCloseButtonAsk)

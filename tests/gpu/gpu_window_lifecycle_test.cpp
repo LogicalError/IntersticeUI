@@ -3,11 +3,43 @@
 #include <gui_core/graphics/gui_primitive_renderer.h>
 #include <gui_core/input/gui_platform_input_handler.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_hints.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
 
 using namespace GpuTestHarness;
+
+// The window-moved callback is for the OS's own move/resize loop (it closes open menus).
+// A window the app moves or resizes itself (SetWindowRect, SetWindowMode from a menu item)
+// mustn't fire it in the middle of the frame: the menu would close under its own click.
+TEST_F(GpuTest, ProgrammaticWindowChangesDontFireTheMovedCallback)
+{
+    const interstice::OSWindowHandle window =
+        windowBackend->CreateWindow("moved-test", interstice::IntRect{ -3000, -3000, 200, 100 },
+                                    interstice::WindowFlags::Hidden | interstice::WindowFlags::Resizable, nullptr);
+    ASSERT_NE(window, nullptr);
+    int moved = 0;
+    windowBackend->SetWindowMovedCallback([&] { ++moved; });
+
+    windowBackend->SetWindowRect(window, interstice::IntRect{ -2900, -2900, 300, 200 });
+    windowBackend->SetWindowMode(window, interstice::WindowMode::Maximized);
+    windowBackend->SetWindowMode(window, interstice::WindowMode::Normal);
+    EXPECT_EQ(moved, 0);
+
+    windowBackend->SetWindowMovedCallback(nullptr);
+    windowBackend->DestroyWindow(window);
+}
+
+// SDL's own minimize-on-focus-loss would minimize an exclusive fullscreen window whenever a
+// menu or dialog of the app opens; the backend turns it off (and minimizes only when the
+// focus leaves the app).
+TEST_F(GpuTest, ExclusiveFullscreenSurvivesTheAppsOwnPopups)
+{
+    const char* hint = SDL_GetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS);
+    ASSERT_NE(hint, nullptr);
+    EXPECT_STREQ(hint, "0");
+}
 
 // A zero-size (minimize) swapchain resize must still queue the old image views
 // for deletion. A leak surfaces as validation errors at device destroy.

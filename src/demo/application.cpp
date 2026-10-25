@@ -312,6 +312,8 @@ namespace interstice
 
         // Commands shown on a menu but with NO shortcut key (the user can assign
         // one in the Shortcuts panel).
+        demo.cmdFullscreen = cmds.RegisterCommand(interstice::EditMode::Default, demo.fullscreenIcon, interstice::KeyCode::F11, interstice::KeyModifier::None,
+                                                  [this]() { ToggleFullscreen(WindowMode::Fullscreen); }, "Fullscreen");
         demo.cmdDocumentation = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
         demo.cmdAbout         = cmds.RegisterCommand(interstice::EditMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
         demo.cmdSearchCommands = cmds.RegisterCommand(interstice::EditMode::Default, demo.findIcon, interstice::KeyCode::KeyK, interstice::KeyModifier::Control,
@@ -1076,6 +1078,16 @@ namespace interstice
                 demo.settingsFontScalePct = 100.0f;
                 RequestReloadTheme(GetThemePath(), 1.0f);
             });
+
+            MenuSeparator();
+            const WindowMode mode = windowManager->GetWindowMode(demo.windowLayoutID2);
+            if (mode == WindowMode::Fullscreen || mode == WindowMode::ExclusiveFullscreen)
+                MenuItem(demo.fullscreenExitIcon, "Exit Fullscreen", "F11", [this]() { ToggleFullscreen(WindowMode::Fullscreen); });
+            else
+            {
+                MenuItem(demo.cmdFullscreen);
+                MenuItem("Exclusive Fullscreen", [this]() { ToggleFullscreen(WindowMode::ExclusiveFullscreen); });
+            }
             EndMenu();
         }
 
@@ -1101,6 +1113,19 @@ namespace interstice
 
     // Undo (or redo) the node view's last edit, moving it to the other stack.
     // Quitting loses the edits on the undo history: ask first when there are any.
+    void Application::ToggleFullscreen(WindowMode fullscreen)
+    {
+        const ID window = demo.windowLayoutID2;
+        const WindowMode mode = windowManager->GetWindowMode(window);
+        if (mode == WindowMode::Fullscreen || mode == WindowMode::ExclusiveFullscreen)
+        {
+            windowManager->SetWindowMode(window, demo.modeBeforeFullscreen);
+            return;
+        }
+        demo.modeBeforeFullscreen = mode == WindowMode::Maximized ? WindowMode::Maximized : WindowMode::Normal;
+        windowManager->SetWindowMode(window, fullscreen);
+    }
+
     void Application::RequestExit()
     {
         if (!commandManager.History().CanUndo()) applicationQuit = true;

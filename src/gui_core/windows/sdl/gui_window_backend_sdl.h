@@ -76,10 +76,8 @@ namespace interstice
 
         bool SetWindowRect(OSWindowHandle, const IntRect& clientRect) override;
         void SetWindowVisible(OSWindowHandle, bool visible) override;
-        void MinimizeWindow(OSWindowHandle) override;
-        void MaximizeWindow(OSWindowHandle) override;
-        void RestoreWindow(OSWindowHandle) override;
-        bool IsWindowMaximized(OSWindowHandle) const override;
+        void       SetWindowMode(OSWindowHandle, WindowMode) override;
+        WindowMode GetWindowMode(OSWindowHandle) const override;
 
         std::vector<MonitorInfo> GetMonitors() const override;
         int GetMonitorAt(int2 pos) const override;
@@ -129,6 +127,7 @@ namespace interstice
         // Live resize, window moves, close requests and modality; sees every event, drops none.
         static bool BackendEventWatch(void* userdata, SDL_Event* event);
         uint32_t m_focusChanges = 0;
+        bool m_checkFocusLeftApp = false;  // a window lost the focus: see whether the app did (exclusive fullscreen)
         bool m_suppressLiveResize = false; // suppress the watch's RenderWindowFrame during programmatic window changes
         SDL_Window* m_lastFocusableWindow = nullptr; // last window that can take focus (for rerouting tooltip input)
         
