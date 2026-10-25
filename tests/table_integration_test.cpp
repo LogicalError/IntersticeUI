@@ -34,7 +34,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 // Stable ID for the table across frames - a dynamic id would churn
                 // every frame and nuke the persisted selection state.
                 tableID = app.idManager.CreateStaticID();
@@ -807,7 +807,7 @@ namespace interstice
             auto build = [&] {
                 app.BeginRootWindow();
                 app.BeginVertical(app.theme.flexFillColStyleRef, LayoutOverride{}.Size(400, 400));
-                app.BeginVertical(LayoutOverride{}.Height(siblingHeight).NoShrink());
+                app.BeginVertical(LayoutOverride{}.Height(CssPx(siblingHeight)).NoShrink());
                 app.EndVertical();
                 app.BeginHorizontal(app.theme.flexFillRowStyleRef, LayoutOverride{}.FlexGrow(1));
                 app.VirtualTable(tableID, state, vcols, /*totalRows*/500,

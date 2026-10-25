@@ -139,7 +139,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            void SetUp()    override { app.Initialize(); }
+            void SetUp()    override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
         };
 
@@ -188,7 +188,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 containerID = app.idManager.CreateStaticID();
                 scrollbarID = app.idManager.CreateStaticID();
             }
@@ -233,7 +233,7 @@ namespace interstice
                 Element el{};
                 el.id       = id;
                 el.styleRef = app.theme.emptyVertStyleRef;
-                app.RegisterElement(std::move(el), LayoutOverride{}.Size(w, h));
+                app.RegisterElement(std::move(el), LayoutOverride{}.Size(CssPx(w), CssPx(h)));
             };
             auto draw = [&] {
                 app.BeginRootWindow();
@@ -289,7 +289,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 areaID    = app.idManager.CreateStaticID();
                 barID     = app.idManager.CreateStaticID();
                 contentID = app.idManager.CreateStaticID();

@@ -336,7 +336,7 @@ namespace interstice
                 for (int lvl = levelCount; lvl >= 0; --lvl) // error, warning, info - most severe first
                 {
                     Toggle(idManager.AllocateDynamicID("logLevelToggle"),
-                        logShowLevel[lvl], demo.dotIcon, logCountText[lvl],
+                        logShowLevel[lvl], { demo.dotIcon, logCountText[lvl] },
                         [lvl](bool on) { logShowLevel[lvl] = on; logFilterDirty = true; },
                         logLevelPillStyleRefs[lvl],
                         interstice::LayoutOverride{}.NoGrow().NoShrink());
@@ -412,7 +412,7 @@ namespace interstice
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = interstice::MakeVerticalSizerHandler(
                 guiStateManager, logDetailHeight, 48, 480, nullptr, nullptr, /*invert*/ true, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedHeight(styleManager.Px(4)));
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedHeight(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -421,7 +421,7 @@ namespace interstice
         // file:line links. Height is driven by the sizer above.
         BeginVertical(idManager.AllocateDynamicID("logDetailPane"),
                       logDetailPaneStyleRef,
-                      interstice::LayoutOverride::Auto().FixedHeight(styleManager.Px(logDetailHeight)).NoGrow().NoShrink());
+                      interstice::LayoutOverride::Auto().FixedHeight(CssPx(logDetailHeight)).NoGrow().NoShrink());
         {
             const int sel = SelectedLogEntry();
             if (sel != logDetailSel) RebuildLogDetail(sel);

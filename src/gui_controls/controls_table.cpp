@@ -38,7 +38,7 @@ namespace interstice
         {
             state.columnWidths.assign(columnCount, 0);
             for (size_t c = 0; c < columnCount; c++)
-                state.columnWidths[c] = columns[c].column.initialWidth;
+                state.columnWidths[c] = columns[c].column.initialWidth.value;
         }
 
         // Clamp persisted selectedColumn.

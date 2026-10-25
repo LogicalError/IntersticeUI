@@ -689,11 +689,11 @@ namespace interstice
         const StyleRef rowIdx = sm.Register(rowStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
-        (void)storage.Add(Element{ .styleRef = rowIdx }, LayoutOverride::FixedSize(width, 40));
+        (void)storage.Add(Element{ .styleRef = rowIdx }, LayoutOverride::FixedSize(CssPx(width), 40));
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
         std::vector<ElementRef> refs;
         for (int i = 0; i < 3; ++i)
-            refs.push_back(storage.Add(Element{ .styleRef = childStyle }, LayoutOverride::FixedSize(childW, 10)).ref);
+            refs.push_back(storage.Add(Element{ .styleRef = childStyle }, LayoutOverride::FixedSize(CssPx(childW), 10)).ref);
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
         EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
         engine.Layout(wm, storage);
@@ -812,7 +812,7 @@ namespace interstice
 
             EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
             (void)storage.Add(Element{ .styleRef = parentIdx },
-                              row ? LayoutOverride::FixedSize(mainSize, 40) : LayoutOverride::FixedSize(40, mainSize));
+                              row ? LayoutOverride::FixedSize(CssPx(mainSize), 40) : LayoutOverride::FixedSize(40, CssPx(mainSize)));
             EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
             std::vector<ElementRef> refs;
             for (auto& k : kids)
@@ -820,7 +820,7 @@ namespace interstice
                 refs.push_back(storage.Add(Element{ .styleRef = kidStyle }, std::move(k)).ref);
                 EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
                 (void)storage.Add(Element{ .styleRef = defaultStyleIndex },
-                                  row ? LayoutOverride::FixedSize(contentMain, 10) : LayoutOverride::FixedSize(10, contentMain));
+                                  row ? LayoutOverride::FixedSize(CssPx(contentMain), 10) : LayoutOverride::FixedSize(10, CssPx(contentMain)));
                 EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
             }
             EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
@@ -871,7 +871,7 @@ namespace interstice
         {
             k.push_back(storage.Add(Element{ .styleRef = basisIdx }, LayoutOverride::Auto()).ref);
             EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
-            (void)storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(content, 10));
+            (void)storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(CssPx(content), 10));
             EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
         }
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);

@@ -29,7 +29,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 tableID = app.idManager.CreateStaticID();
 
                 columns.clear();
@@ -53,7 +53,7 @@ namespace interstice
                 std::span<interstice::VirtualTableColumn> span(columns.data(), columns.size());
                 app.VirtualTable(tableID, state, span, rowCount, /*rowHeight*/0,
                                  app.theme.tableStyleRef,
-                                 LayoutOverride{}.Size(width, height));
+                                 LayoutOverride{}.Size(CssPx(width), CssPx(height)));
                 app.EndRootWindow();
             }
 

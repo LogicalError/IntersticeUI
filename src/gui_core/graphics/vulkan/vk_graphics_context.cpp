@@ -1,3 +1,4 @@
+#include <format>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -223,7 +224,7 @@ interstice::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(inters
     // bindless slots (assigned as pages join the imageSet), resolved here before
     // upload. Re-uploads when the styles or the gradient page table changed.
 
-    const bool vcsModified = styleManager.AreVisualColorStylesModified();
+    const bool vcsModified = styleManager.AreVisualColorStylesModified() || colorStylesMesh == nullptr;
     const bool pageTableChanged = gradientManager.HasPageTableChanged();
     if (!vcsModified && !pageTableChanged)
         return colorStylesMesh;
@@ -255,7 +256,7 @@ interstice::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(inters
 
 interstice::Buffer* VulkanGraphicsContext::PrepareVisualBoxStylesBuffer(interstice::StyleManager& styleManager)
 {
-    if (styleManager.AreVisualBoxStylesModified())
+    if (styleManager.AreVisualBoxStylesModified() || visualBoxStylesMesh == nullptr)
     {
         if (visualBoxStylesMesh != nullptr)
         {
@@ -307,7 +308,7 @@ void VulkanGraphicsContext::DestroyWindowContext(interstice::IWindowContext* con
     delete vulkanContext;
 }
 
-bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend)
+interstice::Result<void> VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend)
 {
     // A hidden window whose surface picks a GPU that can present to the GUI's windows.
     interstice::OSWindowHandle bootstrapWindow = windowBackend->CreateWindow(
@@ -315,7 +316,7 @@ bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend
     if (bootstrapWindow == nullptr)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to create bootstrap window for Vulkan initialization");
-        return false;
+        return interstice::Error{ interstice::ErrorCode::Failed, "could not create the bootstrap window for Vulkan" };
     }
 
     VkSurfaceKHR bootstrapSurface = deviceContext.CreateSurface(bootstrapWindow);
@@ -323,10 +324,13 @@ bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to initialize device context");
         windowBackend->DestroyWindow(bootstrapWindow);
-        return false;
+        return deviceContext.initError.message.empty()
+            ? interstice::Error{ interstice::ErrorCode::Failed, "could not initialize the Vulkan device" }
+            : deviceContext.initError;
     }
 
-    vulkanImageSet = new interstice::vulkan::VulkanImageSet();
+    if (vulkanImageSet == nullptr)   // RecreateDevice keeps the indices the app holds
+        vulkanImageSet = new interstice::vulkan::VulkanImageSet();
 
     if (bootstrapSurface != VK_NULL_HANDLE)
     {
@@ -339,7 +343,39 @@ bool VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend
     }
 
     windowBackend->DestroyWindow(bootstrapWindow);
-    return true;
+    return {};
+}
+
+interstice::Result<void> VulkanGraphicsContext::RecreateDevice(interstice::IWindowBackend* windowBackend)
+{
+    if (deviceContext.UsesExternalDevice())
+        return interstice::Error{ interstice::ErrorCode::DeviceLost,
+                                  "the host's Vulkan device was lost; the host makes a new one and the GUI again" };
+
+    // Everything made on the lost device goes; the image objects, their indices and the
+    // renderer stay. Destroying is allowed on a lost device.
+    deviceContext.WaitIdle();
+    static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
+    if (colorStylesMesh != nullptr)
+    {
+        deviceContext.DestroyVisualColorStylesAtEnd(colorStylesMesh, interstice::DeviceScope::Application);
+        colorStylesMesh = nullptr;
+    }
+    if (visualBoxStylesMesh != nullptr)
+    {
+        deviceContext.DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, interstice::DeviceScope::Application);
+        visualBoxStylesMesh = nullptr;
+    }
+    deviceContext.ReleaseLiveImages();
+    deviceContext.Destroy();
+    deviceContext.initialized = false;
+    interstice::vulkan::SetDeviceLost(false);
+
+    if (interstice::Result<void> result = Initialize(windowBackend); !result)
+        return result;
+    deviceContext.RebuildLiveImages();
+    vulkanImageSet->RefreshDescriptors();
+    return {};
 }
 
 void VulkanGraphicsContext::Cleanup()
@@ -433,7 +469,15 @@ interstice::TextAtlasManager* VulkanGraphicsContext::CreateTextAtlasManager()
 void interstice::vulkan::VulkanImageSet::Clear()
 {
     textures.clear();
+    owners.clear();
     m_freeIndices.clear();
+}
+
+void VulkanImageSet::RefreshDescriptors()
+{
+    for (size_t i = 0; i < owners.size(); ++i)
+        if (owners[i] != nullptr)
+            SetImage(interstice::ImageIndex(i + 1), owners[i]);
 }
 
 interstice::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& descriptor)
@@ -443,6 +487,7 @@ interstice::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& des
         const interstice::ImageIndex index = m_freeIndices.back();
         m_freeIndices.pop_back();
         textures[uint32_t(index) - 1] = descriptor;
+        owners[uint32_t(index) - 1]   = nullptr;
         return index;
     }
     if (textures.size() >= kCapacity)
@@ -451,6 +496,7 @@ interstice::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& des
         return interstice::ImageIndex::Invalid;
     }
     textures.push_back(descriptor);
+    owners.push_back(nullptr);
     return interstice::ImageIndex(textures.size());
 }
 
@@ -464,13 +510,16 @@ bool VulkanImageSet::IsInRange(interstice::ImageIndex index) const
 
 interstice::ImageIndex interstice::vulkan::VulkanImageSet::Add(interstice::Image* image)
 {
-    const VulkanImage* vulkanImage = static_cast<const VulkanImage*>(image);
-    return Allocate(VkDescriptorImageInfo
+    VulkanImage* vulkanImage = static_cast<VulkanImage*>(image);
+    const interstice::ImageIndex index = Allocate(VkDescriptorImageInfo
         {
             .sampler     = vulkanImage->imageSampler,
             .imageView   = vulkanImage->imageView,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         });
+    if (index != interstice::ImageIndex::Invalid)
+        owners[uint32_t(index) - 1] = vulkanImage;
+    return index;
 }
 
 // An empty slot (no image view) is skipped when the frame's descriptors are written.
@@ -484,17 +533,21 @@ void VulkanImageSet::Remove(interstice::ImageIndex index)
     if (!IsInRange(index) || textures[uint32_t(index) - 1].imageView == VK_NULL_HANDLE)
         return;
     textures[uint32_t(index) - 1] = {};
+    owners[uint32_t(index) - 1]   = nullptr;
     m_freeIndices.push_back(index);
 }
 
 bool VulkanImageSet::SetImage(interstice::ImageIndex index, VulkanImage* image)
 {
-    return SetDescriptor(index, VkDescriptorImageInfo
+    if (!SetDescriptor(index, VkDescriptorImageInfo
         {
             .sampler     = image->imageSampler,
             .imageView   = image->imageView,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        });
+        }))
+        return false;
+    owners[uint32_t(index) - 1] = image;
+    return true;
 }
 
 bool VulkanImageSet::SetDescriptor(interstice::ImageIndex index, const VkDescriptorImageInfo& descriptor)
@@ -502,6 +555,7 @@ bool VulkanImageSet::SetDescriptor(interstice::ImageIndex index, const VkDescrip
     if (!IsInRange(index))
         return false;
     textures[uint32_t(index) - 1] = descriptor;
+    owners[uint32_t(index) - 1]   = nullptr;   // a host's descriptor; SetImage sets the owner
     return true;
 }
 
@@ -542,6 +596,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (!system_info_ret)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to get system info");
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to get system info") };
         return VK_NULL_HANDLE;
     }
 
@@ -588,6 +643,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (!inst_ret)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the Vulkan instance: {}", inst_ret.error().message());
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the Vulkan instance: {}", inst_ret.error().message()) };
         return VK_NULL_HANDLE;
     }
     vkb::Instance vkb_inst = inst_ret.value();
@@ -619,6 +675,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
         }
     } else {
         INTERSTICE_LOG_ERROR(kLogVulkan, "No Vulkan GPUs detected!");
+        initError = interstice::Error{ interstice::ErrorCode::NotFound, std::format("No Vulkan GPUs detected!") };
     }
 
     const DeviceRequirements requirements = GetDeviceRequirements();
@@ -632,6 +689,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (surface == VK_NULL_HANDLE)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create surface");
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create surface") };
         return fail(VK_NULL_HANDLE);
     }
 
@@ -647,6 +705,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
         .select();
     if (!physicalDeviceOpt) {
         INTERSTICE_LOG_ERROR(kLogVulkan, "No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message());
+        initError = interstice::Error{ interstice::ErrorCode::NotFound, std::format("No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message()) };
         return fail(surface);
     }
     vkb::PhysicalDevice physicalDevice = physicalDeviceOpt.value();
@@ -658,6 +717,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (!deviceRet)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the Vulkan device: {}", deviceRet.error().message());
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the Vulkan device: {}", deviceRet.error().message()) };
         return fail(surface);
     }
     vkb::Device vkbDevice = deviceRet.value();
@@ -666,6 +726,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (!queueRet || !queueIndexRet)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "the Vulkan device has no graphics queue");
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("the Vulkan device has no graphics queue") };
         vkb::destroy_device(vkbDevice);
         return fail(surface);
     }
@@ -684,6 +745,7 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the GUI allocator");
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the GUI allocator") };
         vkb::destroy_device(vkbDevice);
         device = VK_NULL_HANDLE;
         return fail(surface);
@@ -709,6 +771,7 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
         || external.device == VK_NULL_HANDLE || external.graphicsQueue == VK_NULL_HANDLE)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "External Vulkan device is incomplete (instance, physical device, device and queue are required)");
+        initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("External Vulkan device is incomplete (instance, physical device, device and queue are required)") };
         return false;
     }
 
@@ -716,6 +779,7 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
     if (!CheckPhysicalDeviceSupport(external.physicalDevice, &problems))
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "External Vulkan device cannot run the GUI:\n{}", problems);
+        initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("External Vulkan device cannot run the GUI:\n{}", problems) };
         return false;
     }
 
@@ -735,6 +799,7 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
         if (!external.allocator->m_UseKhrBufferDeviceAddress)
         {
             INTERSTICE_LOG_ERROR(kLogVulkan, "The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT");
+            initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT") };
             return false;
         }
         allocator       = external.allocator;
@@ -751,6 +816,7 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
         if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
         {
             INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to create the GUI allocator on the external device");
+            initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("Failed to create the GUI allocator on the external device") };
             return false;
         }
         m_ownsAllocator = true;
@@ -877,6 +943,7 @@ bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
     auto failed = [this](const char* what)
     {
         INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the {}", what);
+        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the {}", what) };
         GetDeletionQueue(interstice::DeviceScope::Application).flush();
         return false;
     };
@@ -1101,6 +1168,8 @@ interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(intersti
     VkFormat vulkan_format = ToVulkanImageFormat(format);
     VkSampler vulkan_sampler = ToVulkanSampler(sampler, this);
     *image = CreateImage(VkExtent3D { size.x, size.y , 1 }, vulkan_format, VK_IMAGE_USAGE_SAMPLED_BIT, vulkan_sampler, mipmapped);
+    image->recipe = { .usage = VK_IMAGE_USAGE_SAMPLED_BIT, .sampler = sampler, .mipmapped = mipmapped };
+    m_liveImages.insert(image);
     return image;
 }
 
@@ -1120,6 +1189,10 @@ interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(const vo
                                   | (mipmapped ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
     *image = CreateImage(extent, vulkanFormat, usage, ToVulkanSampler(sampler, this), mipmapped);
     m_pendingUploads.push_back({ staging, image->image, extent, mipmapped });
+    image->recipe = { .usage = usage, .sampler = sampler, .mipmapped = mipmapped };
+    if (data != nullptr)
+        image->recipe.pixels.assign(static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + dataSize);
+    m_liveImages.insert(image);
     return image;
 }
 
@@ -1147,12 +1220,41 @@ void interstice::vulkan::VulkanDeviceContext::RecordPendingUploads(VkCommandBuff
 void interstice::vulkan::VulkanDeviceContext::DestroyImage(interstice::Image* img)
 {
     VulkanImage* vulkanImage = (VulkanImage*)img;
+    m_liveImages.erase(vulkanImage);
     DestroyImage(*vulkanImage);
+}
+
+void interstice::vulkan::VulkanDeviceContext::ReleaseLiveImages()
+{
+    for (VulkanImage* image : m_liveImages)
+    {
+        DestroyImage(*image);
+        image->image     = VK_NULL_HANDLE;
+        image->imageView = VK_NULL_HANDLE;
+        image->allocation = VK_NULL_HANDLE;
+    }
+}
+
+void interstice::vulkan::VulkanDeviceContext::RebuildLiveImages()
+{
+    for (VulkanImage* image : m_liveImages)
+    {
+        const VulkanImage::Recipe recipe = std::move(image->recipe);
+        const VkExtent3D extent = image->imageExtent;
+        *image = CreateImage(extent, image->imageFormat, recipe.usage, ToVulkanSampler(recipe.sampler, this), recipe.mipmapped);
+        image->recipe = recipe;
+        if (recipe.pixels.empty())
+            continue;
+        Buffer staging = CreateBuffer(recipe.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        memcpy(staging.info.pMappedData, recipe.pixels.data(), recipe.pixels.size());
+        m_pendingUploads.push_back({ staging, image->image, extent, recipe.mipmapped });
+    }
 }
 
 void interstice::vulkan::VulkanDeviceContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
                                                     const std::source_location& loc)
 {
+    m_liveImages.erase((VulkanImage*)img);
     VulkanImage vulkanImage = *(VulkanImage*)img;
     auto func = [this, vulkanImage, img, loc]()
         {

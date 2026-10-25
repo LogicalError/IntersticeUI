@@ -105,12 +105,12 @@ ctest --test-dir build -C Debug     rem both, one process per test
 class HelloApp : public interstice::GUIApplication
 {
 public:
-    bool Initialize(const InitializeOptions& options = {}) override
+    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (!GUIApplication::Initialize(options))
-            return false;
+        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+            return result;
         windowID = idManager.CreateStaticID();   // windows need stable IDs
-        return true;
+        return {};
     }
 
     // Called every frame: describe the whole UI; the library keeps the state.
@@ -140,8 +140,9 @@ int main()
 {
     HelloApp app;
     app.SetResourceRoot("path/to/resources");   // see below
-    if (app.Initialize())
-        app.Run();   // until the last window closes
+    interstice::Result<void> result = app.Initialize();
+    if (result)
+        result = app.Run();   // until the last window closes
     app.Cleanup();
 }
 ```
@@ -153,6 +154,36 @@ leaves, taking the same arguments:
 ```cpp
 if (auto menu = Menu("File"))
     MenuItem("Quit", [this] { RequestExit(); });
+```
+
+A control shows a `GUIContent`: a text, an icon or both, and an optional tooltip. A string or
+an icon converts to one, so `Button("Save", onSave)` and `Button(saveIcon, onSave)` work as is:
+
+```cpp
+Button({ saveIcon, "Save", "Write the file to disk" }, onSave);
+```
+
+Sizes are CSS px, scaled by the UI scale like the stylesheet's; `Pixels{}` marks a size that
+is already in device pixels (a measured one), and positions and rects are pixels:
+
+```cpp
+LayoutOverride{}.Width(200)                  // 300 pixels at 150%
+LayoutOverride{}.Width(interstice::Pixels{ measured.w })
+```
+
+Calls that can fail return a `Result<T>` with the reason (`Initialize`, `Run`, `ReadWindowPixels`,
+`FindStyle`, `ThemeReloadResult`). A lost GPU device is made again before the next frame; with a
+host's device, `RecordFrame` reports it instead.
+
+A host with its own main loop runs the frame itself; `Run()` loops over the same calls:
+
+```cpp
+while (app.UpdateFrame())
+{
+    if (!app.RecordFrame()) break;   // render-to-image windows are drawn now
+    // ... the host's own work ...
+    app.PresentFrame();              // may wait for vsync
+}
 ```
 
 ## Runtime files
@@ -241,8 +272,13 @@ backend->SetExternalDevice(external);
 
 auto* vk = backend.get();   // for RegisterExternalImage below
 app.SetGraphicsBackend(std::move(backend));
-app.Initialize();
+if (interstice::Result<void> result = app.Initialize(); !result)
+    LogError(result.GetError().message);   // e.g. the device lacks a feature the GUI needs
 ```
+
+If the host's device is lost, `RecordFrame` (and `Run`) returns an error with
+`ErrorCode::DeviceLost`. The GUI can't recreate a device it doesn't own, so the host makes
+a new device and a new app.
 
 `SetGraphicsBackend` hands the app the graphics backend to use; without it,
 `Initialize` creates a `VulkanGraphicsContext`. Another backend implements

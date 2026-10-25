@@ -41,7 +41,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 tableID = app.idManager.CreateStaticID();
             }
 
@@ -58,7 +58,7 @@ namespace interstice
             {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, kColumns, state,
-                                    LayoutOverride{}.Size(width, height)))
+                                    LayoutOverride{}.Size(CssPx(width), CssPx(height))))
                 {
                     for (int r = 0; r < rowCount; r++)
                     {
@@ -759,7 +759,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 auto cell = [this](const char* t) { return [this, t](int) { app.Cell(t); }; };
                 cols = {
                     { .column = { .header = "#",        .initialWidth =  60, .minWidth = 40, .maxWidth = 160, .locked = true }, .generateCell = cell("0"),   .sectionId = 0, .sectionSizing = SectionSizing::FitContent },

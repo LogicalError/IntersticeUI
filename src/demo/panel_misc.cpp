@@ -30,7 +30,7 @@ namespace interstice
             shapeBox.state = guiStateManager.GetCurrentState(shapeBox.id);
             shapeBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
 
-            auto addRes = elementStorage.Add(std::move(shapeBox), interstice::LayoutOverride::FixedSize(size.x, size.y));
+            auto addRes = elementStorage.Add(std::move(shapeBox), interstice::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
 
@@ -119,7 +119,7 @@ namespace interstice
             demoBox.state = guiStateManager.GetCurrentState(demoId);
             demoBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
 
-            auto demoRes = elementStorage.Add(std::move(demoBox), interstice::LayoutOverride::FixedSize(size.x, size.y));
+            auto demoRes = elementStorage.Add(std::move(demoBox), interstice::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(demoRes.status);
             VERIFY(windowRegistry.Add(demoRes.ref));
 
@@ -171,7 +171,7 @@ namespace interstice
             circleIconElem.state = guiStateManager.GetCurrentState(circleIconElem.id);
             circleIconElem.styleRef = theme.firstIconStyleRef;
 
-            auto circleRes = elementStorage.Add(std::move(circleIconElem), interstice::LayoutOverride::FixedSize(iconSize.x, iconSize.y));
+            auto circleRes = elementStorage.Add(std::move(circleIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(circleRes.status);
             VERIFY(windowRegistry.Add(circleRes.ref));
 
@@ -182,7 +182,7 @@ namespace interstice
             heartIconElem.state = guiStateManager.GetCurrentState(heartIconElem.id);
             heartIconElem.styleRef = theme.regularControls.button;
 
-            auto heartRes = elementStorage.Add(std::move(heartIconElem), interstice::LayoutOverride::FixedSize(iconSize.x, iconSize.y));
+            auto heartRes = elementStorage.Add(std::move(heartIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(heartRes.status);
             VERIFY(windowRegistry.Add(heartRes.ref));
 
@@ -193,7 +193,7 @@ namespace interstice
             starIconElem.state = guiStateManager.GetCurrentState(starIconElem.id);
             starIconElem.styleRef = theme.regularControls.button;
 
-            auto starRes = elementStorage.Add(std::move(starIconElem), interstice::LayoutOverride::FixedSize(iconSize.x, iconSize.y));
+            auto starRes = elementStorage.Add(std::move(starIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(starRes.status);
             VERIFY(windowRegistry.Add(starRes.ref));
         }
@@ -221,7 +221,7 @@ namespace interstice
                 INTERSTICE_LOG_INFO(kLogDemo, "Icon button clicked!");
             });
 
-            auto addRes = elementStorage.Add(std::move(iconButtonElem), interstice::LayoutOverride::FixedSize(buttonSize.x, buttonSize.y));
+            auto addRes = elementStorage.Add(std::move(iconButtonElem), interstice::LayoutOverride::FixedSize(Pixels{ buttonSize.x }, Pixels{ buttonSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
             tabChainManager.RegisterTabTarget(iconButtonId);
@@ -251,7 +251,7 @@ namespace interstice
             richTextElem.styleRef = theme.textStyleRef;
             richTextElem.textID = textSystem->RegisterRichText(richTextId, richContent, theme.textStyleRef, state);
 
-            auto addRes = elementStorage.Add(std::move(richTextElem), interstice::LayoutOverride::FixedSize(richTextSize.x, richTextSize.y));
+            auto addRes = elementStorage.Add(std::move(richTextElem), interstice::LayoutOverride::FixedSize(Pixels{ richTextSize.x }, Pixels{ richTextSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
@@ -303,7 +303,7 @@ namespace interstice
                 return false;
             };
 
-            auto addRes = elementStorage.Add(std::move(linkElem), interstice::LayoutOverride::FixedSize(linkTextSize.x, linkTextSize.y));
+            auto addRes = elementStorage.Add(std::move(linkElem), interstice::LayoutOverride::FixedSize(Pixels{ linkTextSize.x }, Pixels{ linkTextSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
@@ -311,8 +311,8 @@ namespace interstice
         // Image element - drop an image straight into the flow. Two display
         // sizes, then a clickable one standing in for an image-selection field.
         {
-            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(styleManager.Px(96), styleManager.Px(96)));
-            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(styleManager.Px(48), styleManager.Px(48)));
+            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(96, 96));
+            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(48, 48));
 
             const interstice::ID fieldID = idManager.AllocateDynamicID("imageField");
             interstice::Element field{};
@@ -329,7 +329,7 @@ namespace interstice
                 }
                 return false;
             };
-            auto fRes = elementStorage.Add(std::move(field), interstice::LayoutOverride::FixedSize(styleManager.Px(64), styleManager.Px(64)));
+            auto fRes = elementStorage.Add(std::move(field), interstice::LayoutOverride::FixedSize(64, 64));
             VERIFY(fRes.status);
             VERIFY(windowRegistry.Add(fRes.ref));
             SetTooltip("Click to choose an image");
@@ -365,7 +365,7 @@ namespace interstice
             mixedElem.styleRef = theme.textStyleRef;
             mixedElem.textID   = textSystem->RegisterRichText(mixedFontId, mixedFontRuns, theme.textStyleRef, mixedState);
 
-            auto addRes = elementStorage.Add(std::move(mixedElem), interstice::LayoutOverride::FixedSize(mixedFontSize.x, mixedFontSize.y));
+            auto addRes = elementStorage.Add(std::move(mixedElem), interstice::LayoutOverride::FixedSize(Pixels{ mixedFontSize.x }, Pixels{ mixedFontSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
@@ -408,16 +408,16 @@ namespace interstice
             {
                 BeginHorizontal(interstice::LayoutOverride::Auto().NoGrow());
                 for (const char* header : headers)
-                    Text(header, interstice::LayoutOverride::Auto().MinWidth(colWidth));
+                    Text(header, interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                 EndHorizontal();
                 for (const auto& row : rows)
                 {
                     BeginHorizontal(interstice::LayoutOverride::Auto().NoGrow());
-                    Text(reinterpret_cast<const char*>(row[0]), interstice::LayoutOverride::Auto().MinWidth(colWidth));
+                    Text(reinterpret_cast<const char*>(row[0]), interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                     for (int c = 0; c < 5; ++c)
                     {
                         const interstice::StyleRef style = styleManager.WithTextOverride(theme.staticTextStyleRef, { .language = interstice::LanguageTag(languages[c]) });
-                        Text(reinterpret_cast<const char*>(row[c + 1]), style, interstice::LayoutOverride::Auto().MinWidth(colWidth));
+                        Text(reinterpret_cast<const char*>(row[c + 1]), style, interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                     }
                     EndHorizontal();
                 }
@@ -432,7 +432,7 @@ namespace interstice
             }();
             static std::string serifText = "This text box uses Noto Serif";
             Field(serifText, styleManager.WithTextOverride(theme.controls->textbox, { .font = serifFont }),
-                  interstice::LayoutOverride::Auto().MinWidth(styleManager.Px(320)).NoGrow());
+                  interstice::LayoutOverride::Auto().MinWidth(320).NoGrow());
         }
 
         // --- Icon + Text Examples with iconTextGap and iconSide ---

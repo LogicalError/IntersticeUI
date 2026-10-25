@@ -37,8 +37,11 @@ namespace interstice
         m_tabBarState = {};
     }
 
-    bool GUIApplication::Tab(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::Tab(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
         if (m_tabBarState.barID == ID::Invalid())
         {
             ReportMisuse("GUIApplication: Tab outside a tab bar (ignored)");

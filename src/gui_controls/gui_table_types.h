@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/gui_id.h>
+#include <gui_core/gui_units.h>
 #include <gui_core/gui_base_types.h>
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_manager.h>
@@ -54,9 +55,9 @@ namespace interstice
     struct TableColumn {
         std::string_view header;
         // Widths in CSS pixels.
-        int32_t initialWidth = 120;
-        int32_t minWidth     = 40;
-        int32_t maxWidth     = 2000;
+        CssPx   initialWidth = 120;
+        CssPx   minWidth     = 40;
+        CssPx   maxWidth     = 2000;
         bool    sortable     = false;
         // Can't be dragged, and other columns can't be dragged past it.
         bool    locked       = false;

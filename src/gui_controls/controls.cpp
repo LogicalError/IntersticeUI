@@ -87,7 +87,7 @@ namespace interstice
     {
         // Inside a node row, fill the body after the label so the node stays grid-aligned.
         if (nodeRowFieldMinWidth > 0 && !constraints.HasFixedWidth())
-            constraints.FlexGrow(1).MinWidth(nodeRowFieldMinWidth);
+            constraints.FlexGrow(1).MinWidth(Pixels{ nodeRowFieldMinWidth });
 
         if (guiStateManager.Construction().IsIndeterminate())
         {
@@ -156,7 +156,7 @@ namespace interstice
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
-            constraints.Width(styleManager.Px(gs->labelWidth));
+            constraints.Width(CssPx(gs->labelWidth));
             style = theme.groupDragLabelStyleRef; // overflow:visible for edge dragger rendering
             if (gs->resizable)
             {
@@ -204,7 +204,7 @@ namespace interstice
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
-            constraints.Width(styleManager.Px(gs->labelWidth));
+            constraints.Width(CssPx(gs->labelWidth));
             if (gs->resizable)
                 handler = MakeGroupLabelHandler(guiStateManager, elementStorage,
                     { &gs->labelWidth, gs->minWidth, gs->maxWidth,
@@ -246,7 +246,7 @@ namespace interstice
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
-            constraints.Width(styleManager.Px(gs->labelWidth));
+            constraints.Width(CssPx(gs->labelWidth));
             if (gs->resizable)
             {
                 style = theme.groupLabelStyleRef; // overflow:visible for edge dragger rendering
@@ -398,11 +398,14 @@ namespace interstice
                 h = int32_t((int64_t(boxW) * sourceSize.y + sourceSize.x / 2) / sourceSize.x);
             }
         }
-        Image(id, image, style, interstice::LayoutOverride::FixedSize(w, h));
+        Image(id, image, style, interstice::LayoutOverride::FixedSize(Pixels{ w }, Pixels{ h }));
     }
 
-    bool GUIApplication::Button(ID id, IconID icon, std::string_view text, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::Button(ID id, const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
         auto* gs = m_buttonGroup->GetActiveButton();
         if (gs) style = m_buttonGroup->NextItemStyleRef(*gs);
         auto ref = RegisterControl(
@@ -742,8 +745,11 @@ namespace interstice
         return modified;
     }
 
-    bool GUIApplication::Toggle(ID id, bool value, IconID icon, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::Toggle(ID id, bool value, const GUIContent& content, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
 	    bool currentValue = value;
         if (currentValue) guiStateManager.Construction().PushSelected();
         auto* gs = m_buttonGroup->GetActiveToggle();
@@ -779,9 +785,9 @@ namespace interstice
     // Label Groups (logical grouping for shared label width)
     // ---------------------------------------------------------------------------
 
-    bool GUIApplication::BeginLabelGroup(ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
+    bool GUIApplication::BeginLabelGroup(ID id, CssPx defaultWidth, CssPx minWidth, CssPx maxWidth, bool resizable)
     {
-        m_labelGroup->BeginGroup(id, defaultWidth, minWidth, maxWidth, resizable);
+        m_labelGroup->BeginGroup(id, defaultWidth.value, minWidth.value, maxWidth.value, resizable);
         return true;
     }
 

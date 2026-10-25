@@ -221,14 +221,16 @@ public:
         SetGraphicsBackend(std::move(backend));
     }
 
-    bool Initialize(const InitializeOptions& options = {}) override
+    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (!GUIApplication::Initialize(options) || host.device.device == VK_NULL_HANDLE || !host.CreateImage())
-            return false;
+        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+            return result;
+        if (host.device.device == VK_NULL_HANDLE || !host.CreateImage())
+            return interstice::Error{ interstice::ErrorCode::Failed, "the host device or its image could not be created" };
         // The GUI samples the host's view and sampler; the host keeps owning them.
         hostImage = vk->RegisterExternalImage(host.view, host.sampler);
         windowID  = idManager.CreateStaticID();
-        return true;
+        return {};
     }
 
     void OnGUI() override
@@ -264,9 +266,12 @@ int main()
     {
         HostedApp app(host);
         app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-        if (app.Initialize())
-            app.Run();
+        interstice::Result<void> result = app.Initialize();
+        if (result)
+            result = app.Run();
         app.Cleanup();   // the GUI destroys only what it created; the device stays
+        if (!result)
+            std::fprintf(stderr, "%s\n", result.GetError().message.c_str());
     }
     host.Destroy();
     SDL_Quit();

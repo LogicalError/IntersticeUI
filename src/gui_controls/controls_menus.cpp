@@ -37,7 +37,7 @@ namespace interstice
             },
             .styleRef = styleRef
             }, "...",
-            LayoutOverride::FixedWidth(buttonWidth).Anchored(windowID, AnchorPlacement::InsideTopLeft, {(int16_t)borderWidth, (int16_t)borderWidth}));
+            LayoutOverride::FixedWidth(Pixels{ buttonWidth }).Anchored(windowID, AnchorPlacement::InsideTopLeft, {(int16_t)borderWidth, (int16_t)borderWidth}));
     }
 
     static void ShowScrollDownButton(GUIApplication& application, ID id, ID windowID, const StyleRef& styleRef, int32_t windowWidth)
@@ -59,7 +59,7 @@ namespace interstice
                 },
                 .styleRef = styleRef
             }, "...",
-                LayoutOverride::FixedWidth(buttonWidth).Anchored(windowID, AnchorPlacement::InsideBottomLeft, {(int16_t)borderWidth, (int16_t)-borderWidth}));
+                LayoutOverride::FixedWidth(Pixels{ buttonWidth }).Anchored(windowID, AnchorPlacement::InsideBottomLeft, {(int16_t)borderWidth, (int16_t)-borderWidth}));
     }
 
     static void MenuTriggerButton(GUIApplication& application, ID menuID, std::string_view text, StyleRef buttonStyle, bool isMenuBar, LayoutOverride&& constraints)
@@ -436,11 +436,11 @@ namespace interstice
             const int kSubmenuFallbackMinWidth = styleManager.Px(160);
             auto windowConstraints = [&]() {
                 if (menuManager.currentDepth != -1)
-                    return pos.MinWidth(kSubmenuFallbackMinWidth).MaxHeight(workArea.h);
+                    return pos.MinWidth(Pixels{ kSubmenuFallbackMinWidth }).MaxHeight(Pixels{ workArea.h });
 
                 const interstice::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
                 if (!triggerRectPtr)
-                    return pos.MaxHeight(workArea.h); // no button rect yet - safest is content-width
+                    return pos.MaxHeight(Pixels{ workArea.h }); // no button rect yet - safest is content-width
 
                 const interstice::IntRect& triggerRect = *triggerRectPtr;
                 bool sidePlacedLastFrame = false;
@@ -457,8 +457,8 @@ namespace interstice
                 }
 
                 return sidePlacedLastFrame
-                    ? pos.MaxHeight(workArea.h)
-                    : pos.MinWidth(triggerRect.w).MaxHeight(workArea.h);
+                    ? pos.MaxHeight(Pixels{ workArea.h })
+                    : pos.MinWidth(Pixels{ triggerRect.w }).MaxHeight(Pixels{ workArea.h });
             }();
 
             level.windowID = menuManager.PopupWindowFor(menuID, idManager);
@@ -565,19 +565,22 @@ namespace interstice
         VERIFY(windowRegistry.Add(sRes.ref));
     }
 
-    bool GUIApplication::MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::MenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
     {
-        return MenuItemImpl(id, icon, text, shortcut, std::move(onClick), style, false, std::move(constraints));
+        return MenuItemImpl(id, content, shortcut, std::move(onClick), style, false, std::move(constraints));
     }
 
-    bool GUIApplication::DestructiveMenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints)
+    bool GUIApplication::DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints)
     {
-        return MenuItemImpl(id, icon, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, true, std::move(constraints));
+        return MenuItemImpl(id, content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, true, std::move(constraints));
     }
 
-    bool GUIApplication::MenuItemImpl(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick,
+    bool GUIApplication::MenuItemImpl(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick,
                                       StyleRef style, bool destructive, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
         if (menuManager.currentDepth < 0 || menuManager.currentDepth >= MenuManager::kMaxDepth)
         {
             ReportMisuse("GUIApplication: MenuItem outside an open menu (ignored)");
@@ -638,7 +641,7 @@ namespace interstice
         if (found == nullptr) return false;
         const CommandManager::Command& c = *found;
         // No shortcut key -> empty trailing column.
-        return MenuItem(c.icon, c.description,
+        return MenuItem({ c.icon, c.description },
                         c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
                         c.callback);
     }
@@ -651,7 +654,7 @@ namespace interstice
         // Icon-only when the command has an icon; fall back to the label otherwise.
         const std::string_view text = (c.icon != IconID::Invalid)
             ? std::string_view{} : std::string_view(c.description);
-        bool clicked = Button(c.icon, text, c.callback, style, std::move(constraints));
+        bool clicked = Button({ c.icon, text }, c.callback, style, std::move(constraints));
         if (c.HasShortcut())
             SetTooltip(c.description + " (" + c.displayString + ")");
         else

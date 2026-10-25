@@ -31,7 +31,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 nodeA = app.idManager.CreateStaticID();
                 nodeB = app.idManager.CreateStaticID();
 

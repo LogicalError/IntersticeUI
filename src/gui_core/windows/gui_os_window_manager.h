@@ -75,6 +75,7 @@ namespace interstice
 
             OSWindowHandle  osHandle = nullptr;
             IWindowContext* context  = nullptr;
+            OnGuiFunc       onGui;              // the context's, to make it again
 
             OSWindowHandle  GetWindowHandle() const { return osHandle; }
         };
@@ -433,6 +434,11 @@ namespace interstice
 
         // Calls func for each live window's context with its render-target rect
         // (OS position, size in physical pixels).
+        // A lost GPU device: the contexts go before the device, and come back on the new one
+        // for the same OS windows. False when one couldn't be made.
+        void DestroyWindowContexts();
+        bool RecreateWindowContexts();
+
         void ForEachAliveWindowContext(const std::function<void(IWindowContext*, IntRect)>& func)
         {
             for (const auto& w : windows)

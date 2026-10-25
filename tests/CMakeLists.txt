@@ -32,6 +32,8 @@ list(APPEND GUI_CORE_TEST_FILES
   id_stability_test.cpp
   control_reporting_test.cpp
   frame_cost_bench.cpp
+  units_test.cpp
+  result_test.cpp
   fuzz_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp

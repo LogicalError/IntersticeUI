@@ -189,7 +189,7 @@ namespace interstice
         VirtualTable(idManager.AllocateDynamicID("treeTable"),
                      demo.treeTableState, columnSpan,
                      int(visibleIdx.size()), 0, theme.tableStyleRef,
-                     LayoutOverride{}.Width(styleManager.Px(520)).Height(styleManager.Px(400)).BreakBefore());
+                     LayoutOverride{}.Width(520).Height(400).BreakBefore());
 
         // Apply a pending post-drop selection now that VirtualTable has set
         // this frame's row IDs.

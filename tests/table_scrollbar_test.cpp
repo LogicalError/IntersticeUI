@@ -41,7 +41,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 cols.resize(2);
                 cols[0].column = { .header = "Name", .initialWidth = 120, .minWidth = 40, .maxWidth = 400 };
                 cols[0].generateCell = [this](int r) { (void)r; app.Cell("name"); };
@@ -208,7 +208,7 @@ namespace interstice
                 app.VirtualTreeView(app.idManager.AllocateDynamicID("catTree"),
                                     catRows, catVisible, catTable,
                                     app.theme.treeViewStyleRef,
-                                    interstice::LayoutOverride::Auto().FixedWidth(catWidth).NoGrow());
+                                    interstice::LayoutOverride::Auto().FixedWidth(CssPx(catWidth)).NoGrow());
 
                 interstice::Element sizer{};
                 sizer.id       = app.idManager.AllocateDynamicID("catSizer");

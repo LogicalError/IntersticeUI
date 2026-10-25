@@ -102,6 +102,10 @@ namespace interstice::vulkan
         bool                     havePresentEnd{ false };
         double                   lastBuildSeconds{ 0.0 };
         bool                     lastBuildValid{ false };
+        // Recorded and submitted, waiting for PresentWindowFrame.
+        bool                     presentPending{ false };
+        FrameData*               readbackPending{ nullptr };
+        interstice::int2         recordedPosition{};
 
         // Transparent window support (Windows layered window readback)
         bool                     needsReadback{ false };
@@ -146,6 +150,9 @@ namespace interstice::vulkan
         interstice::ID GetID() const override { return id; }
 
         void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) override;
+        void RecordWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect) override;
+        void PresentWindowFrame() override;
+        void RecordFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing);
         
         void UpdateTransparentWindow(interstice::int2 screenPos) override;
 

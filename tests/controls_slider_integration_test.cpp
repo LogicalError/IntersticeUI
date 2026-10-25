@@ -23,7 +23,7 @@ namespace interstice
             ID sliderID{};
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 sliderID = app.idManager.CreateStaticID();
             }
             void TearDown() override { app.Cleanup(); }

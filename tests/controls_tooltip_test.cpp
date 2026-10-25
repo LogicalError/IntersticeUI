@@ -21,7 +21,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            void SetUp()    override { app.Initialize(); }
+            void SetUp()    override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
         };
 
@@ -209,6 +209,44 @@ namespace interstice
             app.Frame(draw);
 
             EXPECT_TRUE(app.tooltipManager.IsVisible());
+        }
+
+        // A control's content carries its tooltip (#19); content without one shows none.
+        TEST_F(ControlsTooltipTest, AContentTooltipShowsAfterHoverDelay)
+        {
+            ID withID    = app.idManager.CreateStaticID();
+            ID withoutID = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Button(withID, { IconID::Invalid, "B", "Help text" }, [] {});
+                app.Button(withoutID, "C", [] {});
+                app.EndRootWindow();
+            };
+            auto hover = [&](ID id) {
+                app.InjectMouseMove(app.CenterOf(id));
+                app.Frame(draw);
+                app.Frame(draw);
+                app.AdvanceTime(700);
+                app.Frame(draw);
+            };
+            app.Frame(draw);
+            hover(withID);
+            EXPECT_TRUE(app.tooltipManager.IsVisible());
+            hover(withoutID);
+            EXPECT_FALSE(app.tooltipManager.IsVisible());
+        }
+
+        // GUIContent converts from a string or an icon, and from both with braces.
+        TEST_F(ControlsTooltipTest, ContentConvertsFromTextAndIcon)
+        {
+            const GUIContent fromText = "Save";
+            const GUIContent fromIcon = IconID(7);
+            const GUIContent both     = { IconID(7), "Save", "Write the file" };
+            EXPECT_EQ(fromText.text, "Save");
+            EXPECT_EQ(fromText.icon, IconID::Invalid);
+            EXPECT_EQ(fromIcon.icon, IconID(7));
+            EXPECT_TRUE(fromIcon.text.empty());
+            EXPECT_EQ(both.tooltip, "Write the file");
         }
 
         TEST_F(ControlsTooltipTest, MovingMouseAwayHidesTooltip)

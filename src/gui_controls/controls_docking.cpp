@@ -106,7 +106,7 @@ namespace interstice
             // Use the dragged tab's real width so the target bar's wrap decision is
             // stable and matches the post-drop layout.
             auto layout = (dragInfo.tabWidth > 0)
-                ? LayoutOverride::Auto().Width(dragInfo.tabWidth)
+                ? LayoutOverride::Auto().Width(Pixels{ dragInfo.tabWidth })
                 : LayoutOverride::Auto();
             auto res = app.elementStorage.Add(std::move(phantom), std::move(layout));
             VERIFY(res.status);
@@ -241,7 +241,7 @@ namespace interstice
         {
             if (layout->onDock)
             {
-                app.Button(app.idManager.AllocateDynamicID("dock_back"), app.theme.dockIcon, "Dock", layout->onDock,
+                app.Button(app.idManager.AllocateDynamicID("dock_back"), { app.theme.dockIcon, "Dock" }, layout->onDock,
                            app.theme.titleBarTextButtonStyleRef);
                 app.SetTooltip("Dock back into the main window");
             }
@@ -446,7 +446,7 @@ namespace interstice
 
                     auto it = layout->panels.find(node->panelIds[i]);
                     if (it == layout->panels.end()) continue;
-                    app.Tab(it->second.id, it->second.icon, it->second.title,
+                    app.Tab(it->second.id, { it->second.icon, it->second.title },
                             inTitleBar ? app.theme.titleBarTabStyleRef : app.theme.tabStyleRef);
                 }
 
@@ -557,8 +557,8 @@ namespace interstice
                 auto childRef = app.elementStorage.FindElementRefByID(node->first->nodeID);
                 if (auto* childRect = app.elementStorage.GetElementRectPtr(childRef))
                 {
-                    if (horizontal) childRect->constraints.width.value  = app.styleManager.Px(node->splitSize);
-                    else            childRect->constraints.height.value = app.styleManager.Px(node->splitSize);
+                    if (horizontal) childRect->constraints.width.value  = app.styleManager.Px(node->splitSize.value);
+                    else            childRect->constraints.height.value = app.styleManager.Px(node->splitSize.value);
                     childRect->constraints.flex.grow   = 0;
                     childRect->constraints.flex.shrink = 0;
                 }
@@ -575,25 +575,25 @@ namespace interstice
                 // Split sizes are CSS pixels, so the extent is converted to them.
                 const float uiScale = app.styleManager.GetUIScale();
                 const int extent = int(float(horizontal ? node->cachedSplitRect.w : node->cachedSplitRect.h) / uiScale);
-                SplitSizeRange range { node->minFirstSize, node->minFirstSize + 10000 };
+                SplitSizeRange range { node->minFirstSize.value, node->minFirstSize.value + 10000 };
                 if (extent > 0)
                 {
                     range = ComputeSplitSizeRange(*node, extent, kSizerThickness);
-                    node->splitSize = std::clamp(node->splitSize, range.min, range.max);
+                    node->splitSize = std::clamp(node->splitSize.value, range.min, range.max);
                 }
                 if (horizontal)
                 {
                     sizer.eventHandler = MakeHorizontalSizerHandler(
-                        app.guiStateManager, node->splitSize, range.min, range.max,
+                        app.guiStateManager, node->splitSize.value, range.min, range.max,
                         nullptr, nullptr, pinSecond, uiScale);
-                    app.RegisterElement(std::move(sizer), LayoutOverride::FixedWidth(app.styleManager.Px(kSizerThickness)));
+                    app.RegisterElement(std::move(sizer), LayoutOverride::FixedWidth(CssPx(kSizerThickness)));
                 }
                 else
                 {
                     sizer.eventHandler = MakeVerticalSizerHandler(
-                        app.guiStateManager, node->splitSize, range.min, range.max,
+                        app.guiStateManager, node->splitSize.value, range.min, range.max,
                         nullptr, nullptr, pinSecond, uiScale);
-                    app.RegisterElement(std::move(sizer), LayoutOverride::FixedHeight(app.styleManager.Px(kSizerThickness)));
+                    app.RegisterElement(std::move(sizer), LayoutOverride::FixedHeight(CssPx(kSizerThickness)));
                 }
             }
 
@@ -605,8 +605,8 @@ namespace interstice
                 auto childRef = app.elementStorage.FindElementRefByID(node->second->nodeID);
                 if (auto* childRect = app.elementStorage.GetElementRectPtr(childRef))
                 {
-                    if (horizontal) childRect->constraints.width.value  = app.styleManager.Px(node->splitSize);
-                    else            childRect->constraints.height.value = app.styleManager.Px(node->splitSize);
+                    if (horizontal) childRect->constraints.width.value  = app.styleManager.Px(node->splitSize.value);
+                    else            childRect->constraints.height.value = app.styleManager.Px(node->splitSize.value);
                     childRect->constraints.flex.grow   = 0;
                     childRect->constraints.flex.shrink = 0;
                 }
@@ -1015,7 +1015,7 @@ namespace interstice
                     title = pIt->second.title;
             }
 
-            auto constraints = LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(300));
+            auto constraints = LayoutOverride::FixedSize(400, 300);
             if (!fw.positioned)
             {
                 // First frame: place the window at the mouse position where

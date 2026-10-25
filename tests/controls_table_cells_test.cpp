@@ -34,7 +34,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 tableID = app.idManager.CreateStaticID();
             }
 

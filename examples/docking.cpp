@@ -1,6 +1,8 @@
 // Docking: a few panels in a dock layout. Drag a tab to move a panel, onto
 // another leaf to dock it there, or outside the window to float it.
 #include <gui_controls/gui_application.h>
+
+#include <cstdio>
 #include <gui_controls/gui_dock_node.h>
 
 #include <string>
@@ -8,10 +10,10 @@
 class DockingApp : public interstice::GUIApplication
 {
 public:
-    bool Initialize(const InitializeOptions& options = {}) override
+    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (!GUIApplication::Initialize(options))
-            return false;
+        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+            return result;
         windowID = idManager.CreateStaticID();
         dockID   = idManager.CreateStaticID();
 
@@ -29,7 +31,7 @@ public:
             interstice::MakeSplit(DockSplitMode::BottomPinned, 150,
                 interstice::MakeLeaf({ details, help }),
                 interstice::MakeLeaf({ log })));
-        return true;
+        return {};
     }
 
     void OnGUI() override
@@ -71,8 +73,14 @@ int main()
 {
     DockingApp app;
     app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-    if (app.Initialize())
-        app.Run();
+    interstice::Result<void> result = app.Initialize();
+    if (result)
+        result = app.Run();
     app.Cleanup();
+    if (!result)
+    {
+        std::fprintf(stderr, "%s\n", result.GetError().message.c_str());
+        return 1;
+    }
     return 0;
 }

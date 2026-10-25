@@ -81,13 +81,13 @@ namespace interstice
 
         const auto layout = vertical
             ? LayoutOverride{}
-                .Size(thickness, axisLen)
+                .Size(Pixels{ thickness }, Pixels{ axisLen })
                 .Anchored(containerID,
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.right),
                           AnchorPlacementAxis::InsideMin, inset.top)
                 .NoGrow().NoShrink()
             : LayoutOverride{}
-                .Size(axisLen, thickness)
+                .Size(Pixels{ axisLen }, Pixels{ thickness })
                 .Anchored(containerID,
                           AnchorPlacementAxis::InsideMin, inset.left,
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.bottom))
@@ -152,7 +152,7 @@ namespace interstice
                 .Anchored(containerID,
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.right),
                           AnchorPlacementAxis::InsideMax, static_cast<int16_t>(-inset.bottom))
-                .Size(app.theme.scrollbarThickness, app.theme.scrollbarThickness)
+                .Size(Pixels{ app.theme.scrollbarThickness }, Pixels{ app.theme.scrollbarThickness })
                 .NoGrow().NoShrink());
         VERIFY(cRes.status);
         VERIFY(app.windowRegistry.Add(cRes.ref));

@@ -16,6 +16,7 @@ namespace interstice
 
         const LayoutStyle* layoutStyle = m_styleManager.GetLayoutStyle(element.styleRef.layoutStyleIndex);
         if (layoutStyle == nullptr) return AddResult{.status = ElementStorageResult::InvalidStyle};
+        constraints.ResolveCss([this](int32_t css) { return m_styleManager.Px(css); });
 
         uint32_t depth = 0;
 

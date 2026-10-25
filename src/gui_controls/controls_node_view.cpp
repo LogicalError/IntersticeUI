@@ -625,7 +625,7 @@ namespace interstice
                     .state    = guiStateManager.GetCurrentState(handleID)
                 };
                 auto hres = elementStorage.Add(std::move(handle),
-                    LayoutOverride{}.FixedSize(rw, rh).Absolute(rx, ry));
+                    LayoutOverride{}.FixedSize(Pixels{ rw }, Pixels{ rh }).Absolute(rx, ry));
                 VERIFY(hres.status);
                 VERIFY(windowRegistry.Add(hres.ref));
 
@@ -778,7 +778,7 @@ namespace interstice
             };
             // MinWidth (not Fixed): shrink-wraps content, floored at the grid-snapped width.
             auto outerRes = elementStorage.Add(std::move(outer),
-                LayoutOverride{}.MinWidth(nodeWidth).Absolute(node.pos.x, node.pos.y));
+                LayoutOverride{}.MinWidth(Pixels{ nodeWidth }).Absolute(node.pos.x, node.pos.y));
             VERIFY(outerRes.status);
             VERIFY(windowRegistry.Add(outerRes.ref));
             nodeRefs[n] = outerRes.ref;
@@ -809,7 +809,7 @@ namespace interstice
             const int32_t rowPitch = 2 * grid;
             LayoutOverride headerLayout = LayoutOverride{}.Auto();
             if (rowPitch > nodeTopChromeV)
-                headerLayout = LayoutOverride{}.Height(rowPitch - nodeTopChromeV);
+                headerLayout = LayoutOverride{}.Height(Pixels{ rowPitch - nodeTopChromeV });
             auto headerRes = elementStorage.Add(std::move(header), std::move(headerLayout));
             VERIFY(headerRes.status);
             VERIFY(windowRegistry.Add(headerRes.ref));
@@ -855,7 +855,7 @@ namespace interstice
                     const int32_t span = (prop.rowSpan > 0 ? prop.rowSpan : 1);
                     const int32_t rowH = rowPitch * span
                                        - (p == propCount - 1 ? nodeBottomChromeV : 0);
-                    BeginHorizontal(rowID, theme.nodeRowStyleRef, LayoutOverride{}.Height(rowH));
+                    BeginHorizontal(rowID, theme.nodeRowStyleRef, LayoutOverride{}.Height(Pixels{ rowH }));
 
                     // Input socket at the FIRST pitch centre, output at the LAST
                     // (same as the row centre for single-pitch rows).
@@ -869,7 +869,7 @@ namespace interstice
                         spacer.styleRef = theme.emptyHorzStyleRef;
                         spacer.flags    = ElementFlags::NoInput;
                         auto sp = elementStorage.Add(std::move(spacer),
-                            LayoutOverride{}.FixedSize(kSocketSize / 6, kSocketSize).NoGrow().NoShrink());
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize / 6 }, Pixels{ kSocketSize }).NoGrow().NoShrink());
                         VERIFY(sp.status);
                         VERIFY(windowRegistry.Add(sp.ref));
                     }
@@ -881,7 +881,7 @@ namespace interstice
                     {
                         const int16_t inY = static_cast<int16_t>((rowPitch * span) / 2 - socketYOffset - kSocketSize / 2);
                         socketRefs[n][p * 2 + 0] = emitSocket(n, p, /*isOutput=*/false, /*readonly=*/false,
-                            LayoutOverride{}.FixedSize(kSocketSize, kSocketSize).Absolute(-socketInsetL, inY));
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize }, Pixels{ kSocketSize }).Absolute(-socketInsetL, inY));
                     }
 
                     // Body fills the row. The LabelGroup must begin at the depth renderBody
@@ -912,7 +912,7 @@ namespace interstice
                         rpad.styleRef = theme.emptyHorzStyleRef;
                         rpad.flags    = ElementFlags::NoInput;
                         auto rp = elementStorage.Add(std::move(rpad),
-                            LayoutOverride{}.FixedSize(kSocketSize / 6, kSocketSize).NoGrow().NoShrink());
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize / 6 }, Pixels{ kSocketSize }).NoGrow().NoShrink());
                         VERIFY(rp.status);
                         VERIFY(windowRegistry.Add(rp.ref));
                     }
@@ -922,7 +922,7 @@ namespace interstice
                     {
                         const int16_t outY = static_cast<int16_t>((rowPitch * span) / 2 + socketYOffset - kSocketSize / 2);
                         socketRefs[n][p * 2 + 1] = emitSocket(n, p, /*isOutput=*/true, /*readonly=*/false,
-                            LayoutOverride{}.FixedSize(kSocketSize, kSocketSize)
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize }, Pixels{ kSocketSize })
                                            .Absolute(nodeWidth - socketInsetR, outY));
                     }
 
@@ -946,12 +946,12 @@ namespace interstice
                     if (prop.input.has_value())
                     {
                         socketRefs[n][p * 2 + 0] = emitSocket(n, p, /*isOutput=*/false, /*readonly=*/true,
-                            LayoutOverride{}.FixedSize(kSocketSize, kSocketSize).Absolute(leftX, y));
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize }, Pixels{ kSocketSize }).Absolute(leftX, y));
                     }
                     if (prop.output)
                     {
                         socketRefs[n][p * 2 + 1] = emitSocket(n, p, /*isOutput=*/true, /*readonly=*/true,
-                            LayoutOverride{}.FixedSize(kSocketSize, kSocketSize).Absolute(rightX, y));
+                            LayoutOverride{}.FixedSize(Pixels{ kSocketSize }, Pixels{ kSocketSize }).Absolute(rightX, y));
                     }
                 }
             }
@@ -1276,7 +1276,7 @@ namespace interstice
             };
             auto res = elementStorage.Add(std::move(minimap),
                 corner(AnchorPlacement::InsideRight | AnchorPlacement::InsideBottom, -inset, -inset)
-                    .Size(styleManager.Px(140), styleManager.Px(88)));
+                    .Size(140, 88));
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
             VERIFY(elementStorage.AddCustomDraw(res.ref,

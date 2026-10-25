@@ -5,6 +5,9 @@
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 
+#include <cstdint>
+#include <vector>
+
 namespace interstice::vulkan
 {
     class VulkanImage : public interstice::Image
@@ -16,6 +19,16 @@ namespace interstice::vulkan
         VkExtent3D    imageExtent;
         VkFormat      imageFormat;
         VkSampler     imageSampler;
+
+        // How it was made, to make it again on a new device after the old one is lost;
+        // with its pixels when it was made from them.
+        struct Recipe
+        {
+            VkImageUsageFlags     usage     = 0;
+            interstice::Sampler   sampler   = interstice::Sampler::UNDEFINED;
+            bool                  mipmapped = false;
+            std::vector<uint8_t>  pixels;
+        } recipe;
     };
 
     class VulkanImageSet : public interstice::ImageSet
@@ -25,6 +38,10 @@ namespace interstice::vulkan
         static constexpr uint32_t kCapacity = 256;
 
         std::vector<VkDescriptorImageInfo> textures;
+        std::vector<VulkanImage*>          owners;     // the image behind each index, or null
+
+        // Points every index back at its image, after the images were made again.
+        void RefreshDescriptors();
 
     public:
         void Clear() override;

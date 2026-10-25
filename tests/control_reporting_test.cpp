@@ -60,7 +60,7 @@ namespace
         auto draw = [&] {
             app.BeginRootWindow();
             const int before = calls;
-            const bool returned = app.Toggle(toggleID, on, IconID::Invalid, "On", [&](bool v) { on = v; ++calls; });
+            const bool returned = app.Toggle(toggleID, on, "On", [&](bool v) { on = v; ++calls; });
             frames.push_back({ before > 0, returned });
             app.EndRootWindow();
         };

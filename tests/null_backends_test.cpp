@@ -63,7 +63,7 @@ namespace
         NullBackendApp app;
         ASSERT_TRUE(app.Start());
         EXPECT_EQ(app.graphicsContext->GetAPI(), interstice::GraphicsAPI::None);
-        app.Run();
+        EXPECT_TRUE(app.Run());
         EXPECT_EQ(app.frame, app.frames);
         EXPECT_NE(app.windowManager->GetWindowHandle(app.windowID), nullptr) << "the window exists";
         EXPECT_GT(app.buttonCenter.x, 0) << "the button was laid out";
@@ -88,7 +88,7 @@ namespace
                 default: break;
             }
         };
-        app.Run();
+        EXPECT_TRUE(app.Run());
         EXPECT_EQ(app.clicks, 1);
         app.Cleanup();
     }

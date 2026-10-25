@@ -156,12 +156,12 @@ namespace interstice
     }
 
 
-    bool GUIApplication::Initialize(const InitializeOptions& options)
+    Result<void> GUIApplication::Initialize(const InitializeOptions& options)
     {
         if (m_initialized)
         {
             ReportMisuse("GUIApplication: Initialize called on an initialized app (ignored)");
-            return true;
+            return {};
         }
         if (!m_osWindowBackend)
         {
@@ -171,7 +171,7 @@ namespace interstice
             m_osWindowBackend = std::make_unique<SDLWindowBackend>(sdlOptions);
 #else
             INTERSTICE_LOG_ERROR(kLogApp, "no window backend: built without SDL, so call SetWindowBackend first");
-            return false;
+            return Error{ ErrorCode::Unsupported, "no window backend: built without SDL, so call SetWindowBackend first" };
 #endif
         }
         if (!clipboard)
@@ -202,23 +202,23 @@ namespace interstice
         if (!options.fallbackFonts.empty())
             textSystem->SetFallbackFontDirectory(ResourcePath(options.fallbackFonts));
 
-        if (!graphicsContext->Initialize(windowBackend))
+        if (Result<void> graphics = graphicsContext->Initialize(windowBackend); !graphics)
         {
-            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the graphics context");
-            return false;
+            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the graphics context: {}", graphics.GetError().message);
+            return graphics;
         }
 
         textAtlasManager.reset(graphicsContext->CreateTextAtlasManager());
         if (!textAtlasManager || !textAtlasManager->Initialize(graphicsContext, graphicsContext->GetImageSet()))
         {
             INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
-            return false;
+            return Error{ ErrorCode::Failed, "failed to initialize the text atlas manager" };
         }
 
         if (!textSystem->Initialize(graphicsContext, &styleManager, textAtlasManager.get(), &guiStateManager, clipboard.get()))
         {
             INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text system");
-            return false;
+            return Error{ ErrorCode::Failed, "failed to initialize the text system" };
         }
         // No localization yet, so the OS language is the best guess for the UI's.
         textSystem->SetLanguage(windowBackend->GetPreferredLanguage());
@@ -242,8 +242,9 @@ namespace interstice
         RegisterFrameBalanceChecks();
         RegisterFrameHooks();
 
-        if (options.loadStyles && !InitializeStyles())
-            return false;
+        if (options.loadStyles)
+            if (Result<void> styles = InitializeStyles(); !styles)
+                return styles;
 
         // Global handlers run after focused-element handlers, so a focused control
         // that consumes a key takes priority over shortcuts.
@@ -265,7 +266,7 @@ namespace interstice
                     menuManager.CloseAll(guiStateManager, *windowManager);
             });
         m_initialized = true;
-        return true;
+        return {};
     }
 
     void GUIApplication::RegisterFrameHooks()
@@ -377,7 +378,7 @@ namespace interstice
         m_initialized = false;
     }
 
-    bool GUIApplication::InitializeStyles()
+    Result<void> GUIApplication::InitializeStyles()
     {
         m_displayScale = windowManager ? windowManager->MainDisplayScale() : 1.0f;
         styleManager.SetUIScale(m_displayScale * m_uiScale);
@@ -389,10 +390,10 @@ namespace interstice
             if (textSystem) theme.ComputeRowMetrics(styleManager, *textSystem);
             m_loadedThemePath = m_themePath;
             m_loadedFontScale = m_globalFontScale;
-            return true;
+            return {};
         }
         INTERSTICE_LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
-        return false;
+        return Error{ ErrorCode::ParseFailed, "could not load theme " + m_themePath };
     }
 
     void GUIApplication::CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
@@ -472,10 +473,14 @@ namespace interstice
         }
     }
 
-    bool GUIApplication::ReadWindowPixels(ID windowID, std::span<uint8_t> bgra)
+    Result<void> GUIApplication::ReadWindowPixels(ID windowID, std::span<uint8_t> bgra)
     {
         IWindowContext* context = windowManager ? windowManager->GetWindowContext(windowID) : nullptr;
-        return context != nullptr && context->ReadPixels(bgra);
+        if (context == nullptr)
+            return Error{ ErrorCode::NotFound, "no window with that ID" };
+        if (!context->ReadPixels(bgra))
+            return Error{ ErrorCode::Unsupported, "not a render-to-image window with a rendered frame, or the span is too small" };
+        return {};
     }
 
     std::string GUIApplication::ResourcePath(std::string_view path) const
@@ -518,7 +523,8 @@ namespace interstice
         for (auto& [window, scrim] : m_scrims)
             scrim.color = VisualColorStyleIndex::Invalid;
         if (textSystem) textSystem->ClearCache();
-        bool loaded = InitializeStyles();
+        m_themeReload = InitializeStyles();
+        bool loaded = m_themeReload.HasValue();
         if (!loaded && !m_loadedThemePath.empty() && m_loadedThemePath != m_themePath)
         {
             // A theme that is missing or broken: back to the one that last loaded, so the app keeps its look.
@@ -526,7 +532,7 @@ namespace interstice
             m_themePath       = m_loadedThemePath;
             m_globalFontScale = m_loadedFontScale;
             styleManager.ClearAll();
-            loaded = InitializeStyles();
+            loaded = InitializeStyles().HasValue();
         }
         if (loaded)
             OnStylesReloaded();
@@ -538,61 +544,99 @@ namespace interstice
         if (guiRenderer) guiRenderer->ClearScopeCaptures();
     }
 
-    bool GUIApplication::Run()
+    Result<void> GUIApplication::Run()
     {
         applicationQuit = false;
-        while (!applicationQuit)
+        while (UpdateFrame())
         {
-            auto frameStart = std::chrono::steady_clock::now();
+            if (Result<void> frame = RecordFrame(); !frame)
+                return frame;
+            PresentFrame();
+        }
+        return {};
+    }
 
-            INTERSTICE_PROFILE_FRAME_BEGIN("Frame");
+    Result<void> GUIApplication::RecoverDevice()
+    {
+        INTERSTICE_LOG_WARNING(kLogApp, "the GPU device was lost; making a new one");
+        windowManager->DestroyWindowContexts();
+        if (Result<void> device = graphicsContext->RecreateDevice(windowBackend); !device)
+        {
+            INTERSTICE_LOG_ERROR(kLogApp, "could not recover from the device loss: {}", device.GetError().message);
+            return device;
+        }
+        if (!windowManager->RecreateWindowContexts())
+            return Error{ ErrorCode::DeviceLost, "a window's graphics context couldn't be made on the new device" };
+        // Captured draws were recorded for the old device's buffers.
+        if (m_uiCache) m_uiCache->InvalidateAll();
+        if (guiRenderer) guiRenderer->ClearScopeCaptures();
+        return {};
+    }
 
-            // Pump input right before the build, after the previous present.
-            {
-                INTERSTICE_PROFILE_SCOPE("Input pump");
-                windowManager->Update();
-            }
+    bool GUIApplication::UpdateFrame()
+    {
+        if (applicationQuit)
+            return false;
+        m_frameStart = std::chrono::steady_clock::now();
+        INTERSTICE_PROFILE_FRAME_BEGIN("Frame");
 
-            // Build: construction, layout, input dispatch and draw recording (CPU only).
-            auto buildStart = std::chrono::steady_clock::now();
-            {
-                INTERSTICE_PROFILE_SCOPE("Build");
-                graphicsContext->BeginFrame();
-                OnFrame();
-                graphicsContext->EndFrame();
-            }
-            auto buildEnd = std::chrono::steady_clock::now();
-            frameBuildTime = std::chrono::duration<float>(buildEnd - buildStart).count();
-
-            // Uploads must run between build and render: the render consumes what this build requested
-            // (windows created/resized by OnFrame, glyphs, styles, gradient pages).
-            {
-                INTERSTICE_PROFILE_SCOPE("Resource upload");
-                windowManager->Update();
-                textSystem->Update();
-                graphicsContext->PrepareFrame(styleManager, gradientManager, static_cast<float>(m_frameClock.Seconds()));
-            }
-            {
-                INTERSTICE_PROFILE_SCOPE("Render");
-                windowManager->ForEachAliveWindowContext
-                    ([&](IWindowContext* context, IntRect rect)
-                    {
-                        context->RenderWindowFrame(graphicsContext, rect, false);
-                    });
-            }
-
-            // frameTime includes any vsync wait; frameBuildTime is just the CPU build.
-            INTERSTICE_PROFILE_FRAME_END();
-            frameTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - frameStart).count();
-
-            // In milliseconds; frozen while profiling is off.
-            if (Diagnostics::IsProfilingEnabled())
-            {
-                frameTimingHistory[frameTimingHead] = { frameBuildTime * 1000.0f, frameTime * 1000.0f };
-                frameTimingHead = (frameTimingHead + 1) % kFrameHistoryCount;
-            }
+        // Pump input right before the build, after the previous present.
+        {
+            INTERSTICE_PROFILE_SCOPE("Input pump");
+            windowManager->Update();
         }
         return true;
+    }
+
+    Result<void> GUIApplication::RecordFrame()
+    {
+        if (graphicsContext->DeviceLost())
+            if (Result<void> recovered = RecoverDevice(); !recovered)
+                return recovered;
+
+        // Build: construction, layout, input dispatch and draw recording (CPU only).
+        const auto buildStart = std::chrono::steady_clock::now();
+        {
+            INTERSTICE_PROFILE_SCOPE("Build");
+            graphicsContext->BeginFrame();
+            OnFrame();
+            graphicsContext->EndFrame();
+        }
+        frameBuildTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - buildStart).count();
+
+        // Uploads must run between build and render: the render consumes what this build requested
+        // (windows created/resized by OnFrame, glyphs, styles, gradient pages).
+        {
+            INTERSTICE_PROFILE_SCOPE("Resource upload");
+            windowManager->Update();
+            textSystem->Update();
+            graphicsContext->PrepareFrame(styleManager, gradientManager, static_cast<float>(m_frameClock.Seconds()));
+        }
+        {
+            INTERSTICE_PROFILE_SCOPE("Render");
+            windowManager->ForEachAliveWindowContext
+                ([&](IWindowContext* context, IntRect rect)
+                {
+                    context->RecordWindowFrame(graphicsContext, rect);
+                });
+        }
+        return {};
+    }
+
+    void GUIApplication::PresentFrame()
+    {
+        windowManager->ForEachAliveWindowContext([](IWindowContext* context, IntRect) { context->PresentWindowFrame(); });
+
+        // frameTime includes any vsync wait; frameBuildTime is just the CPU build.
+        INTERSTICE_PROFILE_FRAME_END();
+        frameTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - m_frameStart).count();
+
+        // In milliseconds; frozen while profiling is off.
+        if (Diagnostics::IsProfilingEnabled())
+        {
+            frameTimingHistory[frameTimingHead] = { frameBuildTime * 1000.0f, frameTime * 1000.0f };
+            frameTimingHead = (frameTimingHead + 1) % kFrameHistoryCount;
+        }
     }
 
     void GUIApplication::GetFrameTimingHistory(std::span<FrameTimingSample> out) const

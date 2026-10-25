@@ -268,8 +268,7 @@ namespace interstice
             Text(idManager.AllocateDynamicID("inspectorObjectPath"), "Mesh · Scene / Meshes / Meshes", inspectorObjectPathStyleRef);
             EndVertical();
 
-            Button(idManager.AllocateDynamicID("inspectorObjectMore"), demo.moreIcon, {}, []() {}, iconToggleStyleRef);
-            SetTooltip("Object options");
+            Button(idManager.AllocateDynamicID("inspectorObjectMore"), { demo.moreIcon, {}, "Object options" }, []() {}, iconToggleStyleRef);
         }
         EndHorizontal();
 
@@ -302,7 +301,7 @@ namespace interstice
 
             const bool open = inspectorSectionOpen[s];
             Button(idManager.AllocateDynamicID("inspectorSection"),
-                   open ? demo.chevronDownIcon : demo.chevronRightIcon, kSectionTitles[s],
+                   { open ? demo.chevronDownIcon : demo.chevronRightIcon, kSectionTitles[s] },
                    [s]() { inspectorSectionOpen[s] = !inspectorSectionOpen[s]; },
                    firstSection ? inspectorSectionFirstStyleRef : inspectorSectionStyleRef,
                    LayoutOverride{}.NoGrow().NoShrink());

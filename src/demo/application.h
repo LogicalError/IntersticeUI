@@ -430,7 +430,7 @@ namespace interstice
 
 
     public:
-        bool Initialize(const InitializeOptions& options = {}) override;
+        Result<void> Initialize(const InitializeOptions& options = {}) override;
 
         // Re-registers demo-owned styles after a theme reload.
         void OnStylesReloaded() override;

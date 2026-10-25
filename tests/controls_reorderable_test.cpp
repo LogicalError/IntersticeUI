@@ -29,7 +29,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 groupID = app.idManager.CreateStaticID();
                 for (auto& id : itemIDs) id = app.idManager.CreateStaticID();
             }

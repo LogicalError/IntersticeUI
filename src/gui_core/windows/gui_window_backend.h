@@ -68,7 +68,12 @@ namespace interstice
         virtual OSWindowHandle GetWindowHandle() const = 0;
 
         virtual bool IsTransparent() const = 0;
+        // A frame is recorded (drawn and submitted), then presented. RenderWindowFrame does
+        // both; a host loop records every window before presenting any.
         virtual void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) = 0;
+        virtual void RecordWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect) { RenderWindowFrame(graphicsContext, rect, false); }
+        // May wait for vsync; nothing to do for a render-to-image window.
+        virtual void PresentWindowFrame() {}
         virtual void UpdateTransparentWindow(int2 /*screenPos*/) {}
 
         // The last rendered frame, BGRA8 with tightly packed rows; bgra holds width x

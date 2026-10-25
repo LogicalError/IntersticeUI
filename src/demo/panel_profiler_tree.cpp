@@ -240,7 +240,7 @@ namespace interstice
         BeginHorizontal(idManager.AllocateDynamicID("profilerHeader"), profilerHeaderStyleRef,
                         LayoutOverride{}.NoGrow().NoShrink());
             const bool enabled = Diagnostics::IsProfilingEnabled();
-            Toggle(idManager.AllocateDynamicID("profilerRecord"), enabled, demo.dotIcon, "Recording",
+            Toggle(idManager.AllocateDynamicID("profilerRecord"), enabled, { demo.dotIcon, "Recording" },
                    [](bool value) { Diagnostics::SetProfilingEnabled(value); },
                    profilerRecordStyleRef, LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Record frame timings");
@@ -321,7 +321,7 @@ namespace interstice
             graphEl.id       = frameGraphID;
             graphEl.styleRef = frameGraphBgStyle;
             const auto graphRef = RegisterElement(std::move(graphEl),
-                                                  LayoutOverride{}.Height(styleManager.Px(kFrameGraphHeight)).NoShrink());
+                                                  LayoutOverride{}.Height(CssPx(kFrameGraphHeight)).NoShrink());
 
             VERIFY(elementStorage.AddCustomDraw(graphRef,
                 [this, hist, grids, scaleMax](interstice::CustomDrawContext& ctx)
@@ -429,7 +429,7 @@ namespace interstice
             flameRoot.id       = flameRootID;
             flameRoot.styleRef = flameClipStyle;   // column + overflow:hidden -> clips the bottom, no scaling
             const auto flameRef = RegisterElement(std::move(flameRoot),
-                                                  LayoutOverride{}.Height(styleManager.Px(flameHeight)).FlexShrink(1));
+                                                  LayoutOverride{}.Height(CssPx(flameHeight)).FlexShrink(1));
             VERIFY(elementStorage.AddCustomDraw(flameRef,
                 [](interstice::CustomDrawContext& ctx) { s_flameWidth = ctx.ElementInnerRect().w; }));
 
@@ -439,7 +439,7 @@ namespace interstice
             (void)idManager.PushParent(flameRootID);
             for (int d = 0; d <= maxDepth; ++d)
             {
-                BeginHorizontal(idManager.AllocateDynamicID(), LayoutOverride{}.Height(rowH).NoShrink());
+                BeginHorizontal(idManager.AllocateDynamicID(), LayoutOverride{}.Height(Pixels{ rowH }).NoShrink());
                 int cursorPx = 0;
                 for (const FlameBar& b : barsByDepth[size_t(d)])
                 {
@@ -455,7 +455,7 @@ namespace interstice
                         spacer.id       = idManager.AllocateDynamicID();
                         spacer.styleRef = theme.emptyHorzStyleRef;
                         RegisterElement(std::move(spacer),
-                                        LayoutOverride{}.FixedWidth(leftPx - cursorPx).Height(rowH));
+                                        LayoutOverride{}.FixedWidth(Pixels{ leftPx - cursorPx }).Height(Pixels{ rowH }));
                     }
 
                     const uint64_t key  = b.key;
@@ -476,7 +476,7 @@ namespace interstice
                                  : (key == s_selectedKey) ? selBarStyle
                                  : barStyles[size_t(b.colorIdx)];
                     const int gap = styleManager.Px(1);
-                    RegisterElement(std::move(box), LayoutOverride{}.FixedWidth(std::max(1, wpx - gap)).Height(rowH - gap));
+                    RegisterElement(std::move(box), LayoutOverride{}.FixedWidth(Pixels{ std::max(1, wpx - gap) }).Height(Pixels{ rowH - gap }));
 
                     VERIFY(elementStorage.BeginChildren());
                     if (wpx > styleManager.Px(26))
@@ -500,7 +500,7 @@ namespace interstice
             const int   rowUnits = int(std::ceil(float(rowH) / uiScale));   // rowH is pixels; flameHeight CSS px
             flameSizer.eventHandler = interstice::MakeVerticalSizerHandler(guiStateManager, flameHeight, rowUnits, 40 * rowUnits,
                                                                     nullptr, nullptr, false, uiScale);
-            RegisterElement(std::move(flameSizer), LayoutOverride::FixedHeight(styleManager.Px(5)));
+            RegisterElement(std::move(flameSizer), LayoutOverride::FixedHeight(5));
         }
 
         // ---- Columns -------------------------------------------------------
@@ -542,7 +542,7 @@ namespace interstice
                         const int trackW = styleManager.Px(36);
                         const int fillW  = int(std::lround(std::clamp(pct, 0.0, 100.0) / 100.0 * trackW));
                         BeginHorizontal(idManager.AllocateDynamicID("pctFill"), profilerPctFillStyleRef,
-                                        LayoutOverride{}.FixedWidth(fillW).NoGrow().NoShrink());
+                                        LayoutOverride{}.FixedWidth(Pixels{ fillW }).NoGrow().NoShrink());
                         EndHorizontal();
                         EndHorizontal();
                         Text(idManager.AllocateDynamicID("pctText"), text, profilerPctTextStyleRef,

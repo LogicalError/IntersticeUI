@@ -28,7 +28,7 @@ namespace interstice
         protected:
             HeadlessGUIApp app;
 
-            void SetUp()    override { app.Initialize(); }
+            void SetUp()    override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
         };
 

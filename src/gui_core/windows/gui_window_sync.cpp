@@ -83,7 +83,7 @@ namespace interstice
             ElementRect& elementRect = elementStorage.GetElementRectUnsafe(elementRef);
             if ((window.flags & WindowFlags::Resizable) == WindowFlags::Resizable)
             {
-                auto sc = LayoutOverride::FixedSize(window.rect.w, window.rect.h);
+                auto sc = LayoutOverride::FixedSize(Pixels{ window.rect.w }, Pixels{ window.rect.h });
                 elementRect.constraints.width  = sc.width;
                 elementRect.constraints.height = sc.height;
             }

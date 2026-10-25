@@ -17,6 +17,7 @@
 #include <array>
 #include <mutex>
 #include <optional>
+#include <unordered_set>
 #include <string>
 #include <vector>
 #include <functional>
@@ -150,6 +151,10 @@ namespace interstice::vulkan
         // Records the queued uploads into cmd, outside any rendering scope.
         void RecordPendingUploads(VkCommandBuffer cmd);
         void DestroyImage(interstice::Image* img);
+        // A lost device: frees the images' Vulkan objects (the image objects stay), then
+        // makes them again on the new device, uploading the pixels they were made from.
+        void ReleaseLiveImages();
+        void RebuildLiveImages();
         void DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
                                const std::source_location& loc =
                                std::source_location::current());
@@ -225,6 +230,7 @@ namespace interstice::vulkan
         VkFenceCreateInfo fenceCreateInfo;
 
         bool initialized{ false };
+        interstice::Error initError{};   // why the bring-up failed, when it did
 
         bool Initialize();
         void Flush();  // Wait for GPU and flush deletion queues
@@ -249,6 +255,7 @@ namespace interstice::vulkan
 
         struct PendingUpload { Buffer staging; VkImage image; VkExtent3D extent; bool mipmapped; };
         std::vector<PendingUpload> m_pendingUploads;
+        mutable std::unordered_set<VulkanImage*> m_liveImages;   // made by CreateImage, not yet destroyed
 
         std::mutex  m_ownedQueueMutex;
         std::mutex* m_queueMutex = &m_ownedQueueMutex;

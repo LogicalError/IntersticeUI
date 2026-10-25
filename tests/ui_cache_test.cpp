@@ -32,7 +32,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 scopeID   = app.idManager.CreateStaticID();
                 btnA      = app.idManager.CreateStaticID();
                 btnB      = app.idManager.CreateStaticID();
@@ -49,7 +49,7 @@ namespace interstice
                     app.BeginRootWindow();
                     app.Button(outsideID, "Out", [] {});
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, signature,
-                                        interstice::LayoutOverride{}.Width(400).Height(height)))
+                                        interstice::LayoutOverride{}.Width(400).Height(CssPx(height))))
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [] {});

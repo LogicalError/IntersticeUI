@@ -2,6 +2,7 @@
 
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_base_types.h>
+#include <gui_core/gui_units.h>
 
 #include <functional>
 #include <initializer_list>
@@ -79,9 +80,9 @@ namespace interstice
         // ---- Split fields (only when !isLeaf) ----
         DockSplitMode mode = DockSplitMode::LeftPinned;
         // Sizes in CSS pixels (scaled to the UI when laid out).
-        int  splitSize     = 200;   // pinned child size (which child is pinned is encoded in mode)
-        int  minFirstSize  = 80;
-        int  minSecondSize = 80;
+        CssPx splitSize     = 200;   // pinned child size (which child is pinned is encoded in mode)
+        CssPx minFirstSize  = 80;
+        CssPx minSecondSize = 80;
         std::unique_ptr<DockNode> first;
         std::unique_ptr<DockNode> second;
     };
@@ -90,11 +91,11 @@ namespace interstice
 
     std::unique_ptr<DockNode> MakeLeaf(std::initializer_list<ID> panelIds = {});
     std::unique_ptr<DockNode> MakeSplit(DockSplitMode mode,
-                                        int splitSize,
+                                        CssPx splitSize,
                                         std::unique_ptr<DockNode> first,
                                         std::unique_ptr<DockNode> second,
-                                        int minFirstSize = 80,
-                                        int minSecondSize = 80);
+                                        CssPx minFirstSize = 80,
+                                        CssPx minSecondSize = 80);
 
     // ---- Pure tree operations -----------------------------------------------
 
@@ -169,7 +170,7 @@ namespace interstice
     DockNode* SplitLeafAtZone(std::unique_ptr<DockNode>& leafRef,
                                ID droppedPanelId,
                                DockDropZone zone,
-                               int initialSplitSize = 200);
+                               CssPx initialSplitSize = 200);
 
     // ---- Layout save / restore ---------------------------------------------------
     //

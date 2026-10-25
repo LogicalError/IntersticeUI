@@ -23,7 +23,7 @@ static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Dia
 namespace interstice
 {
 
-    bool Application::Initialize(const InitializeOptions& options)
+    Result<void> Application::Initialize(const InitializeOptions& options)
     {
         const std::string_view styleFiles[] = { "styles.css", "demo.css" };
         SetStyleFiles(styleFiles);
@@ -31,16 +31,16 @@ namespace interstice
         InitializeOptions withFallbacks = options;
         withFallbacks.fallbackFonts = "fonts/Noto-otf";
         if (!GUIApplication::Initialize(withFallbacks))
-            return false;
+            return Error{ ErrorCode::Failed, "initialization failed" };
 
         // Application-specific resources and styles
         if (!InitializeDemoResources() ||
             !InitializeDemoStyles() ||
             !InitializeDemoGUI())
-            return false;
+            return Error{ ErrorCode::Failed, "initialization failed" };
 
         SetDrawCacheEnabled(true);
-        return true;
+        return {};
     }
 
     void Application::OnStylesReloaded()
@@ -455,7 +455,7 @@ namespace interstice
                 tex.properties.push_back(NodeProperty
                 {
                     .output      = true,   // Color output - the dot sits at the image's bottom grid line
-                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(imgSide, imgSide)); },
+                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(Pixels{ imgSide }, Pixels{ imgSide })); },
                     .socketColor = kTeal,                // can feed Mix.Strength / Output.Value
                     .rowSpan     = rowSpan,
                 });
@@ -1034,7 +1034,7 @@ namespace interstice
             MenuItem(demo.cmdCopy);
             MenuItem(demo.cmdPaste);
             MenuSeparator();
-            DestructiveMenuItem(theme.deleteIcon, "Delete", [] {});
+            DestructiveMenuItem({ theme.deleteIcon, "Delete" }, [] {});
         }
         EndMenu();
 
@@ -1066,15 +1066,15 @@ namespace interstice
 
             // Zoom = font scale, clamped to [100, 300]% in steps of 10 to match the
             // Appearance page. RequestReloadTheme no-ops when the scale is unchanged.
-            MenuItem(demo.zoomInIcon, "Zoom In", [this]() {
+            MenuItem({ demo.zoomInIcon, "Zoom In" }, [this]() {
                 demo.settingsFontScalePct = std::clamp(demo.settingsFontScalePct + 10.0f, 100.0f, 300.0f);
                 RequestReloadTheme(GetThemePath(), demo.settingsFontScalePct / 100.0f);
             });
-            MenuItem(demo.zoomOutIcon, "Zoom Out", [this]() {
+            MenuItem({ demo.zoomOutIcon, "Zoom Out" }, [this]() {
                 demo.settingsFontScalePct = std::clamp(demo.settingsFontScalePct - 10.0f, 100.0f, 300.0f);
                 RequestReloadTheme(GetThemePath(), demo.settingsFontScalePct / 100.0f);
             });
-            MenuItem(demo.recenterIcon, "Reset Zoom", [this]() {
+            MenuItem({ demo.recenterIcon, "Reset Zoom" }, [this]() {
                 demo.settingsFontScalePct = 100.0f;
                 RequestReloadTheme(GetThemePath(), 1.0f);
             });
@@ -1082,7 +1082,7 @@ namespace interstice
             MenuSeparator();
             const WindowMode mode = windowManager->GetWindowMode(demo.windowLayoutID2);
             if (mode == WindowMode::Fullscreen || mode == WindowMode::ExclusiveFullscreen)
-                MenuItem(demo.fullscreenExitIcon, "Exit Fullscreen", "F11", [this]() { ToggleFullscreen(WindowMode::Fullscreen); });
+                MenuItem({ demo.fullscreenExitIcon, "Exit Fullscreen" }, "F11", [this]() { ToggleFullscreen(WindowMode::Fullscreen); });
             else
             {
                 MenuItem(demo.cmdFullscreen);
@@ -1168,7 +1168,7 @@ namespace interstice
 
     void Application::OnGUI()
     {
-        auto&& sizeConstraints = LayoutOverride::FixedSize(styleManager.Px(1700), styleManager.Px(900));
+        auto&& sizeConstraints = LayoutOverride::FixedSize(1700, 900);
         
         {
             interstice::int2 size{ styleManager.Px(100), styleManager.Px(50) };

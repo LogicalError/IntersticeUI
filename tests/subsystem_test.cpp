@@ -453,7 +453,7 @@ namespace interstice
     TEST(ListViewItemIndexTest, SecondListInFrameKeepsFirstListsIndices)
     {
         GUITest::HeadlessGUIApp app;
-        app.Initialize();
+        ASSERT_TRUE(app.Initialize());
         const ID listA = app.idManager.CreateStaticID();
         const ID listB = app.idManager.CreateStaticID();
         const ID itemA0 = app.idManager.CreateStaticID();

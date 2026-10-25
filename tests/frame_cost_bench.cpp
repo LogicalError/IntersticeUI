@@ -31,7 +31,7 @@ namespace
                 app.Label("Name");
                 app.Field(fields[size_t(row)]);
                 app.Button("Apply", [] {});
-                app.Toggle(flag, IconID::Invalid, "On", [&](bool v) { flag = v; });
+                app.Toggle(flag, "On", [&](bool v) { flag = v; });
                 app.Text("A line of static text");
                 app.EndHorizontal();
             }

@@ -237,7 +237,7 @@ namespace interstice
         VirtualTreeView(idManager.AllocateDynamicID("shortcutCatTree"),
                         catRows, catVisibleIdx, catTableState,
                         shortcutCategoryStyleRef,
-                        interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(demo.settingsShortcutsCategoryWidth)).NoGrow(),
+                        interstice::LayoutOverride::Auto().FixedWidth(CssPx(demo.settingsShortcutsCategoryWidth)).NoGrow(),
                         "Category");
 
         {
@@ -248,7 +248,7 @@ namespace interstice
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
                 guiStateManager, demo.settingsShortcutsCategoryWidth, 100, 400, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(styleManager.Px(4)));
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }

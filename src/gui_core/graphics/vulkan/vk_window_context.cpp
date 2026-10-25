@@ -1,6 +1,7 @@
 #include <functional>
 #include <deque>
 #include <chrono>
+#include <utility>
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -422,16 +423,6 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
         if (lastBuildValid)
             lastBuildSeconds = dt;
     }
-    struct MarkPresentEnd
-    {
-        VulkanWindowContext& context;
-        ~MarkPresentEnd()
-        {
-            context.lastPresentEnd = std::chrono::steady_clock::now();
-            context.havePresentEnd = true;
-        }
-    } markPresentEnd{ *this };
-
     vkCmdEndRendering(state.commandBuffer);
 
     if (swapchain.swapchain != VK_NULL_HANDLE)
@@ -452,7 +443,7 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
                 INTERSTICE_VK_CHECK(vkQueueSubmit2(deviceContext->graphicsQueue, 1, &abortSubmit, currentFrame.renderFence));
             }
             frameNumber++;
-            return;
+            return;   // nothing to present
         }
         if (acq == VK_SUBOPTIMAL_KHR)
             resize_requested = true;
@@ -516,9 +507,17 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
     }
 
 
+    presentPending = swapchain.swapchain != VK_NULL_HANDLE;
+    readbackPending = needsReadback ? &currentFrame : nullptr;
+    frameNumber++;
+}
+
+void VulkanWindowContext::PresentWindowFrame()
+{
     // Present waits on the image's present semaphore (rendering finished).
-    if (swapchain.swapchain != VK_NULL_HANDLE)
+    if (presentPending)
     {
+        presentPending = false;
         VkPresentInfoKHR presentInfo = interstice::vulkan::present_info();
 
         presentInfo.pSwapchains = &swapchain.swapchain;
@@ -538,28 +537,25 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
             auto queueLock = deviceContext->LockQueue();
             presentResult = vkQueuePresentKHR(deviceContext->graphicsQueue, &presentInfo);
         }
-        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR)
-        {
+        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
             resize_requested = true;
-            return;
-        }
-        if (presentResult == VK_SUBOPTIMAL_KHR)
-        {
-            resize_requested = true;
-        }
         else
-        {
             INTERSTICE_VK_CHECK(presentResult);
-        }
     }
 
-    frameNumber++;
-    
-    if (needsReadback)
+    if (FrameData* frame = std::exchange(readbackPending, nullptr))
     {
-        WaitForFence(deviceContext->device, currentFrame.renderFence);
-        PerformReadback(currentFrame.drawImage);
+        WaitForFence(deviceContext->device, frame->renderFence);
+        PerformReadback(frame->drawImage);
     }
+
+    // Layered windows don't redraw on SDL expose events, so update them explicitly.
+    if ((windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None)
+        UpdateTransparentWindow(recordedPosition);
+
+    // Build time is measured from here to the next frame's submit.
+    lastPresentEnd = std::chrono::steady_clock::now();
+    havePresentEnd = true;
 }
 
 void VulkanWindowContext::PerformReadback(const VulkanImage& drawImage)
@@ -764,6 +760,22 @@ void VulkanWindowContext::UpdateTransparentWindow(interstice::int2 screenPos)
 
 void VulkanWindowContext::RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing)
 {
+    RecordFrame(graphicsContext, rect, resizing);
+    PresentWindowFrame();
+}
+
+void VulkanWindowContext::RecordWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect)
+{
+    RecordFrame(graphicsContext, rect, false);
+}
+
+void VulkanWindowContext::RecordFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing)
+{
+    // A frame recorded and not presented yet (a live-resize redraw in between) goes first,
+    // or its acquired image is never given back.
+    if (presentPending || readbackPending)
+        PresentWindowFrame();
+    recordedPosition = rect.position;
     if (onGui && graphicsContext != nullptr)
     {
         uint32_t requestedWidth  = rect.size.x > 0 ? static_cast<uint32_t>(rect.size.x) : 0u;
@@ -840,13 +852,6 @@ void VulkanWindowContext::RenderWindowFrame(interstice::GraphicsContext* graphic
                     vulkanGraphicsContext->SetFrameBuildSeconds(static_cast<float>(lastBuildSeconds));
             }
         }
-    }
-
-
-    // Layered windows don't redraw on SDL expose events, so update them explicitly.
-    if ((windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None)
-    {
-        UpdateTransparentWindow(rect.position);
     }
 }
 

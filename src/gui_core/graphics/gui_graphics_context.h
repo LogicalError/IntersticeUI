@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/gui_base_types.h>
+#include <gui_core/gui_result.h>
 
 #include <gui_core/graphics/gui_image.h>
 #include <gui_core/memory/gui_allocation_hooks.h>
@@ -67,7 +68,11 @@ namespace interstice
         virtual void SetShaderDirectory(std::string_view directory) = 0;
         // Host memory functions for the graphics API's allocations. Call before Initialize.
         virtual void SetAllocationHooks(const AllocationHooks& hooks) = 0;
-        virtual bool Initialize(IWindowBackend* windowBackend) = 0;
+        virtual Result<void> Initialize(IWindowBackend* windowBackend) = 0;
+        // A lost GPU device (#47): DeviceLost says so, RecreateDevice makes a new one and
+        // everything the backend owns on it again (the window contexts are the caller's).
+        virtual bool DeviceLost() const { return false; }
+        virtual Result<void> RecreateDevice(IWindowBackend*) { return Error{ ErrorCode::Unsupported, "this backend can't recreate its device" }; }
         virtual void Cleanup() = 0;
         virtual void BeginFrame() = 0;
         virtual void EndFrame() = 0;

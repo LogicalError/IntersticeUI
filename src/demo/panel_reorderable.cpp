@@ -21,7 +21,7 @@ namespace interstice
                     auto item = std::move(reorderTabs[from]);
                     reorderTabs.erase(reorderTabs.begin() + from);
                     reorderTabs.insert(reorderTabs.begin() + to, std::move(item));
-                }, theme.emptyHorzStyleRef, interstice::LayoutOverride{}.Height(styleManager.Px(40))))
+                }, theme.emptyHorzStyleRef, interstice::LayoutOverride{}.Height(40)))
             {
                 for (int i = 0; i < static_cast<int>(reorderTabs.size()); i++)
                 {
@@ -43,7 +43,7 @@ namespace interstice
                     auto item = std::move(reorderItems[from]);
                     reorderItems.erase(reorderItems.begin() + from);
                     reorderItems.insert(reorderItems.begin() + to, std::move(item));
-                }, interstice::LayoutOverride{}.FixedWidth(styleManager.Px(300))))
+                }, interstice::LayoutOverride{}.FixedWidth(300)))
             {
                 for (int i = 0; i < static_cast<int>(reorderItems.size()); i++)
                 {
@@ -68,7 +68,7 @@ namespace interstice
                     auto item = std::move(wrappedHorzItems[from]);
                     wrappedHorzItems.erase(wrappedHorzItems.begin() + from);
                     wrappedHorzItems.insert(wrappedHorzItems.begin() + to, std::move(item));
-                }, interstice::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
+                }, interstice::LayoutOverride::FixedSize(400, 200)))
             {
                 for (int i = 0; i < static_cast<int>(wrappedHorzItems.size()); i++)
                 {
@@ -93,7 +93,7 @@ namespace interstice
                     auto item = std::move(wrappedVertItems[from]);
                     wrappedVertItems.erase(wrappedVertItems.begin() + from);
                     wrappedVertItems.insert(wrappedVertItems.begin() + to, std::move(item));
-                }, interstice::LayoutOverride::FixedSize(styleManager.Px(400), styleManager.Px(200))))
+                }, interstice::LayoutOverride::FixedSize(400, 200)))
             {
                 for (int i = 0; i < static_cast<int>(wrappedVertItems.size()); i++)
                 {

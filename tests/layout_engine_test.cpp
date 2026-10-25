@@ -909,7 +909,7 @@ namespace interstice
             EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
 
             auto firstResult = storage.Add(CreateElement(blockRef, ID{ .value{ .integer = 20002 } }),
-                                           LayoutOverride::FixedSize(firstWidth, 50));
+                                           LayoutOverride::FixedSize(CssPx(firstWidth), 50));
             EXPECT_EQ(firstResult.status, ElementStorageResult::Success);
 
             auto secondResult = storage.Add(CreateElement(blockRef, ID{ .value{ .integer = 20003 } }),

@@ -117,10 +117,13 @@ namespace interstice
         m_gridViewState = {};
     }
 
-    bool GUIApplication::GridViewItem(ID id, IconID icon, std::string_view text,
+    bool GUIApplication::GridViewItem(ID id, const GUIContent& content,
                                    interstice::ElementState extraState, std::string* renameBuffer,
                                    StyleRef itemStyle, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
         int itemIndex = m_gridViewState.nextItemIndex++;
         int* selectedIndex        = m_gridViewState.selectedIndex;
         MultiSelectState* multi   = m_gridViewState.multiSelect;
@@ -188,7 +191,7 @@ namespace interstice
                 icn.styleRef = theme.gridViewRenameIconStyleRef;
                 icn.state    = guiStateManager.GetCurrentState(iconElemID);
                 auto icnRes = elementStorage.Add(std::move(icn),
-                    LayoutOverride{}.Size(iconSize, iconSize).NoGrow().NoShrink());
+                    LayoutOverride{}.Size(Pixels{ iconSize }, Pixels{ iconSize }).NoGrow().NoShrink());
                 VERIFY(icnRes.status);
                 VERIFY(windowRegistry.Add(icnRes.ref));
             }
@@ -580,7 +583,7 @@ namespace interstice
             spacer.styleRef = theme.emptyHorzStyleRef;
             spacer.flags    = interstice::ElementFlags::NoInput;
             RegisterElement(std::move(spacer),
-                            interstice::LayoutOverride{}.Height(height).NoGrow().NoShrink());
+                            interstice::LayoutOverride{}.Height(Pixels{ height }).NoGrow().NoShrink());
         };
 
         emitSpacer(firstRow * rowStride);
@@ -592,7 +595,7 @@ namespace interstice
             row.id       = rowID;
             row.styleRef = rowStyle;
             RegisterElement(std::move(row),
-                            interstice::LayoutOverride{}.Height(rowStride).NoGrow().NoShrink());
+                            interstice::LayoutOverride{}.Height(Pixels{ rowStride }).NoGrow().NoShrink());
             VERIFY(elementStorage.BeginChildren());
             const int base = r * cols;
             for (int c = 0; c < cols; ++c)

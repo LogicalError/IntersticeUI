@@ -326,8 +326,11 @@ namespace interstice
         m_treeState = {};
     }
 
-    bool GUIApplication::ListItem(ID id, IconID icon, std::string_view text, StyleRef style, LayoutOverride&& constraints)
+    bool GUIApplication::ListItem(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints)
     {
+        const IconID           icon = content.icon;
+        const std::string_view text = content.text;
+        ShowContentTooltip(id, content);
         if (m_treeState.containerID == ID::Invalid())
         {
             ReportMisuse("GUIApplication: ListItem outside a list or tree view (ignored)");

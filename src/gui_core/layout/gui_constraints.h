@@ -2,6 +2,7 @@
 
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_base_types.h>
+#include <gui_core/gui_units.h>
 #include <gui_core/style/gui_style.h>
 
 namespace interstice
@@ -18,6 +19,25 @@ namespace interstice
         int32_t value = kAuto;       // Explicit size (kAuto = content-driven)
         int32_t min   = 0;
         int32_t max   = kUnbounded;
+        // Which of value / min / max are CSS px, scaled to pixels when the element is added.
+        uint8_t cssMask = 0;
+        static constexpr uint8_t kValueCss = 1, kMinCss = 2, kMaxCss = 4;
+
+        constexpr void SetValue(CssPx v)  { value = v.value; cssMask = uint8_t(cssMask | kValueCss); }
+        constexpr void SetValue(Pixels v) { value = v.value; cssMask = uint8_t(cssMask & ~kValueCss); }
+        constexpr void SetMin(CssPx v)    { min = v.value;   cssMask = uint8_t(cssMask | kMinCss); }
+        constexpr void SetMin(Pixels v)   { min = v.value;   cssMask = uint8_t(cssMask & ~kMinCss); }
+        constexpr void SetMax(CssPx v)    { max = v.value;   cssMask = uint8_t(cssMask | kMaxCss); }
+        constexpr void SetMax(Pixels v)   { max = v.value;   cssMask = uint8_t(cssMask & ~kMaxCss); }
+
+        // CSS px to pixels, with `px` (the style manager's Px).
+        template<class PxFn> constexpr void ResolveCss(const PxFn& px)
+        {
+            if ((cssMask & kValueCss) && value != kAuto)     value = px(value);
+            if (cssMask & kMinCss)                           min   = px(min);
+            if ((cssMask & kMaxCss) && max != kUnbounded)    max   = px(max);
+            cssMask = 0;
+        }
 
         constexpr bool HasFixed() const { return value != kAuto; }
 
@@ -132,10 +152,14 @@ namespace interstice
         // --- Static factories ---
 
         static LayoutOverride Auto()                           { return {}; }
-        static LayoutOverride FixedSize(int32_t w, int32_t h)  { LayoutOverride lo; lo.width.value = w; lo.height.value = h; return lo; }
-        static LayoutOverride FixedSize(int2 s)                { return FixedSize(s.x, s.y); }
-        static LayoutOverride FixedWidth(int32_t w)            { LayoutOverride lo; lo.width.value = w; return lo; }
-        static LayoutOverride FixedHeight(int32_t h)           { LayoutOverride lo; lo.height.value = h; return lo; }
+        // Sizes in CSS px (scaled by the UI scale) or in Pixels (as they are); see gui_units.h.
+        static LayoutOverride FixedSize(CssPx w, CssPx h)      { LayoutOverride lo; lo.width.SetValue(w); lo.height.SetValue(h); return lo; }
+        static LayoutOverride FixedSize(Pixels w, Pixels h)    { LayoutOverride lo; lo.width.SetValue(w); lo.height.SetValue(h); return lo; }
+        static LayoutOverride FixedSize(int2 pixels)           { return FixedSize(Pixels{ pixels.x }, Pixels{ pixels.y }); }   // int2 is pixels
+        static LayoutOverride FixedWidth(CssPx w)              { LayoutOverride lo; lo.width.SetValue(w); return lo; }
+        static LayoutOverride FixedWidth(Pixels w)             { LayoutOverride lo; lo.width.SetValue(w); return lo; }
+        static LayoutOverride FixedHeight(CssPx h)             { LayoutOverride lo; lo.height.SetValue(h); return lo; }
+        static LayoutOverride FixedHeight(Pixels h)            { LayoutOverride lo; lo.height.SetValue(h); return lo; }
 
         // --- Size convenience ---
         constexpr bool HasFixedWidth()  const { return width.HasFixed(); }
@@ -165,15 +189,25 @@ namespace interstice
             LayoutOverride&  name &  { body return *this; } \
             LayoutOverride&& name && { body return std::move(*this); }
 
-        // Size builders
-        INTERSTICE_LO_BUILDER(Size(int2 s),                    width.value = s.x; height.value = s.y;)
-        INTERSTICE_LO_BUILDER(Size(int32_t w, int32_t h),      width.value = w; height.value = h;)
-        INTERSTICE_LO_BUILDER(Width(int32_t w),                width.value = w;)
-        INTERSTICE_LO_BUILDER(Height(int32_t h),               height.value = h;)
-        INTERSTICE_LO_BUILDER(MinWidth(int32_t w),             width.min = w;)
-        INTERSTICE_LO_BUILDER(MinHeight(int32_t h),            height.min = h;)
-        INTERSTICE_LO_BUILDER(MaxWidth(int32_t w),             width.max = w;)
-        INTERSTICE_LO_BUILDER(MaxHeight(int32_t h),            height.max = h;)
+        // Size builders: CSS px (scaled by the UI scale) or Pixels (as they are)
+        INTERSTICE_LO_BUILDER(Size(CssPx w, CssPx h),          width.SetValue(w); height.SetValue(h);)
+        INTERSTICE_LO_BUILDER(Size(Pixels w, Pixels h),        width.SetValue(w); height.SetValue(h);)
+        INTERSTICE_LO_BUILDER(Size(int2 pixels),               width.SetValue(Pixels{ pixels.x }); height.SetValue(Pixels{ pixels.y });)
+        INTERSTICE_LO_BUILDER(Width(CssPx w),                  width.SetValue(w);)
+        INTERSTICE_LO_BUILDER(Width(Pixels w),                 width.SetValue(w);)
+        INTERSTICE_LO_BUILDER(Height(CssPx h),                 height.SetValue(h);)
+        INTERSTICE_LO_BUILDER(Height(Pixels h),                height.SetValue(h);)
+        INTERSTICE_LO_BUILDER(MinWidth(CssPx w),               width.SetMin(w);)
+        INTERSTICE_LO_BUILDER(MinWidth(Pixels w),              width.SetMin(w);)
+        INTERSTICE_LO_BUILDER(MinHeight(CssPx h),              height.SetMin(h);)
+        INTERSTICE_LO_BUILDER(MinHeight(Pixels h),             height.SetMin(h);)
+        INTERSTICE_LO_BUILDER(MaxWidth(CssPx w),               width.SetMax(w);)
+        INTERSTICE_LO_BUILDER(MaxWidth(Pixels w),              width.SetMax(w);)
+        INTERSTICE_LO_BUILDER(MaxHeight(CssPx h),              height.SetMax(h);)
+        INTERSTICE_LO_BUILDER(MaxHeight(Pixels h),             height.SetMax(h);)
+
+        // CSS px to pixels; ElementStorage::Add does it with the style manager's Px.
+        template<class PxFn> void ResolveCss(const PxFn& px) { width.ResolveCss(px); height.ResolveCss(px); }
 
         // Position builders (near = left/top, far = right/bottom)
         INTERSTICE_LO_BUILDER(Position(int2 p),                                     x = PositionConstraintAxis::Fixed(int16_t(p.x)); y = PositionConstraintAxis::Fixed(int16_t(p.y));)

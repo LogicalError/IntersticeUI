@@ -21,11 +21,11 @@ namespace interstice
     }
 
     std::unique_ptr<DockNode> MakeSplit(DockSplitMode mode,
-                                        int splitSize,
+                                        CssPx splitSize,
                                         std::unique_ptr<DockNode> first,
                                         std::unique_ptr<DockNode> second,
-                                        int minFirstSize,
-                                        int minSecondSize)
+                                        CssPx minFirstSize,
+                                        CssPx minSecondSize)
     {
         auto node = std::make_unique<DockNode>();
         node->isLeaf = false;
@@ -238,8 +238,8 @@ namespace interstice
         // splitSize is the PINNED child's size, so its floor is that child's minimum
         // and the ceiling leaves the other child its own minimum.
         const bool pinSecond = PinsSecondChild(splitNode.mode);
-        const int minPinned  = std::max(0, pinSecond ? splitNode.minSecondSize : splitNode.minFirstSize);
-        const int minOther   = std::max(0, pinSecond ? splitNode.minFirstSize  : splitNode.minSecondSize);
+        const int minPinned  = std::max(0, (pinSecond ? splitNode.minSecondSize : splitNode.minFirstSize).value);
+        const int minOther   = std::max(0, (pinSecond ? splitNode.minFirstSize  : splitNode.minSecondSize).value);
         const int sizer      = std::max(0, sizerThickness);
 
         const int maxPinned = containerExtent - sizer - minOther;
@@ -256,7 +256,7 @@ namespace interstice
                        int sizerThickness)
     {
         const SplitSizeRange range = ComputeSplitSizeRange(splitNode, containerExtent, sizerThickness);
-        return std::clamp(splitNode.splitSize, range.min, range.max);
+        return std::clamp(splitNode.splitSize.value, range.min, range.max);
     }
 
     // ---- ID assignment -------------------------------------------------------
@@ -369,7 +369,7 @@ namespace interstice
     DockNode* SplitLeafAtZone(std::unique_ptr<DockNode>& leafRef,
                                ID droppedPanelId,
                                DockDropZone zone,
-                               int initialSplitSize)
+                               CssPx initialSplitSize)
     {
         if (!leafRef) return nullptr;
 
@@ -443,8 +443,8 @@ namespace interstice
             }
             out += "{\"split\":\"";
             out += ModeName(node.mode);
-            out += "\",\"size\":" + std::to_string(node.splitSize) + ",\"minFirst\":" + std::to_string(node.minFirstSize)
-                + ",\"minSecond\":" + std::to_string(node.minSecondSize) + ",\"first\":";
+            out += "\",\"size\":" + std::to_string(node.splitSize.value) + ",\"minFirst\":" + std::to_string(node.minFirstSize.value)
+                + ",\"minSecond\":" + std::to_string(node.minSecondSize.value) + ",\"first\":";
             if (node.first) WriteNode(out, *node.first, keyOf); else out += "{\"tabs\":[],\"selected\":0}";
             out += ",\"second\":";
             if (node.second) WriteNode(out, *node.second, keyOf); else out += "{\"tabs\":[],\"selected\":0}";

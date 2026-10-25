@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <gui_controls/gui_application_internal.h>
+#include <gui_core/graphics/vulkan/vk_graphics_context.h>
 #include <gui_controls/controls_toolbar_dock.h>
 #include <gui_controls/subsystems/gui_ui_cache_subsystem.h>
 #include <gui_core/memory/gui_tracking_allocator.h>
@@ -89,7 +90,7 @@ namespace
         const std::filesystem::path resources = std::filesystem::current_path();
         {
             EmptyApp probe;
-            const bool available = probe.Initialize();
+            const bool available = probe.Initialize().HasValue();
             probe.Cleanup();
             if (!available)
                 GTEST_SKIP() << "no Vulkan device or window system available";
@@ -98,7 +99,7 @@ namespace
         std::filesystem::current_path(std::filesystem::temp_directory_path());
         EmptyApp app;
         app.SetResourceRoot(resources.string());
-        const bool initialized = app.Initialize();
+        const bool initialized = app.Initialize().HasValue();
         std::filesystem::current_path(resources);
 
         EXPECT_TRUE(initialized);
@@ -208,7 +209,7 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device available";
         }
-        app.Run();
+        EXPECT_TRUE(app.Run());
         const interstice::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
         ASSERT_NE(handle, nullptr) << "the window exists";
         EXPECT_EQ(app.windowBackend->GetNativeHandle(handle), nullptr) << "no OS window behind it";
@@ -219,6 +220,117 @@ namespace
         ASSERT_TRUE(app.ReadWindowPixels(app.windowID, pixels));
         const size_t center = (size_t(rect.h / 2) * rect.w + size_t(rect.w / 2)) * 4;
         EXPECT_EQ(pixels[center + 3], 255) << "the window's background covers its image";
+        app.Cleanup();
+    }
+
+    // A host loop drives the frame through the split calls (#55): a render-to-image window
+    // is drawn once RecordFrame returns, before any present.
+    TEST(GpuApplicationInit, AHostLoopDrivesTheFrameCalls)
+    {
+        ImageWindowApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        app.frames = 1000;   // the host decides when to stop
+        int hostFrames = 0;
+        std::vector<uint8_t> pixels;
+        bool drawnBeforePresent = false;
+        while (hostFrames < 3 && app.UpdateFrame())
+        {
+            ASSERT_TRUE(app.RecordFrame());
+            if (hostFrames == 2)
+            {
+                const interstice::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
+                pixels.resize(size_t(rect.w) * rect.h * 4);
+                drawnBeforePresent = rect.w > 0 && app.ReadWindowPixels(app.windowID, pixels)
+                                  && pixels[(size_t(rect.h / 2) * rect.w + size_t(rect.w / 2)) * 4 + 3] == 255;
+            }
+            app.PresentFrame();
+            ++hostFrames;
+        }
+        EXPECT_EQ(hostFrames, 3);
+        EXPECT_EQ(app.frame, 3) << "one build per host frame";
+        EXPECT_TRUE(drawnBeforePresent);
+
+        app.applicationQuit = true;
+        EXPECT_FALSE(app.UpdateFrame()) << "false once the app quits";
+        app.Cleanup();
+    }
+
+    // A render-to-image window showing a red image of the app's.
+    class DeviceLossApp : public interstice::GUIApplicationInternals
+    {
+    public:
+        interstice::ID         windowID = interstice::ID::Invalid();
+        interstice::Image*     image    = nullptr;
+        interstice::ImageIndex red      = interstice::ImageIndex::Invalid;
+
+        void OnGUI() override
+        {
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
+                            interstice::ElementFlags::WindowRenderToImage))
+                Image(red, interstice::LayoutOverride{}.Size(interstice::Pixels{ 1000 }, interstice::Pixels{ 1000 }));
+            EndWindow();
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            windowID = idManager.CreateStaticID();
+            std::vector<uint8_t> pixels(4 * 4 * 4);
+            for (size_t i = 0; i < pixels.size(); i += 4) { pixels[i] = 255; pixels[i + 3] = 255; }   // RGBA red
+            image = graphicsContext->CreateImage(pixels.data(), interstice::uint2{ 4, 4 }, interstice::ImageFormat::R8G8B8A8,
+                                                 interstice::Sampler::LinearClampToEdge);
+            red = graphicsContext->RegisterImage(image);
+            return image != nullptr && red != interstice::ImageIndex::Invalid;
+        }
+
+        // The window's center pixel is red (BGRA8).
+        bool CenterIsRed()
+        {
+            const interstice::IntRect rect = windowManager->GetWindowRect(windowID);
+            if (rect.w <= 0) return false;
+            std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
+            if (!ReadWindowPixels(windowID, pixels)) return false;
+            const size_t c = (size_t(rect.h / 2) * rect.w + size_t(rect.w / 2)) * 4;
+            return pixels[c + 2] > 200 && pixels[c + 1] < 50 && pixels[c] < 50;
+        }
+
+        bool Frames(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (!UpdateFrame() || !RecordFrame()) return false;
+                PresentFrame();
+            }
+            return true;
+        }
+    };
+
+    // A lost device is made again before the next frame (#47): the app's image keeps its
+    // index and pixels, and the window draws on.
+    TEST(GpuApplicationInit, ALostDeviceIsMadeAgainAndTheUIDrawsOn)
+    {
+        DeviceLossApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        ASSERT_TRUE(app.Frames(3));
+        ASSERT_TRUE(app.CenterIsRed()) << "the image draws before the loss";
+
+        auto* vulkan = static_cast<interstice::vulkan::VulkanGraphicsContext*>(app.graphicsContext);
+        vulkan->SimulateDeviceLoss();
+        EXPECT_TRUE(app.graphicsContext->DeviceLost());
+        ASSERT_TRUE(app.Frames(3)) << "the frames go on";
+        EXPECT_FALSE(app.graphicsContext->DeviceLost());
+        EXPECT_TRUE(app.CenterIsRed()) << "the image draws from its index on the new device";
+
+        app.graphicsContext->DestroyImageAtEnd(app.image, interstice::DeviceScope::Application);
         app.Cleanup();
     }
 
@@ -244,7 +356,7 @@ namespace
                 default: break;
             }
         };
-        app.Run();
+        EXPECT_TRUE(app.Run());
         EXPECT_EQ(app.clicks, 1);
         app.Cleanup();
     }
@@ -309,7 +421,7 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device available";
         }
-        app.Run();
+        EXPECT_TRUE(app.Run());
         ASSERT_GT(app.replayFrames, 0) << "test setup: the area was replayed from the cache";
         EXPECT_EQ(app.replayFramesWithAfterDraw, app.replayFrames);
         app.Cleanup();
@@ -372,7 +484,7 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device available";
         }
-        app.Run();
+        EXPECT_TRUE(app.Run());
         ASSERT_GT(app.renderedFrames, 0);
         EXPECT_EQ(app.renderedFramesWithAfterDraw, app.renderedFrames);
         app.Cleanup();

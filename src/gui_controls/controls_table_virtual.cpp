@@ -922,7 +922,7 @@ namespace interstice
                 interstice::LayoutOverride{}
                     .PositionX(interstice::PositionConstraintAxis::Absolute(static_cast<int16_t>(x - gap)))
                     .PositionY(interstice::PositionConstraintAxis::Absolute(0))
-                    .Size(styleManager.Px(1), kStretchHeight));
+                    .Size(Pixels{ styleManager.Px(1) }, Pixels{ kStretchHeight }));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -960,7 +960,7 @@ namespace interstice
                     interstice::LayoutOverride{}
                         .PositionX(interstice::PositionConstraintAxis::Absolute(static_cast<int16_t>(x)))
                         .PositionY(interstice::PositionConstraintAxis::Absolute(0))
-                        .Size(static_cast<int>(track.value), kStretchHeight));
+                        .Size(Pixels{ static_cast<int>(track.value) }, Pixels{ kStretchHeight }));
                 VERIFY(bRes.status);
                 VERIFY(windowRegistry.Add(bRes.ref));
             }
@@ -1003,7 +1003,7 @@ namespace interstice
                 sizerHandler = interstice::MakeHorizontalSizerHandler(
                     guiStateManager,
                     state->columnWidths[c],
-                    col.minWidth, std::numeric_limits<int>::max(),
+                    col.minWidth.value, std::numeric_limits<int>::max(),
                     nullptr,
                     // when double-clicking the sizer, snap to content width (plus padding/borders)
                     [maxWidth, sm = &styleManager, cellStyleIndex, headerStyleIndex]() -> int {
@@ -1028,7 +1028,7 @@ namespace interstice
                     .PositionX(interstice::PositionConstraintAxis::Anchored(
                         leftHeaderID, interstice::AnchorPlacementAxis::OutsideMax, 0))
                     .PositionY(interstice::PositionConstraintAxis::Absolute(0))
-                    .Size(sizerWidth, kStretchHeight));
+                    .Size(Pixels{ sizerWidth }, Pixels{ kStretchHeight }));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         };
@@ -1044,7 +1044,7 @@ namespace interstice
     void GUIApplication::VirtualTable(ID id, TableState& state,
                                       std::span<VirtualTableColumn> columns,
                                       int totalRowCount,
-                                      int32_t rowHeight,
+                                      CssPx rowHeight,
                                       StyleRef style,
                                       LayoutOverride&& constraints)
     {
@@ -1087,7 +1087,7 @@ namespace interstice
                 h += ls->padding.Vertical() + ls->borderWidths.Vertical();
             styleRowHeight = std::max(1, h);
         }
-        const int32_t actualRowHeight = std::max(styleRowHeight, rowHeight);
+        const int32_t actualRowHeight = std::max(styleRowHeight, rowHeight.value > 0 ? styleManager.Px(rowHeight.value) : 0);
 
         constexpr int kBufferRows = 5;
         const auto rowRange = TableHelpers::ComputeVirtualRowRange(
@@ -1216,7 +1216,7 @@ namespace interstice
         {
             state.columnWidths.assign(columnCount, 0);
             for (size_t c = 0; c < columnCount; c++)
-                state.columnWidths[c] = columns[c].column.initialWidth;
+                state.columnWidths[c] = columns[c].column.initialWidth.value;
         }
 
         // Clamp persisted selectedColumn to the current column range.
@@ -1446,7 +1446,7 @@ namespace interstice
                 OpenTableBodySection(emit, bodyID,
                                      fitContent ? theme.tableFitContentBodyStyleRef
                                                 : theme.tableScrollableBodyStyleRef,
-                                     fitContent ? interstice::LayoutOverride{}.Width(sectionFixedWidth)
+                                     fitContent ? interstice::LayoutOverride{}.Width(Pixels{ sectionFixedWidth })
                                                 : interstice::LayoutOverride{}.MinWidth(0),
                                      /*sampleViewport*/isLast);
 

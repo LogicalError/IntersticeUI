@@ -21,7 +21,7 @@ namespace interstice
             HeadlessGUIApp app;
             interstice::color4f   color{ 0.2f, 0.4f, 0.8f, 1.0f };
 
-            void SetUp() override { app.Initialize(); }
+            void SetUp() override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
 
             void EmitField()
@@ -170,7 +170,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 a.AddStop(interstice::color4f{ 1, 0, 0, 1 }, 0.0f);
                 a.AddStop(interstice::color4f{ 0, 0, 1, 1 }, 1.0f);
                 b.AddStop(interstice::color4f{ 0, 1, 0, 1 }, 0.0f);
@@ -231,7 +231,7 @@ namespace interstice
             interstice::color4f   b{ 0.0f, 0.0f, 1.0f, 1.0f };
             interstice::color4b   bytes{ 200, 40, 10, 255 };
 
-            void SetUp() override { app.Initialize(); }
+            void SetUp() override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
 
             void EmitFields()

@@ -65,7 +65,7 @@ namespace interstice
         spacer.styleRef = app.theme.treeTableIndentStyleRef;
         spacer.flags    = interstice::ElementFlags::NoInput;
         auto res = app.elementStorage.Add(std::move(spacer),
-            interstice::LayoutOverride::FixedWidth(depth * app.theme.treeTableIndent));
+            interstice::LayoutOverride::FixedWidth(Pixels{ depth * app.theme.treeTableIndent }));
         VERIFY(res.status);
         VERIFY(app.windowRegistry.Add(res.ref));
     }

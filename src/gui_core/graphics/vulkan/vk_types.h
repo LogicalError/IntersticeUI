@@ -31,19 +31,23 @@ namespace interstice::vulkan
         VmaAllocationInfo info;
     };
 
-    #define INTERSTICE_VK_CHECK(x)                                                     \
+    // A failed Vulkan call is logged and the frame carries on (#47). A lost device is
+    // remembered: the GUI recreates it before its next frame (DeviceLost / RecreateDevice).
+    void OnVulkanError(VkResult result, const char* call);
+    bool IsDeviceLost();
+    void SetDeviceLost(bool lost);
+
+    #define INTERSTICE_VK_CHECK(x)                                              \
         do                                                                  \
         {                                                                   \
-            VkResult err = x;                                               \
-            if (err)                                                        \
-            {                                                               \
-                INTERSTICE_LOG_CRITICAL(::interstice::Diagnostics::MakeLogCategory("vulkan"), "Vulkan error: {}", string_VkResult(err)); \
-                abort();                                                    \
-            }                                                               \
+            const VkResult interstice_vk_result = (x);                      \
+            if (interstice_vk_result != VK_SUCCESS)                         \
+                ::interstice::vulkan::OnVulkanError(interstice_vk_result, #x); \
         } while (0)
 
     // Wait for one fence however long the GPU takes. VK_TIMEOUT only means the GPU is slow (a busy
-    // or stalled driver, a paused debugger), so keep waiting; only real errors such as device loss abort.
+    // or stalled driver, a paused debugger), so keep waiting; a real error such as device loss
+    // is reported and the wait ends.
     inline void WaitForFence(VkDevice device, VkFence fence)
     {
         VkResult result;

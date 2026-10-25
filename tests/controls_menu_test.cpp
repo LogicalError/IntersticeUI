@@ -25,7 +25,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            void SetUp()    override { app.Initialize(); }
+            void SetUp()    override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
         };
 
@@ -156,7 +156,7 @@ namespace interstice
                     app.BeginDisabled();
                     app.MenuItem(disabledID, "Undo", [&] { ++disabledRuns; });
                     app.EndDisabled();
-                    app.DestructiveMenuItem(deleteID, app.theme.deleteIcon, "Delete", {}, [&] { ++deleteRuns; });
+                    app.DestructiveMenuItem(deleteID, { app.theme.deleteIcon, "Delete" }, {}, [&] { ++deleteRuns; });
                 }
                 app.EndMenu();
                 app.EndRootWindow();

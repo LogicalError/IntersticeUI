@@ -53,7 +53,7 @@ public:
 
     // Headless stand-in for GUIApplication::Initialize: no window system, so only
     // loadStyles applies.
-    bool Initialize(const InitializeOptions& options = {}) override;
+    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override;
     void Cleanup() override;
 
     // The harness never calls OnGUI - tests pass their widget callback

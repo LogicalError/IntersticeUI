@@ -55,7 +55,7 @@ namespace interstice
             EventRecorder recorder{};
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 hostID = app.idManager.CreateStaticID();
             }
             void TearDown() override { app.Cleanup(); }

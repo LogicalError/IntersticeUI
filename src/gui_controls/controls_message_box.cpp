@@ -71,7 +71,7 @@ namespace interstice
             guiStateManager.Interaction().SetFocusID(buttonID(defaultButton));
 
         // The close button, top right: as Cancel.
-        Button(idManager.AllocateDynamicID("message_box_close"), theme.tabCloseIcon, {}, [choose, cancelButton] { choose(cancelButton); },
+        Button(idManager.AllocateDynamicID("message_box_close"), theme.tabCloseIcon, [choose, cancelButton] { choose(cancelButton); },
                theme.messageBoxCloseStyleRef,
                LayoutOverride{}.Absolute(styleManager.Px(8), styleManager.Px(8), PositionConstraintAxis::kAuto, PositionConstraintAxis::kAuto));
 
@@ -132,7 +132,7 @@ namespace interstice
             if (!desc.details.empty())
             {
                 Button(idManager.AllocateDynamicID("message_box_details_toggle"),
-                       state.detailsOpen ? theme.dropdownArrowIcon : theme.chevronRightIcon, "Details",
+                       { state.detailsOpen ? theme.dropdownArrowIcon : theme.chevronRightIcon, "Details" },
                        [this, id] { auto& s = guiStateManager.GetElementDataStore().GetOrCreate<MessageDialogState>(id); s.detailsOpen = !s.detailsOpen; },
                        theme.messageBoxDetailsToggleStyleRef, LayoutOverride{}.NoGrow());
                 if (state.detailsOpen)

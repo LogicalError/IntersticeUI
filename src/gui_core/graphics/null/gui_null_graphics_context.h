@@ -17,7 +17,7 @@ namespace interstice
 
         void SetShaderDirectory(std::string_view) override {}
         void SetAllocationHooks(const AllocationHooks&) override {}
-        bool Initialize(IWindowBackend* windowBackend) override;
+        Result<void> Initialize(IWindowBackend* windowBackend) override;
         void Cleanup() override;
         void BeginFrame() override;
         void EndFrame() override {}

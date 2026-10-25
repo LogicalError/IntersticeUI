@@ -28,7 +28,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 containerID = app.idManager.CreateStaticID();
                 panelA = app.CreatePanel(layout.panels, "A", IconID::Invalid,
                                          [this] { drawsA++; }, {},
@@ -125,7 +125,7 @@ namespace interstice
             const int sizerX = (a0.x + a0.w + b0.x) / 2;
             const interstice::int2 from{ sizerX, a0.y + a0.h / 2 };
             const interstice::int2 to  { sizerX + 80, from.y };
-            const int before = layout.root->splitSize;
+            const int before = layout.root->splitSize.value;
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);

@@ -65,11 +65,11 @@ namespace interstice
         Cleanup();
     }
 
-    bool NullGraphicsContext::Initialize(IWindowBackend*)
+    Result<void> NullGraphicsContext::Initialize(IWindowBackend*)
     {
         if (m_imageSet == nullptr)
             m_imageSet = new NullImageSet();
-        return true;
+        return {};
     }
 
     void NullGraphicsContext::Cleanup()

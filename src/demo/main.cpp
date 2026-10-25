@@ -37,14 +37,14 @@ int main(int argc, char* argv[])
     {
         if (application->Initialize())
         {
-            bool runResult = application->Run();
+            const interstice::Result<void> runResult = application->Run();
             application->Cleanup();
             if (runResult)
             {
 				returnCode = EXIT_SUCCESS;
 			} else
 			{
-				INTERSTICE_LOG_ERROR(kLogDemo, "Application::Run failed");
+				INTERSTICE_LOG_ERROR(kLogDemo, "Application::Run failed: {}", runResult.GetError().message);
 				fflush(stderr);
             }
         } else

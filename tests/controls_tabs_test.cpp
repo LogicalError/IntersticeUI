@@ -23,7 +23,7 @@ namespace interstice
             ID barID{};
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 barID = app.idManager.CreateStaticID();
             }
             void TearDown() override { app.Cleanup(); }
@@ -58,7 +58,7 @@ namespace interstice
                     {
                         // Auto width so the item shrinks to its body.
                         for (int i = 0; i < n; ++i)
-                            app.Tab(tabIDs[i], IconID::Invalid, std::string_view("Tab"),
+                            app.Tab(tabIDs[i], std::string_view("Tab"),
                                     LayoutOverride::Auto());
                         app.EndTabBar();
                     }
@@ -250,7 +250,7 @@ namespace interstice
                                     StyleRef{}, LayoutOverride{}.Size(900, 40)))
                 {
                     for (int i = 0; i < 3; ++i)
-                        app.Tab(tabIDs[i], IconID::Invalid, "Tab",
+                        app.Tab(tabIDs[i], "Tab",
                                 LayoutOverride{}.Width(200));
                     app.EndTabBar();
                 }
@@ -283,7 +283,7 @@ namespace interstice
                     ID id{};
                     id.value.dynamicParts.mode = IDMode::Static;
                     id.value.dynamicParts.hashValue = 5000;
-                    app.Tab(id, IconID::Invalid, "Solo", LayoutOverride{}.Width(80));
+                    app.Tab(id, "Solo", LayoutOverride{}.Width(80));
                     app.EndTabBar();
                 }
                 app.EndRootWindow();

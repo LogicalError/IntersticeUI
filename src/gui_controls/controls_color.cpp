@@ -393,7 +393,7 @@ namespace interstice
         BeginTitleBar(idManager.AllocateDynamicID("cp_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
         Text(idManager.AllocateDynamicID("cp_title"), "Color", theme.dialogTitleStyleRef);
         Text(idManager.AllocateDynamicID("cp_context"), DialogContext(cp.context, "Color"), theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
-        Button(idManager.AllocateDynamicID("cp_close"), theme.tabCloseIcon, {}, requestClose(ColorPickerState::CloseRequest::Cancel),
+        Button(idManager.AllocateDynamicID("cp_close"), theme.tabCloseIcon, requestClose(ColorPickerState::CloseRequest::Cancel),
                theme.dialogCloseStyleRef);
         SetTooltip("Close without changing the color");
         EndTitleBar();
@@ -556,7 +556,7 @@ namespace interstice
                 Element spacer{ .id = idManager.AllocateDynamicID("cp_mode_spacer"), .styleRef = theme.emptyHorzStyleRef, .flags = ElementFlags::NoInput };
                 RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
 
-                Button(idManager.AllocateDynamicID("cp_range"), IconID::Invalid, cp.byteRange ? "0\xE2\x80\x93" "255" : "0\xE2\x80\x93" "1",
+                Button(idManager.AllocateDynamicID("cp_range"), cp.byteRange ? "0\xE2\x80\x93" "255" : "0\xE2\x80\x93" "1",
                        [this]() { auto& cp = m_colorPickerSub->State(); cp.byteRange = !cp.byteRange; },
                        theme.colorPickerRangeStyleRef);
                 SetTooltip("Show the values 0-255 or 0-1");
@@ -851,7 +851,7 @@ namespace interstice
                     });
                 SetTooltip("Click to use, right-click to remove");
             }
-            Button(idManager.AllocateDynamicID("color_picker_add_swatch"), theme.addIcon, {}, [this]() {
+            Button(idManager.AllocateDynamicID("color_picker_add_swatch"), theme.addIcon, [this]() {
                 auto& cp = m_colorPickerSub->State();
                 auto [r, g, b] = ColorConvert::HSVtoRGB(cp.h, cp.s, cp.v);
                 const color4f c{ r, g, b, cp.a };
@@ -882,9 +882,9 @@ namespace interstice
             RegisterElement(std::move(dot), LayoutOverride{});
             Text(idManager.AllocateDynamicID("cp_status"), allowHDR ? "HDR \xC2\xB7 float" : "sRGB \xC2\xB7 8-bit", theme.dialogStatusStyleRef,
                  LayoutOverride{}.FlexGrow(1));
-            Button(idManager.AllocateDynamicID("cp_cancel"), IconID::Invalid, "Cancel", requestClose(ColorPickerState::CloseRequest::Cancel),
+            Button(idManager.AllocateDynamicID("cp_cancel"), "Cancel", requestClose(ColorPickerState::CloseRequest::Cancel),
                    theme.dialogButtonStyleRef);
-            Button(idManager.AllocateDynamicID("cp_ok"), IconID::Invalid, "OK", requestClose(ColorPickerState::CloseRequest::Ok),
+            Button(idManager.AllocateDynamicID("cp_ok"), "OK", requestClose(ColorPickerState::CloseRequest::Ok),
                    theme.dialogPrimaryButtonStyleRef);
         }
         EndHorizontal();

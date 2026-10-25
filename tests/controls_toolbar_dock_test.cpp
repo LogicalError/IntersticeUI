@@ -38,7 +38,7 @@ namespace interstice
 
         void SetUp() override
         {
-            app.Initialize();
+            ASSERT_TRUE(app.Initialize());
             InitializeToolbarDockState(dock, app);
             itemTop0    = app.idManager.CreateStaticID();
             itemTop1    = app.idManager.CreateStaticID();

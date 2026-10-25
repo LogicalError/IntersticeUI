@@ -38,7 +38,7 @@ namespace interstice
 
         void SetUp() override
         {
-            app.Initialize();
+            ASSERT_TRUE(app.Initialize());
             groupID           = app.idManager.CreateStaticID();
             itemID0           = app.idManager.CreateStaticID();
             itemID1           = app.idManager.CreateStaticID();

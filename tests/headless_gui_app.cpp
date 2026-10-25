@@ -26,7 +26,7 @@ HeadlessGUIApp::~HeadlessGUIApp()
     Cleanup();
 }
 
-bool HeadlessGUIApp::Initialize(const InitializeOptions& options)
+interstice::Result<void> HeadlessGUIApp::Initialize(const InitializeOptions& options)
 {
     using ::testing::_;
 
@@ -93,7 +93,9 @@ bool HeadlessGUIApp::Initialize(const InitializeOptions& options)
     transitionManager.SetEnabled(false);
 
     // Parse the CSS theme and register every widget style (no graphics context).
-    return !options.loadStyles || InitializeStyles();
+    if (!options.loadStyles)
+        return {};
+    return InitializeStyles();
 }
 
 void HeadlessGUIApp::Cleanup()
@@ -261,7 +263,7 @@ bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementF
     root.state    = guiStateManager.GetCurrentState(m_rootWindowID);
 
     interstice::LayoutOverride lo = interstice::LayoutOverride{}
-        .Size(size.x, size.y)
+        .Size(size)   // the root window's pixels
         .Position(0, 0);
 
     auto add = elementStorage.Add(std::move(root), std::move(lo));

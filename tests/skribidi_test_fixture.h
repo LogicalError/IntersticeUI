@@ -102,7 +102,7 @@ namespace GUITest
         interstice::GraphicsAPI GetAPI() const override { return interstice::GraphicsAPI::None; }
         void SetShaderDirectory(std::string_view) override {}
         void SetAllocationHooks(const interstice::AllocationHooks&) override {}
-        bool Initialize(interstice::IWindowBackend*) override { return true; }
+        interstice::Result<void> Initialize(interstice::IWindowBackend*) override { return {}; }
         void Cleanup() override {}
         void BeginFrame() override {}
         void EndFrame() override {}

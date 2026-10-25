@@ -472,7 +472,7 @@ namespace interstice
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             filteredFolderRows, filteredFolderVisibleIdx, filteredFolderState,
                             theme.treeViewStyleRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
+                            interstice::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
 
             const int selFiltered = SelectedFlat(filteredFolderState, filteredFolderVisibleIdx);
             const int selMaster   = (selFiltered >= 0 && selFiltered < int(filteredToMaster.size()))
@@ -507,7 +507,7 @@ namespace interstice
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             folderRows, folderVisibleIdx, folderTreeState,
                             theme.treeViewStyleRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(folderTreeWidth)).NoGrow());
+                            interstice::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
 
             const int selFlat = SelectedFlat(folderTreeState, folderVisibleIdx);
             if (selFlat >= 0 && selFlat != currentFolder)
@@ -538,7 +538,7 @@ namespace interstice
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
                 guiStateManager, folderTreeWidth, 120, 480, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(styleManager.Px(4)));
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -578,7 +578,7 @@ namespace interstice
 
             if (SearchField(idManager.AllocateDynamicID("filesSearch"), filesSearch, demo.findIcon,
                             TextEditBehavior::ContinuousUpdate,
-                            interstice::LayoutOverride{}.Width(styleManager.Px(150)).NoGrow()))
+                            interstice::LayoutOverride{}.Width(150).NoGrow()))
                 gridFilterDirty = true;
             Toggle(idManager.AllocateDynamicID("filesGridMode"), !filesListMode, demo.layoutGridIcon,
                    [](bool) { filesListMode = false; }, iconToggleStyleRef);
@@ -642,20 +642,20 @@ namespace interstice
                             }
 
                             if (listMode)
-                                GridViewItem(itemID, icon, name, interstice::ElementState::None,
+                                GridViewItem(itemID, { icon, name }, interstice::ElementState::None,
                                              renameBuffer,
                                              theme.gridViewListItemStyleRef,
-                                             LayoutOverride{}.Height(rowH).FlexGrow(1));
+                                             LayoutOverride{}.Height(Pixels{ rowH }).FlexGrow(1));
                             else
                                 // Stretched width: the grid's columns split the
                                 // viewport evenly, so the cells fill each row
                                 // instead of leaving a gap on the right.
-                                GridViewItem(itemID, icon, name, interstice::ElementState::None,
+                                GridViewItem(itemID, { icon, name }, interstice::ElementState::None,
                                              renameBuffer,
                                              itemStyleFor(icon),
                                              LayoutOverride{}.Size(
-                                                 std::max(cellW, int(gridScrollState.cellStretchedW)),
-                                                 cellH));
+                                                 Pixels{ std::max(cellW, int(gridScrollState.cellStretchedW)) },
+                                                 Pixels{ cellH }));
                         },
                         nullptr,                   // selectedIndex (multi-select used instead)
                         &demo.gridViewMultiSelect,

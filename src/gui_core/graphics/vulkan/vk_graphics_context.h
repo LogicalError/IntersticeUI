@@ -4,6 +4,7 @@
 #include <gui_core/graphics/gui_graphics_context.h>
 #include <gui_core/graphics/gui_renderer.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
+#include <gui_core/graphics/vulkan/vk_types.h>
 
 namespace interstice
 {
@@ -45,8 +46,12 @@ namespace interstice::vulkan
 
         void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
         void SetAllocationHooks(const interstice::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
-        bool Initialize(interstice::IWindowBackend* windowBackend) override;
+        Result<void> Initialize(interstice::IWindowBackend* windowBackend) override;
         void Cleanup() override;
+        bool DeviceLost() const override { return interstice::vulkan::IsDeviceLost(); }
+        interstice::Result<void> RecreateDevice(interstice::IWindowBackend* windowBackend) override;
+        // Diagnostic: as if the device were lost, so the next frame recreates it.
+        void SimulateDeviceLoss() { interstice::vulkan::SetDeviceLost(true); }
         void BeginFrame() override;
         void EndFrame() override {}
 

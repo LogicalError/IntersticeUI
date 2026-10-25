@@ -181,7 +181,19 @@ namespace interstice
     StyleRef GUITheme::GetStyle(std::string_view cssClass) const
     {
         const auto it = m_classStyles.find(cssClass);
-        return it != m_classStyles.end() ? it->second : StyleRef{};
+        if (it != m_classStyles.end())
+            return it->second;
+        if (m_missingWarned.emplace(cssClass).second)
+            INTERSTICE_LOG_WARNING(kLogTheme, "no style file defines the class .{}", cssClass);
+        return StyleRef{};
+    }
+
+    Result<StyleRef> GUITheme::FindStyle(std::string_view cssClass) const
+    {
+        const auto it = m_classStyles.find(cssClass);
+        if (it == m_classStyles.end())
+            return Error{ ErrorCode::NotFound, "no style file defines the class ." + std::string(cssClass) };
+        return it->second;
     }
 
     bool GUITheme::LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath,

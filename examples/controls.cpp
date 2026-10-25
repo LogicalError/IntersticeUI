@@ -1,18 +1,20 @@
 // Controls overview: the common controls, laid out as label/value rows.
 #include <gui_controls/gui_application.h>
 
+#include <cstdio>
+
 #include <string>
 
 class ControlsApp : public interstice::GUIApplication
 {
 public:
-    bool Initialize(const InitializeOptions& options = {}) override
+    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (!GUIApplication::Initialize(options))
-            return false;
+        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+            return result;
         windowID = idManager.CreateStaticID();
         menuID   = idManager.CreateStaticID();
-        return true;
+        return {};
     }
 
     void OnGUI() override
@@ -108,8 +110,14 @@ int main()
 {
     ControlsApp app;
     app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-    if (app.Initialize())
-        app.Run();
+    interstice::Result<void> result = app.Initialize();
+    if (result)
+        result = app.Run();
     app.Cleanup();
+    if (!result)
+    {
+        std::fprintf(stderr, "%s\n", result.GetError().message.c_str());
+        return 1;
+    }
     return 0;
 }

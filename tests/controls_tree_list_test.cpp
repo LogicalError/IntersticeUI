@@ -30,7 +30,7 @@ namespace interstice
 
             void SetUp() override
             {
-                app.Initialize();
+                ASSERT_TRUE(app.Initialize());
                 treeID = app.idManager.CreateStaticID();
             }
             void TearDown() override { app.Cleanup(); }

@@ -12,6 +12,40 @@ namespace interstice
         constexpr Diagnostics::LogCategory kLogWindows = Diagnostics::MakeLogCategory("windows");
     }
 
+    void OSWindowManager::DestroyWindowContexts()
+    {
+        for (Window& window : windows)
+        {
+            if (window.context == nullptr || graphicsContext == nullptr)
+                continue;
+            windowBackendManager->AttachContextToWindow(window.osHandle, nullptr);
+            graphicsContext->DestroyWindowContext(window.context);
+            window.context = nullptr;
+        }
+    }
+
+    bool OSWindowManager::RecreateWindowContexts()
+    {
+        bool all = true;
+        for (Window& window : windows)
+        {
+            if (window.context != nullptr || window.osHandle == nullptr || graphicsContext == nullptr
+                || window.state != WindowState::Alive)
+                continue;
+            const IntRect pixelRect = windowBackendManager->GetWindowPixelRect(window.osHandle);
+            window.context = graphicsContext->CreateWindowContext(windowBackendManager->GetNativeHandle(window.osHandle),
+                                                                  window.osHandle, window.id, pixelRect.size,
+                                                                  window.flags, window.onGui);
+            if (window.context == nullptr)
+            {
+                all = false;
+                continue;
+            }
+            windowBackendManager->AttachContextToWindow(window.osHandle, window.context);
+        }
+        return all;
+    }
+
     OSWindowManager::OSWindowManager(GraphicsContext* graphicsContext, IWindowBackend* backendManager)
         : graphicsContext(graphicsContext)
         , windowBackendManager(backendManager)
@@ -360,7 +394,7 @@ namespace interstice
             const IntRect pixelRect = windowBackendManager->GetWindowPixelRect(osHandle);
             windowContext =
                 graphicsContext->CreateWindowContext(nativeWindowHandle, osHandle,
-                                                     id, pixelRect.size, windowFlags, std::move(onGui));
+                                                     id, pixelRect.size, windowFlags, onGui);
             if (windowContext == nullptr)
             {
                 windowBackendManager->DestroyWindow(osHandle);
@@ -384,7 +418,8 @@ namespace interstice
             .displayScale = QueryDisplayScale(osHandle),
             .sequence     = m_nextSequence++,
             .osHandle     = osHandle,
-            .context      = windowContext
+            .context      = windowContext,
+            .onGui        = std::move(onGui)
         };
 
         window.parentID = ID::Invalid();

@@ -27,7 +27,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            void SetUp()    override { app.Initialize(); }
+            void SetUp()    override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
 
             // Walk the element tree depth-first starting at `root`, calling
@@ -309,7 +309,7 @@ namespace interstice
 
             app.Frame([&] {
                 app.BeginRootWindow({ 800, 600 });
-                if (app.BeginHorizontal(rowID, LayoutOverride::FixedWidth(rowWidth).NoGrow()))
+                if (app.BeginHorizontal(rowID, LayoutOverride::FixedWidth(CssPx(rowWidth)).NoGrow()))
                 {
                     app.Field(key,   LayoutOverride{}.FlexGrow(1).FlexShrink(1));
                     app.Text (":",   LayoutOverride{}.NoGrow());
@@ -343,7 +343,7 @@ namespace interstice
             app.Frame([&] {
                 app.BeginRootWindow({ 800, 600 });
                 if (app.BeginArea(outerID, app.theme.dockContentStyleRef,
-                                  LayoutOverride::FixedWidth(outerWidth).NoGrow()))
+                                  LayoutOverride::FixedWidth(CssPx(outerWidth)).NoGrow()))
                 {
                     app.Field(dict, interstice::LayoutOverride{}.FlexGrow(1));
                     app.EndArea();
@@ -413,7 +413,7 @@ namespace interstice
             app.Frame([&] {
                 app.BeginRootWindow({ 800, 600 });
                 if (app.BeginArea(outerID, app.theme.dockContentStyleRef,
-                                  LayoutOverride::FixedWidth(outerWidth).NoGrow()))
+                                  LayoutOverride::FixedWidth(CssPx(outerWidth)).NoGrow()))
                 {
                     if (app.BeginArea(app.theme.listAreaStyleRef, LayoutOverride{}.FlexGrow(1)))
                     {

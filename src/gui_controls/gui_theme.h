@@ -3,7 +3,10 @@
 #include <gui_core/style/gui_style_ref.h>
 #include <gui_core/style/gui_style.h>
 
+#include <gui_core/gui_result.h>
+
 #include <map>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>
@@ -462,9 +465,11 @@ namespace interstice
         bool LoadTheme(StyleManager& styleManager, ITextSystem* textSystem, const std::string& themePath,
                        std::span<const std::string> styleFiles, float fontScale);
 
-        // The style of a CSS class from the loaded style files (library or app);
-        // invalid when no file defines it.
-        StyleRef GetStyle(std::string_view cssClass) const;
+        // The style of a CSS class from the loaded style files (library or app). GetStyle
+        // gives an invalid style when no file defines it (and warns once per class);
+        // FindStyle says so as an error.
+        StyleRef         GetStyle(std::string_view cssClass) const;
+        Result<StyleRef> FindStyle(std::string_view cssClass) const;
 
         // A palette color by custom-property name ("--node-input"), or `fallback`
         // when the loaded theme doesn't define it.
@@ -475,6 +480,7 @@ namespace interstice
     private:
         std::unordered_map<std::string, color4f> m_paletteColors;
         std::map<std::string, StyleRef, std::less<>> m_classStyles;  // every class in the style files
+        mutable std::set<std::string, std::less<>>   m_missingWarned;
     };
 
 } // namespace interstice

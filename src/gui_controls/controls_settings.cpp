@@ -58,7 +58,7 @@ namespace interstice
             const interstice::ID treeID = idManager.AllocateDynamicID();
             VirtualTreeView(treeID, state.internal.rows, state.internal.visibleIdx,
                             state.internal.tableState, theme.settingsPageSelectionRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(styleManager.Px(state.treeWidth)).NoGrow());
+                            interstice::LayoutOverride::Auto().FixedWidth(state.treeWidth).NoGrow());
         }
 
         // Middle: draggable sizer, styled like the dock splitter.
@@ -69,8 +69,8 @@ namespace interstice
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
-                guiStateManager, state.treeWidth, 120, 500, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(styleManager.Px(4)));
+                guiStateManager, state.treeWidth.value, 120, 500, nullptr, nullptr, false, styleManager.GetUIScale());
+            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }

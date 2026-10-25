@@ -43,7 +43,7 @@ namespace interstice
         if (range <= 0.0f) return;
 
         // Label
-        DragLabel(label, LayoutOverride{}.FixedWidth(styleManager.Px(40)).NoShrink().NoGrow());
+        DragLabel(label, LayoutOverride{}.FixedWidth(40).NoShrink().NoGrow());
 
         // Outer wrapper (horizontal row: gradient bar + numeric field)
         Element wrap {};
@@ -143,7 +143,7 @@ namespace interstice
         // ---- Numeric field ----
         Field(value, TextEditBehavior::ContinuousUpdate,
                 NumericFieldConfig<float>{ .minVal = minVal, .maxVal = maxVal },
-                LayoutOverride{}.FixedWidth(styleManager.Px(55)).NoGrow());
+                LayoutOverride{}.FixedWidth(55).NoGrow());
 
         VERIFY(elementStorage.EndChildren());
     }
@@ -356,7 +356,7 @@ namespace interstice
         BeginTitleBar(idManager.AllocateDynamicID("ge_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
         Text(idManager.AllocateDynamicID("ge_title"), "Gradient", theme.dialogTitleStyleRef);
         Text(idManager.AllocateDynamicID("ge_context"), DialogContext(ge.context, "Gradient"), theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
-        Button(idManager.AllocateDynamicID("ge_close"), theme.tabCloseIcon, {}, requestClose(GradientEditorState::CloseRequest::Cancel),
+        Button(idManager.AllocateDynamicID("ge_close"), theme.tabCloseIcon, requestClose(GradientEditorState::CloseRequest::Cancel),
                theme.dialogCloseStyleRef);
         SetTooltip("Close without changing the gradient");
         EndTitleBar();
@@ -414,7 +414,7 @@ namespace interstice
 
             Element spacer{ .id = idManager.AllocateDynamicID("ge_presets_spacer"), .styleRef = theme.emptyHorzStyleRef, .flags = ElementFlags::NoInput };
             RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
-            Button(idManager.AllocateDynamicID("ge_save_preset"), theme.addIcon, "Save preset", [this]() {
+            Button(idManager.AllocateDynamicID("ge_save_preset"), { theme.addIcon, "Save preset" }, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 ge.savedPresets.push_back(ge.workingCopy);
             }, theme.dialogSmallButtonStyleRef);
@@ -600,12 +600,12 @@ namespace interstice
             char count[16];
             std::snprintf(count, sizeof(count), "%d / %d", ge.selectedStop + 1, int(g.stopCount));
             Text(idManager.AllocateDynamicID("ge_stop_count"), count, theme.gradientEditorCountStyleRef, LayoutOverride{}.FlexGrow(1));
-            Button(idManager.AllocateDynamicID("ge_prev"), theme.chevronLeftIcon, {}, [this]() {
+            Button(idManager.AllocateDynamicID("ge_prev"), theme.chevronLeftIcon, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 ge.selectedStop = std::max(0, ge.selectedStop - 1);
             }, theme.dialogIconButtonStyleRef);
             SetTooltip("Previous stop");
-            Button(idManager.AllocateDynamicID("ge_next"), theme.treeArrowRight, {}, [this]() {
+            Button(idManager.AllocateDynamicID("ge_next"), theme.treeArrowRight, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 ge.selectedStop = std::min(int(ge.workingCopy.stopCount) - 1, ge.selectedStop + 1);
             }, theme.dialogIconButtonStyleRef);
@@ -632,7 +632,7 @@ namespace interstice
             }
             Text(idManager.AllocateDynamicID("ge_location_unit"), "%", theme.gradientEditorLocationUnitStyleRef);
             EndHorizontal();
-            Button(idManager.AllocateDynamicID("ge_duplicate"), theme.duplicateIcon, {}, [this]() {
+            Button(idManager.AllocateDynamicID("ge_duplicate"), theme.duplicateIcon, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 auto& g = ge.workingCopy;
                 if (g.stopCount >= Gradient::kMaxStops || ge.selectedStop >= g.stopCount) return;
@@ -645,7 +645,7 @@ namespace interstice
                 ge.selectedStop = SortStops(g, g.stopCount - 1);
             }, theme.dialogSquareButtonStyleRef);
             SetTooltip("Duplicate the stop");
-            Button(idManager.AllocateDynamicID("ge_delete"), theme.deleteIcon, {}, [this]() {
+            Button(idManager.AllocateDynamicID("ge_delete"), theme.deleteIcon, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 RemoveStop(ge.workingCopy, ge.selectedStop);
                 ge.selectedStop = std::min(ge.selectedStop, int(ge.workingCopy.stopCount) - 1);
@@ -681,7 +681,7 @@ namespace interstice
 
         // Reverse, distribute evenly.
         BeginHorizontal(idManager.AllocateDynamicID("ge_actions"), theme.gradientEditorActionsStyleRef, LayoutOverride{}.NoShrink());
-        Button(idManager.AllocateDynamicID("ge_reverse"), theme.reverseIcon, "Reverse", [this]() {
+        Button(idManager.AllocateDynamicID("ge_reverse"), { theme.reverseIcon, "Reverse" }, [this]() {
             auto& ge = m_gradientEditorSub->State();
             auto& g = ge.workingCopy;
             for (int i = 0; i < g.stopCount; i++)
@@ -689,7 +689,7 @@ namespace interstice
             std::reverse(g.stops.begin(), g.stops.begin() + g.stopCount);
             ge.selectedStop = g.stopCount - 1 - ge.selectedStop;
         }, theme.dialogSmallButtonStyleRef);
-        Button(idManager.AllocateDynamicID("ge_distribute"), theme.distributeIcon, "Distribute evenly", [this]() {
+        Button(idManager.AllocateDynamicID("ge_distribute"), { theme.distributeIcon, "Distribute evenly" }, [this]() {
             auto& g = m_gradientEditorSub->State().workingCopy;
             for (int i = 0; i < g.stopCount; i++)
                 g.stops[size_t(i)].SetOffset(g.stopCount > 1 ? float(i) / float(g.stopCount - 1) : 0.0f);
@@ -749,9 +749,9 @@ namespace interstice
             char status[96];
             std::snprintf(status, sizeof(status), "%d stops \xC2\xB7 click the bar to add, drag a stop off to remove", int(g.stopCount));
             Text(idManager.AllocateDynamicID("ge_status"), status, theme.dialogStatusStyleRef, LayoutOverride{}.FlexGrow(1));
-            Button(idManager.AllocateDynamicID("ge_cancel"), IconID::Invalid, "Cancel", requestClose(GradientEditorState::CloseRequest::Cancel),
+            Button(idManager.AllocateDynamicID("ge_cancel"), "Cancel", requestClose(GradientEditorState::CloseRequest::Cancel),
                    theme.dialogButtonStyleRef);
-            Button(idManager.AllocateDynamicID("ge_ok"), IconID::Invalid, "OK", requestClose(GradientEditorState::CloseRequest::Ok),
+            Button(idManager.AllocateDynamicID("ge_ok"), "OK", requestClose(GradientEditorState::CloseRequest::Ok),
                    theme.dialogPrimaryButtonStyleRef);
         }
         EndHorizontal();
