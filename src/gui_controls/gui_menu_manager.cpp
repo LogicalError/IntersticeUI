@@ -167,6 +167,7 @@ namespace interstice
             levels[i].isOpen = false;
             levels[i].activeItemID = ID::Invalid();
             levels[i].triggerID = ID::Invalid();
+            levels[i].filter.clear();
         }
     }
 

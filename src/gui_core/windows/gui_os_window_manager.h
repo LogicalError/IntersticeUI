@@ -175,6 +175,11 @@ namespace interstice
         // path before tearing down the graphics device and the window backend.
         void DestroyAllWindowContexts();
 
+        std::optional<color4b> ReadScreenPixel(int2 screenPos)
+        {
+            return windowBackendManager->ReadScreenPixel(screenPos);
+        }
+
         int2 GetScreenMousePos()
         {
             return windowBackendManager->GetScreenMousePos();

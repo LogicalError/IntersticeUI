@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string_view>
 
 // Helpers shared by the color picker (controls_color.cpp) and gradient editor (controls_gradient.cpp).
 
@@ -22,6 +23,16 @@ namespace interstice
         int32_t               alphaBar    = 3;
         float                 radius      = 3.0f;   // of the drawn area (half its side draws a circle)
     };
+
+    // What a dialog's header shows after its title: the edited field's name, unless that
+    // only repeats the title (a field labelled "Color" in the Color dialog).
+    inline std::string_view DialogContext(std::string_view context, std::string_view title)
+    {
+        auto lower = [](char c) { return (c >= 'A' && c <= 'Z') ? char(c - 'A' + 'a') : c; };
+        const bool same = context.size() == title.size()
+            && std::equal(context.begin(), context.end(), title.begin(), [&](char a, char b) { return lower(a) == lower(b); });
+        return same ? std::string_view{} : context;
+    }
 
     // The color picker's hue strip in a color space, top (0) to bottom (1): around the
     // whole hue circle, back to where it started.

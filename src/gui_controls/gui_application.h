@@ -318,7 +318,11 @@ namespace interstice
         interstice::ElementRef MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
                                     bool reserveIcon, IconID icon, std::string_view text,
                                     std::string_view trailing, StyleRef trailingStyle,
-                                    LayoutOverride&& constraints);
+                                    LayoutOverride&& constraints, bool destructive = false);
+        // SearchField, also giving the ID of its text field (to focus it).
+        bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, LayoutOverride&& constraints, ID* outFieldID);
+        bool MenuItemImpl(ID id, IconID icon, std::string_view text, std::string_view shortcut,
+                          std::function<void()> onClick, StyleRef style, bool destructive, LayoutOverride&& constraints);
 
         void BeginIndeterminate() { guiStateManager.Construction().PushIndeterminate(); }
         void EndIndeterminate()   { guiStateManager.Construction().PopIndeterminate(); }
@@ -380,6 +384,10 @@ namespace interstice
         inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}) { return BeginMenu(idManager.AllocateDynamicID(), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
         // A section's name between items, e.g. "View", lined up with the labels.
         void        MenuHeader(std::string_view text);
+        // A filter field for a big menu, first in it: it takes the keyboard when the menu
+        // opens, and while it holds text the items (and headers and separators) that
+        // don't contain it are left out.
+        void        MenuFilter();
 
         // Optional icon, label, optional shortcut. The icon column is reserved if any sibling has an icon.
         bool        MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
@@ -397,6 +405,10 @@ namespace interstice
 
         // Menu item for a command: icon, label, shortcut and callback come from the command.
         bool MenuItem(CommandID command);
+        // An item that destroys something (Delete, Discard), in the error color.
+        bool        DestructiveMenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {});
+        inline bool DestructiveMenuItem(       IconID icon, std::string_view text, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return DestructiveMenuItem(idManager.AllocateDynamicID(), icon, text, std::string_view{}, std::move(onClick), std::move(constraints)); }
+        // Items between BeginDisabled and EndDisabled are dimmed and can't be chosen.
         void EndMenu();
 
         // Menu bar: place BeginMenu triggers inside. Left/Right move between triggers,
@@ -604,6 +616,9 @@ namespace interstice
         // Items emitted in between render as selected.
         void BeginSelected() { guiStateManager.Construction().PushSelected(); }
         void EndSelected()   { guiStateManager.Construction().PopSelected(); }
+        // Controls emitted in between are disabled: drawn dimmed, and they take no input.
+        void BeginDisabled() { guiStateManager.Construction().PushDisabled(); }
+        void EndDisabled()   { guiStateManager.Construction().PopDisabled(); }
 
         // ---- GridView: 2D icon grid (like file explorer) ----
         bool        BeginGridView(ID id, int* selectedIndex, StyleRef style, MultiSelectState* multiSelect = nullptr, ItemDragDropConfig* dragDrop = nullptr, LayoutOverride&& constraints = {});
@@ -775,7 +790,8 @@ namespace interstice
         inline bool Field(       std::string& value, LayoutOverride&& constraints = {}) { return Field(idManager.AllocateDynamicID(), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, std::move(constraints)); }
 
         // A Field with a leading icon inside its border.
-        bool        SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {});
+        bool        SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {})
+        { return SearchField(id, value, icon, textEditBehavior, std::move(constraints), nullptr); }
         inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}) { return SearchField(idManager.AllocateDynamicID(), value, icon, textEditBehavior, std::move(constraints)); }
 
 

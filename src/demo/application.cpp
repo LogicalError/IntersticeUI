@@ -176,6 +176,7 @@ namespace interstice
                     static const char* const kCameraViews[] = { "Perspective", "Orthographic", "Top", "Front", "Side" };
                     if (BeginMenu(demo.cameraMenuID, kCameraViews[demo.cameraView]))
                     {
+                        MenuFilter();
                         for (int i = 0; i < int(std::size(kCameraViews)); ++i)
                             MenuItem(kCameraViews[i], [this, i]() { demo.cameraView = i; });
                         EndMenu();
@@ -1014,12 +1015,17 @@ namespace interstice
         if (BeginMenu(idManager.AllocateDynamicID("menuEdit"), "Edit",
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
+            // Nothing to undo in the demo.
+            BeginDisabled();
             MenuItem(demo.cmdUndo);
             MenuItem(demo.cmdRedo);
+            EndDisabled();
             MenuSeparator();
             MenuItem(demo.cmdCut);
             MenuItem(demo.cmdCopy);
             MenuItem(demo.cmdPaste);
+            MenuSeparator();
+            DestructiveMenuItem(theme.deleteIcon, "Delete", [] {});
             EndMenu();
         }
 

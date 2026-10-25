@@ -1253,6 +1253,20 @@ namespace interstice
             m_lastFocusableWindow = focused;
     }
 
+    std::optional<color4b> SDLWindowBackend::ReadScreenPixel([[maybe_unused]] int2 screenPos)
+    {
+#ifdef _WIN32
+        HDC screen = GetDC(nullptr);
+        if (screen == nullptr) return std::nullopt;
+        const COLORREF c = GetPixel(screen, screenPos.x, screenPos.y);
+        ReleaseDC(nullptr, screen);
+        if (c == CLR_INVALID) return std::nullopt;
+        return color4b{ GetRValue(c), GetGValue(c), GetBValue(c), 255 };
+#else
+        return std::nullopt;
+#endif
+    }
+
     int2 SDLWindowBackend::GetScreenMousePos()
     {
         return m_mousePos;

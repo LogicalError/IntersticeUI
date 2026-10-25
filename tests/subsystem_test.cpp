@@ -61,12 +61,14 @@ namespace interstice
         sub.ClaimSwatchStyle(swatch) = VisualColorStyleIndex(5);
         sub.State().hueStrip = VisualColorStyleIndex(7);
         sub.State().gradientStyles[2] = VisualColorStyleIndex(9);
+        sub.State().newOpaque = VisualColorStyleIndex(11);
 
         sub.ForgetStyles();
 
         EXPECT_EQ(sub.ClaimSwatchStyle(swatch), VisualColorStyleIndex::Invalid);
         EXPECT_EQ(sub.State().hueStrip, VisualColorStyleIndex::Invalid);
         EXPECT_EQ(sub.State().gradientStyles[2], VisualColorStyleIndex::Invalid);
+        EXPECT_EQ(sub.State().newOpaque, VisualColorStyleIndex::Invalid);
     }
 
     TEST(GradientEditorSubsystemTest, ForgetStylesDropsEveryHeldStyle)

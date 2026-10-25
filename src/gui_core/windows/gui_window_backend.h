@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/gui_base_types.h>
+#include <optional>
 
 #include <stdint.h>
 #include <string>
@@ -103,6 +104,9 @@ namespace interstice
         virtual void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) = 0;
         virtual int2 GetScreenMousePos() = 0;
         virtual MouseButtons GetMouseButtons() = 0;
+        // The color of a screen pixel, anywhere on the desktop (an eyedropper);
+        // nothing where the platform can't read the screen.
+        virtual std::optional<color4b> ReadScreenPixel(int2 /*screenPos*/) { return std::nullopt; }
         
         virtual void SetCursor(MouseCursor cursor) = 0;
 

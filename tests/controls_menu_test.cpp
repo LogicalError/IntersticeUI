@@ -141,6 +141,95 @@ namespace interstice
             }
         }
 
+        // A disabled item shows but can't be chosen: a click doesn't run it, and opening
+        // the menu doesn't put the keyboard on it. A destructive item takes its own styles.
+        TEST_F(ControlsMenuTest, DisabledItemsCantBeChosenAndDestructiveOnesStandOut)
+        {
+            const ID menuID = app.idManager.CreateStaticID();
+            const ID disabledID = app.idManager.CreateStaticID();
+            const ID deleteID = app.idManager.CreateStaticID();
+            int disabledRuns = 0, deleteRuns = 0;
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginMenu(menuID, "Edit"))
+                {
+                    app.BeginDisabled();
+                    app.MenuItem(disabledID, "Undo", [&] { ++disabledRuns; });
+                    app.EndDisabled();
+                    app.DestructiveMenuItem(deleteID, app.theme.deleteIcon, "Delete", {}, [&] { ++deleteRuns; });
+                    app.EndMenu();
+                }
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(menuID));
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_TRUE(app.HasElement(disabledID));
+            EXPECT_NE(app.menuManager.levels[0].activeItemID, disabledID) << "the keyboard skips it";
+
+            app.ClickAt(app.CenterOf(disabledID));
+            app.Frame(draw);
+            app.Frame(draw);
+            EXPECT_EQ(disabledRuns, 0);
+            ASSERT_TRUE(app.menuManager.IsOpen()) << "the click didn't close the menu either";
+
+            bool destructiveLabel = false;
+            const auto& storage = app.elementStorage;
+            for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+                for (const Element& e : it->GetChildren(storage))
+                    if (e.styleRef.visualBoxStyleIndex == app.theme.menuItemDestructiveLabelStyleRef.visualBoxStyleIndex
+                        && e.styleRef.layoutStyleIndex == app.theme.menuItemDestructiveLabelStyleRef.layoutStyleIndex)
+                        destructiveLabel = true;
+            EXPECT_TRUE(destructiveLabel);
+
+            app.ClickAt(app.CenterOf(deleteID));
+            app.Frame(draw);
+            app.Frame(draw);
+            EXPECT_EQ(deleteRuns, 1) << "test setup: an enabled item runs on a click";
+        }
+
+        // A menu with a filter: the filter has the keyboard when it opens, and items not
+        // containing its text (in any case) are left out, with the separators.
+        TEST_F(ControlsMenuTest, AMenuFilterTakesTheKeyboardAndHidesWhatDoesntMatch)
+        {
+            const ID menuID = app.idManager.CreateStaticID();
+            const char* const views[] = { "Perspective", "Orthographic", "Top", "Front", "Side" };
+            ID itemIDs[5] = {};
+            for (ID& id : itemIDs) id = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginMenu(menuID, "Camera"))
+                {
+                    app.MenuFilter();
+                    for (int i = 0; i < 5; ++i)
+                    {
+                        app.MenuItem(itemIDs[i], views[i], [] {});
+                        if (i == 1) app.MenuSeparator();
+                    }
+                    app.EndMenu();
+                }
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(menuID));
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_TRUE(app.menuManager.IsOpen());
+            const ID active = app.menuManager.levels[0].activeItemID;
+            for (const ID& id : itemIDs)
+                EXPECT_NE(active, id) << "no item took the keyboard";
+            EXPECT_EQ(app.guiStateManager.TextEditorFocus().GetFocusedID(), active) << "the filter has it";
+
+            app.menuManager.levels[0].filter = "O";
+            app.Frame(draw);
+            EXPECT_FALSE(app.HasElement(itemIDs[0])) << "Perspective";
+            EXPECT_TRUE(app.HasElement(itemIDs[1]))  << "Orthographic";
+            EXPECT_TRUE(app.HasElement(itemIDs[2]))  << "Top";
+            EXPECT_TRUE(app.HasElement(itemIDs[3]))  << "Front";
+            EXPECT_FALSE(app.HasElement(itemIDs[4])) << "Side";
+        }
+
         // Hovering a row focuses it the next frame; the row must stay highlighted.
         TEST_F(ControlsMenuTest, AHoveredRowStaysHighlightedOnceFocused)
         {

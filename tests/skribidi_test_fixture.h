@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace GUITest
 {
@@ -58,8 +59,12 @@ namespace GUITest
     public:
         void Reset() override {}
         void SetTransform(interstice::float3x2) override {}
-        void RenderBox(interstice::IntRect, interstice::IntRect, uint32_t, uint32_t, float,
-                       interstice::VisualColorStyleIndex, interstice::ImageIndex, interstice::IntRect) override {}
+        void RenderBox(interstice::IntRect rect, interstice::IntRect, uint32_t style, uint32_t, float,
+                       interstice::VisualColorStyleIndex, interstice::ImageIndex, interstice::IntRect) override
+        {
+            lastBoxStyle = style;
+            boxes.push_back(rect);
+        }
         void RenderLine(interstice::int2, interstice::int2, interstice::int2, interstice::int2, interstice::IntRect, const interstice::LineStyle&) override {}
         void RenderDot(interstice::float2, interstice::IntRect, float, interstice::color4f) override {}
         void RenderTriangle(interstice::float2, interstice::float2, interstice::float2, interstice::IntRect,
@@ -80,6 +85,8 @@ namespace GUITest
         float glyphRight     = 0.0f; // right edge of the rightmost glyph drawn since last reset
         float glyphTop       = 1e9f; // top edge of the highest glyph drawn since last reset
         float lastGlyphScale = 0.0f; // atlas-to-layout scale of the last glyph (1 / raster scale)
+        uint32_t lastBoxStyle = 0;   // style slot of the last box drawn (a selection's), state included
+        std::vector<interstice::IntRect> boxes;   // boxes drawn since last cleared
     };
 
     // Only carries the stub renderer; the text system reads nothing else from it.

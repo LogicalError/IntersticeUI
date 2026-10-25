@@ -487,6 +487,29 @@ namespace interstice
                     elemRect.constraints.y = pc.y;
                 }
 
+                // A plain list (no drag-out) shows where the row will land: a slot in the
+                // gap it leaves, and the row itself lifted (opaque, ringed) as it moves.
+                if (!m_reorderable->Construction().onDragOut && !m_reorderable->Construction().dragVisualizer)
+                {
+                    IntRect slot = drag.originalRects[from];
+                    if (m_reorderable->Construction().reorderApplied)
+                        slot.position[mainAxis] = (from > to)
+                            ? drag.originalRects[to].position[mainAxis]
+                            : drag.originalRects[to].position[mainAxis] + drag.originalRects[to].size[mainAxis] - slot.size[mainAxis];
+                    const int2 inGroup = slot.position - drag.groupRect.position;
+                    const VisualBoxStyleIndex slotStyle   = theme.reorderDropSlotStyleRef.visualBoxStyleIndex;
+                    const VisualBoxStyleIndex liftedStyle = theme.reorderLiftedStyleRef.visualBoxStyleIndex;
+                    VERIFY(elementStorage.AddCustomDraw(m_reorderable->Construction().groupRef,
+                        [inGroup, size = slot.size, slotStyle](CustomDrawContext& ctx)
+                        {
+                            const IntRect group = ctx.ElementRect();
+                            ctx.RenderBox(IntRect{ .position = group.position + inGroup, .size = size }, slotStyle);
+                        }));
+                    if (!elementStorage.GetElementCustomDrawUnsafe(draggedRef).callback)
+                        VERIFY(elementStorage.AddCustomDraw(draggedRef, [liftedStyle](CustomDrawContext& ctx)
+                            { ctx.RenderBox(ctx.ElementRect(), liftedStyle); }));
+                }
+
                 // Render dragged item on top
                 windowRegistry.MoveSubtreeToEnd(draggedRef);
             }

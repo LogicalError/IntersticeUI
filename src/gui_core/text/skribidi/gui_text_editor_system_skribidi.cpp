@@ -205,11 +205,16 @@ namespace interstice
         {
             const skb_rich_layout_t* rich_layout = skb_editor_get_rich_layout(editor);
             skb_text_range_t text_range = skb_editor_get_current_selection(editor);
+            // With the app in the background the selection takes its unfocused color
+            // (:not(:focus)::selection).
+            interstice::ElementState selectionState = entry->state;
+            if (ctx->guiStateManager && ctx->guiStateManager->Interaction().GetActiveWindowID() == ID::Invalid())
+                selectionState = interstice::ElementState(uint8_t(selectionState) & ~uint8_t(interstice::ElementState::Focused));
             draw_selection_context_t sel_ctx =
             {
                 .x = ox, .y = oy,
                 .styleIndex = entry->styleIndex.visualBoxStyleIndex,
-                .state = entry->state,
+                .state = selectionState,
                 .ctx = ctx, .clipRect = clipRect
             };
             skb_rich_layout_get_text_range_bounds(rich_layout, text_range, draw_selection_rect, &sel_ctx);

@@ -256,6 +256,7 @@
 .vector-component:active { border-color: var(--accent); background-color: var(--bg-input); }
 .vector-component:focus  { border-color: var(--accent); background-color: var(--bg-input); }
 .vector-component::selection { color: var(--text-1); background-color: var(--selection); }
+.vector-component:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- grouped label variants (overflow visible for edge dragger rendering) - */
 /* No margin, like .group-drag-label: the group sizes both to one width, so a
@@ -332,6 +333,7 @@
 .textbox:active { border-color: var(--accent); background-color: var(--bg-input); }
 .textbox:focus  { border-color: var(--accent); background-color: var(--bg-input); }
 .textbox::selection { color: var(--text-1); background-color: var(--selection); }
+.textbox:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- searchTextbox -------------------------------------------------------- */
 /* Search field: a textbox-looking container with a leading icon inside the
@@ -393,6 +395,7 @@
     flex-shrink: 1;
 }
 .search-textbox-field::selection { color: var(--text-1); background-color: var(--selection); }
+.search-textbox-field:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- buttonStyle ---------------------------------------------------------- */
 .button {
@@ -1077,6 +1080,7 @@
     flex-shrink: 1;
 }
 .tree-table-text-edit::selection { color: var(--text-1); background-color: var(--selection); }
+.tree-table-text-edit:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- toggleStyle ---------------------------------------------------------- */
 .toggle {
@@ -2099,6 +2103,8 @@
 .menu-item-row:hover  { background-color: var(--bg-menu-hover); }
 .menu-item-row:focus  { background-color: var(--bg-menu-hover); }
 .menu-item-row:active { background-color: var(--bg-pressed); }
+/* Disabled: dimmed (the text at 45%), no hover. */
+.menu-item-row:disabled { background-color: transparent; }
 
 /* Fixed icon column; reserved for every item in a menu that uses icons so the
    labels line up whether or not a given item supplies an icon. Width is the
@@ -2144,6 +2150,45 @@
     background-color: transparent;
 }
 
+.menu-item-label:disabled { color: var(--text-disabled); }
+.menu-item-icon:disabled  { color: var(--text-disabled); -interstice-icon-color: var(--text-disabled); }
+
+/* A destructive item (Delete, Discard): label and icon in the error color. */
+.menu-item-icon-destructive {
+    width: 16px;
+    height: 18px;
+    -interstice-icon-size: 14px;
+    -interstice-icon-side: left;
+    -interstice-icon-text-gap: 0px;
+    text-align: center;
+    -interstice-vertical-text-align: middle;
+    font-size: var(--font-size);
+    flex-grow: 0;
+    flex-shrink: 0;
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    color: var(--error);
+    -interstice-icon-color: var(--error);
+}
+.menu-item-label-destructive {
+    flex-grow: 1;
+    flex-shrink: 1;
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align: middle;
+    text-align: start;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    color: var(--error);
+    font-size: var(--font-size);
+    background-color: transparent;
+}
+.menu-item-label-destructive:disabled { color: var(--text-disabled); }
+.menu-item-icon-destructive:disabled  { color: var(--text-disabled); -interstice-icon-color: var(--text-disabled); }
+
 /* Trailing keyboard shortcut: dimmed, pinned to the right edge. */
 .menu-item-shortcut {
     flex-grow: 0;
@@ -2159,6 +2204,7 @@
     font-size: 10.5px;
     background-color: transparent;
 }
+.menu-item-shortcut:disabled { color: var(--text-disabled); }
 
 /* Submenu arrow: dimmed, pinned to the right edge (used instead of a shortcut
    for items that open a child menu). */
@@ -2370,6 +2416,24 @@
     overflow: visible;
 }
 .collection-row:hover { background-color: var(--bg-hover); }
+/* Dragging a list row: the slot it will land in, and the row lifted as it moves. */
+.reorder-drop-slot {
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    -interstice-border-dash-size: 3px;
+    background-color: var(--accent-soft);
+}
+.reorder-lifted {
+    margin: 0px;
+    padding: 0px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    border-color: var(--accent);
+    background-color: var(--bg-control);
+}
 .collection-index {
     width: 14px;
     margin: 0px;
@@ -2482,6 +2546,7 @@
 .collection-value:hover { border-color: var(--line-strong); }
 .collection-value:focus { border-color: var(--accent); }
 .collection-value::selection { color: var(--text-1); background-color: var(--selection); }
+.collection-value:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .collection-header {
     display: flex;
     flex-direction: row;
@@ -2569,6 +2634,7 @@
     cursor: text;
 }
 .typed-field-input::selection { color: var(--text-1); background-color: var(--selection); }
+.typed-field-input:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .typed-field-type {
     margin: 0px;
     padding: 0px;
@@ -2992,6 +3058,7 @@
     flex-shrink: 1;
 }
 .grid-view-rename-edit::selection { color: var(--text-1); background-color: var(--selection); }
+.grid-view-rename-edit:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- gridViewScrollStyle: virtualized grid scroll viewport ---------------- */
 /* Column flex so visible row strips + the top/bottom virtualization spacers   */
@@ -3610,6 +3677,7 @@
 .color-hex:active { border-color: var(--accent); }
 .color-hex:focus  { border-color: var(--accent); }
 .color-hex::selection { color: var(--text-1); background-color: var(--selection); }
+.color-hex:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .color-alpha {
     display: flex;
     flex-direction: row;
@@ -3657,6 +3725,7 @@
     cursor: text;
 }
 .color-alpha-input::selection { color: var(--text-1); background-color: var(--selection); }
+.color-alpha-input:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .color-alpha-unit {
     margin: 0px;
     padding: 0px;
@@ -3883,6 +3952,7 @@
 .color-picker-channel-value:hover { border-color: var(--line-strong); }
 .color-picker-channel-value:focus { border-color: var(--accent); }
 .color-picker-channel-value::selection { color: var(--text-1); background-color: var(--selection); }
+.color-picker-channel-value:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .color-picker-field-row {
     display: flex;
     flex-direction: row;
@@ -3940,6 +4010,7 @@
 }
 .color-picker-hdr-value:disabled { color: var(--text-3); }
 .color-picker-hdr-value::selection { color: var(--text-1); background-color: var(--selection); }
+.color-picker-hdr-value:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .color-picker-swatches {
     display: flex;
     flex-direction: column;
@@ -4407,6 +4478,7 @@
     cursor: text;
 }
 .gradient-editor-location-input::selection { color: var(--text-1); background-color: var(--selection); }
+.gradient-editor-location-input:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .gradient-editor-location-unit {
     margin: 0px;
     padding: 0px;
@@ -4856,6 +4928,7 @@
 .toolbar-textbox:active { border-color: var(--line-strong); border-style: dotted; border-color: var(--accent); }
 .toolbar-textbox:focus  { border-color: var(--accent); border-style: dotted; }
 .toolbar-textbox::selection { color: var(--text-1); background-color: var(--selection); }
+.toolbar-textbox:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 
 /* ---- toolbar menuTriggerStyle --------------------------------------------- */
 /* Like .toolbar-button but text-aligned to start - menu triggers usually     */

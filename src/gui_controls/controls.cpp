@@ -98,7 +98,7 @@ namespace interstice
         return modified;
     }
 
-    bool GUIApplication::SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, LayoutOverride&& constraints)
+    bool GUIApplication::SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, LayoutOverride&& constraints, ID* outFieldID)
     {
         // The container draws the textbox chrome and takes the inner field's
         // hover/focus state (PropagatesDescendantState); the field itself is borderless.
@@ -123,7 +123,9 @@ namespace interstice
             VERIFY(windowRegistry.Add(res.ref));
         }
 
-        const bool modified = Field(idManager.AllocateDynamicID("searchField"),
+        const ID fieldID = idManager.AllocateDynamicID("searchField");
+        if (outFieldID) *outFieldID = fieldID;
+        const bool modified = Field(fieldID,
                                     value, textEditBehavior,
                                     theme.searchTextboxFieldStyleRef,
                                     interstice::LayoutOverride{}.FlexGrow(1));

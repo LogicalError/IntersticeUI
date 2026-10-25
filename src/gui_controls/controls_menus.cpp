@@ -1,5 +1,7 @@
 #include <gui_controls/gui_application_internal.h>
 
+#include <algorithm>
+
 #include <array>
 #include <cerrno>
 #include <cmath>
@@ -250,7 +252,7 @@ namespace interstice
     interstice::ElementRef GUIApplication::MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
                                                 bool reserveIcon, IconID icon, std::string_view text,
                                                 std::string_view trailing, StyleRef trailingStyle,
-                                                LayoutOverride&& constraints)
+                                                LayoutOverride&& constraints, bool destructive)
     {
         const interstice::ElementState rowState = guiStateManager.GetCurrentState(id);
         const bool selected = (rowState & interstice::ElementState::Selected) != interstice::ElementState::None;
@@ -273,7 +275,7 @@ namespace interstice
             interstice::Element iconEl{};
             iconEl.id       = idManager.AllocateDynamicID();
             iconEl.flags    = interstice::ElementFlags::NoInput;
-            iconEl.styleRef = theme.menuItemIconStyleRef;
+            iconEl.styleRef = destructive ? theme.menuItemDestructiveIconStyleRef : theme.menuItemIconStyleRef;
             if (selected)
                 RegisterControl(std::move(iconEl),
                     [this](interstice::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
@@ -289,7 +291,7 @@ namespace interstice
             interstice::Element labelEl{};
             labelEl.id       = idManager.AllocateDynamicID();
             labelEl.flags    = interstice::ElementFlags::NoInput;
-            labelEl.styleRef = theme.menuItemLabelStyleRef;
+            labelEl.styleRef = destructive ? theme.menuItemDestructiveLabelStyleRef : theme.menuItemLabelStyleRef;
             RegisterControl(std::move(labelEl),
                 [this, text](interstice::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
                 interstice::LayoutOverride{});
@@ -472,6 +474,7 @@ namespace interstice
                 // then re-accumulate this frame as items declare icons.
                 level.reserveIconColumn = menuManager.menuItemsHaveIcons[level.triggerID];
                 level.itemsHaveIcons    = false;
+                level.filtering         = false;
                 level.scrollUpID   = idManager.AllocateDynamicID();
                 level.scrollDownID = idManager.AllocateDynamicID();
                 return true;
@@ -491,13 +494,45 @@ namespace interstice
         return false;
     }
 
+    namespace
+    {
+        bool ContainsIgnoringCase(std::string_view text, std::string_view part)
+        {
+            auto lower = [](char c) { return (c >= 'A' && c <= 'Z') ? char(c - 'A' + 'a') : c; };
+            return std::search(text.begin(), text.end(), part.begin(), part.end(),
+                               [&](char a, char b) { return lower(a) == lower(b); }) != text.end();
+        }
+    }
+
+    void GUIApplication::MenuFilter()
+    {
+        assert(menuManager.currentDepth >= 0 && menuManager.currentDepth < MenuManager::kMaxDepth);
+        auto& level = menuManager.levels[menuManager.currentDepth];
+        ID fieldID = ID::Invalid();
+        SearchField(idManager.AllocateDynamicID("menu_filter"), level.filter, theme.searchIcon,
+                    TextEditBehavior::ContinuousUpdate, interstice::LayoutOverride{}.NoShrink(), &fieldID);
+        // The filter takes the keyboard when the menu opens; holding the menu's active
+        // slot keeps the first item from taking it.
+        if (level.isOpen && level.activeItemID == ID::Invalid())
+        {
+            level.activeItemID = fieldID;
+            guiStateManager.Interaction().SetFocusID(fieldID);
+            guiStateManager.TextEditorFocus().Set(fieldID);
+        }
+        level.filtering = !level.filter.empty();
+    }
+
     void GUIApplication::MenuHeader(std::string_view text)
     {
+        if (menuManager.currentDepth >= 0 && menuManager.levels[menuManager.currentDepth].filtering)
+            return;
         Text(idManager.AllocateDynamicID("menu_header"), text, theme.menuHeaderStyleRef, interstice::LayoutOverride{}.NoGrow().NoShrink());
     }
 
     void GUIApplication::MenuSeparator()
     {
+        if (menuManager.currentDepth >= 0 && menuManager.levels[menuManager.currentDepth].filtering)
+            return;
         const interstice::ID sepID = idManager.AllocateDynamicID();
         interstice::Element sep{};
         sep.id       = sepID;
@@ -512,8 +547,24 @@ namespace interstice
 
     bool GUIApplication::MenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
     {
+        return MenuItemImpl(id, icon, text, shortcut, std::move(onClick), style, false, std::move(constraints));
+    }
+
+    bool GUIApplication::DestructiveMenuItem(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints)
+    {
+        return MenuItemImpl(id, icon, text, shortcut, std::move(onClick), theme.menuItemRowStyleRef, true, std::move(constraints));
+    }
+
+    bool GUIApplication::MenuItemImpl(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick,
+                                      StyleRef style, bool destructive, LayoutOverride&& constraints)
+    {
         assert(menuManager.currentDepth >= 0 && menuManager.currentDepth < MenuManager::kMaxDepth);
         auto& level = menuManager.levels[menuManager.currentDepth];
+        if (level.filtering && !ContainsIgnoringCase(text, level.filter))
+            return false;
+        // A disabled item shows but can't be chosen, by mouse or keyboard.
+        const bool disabled = guiStateManager.Construction().IsDisabled();
+        if (disabled) onClick = nullptr;
 
         // Reserve the left column when this item has an icon or is checkable
         // (selected items show a checkmark there).
@@ -524,7 +575,9 @@ namespace interstice
         MenuItemRow(id,
             MakeMenuItemHandler(idManager, guiStateManager, elementStorage, menuManager, menuManager.currentDepth, onClick),
             style, level.reserveIconColumn, icon, text, shortcut, theme.menuItemShortcutStyleRef,
-            std::move(constraints));
+            std::move(constraints), destructive);
+        if (disabled)
+            return false;
 
         // Auto-select the first item only when focus is meant to move into the menu
         // (context menus, dropdowns, or after Down from a menu-bar trigger). In

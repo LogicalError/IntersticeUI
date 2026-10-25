@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +39,8 @@ namespace interstice
 
         // Channel values shown 0-255 (and hue in degrees, S/V/L in percent), or 0-1.
         bool byteRange = true;
+        bool picking   = false;          // the eyedropper is held: the color follows the screen under the cursor
+        std::optional<bool> canPick;     // whether the platform reads the screen (asked once)
         std::string context;   // what's being edited (the field's label), after the title
 
         // OK keeps the color (and adds it to the recent ones), Cancel and the close button
@@ -53,6 +56,8 @@ namespace interstice
         interstice::VisualColorStyleIndex outlineColor  = interstice::VisualColorStyleIndex::Invalid; // around cursors and handles
         interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid; // the color, with its alpha
         interstice::VisualColorStyleIndex originalStyle = interstice::VisualColorStyleIndex::Invalid;
+        interstice::VisualColorStyleIndex newOpaque      = interstice::VisualColorStyleIndex::Invalid; // the colors without their alpha,
+        interstice::VisualColorStyleIndex originalOpaque = interstice::VisualColorStyleIndex::Invalid; // for the preview's top half
 
         enum class DragTarget { None, Square, Hue, Alpha } drag = DragTarget::None;
 

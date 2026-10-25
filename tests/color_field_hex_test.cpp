@@ -163,4 +163,35 @@ namespace
         EXPECT_EQ(first.r, 1.0f); EXPECT_EQ(first.g, 0.0f); EXPECT_EQ(first.b, 0.0f);
         EXPECT_EQ(last.r,  1.0f); EXPECT_EQ(last.g,  0.0f); EXPECT_EQ(last.b,  0.0f);
     }
+
+    // A dialog's header names the edited field after its title, unless it only repeats it.
+    TEST(DialogHeader, ShowsTheFieldUnlessItRepeatsTheTitle)
+    {
+        EXPECT_EQ(DialogContext("Base color", "Color"), "Base color");
+        EXPECT_EQ(DialogContext("Color", "Color"), "");
+        EXPECT_EQ(DialogContext("color", "Color"), "") << "regardless of case";
+        EXPECT_EQ(DialogContext("", "Color"), "");
+    }
+
+    // The eyedropper: pressed and released, the color is the screen's under the cursor, opaque.
+    TEST_F(ColorPickerDialog, TheEyedropperPicksTheScreensColor)
+    {
+        using ::testing::_;
+        using ::testing::Return;
+        ON_CALL(app.mockBackend, ReadScreenPixel(_)).WillByDefault(Return(std::optional<color4b>(color4b{ 255, 0, 0, 255 })));
+        Open();
+        const ID eyedropper = FindByStyle(app.theme.dialogSquareButtonStyleRef);
+        ASSERT_NE(eyedropper, ID::Invalid()) << "shown where the screen can be read";
+        Click(app.theme.dialogSquareButtonStyleRef);
+        EXPECT_FLOAT_EQ(color.r, 1.0f);
+        EXPECT_FLOAT_EQ(color.g, 0.0f);
+        EXPECT_FLOAT_EQ(color.b, 0.0f);
+        EXPECT_FLOAT_EQ(color.a, 1.0f) << "the field was half transparent; the screen isn't";
+    }
+
+    TEST_F(ColorPickerDialog, NoEyedropperWhereTheScreenCantBeRead)
+    {
+        Open();
+        EXPECT_EQ(FindByStyle(app.theme.dialogSquareButtonStyleRef), ID::Invalid());
+    }
 }

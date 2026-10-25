@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <gui_core/input/gui_input_handler_func.h>
 
 #include <gui_core/gui_id.h>
@@ -37,6 +39,8 @@ namespace interstice
             bool    reopened       = false; // closed since last shown: start scrolled to the top
             bool    reserveIconColumn = false; // this frame: reserve the icon slot (from last frame's content)
             bool    itemsHaveIcons    = false; // this frame: accumulated as items with icons are added
+            std::string filter;                // MenuFilter's text; cleared when the menu closes
+            bool    filtering         = false; // this frame: MenuFilter holds text, so items not matching it hide
         };
 
         Level levels[kMaxDepth];

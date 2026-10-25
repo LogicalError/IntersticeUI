@@ -345,7 +345,7 @@ namespace interstice
         // The header is the dialog's title bar: it drags the window.
         BeginTitleBar(idManager.AllocateDynamicID("ge_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
         Text(idManager.AllocateDynamicID("ge_title"), "Gradient", theme.dialogTitleStyleRef);
-        Text(idManager.AllocateDynamicID("ge_context"), ge.context, theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
+        Text(idManager.AllocateDynamicID("ge_context"), DialogContext(ge.context, "Gradient"), theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
         Button(idManager.AllocateDynamicID("ge_close"), theme.tabCloseIcon, {}, requestClose(GradientEditorState::CloseRequest::Cancel),
                theme.dialogCloseStyleRef);
         SetTooltip("Close without changing the gradient");

@@ -377,6 +377,9 @@ namespace interstice
         SetColorStyle(styleManager, cp.whiteColor, { 1.0f, 1.0f, 1.0f, 1.0f });
         SetColorStyle(styleManager, cp.outlineColor, { 0.0f, 0.0f, 0.0f, 0.5f });
         SetColorStyle(styleManager, cp.newColor, { curR, curG, curB, cp.a });
+        SetColorStyle(styleManager, cp.newOpaque, { curR, curG, curB, 1.0f });
+        SetColorStyle(styleManager, cp.originalOpaque, { std::clamp(cp.originalColor.r, 0.f, 1.f), std::clamp(cp.originalColor.g, 0.f, 1.f),
+                                                         std::clamp(cp.originalColor.b, 0.f, 1.f), 1.0f });
         SetColorStyle(styleManager, cp.originalStyle, { std::clamp(cp.originalColor.r, 0.f, 1.f), std::clamp(cp.originalColor.g, 0.f, 1.f),
                                                         std::clamp(cp.originalColor.b, 0.f, 1.f), cp.originalColor.a });
 
@@ -389,7 +392,7 @@ namespace interstice
         // The header is the dialog's title bar: it drags the window.
         BeginTitleBar(idManager.AllocateDynamicID("cp_header"), theme.dialogHeaderStyleRef, LayoutOverride{}.NoShrink());
         Text(idManager.AllocateDynamicID("cp_title"), "Color", theme.dialogTitleStyleRef);
-        Text(idManager.AllocateDynamicID("cp_context"), cp.context, theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
+        Text(idManager.AllocateDynamicID("cp_context"), DialogContext(cp.context, "Color"), theme.dialogContextStyleRef, LayoutOverride{}.FlexGrow(1));
         Button(idManager.AllocateDynamicID("cp_close"), theme.tabCloseIcon, {}, requestClose(ColorPickerState::CloseRequest::Cancel),
                theme.dialogCloseStyleRef);
         SetTooltip("Close without changing the color");
@@ -496,22 +499,28 @@ namespace interstice
         // ---- Right: preview, space, channels, hex, HDR ----
         BeginVertical(idManager.AllocateDynamicID("cp_controls"), theme.colorPickerControlsStyleRef, LayoutOverride{}.FlexGrow(1));
         {
-            // New | Original, on the checkerboard.
+            // New | Original, each opaque on top and at its alpha (on the checkerboard) below.
             BeginVertical(idManager.AllocateDynamicID("cp_preview_group"), theme.colorPickerPreviewGroupStyleRef, LayoutOverride{}.NoShrink());
             {
                 const ID previewID = idManager.AllocateDynamicID("cp_preview");
                 Element preview{ .id = previewID, .styleRef = theme.colorPickerPreviewStyleRef, .flags = ElementFlags::NoInput };
                 const ElementRef previewRef = RegisterElement(std::move(preview), LayoutOverride{});
                 VERIFY(elementStorage.AddCustomDraw(previewRef,
-                    [look, newColor = cp.newColor, original = cp.originalStyle, radius = float(styleManager.Px(5))](CustomDrawContext& ctx)
+                    [look, newColor = cp.newColor, original = cp.originalStyle, newOpaque = cp.newOpaque,
+                     originalOpaque = cp.originalOpaque, radius = float(styleManager.Px(5))](CustomDrawContext& ctx)
                     {
                         const IntRect r = ctx.ElementInnerRect();
                         ColorSwatchLook preview = look;
                         preview.radius = radius;
                         DrawCheckerboard(ctx, r, r, preview);
-                        const int half = r.w / 2;
-                        ctx.RenderQuad(r, IntRect{ .position = r.position, .size = { half, r.h } }, newColor, radius);
-                        ctx.RenderQuad(r, IntRect{ .position = { r.x + half, r.y }, .size = { r.w - half, r.h } }, original, radius);
+                        const int half = r.w / 2, top = r.h / 2;
+                        auto part = [&](int x, int w, VisualColorStyleIndex opaque, VisualColorStyleIndex withAlpha)
+                        {
+                            ctx.RenderQuad(r, IntRect{ .position = { x, r.y },       .size = { w, top } },       opaque,    radius);
+                            ctx.RenderQuad(r, IntRect{ .position = { x, r.y + top }, .size = { w, r.h - top } }, withAlpha, radius);
+                        };
+                        part(r.x, half, newOpaque, newColor);
+                        part(r.x + half, r.w - half, originalOpaque, original);
                     }));
                 BeginHorizontal(idManager.AllocateDynamicID("cp_preview_captions"), theme.colorPickerCaptionsStyleRef, LayoutOverride{});
                 Text(idManager.AllocateDynamicID("cp_new"), "New", theme.colorPickerCaptionStyleRef, LayoutOverride{}.FlexGrow(1));
@@ -702,6 +711,51 @@ namespace interstice
                     float nr, ng, nb;
                     if (HexToColor(cp.hexText, nr, ng, nb))
                         ColorConvert::RGBtoHSV(nr, ng, nb, cp.h, cp.s, cp.v);
+                }
+
+                // Eyedropper: press it and drag anywhere on screen; the color follows the
+                // pixel under the cursor, opaque, and stays when released. Only where the screen can be read.
+                if (!cp.canPick)
+                    cp.canPick = windowManager->ReadScreenPixel(windowManager->GetScreenMousePos()).has_value();
+                if (*cp.canPick)
+                {
+                    auto pick = [this]
+                    {
+                        auto& state = m_colorPickerSub->State();
+                        if (const auto c = windowManager->ReadScreenPixel(windowManager->GetScreenMousePos()))
+                        {
+                            ColorConvert::RGBtoHSV(c->r / 255.0f, c->g / 255.0f, c->b / 255.0f, state.h, state.s, state.v);
+                            state.a = 1.0f;   // the screen is opaque
+                        }
+                    };
+                    RegisterControl(Element{ .id = idManager.AllocateDynamicID("cp_eyedropper"),
+                        .eventHandler = [this, pick](ElementEvent&& event) -> bool
+                        {
+                            auto& state = m_colorPickerSub->State();
+                            switch (event.type)
+                            {
+                                case EventType::MouseDown:
+                                    if (!event.state.LeftPressed()) return false;
+                                    state.picking = true;
+                                    pick();
+                                    return true;
+                                case EventType::MouseMove:
+                                    if (!state.picking) return false;
+                                    pick();
+                                    return true;
+                                case EventType::MouseUp:
+                                    if (!state.picking) return false;
+                                    pick();
+                                    state.picking = false;
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        },
+                        .styleRef = theme.dialogSquareButtonStyleRef },
+                        [this](Element& e) { return textSystem->RegisterText(e.id, theme.eyedropperIcon, std::string_view{}, e.styleRef, e.state); },
+                        LayoutOverride{});
+                    SetTooltip("Pick a color from the screen: press and drag");
                 }
             }
             EndHorizontal();

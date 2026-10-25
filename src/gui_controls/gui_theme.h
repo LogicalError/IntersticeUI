@@ -299,7 +299,11 @@ namespace interstice
         StyleRef titleBarButtonStyleRef {};      // its minimize and maximize buttons
         StyleRef titleBarCloseButtonStyleRef {};
         StyleRef menuSeparatorStyleRef {};
-        StyleRef menuHeaderStyleRef {};     // a section's name in a menu  // thin divider between items in a dropdown
+        StyleRef menuHeaderStyleRef {};     // a section's name in a menu
+        StyleRef reorderDropSlotStyleRef {};   // a list row's drop slot while it's dragged
+        StyleRef reorderLiftedStyleRef {};     // the dragged row itself
+        StyleRef menuItemDestructiveLabelStyleRef {};   // a destructive item's label
+        StyleRef menuItemDestructiveIconStyleRef {};    // and its icon  // thin divider between items in a dropdown
         StyleRef menuItemRowStyleRef {};      // interactive row: icon slot + label + trailing shortcut/arrow
         StyleRef menuItemIconStyleRef {};     // fixed icon slot inside a menu item row
         StyleRef menuItemLabelStyleRef {};    // grow:1 label inside a menu item row
@@ -388,6 +392,7 @@ namespace interstice
         // Drag-handle grip (three-bar) for reorderable-list / tree-list thumbs
         IconID dragHandleIcon = IconID::Invalid;
         IconID dockIcon = IconID::Invalid;        // returns a torn-off panel to its dock
+        IconID eyedropperIcon = IconID::Invalid;  // picks a color from the screen
         IconID searchIcon     = IconID::Invalid;
         IconID windowMinimizeIcon = IconID::Invalid;
         IconID windowMaximizeIcon = IconID::Invalid;

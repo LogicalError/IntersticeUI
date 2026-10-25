@@ -102,6 +102,7 @@ namespace interstice
             distributeIcon    = registerIcon("distribute", R"(<path d="M4 4v16"/><path d="M20 4v16"/><rect x="9" y="7" width="6" height="10" rx="1"/>)");
             addIcon         = registerIcon("list-add",    R"(<path d="M5 12h14"/><path d="M12 5v14"/>)");
             removeIcon      = registerIcon("list-remove", R"(<path d="M5 12h14"/>)");
+            eyedropperIcon  = registerIcon("eyedropper", R"(<path d="m2 22 1-1h3l9-9M3 21v-3l9-9M15 6l3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3Z"/>)");
             dockIcon        = registerIcon("dock", R"(<path d="M3 5h18v14H3ZM15 5v14M8 12h4M10 10l2 2-2 2"/>)");
             dragHandleIcon  = registerIcon("drag-handle",
                 R"(<circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/>)"
@@ -657,6 +658,10 @@ namespace interstice
         titleBarCloseButtonStyleRef       = registerCSS("title-bar-close-button");
         menuSeparatorStyleRef             = registerCSS("menu-separator");
         menuHeaderStyleRef                = registerCSS("menu-header");
+        reorderDropSlotStyleRef           = registerCSS("reorder-drop-slot");
+        reorderLiftedStyleRef             = registerCSS("reorder-lifted");
+        menuItemDestructiveLabelStyleRef  = registerCSS("menu-item-label-destructive");
+        menuItemDestructiveIconStyleRef   = registerCSS("menu-item-icon-destructive");
         menuItemRowStyleRef               = registerCSS("menu-item-row");
         menuItemIconStyleRef              = registerCSS("menu-item-icon");
         menuItemLabelStyleRef             = registerCSS("menu-item-label");

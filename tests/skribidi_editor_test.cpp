@@ -453,6 +453,60 @@ namespace interstice
             EXPECT_NE(bound.find("XY"), std::string::npos) << bound;
         }
 
+        // A selection in a focused field shows in the focused selection color; with the
+        // app in the background (no active window) in the unfocused one
+        // (:not(:focus)::selection), so it's drawn without the Focused state.
+        TEST_F(SkribidiEditorTest, TheSelectionDimsWithTheAppInTheBackground)
+        {
+            auto& renderer = graphicsContext.Renderer();
+            Frame(200);
+            Focus(field);
+            textSystem->RequestSelectAll(field);
+            Frame(200);
+            auto drawnState = [&] { return uint32_t(renderer.lastBoxStyle % uint32_t(Style::kStateCount)); };
+
+            stateManager.Interaction().SetActiveWindowID(ID{ .value{ .integer = 77 } });
+            renderer.lastBoxStyle = 0;
+            Frame(200);
+            ASSERT_NE(renderer.lastBoxStyle, 0u) << "test setup: the selection was drawn";
+            EXPECT_NE(drawnState() & uint32_t(ElementState::Focused), 0u);
+
+            stateManager.Interaction().SetActiveWindowID(ID::Invalid());
+            renderer.lastBoxStyle = 0;
+            Frame(200);
+            ASSERT_NE(renderer.lastBoxStyle, 0u);
+            EXPECT_EQ(drawnState() & uint32_t(ElementState::Focused), 0u);
+            EXPECT_NE(drawnState() & uint32_t(ElementState::Selection), 0u);
+        }
+
+        // A selection over several lines shows each line's break: every selected line but
+        // the last reaches a little (its break's 4 px) past its last glyph.
+        TEST_F(SkribidiEditorTest, ASelectedLineBreakShows)
+        {
+            auto& renderer = graphicsContext.Renderer();
+            bound = "ab\nab";
+            auto multiline = [&]
+            {
+                modified = false;
+                const ElementState state = (stateManager.TextEditorFocus().GetFocusedID() == field)
+                    ? ElementState::Focused : ElementState::None;
+                textId = textSystem->RegisterEditableText(field, bound, TextEditBehavior::Multiline, style, state, modified);
+                const IntRect rect{ 0, 0, 200, 60 };
+                textSystem->RenderText(textId, rect, rect, IntRect{ 0, 0, 2000, 2000 });
+            };
+            multiline();
+            Focus(field);
+            textSystem->RequestSelectAll(field);
+            multiline();
+            renderer.boxes.clear();
+            multiline();
+            ASSERT_EQ(renderer.boxes.size(), 2u) << "a selection box per line";
+            const IntRect first = renderer.boxes[0].y < renderer.boxes[1].y ? renderer.boxes[0] : renderer.boxes[1];
+            const IntRect last  = renderer.boxes[0].y < renderer.boxes[1].y ? renderer.boxes[1] : renderer.boxes[0];
+            EXPECT_GT(first.w, last.w) << "the first line's break is selected too";
+            EXPECT_LE(first.w, last.w + 8) << "by about a space's width, not more";
+        }
+
         // A list reordered under a focused row: the rows keep their IDs (by position), so
         // when focus moves on, the old row's editor must not write its text over the item
         // that now sits there.

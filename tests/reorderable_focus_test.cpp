@@ -205,5 +205,35 @@ namespace interstice
             << "after dragging row 0 → slot 1, focus should be on the button at slot 1";
     }
 
+    // -------------------------------------------------------------------------
+    // 4. While a row of a plain list is dragged, the group draws the slot it will land
+    //    in and the row draws itself lifted; neither draws anything otherwise.
+    // -------------------------------------------------------------------------
+    TEST_F(ReorderableFocusTest, ADraggedRowShowsItsDropSlot)
+    {
+        app.Frame([&] { EmitGroup(); });
+        const auto thumbCenter0 = ThumbCenterOfItem(itemID0);
+        const auto* row1Rect = app.elementStorage.GetElementRectPtr(app.elementStorage.FindElementRefByID(itemID1));
+        ASSERT_NE(row1Rect, nullptr);
+        auto drawsOf = [&](interstice::ID id) { return app.elementStorage.GetCustomDraw(app.elementStorage.FindElementRefByID(id)) != nullptr; };
+        EXPECT_FALSE(drawsOf(groupID));
+        EXPECT_FALSE(drawsOf(itemID0));
+
+        app.InjectMouseMove(thumbCenter0);
+        app.InjectMouseDown(thumbCenter0);
+        app.Frame([&] { EmitGroup(); });
+        app.InjectMouseMove({ thumbCenter0.x, row1Rect->rect.y + row1Rect->rect.h * 3 / 4 }, interstice::MouseButtons::Left);
+        app.Frame([&] { EmitGroup(); });
+        app.Frame([&] { EmitGroup(); });   // the drag shows from the frame after it starts
+
+        EXPECT_TRUE(drawsOf(groupID)) << "the drop slot";
+        EXPECT_TRUE(drawsOf(itemID0)) << "the lifted row";
+
+        app.InjectMouseUp(thumbCenter0);
+        app.Frame([&] { EmitGroup(); });
+        app.Frame([&] { EmitGroup(); });
+        EXPECT_FALSE(drawsOf(groupID));
+    }
+
     } // namespace
 } // namespace interstice

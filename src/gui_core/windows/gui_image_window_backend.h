@@ -41,6 +41,7 @@ namespace interstice
         uint32_t GetFocusChangeCount() const override { return m_os.GetFocusChangeCount() + m_focusChanges; }
         void PollEvents(std::function<void(OSWindowHandle, IWindowContext*)> cleanup) override;
         int2 GetScreenMousePos() override;
+        std::optional<color4b> ReadScreenPixel(int2 screenPos) override { return m_os.ReadScreenPixel(screenPos); }
         MouseButtons GetMouseButtons() override;
         void SetCursor(MouseCursor cursor) override;
         void SetTextInputArea(OSWindowHandle window, IntRect rect) override;
