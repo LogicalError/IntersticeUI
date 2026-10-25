@@ -334,7 +334,12 @@ namespace interstice
         if (!isSubmenu)
         {
             guiStateManager.Interaction().SetClicked(currentItemID);
+            const ID focusBefore = guiStateManager.Interaction().GetFocusedID();
             if (onClick) onClick();
+            // A command that moved the focus (Undo back to the field it changed) keeps it
+            // when the menu closes.
+            if (guiStateManager.Interaction().GetFocusedID() != focusBefore)
+                priorFocusID = guiStateManager.Interaction().GetFocusedID();
             RequestCloseAll();
         } else
         {

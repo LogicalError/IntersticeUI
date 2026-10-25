@@ -5,6 +5,8 @@
 #include <gui_core/gui_hash.h>
 
 #include <gui_core/text/gui_numeric_field_config.h>
+#include <gui_core/text/gui_numeric_type.h>
+#include <gui_core/text/gui_text_converter.h>
 
 #include <gui_core/input/gui_platform_input_handler.h>
 
@@ -157,119 +159,6 @@ namespace interstice
     };
 
 
-	// ------------------------------------------------------------------------
-	// Numeric Value Union/Type - For editable numeric text fields
-	// ------------------------------------------------------------------------
-
-    enum class NumericType
-    {
-        None,       // not a numeric type,
-
-        TypeUnsignedBit = 16,
-        TypeSignedBit   = 32,
-        TypeFloatBit    = 64,
-
-        TypeUInt8  = TypeUnsignedBit | 1,
-        TypeUInt16 = TypeUnsignedBit | 2,
-        TypeUInt32 = TypeUnsignedBit | 3,
-        TypeUInt64 = TypeUnsignedBit | 4,
-        
-        TypeInt8   = TypeSignedBit | 1,
-        TypeInt16  = TypeSignedBit | 2,
-        TypeInt32  = TypeSignedBit | 3,
-        TypeInt64  = TypeSignedBit | 4,
-
-        TypeFloat  = TypeFloatBit | 1,
-        TypeDouble = TypeFloatBit | 2
-    };
-
-    union NumericValue
-    {
-        uint8_t  value_uint8;
-        uint16_t value_uint16;
-        uint32_t value_uint32;
-        uint64_t value_uint64;
-        
-        int8_t  value_int8;
-        int16_t value_int16;
-        int32_t value_int32;
-        int64_t value_int64;
-
-        float   value_float;
-        double  value_double;
-    };
-    
-    template<typename T> NumericType GetNumericType(const T&     /*value*/) { return NumericType::None; }
-    template<> inline NumericType GetNumericType(const int8_t&   /*value*/) { return NumericType::TypeInt8; }
-    template<> inline NumericType GetNumericType(const int16_t&  /*value*/) { return NumericType::TypeInt16; }
-    template<> inline NumericType GetNumericType(const int32_t&  /*value*/) { return NumericType::TypeInt32; }
-    template<> inline NumericType GetNumericType(const int64_t&  /*value*/) { return NumericType::TypeInt64; }
-    template<> inline NumericType GetNumericType(const uint8_t&  /*value*/) { return NumericType::TypeUInt8; }
-    template<> inline NumericType GetNumericType(const uint16_t& /*value*/) { return NumericType::TypeUInt16; }
-    template<> inline NumericType GetNumericType(const uint32_t& /*value*/) { return NumericType::TypeUInt32; }
-    template<> inline NumericType GetNumericType(const uint64_t& /*value*/) { return NumericType::TypeUInt64; }
-    template<> inline NumericType GetNumericType(const float&    /*value*/) { return NumericType::TypeFloat; }
-    template<> inline NumericType GetNumericType(const double&   /*value*/) { return NumericType::TypeDouble; }
-    
-    template<typename T> NumericType CopyNumericTypeTo(const T& src, NumericValue& dst) { dst = {}; return NumericType::None; }
-    template<> inline NumericType CopyNumericTypeTo(const int8_t&   src, NumericValue& dst) { dst.value_int8   = src; return NumericType::TypeInt8; }
-    template<> inline NumericType CopyNumericTypeTo(const int16_t&  src, NumericValue& dst) { dst.value_int16  = src; return NumericType::TypeInt16; }
-    template<> inline NumericType CopyNumericTypeTo(const int32_t&  src, NumericValue& dst) { dst.value_int32  = src; return NumericType::TypeInt32; }
-    template<> inline NumericType CopyNumericTypeTo(const int64_t&  src, NumericValue& dst) { dst.value_int64  = src; return NumericType::TypeInt64; }
-    template<> inline NumericType CopyNumericTypeTo(const uint8_t&  src, NumericValue& dst) { dst.value_uint8  = src; return NumericType::TypeUInt8; }
-    template<> inline NumericType CopyNumericTypeTo(const uint16_t& src, NumericValue& dst) { dst.value_uint16 = src; return NumericType::TypeUInt16; }
-    template<> inline NumericType CopyNumericTypeTo(const uint32_t& src, NumericValue& dst) { dst.value_uint32 = src; return NumericType::TypeUInt32; }
-    template<> inline NumericType CopyNumericTypeTo(const uint64_t& src, NumericValue& dst) { dst.value_uint64 = src; return NumericType::TypeUInt64; }
-    template<> inline NumericType CopyNumericTypeTo(const float&    src, NumericValue& dst) { dst.value_float  = src; return NumericType::TypeFloat; }
-    template<> inline NumericType CopyNumericTypeTo(const double&   src, NumericValue& dst) { dst.value_double = src; return NumericType::TypeDouble; }
-        
-    template<typename T> bool CopyNumericTypeTo(NumericType type, const NumericValue& dst, T&     src) { dst = {}; return NumericType::None; } 
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, int8_t&   dst) { if (type != NumericType::TypeInt8  ) return false; dst = src.value_int8  ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, int16_t&  dst) { if (type != NumericType::TypeInt16 ) return false; dst = src.value_int16 ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, int32_t&  dst) { if (type != NumericType::TypeInt32 ) return false; dst = src.value_int32 ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, int64_t&  dst) { if (type != NumericType::TypeInt64 ) return false; dst = src.value_int64 ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, uint8_t&  dst) { if (type != NumericType::TypeUInt8 ) return false; dst = src.value_uint8 ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, uint16_t& dst) { if (type != NumericType::TypeUInt16) return false; dst = src.value_uint16; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, uint32_t& dst) { if (type != NumericType::TypeUInt32) return false; dst = src.value_uint32; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, uint64_t& dst) { if (type != NumericType::TypeUInt64) return false; dst = src.value_uint64; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, float&    dst) { if (type != NumericType::TypeFloat ) return false; dst = src.value_float ; return true; }
-    template<> inline bool CopyNumericTypeTo(NumericType type, const NumericValue& src, double&   dst) { if (type != NumericType::TypeDouble) return false; dst = src.value_double; return true; }
-    
-    template<typename T> bool EqualsNumericType(NumericType type, NumericValue& left, const T& right) { return false; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const int8_t&   right) { return type == NumericType::TypeInt8   && left.value_int8   == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const int16_t&  right) { return type == NumericType::TypeInt16  && left.value_int16  == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const int32_t&  right) { return type == NumericType::TypeInt32  && left.value_int32  == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const int64_t&  right) { return type == NumericType::TypeInt64  && left.value_int64  == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const uint8_t&  right) { return type == NumericType::TypeUInt8  && left.value_uint8  == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const uint16_t& right) { return type == NumericType::TypeUInt16 && left.value_uint16 == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const uint32_t& right) { return type == NumericType::TypeUInt32 && left.value_uint32 == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const uint64_t& right) { return type == NumericType::TypeUInt64 && left.value_uint64 == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const float&    right) { return type == NumericType::TypeFloat  && left.value_float  == right; }
-    template<> inline bool EqualsNumericType(NumericType type, NumericValue& left, const double&   right) { return type == NumericType::TypeDouble && left.value_double == right; }
-
-    inline bool EqualsNumericType(NumericType leftType, NumericValue& left, NumericType rightType, const NumericValue& right)
-    { 
-        if (leftType != rightType) return false;
-        switch (leftType)
-        {
-		    case NumericType::TypeFloat:  return left.value_float == right.value_float;
-			case NumericType::TypeDouble: return left.value_double == right.value_double;
-
-			case NumericType::TypeUInt64: return left.value_uint64 == right.value_uint64;
-            case NumericType::TypeUInt32: return left.value_uint32 == right.value_uint32;
-            case NumericType::TypeUInt16: return left.value_uint16 == right.value_uint16;
-            case NumericType::TypeUInt8:  return left.value_uint8  == right.value_uint8;
-
-			case NumericType::TypeInt64: return left.value_int64 == right.value_int64;
-            case NumericType::TypeInt32: return left.value_int32 == right.value_int32;
-            case NumericType::TypeInt16: return left.value_int16 == right.value_int16;
-            case NumericType::TypeInt8:  return left.value_int8  == right.value_int8;
-
-            default: return false;
-        }
-    }
-
-
     // ------------------------------------------------------------------------
     // Abstract Text System Interface
     // ------------------------------------------------------------------------
@@ -351,31 +240,51 @@ namespace interstice
         virtual TextID RegisterText(ID elementId, IconID iconId, std::string_view text, StyleRef styleIndex, ElementState state) = 0;
         TextID RegisterText(ID elementId, std::string_view text, StyleRef styleIndex, ElementState state) { return RegisterText(elementId, IconID::Invalid, text, styleIndex, state); }
         
-        /// Register editable text for a specific element ID
-        virtual TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) = 0;
+        /// Register editable text for a specific element ID. A validator limits what can be
+        /// typed, pasted or dropped into it (it must outlive the field).
+        virtual TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified,
+                                            const ITextValidator* validator = nullptr) = 0;
 
-        /// Register editable numeric text for a specific element ID.
-        /// The text representation and numeric<->text conversion are handled by the text system.
-        /// If a NumericFieldConfig is provided, the value is clamped to [minVal, maxVal] after text editing.
+        /// The text the focused field `elementId` edits, kept while it has the focus (its
+        /// value isn't formatted again under the typing); null when it doesn't have it.
+        /// `started` is set when the focus just arrived: fill it from the value then.
+        virtual std::string* ValueEditText(ID elementId, bool& started) = 0;
+
+        /// Register a field that edits `value` as text: the converter formats it and parses
+        /// the edits back (see TextConverter). wasModified is set when an edit parsed.
+        template<typename T, typename Converter = TextConverter<T>>
+        TextID RegisterEditableValue(ID elementId, T& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified,
+                                     const Converter& converter = DefaultTextConverter<T>())
+        {
+            bool started = false;
+            std::string* editText = ValueEditText(elementId, started);
+            std::string shownText;
+            if (editText == nullptr)
+                shownText = converter.Format(value, /*editing*/ false);
+            else if (started)
+                *editText = converter.Format(value, /*editing*/ true);
+            std::string& text = editText ? *editText : shownText;
+
+            bool edited = false;
+            const TextID textId = RegisterEditableText(elementId, text, behavior, styleIndex, state, edited, &converter);
+            if (edited && converter.Parse(text, value))
+                wasModified = true;
+            return textId;
+        }
+
+        /// Register an editable number, clamped to the config's [minVal, maxVal] after an edit.
         template<typename T>
         TextID RegisterEditableNumber(ID elementId, T& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified, NumericFieldConfig<T> config = {})
         {
-            NumericValue numeric_value{};
-            NumericType numeric_type = CopyNumericTypeTo(value, numeric_value);
-			bool local_was_modified = false;
-            auto textID = RegisterEditableNumber(elementId, numeric_type, numeric_value, behavior, styleIndex, state, local_was_modified);
-
-            if (local_was_modified) {
+            bool edited = false;
+            const TextID textId = RegisterEditableValue(elementId, value, behavior, styleIndex, state, edited);
+            if (edited)
+            {
                 wasModified = true;
-                CopyNumericTypeTo(numeric_type, numeric_value, value);
                 value = std::clamp(value, config.minVal, config.maxVal);
             }
-            return textID;
+            return textId;
         }
-
-        /// Register editable numeric text for a specific element ID.
-        /// The text representation and int<->text conversion are handled by the text system.
-        virtual TextID RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) = 0;
 
         /// Draw a registered text in `color` instead of its style's text color, until it is
         /// registered again (call after each registration, e.g. for a NaN value).
@@ -383,6 +292,8 @@ namespace interstice
 
         /// The text caret's color (the theme's --caret). Set again after the style manager is cleared.
         virtual void SetCaretColor(VisualColorStyleIndex color) = 0;
+        /// Where committed text edits go as undo steps (none: not recorded).
+        virtual void SetUndoHistory(class UndoHistory* history) = 0;
 
         /// Get the original text string from a registered TextID
         virtual std::string_view GetText(TextID textId) const = 0;
@@ -480,8 +391,9 @@ namespace interstice
         /// Handle mouse scroll events for text editors
         virtual void OnMouseScroll(ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) = 0;
 
-        /// Sets which text editor is currently active for input. Pass ID::Invalid to disable.
-        virtual void SetActiveTextEditor(ID elementId) = 0;
+        /// The focused text field changed (GUIStateManager::TextEditorFocus): commit `from`
+        /// (ID::Invalid if none) and move the editor to `to` (ID::Invalid: no editor).
+        virtual void SwitchTextEditor(ID from, ID to) = 0;
 
         /// Check if a text editor accepts Tab key for character insertion (vs navigation)
         virtual bool DoesTextEditorAcceptTabs(ID elementId) const = 0;

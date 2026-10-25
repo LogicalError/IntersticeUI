@@ -31,6 +31,8 @@ namespace interstice
 
     public:
         ID GetFocusedID()     const { return m_focusedID;     }
+        // As of the last Commit, when the text system switched its editor to it: the field
+        // the editor holds.
         ID GetPrevFocusedID() const { return m_prevFocusedID; }
 
         void Set(ID id) { m_focusedID = id; }

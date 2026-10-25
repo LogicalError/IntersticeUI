@@ -65,7 +65,10 @@ namespace GUITest
             lastBoxStyle = style;
             boxes.push_back(rect);
         }
-        void RenderLine(interstice::int2, interstice::int2, interstice::int2, interstice::int2, interstice::IntRect, const interstice::LineStyle&) override {}
+        void RenderLine(interstice::int2 p0, interstice::int2, interstice::int2, interstice::int2, interstice::IntRect, const interstice::LineStyle&) override
+        {
+            lineStarts.push_back(p0);
+        }
         void RenderDot(interstice::float2, interstice::IntRect, float, interstice::color4f) override {}
         void RenderTriangle(interstice::float2, interstice::float2, interstice::float2, interstice::IntRect,
                             interstice::VisualColorStyleIndex, interstice::ImageIndex) override {}
@@ -87,6 +90,7 @@ namespace GUITest
         float lastGlyphScale = 0.0f; // atlas-to-layout scale of the last glyph (1 / raster scale)
         uint32_t lastBoxStyle = 0;   // style slot of the last box drawn (a selection's), state included
         std::vector<interstice::IntRect> boxes;   // boxes drawn since last cleared
+        std::vector<interstice::int2> lineStarts; // first point of each line (carets) since last cleared
     };
 
     // Only carries the stub renderer; the text system reads nothing else from it.

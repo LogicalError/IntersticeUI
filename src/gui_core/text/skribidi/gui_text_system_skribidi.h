@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/input/gui_platform_input_handler.h>
+#include <gui_core/input/gui_undo_history.h>
 #include <gui_core/text/gui_text_system.h>
 #include <gui_core/gui_hash.h>
 
@@ -18,6 +19,7 @@ namespace interstice
     // Implementation detail, private to the skribidi backend.
     class SkribidiContext;
     struct RegisteredText;
+    struct EditSelection;
 
     /// Skribidi-based implementation of ITextSystem.
     class SkribidiTextSystem : public ITextSystem
@@ -46,7 +48,10 @@ namespace interstice
         void OnMouseScroll(ID windowId, int2 screenPos, float2 scrollOffset, KeyModifier modifiers) override;
         void OnTextComposition(ID windowId, std::string_view text, int32_t cursor) override;
 
-        void SetActiveTextEditor(ID elementId) override;
+        void SwitchTextEditor(ID from, ID to) override;
+        void SetUndoHistory(UndoHistory* history) override { m_undoHistory = history; }
+        // The field the editor holds: the text focus as of the last switch.
+        ID ActiveElementID() const;
         bool DoesTextEditorAcceptTabs(ID elementId) const override;
         bool IsTextEditor(ID elementId) const override;
         void RequestSelectAll(ID elementId) override;
@@ -78,8 +83,9 @@ namespace interstice
         // -------------------- Editor Registration --------------------
 
 
-        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) override;
-        TextID RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) override;
+        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified,
+                                    const ITextValidator* validator = nullptr) override;
+        std::string* ValueEditText(ID elementId, bool& started) override;
         void   SetTextColor(TextID textId, VisualColorStyleIndex color) override;
         void   SetCaretColor(VisualColorStyleIndex color) override;
 
@@ -150,6 +156,7 @@ namespace interstice
 
         bool TryGetCaretPositionInternal(ID windowId, interstice::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition);
         void DropDraggedText(ID windowId, interstice::int2 screenPos, ID targetTextEditorId);
+        void SelectFromDropPoint(skb_editor_t* editor, skb_text_position_t dropPoint);
         void EndTextDragging();
 
         void RenderText(RegisteredText* entry, IntRect rect, IntRect innerRectScreen, IntRect clipRect, float pixelScale);
@@ -164,7 +171,8 @@ namespace interstice
         bool IsActiveEditorPosOnLink(float localX, float localY) const;
         bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
         ID FindTextEditorAtScreenPoint(ID windowId, interstice::int2 screenSpace) const;
-        bool IsNumericTextEditor(ID elementId) const;
+        // The validator a text editor registered with (null: any text).
+        const ITextValidator* TextEditorValidator(ID elementId) const;
         bool CanDropDraggedTextInto(ID targetTextEditorId) const;
         void* UpdateLayoutWhenNecessary(RegisteredText* entry, float width) const;
         void* UpdateEditorWhenNecessary(RegisteredText* entry, float width) const;
@@ -179,28 +187,26 @@ namespace interstice
         std::unordered_set<uint64_t> m_textEditorElements; // element IDs that are text editors
         std::unordered_set<uint64_t> m_readOnlyEditorElements; // Subset of the above flagged TextEditBehavior::ReadOnly
 
-        std::unordered_map<uint64_t, NumericType> m_textEditorNumericModes;
+        std::unordered_map<uint64_t, const ITextValidator*> m_textEditorValidators;
 
         ID m_textDragSourceId = ID::Invalid();
+        UndoHistory* m_undoHistory = nullptr;
+        // Text an undo / redo (or a drop) sets on a field, by element: given to its bound
+        // value the next time it registers.
+        std::unordered_map<uint64_t, std::string> m_externalText;
+        void PushTextEdit(ID elementId, const std::string& before, const std::string& after);
+        // An undo / redo gives the focus back to the field it changed (without selecting all),
+        // with the selection it had then.
+        void FocusChangedField(ID elementId, EditSelection selection);
+        // Called before input that may change the text (see edit_selection_before).
+        void NoteSelectionBeforeEdit();
         std::string m_textDragPayload;
         ID m_skipNextSelectAllId = ID::Invalid();
         bool m_textDragArmed = false;
         int2 m_textDragStartScreenPos = int2 { 0, 0 };
-        ID m_numericEditElementId = ID::Invalid();
-        NumericType m_numericEditMode = NumericType::None;
-        std::string m_numericEditText;
-        std::string m_numericParsedTextCache; 
-        NumericValue m_numericParsedValueCache{};
-        bool m_numericHasParsedCache = false;
-
-        struct NumericDisplayCacheEntry
-        {
-            NumericType  type = NumericType::None;
-            NumericValue value{};
-            std::string  text;
-            bool         isInitialized = false;
-        };
-        std::unordered_map<uint64_t, NumericDisplayCacheEntry> m_numericDisplayCache;
+        // ValueEditText: the focused value field and the text it edits.
+        ID          m_valueEditElementId = ID::Invalid();
+        std::string m_valueEditText;
 
         ID m_pendingCursorVisibleEditorId = ID::Invalid();
 

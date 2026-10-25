@@ -140,6 +140,18 @@ namespace interstice
             m_skribidiContext->pending_select_all_id = TextID::Invalid;
         }
 
+        if (m_skribidiContext->pending_selection_element == entry->elementId)
+        {
+            const int32_t count = int32_t(skb_editor_get_text_utf32_count(m_skribidiContext->editor));
+            const skb_text_range_t range =
+            {
+                .start = { .offset = std::clamp(m_skribidiContext->pending_selection.anchor, 0, count), .affinity = SKB_AFFINITY_TRAILING },
+                .end   = { .offset = std::clamp(m_skribidiContext->pending_selection.caret,  0, count), .affinity = SKB_AFFINITY_TRAILING },
+            };
+            skb_editor_select(m_skribidiContext->editor, range);
+            m_skribidiContext->pending_selection_element = ID::Invalid();
+        }
+
         return m_skribidiContext->editor;
     }
 
@@ -388,19 +400,16 @@ namespace interstice
                 LineStyle{ .colorStyleIndex = ctx->caretColorStyleIndex, .lineWidth = ctx->Px(2.0f) });
         } else
         {
-            // While text is selected, show the nearest insertion caret only during active text drag.
+            // While text is dragged, the insertion caret shows here only while this editor is
+            // where it would drop (the mouse over it, off the dragged selection).
+            const int2 screenMousePos = ctx->frameMousePos;
+            const ID activeWindowId = ctx->guiStateManager ? ctx->guiStateManager->Interaction().GetActiveWindowID() : ID::Invalid();
+            ID dropTarget = ID::Invalid();
             if (ctx->drag_text &&
-                m_textDragSourceId != ID::Invalid() &&
-                CanDropDraggedTextInto(m_skribidiContext->active_element_id) &&
-                (ctx->frameMouseButtons & MouseButtons::Left) != MouseButtons::None)
+                (ctx->frameMouseButtons & MouseButtons::Left) != MouseButtons::None &&
+                TryGetTextDragHoverTarget(activeWindowId, screenMousePos, dropTarget) &&
+                dropTarget == ActiveElementID())
             {
-                const int2 screenMousePos = ctx->frameMousePos;
-                ID activeWindowId = ID::Invalid();
-                if (ctx->guiStateManager)
-                {
-                    activeWindowId = ctx->guiStateManager->Interaction().GetActiveWindowID();
-                }
-
                 interstice::float2 localMouse{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
                 if (TryGetActiveTextEditorLocalPoint(activeWindowId, screenMousePos, localMouse))
                 {
@@ -427,18 +436,38 @@ namespace interstice
 
     // -------------------- Editor Input Handling --------------------
 
-    void SkribidiTextSystem::SetActiveTextEditor(ID elementId)
+    ID SkribidiTextSystem::ActiveElementID() const
+    {
+        return (m_skribidiContext && m_skribidiContext->guiStateManager)
+            ? m_skribidiContext->guiStateManager->TextEditorFocus().GetPrevFocusedID() : ID::Invalid();
+    }
+
+    void SkribidiTextSystem::NoteSelectionBeforeEdit()
+    {
+        SkribidiContext* ctx = m_skribidiContext;
+        if (!ctx || !ctx->editor || ctx->active_text_id != ctx->editing_text_id)
+            return;
+        // Only while the editor holds the committed text: then the next change is the first
+        // of an edit, and this is the selection its undo gives back.
+        const RegisteredText* entry = ctx->GetRegisteredText(ctx->editing_text_id);
+        if (entry == nullptr || EditorText(ctx->editor) != entry->text)
+            return;
+        ctx->edit_selection_element = ActiveElementID();
+        ctx->edit_selection_before  = EditorSelection(ctx->editor);
+    }
+
+    void SkribidiTextSystem::SwitchTextEditor(ID from, ID elementId)
     {
         if (!m_skribidiContext)
             return;
 
-        const bool activeElementChanged =
-            m_skribidiContext->active_element_id != elementId;
+        const bool activeElementChanged = from != elementId;
+        if (activeElementChanged && m_undoHistory)
+            m_undoHistory->EndMerge();   // the next edit is a step of its own
 
-        if (m_skribidiContext->active_element_id != ID::Invalid() &&
-            activeElementChanged)
+        if (from != ID::Invalid() && activeElementChanged)
         {
-            uint64_t key = Hash::Calculate(m_skribidiContext->active_element_id);
+            uint64_t key = Hash::Calculate(from);
             auto it = m_elementIdToTextIdMap.find(key);
             if (it != m_elementIdToTextIdMap.end())
             {
@@ -452,21 +481,19 @@ namespace interstice
                 {
                     UpdateText(it->second, m_skribidiContext->pending_text);
                     m_skribidiContext->pending_text_prev_id = it->second;
+                    // The editor goes below: keep its selection for the edit's redo.
+                    if (m_skribidiContext->editor && m_skribidiContext->edit_selection_element == from)
+                        m_skribidiContext->edit_selection_after = EditorSelection(m_skribidiContext->editor);
                 }
             }
         }
 
-        if (elementId != m_numericEditElementId)
+        // A value field's edit text is kept only while it has the focus.
+        if (elementId != m_valueEditElementId)
         {
-            m_numericEditElementId = ID::Invalid();
-            m_numericEditMode = NumericType::None;
-            m_numericEditText.clear();
-            m_numericParsedTextCache.clear();
-            m_numericParsedValueCache = {};
-            m_numericHasParsedCache = false;
+            m_valueEditElementId = ID::Invalid();
+            m_valueEditText.clear();
         }
-
-        m_skribidiContext->active_element_id = elementId;
 
         // The shared editor still holds the previous field's content until the next render
         // recreates it; destroy it now so neither RenderEditor nor ConsumeTextEditUpdate
@@ -498,8 +525,8 @@ namespace interstice
         }
 
         m_skribidiContext->active_text_id = textId;
-        // Numeric mode applies only to the focused numeric editor.
-        m_skribidiContext->active_numeric_mode = (elementId != m_numericEditElementId) ? NumericType::None : m_numericEditMode;
+        // The field's validator, until it registers again (RegisterEditableText).
+        m_skribidiContext->active_validator = TextEditorValidator(elementId);
 
         if (textId == TextID::Invalid)
         {
@@ -530,13 +557,13 @@ namespace interstice
         return m_textEditorElements.find(Hash::Calculate(elementId)) != m_textEditorElements.end();
     }
 
-    bool SkribidiTextSystem::IsNumericTextEditor(ID elementId) const
+    const ITextValidator* SkribidiTextSystem::TextEditorValidator(ID elementId) const
     {
         if (elementId == ID::Invalid())
-            return false;
+            return nullptr;
 
-        const auto it = m_textEditorNumericModes.find(Hash::Calculate(elementId));
-        return it != m_textEditorNumericModes.end() && it->second != NumericType::None;
+        const auto it = m_textEditorValidators.find(Hash::Calculate(elementId));
+        return it != m_textEditorValidators.end() ? it->second : nullptr;
     }
 
     bool SkribidiTextSystem::CanDropDraggedTextInto(ID targetTextEditorId) const
@@ -549,9 +576,8 @@ namespace interstice
         if (m_textDragSourceId == ID::Invalid())
             return true;
 
-        const bool sourceIsNumeric = IsNumericTextEditor(m_textDragSourceId);
-        const bool targetIsNumeric = IsNumericTextEditor(targetTextEditorId);
-        if (!sourceIsNumeric && targetIsNumeric)
+        // A field that takes only some text (a number) takes drops from such fields only.
+        if (TextEditorValidator(targetTextEditorId) != nullptr && TextEditorValidator(m_textDragSourceId) == nullptr)
             return false;
 
         return true;
@@ -682,10 +708,11 @@ namespace interstice
         std::string cutText = Copy();
         if (cutText.empty())
             return cutText;
+        NoteSelectionBeforeEdit();
 
         skb_editor_insert_text_utf8(m_skribidiContext->editor, m_skribidiContext->temp_alloc, SKB_CURRENT_SELECTION, nullptr, 0);
         m_skribidiContext->allow_char = false;
-        EnsureCursorVisible(m_skribidiContext->active_element_id);
+        EnsureCursorVisible(ActiveElementID());
         return cutText;
     }
 
@@ -699,14 +726,13 @@ namespace interstice
             return;
         if (text.empty())
             return;
+        NoteSelectionBeforeEdit();
 
-        const NumericType numericMode = m_skribidiContext->active_numeric_mode;
-        const bool isNumericField = (numericMode != NumericType::None);
-
-        if (isNumericField)
+        if (const ITextValidator* validator = m_skribidiContext->active_validator)
         {
             std::string filteredText(text);
-            if (!filter_numeric_paste(numericMode, filteredText))
+            validator->Filter(filteredText);
+            if (filteredText.empty())
                 return;
 
             skb_editor_insert_text_utf8(m_skribidiContext->editor, m_skribidiContext->temp_alloc, SKB_CURRENT_SELECTION, filteredText.c_str(), static_cast<int32_t>(filteredText.size()));
@@ -726,7 +752,7 @@ namespace interstice
         }
 
         m_skribidiContext->allow_char = false;
-        EnsureCursorVisible(m_skribidiContext->active_element_id);
+        EnsureCursorVisible(ActiveElementID());
     }
 
     void SkribidiTextSystem::ClearCache()
@@ -757,14 +783,10 @@ namespace interstice
         m_skribidiContext->RegisterCaretColor();
         m_elementIdToTextIdMap.clear();
         m_textKeyToIdMap.clear();
-        m_textEditorNumericModes.clear();
-        m_numericEditElementId = ID::Invalid();
-        m_numericEditMode = NumericType::None;
-        m_numericEditText.clear();
-        m_numericParsedTextCache.clear();
-        m_numericParsedValueCache = {};
-        m_numericHasParsedCache = false;
-        m_numericDisplayCache.clear();
+        m_textEditorValidators.clear();
+        m_skribidiContext->active_validator = nullptr;
+        m_valueEditElementId = ID::Invalid();
+        m_valueEditText.clear();
         m_skribidiContext->pending_text_id = TextID::Invalid;
         m_skribidiContext->pending_text_dirty = false;
         m_skribidiContext->pending_text_committed = false;

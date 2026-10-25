@@ -304,8 +304,8 @@ namespace interstice
         demo.cmdSaveAs = cmds.RegisterCommand(interstice::EditMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
         demo.cmdExit   = cmds.RegisterCommand(interstice::EditMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ false); }, "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { UndoNodeEdit(/*redo*/ true); },  "Redo");
+        demo.cmdUndo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
+        demo.cmdRedo   = cmds.RegisterCommand(interstice::EditMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
         demo.cmdCut    = cmds.RegisterCommand(interstice::EditMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
         demo.cmdCopy   = cmds.RegisterCommand(interstice::EditMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
         demo.cmdPaste  = cmds.RegisterCommand(interstice::EditMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
@@ -479,11 +479,14 @@ namespace interstice
                          == v.nodes[i.nodeIdx].properties[i.propIdx].socketColor;
                 };
 
-            // The host keeps the undo history; the view reports each edit once it is made.
+            // The view reports each edit once it is made; it goes on the app's undo history,
+            // with the text edits.
             demo.nodeView.onEdit = [this](const NodeViewEdit& edit)
             {
-                demo.nodeUndo.push_back(edit);
-                demo.nodeRedo.clear();
+                commandManager.History().Push({ .description = "Edit node graph",
+                    .undo = [this, edit] { ApplyNodeViewEdit(demo.nodeView, edit, /*undo*/ true); },
+                    .redo = [this, edit] { ApplyNodeViewEdit(demo.nodeView, edit, /*undo*/ false); } });
+                commandManager.History().EndMerge();
             };
 
             // One initial connection: Source.Name (0,0) output -> Mix.Strength (1,0) input
@@ -1016,13 +1019,14 @@ namespace interstice
         if (BeginMenu(idManager.AllocateDynamicID("menuEdit"), "Edit",
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
-            // Node-view edits; disabled with nothing to undo or redo.
-            if (demo.nodeUndo.empty()) BeginDisabled();
+            // The app's undo history; disabled with nothing to undo or redo.
+            const auto& history = commandManager.History();
+            if (!history.CanUndo()) BeginDisabled();
             MenuItem(demo.cmdUndo);
-            if (demo.nodeUndo.empty()) EndDisabled();
-            if (demo.nodeRedo.empty()) BeginDisabled();
+            if (!history.CanUndo()) EndDisabled();
+            if (!history.CanRedo()) BeginDisabled();
             MenuItem(demo.cmdRedo);
-            if (demo.nodeRedo.empty()) EndDisabled();
+            if (!history.CanRedo()) EndDisabled();
             MenuSeparator();
             MenuItem(demo.cmdCut);
             MenuItem(demo.cmdCopy);
@@ -1096,10 +1100,10 @@ namespace interstice
     }
 
     // Undo (or redo) the node view's last edit, moving it to the other stack.
-    // Quitting loses the node edits: ask first when there are any.
+    // Quitting loses the edits on the undo history: ask first when there are any.
     void Application::RequestExit()
     {
-        if (demo.nodeUndo.empty()) applicationQuit = true;
+        if (!commandManager.History().CanUndo()) applicationQuit = true;
         else                       demo.exitRequested = true;
     }
 
@@ -1110,25 +1114,14 @@ namespace interstice
             { .label = "Cancel" },
             { .label = "Quit", .kind = MessageButtonKind::Danger },
         };
-        const std::string message = std::format("The node graph has {} unsaved edit{}. Quitting discards {}.",
-                                                demo.nodeUndo.size(), demo.nodeUndo.size() == 1 ? "" : "s",
-                                                demo.nodeUndo.size() == 1 ? "it" : "them");
+        const size_t edits = commandManager.History().UndoCount();
+        const std::string message = std::format("There {} {} unsaved edit{}. Quitting discards {}.",
+                                                edits == 1 ? "is" : "are", edits, edits == 1 ? "" : "s", edits == 1 ? "it" : "them");
         const int choice = MessageDialog(demo.exitDialogID, MessageDialogDesc{
             .icon = MessageIcon::Quit, .title = "Quit Test?", .message = message, .buttons = kButtons,
             .defaultButton = 0, .cancelButton = 0 });   // Cancel: quitting destroys work
         if (choice == 1) applicationQuit = true;
         if (choice >= 0) demo.exitRequested = false;
-    }
-
-    void Application::UndoNodeEdit(bool redo)
-    {
-        auto& from = redo ? demo.nodeRedo : demo.nodeUndo;
-        auto& to   = redo ? demo.nodeUndo : demo.nodeRedo;
-        if (from.empty())
-            return;
-        ApplyNodeViewEdit(demo.nodeView, from.back(), /*undo*/ !redo);
-        to.push_back(std::move(from.back()));
-        from.pop_back();
     }
 
     // Status bar: state on the left, frame time on the right.

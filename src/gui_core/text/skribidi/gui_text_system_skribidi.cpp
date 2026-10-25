@@ -74,14 +74,9 @@ namespace interstice
 		m_textKeyToIdMap.clear();
 		m_textEditorElements.clear();
 		m_readOnlyEditorElements.clear();
-		m_textEditorNumericModes.clear();
-		m_numericEditElementId = ID::Invalid();
-		m_numericEditMode = NumericType::None;
-		m_numericEditText.clear();
-		m_numericParsedTextCache.clear();
-		m_numericParsedValueCache = {};
-		m_numericHasParsedCache = false;
-		m_numericDisplayCache.clear();
+		m_textEditorValidators.clear();
+		m_valueEditElementId = ID::Invalid();
+		m_valueEditText.clear();
 	}
 
 	void SkribidiTextSystem::UpdateGlyphs()
@@ -111,7 +106,7 @@ namespace interstice
 	{
 		m_textEditorElements.clear();
 		m_readOnlyEditorElements.clear();
-		m_textEditorNumericModes.clear();
+		m_textEditorValidators.clear();
 
 		if (m_skribidiContext != nullptr)
 		{

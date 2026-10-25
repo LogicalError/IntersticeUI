@@ -116,6 +116,10 @@ list(APPEND GUI_FILES
   
   # Text
   gui_core/text/gui_numeric_field_config.h
+  gui_core/text/gui_numeric_type.h
+  gui_core/text/gui_numeric_text.h
+  gui_core/text/gui_numeric_text.cpp
+  gui_core/text/gui_text_converter.h
   gui_core/text/gui_icon_text_placement.h
   gui_core/text/gui_text_atlas_manager.h
   gui_core/text/gui_text_system.h

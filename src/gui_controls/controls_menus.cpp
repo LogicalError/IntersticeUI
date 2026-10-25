@@ -665,14 +665,12 @@ namespace interstice
         menuManager.currentDepth--;
         if (menuManager.requestCloseAll)
         {
-            level.isOpen = false;
-
-            // If we've returned to outside all menus and closeAll was requested, finalize.
-            // CloseAll is the single point of responsibility for restoring focus.
+            // Back outside all menus: finalize. CloseAll is the single point of responsibility
+            // for restoring focus, and does nothing once the menu is marked closed.
             if (menuManager.currentDepth == -1)
-            {
                 menuManager.CloseAll(guiStateManager);
-            }
+            else
+                level.isOpen = false;
         }
 
         if (menuManager.currentDepth <= -1)

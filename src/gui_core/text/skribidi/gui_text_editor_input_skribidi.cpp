@@ -64,9 +64,9 @@ namespace interstice
         // block every mutation: typed characters, backspace/delete, enter, paste, cut and undo.
         const bool readOnly = m_skribidiContext->active_read_only;
 
-        const NumericType numericMode = m_skribidiContext->active_numeric_mode;
-        const bool isNumericField = (numericMode != NumericType::None);
-        const bool isFloatField = (numericMode == NumericType::TypeFloat);
+        const ITextValidator* validator = m_skribidiContext->active_validator;
+        if (!readOnly && action != KeyAction::KeyUp)
+            NoteSelectionBeforeEdit();
 
         if (action == KeyAction::KeyChar)
         {
@@ -85,24 +85,11 @@ namespace interstice
                     return;
             }
 
-            if (isNumericField)
-            {
-                if (codepoint > 127)
-                    return;
-
-                const char c = static_cast<char>(codepoint);
-                bool isAllowedChar = (c >= '0' && c <= '9') || (c == '+') || (c == '-');
-                if (isFloatField)
-                {
-                    isAllowedChar = isAllowedChar || (c == '.') || (c == 'e') || (c == 'E');
-                }
-
-                if (!isAllowedChar)
-                    return;
-            }
+            if (validator && !validator->AcceptsCharacter(codepoint))
+                return;
 
             skb_editor_insert_codepoint(m_skribidiContext->editor, m_skribidiContext->temp_alloc, SKB_CURRENT_SELECTION, codepoint);
-            EnsureCursorVisible(m_skribidiContext->active_element_id);
+            EnsureCursorVisible(ActiveElementID());
         } else
         {
             // Only process key down events
@@ -206,23 +193,31 @@ namespace interstice
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
                         skb_editor_select_all(m_skribidiContext->editor);
-                        EnsureCursorVisible(m_skribidiContext->active_element_id);
+                        EnsureCursorVisible(ActiveElementID());
                     }
                     return;
                 case interstice::KeyCode::KeyZ:
+                case interstice::KeyCode::KeyY:
                     if (readOnly) return;
                     if (skb_modifiers & SKB_MOD_CONTROL)
                     {
-                        if (skb_modifiers & SKB_MOD_SHIFT)
+                        // The field's own typing first; past that, the app's history (e.g. a
+                        // text move between fields).
+                        const bool redo = key == interstice::KeyCode::KeyY || (skb_modifiers & SKB_MOD_SHIFT);
+                        if (redo)
                         {
                             if (skb_editor_can_redo(m_skribidiContext->editor))
                                 skb_editor_redo(m_skribidiContext->editor, m_skribidiContext->temp_alloc);
+                            else if (m_undoHistory)
+                                m_undoHistory->Redo();
                         } else
                         {
                             if (skb_editor_can_undo(m_skribidiContext->editor))
                                 skb_editor_undo(m_skribidiContext->editor, m_skribidiContext->temp_alloc);
+                            else if (m_undoHistory)
+                                m_undoHistory->Undo();
                         }
-                        EnsureCursorVisible(m_skribidiContext->active_element_id);
+                        EnsureCursorVisible(ActiveElementID());
                     }
                     return;
                 default:
@@ -237,7 +232,7 @@ namespace interstice
                 if (readOnly && mutatingKey)
                     return;
                 skb_editor_process_key_pressed(m_skribidiContext->editor, m_skribidiContext->temp_alloc, skb_key, skb_modifiers);
-                EnsureCursorVisible(m_skribidiContext->active_element_id);
+                EnsureCursorVisible(ActiveElementID());
             }
         }
     }
@@ -274,8 +269,8 @@ namespace interstice
         }
 
         skb_editor_process_mouse_drag(m_skribidiContext->editor, localPos.x, localPos.y);
-        if (m_skribidiContext->active_element_id != ID::Invalid())
-            EnsureCursorVisible(m_skribidiContext->active_element_id);
+        if (ActiveElementID() != ID::Invalid())
+            EnsureCursorVisible(ActiveElementID());
     }
 
     bool SkribidiTextSystem::IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const
@@ -284,7 +279,7 @@ namespace interstice
             return false;
         if (textEditorId == ID::Invalid())
             return false;
-        if (textEditorId != m_skribidiContext->active_element_id)
+        if (textEditorId != ActiveElementID())
             return false;
         if (m_skribidiContext->active_text_id != m_skribidiContext->editing_text_id)
             return false;
@@ -342,10 +337,10 @@ namespace interstice
     {
         if (!m_skribidiContext)
             return false;
-        if (m_skribidiContext->active_element_id == ID::Invalid())
+        if (ActiveElementID() == ID::Invalid())
             return false;
 
-        return TryGetTextEditorLocalPoint(m_skribidiContext->active_element_id, windowId, screenSpace, outLocal);
+        return TryGetTextEditorLocalPoint(ActiveElementID(), windowId, screenSpace, outLocal);
     }
 
     bool SkribidiTextSystem::IsActiveEditorPosOnLink(float localX, float localY) const
@@ -446,25 +441,44 @@ namespace interstice
         return true;
     }
 
+    // The dropped text ends up selected: from the drop point to where the paste left the caret.
+    void SkribidiTextSystem::SelectFromDropPoint(skb_editor_t* editor, skb_text_position_t dropPoint)
+    {
+        const skb_text_range_t afterPaste = skb_editor_get_current_selection(editor);
+        skb_editor_select(editor, skb_text_range_t { .start = dropPoint, .end = afterPaste.end });
+    }
+
     void SkribidiTextSystem::DropDraggedText(ID windowId, interstice::int2 screenPos, ID targetTextEditorId)
     {
         std::string movedText;
         bool droppedOnOwnTextbox = (targetTextEditorId == m_textDragSourceId);
         if (!droppedOnOwnTextbox)
         {
-            const skb_text_range_t selection = skb_editor_get_current_selection(m_skribidiContext->editor);
+            // One undo step covers both fields: their text before and after the move.
+            const ID sourceId = m_textDragSourceId;
+            const std::string sourceBefore = m_skribidiContext->editor ? EditorText(m_skribidiContext->editor) : std::string{};
+            const EditSelection sourceSelection = m_skribidiContext->editor ? EditorSelection(m_skribidiContext->editor) : EditSelection{};
             movedText = Cut();
             if (movedText.empty())
             {
                 movedText = m_textDragPayload;
             }
+            const std::string sourceAfter = m_skribidiContext->editor ? EditorText(m_skribidiContext->editor) : sourceBefore;
+            // The cut is the source's text now: leaving it isn't an edit of its own.
+            if (const TextID sourceText = GetTextID(sourceId); sourceText != TextID::Invalid)
+                UpdateText(sourceText, sourceAfter);
+            m_externalText[Hash::Calculate(sourceId)] = sourceAfter;
 
-            SetActiveTextEditor(targetTextEditorId);
+            // The target takes the focus now, to paste into; switched here, so the input
+            // manager sees no further change.
             if (m_skribidiContext->guiStateManager)
             {
                 m_skribidiContext->guiStateManager->Interaction().SetFocusID(targetTextEditorId);
                 m_skribidiContext->guiStateManager->TextEditorFocus().Set(targetTextEditorId);
             }
+            SwitchTextEditor(m_textDragSourceId, targetTextEditorId);
+            if (m_skribidiContext->guiStateManager)
+                m_skribidiContext->guiStateManager->TextEditorFocus().Commit();
 
             skb_text_position_t dropCaretPos {};
             skb_editor_t* targetEditor;
@@ -474,13 +488,43 @@ namespace interstice
                 skb_editor_select(targetEditor, skb_text_range_t { .start = dropCaretPos, .end = dropCaretPos });
             }
 
+            const TextID targetText = GetTextID(targetTextEditorId);
+            const RegisteredText* targetEntry = m_skribidiContext->GetRegisteredText(targetText);
+            const std::string targetBefore = targetEntry ? targetEntry->text : std::string{};
             if (!movedText.empty())
             {
                 m_skipNextSelectAllId = targetTextEditorId;
                 Paste(movedText);
                 if (hasDropCaretPos)
+                    SelectFromDropPoint(targetEditor, dropCaretPos);
+            }
+
+            if (hasDropCaretPos)
+            {
+                // The paste is the target's text now, without a step in its own history (Ctrl+Z
+                // there undoes the whole move).
+                const std::string targetAfter = EditorText(targetEditor);
+                const skb_text_range_t caret = skb_editor_get_current_selection(targetEditor);
+                skb_editor_set_text_utf8(targetEditor, m_skribidiContext->temp_alloc, targetAfter.data(), int32_t(targetAfter.size()));
+                skb_editor_select(targetEditor, caret);
+                if (targetText != TextID::Invalid)
+                    UpdateText(targetText, targetAfter);
+                const uint64_t sourceKey = Hash::Calculate(sourceId), targetKey = Hash::Calculate(targetTextEditorId);
+                m_externalText[targetKey] = targetAfter;
+                if (m_undoHistory && (sourceBefore != sourceAfter || targetBefore != targetAfter))
                 {
-                    skb_editor_select(targetEditor, skb_text_range_t { .start = dropCaretPos, .end = dropCaretPos });
+                    // Undo gives the focus back to the source with the dragged text selected, as
+                    // the drag began; redo to the target with the caret where the drop left it.
+                    const EditSelection targetSelection = EditorSelection(targetEditor);
+                    m_undoHistory->EndMerge();
+                    m_undoHistory->Push({ .description = "Move text",
+                        .undo = [this, sourceKey, targetKey, sourceId, sourceBefore, targetBefore, sourceSelection]
+                            { m_externalText[sourceKey] = sourceBefore; m_externalText[targetKey] = targetBefore;
+                              FocusChangedField(sourceId, sourceSelection); },
+                        .redo = [this, sourceKey, targetKey, targetId = targetTextEditorId, sourceAfter, targetAfter, targetSelection]
+                            { m_externalText[sourceKey] = sourceAfter;  m_externalText[targetKey] = targetAfter;
+                              FocusChangedField(targetId, targetSelection); } });
+                    m_undoHistory->EndMerge();
                 }
             }
         } else
@@ -508,7 +552,7 @@ namespace interstice
             {
                 m_skipNextSelectAllId = targetTextEditorId;
                 Paste(movedText);
-                skb_editor_select(targetEditor, skb_text_range_t { .start = dropCaretPos, .end = dropCaretPos });
+                SelectFromDropPoint(targetEditor, dropCaretPos);
             }
         }
 
@@ -545,7 +589,7 @@ namespace interstice
                 {
                     const skb_text_position_t caretPos = skb_editor_hit_test(m_skribidiContext->editor, SKB_MOVEMENT_CARET, localPos.x, localPos.y);
                     skb_editor_select(m_skribidiContext->editor, skb_text_range_t { .start = caretPos, .end = caretPos });
-                    EnsureCursorVisible(m_skribidiContext->active_element_id);
+                    EnsureCursorVisible(ActiveElementID());
                 }
 
                 m_textDragSourceId = ID::Invalid();
@@ -590,9 +634,9 @@ namespace interstice
             // Read-only editors never drag their text - pressing (even on selected text) starts
             // a new selection, so click-drag always selects instead of moving text.
             if (!m_skribidiContext->active_read_only &&
-                IsHoveringSelectedText(m_skribidiContext->active_element_id, windowId, screenPos))
+                IsHoveringSelectedText(ActiveElementID(), windowId, screenPos))
             {
-                m_textDragSourceId = m_skribidiContext->active_element_id;
+                m_textDragSourceId = ActiveElementID();
                 m_textDragPayload = Copy();
                 m_textDragArmed = !m_textDragPayload.empty();
                 m_textDragStartScreenPos = screenPos;
@@ -622,7 +666,7 @@ namespace interstice
             m_skribidiContext->editor_drag_active = true;
             double time = m_skribidiContext->frameTimeMs / 1000.0;
             skb_editor_process_mouse_click(m_skribidiContext->editor, localPos.x, localPos.y, skb_modifiers, time);
-            EnsureCursorVisible(m_skribidiContext->active_element_id);
+            EnsureCursorVisible(ActiveElementID());
         }
     }
 
@@ -636,9 +680,10 @@ namespace interstice
             ClearComposition();
             return;
         }
-        // Numeric fields only take ASCII digits and signs; IMEs have nothing to compose there.
-        if (ctx->active_numeric_mode != NumericType::None)
+        // E.g. number fields take digits and signs only: nothing for an IME to compose.
+        if (ctx->active_validator && !ctx->active_validator->AcceptsComposition())
             return;
+        NoteSelectionBeforeEdit();
 
         std::vector<uint32_t> utf32(size_t(skb_utf8_to_utf32_count(text.data(), int32_t(text.size()))));
         skb_utf8_to_utf32(text.data(), int32_t(text.size()), utf32.data(), int32_t(utf32.size()));

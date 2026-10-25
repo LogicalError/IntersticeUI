@@ -12,6 +12,29 @@
 
 namespace interstice
 {
+    // An editor's whole text, as UTF-8.
+    inline std::string EditorText(const skb_editor_t* editor)
+    {
+        std::string text(size_t(std::max(0, skb_editor_get_text_utf8_count(editor))), '\0');
+        if (!text.empty())
+            text.resize(size_t(std::max(0, skb_editor_get_text_utf8(editor, text.data(), int32_t(text.size())))));
+        return text;
+    }
+
+    // A selection as codepoint offsets, anchor to caret (equal: just a caret).
+    struct EditSelection
+    {
+        int32_t anchor = 0;
+        int32_t caret  = 0;
+    };
+
+    inline EditSelection EditorSelection(const skb_editor_t* editor)
+    {
+        const skb_text_range_t range = skb_editor_get_current_selection(editor);
+        return { skb_editor_get_text_offset_from_text_position(editor, range.start),
+                 skb_editor_get_text_offset_from_text_position(editor, range.end) };
+    }
+
 	class GUIRenderer;
 	class StyleManager;
 	class IClipboard;
@@ -266,8 +289,15 @@ namespace interstice
 		float					editing_text_width = 0;
 		TextID                  editing_text_id = TextID::Invalid;
 		TextID                  active_text_id = TextID::Invalid;
-		ID                      active_element_id = ID::Invalid();
 		TextID                  pending_select_all_id = TextID::Invalid;
+		// An undo / redo's selection, for the field's editor once it has the text.
+		ID                      pending_selection_element = ID::Invalid();
+		EditSelection           pending_selection;
+		// The edited field's selection just before its first change since the last commit, and
+		// after its latest change: what an undo / redo of that edit gives back.
+		ID                      edit_selection_element = ID::Invalid();
+		EditSelection           edit_selection_before;
+		EditSelection           edit_selection_after;
 		TextID                  pending_text_prev_id = TextID::Invalid;
 		TextID                  pending_text_id = TextID::Invalid;
 		bool                    pending_text_dirty = false;
@@ -276,7 +306,7 @@ namespace interstice
 		std::string             pending_text;
 		skb_editor_t*			editor = nullptr;
 		bool					editor_drag_active = false;
-		NumericType				active_numeric_mode = NumericType::None;
+		const ITextValidator*	active_validator = nullptr;   // the focused field's (none: any text)
 		TextEditBehavior		text_edit_behavior = TextEditBehavior::None;
 		bool                    active_is_multiline = false;
 		bool                    active_continuous_update = false;
@@ -366,40 +396,6 @@ namespace interstice
 	// Selectable rich text: the editor's text (the runs' text; icons excluded) and
 	// each link run's range in editor text offsets.
 	std::string build_editor_text(std::span<const ContentRun> runs, std::vector<RegisteredText::LinkRange>& outLinks);
-
-	using FilterFunc = bool(std::string& text);
-	FilterFunc* get_text_filter_func(NumericType type);
-	// Strips what a numeric field can't accept; false when nothing is left to insert.
-	bool filter_numeric_paste(NumericType type, std::string& text);
-
-	std::string format_to_text(float value, bool clamp);
-	std::string format_to_text(double value, bool clamp);
-	std::string format_to_text(uint64_t value);
-	std::string format_to_text(uint32_t value);
-	std::string format_to_text(uint16_t value);
-	std::string format_to_text(uint8_t value);
-	std::string format_to_text(int64_t value);
-	std::string format_to_text(int32_t value);
-	std::string format_to_text(int16_t value);
-	std::string format_to_text(int8_t value);
-	std::string format_to_text(NumericType type, NumericValue& outValue);
-
-	std::string to_string(NumericType type, NumericValue& outValue);
-
-	bool try_parse_text(std::string_view text, float& outValue);
-	bool try_parse_text(std::string_view text, double& outValue);
-
-	bool try_parse_text(std::string_view text, uint64_t& outValue);
-	bool try_parse_text(std::string_view text, uint32_t& outValue);
-	bool try_parse_text(std::string_view text, uint16_t& outValue);
-	bool try_parse_text(std::string_view text, uint8_t& outValue);
-
-	bool try_parse_text(std::string_view text, int64_t& outValue);
-	bool try_parse_text(std::string_view text, int32_t& outValue);
-	bool try_parse_text(std::string_view text, int16_t& outValue);
-	bool try_parse_text(std::string_view text, int8_t& outValue);
-
-	bool try_parse_text(std::string_view text, NumericType type, NumericValue& outValue);
 
 	std::string get_editor_text_utf8(skb_editor_t* editor);
 	std::string get_rich_text_utf8(const skb_rich_text_t* rich_text);

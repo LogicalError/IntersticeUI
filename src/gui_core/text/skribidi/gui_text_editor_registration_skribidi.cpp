@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include <gui_core/style/gui_style_manager.h>
 
 #include <gui_core/state/gui_state_manager.h>
@@ -21,14 +19,15 @@
 
 namespace interstice
 {
-    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified)
+    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified,
+                                                    const ITextValidator* validator)
     {
         if (!m_skribidiContext)
             return TextID::Invalid;
 
         // Track this element as a text editor
         m_textEditorElements.insert(Hash::Calculate(elementId));
-        m_textEditorNumericModes[Hash::Calculate(elementId)] = NumericType::None;
+        m_textEditorValidators[Hash::Calculate(elementId)] = validator;
         if ((behavior & TextEditBehavior::ReadOnly) != TextEditBehavior::None)
             m_readOnlyEditorElements.insert(Hash::Calculate(elementId));
 
@@ -40,6 +39,7 @@ namespace interstice
             m_skribidiContext->active_continuous_update = (behavior & TextEditBehavior::ContinuousUpdate) != TextEditBehavior::None;
             m_skribidiContext->active_accepts_tabs = (behavior & TextEditBehavior::AcceptTabs) != TextEditBehavior::None;
             m_skribidiContext->active_read_only = (behavior & TextEditBehavior::ReadOnly) != TextEditBehavior::None;
+            m_skribidiContext->active_validator = validator;
         }
 
         m_skribidiContext->text_edit_behavior = behavior;
@@ -48,7 +48,7 @@ namespace interstice
         const TextID textId = RegisterText(elementId, IconID::Invalid, text, styleIndex, state);
         // The active editor follows its element's current text ID (it changes
         // when the text cache is cleared).
-        if (m_skribidiContext->active_element_id == elementId)
+        if (ActiveElementID() == elementId)
             m_skribidiContext->active_text_id = textId;
         return textId;
     }
@@ -61,7 +61,7 @@ namespace interstice
 
         // Track this element as a (non-numeric) text editor, so it gets an editor for selection.
         m_textEditorElements.insert(Hash::Calculate(elementId));
-        m_textEditorNumericModes[Hash::Calculate(elementId)] = NumericType::None;
+        m_textEditorValidators[Hash::Calculate(elementId)] = nullptr;
         if ((behavior & TextEditBehavior::ReadOnly) != TextEditBehavior::None)
             m_readOnlyEditorElements.insert(Hash::Calculate(elementId));
 
@@ -72,6 +72,7 @@ namespace interstice
             m_skribidiContext->active_continuous_update = (behavior & TextEditBehavior::ContinuousUpdate) != TextEditBehavior::None;
             m_skribidiContext->active_accepts_tabs = (behavior & TextEditBehavior::AcceptTabs) != TextEditBehavior::None;
             m_skribidiContext->active_read_only = (behavior & TextEditBehavior::ReadOnly) != TextEditBehavior::None;
+            m_skribidiContext->active_validator = nullptr;
         }
         m_skribidiContext->text_edit_behavior = behavior;
 
@@ -87,91 +88,19 @@ namespace interstice
         return textId;
     }
 
-    TextID SkribidiTextSystem::RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior,
-                                                      StyleRef styleIndex, ElementState state, bool& wasModified)
+    std::string* SkribidiTextSystem::ValueEditText(ID elementId, bool& started)
     {
-        if (type == NumericType::None)
+        started = false;
+        if (!m_skribidiContext || !m_skribidiContext->guiStateManager || elementId == ID::Invalid() ||
+            m_skribidiContext->guiStateManager->TextEditorFocus().GetFocusedID() != elementId)
+            return nullptr;
+        if (m_valueEditElementId != elementId)
         {
-            assert(false && "RegisterEditable called with NumericType::None. This likely means the type deduction failed. Check that GetNumericType is implemented for this type.");
-            return TextID::Invalid;
+            m_valueEditElementId = elementId;
+            m_valueEditText.clear();
+            started = true;
         }
-
-        const bool focused = m_skribidiContext && m_skribidiContext->guiStateManager &&
-            (m_skribidiContext->guiStateManager->TextEditorFocus().GetFocusedID() == elementId);
-
-        if (!focused)
-        {
-            const uint64_t elementKey = Hash::Calculate(elementId);
-            auto& cachedDisplay = m_numericDisplayCache[elementKey];
-
-            if (!cachedDisplay.isInitialized || 
-                !EqualsNumericType(cachedDisplay.type, cachedDisplay.value, type, value))
-            {
-                cachedDisplay.type = type;
-                cachedDisplay.value = value;
-                cachedDisplay.text = format_to_text(type, value);
-                cachedDisplay.isInitialized = true;
-            }
-
-            std::string text = cachedDisplay.text;
-            TextID textId = RegisterEditableText(elementId, text, behavior, styleIndex, state, wasModified);
-            m_textEditorNumericModes[elementKey] = type;
-
-            // Text committed when focus left the field: parse it into the bound value.
-            if (wasModified)
-            {
-                NumericValue parsed;
-                wasModified = try_parse_text(text, type, parsed);
-                if (wasModified) value = parsed;
-            }
-            return textId;
-        }
-
-        if (m_numericEditElementId != elementId || m_numericEditMode != type)
-        {
-            m_numericEditElementId = elementId;
-            m_numericEditMode = type;
-
-            // Default NaN/Infinity to 0 for editing - "nan"/"inf" aren't usable as starting text.
-            bool isNonFinite = (type == NumericType::TypeFloat  && !std::isfinite(value.value_float))
-                           || (type == NumericType::TypeDouble && !std::isfinite(value.value_double));
-            if (isNonFinite)
-            {
-                if (type == NumericType::TypeFloat)  value.value_float  = 0.0f;
-                if (type == NumericType::TypeDouble) value.value_double = 0.0;
-            }
-
-            m_numericParsedValueCache = value;
-            m_numericEditText = format_to_text(type, value);
-            m_numericParsedTextCache = m_numericEditText;
-            m_numericHasParsedCache = true;
-        }
-
-        TextID textId = RegisterEditableText(elementId, m_numericEditText, behavior, styleIndex, state, wasModified);
-        m_textEditorNumericModes[Hash::Calculate(elementId)] = type;
-
-        if (m_numericHasParsedCache && 
-            m_numericParsedTextCache == m_numericEditText)
-        {
-            assert(type == m_numericEditMode);
-            if (type == m_numericEditMode) value = m_numericParsedValueCache;
-            return textId;
-        }
-
-        NumericValue temp;
-        if (try_parse_text(m_numericEditText, m_numericEditMode, temp))
-        {
-            assert(type == m_numericEditMode);
-            if (type == m_numericEditMode)
-            {
-                m_numericParsedTextCache = m_numericEditText;
-                m_numericParsedValueCache = temp;
-                m_numericHasParsedCache = true;
-                value = temp;
-            }
-        }
-
-        return textId;
+        return &m_valueEditText;
     }
 
     bool SkribidiTextSystem::ApplyTextEditUpdate(ID elementId, std::string& currentText, bool& wasModified)
@@ -184,13 +113,39 @@ namespace interstice
         if (it == m_elementIdToTextIdMap.end())
             return false;
 
-        // Text committed when focus left this editor (SetActiveTextEditor captured it).
+        // Text an undo, redo or drop set: it replaces the field's text and any edit in progress.
+        if (auto external = m_externalText.find(key); external != m_externalText.end())
+        {
+            std::string text = std::move(external->second);
+            m_externalText.erase(external);
+            std::string discarded;
+            (void)ConsumeTextEditUpdate(it->second, discarded);
+            if (m_skribidiContext->pending_text_prev_id == it->second)
+                m_skribidiContext->pending_text_prev_id = TextID::Invalid;
+            UpdateText(it->second, text);
+            m_skribidiContext->ResetLayout(it->second);
+            // A focused field's editor still shows the old text: let it be made anew.
+            if (m_skribidiContext->editor != nullptr && m_skribidiContext->editing_text_id == it->second
+                && EditorText(m_skribidiContext->editor) != text)
+            {
+                skb_editor_destroy(m_skribidiContext->editor);
+                m_skribidiContext->editor = nullptr;
+                m_skribidiContext->editing_text_id = TextID::Invalid;
+            }
+            const bool changed = currentText != text;
+            currentText = std::move(text);
+            wasModified = changed;
+            return changed;
+        }
+
+        // Text committed when focus left this editor (SwitchTextEditor captured it).
         bool committedOnBlur = false;
         if (m_skribidiContext->pending_text_prev_id == it->second)
         {
             auto entry = m_skribidiContext->GetRegisteredText(it->second);
             if (entry != nullptr && entry->text != currentText)
             {
+                PushTextEdit(elementId, currentText, entry->text);
                 currentText = entry->text;
                 wasModified = committedOnBlur = true;
             }
@@ -211,9 +166,80 @@ namespace interstice
 
         UpdateText(it->second, updatedText);
 
+        PushTextEdit(elementId, currentText, updatedText);
         currentText = std::move(updatedText);
         wasModified = true;
         return true;
+    }
+
+    namespace
+    {
+        bool IsContinuationByte(char c) { return (static_cast<unsigned char>(c) & 0xC0) == 0x80; }
+
+        int32_t CodepointCount(std::string_view text)
+        {
+            int32_t count = 0;
+            for (char c : text)
+                count += IsContinuationByte(c) ? 0 : 1;
+            return count;
+        }
+
+        // The part of `to` that differs from `from` (what they share at the start and the end
+        // left out), as codepoint offsets into `to`.
+        EditSelection ChangedSpan(std::string_view from, std::string_view to)
+        {
+            const size_t shorter = std::min(from.size(), to.size());
+            size_t prefix = 0;
+            while (prefix < shorter && from[prefix] == to[prefix])
+                prefix++;
+            while (prefix > 0 && prefix < to.size() && IsContinuationByte(to[prefix]))
+                prefix--;
+            size_t suffix = 0;
+            while (suffix < shorter - prefix && from[from.size() - 1 - suffix] == to[to.size() - 1 - suffix])
+                suffix++;
+            while (suffix > 0 && IsContinuationByte(to[to.size() - suffix]))
+                suffix--;
+            return { CodepointCount(to.substr(0, prefix)), CodepointCount(to.substr(0, to.size() - suffix)) };
+        }
+    }
+
+    void SkribidiTextSystem::PushTextEdit(ID elementId, const std::string& before, const std::string& after)
+    {
+        if (!m_undoHistory || before == after)
+            return;
+
+        // The selections the field had before and after the edit. Without them (an edit made
+        // some other way), from the text: the text an undo brings back selected, the caret
+        // after what a redo changes.
+        EditSelection selectionBefore = ChangedSpan(after, before);
+        EditSelection selectionAfter  = ChangedSpan(before, after);
+        selectionAfter.anchor = selectionAfter.caret;
+        SkribidiContext* ctx = m_skribidiContext;
+        if (ctx->edit_selection_element == elementId)
+        {
+            selectionBefore = ctx->edit_selection_before;
+            const bool editing = ctx->editor != nullptr && ctx->editing_text_id == GetTextID(elementId);
+            selectionAfter = editing ? EditorSelection(ctx->editor) : ctx->edit_selection_after;
+        }
+
+        const uint64_t key = Hash::Calculate(elementId);
+        m_undoHistory->Push({ .description = "Edit text",
+                              .undo = [this, key, elementId, before, selectionBefore] { m_externalText[key] = before; FocusChangedField(elementId, selectionBefore); },
+                              .redo = [this, key, elementId, after, selectionAfter]   { m_externalText[key] = after;  FocusChangedField(elementId, selectionAfter); },
+                              .mergeKey = key });
+    }
+
+    void SkribidiTextSystem::FocusChangedField(ID elementId, EditSelection selection)
+    {
+        if (!m_skribidiContext || !m_skribidiContext->guiStateManager)
+            return;
+        m_skribidiContext->pending_selection_element = elementId;
+        m_skribidiContext->pending_selection         = selection;
+        auto& textFocus = m_skribidiContext->guiStateManager->TextEditorFocus();
+        if (textFocus.GetPrevFocusedID() != elementId)
+            m_skipNextSelectAllId = elementId;   // the switch to it would select all
+        m_skribidiContext->guiStateManager->Interaction().SetFocusID(elementId);
+        textFocus.Set(elementId);
     }
 
     std::string_view SkribidiTextSystem::GetText(TextID textId) const

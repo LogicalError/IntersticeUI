@@ -432,24 +432,19 @@ namespace interstice
         // Dispatch input to element handlers (capture/focus/hover rules). Clears recorded events.
         Dispatch(guiStateManager, elementStorage);
 
-        // Post-dispatch: activate text editor and handle focus transitions.
-        bool textEditorFocused = (guiStateManager.Interaction().GetFocusedID() == guiStateManager.TextEditorFocus().GetFocusedID());
-        if (textSystem)
+        // Post-dispatch: a text field keeps the text focus only while it has the keyboard focus;
+        // when the focused field changes, the text system moves its editor.
+        auto& textFocus = guiStateManager.TextEditorFocus();
+        if (textFocus.GetFocusedID() != guiStateManager.Interaction().GetFocusedID())
+            textFocus.Clear();
+        const bool textEditorFocused = textFocus.GetFocusedID() != ID::Invalid();
+        if (textSystem && textFocus.GetPrevFocusedID() != textFocus.GetFocusedID())
         {
-            auto focusedTextEditorId = guiStateManager.TextEditorFocus().GetFocusedID();
-            if (textEditorFocused && focusedTextEditorId != ID::Invalid())
-            {
-                textSystem->SetActiveTextEditor(focusedTextEditorId);
-                if (guiStateManager.TextEditorFocus().GetPrevFocusedID() != guiStateManager.TextEditorFocus().GetFocusedID())
-                {
-                    textSystem->RequestSelectAll(focusedTextEditorId);
-                }
-            } else
-            {
-                textSystem->SetActiveTextEditor(ID::Invalid());
-            }
+            textSystem->SwitchTextEditor(textFocus.GetPrevFocusedID(), textFocus.GetFocusedID());
+            if (textEditorFocused)
+                textSystem->RequestSelectAll(textFocus.GetFocusedID());
         }
-        guiStateManager.TextEditorFocus().Commit();
+        textFocus.Commit();
 
         // Scroll the active text editor's cursor into view if requested by the text system.
         if (textSystem && textEditorFocused)

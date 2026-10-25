@@ -189,6 +189,48 @@ namespace interstice
             EXPECT_EQ(deleteRuns, 1) << "test setup: an enabled item runs on a click";
         }
 
+        // Closing the menu gives the focus back to where it was, unless the chosen item moved
+        // it (Edit > Undo focusing the field it changed): then it stays there.
+        TEST_F(ControlsMenuTest, AnItemThatMovesTheFocusKeepsIt)
+        {
+            const ID menuID = app.idManager.CreateStaticID();
+            const ID keepID = app.idManager.CreateStaticID();
+            const ID moveID = app.idManager.CreateStaticID();
+            const ID fieldID = app.idManager.CreateStaticID();
+            std::string text = "abc";
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginMenu(menuID, "Edit"))
+                {
+                    app.MenuItem(keepID, "Copy", [] {});
+                    app.MenuItem(moveID, "Undo", [&] { app.guiStateManager.Interaction().SetFocusID(fieldID); });
+                    app.EndMenu();
+                }
+                app.Field(fieldID, text);
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+
+            app.ClickAt(app.CenterOf(menuID));
+            app.Frame(draw);
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(keepID));
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_FALSE(app.menuManager.IsOpen());
+            EXPECT_EQ(app.guiStateManager.Interaction().GetFocusedID(), menuID)
+                << "the focus goes back to what had it when the menu opened (the clicked trigger), not the gone item";
+
+            app.ClickAt(app.CenterOf(menuID));
+            app.Frame(draw);
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(moveID));
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_FALSE(app.menuManager.IsOpen());
+            EXPECT_EQ(app.guiStateManager.Interaction().GetFocusedID(), fieldID) << "closing the menu took the focus back";
+        }
+
         // A menu with a filter: the filter has the keyboard when it opens, and items not
         // containing its text (in any case) are left out, with the separators.
         TEST_F(ControlsMenuTest, AMenuFilterTakesTheKeyboardAndHidesWhatDoesntMatch)

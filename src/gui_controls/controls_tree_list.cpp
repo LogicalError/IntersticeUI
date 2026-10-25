@@ -259,7 +259,7 @@ namespace interstice
                 return textSystem->RegisterEditableText(element.id, *renameBuffer, interstice::TextEditBehavior::None, element.styleRef, element.state, modified);
             }, interstice::LayoutOverride::Auto());
 
-        // Skip commit check on first frame - SetActiveTextEditor(Invalid) from a
+        // Skip commit check on first frame - SwitchTextEditor(..., Invalid) from a
         // previous deactivation leaves a stale pending_text_committed.
         if ((*m_renameSub).firstFrame)
             (*m_renameSub).firstFrame = false;

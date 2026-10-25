@@ -183,7 +183,6 @@ namespace interstice
             // Each NodeView is an independent graph with its own pan/zoom and drag state.
             NodeView nodeView;
             // The node view's edits, for Undo / Redo (the demo's only undoable changes).
-            std::vector<NodeViewEdit> nodeUndo, nodeRedo;
             bool exitRequested = false;   // Exit with node edits: asking
             ID   exitDialogID  = ID::Invalid();
 
@@ -470,7 +469,6 @@ namespace interstice
         // Main menu bar across the top of the main window (File / Edit / View / Help).
         void RenderMainMenu();
         void RenderStatusBar();
-        void UndoNodeEdit(bool redo);
         void RequestExit();
         void AskBeforeExit();
 

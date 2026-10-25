@@ -209,6 +209,7 @@ namespace interstice
         }
         // No localization yet, so the OS language is the best guess for the UI's.
         textSystem->SetLanguage(windowBackend->GetPreferredLanguage());
+        textSystem->SetUndoHistory(&commandManager.History());   // text edits are undo steps
 
         tooltipWindowID      = idManager.CreateStaticID();
         contextMenuWindowID  = idManager.CreateStaticID();

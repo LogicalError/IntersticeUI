@@ -4,6 +4,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <gui_core/input/gui_input_state.h>
 #include <gui_core/input/gui_input_handler_func.h>
+#include <gui_core/input/gui_undo_history.h>
 #include <gui_core/style/gui_style_text.h> // IconID
 
 #include <stdint.h>
@@ -64,6 +65,10 @@ namespace interstice
             bool HasShortcut() const { return key != KeyCode::None; }
             bool IsHeld()      const { return static_cast<bool>(onEnd); }
         };
+
+        // The app's undo history (text fields push their edits to it).
+        UndoHistory&       History()       { return m_history; }
+        const UndoHistory& History() const { return m_history; }
 
         CommandManager()
         {
@@ -562,6 +567,7 @@ namespace interstice
         }
 
         // One per held command whose key is currently down.
+        UndoHistory m_history;
         struct HeldActive { KeyCode key; CommandID cmd; };
 
         std::vector<std::string>           m_modeNames;

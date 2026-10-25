@@ -401,7 +401,7 @@ namespace interstice
             };
             app.Frame(draw);
 
-            // Click to focus, then frame to settle SetActiveTextEditor.
+            // Click to focus, then frame to settle SwitchTextEditor.
             app.ClickAt(app.CenterOf(fieldID));
             app.Frame(draw);
 
@@ -409,6 +409,57 @@ namespace interstice
             app.Frame(draw);
 
             EXPECT_EQ(text, "abc");
+        }
+
+        // A text field keeps the text focus only while it has the keyboard focus: clicking a
+        // button takes both, so the field's editor is let go (and its text committed).
+        TEST_F(ControlsBasicTest, ClickingAButtonTakesTheTextFocus)
+        {
+            const ID fieldID = app.idManager.CreateStaticID();
+            const ID buttonID = app.idManager.CreateStaticID();
+            std::string text = "abc";
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Field(fieldID, text);
+                app.Button(buttonID, "OK", [] {});
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(fieldID));
+            app.Frame(draw);
+            ASSERT_EQ(app.guiStateManager.TextEditorFocus().GetFocusedID(), fieldID);
+
+            app.ClickAt(app.CenterOf(buttonID));
+            app.Frame(draw);
+            EXPECT_EQ(app.guiStateManager.TextEditorFocus().GetFocusedID(), ID::Invalid());
+            EXPECT_EQ(app.guiStateManager.TextEditorFocus().GetPrevFocusedID(), ID::Invalid()) << "the editor let go of the field";
+        }
+
+        // A focused field takes Ctrl+Z for itself (its own typing, then the app's history):
+        // the app's Undo command must not run on top of it.
+        TEST_F(ControlsBasicTest, AFocusedFieldTakesCtrlZBeforeTheUndoCommand)
+        {
+            int undoFired = 0;
+            app.commandManager.RegisterCommand(KeyCode::KeyZ, KeyModifier::Control, [&] { undoFired++; }, "Undo");
+            app.inputManager->PushGlobalHandler(app.commandManager.MakeHandler());
+            const ID fieldID = app.idManager.CreateStaticID();
+            std::string text = "abc";
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Field(fieldID, text);
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.InjectKey(KeyCode::KeyZ, KeyAction::KeyDown, KeyModifier::Control);
+            app.Frame(draw);
+            ASSERT_EQ(undoFired, 1) << "with no field focused, Ctrl+Z is the app's Undo";
+
+            app.ClickAt(app.CenterOf(fieldID));
+            app.Frame(draw);
+            ASSERT_EQ(app.guiStateManager.TextEditorFocus().GetFocusedID(), fieldID);
+            app.InjectKey(KeyCode::KeyZ, KeyAction::KeyDown, KeyModifier::Control);
+            app.Frame(draw);
+            EXPECT_EQ(undoFired, 1) << "the focused field's Ctrl+Z also ran the Undo command";
         }
 
         TEST_F(ControlsBasicTest, BackspaceDeletesLastCharacter)
@@ -472,8 +523,6 @@ namespace interstice
         TEST_F(ControlsBasicTest, FocusingNonFiniteNumericFieldDoesNotChangeValue)
         {
             ID id = app.idManager.CreateStaticID();
-            // Call through the base interface - the derived stub's non-template
-            // override otherwise hides the templated convenience wrapper.
             ITextSystem& ts = app.ownedTextSystem;
             for (float v0 : { std::numeric_limits<float>::quiet_NaN(),
                               std::numeric_limits<float>::infinity(),

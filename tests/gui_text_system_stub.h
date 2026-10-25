@@ -96,26 +96,22 @@ namespace interstice
             return textId;
         }
 
-        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified) override
+        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified,
+                                    const ITextValidator* /*validator*/ = nullptr) override
         {
             m_editableElementIds.insert(elementId);
             ApplyTextEditUpdate(elementId, text, behavior, wasModified);
             return RegisterText(elementId, IconID::Invalid, text, styleIndex, state);
         }
 
-        // Edits the number as text, parsing it back when the edit is applied.
-        TextID RegisterEditableNumber(ID elementId, NumericType type, NumericValue& value, TextEditBehavior behavior, StyleRef styleIndex, ElementState state, bool& wasModified) override
-        {
-            std::string text = NumberToText(type, value);
-            const TextID textId = RegisterEditableText(elementId, text, behavior, styleIndex, state, wasModified);
-            if (wasModified)
-                wasModified = TextToNumber(text, type, value);
-            return textId;
-        }
+        // No live editor: a value field shows its formatted value each frame, and the
+        // frame's injected edits apply to that.
+        std::string* ValueEditText(ID /*elementId*/, bool& started) override { started = false; return nullptr; }
 
         // Remembers the color, so tests can see which texts were recolored.
         void SetTextColor(TextID textId, VisualColorStyleIndex color) override { textColors[textId] = color; }
         void SetCaretColor(VisualColorStyleIndex color) override { caretColor = color; }
+        void SetUndoHistory(UndoHistory* /*history*/) override {}
         VisualColorStyleIndex caretColor = VisualColorStyleIndex::Invalid;
         std::unordered_map<TextID, VisualColorStyleIndex> textColors;
 
@@ -282,9 +278,9 @@ namespace interstice
         void OnMouseScroll(ID /*windowId*/, int2 /*screenPos*/, float2 /*scrollOffset*/, KeyModifier /*mods*/) override {}
         void OnTextComposition(ID /*windowId*/, std::string_view /*text*/, int32_t /*cursor*/) override {}
 
-        void SetActiveTextEditor(ID elementId) override
+        void SwitchTextEditor(ID /*from*/, ID to) override
         {
-            m_activeEditor = elementId;
+            m_activeEditor = to;
         }
 
         bool DoesTextEditorAcceptTabs(ID /*elementId*/) const override
@@ -411,49 +407,6 @@ namespace interstice
             const bool shouldNotify = committed || (continuousUpdate && textChanged);
             if (shouldNotify) wasModified = true;
             return shouldNotify;
-        }
-
-        static std::string NumberToText(NumericType type, const NumericValue& value)
-        {
-            switch (type)
-            {
-                case NumericType::TypeUInt8:  return std::to_string(value.value_uint8);
-                case NumericType::TypeUInt16: return std::to_string(value.value_uint16);
-                case NumericType::TypeUInt32: return std::to_string(value.value_uint32);
-                case NumericType::TypeUInt64: return std::to_string(value.value_uint64);
-                case NumericType::TypeInt8:   return std::to_string(value.value_int8);
-                case NumericType::TypeInt16:  return std::to_string(value.value_int16);
-                case NumericType::TypeInt32:  return std::to_string(value.value_int32);
-                case NumericType::TypeInt64:  return std::to_string(value.value_int64);
-                case NumericType::TypeFloat:  return std::to_string(value.value_float);
-                case NumericType::TypeDouble: return std::to_string(value.value_double);
-                default:                      return {};
-            }
-        }
-
-        // Returns false (leaving value untouched) when the text isn't a valid number.
-        static bool TextToNumber(const std::string& text, NumericType type, NumericValue& value)
-        {
-            const char* begin = text.c_str();
-            char* end = nullptr;
-            NumericValue parsed{};
-            switch (type)
-            {
-                case NumericType::TypeUInt8:  parsed.value_uint8  = (uint8_t) std::strtoull(begin, &end, 10); break;
-                case NumericType::TypeUInt16: parsed.value_uint16 = (uint16_t)std::strtoull(begin, &end, 10); break;
-                case NumericType::TypeUInt32: parsed.value_uint32 = (uint32_t)std::strtoull(begin, &end, 10); break;
-                case NumericType::TypeUInt64: parsed.value_uint64 =           std::strtoull(begin, &end, 10); break;
-                case NumericType::TypeInt8:   parsed.value_int8   = (int8_t)  std::strtoll(begin, &end, 10);  break;
-                case NumericType::TypeInt16:  parsed.value_int16  = (int16_t) std::strtoll(begin, &end, 10);  break;
-                case NumericType::TypeInt32:  parsed.value_int32  = (int32_t) std::strtoll(begin, &end, 10);  break;
-                case NumericType::TypeInt64:  parsed.value_int64  =           std::strtoll(begin, &end, 10);  break;
-                case NumericType::TypeFloat:  parsed.value_float  =           std::strtof(begin, &end);       break;
-                case NumericType::TypeDouble: parsed.value_double =           std::strtod(begin, &end);       break;
-                default: return false;
-            }
-            if (end == begin || *end != '\0') return false;
-            value = parsed;
-            return true;
         }
 
 
