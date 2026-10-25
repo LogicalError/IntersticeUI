@@ -193,7 +193,11 @@ namespace interstice
 
     void GUIApplication::EndTitleBar()
     {
-        assert(!m_titleBarStack.empty());
+        if (m_titleBarStack.empty())
+        {
+            ReportMisuse("GUIApplication: EndTitleBar without BeginTitleBar (ignored)");
+            return;
+        }
         const ID barID = m_titleBarStack.back();
         m_titleBarStack.pop_back();
 
@@ -510,7 +514,11 @@ namespace interstice
 
     void GUIApplication::MenuFilter()
     {
-        assert(menuManager.currentDepth >= 0 && menuManager.currentDepth < MenuManager::kMaxDepth);
+        if (menuManager.currentDepth < 0 || menuManager.currentDepth >= MenuManager::kMaxDepth)
+        {
+            ReportMisuse("GUIApplication: MenuFilter outside an open menu (ignored)");
+            return;
+        }
         auto& level = menuManager.levels[menuManager.currentDepth];
         ID fieldID = ID::Invalid();
         SearchField(idManager.AllocateDynamicID("menu_filter"), level.filter, theme.searchIcon,
@@ -562,7 +570,11 @@ namespace interstice
     bool GUIApplication::MenuItemImpl(ID id, IconID icon, std::string_view text, std::string_view shortcut, std::function<void()> onClick,
                                       StyleRef style, bool destructive, LayoutOverride&& constraints)
     {
-        assert(menuManager.currentDepth >= 0 && menuManager.currentDepth < MenuManager::kMaxDepth);
+        if (menuManager.currentDepth < 0 || menuManager.currentDepth >= MenuManager::kMaxDepth)
+        {
+            ReportMisuse("GUIApplication: MenuItem outside an open menu (ignored)");
+            return false;
+        }
         auto& level = menuManager.levels[menuManager.currentDepth];
         if (level.filtering && !ContainsIgnoringCase(text, level.filter))
             return false;
@@ -641,7 +653,11 @@ namespace interstice
 
     void GUIApplication::EndMenu()
     {
-        assert(menuManager.currentDepth >= 0);
+        if (menuManager.currentDepth < 0)
+        {
+            ReportMisuse("GUIApplication: EndMenu without an open BeginMenu (ignored)");
+            return;
+        }
         auto& level = menuManager.levels[menuManager.currentDepth];
 
         // Remember whether this menu used icons (keyed by trigger) so the icon

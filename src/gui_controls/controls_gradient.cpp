@@ -154,6 +154,11 @@ namespace interstice
 
     bool GUIApplication::GradientField(Gradient& value, LayoutOverride&& constraints)
     {
+        if (value.stopCount > Gradient::kMaxStops)
+        {
+            ReportMisuse("GUIApplication: a gradient with more stops than Gradient::kMaxStops (clamped)");
+            value.stopCount = Gradient::kMaxStops;
+        }
         const Gradient before = value;
 
         // ---- Gradient swatch (inline preview bar) ----
@@ -326,6 +331,11 @@ namespace interstice
 
     void GUIApplication::EmitGradientEditor(Gradient& outGradient)
     {
+        if (outGradient.stopCount > Gradient::kMaxStops)
+        {
+            ReportMisuse("GUIApplication: a gradient with more stops than Gradient::kMaxStops (clamped)");
+            outGradient.stopCount = Gradient::kMaxStops;
+        }
         auto& ge = m_gradientEditorSub->State();
         auto& g  = ge.workingCopy;
         if (ge.selectedStop >= g.stopCount)

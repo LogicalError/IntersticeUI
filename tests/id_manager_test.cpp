@@ -235,21 +235,9 @@ namespace interstice
         uint32_t size = 3;
         ID range_id = manager.AllocateRangedID(size, "options");
 
-#ifdef NDEBUG
         // In release builds, asserts are disabled, so this won't crash
         EXPECT_EQ(manager.GetSubID(range_id, size), ID::Invalid());
         EXPECT_EQ(manager.GetSubID(range_id, static_cast<uint32_t>(-1)), ID::Invalid());
-#else
-        // In debug builds, assert triggers program termination
-        EXPECT_DEATH({
-            [[maybe_unused]]
-            ID id = manager.GetSubID(range_id, size); // out-of-range index
-            }, ".*");
-        EXPECT_DEATH({
-            [[maybe_unused]]
-            ID id = manager.GetSubID(range_id, static_cast<uint32_t>(-1)); // out-of-range index
-            }, ".*");
-#endif
     }
 
     TEST_F(IDManagerTest, IsSubRangedIDValidOnlyWorksWithSubRangedID) {
@@ -277,15 +265,8 @@ namespace interstice
         VERIFY(manager.PopParent());
     }
 
-    TEST_F(IDManagerTest, ParentStackUnderflowDeathTest) {
-#ifdef NDEBUG
+    TEST_F(IDManagerTest, ParentStackUnderflowFails) {
         EXPECT_EQ(manager.PopParent(), false);
-#else
-        EXPECT_DEATH({
-            [[maybe_unused]]
-            bool result = manager.PopParent(); // triggers assert
-            }, ".*");
-#endif
     }
 
     TEST_F(IDManagerTest, IsInParentStack) {
@@ -343,20 +324,10 @@ namespace interstice
         EXPECT_TRUE(manualManager.IsStaticIDValid(staticId));
         EXPECT_TRUE(manualManager.ReleaseStaticID(staticId));
 
-        // Pushing a parent asserts on the empty stack.
-#ifndef NDEBUG
-        EXPECT_DEATH(
-            [[maybe_unused]]
-        bool result = manualManager.PushParent(staticId), ".*");
-#endif
-
-        // Dynamic/ranged allocation asserts: the parent stack is empty.
-#ifndef NDEBUG
-        EXPECT_DEATH([[maybe_unused]]
-            ID id = manualManager.AllocateDynamicID("fail"), ".*");
-        EXPECT_DEATH([[maybe_unused]]
-            ID id = manualManager.AllocateRangedID(10, "fail"), ".*");
-#endif
+        // Outside a frame, pushing a parent and allocating dynamic / ranged IDs fail (reported).
+        EXPECT_FALSE(manualManager.PushParent(staticId));
+        EXPECT_EQ(manualManager.AllocateDynamicID("fail"), ID::Invalid());
+        EXPECT_EQ(manualManager.AllocateRangedID(10, "fail"), ID::Invalid());
 
 
         // --- PHASE 2: INSIDE FRAME ---
@@ -370,11 +341,13 @@ namespace interstice
 
         // --- PHASE 3: AFTER FRAME ---
 
-        // EndFrame clears the stack, so allocating asserts again.
-#ifndef NDEBUG
-        EXPECT_DEATH([[maybe_unused]]
-            ID id = manualManager.AllocateDynamicID("fail_again"), ".*");
-#endif
+        // EndFrame clears the stack, so allocating fails again.
+        EXPECT_EQ(manualManager.AllocateDynamicID("fail_again"), ID::Invalid());
+
+        // ... and the next frame works.
+        VERIFY(manualManager.BeginFrame());
+        EXPECT_TRUE(manualManager.IsDynamicIDValid(manualManager.AllocateDynamicID("next")));
+        manualManager.EndFrame();
     }
 
     TEST_F(IDManagerTest, FrameDetection)
@@ -401,6 +374,20 @@ namespace interstice
         EXPECT_FALSE(manualManager.IsInsideFrame());
     }
 
+    TEST_F(IDManagerTest, AParentLeftPushedAtEndFrameIsCleared)
+    {
+        IDManager manualManager;
+        VERIFY(manualManager.BeginFrame());
+        const ID top = manualManager.AllocateDynamicID("top");
+        VERIFY(manualManager.PushParent(manualManager.AllocateDynamicID("parent")));   // never popped
+        manualManager.EndFrame();
+
+        VERIFY(manualManager.BeginFrame());
+        EXPECT_EQ(manualManager.GetStackParent(), ID::Invalid()) << "the next frame starts at the root";
+        EXPECT_EQ(manualManager.AllocateDynamicID("top"), top) << "and gives the same IDs";
+        manualManager.EndFrame();
+    }
+
     TEST_F(IDManagerTest, FrameInFrame)
     {
         IDManager manualManager;
@@ -408,14 +395,8 @@ namespace interstice
         // Begin a frame
         EXPECT_TRUE(manualManager.BeginFrame());
 
-#ifndef NDEBUG
-        // Beginning a frame while already inside one should trigger an assert
-        EXPECT_DEATH([[maybe_unused]]
-            bool result = manualManager.BeginFrame(), ".*");
-#else
         // In release builds, it should fail gracefully
         EXPECT_FALSE(manualManager.BeginFrame());
-#endif
     }
 
 
@@ -477,57 +458,28 @@ namespace interstice
         ID range_id = manager.AllocateRangedID(100, "foo");
         ID sub_range_id = manager.GetSubID(range_id, 0);
 
-#ifdef NDEBUG
         EXPECT_TRUE(manager.ReleaseStaticID(static_id));   // correct
         EXPECT_FALSE(manager.ReleaseStaticID(dynamic_id)); // wrong type
         EXPECT_FALSE(manager.ReleaseStaticID(range_id)); // wrong type
         EXPECT_FALSE(manager.ReleaseStaticID(sub_range_id)); // wrong type
         EXPECT_FALSE(manager.ReleaseStaticID(static_id));  // double release
         EXPECT_FALSE(manager.ReleaseStaticID(ID::Invalid()));// invalid ID
-#else
-        EXPECT_TRUE(manager.ReleaseStaticID(static_id));         // correct
-        EXPECT_DEATH(manager.ReleaseStaticID(dynamic_id), ".*"); // wrong type
-        EXPECT_DEATH(manager.ReleaseStaticID(range_id), ".*"); // wrong type
-        EXPECT_DEATH(manager.ReleaseStaticID(sub_range_id), ".*"); // wrong type
-        EXPECT_DEATH(manager.ReleaseStaticID(static_id), ".*");  // double release
-        EXPECT_DEATH(manager.ReleaseStaticID(ID::Invalid()), ".*");// invalid ID
-#endif
     }
 
     TEST_F(IDManagerTest, SubIDMisuse) {
         ID invalid_range = ID::Invalid();
-#ifdef NDEBUG
         EXPECT_EQ(manager.GetSubID(invalid_range, 0), ID::Invalid()); // not a ranged ID
-#else 
-        EXPECT_DEATH([[maybe_unused]]
-            ID id = manager.GetSubID(invalid_range, 0), ".*"); // not a ranged ID
-#endif
 
         ID dynamic_id = manager.AllocateDynamicID("dynamic");
-#ifdef NDEBUG
         EXPECT_EQ(manager.GetSubID(dynamic_id, 0), ID::Invalid()); // wrong parent type
-#else
-        EXPECT_DEATH([[maybe_unused]]
-            ID id = manager.GetSubID(dynamic_id, 0), ".*"); // wrong parent type
-#endif
     }
 
     TEST_F(IDManagerTest, ParentStackMisuse) {
-#ifdef NDEBUG
         EXPECT_FALSE(manager.PushParent(ID::Invalid())); // release build: fails gracefully
-#else
-        EXPECT_DEATH([[maybe_unused]]
-            bool result = manager.PushParent(ID::Invalid()), ".*"); // debug: triggers assert
-#endif
 
         ID child = manager.AllocateDynamicID("child");
         EXPECT_TRUE(manager.IsDynamicIDValid(child));
 
-#ifdef NDEBUG
         EXPECT_FALSE(manager.PopParent()); // release build: fails gracefully
-#else
-        EXPECT_DEATH([[maybe_unused]]
-            bool result = manager.PopParent(), ".*"); // debug: triggers assert
-#endif
     }
 }

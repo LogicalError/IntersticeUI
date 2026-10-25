@@ -65,6 +65,11 @@ namespace interstice
 
     void GUIApplication::EndTable()
     {
+        if (!m_tableEmit.has_value() || !m_tableEmit->isRecording)
+        {
+            ReportMisuse("GUIApplication: EndTable without BeginTable (ignored)");
+            return;
+        }
         TableState&         state       = *m_tableEmit->userState;
         VirtualTableColumn* columns     = m_tableEmit->columns;
         const size_t        columnCount = m_tableEmit->columnCount;
@@ -96,6 +101,11 @@ namespace interstice
 
     void GUIApplication::BeginRow()
     {
+        if (!m_tableEmit.has_value())
+        {
+            ReportMisuse("GUIApplication: BeginRow outside a table (ignored)");
+            return;
+        }
         m_tableEmit->currentCol = 0;
         m_tableEmit->rowCount++;
     }
@@ -103,6 +113,11 @@ namespace interstice
 
     void GUIApplication::EndRow()
     {
+        if (!m_tableEmit.has_value())
+        {
+            ReportMisuse("GUIApplication: EndRow outside a table (ignored)");
+            return;
+        }
         m_tableEmit->currentCol = 0;
     }
 }

@@ -1,11 +1,17 @@
 #include <gui_core/graphics/gui_graphics_context.h>
 #include <gui_core/windows/gui_os_window_manager.h>
 
-#include <unordered_set>
 #include <assert.h>
+
+#include <gui_core/diagnostics/gui_logging.h>
 
 namespace interstice
 {
+    namespace
+    {
+        constexpr Diagnostics::LogCategory kLogWindows = Diagnostics::MakeLogCategory("windows");
+    }
+
     OSWindowManager::OSWindowManager(GraphicsContext* graphicsContext, IWindowBackend* backendManager)
         : graphicsContext(graphicsContext)
         , windowBackendManager(backendManager)
@@ -28,7 +34,7 @@ namespace interstice
     {
         if (insideBeginEnd)
         {
-            assert(false && "BeginFrame called while previous frame has not ended (no EndFrame called)");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: BeginFrame called while the previous frame has not ended (no EndFrame)");
             return false;
         }
 
@@ -116,7 +122,7 @@ namespace interstice
     {
         if (!insideBeginEnd)
         {
-            assert(false && "EndFrame called without BeginFrame called first");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: EndFrame called without BeginFrame first");
             return false;
         }
 
@@ -186,7 +192,7 @@ namespace interstice
     {
         if (insideBeginEnd)
         {
-            assert(false && "Tried to call Update inside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: Update called inside BeginFrame/EndFrame");
             return false;
         }
         windowBackendManager->PollEvents([this](interstice::OSWindowHandle handle, IWindowContext* context)
@@ -218,7 +224,7 @@ namespace interstice
     {
         if (!insideBeginEnd)
         {
-            assert(false && "ReleaseUndeclaredWindows called outside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: ReleaseUndeclaredWindows called outside BeginFrame/EndFrame");
             return;
         }
 
@@ -276,7 +282,7 @@ namespace interstice
     {
         if (!insideBeginEnd) 
         {
-            assert(false && "Tried to create window outside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: a window was declared outside BeginFrame/EndFrame");
             return AddWindowResult::CalledOutsideOfFrame;
         }
         if (id == ID::Invalid()) return AddWindowResult::InvalidID;
@@ -392,7 +398,7 @@ namespace interstice
     {
         if (!insideBeginEnd)
         {
-            assert(false && "SetWindowRect called outside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: SetWindowRect called outside BeginFrame/EndFrame");
             return false;
         }
 
@@ -425,7 +431,7 @@ namespace interstice
     {
         if (!insideBeginEnd)
         {
-            assert(false && "Tried to create window outside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: RequestClose called outside BeginFrame/EndFrame");
             return RequestCloseResult::CalledOutsideFrame;
         }
         if (index < 0 || index >= static_cast<int32_t>(windows.size()))
@@ -460,7 +466,7 @@ namespace interstice
     {
         if (!insideBeginEnd)
         {
-            assert(false && "Tried to create window outside of Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: RequestClose called outside BeginFrame/EndFrame");
             return RequestCloseResult::CalledOutsideFrame;
         }
         if (index < 0 || index >= static_cast<int32_t>(windows.size()))

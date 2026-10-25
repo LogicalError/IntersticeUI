@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <gui_core/gui_id.h>
+#include <gui_core/diagnostics/gui_logging.h>
 
 // Small state values owned by GUIStateManager.
 
@@ -50,13 +51,13 @@ namespace interstice
 
     public:
         void PushDisabled() { m_disabledLevel++; }
-        void PopDisabled()  { assert(m_disabledLevel > 0); if (m_disabledLevel > 0) m_disabledLevel--; }
+        void PopDisabled()  { if (m_disabledLevel > 0) m_disabledLevel--; else ReportUnmatchedPop("ConstructionScopes: PopDisabled without PushDisabled (ignored)"); }
 
         void PushSelected() { m_selectedLevel++; }
-        void PopSelected()  { assert(m_selectedLevel > 0); if (m_selectedLevel > 0) m_selectedLevel--; }
+        void PopSelected()  { if (m_selectedLevel > 0) m_selectedLevel--; else ReportUnmatchedPop("ConstructionScopes: PopSelected without PushSelected (ignored)"); }
 
         void PushIndeterminate() { m_indeterminateLevel++; }
-        void PopIndeterminate()  { assert(m_indeterminateLevel > 0); if (m_indeterminateLevel > 0) m_indeterminateLevel--; }
+        void PopIndeterminate()  { if (m_indeterminateLevel > 0) m_indeterminateLevel--; else ReportUnmatchedPop("ConstructionScopes: PopIndeterminate without PushIndeterminate (ignored)"); }
 
         bool IsDisabled()      const { return m_disabledLevel      > 0; }
         bool IsSelected()      const { return m_selectedLevel      > 0; }
@@ -64,5 +65,12 @@ namespace interstice
 
         void Reset()            { m_disabledLevel = 0; m_selectedLevel = 0; m_indeterminateLevel = 0; }
         bool IsBalanced() const { return m_disabledLevel == 0 && m_selectedLevel == 0 && m_indeterminateLevel == 0; }
+
+    private:
+        // A Pop without its Push is reported and ignored.
+        static void ReportUnmatchedPop(const char* message)
+        {
+            Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("state"), message);
+        }
     };
 }

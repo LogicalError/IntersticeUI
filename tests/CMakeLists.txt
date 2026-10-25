@@ -27,6 +27,8 @@ list(APPEND GUI_CORE_TEST_FILES
   gradient_editor_dialog_test.cpp
   message_dialog_test.cpp
   undo_history_test.cpp
+  misuse_test.cpp
+  fuzz_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp
   node_view_wire_edit_test.cpp
@@ -87,6 +89,7 @@ list(APPEND GUI_CORE_TEST_FILES
   node_view_marquee_test.cpp
   node_view_wire_route_test.cpp
   headless_gui_app.h
+  misuse_reports.h
   headless_gui_app.cpp
   mock_window_backend.h
   window_registry_test.cpp

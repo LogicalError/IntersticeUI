@@ -1,6 +1,12 @@
 #include <gui_controls/subsystems/gui_button_group_subsystem.h>
 
 #include <cassert>
+#include <gui_core/diagnostics/gui_logging.h>
+
+namespace
+{
+    constexpr interstice::Diagnostics::LogCategory kLogApp = interstice::Diagnostics::MakeLogCategory("app");
+}
 
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/elements/gui_element_storage.h>
@@ -20,7 +26,7 @@ namespace interstice
     {
         if (!IsBalanced())
         {
-            assert(false && "ButtonGroupSubsystem: unbalanced Begin/End group at end of frame");
+            Diagnostics::ReportMisuse(kLogApp, "ButtonGroupSubsystem: unbalanced Begin/End group at end of frame (closed)");
             m_buttonStack.clear();
             m_toggleStack.clear();
         }
@@ -48,7 +54,11 @@ namespace interstice
 
     void ButtonGroupSubsystem::EndButtonGroup()
     {
-        assert(!m_buttonStack.empty());
+        if (m_buttonStack.empty())
+        {
+            Diagnostics::ReportMisuse(kLogApp, "ButtonGroupSubsystem: EndButtonGroup without BeginButtonGroup (ignored)");
+            return;
+        }
         auto& s = m_buttonStack.back().state;
         if (s.itemCount == 1)
             UpdateElementStyleRef(m_elementStorage, m_styleManager, s.firstRef, s.soloStyleRef);
@@ -57,7 +67,11 @@ namespace interstice
 
     void ButtonGroupSubsystem::EndToggleGroup()
     {
-        assert(!m_toggleStack.empty());
+        if (m_toggleStack.empty())
+        {
+            Diagnostics::ReportMisuse(kLogApp, "ButtonGroupSubsystem: EndToggleGroup without BeginToggleGroup (ignored)");
+            return;
+        }
         auto& s = m_toggleStack.back().state;
         if (s.itemCount == 1)
             UpdateElementStyleRef(m_elementStorage, m_styleManager, s.firstRef, s.soloStyleRef);

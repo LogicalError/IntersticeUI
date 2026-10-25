@@ -38,6 +38,9 @@ namespace interstice
 
     void GUIApplication::BeginReorderableItem(ID id, StyleRef style, LayoutOverride&& constraints)
     {
+        // Outside a group it is built as a plain item (its EndReorderableItem still closes it).
+        if (m_reorderable->Construction().groupID == ID::Invalid())
+            ReportMisuse("GUIApplication: BeginReorderableItem outside a reorderable group (it can't be dragged)");
         int itemIndex = m_reorderable->Construction().nextItemIndex++;
 
         // Capture by value: construction state is reset in EndReorderableGroup, before input dispatch.

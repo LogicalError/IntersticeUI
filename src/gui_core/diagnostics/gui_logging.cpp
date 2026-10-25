@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <iterator>
 #include <mutex>
 #include <thread>
 
@@ -122,6 +123,33 @@ namespace interstice::Diagnostics
     void SetMinimumLogSeverity(LogSeverity severity) { g_minimumSeverity.store(severity, std::memory_order_relaxed); }
     LogSeverity GetMinimumLogSeverity()              { return g_minimumSeverity.load(std::memory_order_relaxed); }
     void SetLogConsoleOutput(bool enabled)           { g_consoleOutput.store(enabled, std::memory_order_relaxed); }
+
+    namespace
+    {
+        // The misuse messages already reported. Once full, a report is logged every time.
+        std::mutex  g_misuseMutex;
+        const char* g_misuseReported[64] = {};
+        int         g_misuseReportedCount = 0;
+    }
+
+    void ReportMisuse(LogCategory category, const char* message)
+    {
+        {
+            std::lock_guard lock(g_misuseMutex);
+            for (int i = 0; i < g_misuseReportedCount; ++i)
+                if (g_misuseReported[i] == message)
+                    return;
+            if (g_misuseReportedCount < int(std::size(g_misuseReported)))
+                g_misuseReported[g_misuseReportedCount++] = message;
+        }
+        Log(category, LogSeverity::Error, "", 0, "{}", message);
+    }
+
+    void ResetMisuseReports()
+    {
+        std::lock_guard lock(g_misuseMutex);
+        g_misuseReportedCount = 0;
+    }
 
     bool AddLogSink(LogSinkFn sink, void* context)
     {

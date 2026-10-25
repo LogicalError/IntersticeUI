@@ -120,6 +120,7 @@ list(APPEND GUI_FILES
   gui_core/text/gui_numeric_text.h
   gui_core/text/gui_numeric_text.cpp
   gui_core/text/gui_text_converter.h
+  gui_core/text/gui_utf8.h
   gui_core/text/gui_icon_text_placement.h
   gui_core/text/gui_text_atlas_manager.h
   gui_core/text/gui_text_system.h

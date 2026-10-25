@@ -223,6 +223,10 @@ namespace interstice
         inline void ClearStops() { stopCount = 0; }
 
         // Check if gradient is effectively empty/transparent
+        // The stops in use: stopCount, but never past the stop array (a gradient built in code
+        // can set stopCount to anything).
+        inline uint8_t StopCount() const { return stopCount < kMaxStops ? stopCount : uint8_t(kMaxStops); }
+
         inline bool IsEmpty() const { return type == GradientType::None || stopCount == 0; }
 
         // Write the gradient into a preallocated span of `byte4` values.
@@ -235,7 +239,7 @@ namespace interstice
                 value != other.value || colorSpace != other.colorSpace)
                 return false;
             
-            for (uint8_t i = 0; i < stopCount; ++i)
+            for (uint8_t i = 0; i < StopCount(); ++i)
                 if (stops[i] != other.stops[i])
                     return false;
             

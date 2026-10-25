@@ -520,19 +520,17 @@ namespace interstice
 
     // ============================================================================
     // Frame Lifecycle Guard Tests
+    //
+    // Misuse is reported (logged once) and returns its error; the manager stays usable.
     // ============================================================================
 
     TEST_F(OSWindowManagerTest, CreateWindow_CalledBeforeBeginFrame) 
     {
         ID id = CreateTestID(1);
-    #ifdef NDEBUG
         auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
     
         EXPECT_EQ(result, AddWindowResult::CalledOutsideOfFrame);
         EXPECT_EQ(manager->WindowCount(), 0);
-    #else
-        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr), ".*");
-    #endif
     }
 
     TEST_F(OSWindowManagerTest, CreateWindow_CalledAfterEndFrame) 
@@ -542,14 +540,10 @@ namespace interstice
         manager->BeginFrame();
         manager->EndFrame();
 
-    #ifdef NDEBUG
         auto result = manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
     
         EXPECT_EQ(result, AddWindowResult::CalledOutsideOfFrame);
         EXPECT_EQ(manager->WindowCount(), 0);
-    #else
-        EXPECT_DEATH(manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr), ".*");
-    #endif
     }
 
     TEST_F(OSWindowManagerTest, RequestClose_CalledBeforeBeginFrame) 
@@ -560,43 +554,30 @@ namespace interstice
         manager->GetOrCreateWindow(id, "Test", IntRect{0, 0, 800, 600 }, nullptr);
         manager->EndFrame();
 
-    #ifdef NDEBUG
         auto result = manager->RequestClose(id);
     
         EXPECT_EQ(result, RequestCloseResult::CalledOutsideFrame);
-    #else
-        EXPECT_DEATH(manager->RequestClose(id), ".*");
-    #endif
     }
 
     TEST_F(OSWindowManagerTest, DoubleBeginFrame_WithoutEndFrame) 
     {
         EXPECT_TRUE(manager->BeginFrame());
-    #ifdef NDEBUG
         EXPECT_FALSE(manager->BeginFrame());
-    #else
-        EXPECT_DEATH(manager->BeginFrame(), ".*");
-    #endif
+        EXPECT_TRUE(manager->EndFrame());
+        EXPECT_TRUE(manager->BeginFrame()) << "the next frame works";
+        EXPECT_TRUE(manager->EndFrame());
     }
 
     TEST_F(OSWindowManagerTest, DoubleEndFrame_AfterBeginFrame) 
     {
         EXPECT_TRUE(manager->BeginFrame());
         EXPECT_TRUE(manager->EndFrame());
-    #ifdef NDEBUG
         EXPECT_FALSE(manager->EndFrame());
-    #else
-        EXPECT_DEATH(manager->EndFrame(), ".*");
-    #endif
     }
 
     TEST_F(OSWindowManagerTest, EndFrame_WithoutBeginFrame) 
     {
-    #ifdef NDEBUG
         EXPECT_FALSE(manager->EndFrame());
-    #else
-        EXPECT_DEATH(manager->EndFrame(), ".*");
-    #endif
     }
 
     // ============================================================================

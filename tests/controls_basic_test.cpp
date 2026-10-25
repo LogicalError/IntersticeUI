@@ -462,6 +462,29 @@ namespace interstice
             EXPECT_EQ(undoFired, 1) << "the focused field's Ctrl+Z also ran the Undo command";
         }
 
+        // Typed text is UTF-8: 2, 3 and 4 byte characters go in whole, and a backspace takes
+        // the last character, not its last byte.
+        TEST_F(ControlsBasicTest, TypingNonAsciiText)
+        {
+            const ID fieldID = app.idManager.CreateStaticID();
+            std::string text = "";
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Field(fieldID, text);
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.ClickAt(app.CenterOf(fieldID));
+            app.Frame(draw);
+            app.InjectText("h\xC3\xA9 \xE2\x82\xAC\xF0\x9D\x84\x9E");   // "he-acute euro G-clef"
+            app.Frame(draw);
+            EXPECT_EQ(text, "h\xC3\xA9 \xE2\x82\xAC\xF0\x9D\x84\x9E");
+
+            app.InjectKey(KeyCode::Backspace, KeyAction::KeyDown);
+            app.Frame(draw);
+            EXPECT_EQ(text, "h\xC3\xA9 \xE2\x82\xAC") << "the 4-byte character went as one";
+        }
+
         TEST_F(ControlsBasicTest, BackspaceDeletesLastCharacter)
         {
             ID fieldID = app.idManager.CreateStaticID();

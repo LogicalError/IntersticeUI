@@ -44,9 +44,17 @@ namespace interstice
 		    false); // already updated state, so skipping it in RegisterElementInternal
     }
 
+    // A control without an ID can't take input or keep state: it's drawn, nothing more.
+    void GUIApplication::ReportInvalidControlID(ID id)
+    {
+        if (id == ID::Invalid())
+            ReportMisuse("GUIApplication: a control with an invalid ID (it is drawn but takes no input and keeps no state)");
+    }
+
     interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
+        ReportInvalidControlID(element.id);
         tabChainManager.RegisterTabTarget(element.id);
         return RegisterElement(std::move(element), text, std::move(constraints));
     }
@@ -54,6 +62,7 @@ namespace interstice
     interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
+        ReportInvalidControlID(element.id);
         tabChainManager.RegisterTabTarget(element.id);
         return RegisterElement(std::move(element), std::move(constraints));
     }
@@ -61,6 +70,7 @@ namespace interstice
     interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::function<TextID(interstice::Element& element)> createTextID, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
+        ReportInvalidControlID(element.id);
         element.state |= guiStateManager.GetCurrentState(element.id); // required for createTextID callback
         element.textID = createTextID(element);
         tabChainManager.RegisterTabTarget(element.id);
@@ -913,7 +923,11 @@ namespace interstice
 
     void GUIApplication::EndCached()
     {
-        assert(!m_cacheRecordStack.empty() && "EndCached without a matching BeginCached miss");
+        if (m_cacheRecordStack.empty())
+        {
+            ReportMisuse("GUIApplication: EndCached without a matching BeginCached (ignored)");
+            return;
+        }
         m_cacheRecordStack.pop_back();
         VERIFY(elementStorage.EndChildren()); // close container; UICacheManager captures it at PostLayout
         [[maybe_unused]] bool popped = idManager.PopParent();
@@ -1008,7 +1022,11 @@ namespace interstice
     }
     void GUIApplication::EndToolbar()
     {
-        assert(!controlStylesStack.empty());
+        if (controlStylesStack.empty())
+        {
+            ReportMisuse("GUIApplication: EndToolbar without BeginToolbar (ignored)");
+            return;
+        }
         EndArea();
         theme.controls = controlStylesStack.back();
         controlStylesStack.pop_back();

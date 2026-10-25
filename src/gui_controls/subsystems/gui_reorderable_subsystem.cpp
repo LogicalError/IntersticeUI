@@ -1,6 +1,7 @@
 #include <gui_controls/subsystems/gui_reorderable_subsystem.h>
 
 #include <cassert>
+#include <gui_core/diagnostics/gui_logging.h>
 
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/input/gui_input_manager.h>
@@ -29,7 +30,8 @@ namespace interstice
     {
         if (!IsBalanced())
         {
-            assert(false && "ReorderableSubsystem: unbalanced BeginReorderableGroup/End at end of frame");
+            Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("app"),
+                "ReorderableSubsystem: unbalanced BeginReorderableGroup/End at end of frame (closed)");
             m_construction = {};
         }
     }

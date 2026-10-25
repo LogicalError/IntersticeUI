@@ -1,3 +1,4 @@
+#include <gui_core/text/gui_utf8.h>
 #include <algorithm>
 #include <cmath>
 
@@ -727,6 +728,9 @@ namespace interstice
         if (text.empty())
             return;
         NoteSelectionBeforeEdit();
+        // Pasted text can come from anywhere: malformed bytes become U+FFFD, not a lost paste.
+        const std::string validText = ToValidUtf8(text);
+        text = validText;
 
         if (const ITextValidator* validator = m_skribidiContext->active_validator)
         {

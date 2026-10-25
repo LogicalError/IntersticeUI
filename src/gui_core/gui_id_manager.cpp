@@ -3,15 +3,23 @@
 #include <gui_core/gui_hash.h>
 
 #include <assert.h>
+#include <gui_core/diagnostics/gui_logging.h>
 #include <vector>
         
 namespace interstice
 {
+    namespace
+    {
+        // Misuse (a call outside the frame, an ID of the wrong kind, ...) is reported and the
+        // call returns its failure value.
+        constexpr Diagnostics::LogCategory kLogID = Diagnostics::MakeLogCategory("id");
+    }
+
     bool IDManager::BeginFrame()
     {
         if (IsInsideFrame())
         {
-            assert(false && "Previous frame has not ended when calling BeginFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Previous frame has not ended when calling BeginFrame");
             return false;
         }
         m_dynamic_id_total = 0;
@@ -27,8 +35,8 @@ namespace interstice
         
     void IDManager::EndFrame()
     {
-        assert(m_parent_stack.size() == 1 && "Parent stack not empty at frame end");
-        assert(m_parent_stack.back().id == ID::Invalid() && "Parent stack corrupted at frame end");
+        if (m_parent_stack.size() != 1 || m_parent_stack.back().id != ID::Invalid())
+            Diagnostics::ReportMisuse(kLogID, "IDManager: PushParent left unpopped at EndFrame (cleared)");
         m_parent_stack.clear();
     }
 
@@ -36,12 +44,12 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "PushParent() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: PushParent() can only be called between Begin/EndFrame");
             return false;
         }
         if (parent_id == ID::Invalid())
         {
-            assert(false && "Pushing Invalid ID as parent");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Pushing Invalid ID as parent");
             return false;
         }
         m_parent_stack.push_back(ParentData{ .id = parent_id, .counter = 0 });
@@ -52,12 +60,12 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "PopParent() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: PopParent() can only be called between Begin/EndFrame");
             return false;
         }
         if (m_parent_stack.size() == 1)
         {
-            assert(false && "Parent stack underflow");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Parent stack underflow");
             return false;
         }
         m_parent_stack.pop_back();
@@ -99,7 +107,7 @@ namespace interstice
     {
         if (id.GetMode() != IDMode::Static)
         {
-            assert(false && "Not a static ID");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Not a static ID");
             return false;
         }
 
@@ -108,7 +116,7 @@ namespace interstice
 
         if (index >= m_static_slots.size())
         {
-            assert(false && "Invalid slot index");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Invalid slot index");
             return false;
         }
         int32_t& generation = m_static_slots[index];
@@ -116,7 +124,7 @@ namespace interstice
         // Only release if the ID matches the current occupant exactly
         if (generation <= 0 || static_cast<uint32_t>(generation) != gen)
         {
-            assert(false && "Generation mismatch");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Generation mismatch");
             return false;
         }
 
@@ -137,7 +145,7 @@ namespace interstice
     {
         if (index >= m_static_slots.size())
         {
-            assert(false && "Invalid slot index");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Invalid slot index");
             return false;
         }
 
@@ -161,7 +169,7 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "AllocateDynamicID() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: AllocateDynamicID() can only be called between Begin/EndFrame");
             return ID::Invalid();
         }
         m_dynamic_id_total++;
@@ -204,7 +212,7 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "IsDynamicIDValid() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: IsDynamicIDValid() can only be called between Begin/EndFrame");
             return false;
         }
         if (id.GetMode() != IDMode::Dynamic) return false;
@@ -240,12 +248,12 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "AllocateRangedID() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: AllocateRangedID() can only be called between Begin/EndFrame");
             return ID::Invalid();
         }
         if (size <= 0 || size > ID::MAX_RANGED_SIZE_MASK) 
         {
-            assert(false && "Ranged size out of bounds");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Ranged size out of bounds");
             return ID::Invalid();
         }
         hash = Hash::Combine(hash, m_parent_stack.back().id.value.integer);
@@ -279,7 +287,7 @@ namespace interstice
     {
         if (ranged_id.GetMode() != IDMode::Ranged)
         {
-            assert(false && "Not a ranged ID");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Not a ranged ID");
             return 0;
         }
         return ranged_id.value.rangedParts.rangedSize;
@@ -289,7 +297,7 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "IsRangedIDValid() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: IsRangedIDValid() can only be called between Begin/EndFrame");
             return false;
         }
         if (id.GetMode() != IDMode::Ranged) return false;
@@ -315,23 +323,23 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "GetSubID() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: GetSubID() can only be called between Begin/EndFrame");
             return ID::Invalid();
         }
         if (ranged_id.GetMode() != IDMode::Ranged)
         {
-            assert(false && "Not a ranged ID");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Not a ranged ID");
             return ID::Invalid();
         }
         if (ranged_id == ID::Invalid())
         {
-            assert(false && "Not a ranged ID");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Not a ranged ID");
             return ID::Invalid();
         }
         const uint32_t ranged_size = ranged_id.value.rangedParts.rangedSize;
         if (index >= ranged_size)
         {
-            assert(false && "Index out of range");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: Index out of range");
             return ID::Invalid();
         }
         const uint64_t parent_hash = ranged_id.value.rangedParts.hashValue;
@@ -352,7 +360,7 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "IsSubRangeIDValid() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: IsSubRangeIDValid() can only be called between Begin/EndFrame");
             return false;
         }
         if (id.GetMode() != IDMode::SubRange) return false;
@@ -393,7 +401,7 @@ namespace interstice
     {
         if (!IsInsideFrame())
         {
-            assert(false && "GetStackParent() can only be called between Begin/EndFrame");
+            Diagnostics::ReportMisuse(kLogID, "IDManager: GetStackParent() can only be called between Begin/EndFrame");
             return ID::Invalid();
         }
         return m_parent_stack.back().id;

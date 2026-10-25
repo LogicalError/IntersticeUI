@@ -138,6 +138,14 @@ namespace interstice::Diagnostics
     void LogMessage(LogCategory category, LogSeverity severity, std::string_view messageTemplate,
                     std::span<const LogArg> args, const char* file = "", uint32_t line = 0);
 
+    // API misuse (an unbalanced Begin/End, a call outside its frame, ...) is reported, not
+    // fatal: the caller recovers and the app carries on. Logged as an error once per message,
+    // keyed by its address (pass a string literal), as a mistake in GUI code likely repeats
+    // every frame. [AnyThread]
+    void ReportMisuse(LogCategory category, const char* message);
+    // Lets every misuse be reported again (tests). [AnyThread]
+    void ResetMisuseReports();
+
     // Sequence number of the newest record (0 before the first). [AnyThread]
     uint64_t LatestLogSequence();
 

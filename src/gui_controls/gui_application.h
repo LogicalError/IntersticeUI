@@ -1510,6 +1510,9 @@ namespace interstice
         // Debug asserts for Begin*/End* stacks left unbalanced at frame end. Also used by the headless tests.
         void RegisterFrameHooks();   // per-frame stage hooks; Initialize (and test harnesses) call it
         void RegisterFrameBalanceChecks();
+        // API misuse (e.g. an End without its Begin): logged once, and the caller carries on.
+        static void ReportMisuse(const char* message);
+        static void ReportInvalidControlID(ID id);
 
         // Rebuilds the styles when a reload is pending or the main window's
         // display scale changed. Runs before the managers begin their frame.
@@ -1529,6 +1532,11 @@ namespace interstice
         MouseButtons m_lastPhysicalButtons { MouseButtons::None };  // for SynthesizeMissingMouseEvents
         std::string ResourcePath(std::string_view path) const;   // relative paths resolve against m_resourceRoot
         std::string m_themePath     { "themes/dark.css" };
+        bool        m_initialized = false;   // Initialize succeeded; Cleanup clears it
+        bool        m_inFrame     = false;   // inside OnFrame (a frame can't run inside another)
+        // The theme that last loaded, for a reload that fails to fall back to.
+        std::string m_loadedThemePath;
+        float       m_loadedFontScale { 1.0f };
         std::vector<std::string> m_styleFiles { "styles.css" };
         float       m_globalFontScale { 1.0f };
         float       m_uiScale { 1.0f };

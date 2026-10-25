@@ -5,6 +5,7 @@
 
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/elements/gui_element_data_store.h>
+#include <gui_core/diagnostics/gui_logging.h>
 
 namespace interstice
 {
@@ -520,6 +521,9 @@ namespace interstice
         if (id == ID::Invalid()) return;
         auto [it, inserted] = m_idIndex.try_emplace(id, ref);
         if (inserted) return;
+        if ((GetElementUnsafe(ref).flags & ElementFlags::SharesID) == ElementFlags::None)
+            Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("elements"),
+                "ElementStorage: two elements share an ID this frame (the first is kept for input and state)");
         // Duplicate ID: keep the shallowest, then earliest, element.
         const ElementRef& held = it->second;
         if (ref.depth < held.depth || (ref.depth == held.depth && ref.index < held.index))

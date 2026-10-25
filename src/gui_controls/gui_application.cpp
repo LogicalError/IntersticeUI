@@ -1,3 +1,4 @@
+#include <gui_core/text/gui_utf8.h>
 #include <gui_controls/gui_application.h>
 #include <gui_core/graphics/gui_pixel_snap.h>
 #include <gui_core/diagnostics/gui_logging.h>
@@ -89,11 +90,8 @@ namespace interstice
         case ElementStorageResult::UnknownProblem:       message = "ElementStorage: unknown problem (should not happen)"; break;
         }
         // A construction mistake (e.g. unbalanced Begin/End) is reported, not fatal: the
-        // storage recovers. Once per kind, as it likely repeats every frame.
-        static bool reported[int(ElementStorageResult::UnknownProblem) + 1] = {};
-        const int kind = int(result);
-        if (kind >= 0 && kind < int(std::size(reported)) && !std::exchange(reported[kind], true))
-            INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        // storage recovers.
+        Diagnostics::ReportMisuse(kLogApp, message);
     }
 
     void VERIFY(RegistryResult result)
@@ -106,8 +104,7 @@ namespace interstice
         case RegistryResult::InvalidRef:     message = "WindowRegistry: invalid element reference"; break;
         case RegistryResult::NoActiveWindow: message = "WindowRegistry: no active window scope (call BeginWindowScope() first)"; break;
         }
-        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
-        assert(false && "RegistryResult is not Success");
+        Diagnostics::ReportMisuse(kLogApp, message);
     }
 
     // WindowUserClosed is accepted too: it's the expected outcome when a window can't be reopened.
@@ -127,6 +124,12 @@ namespace interstice
             case AddWindowResult::FailedToCreateOSWindow:message = "OSWindowManager: OS-level window creation failed"; break;
             case AddWindowResult::InvalidID:             message = "OSWindowManager: AddWindow called with an invalid ID"; break;
         }
+        if (result == AddWindowResult::CalledOutsideOfFrame || result == AddWindowResult::InvalidID
+            || result == AddWindowResult::FailedToCreateOSWindow)
+        {
+            Diagnostics::ReportMisuse(kLogApp, message);
+            return;
+        }
         INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "AddWindowResult is not a success variant");
     }
@@ -143,6 +146,11 @@ namespace interstice
             case RequestCloseResult::WindowAlreadyClosed: message = "OSWindowManager: window was already closed"; break;
             case RequestCloseResult::UnknownError:        message = "OSWindowManager: unknown error while closing window"; break;
         }
+        if (result == RequestCloseResult::CalledOutsideFrame || result == RequestCloseResult::WindowAlreadyClosed)
+        {
+            Diagnostics::ReportMisuse(kLogApp, message);
+            return;
+        }
         INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "RequestCloseResult is not Success");
     }
@@ -150,6 +158,11 @@ namespace interstice
 
     bool GUIApplication::Initialize(const InitializeOptions& options)
     {
+        if (m_initialized)
+        {
+            ReportMisuse("GUIApplication: Initialize called on an initialized app (ignored)");
+            return true;
+        }
         if (!m_osWindowBackend)
         {
 #if INTERSTICE_SDL
@@ -251,6 +264,7 @@ namespace interstice
                 if (menuManager.IsOpen())
                     menuManager.CloseAll(guiStateManager, *windowManager);
             });
+        m_initialized = true;
         return true;
     }
 
@@ -267,43 +281,63 @@ namespace interstice
         m_frame.OnPostConstruct([this](FrameContext& ctx) { DrawScrims(ctx.elapsedTimeSecs); });
     }
 
+    void GUIApplication::ReportMisuse(const char* message) { Diagnostics::ReportMisuse(kLogApp, message); }
+
+    // A container left open at the end of the frame is reported and closed, and the next
+    // frame starts clean.
     void GUIApplication::RegisterFrameBalanceChecks()
     {
         m_frame.OnEndFrame([this](FrameContext&)
         {
+            if (m_tableEmit.has_value() || !m_outerTableEmits.empty())
+            {
+                ReportMisuse("GUIApplication: unbalanced BeginTable/EndTable at end of frame (closed)");
+                m_tableEmit.reset();
+                m_outerTableEmits.clear();
+            }
+            if (!m_cacheRecordStack.empty())
+            {
+                ReportMisuse("GUIApplication: unbalanced BeginCached/EndCached at end of frame (closed)");
+                m_cacheRecordStack.clear();
+            }
+            if (!m_titleBarStack.empty())
+            {
+                ReportMisuse("GUIApplication: unbalanced BeginTitleBar/EndTitleBar at end of frame (closed)");
+                m_titleBarStack.clear();
+            }
             if (!controlStylesStack.empty())
             {
-                assert(false && "GUIApplication: unbalanced BeginToolbar/EndToolbar at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginToolbar/EndToolbar at end of frame (closed)");
                 controlStylesStack.clear();
             }
             if (!m_windowIdScopeStack.empty())
             {
-                assert(false && "GUIApplication: unbalanced BeginWindow/EndWindow at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginWindow/EndWindow at end of frame (closed)");
                 m_windowIdScopeStack.clear();
             }
             if (m_treeState.containerID != ID::Invalid())
             {
-                assert(false && "GUIApplication: unbalanced BeginListView/BeginTreeView/EndListView at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginListView/BeginTreeView/EndListView at end of frame (closed)");
                 m_treeState = {};
             }
             if (m_gridViewState.containerID != ID::Invalid())
             {
-                assert(false && "GUIApplication: unbalanced BeginGridView/EndGridView at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginGridView/EndGridView at end of frame (closed)");
                 m_gridViewState = {};
             }
             if (m_tabBarState.barID != ID::Invalid())
             {
-                assert(false && "GUIApplication: unbalanced BeginTabBar/EndTabBar at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginTabBar/EndTabBar at end of frame (closed)");
                 m_tabBarState = {};
             }
             if (m_dockingState.containerID != ID::Invalid())
             {
-                assert(false && "GUIApplication: unbalanced BeginDockingContainer/EndDockingContainer at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginDockingContainer/EndDockingContainer at end of frame (closed)");
                 m_dockingState = {};
             }
             if (!menuManager.IsBalanced())
             {
-                assert(false && "GUIApplication: unbalanced BeginMenu/EndMenu at end of frame");
+                Diagnostics::ReportMisuse(kLogApp, "GUIApplication: unbalanced BeginMenu/EndMenu at end of frame (closed)");
                 menuManager.currentDepth = -1;
             }
         });
@@ -324,12 +358,15 @@ namespace interstice
 
         guiRenderer = nullptr;
         // The atlas registered a cleanup lambda on the device's deletion queue, so it must outlive Cleanup().
-        graphicsContext->Cleanup();
+        // Null without Initialize (or after a Cleanup): there is nothing to clean up.
+        if (graphicsContext != nullptr)
+            graphicsContext->Cleanup();
         textAtlasManager.reset();
         m_graphicsBackend.reset(); graphicsContext = nullptr;
         delete windowBackend; windowBackend = nullptr; m_imageWindows = nullptr;
         m_osWindowBackend.reset();
         clipboard.reset();
+        m_initialized = false;
     }
 
     bool GUIApplication::InitializeStyles()
@@ -342,6 +379,8 @@ namespace interstice
         {
             // After LoadTheme, so .table-cell / .tree-table-cell are resolved.
             if (textSystem) theme.ComputeRowMetrics(styleManager, *textSystem);
+            m_loadedThemePath = m_themePath;
+            m_loadedFontScale = m_globalFontScale;
             return true;
         }
         INTERSTICE_LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
@@ -418,15 +457,10 @@ namespace interstice
         m_imageWindows->SetFocus(windowManager->GetWindowHandle(windowID));
         for (size_t i = 0; i < utf8.size(); )
         {
-            const auto lead = static_cast<unsigned char>(utf8[i]);
-            const int length = lead < 0x80 ? 1 : (lead >> 5) == 0x6 ? 2 : (lead >> 4) == 0xE ? 3 : (lead >> 3) == 0x1E ? 4 : 0;
-            if (length == 0 || i + length > utf8.size())
+            const uint32_t codepoint = NextUtf8Codepoint(utf8, i);
+            if (codepoint == kInvalidCodepoint)
                 return;   // malformed: stop rather than send garbage
-            uint32_t codepoint = length == 1 ? lead : lead & (0x7Fu >> length);
-            for (int k = 1; k < length; ++k)
-                codepoint = (codepoint << 6) | (static_cast<unsigned char>(utf8[i + k]) & 0x3Fu);
             inputBroadcaster.OnKeyboard(windowID, static_cast<KeyCode>(codepoint), 0, KeyModifier::None, KeyAction::KeyChar);
-            i += size_t(length);
         }
     }
 
@@ -476,10 +510,20 @@ namespace interstice
         for (auto& [window, scrim] : m_scrims)
             scrim.color = VisualColorStyleIndex::Invalid;
         if (textSystem) textSystem->ClearCache();
-        if (!InitializeStyles())
-            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
-        else
+        bool loaded = InitializeStyles();
+        if (!loaded && !m_loadedThemePath.empty() && m_loadedThemePath != m_themePath)
+        {
+            // A theme that is missing or broken: back to the one that last loaded, so the app keeps its look.
+            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; keeping {}", m_themePath, m_loadedThemePath);
+            m_themePath       = m_loadedThemePath;
+            m_globalFontScale = m_loadedFontScale;
+            styleManager.ClearAll();
+            loaded = InitializeStyles();
+        }
+        if (loaded)
             OnStylesReloaded();
+        else
+            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
 
         // Captured draws reference the old styles and glyph atlas.
         if (m_uiCache) m_uiCache->InvalidateAll();
@@ -984,6 +1028,15 @@ namespace interstice
 
     void GUIApplication::OnFrame()
     {
+        // A frame run from inside a frame (a callback calling OnFrame) would dispatch the same
+        // input again, and again: skipped.
+        if (m_inFrame)
+        {
+            ReportMisuse("GUIApplication: a frame run from inside a frame (ignored)");
+            return;
+        }
+        struct FrameScope { bool& inFrame; FrameScope(bool& f) : inFrame(f) { inFrame = true; } ~FrameScope() { inFrame = false; } } frameScope{ m_inFrame };
+
         // Once per frame; shared by transitions and GPU push constants.
         m_frameClock.Tick(SteadyClockNowNanos(), windowManager ? windowManager->MainRefreshRate() : 0.0f);
         const float elapsedTimeSecs = static_cast<float>(m_frameClock.Seconds());

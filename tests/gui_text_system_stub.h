@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gui_core/text/gui_utf8.h>
 #include <gui_core/text/gui_text_system.h>
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_hash.h>
@@ -248,7 +249,9 @@ namespace interstice
         // -------------------- Cursor Visibility --------------------
 
         void EnsureCursorVisible(ID /*textEditorId*/) override {}
-        std::optional<IntRect> GetCursorRect(ID /*textEditorId*/) override { return std::nullopt; }
+        // The focused editor's cursor (editor-local), as a test sets it; none by default.
+        std::optional<IntRect> cursorRect;
+        std::optional<IntRect> GetCursorRect(ID /*textEditorId*/) override { return cursorRect; }
         std::optional<IntRect> GetCaretScreenRect() const override { return std::nullopt; }
 
         // -------------------- Editor Input Handling --------------------
@@ -263,8 +266,7 @@ namespace interstice
             {
                 unsigned int codepoint = static_cast<unsigned int>(key);
                 if (codepoint < 32 && codepoint != '\t') return;
-                if (codepoint > 127) return;
-                pending.inserts += static_cast<char>(codepoint);
+                AppendUtf8(pending.inserts, codepoint);
             }
             else if (action == KeyAction::KeyDown)
             {
@@ -384,14 +386,10 @@ namespace interstice
                 return false;
 
             bool textChanged = false;
-            for (uint32_t i = 0; i < pe.backspaces && !currentText.empty(); ++i)
+            // A whole character at a time, not a byte.
+            for (uint32_t i = 0; i < pe.backspaces + pe.deletes && !currentText.empty(); ++i)
             {
-                currentText.pop_back();
-                textChanged = true;
-            }
-            for (uint32_t i = 0; i < pe.deletes && !currentText.empty(); ++i)
-            {
-                currentText.pop_back();
+                currentText.resize(currentText.size() - LastUtf8CodepointSize(currentText));
                 textChanged = true;
             }
             if (!pe.inserts.empty())

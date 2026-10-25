@@ -15,8 +15,9 @@ void Gradient::WriteTo(std::span<color4b> out) const
         return;
 
     size_t size = out.size();
+    const size_t count = StopCount();   // never past the stop array
 
-    if (stopCount == 0)
+    if (count == 0)
     {
         // Fill transparent black if no stops
         for (size_t i = 0; i < size; ++i)
@@ -26,7 +27,7 @@ void Gradient::WriteTo(std::span<color4b> out) const
 
     // Ensure stops are sorted by offset (stable)
     std::array<ColorStop, kMaxStops> sorted = stops;
-    std::sort(sorted.begin(), sorted.begin() + stopCount,
+    std::sort(sorted.begin(), sorted.begin() + count,
               [](const ColorStop& a, const ColorStop& b)
               {
                   return a.GetOffset() < b.GetOffset();
@@ -34,7 +35,7 @@ void Gradient::WriteTo(std::span<color4b> out) const
 
     // Clamp offsets to [0,1] for first/last stops
     sorted[0].SetOffset(std::max(0.0f, std::min(1.0f, sorted[0].GetOffset())));
-    sorted[stopCount - 1].SetOffset(std::max(0.0f, std::min(1.0f, sorted[stopCount - 1].GetOffset())));
+    sorted[count - 1].SetOffset(std::max(0.0f, std::min(1.0f, sorted[count - 1].GetOffset())));
 
     // Interpolated sRGB color at t in [0,1].
     auto sample = [&](float t) -> color4f
@@ -44,12 +45,12 @@ void Gradient::WriteTo(std::span<color4b> out) const
         // If before first stop or exactly equal
         if (t <= sorted[0].GetOffset())
             return sorted[0].GetColor4f();
-        if (t >= sorted[stopCount - 1].GetOffset())
-            return sorted[stopCount - 1].GetColor4f();
+        if (t >= sorted[count - 1].GetOffset())
+            return sorted[count - 1].GetColor4f();
 
         // Find neighboring stops
         size_t idx = 0;
-        for (size_t i = 0; i + 1 < stopCount; ++i)
+        for (size_t i = 0; i + 1 < count; ++i)
         {
             if (t >= sorted[i].GetOffset() && t <= sorted[i + 1].GetOffset())
             {

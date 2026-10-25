@@ -490,8 +490,8 @@ namespace interstice
 
     TEST_F(StateManagerTest, MakeTextCursorVisibleInTextBox)
     {
-        // Checks the scroll offsets only; scrolling the cursor into view needs a
-        // real ElementStorage (#68).
+        // The offset math only; ScrollbarDragTest.TheTextCursorScrollsIntoView runs the
+        // whole path (input manager, element storage, an enclosing scroll area).
 
         ID id = idManager.CreateStaticID();
         ScrollOffsetHandle handle = GetScrollOffsetHandle(id);

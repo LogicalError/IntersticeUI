@@ -40,6 +40,7 @@ namespace interstice
         PropagatesDescendantState = 1u << 16, // Hover/Focused when any descendant is
         NoInput                   = 1u << 17, // Mouse hits pass through
         IsCachedScope             = 1u << 20, // BeginCached scope; render blits its cached primitives while clean
+        SharesID                  = 1u << 22, // has an earlier element's ID on purpose (a part of it, e.g. a row's tree cell)
 
         IsMenuWindow = IsWindow | WindowUserControlled | WindowNoCaption | WindowIsPopup | Shadows
     };

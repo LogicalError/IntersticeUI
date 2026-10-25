@@ -734,8 +734,11 @@ namespace interstice
             const StyleRef rowStyle = (visualIdx % 2 == 0) ? rowStyleEven : rowStyleOdd;
             interstice::ElementState backdropState = guiStateManager.GetCurrentState(rowID);
             if (!cellMode && rowSelected) backdropState |= interstice::ElementState::Selected;
+            // A row spans its sections: each section after the first (colStart > 0) has a
+            // backdrop of its own with the row's ID.
             const interstice::ElementFlags backdropFlags =
-                cellMode ? interstice::ElementFlags::NoInput : interstice::ElementFlags::None;
+                (cellMode ? interstice::ElementFlags::NoInput : interstice::ElementFlags::None)
+                | (colStart > 0 ? interstice::ElementFlags::SharesID : interstice::ElementFlags::None);
 
             EmitDirectRowBackdrop(rowID, static_cast<int16_t>(gridRowOf(visualIdx)),
                                   colStart, colEnd,

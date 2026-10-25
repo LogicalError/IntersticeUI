@@ -67,8 +67,13 @@ public:
     // Emit a root "window" element filling the monitor area. Widgets
     // emitted between BeginRootWindow/EndRootWindow become its children
     // and participate in hit-testing/layout.
+    // The default style is the production `.window` (a wrapping row). Pass
+    // theme.mainWindowStyleRef (a stretching column, like the app's main
+    // window or a docked panel) for content that fills the height, such as
+    // the node view's canvas.
     bool BeginRootWindow(interstice::int2 size = { 1920, 1080 },
-                         interstice::ElementFlags extraFlags = interstice::ElementFlags::None);
+                         interstice::ElementFlags extraFlags = interstice::ElementFlags::None,
+                         interstice::StyleRef style = {});
     void EndRootWindow();
 
     // ---- Input injection ------------------------------------------------
@@ -111,8 +116,8 @@ public:
     // Per-character text input. Each character is sent to the text system
     // as a KeyAction::KeyChar event (matching the SDL backend's path). For
     // the StubTextSystem this routes characters into the active editable
-    // text registered by Field(string&) / NumericalField. Only ASCII is
-    // mapped through; non-ASCII characters are silently skipped (#68).
+    // text registered by Field(string&) / NumericalField. The text is UTF-8:
+    // one KeyChar per codepoint.
     void InjectText(std::string_view text);
 
     // Advance the harness's notion of "now". Forwarded to

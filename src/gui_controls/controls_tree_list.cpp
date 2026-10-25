@@ -328,6 +328,11 @@ namespace interstice
 
     bool GUIApplication::ListItem(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints)
     {
+        if (m_treeState.containerID == ID::Invalid())
+        {
+            ReportMisuse("GUIApplication: ListItem outside a list or tree view (ignored)");
+            return false;
+        }
         int itemIndex = m_treeState.nextItemIndex++;
         bool selected = IsTreeItemSelected(id, itemIndex);
 

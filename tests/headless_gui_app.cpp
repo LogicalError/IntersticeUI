@@ -1,3 +1,4 @@
+#include <gui_core/text/gui_utf8.h>
 #include "headless_gui_app.h"
 
 #include <gui_core/input/gui_input_manager.h>
@@ -110,6 +111,14 @@ void HeadlessGUIApp::Cleanup()
 
 void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 {
+    // As OnFrame: a frame run from inside a frame is reported and skipped.
+    if (m_inFrame)
+    {
+        ReportMisuse("GUIApplication: a frame run from inside a frame (ignored)");
+        return;
+    }
+    struct FrameScope { bool& inFrame; FrameScope(bool& f) : inFrame(f) { inFrame = true; } ~FrameScope() { inFrame = false; } } frameScope{ m_inFrame };
+
     // Rebuilt each frame; the stage points mirror production's OnFrame so
     // subsystem hooks fire under test.
     interstice::FrameContext ctx{
@@ -237,7 +246,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 // Root window
 // ---------------------------------------------------------------------------
 
-bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementFlags extraFlags)
+bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementFlags extraFlags, interstice::StyleRef style)
 {
     // Stand-in for BeginWindow() without an OS window: an IsWindow + NotFocusable
     // content root.
@@ -248,7 +257,7 @@ bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementF
                | interstice::ElementFlags::WindowNotFocusable
                | extraFlags;
     // Production window style, for its padding + Display::Flex defaults.
-    root.styleRef = theme.windowStyleRef;
+    root.styleRef = style != interstice::StyleRef::Invalid() ? style : theme.windowStyleRef;
     root.state    = guiStateManager.GetCurrentState(m_rootWindowID);
 
     interstice::LayoutOverride lo = interstice::LayoutOverride{}
@@ -345,12 +354,13 @@ void HeadlessGUIApp::DragFrom(interstice::int2 from, interstice::int2 to,
 
 void HeadlessGUIApp::InjectText(std::string_view text)
 {
-    for (char c : text)
+    // One KeyChar per codepoint, as the OS backend sends typed text; malformed text stops.
+    for (size_t i = 0; i < text.size(); )
     {
-        // Map ASCII to KeyCode payload exactly the way SDL does
-        // (gui_window_backend_sdl.cpp: cast text byte -> KeyCode).
-        InjectKey(static_cast<interstice::KeyCode>(static_cast<unsigned char>(c)),
-                  interstice::KeyAction::KeyChar);
+        const uint32_t codepoint = interstice::NextUtf8Codepoint(text, i);
+        if (codepoint == interstice::kInvalidCodepoint)
+            return;
+        InjectKey(static_cast<interstice::KeyCode>(codepoint), interstice::KeyAction::KeyChar);
     }
 }
 

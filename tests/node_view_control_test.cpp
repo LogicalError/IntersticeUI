@@ -1,19 +1,9 @@
 // Tests for the node-view widget (GUIApplication::RenderNodeView,
 // controls_node_view.cpp) through the headless harness.
 //
-// HARNESS LIMITATION (#68) - read before adding node-level interaction tests:
-// the node-view canvas uses overflow:auto + flex-grow:1 with no flex-basis:0,
-// and the engine does not zero a scroll container's min-content height (see
-// the project memory on flex-basis bounding). With no height-giving dock
-// parent (absent in the harness) the canvas collapses to ~0 height. Its nodes
-// are Absolute-positioned, so they render at their `pos` but fall OUTSIDE the
-// collapsed canvas's hit region - clicks/drags on nodes and sockets never
-// dispatch. So this file covers only what the harness can reach: layout and
-// the CANVAS-level interactions (pan, zoom, marquee activation, background
-// click). Node-level math (socket wiring routes, marquee containment, hit
-// tests) is covered directly by node_view_{hit_test,marquee,wire_route}_test,
-// and the interaction handlers themselves moved verbatim from the demo, which
-// the user verifies visually.
+// The canvas fills its parent's height the way it does in a docked panel, so the
+// root here is a main-window root (a stretching column): the default `.window`
+// root is a wrapping row, where the canvas would collapse to its padding.
 
 #include <gtest/gtest.h>
 
@@ -22,6 +12,7 @@
 #include <gui_core/gui_id.h>
 
 #include <algorithm>
+#include <unordered_set>
 #include <vector>
 
 namespace interstice
@@ -66,7 +57,7 @@ namespace interstice
             void Frame()
             {
                 app.Frame([&] {
-                    app.BeginRootWindow();
+                    app.BeginRootWindow({ 1920, 1080 }, ElementFlags::None, app.theme.mainWindowStyleRef);
                     app.RenderNodeView(view);
                     app.EndRootWindow();
                 });
@@ -93,12 +84,62 @@ namespace interstice
                 return {};
             }
 
-            // A point on the canvas background (its hittable top strip),
-            // clear of any node.
+            // A point on the canvas background, clear of the nodes and the overlays.
             interstice::int2 CanvasPoint() const
             {
                 const auto inner = CanvasInner();
-                return { inner.x + inner.w * 3 / 4, inner.y };
+                return { inner.x + inner.w * 3 / 4, inner.y + inner.h / 2 };
+            }
+
+            // The rects of the elements with `style`, in layout order.
+            std::vector<interstice::IntRect> RectsWithStyle(interstice::StyleRef style) const
+            {
+                std::vector<interstice::IntRect> out;
+                for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
+                    for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
+                    {
+                        interstice::ElementRef ref{ d, i };
+                        if (!app.elementStorage.IsValidRef(ref)) continue;
+                        if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
+                        if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
+                    }
+                return out;
+            }
+
+            // The centre of the first socket inside `node`'s rect.
+            interstice::int2 SocketOf(interstice::ID node) const
+            {
+                const auto n = app.GetElementRect(node);
+                for (const auto& r : RectsWithStyle(app.theme.nodeSocketStyleRef))
+                {
+                    const interstice::int2 c{ r.x + r.w / 2, r.y + r.h / 2 };
+                    if (c.x >= n.x - r.w && c.x <= n.x + n.w + r.w && c.y >= n.y && c.y < n.y + n.h)
+                        return c;
+                }
+                return { -1, -1 };
+            }
+
+            // A left drag the way a mouse makes one: press, moves and release on frames of
+            // their own.
+            void Drag(interstice::int2 from, interstice::int2 to)
+            {
+                app.InjectMouseMove(from);
+                app.InjectMouseDown(from);
+                Frame();
+                const interstice::int2 mid{ (from.x + to.x) / 2, (from.y + to.y) / 2 };
+                app.InjectMouseMove(mid, MouseButtons::Left);
+                Frame();
+                app.InjectMouseMove(to, MouseButtons::Left);
+                Frame();
+                app.InjectMouseUp(to);
+                Frame();
+            }
+
+            // A point on `node`'s header, clear of its sockets.
+            interstice::int2 HeaderOf(interstice::ID node) const
+            {
+                const auto n = app.GetElementRect(node);
+                return { n.x + n.w / 2, n.y + app.theme.nodeGridSize };
             }
         };
 
@@ -131,6 +172,52 @@ namespace interstice
             const int rowPitch = 2 * app.theme.nodeGridSize;
             EXPECT_EQ(socket.y + socket.h / 2, nodeRect.y + rowPitch / 2)
                 << "on the header slot's centre (a grid line), not a fixed offset";
+        }
+
+        TEST_F(NodeViewControlTest, TheCanvasFillsItsParent)
+        {
+            Settle();
+            const auto inner = CanvasInner();
+            EXPECT_GT(inner.h, 1000) << "the canvas collapsed (#68)";
+            EXPECT_GT(inner.w, 1800);
+        }
+
+        TEST_F(NodeViewControlTest, ClickingANodeSelectsIt)
+        {
+            Settle();
+            app.ClickAt(HeaderOf(nodeB));
+            Frame();
+            EXPECT_EQ(view.selectedNodeIDs, std::unordered_set<interstice::ID>{ nodeB });
+        }
+
+        // A drag on a node's header moves it (on the grid) and reports one edit.
+        TEST_F(NodeViewControlTest, DraggingANodeMovesIt)
+        {
+            Settle();
+            int edits = 0;
+            view.onEdit = [&](const NodeViewEdit& edit) { edits++; EXPECT_EQ(edit.moves.size(), 1u); };
+            const interstice::int2 before = view.nodes[1].pos;
+            const interstice::int2 from = HeaderOf(nodeB);
+            Drag(from, { from.x + 5 * app.theme.nodeGridSize, from.y + 3 * app.theme.nodeGridSize });
+            Settle();
+            EXPECT_GT(view.nodes[1].pos.x, before.x);
+            EXPECT_GT(view.nodes[1].pos.y, before.y);
+            EXPECT_EQ(view.nodes[1].pos.x % app.theme.nodeGridSize, 0) << "positions snap to the grid";
+            EXPECT_EQ(edits, 1);
+        }
+
+        // Dragging from an output socket onto an input socket wires them.
+        TEST_F(NodeViewControlTest, DraggingFromAnOutputToAnInputConnects)
+        {
+            Settle();
+            const interstice::int2 out = SocketOf(nodeA), in = SocketOf(nodeB);
+            ASSERT_GE(out.x, 0);
+            ASSERT_GE(in.x, 0);
+            Drag(out, in);
+            Settle();
+            ASSERT_TRUE(view.nodes[1].properties[0].input.has_value());
+            ASSERT_TRUE(view.nodes[1].properties[0].input->valid());
+            EXPECT_EQ(view.nodes[1].properties[0].input->nodeIdx, 0);
         }
 
         TEST_F(NodeViewControlTest, NodesLayOutAtTheirPositions)

@@ -39,6 +39,11 @@ namespace interstice
 
     bool GUIApplication::Tab(ID id, std::string_view text, IconID icon, StyleRef style, LayoutOverride&& constraints)
     {
+        if (m_tabBarState.barID == ID::Invalid())
+        {
+            ReportMisuse("GUIApplication: Tab outside a tab bar (ignored)");
+            return false;
+        }
         int         tabIndex      = m_tabBarState.nextTabIndex++;
         int*        selectedIndex = m_tabBarState.selectedIndex;
         const auto& onClose       = m_tabBarState.onClose;

@@ -7,6 +7,9 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/graphics/gui_custom_draw_context.h>
 #include <gui_core/input/gui_undo_history.h>
+#include <gui_core/text/gui_utf8.h>
+
+#include <cmath>
 
 #include <string>
 
@@ -837,6 +840,142 @@ namespace interstice
             EXPECT_EQ(bound, "abc");
             EXPECT_EQ(history.UndoCount(), 0u);
             EXPECT_EQ(history.RedoCount(), 1u) << "the blur pushed a step and dropped the redo";
+        }
+
+        // ---- Abuse (#87): the editor takes bad input without breaking ----
+
+        bool IsValidUtf8(std::string_view text)
+        {
+            for (size_t i = 0; i < text.size(); )
+                if (NextUtf8Codepoint(text, i) == kInvalidCodepoint)
+                    return false;
+            return true;
+        }
+
+        // Pasted bytes that aren't UTF-8: the field keeps valid text, the good part included,
+        // and each bad byte shows as U+FFFD.
+        TEST_F(SkribidiEditorTest, PastingInvalidUtf8KeepsTheTextValid)
+        {
+            clipboard.Set("\xff\xfe ok \xc3");
+            Frame(200);
+            Focus(field);
+            Frame(200);
+            Key(KeyCode::End);
+            Key(KeyCode::KeyV, KeyModifier::Control);
+            Key(KeyCode::Return);
+            Frame(200);
+            EXPECT_TRUE(IsValidUtf8(bound)) << bound;
+            EXPECT_NE(bound.find(" ok "), std::string::npos) << bound;
+            EXPECT_EQ(bound, "abc" "\xEF\xBF\xBD" "\xEF\xBF\xBD" " ok " "\xEF\xBF\xBD") << "each bad byte shows as U+FFFD";
+        }
+
+        TEST_F(SkribidiEditorTest, PastingAMegabyte)
+        {
+            clipboard.Set(std::string(1 << 20, 'x'));
+            Frame(200);
+            Focus(field);
+            Frame(200);
+            Key(KeyCode::End);
+            Key(KeyCode::KeyV, KeyModifier::Control);
+            Key(KeyCode::Return);
+            Frame(200);
+            EXPECT_EQ(bound.size(), (1u << 20) + 3);
+        }
+
+        // A bound string that is already broken UTF-8 can be shown, focused and edited.
+        TEST_F(SkribidiEditorTest, ABoundStringThatIsntUtf8)
+        {
+            bound = "\xc3\x28 bad \xe2\x82";
+            Frame(200);
+            Focus(field);
+            Frame(200);
+            Key(KeyCode::End);
+            Type("Z");
+            Key(KeyCode::Return);
+            Frame(200);
+            EXPECT_NE(bound.find('Z'), std::string::npos);
+        }
+
+        // An undo whose field is gone: nothing breaks, another field still edits, and the
+        // field gets the undone text when it comes back.
+        TEST_F(SkribidiEditorTest, UndoAfterTheFieldIsGone)
+        {
+            Frame(200);
+            Focus(field);
+            Frame(200);
+            Type("XY");
+            Focus(ID::Invalid());
+            Frame(200);
+            ASSERT_NE(bound, "abc");
+
+            history.Undo();   // focuses a field that isn't there any more
+            SettleFocus();
+            const ID other{ .value{ .integer = 950 } };
+            std::string otherText = "other";
+            auto otherFrame = [&] {
+                bool changed = false;
+                const ElementState state = (stateManager.TextEditorFocus().GetFocusedID() == other) ? ElementState::Focused : ElementState::None;
+                const TextID id = textSystem->RegisterEditableText(other, otherText, TextEditBehavior::None, style, state, changed);
+                const IntRect rect{ 0, 40, 200, 20 };
+                textSystem->RenderText(id, rect, rect, IntRect{ 0, 0, 2000, 2000 });
+            };
+            otherFrame();
+            otherFrame();
+            Focus(other);
+            otherFrame();
+            Key(KeyCode::End);
+            Type("!");
+            Key(KeyCode::Return);
+            otherFrame();
+            EXPECT_EQ(otherText, "other!");
+
+            Frame(200);   // the first field is back
+            EXPECT_EQ(bound, "abc");
+        }
+
+        // A number field committed with text that isn't a number keeps its value.
+        TEST_F(SkribidiEditorTest, ANumberCommittedWithNoNumberKeepsItsValue)
+        {
+            for (const char* typed : { "-", "+", "1e999", "" })
+            {
+                float value = 2.5f;
+                auto numericFrame = [&] {
+                    modified = false;
+                    const ElementState state = (stateManager.TextEditorFocus().GetFocusedID() == field) ? ElementState::Focused : ElementState::None;
+                    textId = textSystem->RegisterEditableValue(field, value, TextEditBehavior::None, style, state, modified);
+                    const IntRect rect{ 0, 0, 200, 20 };
+                    textSystem->RenderText(textId, rect, rect, IntRect{ 0, 0, 2000, 2000 });
+                };
+                numericFrame();
+                Focus(field);
+                numericFrame();
+                Key(KeyCode::KeyA, KeyModifier::Control);
+                Key(KeyCode::Backspace);
+                Type(typed);
+                Key(KeyCode::Return);
+                numericFrame();
+                Focus(ID::Invalid());
+                numericFrame();
+                EXPECT_EQ(value, 2.5f) << "typed '" << typed << "'";
+                EXPECT_TRUE(std::isfinite(value)) << typed;
+            }
+        }
+
+        TEST_F(SkribidiEditorTest, EditingAHugeString)
+        {
+            bound = std::string(200000, 'w');
+            Frame(400);
+            Focus(field);
+            Frame(400);
+            Key(KeyCode::End);
+            Type("e");
+            Key(KeyCode::Home);
+            Type("s");
+            Key(KeyCode::Return);
+            Frame(400);
+            ASSERT_EQ(bound.size(), 200002u);
+            EXPECT_EQ(bound.front(), 's');
+            EXPECT_EQ(bound.back(), 'e');
         }
 
         // Two fields, A over B: drag A's selected text into B.

@@ -5,6 +5,7 @@
 #include <gui_core/state/gui_state_manager.h>
 
 #include <assert.h>
+#include <gui_core/diagnostics/gui_logging.h>
 
 namespace interstice
 {
@@ -121,8 +122,8 @@ namespace interstice
 
         if (!m_construction.IsBalanced())
         {
-            assert(false && "GUIStateManager construction phase levels not "
-                            "balanced at EndFrame");
+            Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("state"),
+                "GUIStateManager: PushDisabled/PushSelected/PushIndeterminate left unpopped at EndFrame (reset)");
             m_construction.Reset();
         }
 

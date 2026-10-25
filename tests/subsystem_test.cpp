@@ -259,18 +259,6 @@ namespace interstice
         EXPECT_TRUE(sub.IsBalanced());
     }
 
-#ifndef NDEBUG
-    TEST(LabelGroupSubsystemTest, EndGroupWithoutBeginAsserts)
-    {
-        HeadlessGUIApp app;
-        ASSERT_TRUE(app.Initialize());
-
-        FramePipeline pipeline;
-        LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
-
-        EXPECT_DEATH({ sub.EndGroup(); }, ".*");
-    }
-#endif
 
     // ---------------------------------------------------------------------
     // ButtonGroupSubsystem - verify the first/mid/last/solo style cycle.
@@ -368,29 +356,6 @@ namespace interstice
         EXPECT_TRUE(sub.IsBalanced());
     }
 
-#ifndef NDEBUG
-    TEST(ButtonGroupSubsystemTest, EndButtonGroupWithoutBeginAsserts)
-    {
-        HeadlessGUIApp app;
-        ASSERT_TRUE(app.Initialize());
-
-        FramePipeline pipeline;
-        ButtonGroupSubsystem sub(pipeline, app.elementStorage, app.styleManager);
-
-        EXPECT_DEATH({ sub.EndButtonGroup(); }, ".*");
-    }
-
-    TEST(ButtonGroupSubsystemTest, EndToggleGroupWithoutBeginAsserts)
-    {
-        HeadlessGUIApp app;
-        ASSERT_TRUE(app.Initialize());
-
-        FramePipeline pipeline;
-        ButtonGroupSubsystem sub(pipeline, app.elementStorage, app.styleManager);
-
-        EXPECT_DEATH({ sub.EndToggleGroup(); }, ".*");
-    }
-#endif
 
     // ---------------------------------------------------------------------
     // RenameSubsystem - verify the Start/Cancel state machine.
@@ -482,26 +447,6 @@ namespace interstice
         EXPECT_FALSE(scopes.IsSelected());
     }
 
-    // ---------------------------------------------------------------------
-    // GUIApplication frame-end balance - verifies the OnEndFrame callback
-    // registered by RegisterFrameBalanceChecks() catches unmatched
-    // BeginWindow / BeginToolbar at end of frame.
-    // ---------------------------------------------------------------------
-
-#ifndef NDEBUG
-    TEST(GUIApplicationBalanceTest, UnmatchedBeginToolbarAssertsAtFrameEnd)
-    {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                app.BeginToolbar();        // leak - no EndToolbar before frame end
-                app.EndRootWindow();
-            });
-        }, ".*");
-    }
-
     // onReorder handlers run at end of frame and resolve item IDs through
     // FindListItemIndex; a second list view in the same frame must not wipe
     // the first one's entries.
@@ -539,72 +484,6 @@ namespace interstice
         app.Cleanup();
     }
 
-    TEST(GUIApplicationBalanceTest, UnmatchedBeginListViewAssertsAtFrameEnd)
-    {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                int sel = 0;
-                app.BeginListView(&sel, 0);  // leak - no EndListView
-                app.EndRootWindow();
-            });
-        }, ".*");
-    }
-
-    TEST(GUIApplicationBalanceTest, UnmatchedBeginGridViewAssertsAtFrameEnd)
-    {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                int sel = 0;
-                const interstice::ID gridID = app.idManager.CreateStaticID();
-                app.BeginGridView(gridID, &sel);   // leak - no EndGridView
-                app.EndRootWindow();
-            });
-        }, ".*");
-    }
-
-    TEST(GUIApplicationBalanceTest, UnmatchedBeginReorderableGroupAssertsAtFrameEnd)
-    {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            app.Frame([&]{
-                app.BeginRootWindow();
-                const interstice::ID groupID = app.idManager.CreateStaticID();
-                app.BeginReorderableGroup(groupID, interstice::ReorderDirection::Vertical,
-                                          [](int, int){});      // leak - no End
-                app.EndRootWindow();
-            });
-        }, ".*");
-    }
-
-    TEST(GUIApplicationBalanceTest, UnmatchedBeginMenuAssertsAtFrameEnd)
-    {
-        EXPECT_DEATH({
-            HeadlessGUIApp app;
-            ASSERT_TRUE(app.Initialize());
-            // BeginMenu opens a popup window, which is hard to set up headless
-            // (#68): drive currentDepth directly to simulate a leaked BeginMenu
-            // and verify the OnEndFrame check fires.
-            app.Frame([&]{
-                app.BeginRootWindow();
-                app.menuManager.currentDepth = 0;  // simulate leaked BeginMenu
-                app.EndRootWindow();
-            });
-        }, ".*");
-    }
-
-    // BeginWindow is protected on GUIApplication, so a leak case can't be
-    // built from outside (#68). The same balance check
-    // (m_windowIdScopeStack non-empty at EndFrame) is wired up alongside
-    // controlStylesStack - exercising the toolbar case above covers the
-    // OnEndFrame callback's overall mechanism.
-#endif
 
     // ---------------------------------------------------------------------
     // A widget Begin/End mismatch is reported, not fatal: the frame completes
@@ -647,26 +526,4 @@ namespace interstice
         EXPECT_GT(app.GetElementRect(buttonID).w, 0);
     }
 
-#ifndef NDEBUG
-    TEST(ConstructionScopesTest, PopWithoutPushAsserts)
-    {
-        EXPECT_DEATH({ ConstructionScopes scopes; scopes.PopDisabled();      }, ".*");
-        EXPECT_DEATH({ ConstructionScopes scopes; scopes.PopSelected();      }, ".*");
-        EXPECT_DEATH({ ConstructionScopes scopes; scopes.PopIndeterminate(); }, ".*");
-    }
-
-    TEST(ConstructionScopesTest, GUIStateManagerEndFrameAssertsOnUnbalancedScopes)
-    {
-        // GUIStateManager::EndFrame calls IsBalanced(); when unbalanced it
-        // asserts (then Resets, so production limps on, but the assert fires).
-        EXPECT_DEATH({
-            GUIStateManager sm;
-            IDManager       idm;
-            ASSERT_TRUE(sm.BeginFrame());
-            ASSERT_TRUE(idm.BeginFrame());
-            sm.Construction().PushDisabled();   // leak - no matching Pop
-            sm.EndFrame({}, idm);
-        }, ".*");
-    }
-#endif
 }

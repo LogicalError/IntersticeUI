@@ -280,15 +280,143 @@ namespace interstice
                 << "target y " << target.y << " not in outer viewport " << outerRect->innerRect.y << ".." << outerRect->innerRect.y + outerRect->innerRect.h;
         }
 
-        // Note on track-click + thumb-drag integration: those flows require
-        // a parent container whose CSS layout sets up vertical overflow with
-        // contentBounds.h > innerRect.h. The list-area style + stacked
-        // labels in this harness don't reliably produce that geometry
-        // (label flex-direction interacts with the area's auto sizing in
-        // ways the harness doesn't fully simulate without a real renderer).
-        // The wheel-handler unit tests above and the registration test
-        // below give the high-value coverage; track-click tests need the
-        // harness to produce that overflow (#68).
+        // Track clicks and thumb drags, end to end: a 200px area over 1000px of content.
+        class ScrollbarDragTest : public ::testing::Test
+        {
+        protected:
+            HeadlessGUIApp app;
+            ID areaID{}, barID{}, contentID{};
+
+            void SetUp() override
+            {
+                app.Initialize();
+                areaID    = app.idManager.CreateStaticID();
+                barID     = app.idManager.CreateStaticID();
+                contentID = app.idManager.CreateStaticID();
+            }
+            void TearDown() override { app.Cleanup(); }
+
+            void Frame()
+            {
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    if (app.BeginArea(areaID, app.theme.listAreaStyleRef, LayoutOverride{}.Size(200, 200)))
+                    {
+                        Element content{};
+                        content.id       = contentID;
+                        content.styleRef = app.theme.emptyVertStyleRef;
+                        app.RegisterElement(std::move(content), LayoutOverride{}.Size(160, 1000));
+                        app.VerticalScrollbar(barID, areaID);
+                        app.EndArea();
+                    }
+                    app.EndRootWindow();
+                });
+            }
+
+            int ScrollY() { return -app.guiStateManager.GetScrollManagement().GetScrollOffset(
+                                       app.guiStateManager.GetScrollManagement().GetOrCreateScrollOffsetHandle(areaID)).y; }
+            const ElementRect& Area() { return *app.elementStorage.GetElementRectPtr(app.elementStorage.FindElementRefByID(areaID)); }
+            int BarX() { const IntRect bar = app.GetElementRect(barID); return bar.x + bar.w / 2; }
+            int ScrollRange() { return Area().contentBounds.h - Area().innerRect.h; }
+        };
+
+        // A focused field below the fold: the input manager scrolls its text cursor into view
+        // in the enclosing area (MakeTextCursorVisibleInTextBox, with the real element storage).
+        TEST_F(ScrollbarDragTest, TheTextCursorScrollsIntoView)
+        {
+            const ID fieldID = app.idManager.CreateStaticID();
+            std::string text = "below the fold";
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginArea(areaID, app.theme.listAreaStyleRef, LayoutOverride{}.Size(200, 200)))
+                {
+                    Element spacer{};
+                    spacer.id       = contentID;
+                    spacer.styleRef = app.theme.emptyVertStyleRef;
+                    app.RegisterElement(std::move(spacer), LayoutOverride{}.Size(160, 600));
+                    app.Field(fieldID, text);
+                    app.EndArea();
+                }
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_EQ(ScrollY(), 0);
+
+            // Focus first (focusing scrolls the field into view by itself), then scroll back
+            // to the top: from here only the cursor can move the area.
+            app.guiStateManager.Interaction().SetFocusID(fieldID);
+            app.Frame(draw);
+            app.Frame(draw);
+            auto& scroll = app.guiStateManager.GetScrollManagement();
+            scroll.SetScrollOffset(scroll.GetOrCreateScrollOffsetHandle(areaID), int2{ 0, 0 });
+            app.Frame(draw);
+            ASSERT_EQ(ScrollY(), 0) << "test setup: nothing else scrolls the area";
+
+            app.ownedTextSystem.cursorRect = IntRect{ 4, 0, 1, 10 };   // fits the field: it has no scrolling of its own to do
+            app.Frame(draw);
+            app.Frame(draw);
+            // The cursor rect is local to the field's inner rect.
+            const IntRect field = app.elementStorage.GetElementRectPtr(app.elementStorage.FindElementRefByID(fieldID))->innerRect;
+            const IntRect inner = Area().innerRect;
+            EXPECT_GT(ScrollY(), 0) << "the area didn't scroll to the cursor";
+            EXPECT_GE(field.y, inner.y);
+            EXPECT_LE(field.y + 10, inner.y + inner.h) << "the cursor is still out of view";
+        }
+
+        TEST_F(ScrollbarDragTest, TheAreaOverflows)
+        {
+            Frame();
+            Frame();
+            ASSERT_GT(ScrollRange(), 600) << "content " << Area().contentBounds.h << ", visible " << Area().innerRect.h;
+            EXPECT_EQ(ScrollY(), 0);
+        }
+
+        // A click on the empty track jumps there: at the bottom end, to the end.
+        TEST_F(ScrollbarDragTest, ClickingTheTrackJumpsThere)
+        {
+            Frame();
+            Frame();
+            const IntRect inner = Area().innerRect;
+            app.ClickAt({ BarX(), inner.y + inner.h - 2 });
+            Frame();
+            EXPECT_EQ(ScrollY(), ScrollRange());
+
+            app.ClickAt({ BarX(), inner.y + 2 });   // the top end: back to the start
+            Frame();
+            EXPECT_EQ(ScrollY(), 0);
+        }
+
+        // Dragging the thumb scrolls in proportion: thumb travel over the track's spare length
+        // is scroll over the scroll range. The release ends the drag.
+        TEST_F(ScrollbarDragTest, DraggingTheThumbScrollsInProportion)
+        {
+            Frame();
+            Frame();
+            const IntRect inner = Area().innerRect;
+            const int range = ScrollRange();
+            const int track = inner.h;
+            const int thumb = std::max(int(int64_t(track) * inner.h / Area().contentBounds.h), app.styleManager.Px(kScrollbarMinThumbLength));
+            const int2 grab{ BarX(), inner.y + 5 };   // on the thumb, at the top
+
+            app.InjectMouseMove(grab);
+            app.InjectMouseDown(grab);
+            Frame();
+            EXPECT_EQ(ScrollY(), 0) << "a press on the thumb doesn't jump";
+            app.InjectMouseMove({ grab.x, grab.y + 40 }, MouseButtons::Left);
+            Frame();
+            EXPECT_NEAR(ScrollY(), 40 * range / (track - thumb), 2);
+            app.InjectMouseMove({ grab.x + 60, grab.y + 80 }, MouseButtons::Left);   // off the bar: still dragging
+            Frame();
+            EXPECT_NEAR(ScrollY(), 80 * range / (track - thumb), 2);
+
+            app.InjectMouseUp({ grab.x + 60, grab.y + 80 });
+            Frame();
+            const int afterRelease = ScrollY();
+            app.InjectMouseMove({ grab.x, grab.y + 120 });
+            Frame();
+            EXPECT_EQ(ScrollY(), afterRelease) << "the drag ended with the release";
+        }
 
 
     } // namespace

@@ -39,6 +39,31 @@ namespace
         app.Cleanup();
     }
 
+    // Lifecycle misuse (#87): Cleanup without Initialize (or twice) has nothing to free, and
+    // Initialize on an initialized app is reported and ignored.
+    TEST(GpuApplicationInit, CleanupWithoutInitializeIsHarmless)
+    {
+        EmptyApp app;
+        app.Cleanup();
+        app.Cleanup();
+        SUCCEED();
+    }
+
+    TEST(GpuApplicationInit, InitializeTwiceIsIgnored)
+    {
+        EmptyApp app;
+        if (!app.Initialize())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device or window system available";
+        }
+        auto* const textSystem = app.textSystem;
+        EXPECT_TRUE(app.Initialize()) << "the app is initialized";
+        EXPECT_EQ(app.textSystem, textSystem) << "nothing was made again (or leaked)";
+        app.Cleanup();
+        app.Cleanup();
+    }
+
     TEST(GpuApplicationInit, OptionsTurnTheDefaultsOff)
     {
         EmptyApp app;

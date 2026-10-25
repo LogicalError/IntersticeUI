@@ -2,6 +2,12 @@
 #include <gui_core/style/gui_style_manager.h>
 
 #include <cassert>
+#include <gui_core/diagnostics/gui_logging.h>
+
+namespace
+{
+    constexpr interstice::Diagnostics::LogCategory kLogApp = interstice::Diagnostics::MakeLogCategory("app");
+}
 #include <cmath>
 
 #include <gui_core/frame/gui_frame_pipeline.h>
@@ -46,7 +52,11 @@ namespace interstice
 
     void LabelGroupSubsystem::EndGroup()
     {
-        assert(!m_stack.empty());
+        if (m_stack.empty())
+        {
+            Diagnostics::ReportMisuse(kLogApp, "LabelGroupSubsystem: EndGroup without BeginGroup (ignored)");
+            return;
+        }
         m_stack.pop_back();
     }
 
@@ -80,7 +90,7 @@ namespace interstice
     {
         if (!IsBalanced())
         {
-            assert(false && "LabelGroupSubsystem: unbalanced BeginGroup/EndGroup at end of frame");
+            Diagnostics::ReportMisuse(kLogApp, "LabelGroupSubsystem: unbalanced BeginGroup/EndGroup at end of frame (closed)");
             m_stack.clear();
         }
     }

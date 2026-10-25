@@ -171,6 +171,11 @@ namespace interstice
 
     void GUIApplication::Cell(std::string_view text)
     {
+        if (!m_tableEmit.has_value())
+        {
+            ReportMisuse("GUIApplication: a table cell outside a table (ignored)");
+            return;
+        }
         if (m_tableEmit->isRecording)
         {
             RecordReplayCell(*m_tableEmit, [this, text = std::string(text)]
@@ -217,6 +222,11 @@ namespace interstice
 
     void GUIApplication::Cell(std::function<void()> emit_fn)
     {
+        if (!m_tableEmit.has_value())
+        {
+            ReportMisuse("GUIApplication: a table cell outside a table (ignored)");
+            return;
+        }
         if (m_tableEmit->isRecording)
         {
             RecordReplayCell(*m_tableEmit, [this, fn = std::move(emit_fn)]
@@ -262,6 +272,11 @@ namespace interstice
                                   bool isLastSibling, std::string* renameBuffer,
                                   bool reserveExpander)
     {
+        if (!m_tableEmit.has_value())
+        {
+            ReportMisuse("GUIApplication: a table cell outside a table (ignored)");
+            return;
+        }
         if (m_tableEmit->isRecording)
         {
             RecordReplayCell(*m_tableEmit,
@@ -289,7 +304,8 @@ namespace interstice
         const interstice::ID cellID = cellMode ? idManager.AllocateDynamicID() : rowID;
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        const interstice::ElementFlags cellFlags = interstice::ElementFlags::None;
+        // In row mode the cell is the row (its state follows the row's): it shares the row's ID.
+        const interstice::ElementFlags cellFlags = cellID == rowID ? interstice::ElementFlags::SharesID : interstice::ElementFlags::None;
 
         const interstice::ID bodyID = idManager.AllocateDynamicID();
 
