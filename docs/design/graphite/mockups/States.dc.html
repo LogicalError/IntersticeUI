@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>States and transitions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1560px; height: 860px; box-sizing: border-box; padding: 32px; display: grid; grid-template-columns: 980px minmax(0, 1fr); gap: 20px; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="color: {{t.t1}}; font-size: 14px; font-weight: 600">Control states</span><span style="color: {{t.t3}}">Every state = base + state layer (content color at 8% hover, 14% pressed) + selection + focus ring</span></div>
+<div role="table" aria-label="State matrix" style="display: flex; flex-direction: column">
+<div role="row" style="height: 30px; display: grid; grid-template-columns: 110px repeat(7, minmax(0, 1fr)); align-items: center; border-bottom: 1px solid {{t.line}}; color: {{t.t3}}; font-size: 11px; font-weight: 500">
+<span></span><sc-for list="{{cols}}" as="c" hint-placeholder-count="7"><span role="columnheader">{{c}}</span></sc-for>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<div role="row" style="height: 52px; display: grid; grid-template-columns: 110px repeat(7, minmax(0, 1fr)); align-items: center; border-bottom: 1px solid {{t.rowLine}}">
+<span role="rowheader" style="color: {{t.t1}}">{{r.n}}</span>
+<sc-for list="{{r.cells}}" as="c" hint-placeholder-count="7">
+<div role="cell" style="display: flex; align-items: center">
+<sc-if value="{{c.isBox}}" hint-placeholder-val="{{true}}"><span style="width: {{c.w}}; height: {{c.h}}px; box-sizing: border-box; display: flex; align-items: center; justify-content: {{c.justify}}; gap: 6px; padding: {{c.pad}}; border: 1px solid {{c.border}}; border-radius: {{c.radius}}; background: {{c.bg}}; color: {{c.fg}}; box-shadow: {{c.ring}}; opacity: {{c.op}}; font-family: {{c.font}}; font-size: {{c.size}}; font-weight: {{c.weight}}; white-space: nowrap">{{c.text}}<sc-if value="{{c.caret}}" hint-placeholder-val="{{false}}"><span style="width: 2px; height: 13px; margin-left: -4px; background: {{t.accent}}"></span></sc-if><sc-if value="{{c.chev}}" hint-placeholder-val="{{false}}"><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true" style="margin-left: auto; fill: none; stroke: {{c.chevC}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="{{c.chevD}}"></path></svg></sc-if></span></sc-if>
+<sc-if value="{{c.isToggle}}" hint-placeholder-val="{{false}}"><span style="position: relative; width: 28px; height: 16px; border-radius: 8px; background: {{c.bg}}; box-shadow: {{c.ring}}; opacity: {{c.op}}"><span style="position: absolute; left: {{c.knobX}}px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: {{c.knob}}"></span></span></sc-if>
+<sc-if value="{{c.isCheck}}" hint-placeholder-val="{{false}}"><span style="width: 16px; height: 16px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1px solid {{c.border}}; border-radius: {{c.radius}}; background: {{c.bg}}; box-shadow: {{c.ring}}; opacity: {{c.op}}"><sc-if value="{{c.on}}" hint-placeholder-val="{{false}}"><span style="display: flex"><svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{c.mark}}; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round"><path d="{{c.markD}}"></path></svg></span></sc-if></span><span style="margin-left: 8px; color: {{c.fg}}; opacity: {{c.op}}">{{c.text}}</span></sc-if>
+<sc-if value="{{c.isNa}}" hint-placeholder-val="{{false}}"><span style="color: {{t.na}}">—</span></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="margin-top: auto; display: flex; gap: 20px; color: {{t.t3}}; font-size: 11px">
+<span>Focus = keyboard focus only (not shown on mouse click)</span><span>Disabled = 40% opacity, no state layer</span><span>Invalid = error border + 3px error halo, keeps its other states</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t1}}; font-size: 14px; font-weight: 600">Transitions</span>
+<div role="table" aria-label="Transition timings" style="display: flex; flex-direction: column">
+<sc-for list="{{timings}}" as="m" hint-placeholder-count="12">
+<div role="row" style="height: 26px; display: grid; grid-template-columns: minmax(0, 1fr) 128px 40px 76px; align-items: center; gap: 10px; border-bottom: 1px solid {{t.rowLine}}">
+<span style="color: {{t.t1}}">{{m.n}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px">{{m.d}}</span>
+<svg width="40" height="18" viewBox="0 0 40 18" aria-hidden="true"><path d="M0 17.5 H40" stroke="{{t.line}}" stroke-width="1"></path><path d="{{m.curve}}" fill="none" stroke="{{t.accent}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span style="color: {{t.t3}}; font-size: 11px">{{m.e}}</span>
+</div>
+</sc-for>
+</div>
+<span style="color: {{t.t3}}; font-size: 11px">ease-out = cubic-bezier(0.2, 0, 0, 1) · ease-in-out = cubic-bezier(0.4, 0, 0.2, 1)</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t1}}; font-size: 14px; font-weight: 600">State layer over time · one scalar per state</span>
+<svg width="460" height="118" viewBox="0 0 460 118" role="img" aria-label="State layer opacity over time: hover rises to 8 percent in 70 ms, press jumps to 14 percent, release eases back to 8 percent in 120 ms, leave eases to 0 in 140 ms">
+<path d="M30 10 V96 H456" fill="none" stroke="{{t.line}}" stroke-width="1"></path>
+<path d="M30 42 H456 M30 20 H456" fill="none" stroke="{{t.rowLine}}" stroke-width="1"></path>
+<path d="{{layerPath}}" fill="none" stroke="{{t.accent}}" stroke-width="2" stroke-linejoin="round"></path>
+<sc-for list="{{marks}}" as="k" hint-placeholder-count="4"><path d="M{{k.x}} 96 V102" stroke="{{t.t3}}" stroke-width="1"></path></sc-for>
+</svg>
+<div style="position: relative; height: 14px; margin-top: -20px">
+<sc-for list="{{marks}}" as="k" hint-placeholder-count="4"><span style="position: absolute; left: {{k.x}}px; transform: translateX(-50%); color: {{t.t3}}; font-size: 11px">{{k.l}}</span></sc-for>
+<span style="position: absolute; left: 0; top: -82px; color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10px">14%</span>
+<span style="position: absolute; left: 0; top: -60px; color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10px">8%</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t1}}; font-size: 14px; font-weight: 600">Hue changes interpolate in Oklab</span>
+<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 10px">
+<span style="color: {{t.t3}}; font-size: 11px">sRGB</span>
+<div style="display: flex; height: 22px; border-radius: 4px; overflow: hidden"><sc-for list="{{rampSrgb}}" as="c" hint-placeholder-count="12"><span style="flex: 1; background: {{c}}"></span></sc-for></div>
+<span style="color: {{t.t3}}; font-size: 11px">Oklab</span>
+<div style="display: flex; height: 22px; border-radius: 4px; overflow: hidden"><sc-for list="{{rampOklab}}" as="c" hint-placeholder-count="12"><span style="flex: 1; background: {{c}}"></span></sc-for></div>
+</div>
+<span style="color: {{t.t3}}; font-size: 11px">Red → blue. In sRGB the middle sags darker and greyer; Oklab keeps lightness and chroma even. Use it whenever hue changes (status changes, theme switch); same-hue state layers can blend in sRGB.</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1560,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      app: '#E6E8EC', panel: '#FBFBFC', header: '#F3F4F6', active: '#E4E7EC', input: '#FFFFFF', control: '#FFFFFF',
+      border: '#DADDE3', line: '#E3E6EB', rowLine: '#EEF0F3', ctlBorder: '#CDD2DA', fieldBorder: '#D5D9E0', trackOff: '#C9CED6',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', na: '#B4BAC4', accent: '#2F6FEB', onAccent: '#FFFFFF',
+      soft: 'rgba(47,111,235,0.12)', ring: 'rgba(47,111,235,0.25)', error: '#D64545', errorHalo: 'rgba(214,69,69,0.16)',
+      ok: '#1E9E62'
+    } : {
+      app: '#0B0C0F', panel: '#121418', header: '#16191E', active: '#23272F', input: '#0D0F12', control: '#1E2128',
+      border: '#1C1F25', line: '#23272F', rowLine: '#181B20', ctlBorder: '#2E333D', fieldBorder: '#23272F', trackOff: '#2E333D',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', na: '#3A3F4A', accent: '#6B9BFF', onAccent: '#0B0C0F',
+      soft: 'rgba(107,155,255,0.16)', ring: 'rgba(107,155,255,0.30)', error: '#EF6A6A', errorHalo: 'rgba(239,106,106,0.18)',
+      ok: '#4FC48A'
+    };
+
+    const hex2 = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+    const toHex = function (c) { return '#' + c.map(function (v) { return Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0'); }).join(''); };
+    const mix = function (a, b, k) { const x = hex2(a), y = hex2(b); return toHex([0, 1, 2].map(function (i) { return x[i] + (y[i] - x[i]) * k; })); };
+
+    const focusRing = '0 0 0 1px ' + t.accent + ', 0 0 0 4px ' + t.ring;
+    const focusInset = 'inset 0 0 0 1px ' + t.accent;
+    const errRing = '0 0 0 3px ' + t.errorHalo;
+    const cols = ['Rest', 'Hover', 'Pressed', 'Focus', 'Selected · on', 'Disabled', 'Invalid'];
+    const na = { isNa: true };
+    const box = function (o) {
+      return Object.assign({
+        isBox: true, w: 'auto', h: 24, justify: 'center', pad: '0 12px', border: 'transparent', radius: '4px', bg: 'transparent',
+        fg: t.t1, ring: 'none', op: 1, font: 'inherit', size: '12px', weight: 400, text: '', caret: false, chev: false, chevC: t.t3, chevD: 'm6 9 6 6 6-6'
+      }, o);
+    };
+
+    const states = function (base, fg, extra) {
+      return {
+        rest: base, hover: mix(base, fg, 0.08), press: mix(base, fg, 0.14)
+      };
+    };
+
+    const sec = states(t.control, t.t1);
+    const button = [
+      box({ text: 'Apply', bg: sec.rest, border: t.ctlBorder }),
+      box({ text: 'Apply', bg: sec.hover, border: t.ctlBorder }),
+      box({ text: 'Apply', bg: sec.press, border: t.ctlBorder }),
+      box({ text: 'Apply', bg: sec.rest, border: t.accent, ring: '0 0 0 3px ' + t.ring }),
+      box({ text: 'Apply', bg: t.soft, border: t.accent, fg: t.accent }),
+      box({ text: 'Apply', bg: sec.rest, border: t.ctlBorder, op: 0.4 }),
+      na
+    ];
+    const pri = states(t.accent, t.onAccent);
+    const primary = [
+      box({ text: 'Save', bg: pri.rest, border: pri.rest, fg: t.onAccent, weight: 600 }),
+      box({ text: 'Save', bg: pri.hover, border: pri.hover, fg: t.onAccent, weight: 600 }),
+      box({ text: 'Save', bg: pri.press, border: pri.press, fg: t.onAccent, weight: 600 }),
+      box({ text: 'Save', bg: pri.rest, border: pri.rest, fg: t.onAccent, weight: 600, ring: '0 0 0 2px ' + t.panel + ', 0 0 0 4px ' + t.accent }),
+      na,
+      box({ text: 'Save', bg: pri.rest, border: pri.rest, fg: t.onAccent, weight: 600, op: 0.4 }),
+      na
+    ];
+    const tabS = states(t.panel, t.t1);
+    const tab = [
+      box({ text: 'Inspector', fg: t.t2, pad: '0 10px' }),
+      box({ text: 'Inspector', fg: t.t1, bg: tabS.hover, pad: '0 10px' }),
+      box({ text: 'Inspector', fg: t.t1, bg: tabS.press, pad: '0 10px' }),
+      box({ text: 'Inspector', fg: t.t2, pad: '0 10px', ring: focusInset }),
+      box({ text: 'Inspector', fg: t.t1, bg: t.active, pad: '0 10px', weight: 500 }),
+      box({ text: 'Inspector', fg: t.t2, pad: '0 10px', op: 0.4 }),
+      na
+    ];
+    const row = function (o) { return box(Object.assign({ text: 'Sphere', w: '104px', h: 22, justify: 'flex-start', pad: '0 8px', fg: t.t2 }, o)); };
+    const tree = [
+      row({}), row({ bg: tabS.hover, fg: t.t1 }), row({ bg: tabS.press, fg: t.t1 }), row({ ring: focusInset }),
+      row({ bg: t.soft, fg: t.t1 }), row({ op: 0.4 }), na
+    ];
+    const fld = function (o) { return box(Object.assign({ text: '0.75', w: '104px', justify: 'flex-start', pad: '0 8px', bg: t.input, border: t.fieldBorder, font: "'JetBrains Mono', monospace", size: '11.5px' }, o)); };
+    const field = [
+      fld({}), fld({ border: t.ctlBorder }), fld({ border: t.ctlBorder }), fld({ border: t.accent, ring: '0 0 0 3px ' + t.ring, caret: true, text: '0.75 ' }),
+      na, fld({ op: 0.4 }), fld({ text: '1.8', border: t.error, ring: errRing })
+    ];
+    const dd = function (o) { return box(Object.assign({ text: 'Linear', w: '104px', justify: 'flex-start', pad: '0 6px 0 8px', bg: sec.rest, border: t.ctlBorder, chev: true }, o)); };
+    const dropdown = [
+      dd({}), dd({ bg: sec.hover }), dd({ bg: sec.press }), dd({ border: t.accent, ring: '0 0 0 3px ' + t.ring }),
+      dd({ border: t.accent, ring: '0 0 0 3px ' + t.ring, chevD: 'm18 15-6-6-6 6', chevC: t.t2 }), dd({ op: 0.4 }), dd({ border: t.error, ring: errRing, text: 'Required' })
+    ];
+    const tog = function (on, o) {
+      return Object.assign({ isToggle: true, bg: on ? t.accent : t.trackOff, knob: on ? t.onAccent : (isLight ? '#FFFFFF' : t.t2), knobX: on ? 14 : 2, ring: 'none', op: 1 }, o);
+    };
+    const toggle = [
+      tog(false), tog(false, { bg: mix(t.trackOff, t.t1, 0.12) }), tog(false, { bg: mix(t.trackOff, t.t1, 0.2), knobX: 4 }),
+      tog(false, { ring: '0 0 0 2px ' + t.panel + ', 0 0 0 4px ' + t.accent }), tog(true), tog(false, { op: 0.4 }), na
+    ];
+    const ck = function (on, o) {
+      return Object.assign({ isCheck: true, on: on, text: 'Visible', fg: t.t1, border: on ? t.accent : t.ctlBorder, bg: on ? t.accent : t.input, mark: t.onAccent, markD: 'M20 6 9 17l-5-5', radius: '4px', ring: 'none', op: 1 }, o);
+    };
+    const check = [
+      ck(false), ck(false, { border: mix(t.ctlBorder, t.t1, 0.3), bg: mix(t.input, t.t1, 0.06) }), ck(false, { border: mix(t.ctlBorder, t.t1, 0.4), bg: mix(t.input, t.t1, 0.12) }),
+      ck(false, { ring: '0 0 0 1px ' + t.accent + ', 0 0 0 4px ' + t.ring }), ck(true), ck(true, { op: 0.4 }), ck(false, { border: t.error, ring: errRing, text: 'Accept' })
+    ];
+    const rd = function (on, o) {
+      return ck(on, Object.assign({ radius: '50%', bg: on ? t.input : t.input, border: on ? t.accent : t.ctlBorder, mark: t.accent, markD: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', text: 'Bezier' }, o));
+    };
+    const radio = [
+      rd(false), rd(false, { border: mix(t.ctlBorder, t.t1, 0.3), bg: mix(t.input, t.t1, 0.06) }), rd(false, { border: mix(t.ctlBorder, t.t1, 0.4), bg: mix(t.input, t.t1, 0.12) }),
+      rd(false, { ring: '0 0 0 1px ' + t.accent + ', 0 0 0 4px ' + t.ring }), rd(true, { border: t.accent }), rd(true, { op: 0.4 }), na
+    ];
+    const acc = hex2(t.accent);
+    const tintA = function (a) { return 'rgba(' + acc[0] + ',' + acc[1] + ',' + acc[2] + ',' + a + ')'; };
+    const dt = function (o) { return box(Object.assign({ text: 'Forest.level', h: 28, pad: '0 12px', radius: '6px 6px 0 0', fg: t.t1, bg: tintA(isLight ? 0.12 : 0.14) }, o)); };
+    const doctab = [
+      dt({}), dt({ bg: tintA(isLight ? 0.18 : 0.22) }), dt({ bg: tintA(isLight ? 0.24 : 0.30) }), dt({ ring: focusInset }),
+      dt({ bg: t.accent, fg: t.onAccent, weight: 600 }), dt({ op: 0.4 }), na
+    ];
+
+    const ib = function (o) { return box(Object.assign({ text: '⋯', w: '24px', h: 24, pad: '0', fg: t.t2, size: '14px' }, o)); };
+    const iconBtn = [
+      ib({}), ib({ bg: tabS.hover, fg: t.t1 }), ib({ bg: tabS.press, fg: t.t1 }), ib({ ring: focusRing }),
+      ib({ bg: t.active, fg: t.accent }), ib({ op: 0.4 }), na
+    ];
+    const mi = function (o) { return box(Object.assign({ text: 'Duplicate', w: '104px', h: 24, justify: 'flex-start', pad: '0 8px', fg: t.t1 }, o)); };
+    const menuItem = [
+      mi({}), mi({ bg: t.soft }), mi({ bg: mix(t.panel, t.accent, isLight ? 0.2 : 0.26) }), mi({ ring: focusInset }),
+      mi({ text: '✓ Show grid' }), mi({ op: 0.45 }), na
+    ];
+    const rows = [
+      ['Button', button], ['Primary button', primary], ['Icon button', iconBtn], ['Panel tab', tab], ['Document tab', doctab], ['Tree / table row', tree],
+      ['Text field', field], ['Dropdown', dropdown], ['Menu item', menuItem], ['Toggle', toggle], ['Checkbox', check], ['Radio', radio]
+    ].map(function (r) {
+      return {
+        n: r[0], cells: r[1].map(function (c) {
+          return Object.assign({ isBox: false, isToggle: false, isCheck: false, isNa: false }, c);
+        })
+      };
+    });
+
+    const C = { out: 'M0 17 C8 17 0 1 40 1', inout: 'M0 17 C16 17 8 1 40 1', step: 'M0 17 V1 H40', lin: 'M0 17 L40 1' };
+    const timings = [
+      ['Hover in', '70 ms', 'out', 'ease-out'], ['Hover out', '140 ms', 'out', 'ease-out'],
+      ['Press', '0 ms', 'step', 'instant'], ['Release', '120 ms', 'out', 'ease-out'],
+      ['Focus ring', '100 ms', 'out', 'ease-out'], ['Selection', '0 ms', 'step', 'instant'],
+      ['Toggle, check, radio', '120 ms', 'inout', 'ease-in-out'], ['Tooltip', '100 in · 80 out', 'out', 'ease-out'],
+      ['Menu, popup', '120 in · 80 out', 'out', 'ease-out'], ['Toast', '180 in · 140 out', 'out', 'ease-out'],
+      ['Dock preview', '100 ms', 'out', 'ease-out'], ['Invalid', '0 ms (halo 150)', 'step', 'instant'],
+      ['Theme switch', '200 ms', 'inout', 'ease-in-out']
+    ].map(function (m) { return { n: m[0], d: m[1], curve: C[m[2]], e: m[3] }; });
+
+    const tx = function (ms) { return 30 + ms * 0.53; };
+    const ty = function (pct) { return 96 - pct / 14 * 76; };
+    const seg = function (t0, dur, a, b) {
+      const pts = [];
+      for (let i = 0; i <= 8; i++) {
+        const u = i / 8, e = 1 - Math.pow(1 - u, 3);
+        pts.push(tx(t0 + dur * u).toFixed(1) + ' ' + ty(a + (b - a) * e).toFixed(1));
+      }
+      return pts.join(' L');
+    };
+    const layerPath = 'M' + tx(0) + ' ' + ty(0) + ' L' + tx(60) + ' ' + ty(0) + ' L' + seg(60, 70, 0, 8) +
+      ' L' + tx(300) + ' ' + ty(8) + ' L' + tx(300) + ' ' + ty(14) + ' L' + tx(420) + ' ' + ty(14) + ' L' + seg(420, 120, 14, 8) +
+      ' L' + tx(620) + ' ' + ty(8) + ' L' + seg(620, 140, 8, 0) + ' L' + tx(800) + ' ' + ty(0);
+    const marks = [[60, 'enter'], [300, 'press'], [420, 'release'], [620, 'leave']].map(function (m) { return { x: tx(m[0]).toFixed(1), l: m[1] }; });
+
+    const lin = function (c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const gam = function (c) { const v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; return v * 255; };
+    const toOk = function (h) {
+      const c = hex2(h).map(lin);
+      const l = Math.cbrt(0.4122214708 * c[0] + 0.5363325363 * c[1] + 0.0514459929 * c[2]);
+      const m = Math.cbrt(0.2119034982 * c[0] + 0.6806995451 * c[1] + 0.1073969566 * c[2]);
+      const s = Math.cbrt(0.0883024619 * c[0] + 0.2817188376 * c[1] + 0.6299787005 * c[2]);
+      return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+    };
+    const fromOk = function (o) {
+      const l = Math.pow(o[0] + 0.3963377774 * o[1] + 0.2158037573 * o[2], 3);
+      const m = Math.pow(o[0] - 0.1055613458 * o[1] - 0.0638541728 * o[2], 3);
+      const s = Math.pow(o[0] - 0.0894841775 * o[1] - 1.2914855480 * o[2], 3);
+      return toHex([4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s].map(gam));
+    };
+    const A = '#E5484D', B = '#3B6CF6', N = 12;
+    const rampSrgb = [], rampOklab = [];
+    const oa = toOk(A), ob = toOk(B);
+    for (let i = 0; i < N; i++) {
+      const k = i / (N - 1);
+      rampSrgb.push(mix(A, B, k));
+      rampOklab.push(fromOk([0, 1, 2].map(function (j) { return oa[j] + (ob[j] - oa[j]) * k; })));
+    }
+
+    return { t: t, cols: cols, rows: rows, timings: timings, layerPath: layerPath, marks: marks, rampSrgb: rampSrgb, rampOklab: rampOklab };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Editor — Settings and Table</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0C0F}
+*{box-sizing:border-box}
+button,input{font:inherit;color:inherit}
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+a{color:#8FB3FF}a:hover{color:#B5CDFF}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 882px; display: flex; flex-direction: column; background: #0B0C0F; color: #AEB4C0; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+
+
+<main style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; min-height: 0">
+
+<section aria-label="Settings" style="flex: 999 1 640px; min-width: 0; height: 874px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect x="13" y="13" width="8" height="8" rx="2"></rect></svg>NodeView</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7ZM3.3 7l8.7 5 8.7-5M12 22V12"></path></svg>Viewport</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</button>
+</div>
+<div style="flex: 1; min-height: 0; display: flex">
+<nav aria-label="Settings sections" style="width: 176px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; border-right: 1px solid #23272F; background: #101216">
+<span style="padding: 4px 8px 8px; color: #8A92A2; font-size: 11px; font-weight: 500">Preferences</span>
+<a href="#" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 4px; background: {{accentSoft}}; color: #E8EAEF; text-decoration: none"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path></svg>Shortcuts</a>
+<a href="#" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 4px; color: #AEB4C0; text-decoration: none"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1"></circle><circle cx="17.5" cy="10.5" r="1"></circle><circle cx="8.5" cy="7.5" r="1"></circle><circle cx="6.5" cy="12.5" r="1"></circle><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.7h2a5.6 5.6 0 0 0 5.6-5.6C22 6 17.5 2 12 2Z"></path></svg>Appearance</a>
+<a href="#" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 4px; color: #AEB4C0; text-decoration: none"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>General</a>
+<a href="#" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 4px; color: #AEB4C0; text-decoration: none"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16"></path></svg>Advanced</a>
+<a href="#" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 4px; color: #AEB4C0; text-decoration: none"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-4M12 8h.01"></path></svg>About</a>
+</nav>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<div style="flex-shrink: 0; padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #23272F">
+<div style="display: flex; align-items: baseline; gap: 10px"><h1 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; color: #E8EAEF">Shortcuts</h1><span style="color: #8A92A2">27 commands</span><button style="margin-left: auto; height: 24px; padding: 0 10px; border: 1px solid #2E333D; border-radius: 4px; background: #1E2128; color: #E8EAEF">Reset to defaults</button></div>
+<label style="height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #23272F; border-radius: 4px; background: #0D0F12; color: #8A92A2"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="text" placeholder="Search commands or press a key combination" aria-label="Search shortcuts" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; color: #E8EAEF"></label>
+</div>
+<div style="flex: 1; min-height: 0; display: flex">
+<div role="listbox" aria-label="Category" style="width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-right: 1px solid #23272F">
+<span style="padding: 2px 8px 6px; color: #8A92A2; font-size: 11px; font-weight: 500">Category</span>
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="4">
+<div role="option" aria-selected="{{c.sel}}" style="height: 26px; display: flex; align-items: center; padding: 0 8px; border-radius: 4px; background: {{c.bg}}; color: {{c.fg}}">{{c.n}}<span style="margin-left: auto; color: #8A92A2; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{c.k}}</span></div>
+</sc-for>
+</div>
+<div role="table" aria-label="Shortcuts" style="flex: 1; min-width: 0; position: relative; overflow: hidden">
+<div role="row" style="height: 28px; display: grid; grid-template-columns: minmax(0, 1fr) 150px 96px 72px; gap: 12px; align-items: center; padding: 0 16px 0 12px; background: #16191E; border-bottom: 1px solid #23272F; color: #8A92A2; font-size: 11px; font-weight: 500">
+<span role="columnheader" style="display: flex; align-items: center; gap: 4px; color: #E8EAEF">Command<svg class="i" width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span><span role="columnheader">Shortcut</span><span role="columnheader">Context</span><span role="columnheader">Type</span>
+</div>
+<sc-for list="{{cmds}}" as="c" hint-placeholder-count="27">
+<div role="row" style="height: 27px; display: grid; grid-template-columns: minmax(0, 1fr) 150px 96px 72px; gap: 12px; align-items: center; padding: 0 16px 0 12px; border-bottom: 1px solid #181B20; background: {{c.bg}}">
+<span role="cell" style="display: flex; align-items: center; gap: 8px; color: #E8EAEF; white-space: nowrap; overflow: hidden"><span style="width: 14px; display: flex; color: #8A92A2">
+<sc-if value="{{c.ic.copy}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"></path></svg></sc-if>
+<sc-if value="{{c.ic.cut}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"></path></svg></sc-if>
+<sc-if value="{{c.ic.brush}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.1 11.3 8.2-8.2a2.1 2.1 0 0 1 3 3l-8.2 8.2M7 14a3 3 0 0 0-3 3c0 1.3-2 2-2 2 1 1.5 2.4 2 4 2a4 4 0 0 0 4-4 3 3 0 0 0-3-3Z"></path></svg></sc-if>
+<sc-if value="{{c.ic.trash}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></sc-if>
+<sc-if value="{{c.ic.search}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></sc-if>
+<sc-if value="{{c.ic.file}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path></svg></sc-if>
+<sc-if value="{{c.ic.save}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"></path></svg></sc-if>
+<sc-if value="{{c.ic.play}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3l14 9-14 9Z"></path></svg></sc-if>
+<sc-if value="{{c.ic.frame}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path></svg></sc-if>
+<sc-if value="{{c.ic.undo}}" hint-placeholder-val="{{false}}"><svg class="i" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></sc-if>
+</span>{{c.n}}</span>
+<span role="cell" style="display: flex; gap: 3px">
+<sc-for list="{{c.keys}}" as="k" hint-placeholder-count="2"><kbd style="min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; border: 1px solid #2E333D; border-bottom-width: 2px; border-radius: 4px; background: #1A1D23; color: #E8EAEF; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">{{k}}</kbd></sc-for>
+<sc-if value="{{c.none}}" hint-placeholder-val="{{false}}"><span style="color: #8A92A2">Unassigned</span></sc-if>
+</span>
+<span role="cell" style="color: #AEB4C0">{{c.ctx}}</span>
+<span role="cell" style="color: #8A92A2">{{c.type}}</span>
+</div>
+</sc-for>
+<span aria-hidden="true" style="position: absolute; right: 3px; top: 32px; width: 4px; height: 520px; border-radius: 2px; background: #2E333D"></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Table" style="flex: 1 1 640px; min-width: 0; height: 874px; display: flex; flex-direction: column; background: #121418; border: 1px solid #1C1F25; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 2px; padding: 0 4px 0 5px; background: #16191E; border-bottom: 1px solid #23272F">
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Profiler</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Inspector</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">TreeTable</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 4px; background: #23272F; color: #E8EAEF; font-weight: 500"><svg class="i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{accent}}"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M3 15h18M9 3v18"></path></svg>Table</button>
+<button style="height: 24px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">FrozenTable</button>
+<button aria-label="4 more tabs" style="height: 24px; display: flex; align-items: center; gap: 4px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #8A92A2">+4<svg class="i" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="height: 44px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid #23272F">
+<span>Selection mode</span>
+<div role="group" aria-label="Selection mode" style="display: inline-flex; padding: 2px; gap: 2px; border-radius: 6px; background: #0D0F12; border: 1px solid #23272F"><button aria-pressed="true" style="height: 22px; padding: 0 14px; border: 0; border-radius: 4px; background: #2A2F39; color: #E8EAEF">Row</button><button style="height: 22px; padding: 0 14px; border: 0; border-radius: 4px; background: transparent; color: #AEB4C0">Cell</button></div>
+<span style="margin-left: auto; color: #8A92A2; font-family: 'JetBrains Mono', monospace; font-size: 11px">1 of 10,000 selected</span>
+</div>
+<div role="table" aria-label="Rows" style="position: relative; flex: 1; min-height: 0; overflow: hidden">
+<div role="row" style="height: 28px; display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; padding: 0 16px 0 12px; background: #16191E; border-bottom: 1px solid #23272F; color: #8A92A2; font-size: 11px; font-weight: 500">
+<span role="columnheader" style="display: flex; align-items: center; gap: 4px; color: #E8EAEF">#<svg class="i" width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></span><span role="columnheader">Name</span><span role="columnheader">Hex</span><span role="columnheader">Multiple</span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="34">
+<div role="row" style="height: 24px; display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; padding: 0 16px 0 12px; background: {{r.bg}}; color: {{r.fg}}; box-shadow: {{r.ring}}">
+<span role="cell" style="color: #8A92A2; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{r.i}}</span>
+<span role="cell">{{r.n}}</span>
+<span role="cell" style="font-family: 'JetBrains Mono', monospace; font-size: 11px">{{r.h}}</span>
+<span role="cell" style="font-family: 'JetBrains Mono', monospace; font-size: 11px">{{r.m}}</span>
+</div>
+</sc-for>
+<span aria-hidden="true" style="position: absolute; right: 3px; top: 32px; width: 4px; height: 40px; border-radius: 2px; background: #2E333D"></span>
+</div>
+</section>
+</main>
+
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B9BFF","options":["#6B9BFF","#34D1BF","#A98BFF","#F59E4B"]},"$preview":{"width":1700,"height":882}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#6B9BFF';
+    const hx = accent.replace('#', '');
+    const r = parseInt(hx.slice(0, 2), 16), g = parseInt(hx.slice(2, 4), 16), b = parseInt(hx.slice(4, 6), 16);
+    const accentSoft = 'rgba(' + r + ',' + g + ',' + b + ',0.16)';
+
+    const cats = [['All', 27, true], ['Default', 17], ['NodeView', 6], ['Sculpt', 5]].map(function (c) {
+      return { n: c[0], k: c[1], sel: c[2] ? 'true' : 'false', bg: c[2] ? accentSoft : 'transparent', fg: c[2] ? '#E8EAEF' : '#AEB4C0' };
+    });
+
+    const icons = ['copy', 'cut', 'brush', 'trash', 'search', 'file', 'save', 'play', 'frame', 'undo'];
+    const cmdSrc = [
+      ['About IntersticeUI', '', 'Default', 'Instant'],
+      ['Brush Tool', 'B', 'Sculpt', 'Instant', 'brush'],
+      ['Copy', 'Ctrl C', 'Default', 'Instant', 'copy'],
+      ['Cut', 'Ctrl X', 'Default', 'Instant', 'cut'],
+      ['Decrease Brush Size', '[', 'Sculpt', 'Instant'],
+      ['Delete Selection', 'Del', 'Default', 'Instant', 'trash'],
+      ['Documentation', 'F1', 'Default', 'Instant'],
+      ['Duplicate', 'Ctrl D', 'Default', 'Instant', 'copy'],
+      ['Erase Tool', 'E', 'Sculpt', 'Instant', 'brush'],
+      ['Exit', 'Alt F4', 'Default', 'Instant'],
+      ['Find', 'Ctrl F', 'Default', 'Instant', 'search'],
+      ['Frame All', 'A', 'NodeView', 'Instant', 'frame'],
+      ['Frame Selected', 'F', 'NodeView', 'Instant', 'frame'],
+      ['Group Selection', 'Ctrl G', 'NodeView', 'Instant'],
+      ['Increase Brush Size', ']', 'Sculpt', 'Instant'],
+      ['New', 'Ctrl N', 'Default', 'Instant', 'file', true],
+      ['Open…', 'Ctrl O', 'Default', 'Instant', 'file'],
+      ['Pan View (hold)', 'Space', 'Default', 'Hold'],
+      ['Paste', 'Ctrl V', 'Default', 'Instant', 'copy'],
+      ['Play', 'F5', 'Default', 'Instant', 'play'],
+      ['Redo', 'Ctrl Y', 'Default', 'Instant', 'undo'],
+      ['Reset view', 'Home', 'NodeView', 'Instant'],
+      ['Save', 'Ctrl S', 'Default', 'Instant', 'save'],
+      ['Save As…', 'Ctrl Shift S', 'Default', 'Instant', 'save'],
+      ['Search Nodes', 'Tab', 'NodeView', 'Instant', 'search'],
+      ['Select All', 'Ctrl A', 'Default', 'Instant', 'frame'],
+      ['Smooth Tool', 'S', 'Sculpt', 'Instant', 'brush']
+    ];
+    const cmds = cmdSrc.map(function (c) {
+      const ic = {};
+      icons.forEach(function (n) { ic[n] = c[4] === n; });
+      return {
+        n: c[0], keys: c[1] ? c[1].split(' ') : [], none: !c[1], ctx: c[2], type: c[3], ic: ic,
+        bg: c[5] ? accentSoft : 'transparent'
+      };
+    });
+
+    const rows = [];
+    for (let i = 0; i < 34; i++) {
+      const sel = i === 4;
+      rows.push({
+        i: i, n: 'Row ' + String(i).padStart(5, '0'), h: '0x' + i.toString(16).toUpperCase().padStart(6, '0'),
+        m: i + ' × 7 = ' + (i * 7),
+        bg: sel ? accentSoft : (i % 2 ? '#14161B' : 'transparent'),
+        fg: sel ? '#E8EAEF' : '#AEB4C0',
+        ring: sel ? 'inset 2px 0 0 ' + accent : 'none'
+      });
+    }
+
+    return { accent: accent, accentSoft: accentSoft, cats: cats, cmds: cmds, rows: rows };
+  }
+}
+</script>
+</body>
+</html>

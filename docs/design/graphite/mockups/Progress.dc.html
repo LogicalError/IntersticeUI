@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Progress and loading</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1000px; height: 604px; box-sizing: border-box; padding: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Progress bars</span>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="color: {{t.t1}}">Importing character.fbx</span><span style="margin-left: auto; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11px">64%</span><button aria-label="Cancel import" style="width: 20px; height: 20px; border: 0; border-radius: 4px; background: transparent; color: {{t.t3}}; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+<div role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" aria-label="Import progress" style="height: 6px; border-radius: 3px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: 64%; height: 6px; border-radius: 3px; background: {{t.accent}}"></span></div>
+<span style="color: {{t.t3}}; font-size: 11px">12.4 MB of 19.3 MB · about 3 s left</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="color: {{t.t1}}">Compiling shaders…</span><span style="margin-left: auto; color: {{t.t3}}; font-size: 11px">indeterminate</span></div>
+<div role="progressbar" aria-label="Compiling shaders" style="position: relative; height: 6px; border-radius: 3px; background: {{t.track}}; overflow: hidden"><span style="position: absolute; left: 28%; width: 26%; height: 6px; border-radius: 3px; background: linear-gradient(to right, {{t.accentClear}}, {{t.accent}} 30%, {{t.accent}} 70%, {{t.accentClear}})"></span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.error}}; stroke-width: 2; stroke-linecap: round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 8v5M12 16h.01"></path></svg><span style="color: {{t.t1}}">Bake failed at 73%</span><button style="margin-left: auto; height: 22px; padding: 0 10px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit">Retry</button></div>
+<div role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" aria-label="Bake progress, failed" style="height: 6px; border-radius: 3px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: 73%; height: 6px; border-radius: 3px; background: {{t.error}}"></span></div>
+<span style="color: {{t.errorText}}; font-size: 11px">Out of GPU memory while baking lightmap 4 of 6</span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 8px"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.ok}}; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"><path d="M20 6 9 17l-5-5"></path></svg><span style="color: {{t.t1}}">Import complete</span><span style="margin-left: auto; color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 11px">2.1 s</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Multi-step · Build player</span>
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 22px">
+<sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><span style="width: 16px; height: 16px; border-radius: 50%; background: {{t.ok}}; display: flex; align-items: center; justify-content: center"><svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.onOk}}; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round"><path d="M20 6 9 17l-5-5"></path></svg></span></sc-if>
+<sc-if value="{{s.active}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="{{t.track}}" stroke-width="2"></circle><path d="M8 1.5a6.5 6.5 0 0 1 6.5 6.5" fill="none" stroke="{{t.accent}}" stroke-width="2" stroke-linecap="round"></path></svg></sc-if>
+<sc-if value="{{s.pending}}" hint-placeholder-val="{{true}}"><span style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed {{t.ctlBorder}}"></span></sc-if>
+<div style="display: flex; flex-direction: column; gap: 5px"><span style="color: {{s.fg}}">{{s.n}}</span><sc-if value="{{s.active}}" hint-placeholder-val="{{false}}"><span style="height: 4px; border-radius: 2px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: 42%; height: 4px; background: {{t.accent}}"></span></span></sc-if></div>
+<span style="color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{s.meta}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Status bar progress</span>
+<div style="height: 26px; display: flex; align-items: center; gap: 12px; padding: 0 10px; border-radius: 4px; background: {{t.app}}; color: {{t.t3}}; font-size: 11px">
+<span style="display: flex; align-items: center; gap: 6px"><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="{{t.track}}" stroke-width="2"></circle><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="{{t.accent}}" stroke-width="2" stroke-linecap="round"></path></svg>Indexing assets</span>
+<span style="width: 120px; height: 4px; border-radius: 2px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: 33%; height: 4px; background: {{t.accent}}"></span></span>
+<span style="font-family: 'JetBrains Mono', monospace">1,240 / 3,800</span>
+<span style="margin-left: auto; padding: 0 6px; border-radius: 8px; background: {{t.soft}}; color: {{t.accentText}}">3 tasks</span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Spinners · circular</span>
+<div style="display: flex; align-items: center; gap: 20px">
+<svg width="12" height="12" viewBox="0 0 16 16" role="img" aria-label="Loading"><circle cx="8" cy="8" r="6" fill="none" stroke="{{t.track}}" stroke-width="2"></circle><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="{{t.accent}}" stroke-width="2" stroke-linecap="round"></path></svg>
+<svg width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Loading"><circle cx="8" cy="8" r="6.5" fill="none" stroke="{{t.track}}" stroke-width="2"></circle><path d="M8 1.5a6.5 6.5 0 0 1 6.5 6.5" fill="none" stroke="{{t.accent}}" stroke-width="2" stroke-linecap="round"></path></svg>
+<svg width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Loading"><circle cx="12" cy="12" r="10" fill="none" stroke="{{t.track}}" stroke-width="2.5"></circle><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="{{t.accent}}" stroke-width="2.5" stroke-linecap="round"></path></svg>
+<span style="position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center">
+<svg width="40" height="40" viewBox="0 0 40 40" role="img" aria-label="68 percent" style="position: absolute; left: 0; top: 0; transform: rotate(-90deg)"><circle cx="20" cy="20" r="17" fill="none" stroke="{{t.track}}" stroke-width="3"></circle><circle cx="20" cy="20" r="17" fill="none" stroke="{{t.accent}}" stroke-width="3" stroke-linecap="round" stroke-dasharray="72.6 106.8"></circle></svg>
+<span style="position: relative; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">68</span>
+</span>
+<button aria-busy="true" style="margin-left: auto; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 4px; background: {{t.accent}}; color: {{t.onAccent}}; font: inherit; font-weight: 600; opacity: 0.85"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="{{t.onAccentTrack}}" stroke-width="2"></circle><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="{{t.onAccent}}" stroke-width="2" stroke-linecap="round"></path></svg>Saving…</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Skeleton · list loading</span>
+<sc-for list="{{skel}}" as="s" hint-placeholder-count="5">
+<div style="height: 26px; display: flex; align-items: center; gap: 8px; padding-left: {{s.pad}}px">
+<span style="width: 14px; height: 14px; border-radius: 3px; background: {{t.skel}}"></span>
+<span style="width: {{s.w}}px; height: 10px; border-radius: 5px; background: {{s.bg}}"></span>
+<span style="margin-left: auto; width: 44px; height: 10px; border-radius: 5px; background: {{t.skel}}"></span>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 8px; background: {{t.popup}}; border: 1px solid {{t.popBorder}}; border-radius: 8px; box-shadow: {{t.popShadow}}">
+<div style="height: 28px; display: flex; align-items: center; padding: 0 6px; color: {{t.t1}}; font-weight: 600">Background tasks<span style="margin-left: auto; color: {{t.t3}}; font-weight: 400; font-size: 11px">3 running</span></div>
+<sc-for list="{{tasks}}" as="k" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 40px 22px; align-items: center; gap: 8px; padding: 6px; border-radius: 4px; background: {{k.bg}}">
+<div style="display: flex; flex-direction: column; gap: 5px"><span style="color: {{t.t1}}">{{k.n}}</span><span style="height: 4px; border-radius: 2px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: {{k.p}}%; height: 4px; background: {{k.c}}"></span></span></div>
+<span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {{t.t2}}">{{k.l}}</span>
+<button aria-label="Cancel {{k.n}}" style="width: 22px; height: 22px; border: 0; border-radius: 4px; background: transparent; color: {{t.t3}}; display: flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1000,"height":604}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      app: '#E6E8EC', panel: '#FBFBFC', control: '#FFFFFF', border: '#DADDE3', ctlBorder: '#C9CED6', track: '#E3E6EB',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', accentClear: 'rgba(47,111,235,0)', accentText: '#2459C9', onAccent: '#FFFFFF', onAccentTrack: 'rgba(255,255,255,0.35)',
+      soft: 'rgba(47,111,235,0.12)', ok: '#1E9E62', onOk: '#FFFFFF', error: '#D64545', errorText: '#B83232',
+      skel: '#E9EBEF', skelShine: 'linear-gradient(to right, #E9EBEF, #F4F5F7, #E9EBEF)',
+      popup: '#FFFFFF', popBorder: '#D5D9E0', popShadow: '0 12px 32px rgba(16,24,40,0.16)', hover: '#F3F4F6', warn: '#D99A2B'
+    } : {
+      app: '#0B0C0F', panel: '#121418', control: '#1E2128', border: '#1C1F25', ctlBorder: '#2E333D', track: '#23272F',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', accentClear: 'rgba(107,155,255,0)', accentText: '#8FB3FF', onAccent: '#0B0C0F', onAccentTrack: 'rgba(11,12,15,0.3)',
+      soft: 'rgba(107,155,255,0.16)', ok: '#4FC48A', onOk: '#0B0C0F', error: '#EF6A6A', errorText: '#F28B8B',
+      skel: '#1C1F25', skelShine: 'linear-gradient(to right, #1C1F25, #262A32, #1C1F25)',
+      popup: '#1A1D23', popBorder: '#2E333D', popShadow: '0 16px 40px rgba(0,0,0,0.55)', hover: '#20242B', warn: '#E5B454'
+    };
+    const steps = [
+      ['Compile scripts', 'done', '4.2 s'], ['Bake lighting', 'active', '42%'], ['Package assets', 'pending', ''], ['Upload', 'pending', '']
+    ].map(function (s) {
+      return { n: s[0], done: s[1] === 'done', active: s[1] === 'active', pending: s[1] === 'pending', meta: s[2], fg: s[1] === 'pending' ? t.t3 : t.t1 };
+    });
+    const skel = [[0, 140], [16, 110], [16, 160], [32, 90], [16, 130]].map(function (s, i) {
+      return { pad: s[0], w: s[1], bg: i === 2 ? t.skelShine : t.skel };
+    });
+    const tasks = [
+      ['Bake lighting', 42, '42%', t.accent], ['Generate thumbnails', 78, '78%', t.accent], ['Upload build', 15, 'paused', t.warn]
+    ].map(function (k, i) { return { n: k[0], p: k[1], l: k[2], c: k[3], bg: i === 0 ? t.hover : 'transparent' }; });
+    return { t: t, steps: steps, skel: skel, tasks: tasks };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Message boxes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1040px; height: 620px; box-sizing: border-box; padding: 32px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; gap: 4px; padding: 4px; background: {{t.app}}">
+<span style="flex: 0 0 22%; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="flex: 1; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="flex: 0 0 28%; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: {{t.scrim}}"></span>
+</div>
+
+
+<sc-for list="{{boxes}}" as="m" hint-placeholder-count="4">
+<div style="position: relative; display: flex; flex-direction: column; gap: 8px">
+<span style="color: {{t.caption}}; font-size: 11px; font-weight: 500">{{m.caption}}</span>
+<div role="alertdialog" aria-label="{{m.title}}" style="position: relative; width: 456px; box-sizing: border-box; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 8px; box-shadow: {{t.shadow}}; overflow: hidden">
+<button aria-label="Close" style="position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: {{t.t3}}; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+<div style="display: flex; gap: 14px; padding: 20px 40px 16px 20px">
+<span style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: {{m.soft}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{m.color}}; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"><path d="{{m.icon}}"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="color: {{t.t1}}; font-size: 14px; line-height: 20px; font-weight: 600">{{m.title}}</span>
+<span>{{m.body}}</span>
+<sc-if value="{{m.hasList}}" hint-placeholder-val="{{false}}">
+<div style="margin-top: 6px; display: flex; flex-direction: column; padding: 4px 0; border: 1px solid {{t.line}}; border-radius: 6px; background: {{t.well}}">
+<sc-for list="{{m.list}}" as="d" hint-placeholder-count="2"><label style="height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: {{t.t1}}"><span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 3px; background: {{t.accent}}; display: flex; align-items: center; justify-content: center"><svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.onAccent}}; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="width: 8px; height: 8px; border-radius: 2px; background: {{d.c}}"></span>{{d.n}}<span style="margin-left: auto; color: {{t.t3}}; font-size: 11px">{{d.meta}}</span></label></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{m.hasCheck}}" hint-placeholder-val="{{false}}"><label style="margin-top: 6px; display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 3px; border: 1px solid {{t.ctlBorder}}; background: {{t.input}}"></span>Don't ask again</label></sc-if>
+<sc-if value="{{m.hasDetails}}" hint-placeholder-val="{{false}}">
+<div style="margin-top: 6px; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 4px; color: {{t.t2}}"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m6 9 6 6 6-6"></path></svg>Details</span>
+<div style="padding: 8px 10px; border: 1px solid {{t.line}}; border-radius: 6px; background: {{t.well}}; color: {{t.t2}}; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 16px; white-space: pre-wrap">{{m.details}}</div>
+</div>
+</sc-if>
+</div>
+</div>
+<div style="height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: {{t.header}}; border-top: 1px solid {{t.line}}">
+<sc-if value="{{m.hasLeft}}" hint-placeholder-val="{{false}}"><button style="height: 28px; padding: 0 12px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit"><span style="text-decoration: underline; text-underline-offset: 2px">D</span>on't save</button></sc-if>
+<span style="flex: 1"></span>
+<sc-for list="{{m.buttons}}" as="b" hint-placeholder-count="2"><button style="height: 28px; padding: 0 14px; box-sizing: border-box; border: 1px solid {{b.border}}; border-radius: 4px; background: {{b.bg}}; color: {{b.fg}}; box-shadow: {{b.ring}}; font: inherit; font-weight: {{b.w}}"><span style="text-decoration: underline; text-underline-offset: 2px">{{b.k}}</span>{{b.rest}}</button></sc-for>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1040,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      app: '#E6E8EC', bpanel: '#FBFBFC', bborder: '#DADDE3', scrim: 'rgba(16,24,40,0.30)', caption: '#1A1D23', panel: '#FFFFFF', header: '#F6F7F9', input: '#FFFFFF', control: '#FFFFFF', well: '#F6F7F9',
+      border: '#C3C9D2', line: '#E6E8EC', ctlBorder: '#C9CED6', t1: '#1A1D23', t2: '#464C57', t3: '#5F6673',
+      accent: '#2F6FEB', onAccent: '#FFFFFF', ring: 'rgba(47,111,235,0.25)', danger: '#C93C3C', onDanger: '#FFFFFF',
+      info: '#2F6FEB', infoSoft: 'rgba(47,111,235,0.12)', warn: '#B7791F', warnSoft: 'rgba(217,154,43,0.16)',
+      error: '#D64545', errorSoft: 'rgba(214,69,69,0.12)', level: '#2F6FEB', mat: '#0FA596',
+      shadow: '0 0 0 1px rgba(16,24,40,0.06), 0 24px 64px rgba(16,24,40,0.28)'
+    } : {
+      app: '#0B0C0F', bpanel: '#121418', bborder: '#1C1F25', scrim: 'rgba(0,0,0,0.55)', caption: '#AEB4C0', panel: '#1B1E25', header: '#20242C', input: '#0F1115', control: '#272B34', well: '#13151A',
+      border: '#3A404C', line: '#2A2F39', ctlBorder: '#3A404C', t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2',
+      accent: '#6B9BFF', onAccent: '#0B0C0F', ring: 'rgba(107,155,255,0.30)', danger: '#EF6A6A', onDanger: '#0B0C0F',
+      info: '#6B9BFF', infoSoft: 'rgba(107,155,255,0.16)', warn: '#E5B454', warnSoft: 'rgba(229,180,84,0.14)',
+      error: '#EF6A6A', errorSoft: 'rgba(239,106,106,0.16)', level: '#6B9BFF', mat: '#34D1BF',
+      shadow: '0 0 0 1px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+    };
+    const I = {
+      warn: 'm21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3ZM12 9v4M12 17h.01',
+      question: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',
+      info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 16v-4M12 8h.01',
+      error: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM15 9l-6 6M9 9l6 6',
+      power: 'M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0'
+    };
+    const btn = function (label, kind, focus) {
+      const primary = kind === 'primary', danger = kind === 'danger';
+      return {
+        k: label.charAt(0), rest: label.slice(1),
+        bg: primary ? t.accent : (danger ? t.danger : t.control),
+        border: primary ? t.accent : (danger ? t.danger : (focus ? t.accent : t.ctlBorder)),
+        fg: primary ? t.onAccent : (danger ? t.onDanger : t.t1), w: (primary || danger) ? 600 : 400,
+        ring: focus ? (primary ? '0 0 0 2px ' + t.panel + ', 0 0 0 4px ' + t.accent : '0 0 0 3px ' + t.ring) : 'none'
+      };
+    };
+    const boxes = [
+      {
+        caption: 'Unsaved changes · Save / Don\'t save / Cancel', kind: 'warn',
+        title: 'Save changes before closing?', body: '2 documents have unsaved changes. Changes you don\'t save are lost.',
+        list: [{ n: 'Desert.level', c: t.level, meta: '12 edits' }, { n: 'Terrain.mat', c: t.mat, meta: '3 edits' }],
+        left: true, buttons: [btn('Cancel', 'secondary'), btn('Save all', 'primary', true)]
+      },
+      {
+        caption: 'Confirm · action / Cancel', kind: 'power',
+        title: 'Quit Test?', body: '2 background tasks are still running: Bake lighting (42%) and Upload build (paused). They will be stopped.',
+        check: true, buttons: [btn('Cancel', 'secondary', true), btn('Quit', 'danger')]
+      },
+      {
+        caption: 'Question · No / Yes (verbs, not "Yes")', kind: 'question',
+        title: 'Reload Terrain.mat?', body: 'The file changed on disk. Reloading replaces the open version; your 3 unsaved edits will be lost.',
+        buttons: [btn('Keep mine', 'secondary'), btn('Reload', 'primary', true)]
+      },
+      {
+        caption: 'Error · OK', kind: 'error',
+        title: 'Couldn\'t open Desert.level', body: 'The file uses a newer format than this version of Test can read.',
+        details: 'LevelReader: version 14 > supported 12\n  at levels/desert.level:1', buttons: [btn('Copy details', 'secondary'), btn('OK', 'primary', true)]
+      }
+    ].map(function (m) {
+      const col = { warn: [t.warn, t.warnSoft], power: [t.warn, t.warnSoft], question: [t.info, t.infoSoft], error: [t.error, t.errorSoft] }[m.kind];
+      return {
+        caption: m.caption, title: m.title, body: m.body, icon: I[m.kind], color: col[0], soft: col[1],
+        hasList: !!m.list, list: m.list || [], hasCheck: !!m.check, hasDetails: !!m.details, details: m.details || '',
+        hasLeft: !!m.left, buttons: m.buttons
+      };
+    });
+    return { t: t, boxes: boxes };
+  }
+}
+</script>
+</body>
+</html>

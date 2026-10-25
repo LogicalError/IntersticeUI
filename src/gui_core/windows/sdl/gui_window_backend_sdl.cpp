@@ -23,6 +23,8 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
 // Undefine Windows macro that conflicts with our CreateWindow method
 #undef CreateWindow
 #endif
@@ -845,11 +847,19 @@ namespace interstice
                 SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
             }
 
-            // A caption-less WS_POPUP never gets a DWM shadow, so borderless shadows use
-            // CS_DROPSHADOW, applied by ShowSDLWindowWithShadow on every Show.
-            SDL_SetBooleanProperty(props, "WantsDropShadow",
+            // A borderless window with a shadow: Windows 11 rounds its corners and gives it the
+            // system shadow. Elsewhere that fails, and CS_DROPSHADOW (applied by
+            // ShowSDLWindowWithShadow on every Show) draws a small one.
+            const bool borderlessShadow =
                 ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None) &&
-                ((windowFlags & interstice::WindowFlags::Shadow) != interstice::WindowFlags::None));
+                ((windowFlags & interstice::WindowFlags::Shadow) != interstice::WindowFlags::None) && !isTransparent;
+            bool systemShadow = false;
+            if (borderlessShadow)
+            {
+                const DWM_WINDOW_CORNER_PREFERENCE round = DWMWCP_ROUND;
+                systemShadow = SUCCEEDED(DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &round, sizeof(round)));
+            }
+            SDL_SetBooleanProperty(props, "WantsDropShadow", borderlessShadow && !systemShadow);
         }
 #else
         if (customTitleBar)

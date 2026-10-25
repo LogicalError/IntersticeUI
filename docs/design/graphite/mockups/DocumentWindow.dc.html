@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Second main window with a dragged-out document</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 796px; box-sizing: border-box; padding: 32px; background: {{t.backdrop}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div role="application" aria-label="Hero.prefab — second main window" style="width: 1216px; height: 732px; box-sizing: border-box; display: flex; flex-direction: column; background: {{t.app}}; border: 1px solid {{t.winBorder}}; border-radius: 8px; box-shadow: {{t.winShadow}}; overflow: hidden">
+
+<header style="height: 36px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding-left: 10px; background: {{t.title}}">
+<div style="width: 18px; height: 18px; border-radius: 4px; background: {{t.accent}}; display: flex; align-items: center; justify-content: center; color: {{t.onAccent}}; font-weight: 600; font-size: 11px">T</div>
+<span style="margin-left: 6px; padding: 0 9px">File</span><span style="padding: 0 9px">Edit</span><span style="padding: 0 9px">View</span><span style="padding: 0 9px">Help</span>
+<div style="flex: 1"></div>
+<span style="margin-right: 10px; color: {{t.t3}}; font-size: 11px">Window 2</span>
+<span style="width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M5 12h14"></path></svg></span>
+<span style="width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round"><path d="M4 4h16v16H4Z"></path></svg></span>
+<span style="width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span>
+</header>
+<div role="tablist" aria-label="Documents" style="height: 36px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: flex-end; gap: 3px; padding: 0 8px; background: {{t.title}}; border-bottom: 2px solid {{docLine}}">
+<sc-for list="{{docs}}" as="d" hint-placeholder-count="2">
+<div role="tab" aria-selected="{{d.sel}}" style="height: 30px; min-width: 150px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; border-radius: 6px 6px 0 0; background: {{d.bg}}; color: {{d.fg}}">
+<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0; fill: none; stroke: {{d.ic}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="{{d.d}}"></path></svg>
+<span style="white-space: nowrap; font-weight: {{d.w}}">{{d.n}}<span style="color: {{d.extC}}; font-weight: 400">{{d.ext}}</span></span>
+<span style="flex: 1"></span>
+<sc-if value="{{d.close}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; color: {{d.markC}}"><svg width="11" height="11" viewBox="0 0 24 24" style="fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span></sc-if>
+</div>
+</sc-for>
+<button aria-label="New document" style="width: 26px; height: 26px; margin: 0 0 3px 4px; border: 0; border-radius: 4px; background: transparent; color: {{t.t3}}; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M5 12h14M12 5v14"></path></svg></button>
+</div>
+
+<main style="flex: 1; min-height: 0; display: flex; gap: 4px; padding: 4px">
+<section aria-label="Prefab hierarchy" style="width: 220px; flex-shrink: 0; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}"><span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500">Hierarchy</span></div>
+<div style="padding: 8px 4px">
+<sc-for list="{{tree}}" as="r" hint-placeholder-count="8"><div style="height: 22px; display: flex; align-items: center; padding-left: {{r.pad}}px; border-radius: 4px; background: {{r.bg}}; color: {{r.fg}}">{{r.n}}</div></sc-for>
+</div>
+</section>
+
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<section aria-label="Prefab viewport" style="flex: 1; min-height: 0; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}"><span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500">Viewport</span><span style="height: 24px; display: flex; align-items: center; padding: 0 10px">Preview lighting</span></div>
+<div style="position: relative; flex: 1; overflow: hidden; background: {{t.scene}}">
+<div aria-hidden="true" style="position: absolute; left: -40%; right: -40%; top: 60%; height: 600px; transform-origin: top center; transform: perspective(500px) rotateX(62deg); background-image: linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size: 48px 48px"></div>
+<div role="img" aria-label="Hero character preview" style="position: absolute; left: 50%; top: 50%; width: 0; height: 0">
+<span style="position: absolute; left: -34px; top: -150px; width: 68px; height: 68px; border-radius: 50%; background: {{t.body}}"></span>
+<span style="position: absolute; left: -52px; top: -78px; width: 104px; height: 150px; border-radius: 48px 48px 22px 22px; background: {{t.body}}"></span>
+<span style="position: absolute; left: -70px; top: 66px; width: 140px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.35); filter: blur(5px)"></span>
+</div>
+</div>
+</section>
+<section aria-label="Animation" style="height: 150px; flex-shrink: 0; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}"><span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500">Timeline</span></div>
+<div style="position: relative; flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{lanes}}" as="l" hint-placeholder-count="3">
+<div style="position: relative; height: 26px; display: flex; align-items: center; border-bottom: 1px solid {{t.rowLine}}"><span style="width: 120px; color: {{t.t2}}">{{l.n}}</span>
+<div style="position: relative; flex: 1; height: 26px"><sc-for list="{{l.keys}}" as="k" hint-placeholder-count="4"><span style="position: absolute; left: {{k}}%; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; transform: rotate(45deg); border-radius: 2px; background: {{t.key}}"></span></sc-for></div>
+</div>
+</sc-for>
+<span aria-hidden="true" style="position: absolute; left: calc(132px + 38%); top: 4px; bottom: 4px; width: 1px; background: {{t.accent}}"></span>
+</div>
+</section>
+</div>
+
+<section aria-label="Inspector" style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}"><span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500">Inspector</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px">
+<sc-for list="{{props}}" as="p" hint-placeholder-count="7"><div style="height: 26px; display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px"><span>{{p.l}}</span><span style="height: 24px; box-sizing: border-box; display: flex; align-items: center; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">{{p.v}}</span></div></sc-for>
+</div>
+</section>
+</main>
+
+<footer style="height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; color: {{t.t3}}; font-size: 11px">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{t.ok}}"></span>Ready</span>
+<span>Hero.prefab · own layout, saved with this window</span>
+</footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":796}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      backdrop: '#C9CDD4', app: '#E6E8EC', title: '#DADDE2', panel: '#FBFBFC', header: '#F3F4F6', active: '#E4E7EC', input: '#FFFFFF',
+      border: '#DADDE3', line: '#CDD2DA', line2: '#D5D9E0', rowLine: '#EEF0F3',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', onAccent: '#FFFFFF', soft: 'rgba(47,111,235,0.12)', ok: '#1E9E62', key: '#5F6673',
+      scene: 'linear-gradient(to bottom, #EEF1F5 0%, #E3E7EC 60%, #D9DDE3 100%)', grid: '#C3C9D2',
+      body: 'linear-gradient(135deg, #FFFFFF 0%, #C9CED8 45%, #8C93A1 100%)',
+      prefab: '#7C5CE0', anim: '#D63F8C',
+      winBorder: '#C9CED6', winShadow: '0 20px 48px rgba(16,24,40,0.22), 0 2px 6px rgba(16,24,40,0.10)'
+    } : {
+      backdrop: '#1D2026', app: '#0B0C0F', title: '#08090B', panel: '#121418', header: '#16191E', active: '#23272F', input: '#0D0F12',
+      border: '#1C1F25', line: '#23272F', line2: '#23272F', rowLine: '#181B20',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', onAccent: '#0B0C0F', soft: 'rgba(107,155,255,0.16)', ok: '#4FC48A', key: '#C9CED8',
+      scene: 'linear-gradient(to bottom, #1A1E26 0%, #14171C 60%, #101215 100%)', grid: '#262B34',
+      body: 'linear-gradient(135deg, #C9CED8 0%, #7E8594 45%, #3A3F4A 100%)',
+      prefab: '#A98BFF', anim: '#F472B6',
+      winBorder: '#2E333D', winShadow: '0 24px 56px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3)'
+    };
+    const P = { prefab: 'M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7ZM3.3 7l8.7 5 8.7-5M12 22V12', anim: 'M6 3l14 9-14 9Z' };
+    const solid = isLight ? { prefab: '#7C5CE0', anim: '#B8306F' } : { prefab: t.prefab, anim: t.anim };
+    const onSolid = isLight ? '#FFFFFF' : '#0B0C0F', onMuted = isLight ? 'rgba(255,255,255,0.78)' : 'rgba(11,12,15,0.62)';
+    const tintOf = function (h) { return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + (isLight ? 0.12 : 0.14) + ')'; };
+    const docs = [['Hero.prefab', 'prefab', true], ['Hero_Run.anim', 'anim', false]].map(function (d) {
+      const on = d[2];
+      return {
+        n: d[0].split('.')[0], ext: '.' + d[0].split('.')[1], d: P[d[1]], sel: on ? 'true' : 'false', close: on, w: on ? 600 : 400,
+        bg: on ? solid[d[1]] : tintOf(t[d[1]]), fg: on ? onSolid : t.t1, ic: on ? onSolid : t[d[1]], extC: on ? onMuted : t.t3, markC: on ? onSolid : t.t2
+      };
+    });
+    const docLine = solid.prefab;
+    const tree = [['Hero', 0], ['Armature', 1], ['Hips', 2], ['Spine', 3, true], ['Head', 4], ['Body mesh', 1], ['Weapon socket', 1], ['Hit box', 1]]
+      .map(function (r) { return { n: r[0], pad: 10 + r[1] * 14, bg: r[2] ? t.soft : 'transparent', fg: r[2] ? t.t1 : t.t2 }; });
+    const props = [['Bone', 'Spine'], ['Rotation', '0, 12, 0'], ['Length', '0.42'], ['Constraint', 'Look at'], ['Target', 'Head'], ['Weight', '0.75']]
+      .map(function (p) { return { l: p[0], v: p[1] }; });
+    const lanes = [['Spine.rotation', [5, 30, 55, 80]], ['Hips.position', [5, 42, 80]], ['Footstep events', [18, 68]]]
+      .map(function (l) { return { n: l[0], keys: l[1] }; });
+    return { t: t, docLine: docLine, docs: docs, tree: tree, props: props, lanes: lanes };
+  }
+}
+</script>
+</body>
+</html>

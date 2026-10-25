@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Curve editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 580px; box-sizing: border-box; padding: 20px; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<section aria-label="Curve editor" style="width: 1240px; height: 540px; box-sizing: border-box; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}">
+<span style="height: 24px; display: flex; align-items: center; padding: 0 10px; color: {{t.t2}}">Timeline</span>
+<span style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.accent}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 20c4 0 5-16 9-16s5 16 9 16"></path></svg>Curves</span>
+<span style="height: 24px; display: flex; align-items: center; padding: 0 10px; color: {{t.t2}}">Audio mixer</span>
+</div>
+
+<div role="toolbar" aria-label="Curve tools" style="height: 40px; flex-shrink: 0; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-bottom: 1px solid {{t.line}}">
+<span style="color: {{t.t3}}; font-size: 11px">Interpolation</span>
+<div role="group" aria-label="Interpolation" style="display: inline-flex; padding: 2px; gap: 2px; border-radius: 6px; background: {{t.well}}; border: 1px solid {{t.line}}">
+<sc-for list="{{interp}}" as="b" hint-placeholder-count="3"><button aria-label="{{b.l}}" aria-pressed="{{b.p}}" style="height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 0; border-radius: 4px; background: {{b.bg}}; box-shadow: {{b.sh}}; color: {{b.fg}}; font: inherit"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="{{b.d}}"></path></svg>{{b.l}}</button></sc-for>
+</div>
+<span style="color: {{t.t3}}; font-size: 11px; margin-left: 6px">Tangents</span>
+<div role="group" aria-label="Tangents" style="display: inline-flex; padding: 2px; gap: 2px; border-radius: 6px; background: {{t.well}}; border: 1px solid {{t.line}}">
+<sc-for list="{{tangents}}" as="b" hint-placeholder-count="4"><button aria-pressed="{{b.p}}" style="height: 22px; padding: 0 9px; border: 0; border-radius: 4px; background: {{b.bg}}; box-shadow: {{b.sh}}; color: {{b.fg}}; font: inherit">{{b.l}}</button></sc-for>
+</div>
+<span style="width: 1px; height: 18px; background: {{t.line}}; margin: 0 2px"></span>
+<button style="height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path></svg>Frame all<span style="color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">A</span></button>
+<div style="margin-left: auto; display: flex; align-items: center; gap: 6px">
+<span style="color: {{t.t3}}; font-size: 11px">Frame</span>
+<span style="width: 64px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">120</span>
+<span style="color: {{t.t3}}; font-size: 11px; margin-left: 4px">Value</span>
+<span style="width: 76px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">0.400</span>
+</div>
+</div>
+
+<div style="flex: 1; min-height: 0; display: flex">
+<div role="tree" aria-label="Channels" style="width: 238px; flex-shrink: 0; box-sizing: border-box; display: flex; flex-direction: column; padding: 6px 4px; border-right: 1px solid {{t.line}}">
+<div style="height: 22px; display: flex; align-items: center; padding: 0 8px 4px; color: {{t.t3}}; font-size: 11px; font-weight: 500">Channel<span style="margin-left: auto">@ f 134</span></div>
+<sc-for list="{{channels}}" as="c" hint-placeholder-count="9">
+<div role="treeitem" style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 8px 0 {{c.pad}}px; border-radius: 4px; background: {{c.bg}}; color: {{c.fg}}; opacity: {{c.op}}; font-weight: {{c.w}}">
+<sc-if value="{{c.open}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.t3}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m6 9 6 6 6-6"></path></svg></sc-if>
+<sc-if value="{{c.leaf}}" hint-placeholder-val="{{true}}"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{c.color}}"></span></sc-if>
+<span>{{c.n}}</span>
+<span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {{t.t2}}">{{c.v}}</span>
+<sc-if value="{{c.leaf}}" hint-placeholder-val="{{true}}"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="margin-left: 6px; fill: none; stroke: {{t.t3}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="{{c.eye}}"></path></svg></sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="position: relative; width: 1000px; height: 464px; flex-shrink: 0; overflow: hidden">
+<div aria-label="Frame ruler" style="position: relative; height: 24px; box-sizing: border-box; border-bottom: 1px solid {{t.line}}; background: {{t.header}}">
+<sc-for list="{{frameLabels}}" as="f" hint-placeholder-count="9"><span style="position: absolute; left: {{f.x}}px; top: 5px; transform: translateX(-50%); color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">{{f.l}}</span></sc-for>
+</div>
+<div aria-label="Curves" style="position: relative; width: 1000px; height: 440px; background: {{t.plot}}">
+<sc-for list="{{vlines}}" as="g" hint-placeholder-count="25"><span style="position: absolute; left: {{g.x}}px; top: 0; bottom: 0; width: 1px; background: {{g.c}}"></span></sc-for>
+<sc-for list="{{hlines}}" as="g" hint-placeholder-count="15"><span style="position: absolute; top: {{g.y}}px; left: 0; right: 0; height: 1px; background: {{g.c}}"></span></sc-for>
+<sc-for list="{{vlabels}}" as="g" hint-placeholder-count="7"><span style="position: absolute; left: 6px; top: {{g.y}}px; margin-top: -14px; color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10px">{{g.l}}</span></sc-for>
+<span aria-hidden="true" style="position: absolute; left: 470px; top: 228px; width: 64px; height: 62px; box-sizing: border-box; border: 1px dashed {{t.accent}}; background: {{t.soft}}; border-radius: 2px"></span>
+<sc-for list="{{curves}}" as="c" hint-placeholder-count="3"><svg width="1000" height="440" viewBox="0 0 1000 440" aria-hidden="true" style="position: absolute; left: 0; top: 0; opacity: {{c.op}}"><path d="{{c.d}}" fill="none" stroke="{{c.color}}" stroke-width="{{c.w}}" stroke-linecap="round"></path><path d="{{c.pre}}" fill="none" stroke="{{c.color}}" stroke-width="1.5" stroke-dasharray="3 4"></path></svg></sc-for>
+<svg width="1000" height="440" viewBox="0 0 1000 440" aria-hidden="true" style="position: absolute; left: 0; top: 0"><path d="{{handles.d}}" fill="none" stroke="{{t.accent}}" stroke-width="1.25"></path></svg>
+<sc-for list="{{keys}}" as="k" hint-placeholder-count="13"><span style="position: absolute; left: {{k.x}}px; top: {{k.y}}px; width: {{k.s}}px; height: {{k.s}}px; margin: {{k.m}}; box-sizing: border-box; border-radius: {{k.r}}; background: {{k.fill}}; border: {{k.border}}; opacity: {{k.op}}"></span></sc-for>
+<span role="tooltip" style="position: absolute; left: 512px; top: 290px; padding: 3px 7px; border-radius: 4px; background: {{t.tip}}; color: {{t.tipText}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; white-space: nowrap">X · f 120 · 0.400</span>
+</div>
+<div aria-hidden="true" style="position: absolute; left: {{playX}}px; top: 0; bottom: 0; width: 0">
+<span style="position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: {{t.accent}}"></span>
+<span style="position: absolute; left: -18px; top: 3px; width: 36px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: {{t.accent}}; color: {{t.onAccent}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 500">134</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1280,"height":580}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      app: '#E6E8EC', panel: '#FBFBFC', header: '#F3F4F6', active: '#E4E7EC', input: '#FFFFFF', well: '#EEF0F3', plot: '#FFFFFF',
+      border: '#DADDE3', line: '#E3E6EB', line2: '#D5D9E0', gridMinor: '#F1F2F5', gridMajor: '#E1E4E9', zero: '#C9CED6',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', onAccent: '#FFFFFF', soft: 'rgba(47,111,235,0.10)',
+      segOn: '#FFFFFF', segShadow: '0 1px 2px rgba(16,24,40,0.12)', keyEdge: '#FFFFFF', selFill: '#FFFFFF',
+      tip: '#1A1D23', tipText: '#FFFFFF',
+      x: '#D64545', y: '#1E9E62', z: '#2F6FEB', s: '#B77A12'
+    } : {
+      app: '#0B0C0F', panel: '#121418', header: '#16191E', active: '#23272F', input: '#0D0F12', well: '#0D0F12', plot: '#0E1013',
+      border: '#1C1F25', line: '#23272F', line2: '#23272F', gridMinor: '#15181D', gridMajor: '#1F232A', zero: '#343A45',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', onAccent: '#0B0C0F', soft: 'rgba(107,155,255,0.12)',
+      segOn: '#2A2F39', segShadow: 'none', keyEdge: '#0E1013', selFill: '#FFFFFF',
+      tip: '#2A2F39', tipText: '#E8EAEF',
+      x: '#EF6A6A', y: '#4FC48A', z: '#6B9BFF', s: '#E5B454'
+    };
+
+    const X = function (f) { return 20 + f * 4; };
+    const Y = function (v) { return 20 + (2.5 - v) / 3.5 * 400; };
+    const r1 = function (n) { return Math.round(n * 10) / 10; };
+
+    const seg = function (items, on) {
+      return items.map(function (it) {
+        const p = it[0] === on;
+        return { l: it[0], d: it[1] || '', p: p ? 'true' : 'false', bg: p ? t.segOn : 'transparent', sh: p ? t.segShadow : 'none', fg: p ? t.t1 : t.t2 };
+      });
+    };
+    const interp = seg([['Constant', 'M3 18h6V6h6v12h6'], ['Linear', 'M3 18 9 6l6 12 6-12'], ['Bezier', 'M3 18c3 0 3-12 6-12s3 12 6 12 3-12 6-12']], 'Bezier');
+    const tangents = seg([['Auto'], ['Aligned'], ['Free'], ['Flat']], 'Auto');
+
+    const curveDefs = [
+      { n: 'X', color: t.x, keys: [[0, 0], [60, 1.5], [120, 0.4], [180, 1.8], [240, 1.0]], active: true },
+      { n: 'Y', color: t.y, keys: [[0, 1.0], [80, 1.0], [160, 0.2], [240, 0.6]] },
+      { n: 'Z', color: t.z, keys: [[0, -0.5], [100, 0.8], [200, -0.2], [240, 0]] }
+    ];
+    const slopes = function (k) {
+      return k.map(function (p, i) {
+        if (i === 0 || i === k.length - 1) return 0;
+        return (k[i + 1][1] - k[i - 1][1]) / (k[i + 1][0] - k[i - 1][0]);
+      });
+    };
+    const evalAt = function (k, m, f) {
+      for (let i = 0; i < k.length - 1; i++) {
+        if (f >= k[i][0] && f <= k[i + 1][0]) {
+          const dx = k[i + 1][0] - k[i][0], u = (f - k[i][0]) / dx;
+          const h00 = 2 * u * u * u - 3 * u * u + 1, h10 = u * u * u - 2 * u * u + u, h01 = -2 * u * u * u + 3 * u * u, h11 = u * u * u - u * u;
+          return h00 * k[i][1] + h10 * dx * m[i] + h01 * k[i + 1][1] + h11 * dx * m[i + 1];
+        }
+      }
+      return k[k.length - 1][1];
+    };
+    const keys = [];
+    const values = {};
+    const curves = curveDefs.map(function (c) {
+      const k = c.keys, m = slopes(k);
+      let d = 'M' + r1(X(k[0][0])) + ' ' + r1(Y(k[0][1]));
+      for (let i = 0; i < k.length - 1; i++) {
+        const dx = k[i + 1][0] - k[i][0];
+        d += ' C' + r1(X(k[i][0] + dx / 3)) + ' ' + r1(Y(k[i][1] + m[i] * dx / 3)) + ' ' + r1(X(k[i + 1][0] - dx / 3)) + ' ' + r1(Y(k[i + 1][1] - m[i + 1] * dx / 3)) + ' ' + r1(X(k[i + 1][0])) + ' ' + r1(Y(k[i + 1][1]));
+      }
+      const pre = 'M0 ' + r1(Y(k[0][1])) + ' H' + X(k[0][0]) + ' M' + X(k[k.length - 1][0]) + ' ' + r1(Y(k[k.length - 1][1])) + ' H1000';
+      values[c.n] = evalAt(k, m, 134).toFixed(2);
+      k.forEach(function (p) {
+        const sel = c.active && p[0] === 120;
+        keys.push(sel
+          ? { x: X(p[0]), y: r1(Y(p[1])), s: 11, m: '-5.5px 0 0 -5.5px', r: '2px', fill: t.selFill, border: '2px solid ' + t.accent, op: 1 }
+          : { x: X(p[0]), y: r1(Y(p[1])), s: 8, m: '-4px 0 0 -4px', r: '2px', fill: c.color, border: '1.5px solid ' + t.keyEdge, op: c.active ? 1 : 0.7 });
+      });
+      return { d: d, pre: pre, color: c.color, w: c.active ? 2 : 1.5, op: c.active ? 1 : 0.55 };
+    });
+    const hx0 = X(90), hy0 = r1(Y(0.4 - 0.075)), hx1 = X(150), hy1 = r1(Y(0.4 + 0.075)), kx = X(120), ky = r1(Y(0.4));
+    const handles = { d: 'M' + hx0 + ' ' + hy0 + ' L' + kx + ' ' + ky + ' L' + hx1 + ' ' + hy1 };
+    keys.push({ x: hx0, y: hy0, s: 8, m: '-4px 0 0 -4px', r: '50%', fill: t.plot, border: '1.5px solid ' + t.accent, op: 1 });
+    keys.push({ x: hx1, y: hy1, s: 8, m: '-4px 0 0 -4px', r: '50%', fill: t.plot, border: '1.5px solid ' + t.accent, op: 1 });
+
+    const vlines = [], hlines = [], vlabels = [], frameLabels = [];
+    for (let f = 0; f <= 240; f += 10) vlines.push({ x: X(f), c: f % 30 === 0 ? t.gridMajor : t.gridMinor });
+    for (let v = -1; v <= 2.5001; v += 0.25) {
+      const major = Math.abs(v * 2 - Math.round(v * 2)) < 1e-6;
+      hlines.push({ y: r1(Y(v)), c: Math.abs(v) < 1e-6 ? t.zero : (major ? t.gridMajor : t.gridMinor) });
+      if (major && v > -1) vlabels.push({ y: r1(Y(v)), l: v.toFixed(1) });
+    }
+    for (let f = 0; f <= 240; f += 30) frameLabels.push({ x: X(f), l: String(f) });
+
+    const eyeOn = 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z';
+    const eyeOff = 'M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6';
+    const channels = [
+      { n: 'Sphere', pad: 6, open: true, w: 600 },
+      { n: 'Position', pad: 20, open: true },
+      { n: 'X', pad: 38, color: t.x, v: values.X, sel: true },
+      { n: 'Y', pad: 38, color: t.y, v: values.Y },
+      { n: 'Z', pad: 38, color: t.z, v: values.Z },
+      { n: 'Rotation', pad: 20, open: true },
+      { n: 'Y', pad: 38, color: t.y, v: '45.0', hidden: true },
+      { n: 'Scale', pad: 20, open: true },
+      { n: 'Uniform', pad: 38, color: t.s, v: '1.00', hidden: true }
+    ].map(function (c) {
+      const leaf = !!c.color;
+      return {
+        n: c.n, pad: c.pad, open: !!c.open, leaf: leaf, color: c.color || '', v: c.v || '', w: c.w || 400,
+        eye: c.hidden ? eyeOff : eyeOn, op: c.hidden ? 0.55 : 1,
+        bg: c.sel ? t.soft : 'transparent', fg: (c.sel || c.w) ? t.t1 : t.t2
+      };
+    });
+
+    return {
+      t: t, interp: interp, tangents: tangents, curves: curves, keys: keys, handles: handles,
+      vlines: vlines, hlines: hlines, vlabels: vlabels, frameLabels: frameLabels, channels: channels, playX: X(134)
+    };
+  }
+}
+</script>
+</body>
+</html>

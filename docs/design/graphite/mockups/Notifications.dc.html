@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notifications and confirmations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1000px; height: 640px; box-sizing: border-box; padding: 28px; display: grid; grid-template-columns: 460px minmax(0, 1fr); gap: 16px; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+
+<div role="alertdialog" aria-label="Delete 12 assets?" style="display: flex; flex-direction: column; background: {{t.dlgPanel}}; border: 1px solid {{t.dlgBorder}}; border-radius: 8px; box-shadow: {{t.dlgShadow}}; overflow: hidden">
+<div style="display: flex; gap: 12px; padding: 18px 18px 12px">
+<span style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: {{t.errorSoft}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.error}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="color: {{t.t1}}; font-size: 14px; line-height: 20px; font-weight: 600">Delete 12 assets?</span>
+<span>The files are removed from disk. This can't be undone.</span>
+</div>
+</div>
+<div style="margin: 0 18px 0 62px; display: flex; flex-direction: column; padding: 4px 0; border: 1px solid {{t.dlgLine}}; border-radius: 6px; background: {{t.dlgWell}}">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="3"><div style="height: 24px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11px"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{t.t3}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4"></path></svg>{{f}}</div></sc-for>
+<div style="height: 22px; display: flex; align-items: center; padding: 0 10px 0 31px; color: {{t.t3}}">and 9 more…</div>
+</div>
+<label style="margin: 12px 18px 0 62px; display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 3px; border: 1px solid {{t.dlgCtlBorder}}; background: {{t.dlgInput}}"></span>Don't ask again this session</label>
+<div style="margin-top: 16px; height: 52px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 16px; background: {{t.dlgHeader}}; border-top: 1px solid {{t.dlgLine}}">
+<button style="height: 28px; padding: 0 14px; box-sizing: border-box; border: 1px solid {{t.accent}}; box-shadow: 0 0 0 3px {{t.soft}}; border-radius: 4px; background: {{t.dlgControl}}; color: {{t.t1}}; font: inherit">Cancel</button>
+<button style="height: 28px; padding: 0 14px; border: 0; border-radius: 4px; background: {{t.danger}}; color: {{t.onDanger}}; font: inherit; font-weight: 600">Delete 12 assets</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; padding: 0 5px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}"><span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}; font-weight: 500">Inspector</span></div>
+<div role="status" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 12px; background: {{t.warnSoft}}; border-bottom: 1px solid {{t.warnLine}}">
+<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0; fill: none; stroke: {{t.warn}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3ZM12 9v4M12 17h.01"></path></svg>
+<span style="color: {{t.t1}}">Scene has unsaved changes</span>
+<button style="margin-left: auto; height: 24px; padding: 0 10px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit">Discard</button>
+<button style="height: 24px; padding: 0 12px; border: 0; border-radius: 4px; background: {{t.accent}}; color: {{t.onAccent}}; font: inherit; font-weight: 600">Save</button>
+</div>
+<div role="status" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 12px; background: {{t.infoSoft}}; border-bottom: 1px solid {{t.line}}">
+<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0; fill: none; stroke: {{t.info}}; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 11h14v10H5ZM7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+<span style="color: {{t.t1}}">Read-only — this asset comes from a package</span>
+<a href="#" style="margin-left: auto; color: {{t.link}}; text-decoration: none; font-weight: 500">Make editable</a>
+</div>
+<div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+<div style="height: 26px; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; gap: 12px"><span>Position</span><span style="height: 24px; box-sizing: border-box; display: flex; align-items: center; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">0, 1.5, 0</span></div>
+</div>
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 8px; padding: 16px; background: {{t.scene}}; border: 1px solid {{t.border}}; border-radius: 6px; overflow: hidden">
+<span style="position: absolute; left: 16px; top: 14px; color: {{t.t3}}; font-size: 11px; font-weight: 500">Toasts · bottom-right, newest closest to the corner</span>
+<span style="height: 22px; display: flex; align-items: center; padding: 0 10px; border-radius: 11px; background: {{t.popup}}; border: 1px solid {{t.popBorder}}; color: {{t.t2}}; font-size: 11px">+2 earlier</span>
+<sc-for list="{{toasts}}" as="n" hint-placeholder-count="4">
+<div role="{{n.role}}" style="width: 380px; box-sizing: border-box; display: grid; grid-template-columns: 24px minmax(0, 1fr) 22px; gap: 10px; padding: 12px 10px 12px 12px; background: {{t.popup}}; border: 1px solid {{t.popBorder}}; border-radius: 8px; box-shadow: {{t.popShadow}}">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: {{n.soft}}; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: {{n.color}}; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"><path d="{{n.icon}}"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="color: {{t.t1}}; font-weight: 600">{{n.title}}</span><span style="margin-left: auto; color: {{t.t3}}; font-size: 11px">{{n.time}}</span></div>
+<span style="color: {{t.t2}}; font-family: {{n.bodyFont}}; font-size: {{n.bodySize}}">{{n.body}}</span>
+<sc-if value="{{n.progress}}" hint-placeholder-val="{{false}}"><span style="margin-top: 2px; height: 4px; border-radius: 2px; background: {{t.track}}; overflow: hidden"><span style="display: block; width: 48%; height: 4px; background: {{t.accent}}"></span></span></sc-if>
+<div style="display: flex; gap: 14px; margin-top: 4px">
+<sc-for list="{{n.actions}}" as="a" hint-placeholder-count="2"><a href="#" style="color: {{a.c}}; text-decoration: none; font-weight: 500">{{a.l}}</a></sc-for>
+</div>
+</div>
+<button aria-label="Dismiss" style="width: 22px; height: 22px; border: 0; border-radius: 4px; background: transparent; color: {{t.t3}}; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1000,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      dlgPanel: '#FFFFFF', dlgHeader: '#F6F7F9', dlgBorder: '#C3C9D2', dlgLine: '#E6E8EC', dlgWell: '#F6F7F9', dlgControl: '#FFFFFF', dlgCtlBorder: '#C9CED6', dlgInput: '#FFFFFF', dlgShadow: '0 0 0 1px rgba(16,24,40,0.06), 0 24px 64px rgba(16,24,40,0.28)',
+      app: '#E6E8EC', panel: '#FBFBFC', header: '#F3F4F6', active: '#E4E7EC', input: '#FFFFFF', control: '#FFFFFF', well: '#F6F7F9',
+      border: '#DADDE3', line: '#E3E6EB', line2: '#D5D9E0', ctlBorder: '#CDD2DA', track: '#E3E6EB',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', onAccent: '#FFFFFF', soft: 'rgba(47,111,235,0.14)', link: '#2459C9',
+      ok: '#1E9E62', okSoft: 'rgba(30,158,98,0.14)', warn: '#B7791F', warnSoft: 'rgba(217,154,43,0.14)', warnLine: 'rgba(217,154,43,0.35)',
+      error: '#D64545', errorSoft: 'rgba(214,69,69,0.12)', info: '#2F6FEB', infoSoft: 'rgba(47,111,235,0.08)',
+      danger: '#C93C3C', onDanger: '#FFFFFF',
+      scene: 'linear-gradient(to bottom, #EEF1F5, #DDE1E7)',
+      popup: '#FFFFFF', popBorder: '#D5D9E0', popShadow: '0 10px 28px rgba(16,24,40,0.16)', dialogShadow: '0 24px 64px rgba(16,24,40,0.18)'
+    } : {
+      dlgPanel: '#1B1E25', dlgHeader: '#20242C', dlgBorder: '#3A404C', dlgLine: '#2A2F39', dlgWell: '#13151A', dlgControl: '#272B34', dlgCtlBorder: '#3A404C', dlgInput: '#0F1115', dlgShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
+      app: '#0B0C0F', panel: '#121418', header: '#16191E', active: '#23272F', input: '#0D0F12', control: '#1E2128', well: '#0D0F12',
+      border: '#1C1F25', line: '#23272F', line2: '#23272F', ctlBorder: '#2E333D', track: '#2A2F39',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', onAccent: '#0B0C0F', soft: 'rgba(107,155,255,0.16)', link: '#8FB3FF',
+      ok: '#4FC48A', okSoft: 'rgba(79,196,138,0.16)', warn: '#E5B454', warnSoft: 'rgba(229,180,84,0.10)', warnLine: 'rgba(229,180,84,0.30)',
+      error: '#EF6A6A', errorSoft: 'rgba(239,106,106,0.16)', info: '#6B9BFF', infoSoft: 'rgba(107,155,255,0.07)',
+      danger: '#EF6A6A', onDanger: '#0B0C0F',
+      scene: 'linear-gradient(to bottom, #1A1E26, #101215)',
+      popup: '#1A1D23', popBorder: '#2E333D', popShadow: '0 12px 32px rgba(0,0,0,0.5)', dialogShadow: '0 24px 64px rgba(0,0,0,0.55)'
+    };
+    const I = {
+      ok: 'M20 6 9 17l-5-5', warn: 'M12 8v5M12 17h.01', error: 'M18 6 6 18M6 6l12 12', info: 'M12 19V5M5 12l7-7 7 7'
+    };
+    const mono = "'JetBrains Mono', monospace";
+    const toasts = [
+      { title: 'Uploading build', time: 'now', body: 'build-0.8.3-win64.zip · 48%', icon: I.info, color: t.info, soft: t.soft, progress: true, actions: [['Cancel', t.t2]], role: 'status' },
+      { title: '3 textures exceed 4K', time: '1 min', body: 'They will be downscaled on import.', icon: I.warn, color: t.warn, soft: t.warnSoft, actions: [['Review', t.link], ['Ignore', t.t2]], role: 'status' },
+      { title: 'Shader compile failed', time: '2 min', body: "Terrain.shader:118 — undeclared identifier 'uv2'", mono: true, icon: I.error, color: t.error, soft: t.errorSoft, actions: [['Show log', t.link], ['Copy error', t.t2]], role: 'alert' },
+      { title: 'Build succeeded', time: '4 min', body: 'Windows x64 · 1 m 42 s', icon: I.ok, color: t.ok, soft: t.okSoft, actions: [['Open folder', t.link], ['Run', t.t2]], role: 'status' }
+    ].reverse().map(function (n) {
+      return {
+        title: n.title, time: n.time, body: n.body, icon: n.icon, color: n.color, soft: n.soft, progress: !!n.progress, role: n.role,
+        bodyFont: n.mono ? mono : 'inherit', bodySize: n.mono ? '11px' : '12px',
+        actions: n.actions.map(function (a) { return { l: a[0], c: a[1] }; })
+      };
+    });
+    return { t: t, toasts: toasts, files: ['Textures/rock_albedo.png', 'Textures/rock_normal.png', 'Materials/Rock.mat'] };
+  }
+}
+</script>
+</body>
+</html>

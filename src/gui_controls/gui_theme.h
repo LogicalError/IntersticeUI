@@ -429,7 +429,7 @@ namespace interstice
         interstice::VisualColorStyleIndex treeGuideLineStyle;
         interstice::VisualColorStyleIndex dividerHoverLineStyle; // a hovered divider drawn as a line (label sizer)
         interstice::VisualColorStyleIndex nanTextColor;          // a number field's NaN
-        interstice::VisualColorStyleIndex scrimColor;            // dims a window under its modal dialog
+        interstice::color4b               scrim {};              // dims a window under its modal dialog (fading in and out)
         interstice::VisualColorStyleIndex checkerAColor, checkerBColor;     // transparency checkerboard
         interstice::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  // a color's alpha bar
         interstice::VisualColorStyleIndex accentColor, panelColor;          // a selected swatch's ring and gap

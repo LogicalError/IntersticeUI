@@ -85,6 +85,7 @@ bool HeadlessGUIApp::Initialize(const InitializeOptions& options)
     m_uiCache           = std::make_unique<interstice::UICacheManager>(m_frame, elementStorage, guiStateManager);
 
     RegisterFrameBalanceChecks();
+    RegisterFrameHooks();
 
     // Visual-state transitions depend on the clock; disable them so tests see
     // settled visuals (re-enable with transitionManager.SetEnabled(true)).

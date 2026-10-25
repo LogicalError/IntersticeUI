@@ -111,9 +111,30 @@ namespace
         EXPECT_EQ(app.elementStorage.GetCustomDraw(root), nullptr);
 
         Emit();
+        app.AdvanceTime(60);
         Emit();
         EXPECT_EQ(app.GetElementRect(belowID).position, alone.position) << "the window's content stays put";
         EXPECT_NE(app.elementStorage.GetCustomDraw(app.elementStorage.FindElementRefByID(app.RootWindowID())), nullptr)
             << "the scrim";
+    }
+
+    // The scrim fades in over 120 ms while asking, and out again after the dialog closes.
+    TEST_F(MessageDialogTest, TheScrimFadesInAndOut)
+    {
+        auto scrimDrawn = [&] { return app.elementStorage.GetCustomDraw(app.elementStorage.FindElementRefByID(app.RootWindowID())) != nullptr; };
+        Emit();
+        app.AdvanceTime(60);
+        Emit();
+        EXPECT_TRUE(scrimDrawn()) << "fading in";
+
+        app.AdvanceTime(30);
+        Emit(false);
+        EXPECT_TRUE(scrimDrawn()) << "still fading out after the dialog closed";
+        for (int i = 0; i < 4; ++i)
+        {
+            app.AdvanceTime(40);
+            Emit(false);
+        }
+        EXPECT_FALSE(scrimDrawn()) << "gone 120 ms later";
     }
 }

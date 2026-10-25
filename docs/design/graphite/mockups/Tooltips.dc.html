@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tooltips</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1000px; height: 520px; box-sizing: border-box; padding: 32px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 16px; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Simple · with shortcut</span>
+<div style="display: flex; gap: 2px; width: max-content; padding: 3px; border: 1px solid {{t.line}}; border-radius: 6px; background: {{t.header}}">
+<span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4"></path></svg></span>
+<span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: {{t.active}}; color: {{t.t1}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"></path></svg></span>
+<span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></span>
+<span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: {{t.t2}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></span>
+</div>
+<div role="tooltip" style="position: absolute; left: 30px; top: 86px; display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; background: {{t.tip}}; border: 1px solid {{t.tipBorder}}; box-shadow: {{t.tipShadow}}; color: {{t.tipText}}; white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 14px; top: -5px; width: 8px; height: 8px; transform: rotate(45deg); background: {{t.tip}}; border-left: 1px solid {{t.tipBorder}}; border-top: 1px solid {{t.tipBorder}}"></span>
+Save scene<span style="padding: 0 5px; border-radius: 3px; background: {{t.tipKbd}}; color: {{t.tipMuted}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">Ctrl S</span>
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Rich · property help</span>
+<div style="height: 26px; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; gap: 12px">
+<span style="color: {{t.t1}}; text-decoration: underline dotted {{t.t3}}; text-underline-offset: 3px">Cast shadows</span>
+<span style="height: 24px; box-sizing: border-box; display: flex; align-items: center; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}">On</span>
+</div>
+<div role="tooltip" style="position: absolute; left: 14px; top: 86px; width: 268px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 8px; background: {{t.popup}}; border: 1px solid {{t.popBorder}}; box-shadow: {{t.popShadow}}">
+<span aria-hidden="true" style="position: absolute; left: 40px; top: -5px; width: 8px; height: 8px; transform: rotate(45deg); background: {{t.popup}}; border-left: 1px solid {{t.popBorder}}; border-top: 1px solid {{t.popBorder}}"></span>
+<span style="color: {{t.t1}}; font-weight: 600">Cast shadows</span>
+<span style="color: {{t.t2}}">Whether this mesh casts shadows from directional, spot and point lights.</span>
+<span style="padding-top: 6px; border-top: 1px solid {{t.line}}; color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">MeshRenderer.castShadows · bool</span>
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Truncated text · expands in place</span>
+<div style="width: 170px; display: flex; flex-direction: column; gap: 0">
+<span style="height: 22px; display: flex; align-items: center; padding-left: 20px; color: {{t.t2}}">Layout</span>
+<span style="height: 22px; display: flex; align-items: center; padding-left: 34px; border-radius: 4px; background: {{t.hover}}; color: {{t.t1}}; white-space: nowrap; overflow: hidden">UpdateLayoutWhenDi…</span>
+<span style="height: 22px; display: flex; align-items: center; padding-left: 34px; color: {{t.t2}}">MeasureText</span>
+</div>
+<div role="tooltip" style="position: absolute; left: 47px; top: 69px; height: 24px; box-sizing: border-box; display: flex; align-items: center; padding: 0 6px; border-radius: 4px; background: {{t.tip}}; border: 1px solid {{t.tipBorder}}; box-shadow: {{t.tipShadow}}; color: {{t.tipText}}; white-space: nowrap">UpdateLayoutWhenDirty</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Validation</span>
+<div style="height: 26px; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; gap: 12px">
+<span>Opacity</span>
+<span style="height: 24px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid {{t.error}}; box-shadow: 0 0 0 3px {{t.errorSoft}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">1.8<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="margin-left: auto; fill: none; stroke: {{t.error}}; stroke-width: 2; stroke-linecap: round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 8v5M12 16h.01"></path></svg></span>
+</div>
+<div role="tooltip" style="position: absolute; left: 100px; top: 90px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; background: {{t.popup}}; border: 1px solid {{t.error}}; box-shadow: {{t.popShadow}}; color: {{t.t1}}; white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 40px; top: -5px; width: 8px; height: 8px; transform: rotate(45deg); background: {{t.popup}}; border-left: 1px solid {{t.error}}; border-top: 1px solid {{t.error}}"></span>
+Value must be between 0 and 1
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Disabled · explains why</span>
+<button aria-disabled="true" style="width: max-content; height: 26px; padding: 0 14px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit; opacity: 0.45">Publish</button>
+<div role="tooltip" style="position: absolute; left: 14px; top: 88px; display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; border-radius: 6px; background: {{t.tip}}; border: 1px solid {{t.tipBorder}}; box-shadow: {{t.tipShadow}}; color: {{t.tipText}}">
+<span aria-hidden="true" style="position: absolute; left: 24px; top: -5px; width: 8px; height: 8px; transform: rotate(45deg); background: {{t.tip}}; border-left: 1px solid {{t.tipBorder}}; border-top: 1px solid {{t.tipBorder}}"></span>
+<span>Publish to asset store</span>
+<span style="color: {{t.tipMuted}}">Sign in to enable publishing</span>
+</div>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 14px; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 6px">
+<span style="color: {{t.t3}}; font-size: 11px; font-weight: 500">Node pin · live value</span>
+<div style="position: relative; width: 170px; padding: 6px 0; background: {{t.raised}}; border: 1px solid {{t.line2}}; border-radius: 6px">
+<div style="position: relative; height: 26px; display: flex; align-items: center; padding: 0 14px">Strength<span style="position: absolute; left: -6px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: {{t.pinFloat}}; box-shadow: 0 0 0 2px {{t.raised}}, 0 0 0 5px {{t.pinHalo}}"></span></div>
+<div style="height: 26px; display: flex; align-items: center; padding: 0 14px">Gain</div>
+</div>
+<div role="tooltip" style="position: absolute; left: 2px; top: 106px; display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; border-radius: 6px; background: {{t.tip}}; border: 1px solid {{t.tipBorder}}; box-shadow: {{t.tipShadow}}; color: {{t.tipText}}; white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 12px; top: -5px; width: 8px; height: 8px; transform: rotate(45deg); background: {{t.tip}}; border-left: 1px solid {{t.tipBorder}}; border-top: 1px solid {{t.tipBorder}}"></span>
+<span style="display: flex; align-items: center; gap: 8px">Strength<span style="color: {{t.tipMuted}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">float</span><span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px">0.75</span></span>
+<span style="color: {{t.tipMuted}}">from Source.Value</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1000,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isLight = (this.props.theme ?? 'dark') === 'light';
+    const t = isLight ? {
+      app: '#E6E8EC', panel: '#FBFBFC', header: '#F3F4F6', active: '#E4E7EC', hover: '#EAECF0', input: '#FFFFFF', control: '#FFFFFF', raised: '#FFFFFF',
+      border: '#DADDE3', line: '#E3E6EB', line2: '#D5D9E0', ctlBorder: '#CDD2DA',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', error: '#D64545', errorSoft: 'rgba(214,69,69,0.12)', pinFloat: '#0FA596', pinHalo: 'rgba(15,165,150,0.25)',
+      tip: '#1A1D23', tipBorder: '#1A1D23', tipText: '#FFFFFF', tipMuted: '#AEB4C0', tipKbd: 'rgba(255,255,255,0.12)', tipShadow: '0 4px 12px rgba(16,24,40,0.20)',
+      popup: '#FFFFFF', popBorder: '#D5D9E0', popShadow: '0 12px 32px rgba(16,24,40,0.16)'
+    } : {
+      app: '#0B0C0F', panel: '#121418', header: '#16191E', active: '#23272F', hover: '#1A1D23', input: '#0D0F12', control: '#1E2128', raised: '#181B20',
+      border: '#1C1F25', line: '#23272F', line2: '#23272F', ctlBorder: '#2E333D',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', error: '#EF6A6A', errorSoft: 'rgba(239,106,106,0.16)', pinFloat: '#34D1BF', pinHalo: 'rgba(52,209,191,0.25)',
+      tip: '#2A2F39', tipBorder: '#363C48', tipText: '#E8EAEF', tipMuted: '#A3AAB7', tipKbd: 'rgba(255,255,255,0.08)', tipShadow: '0 6px 16px rgba(0,0,0,0.45)',
+      popup: '#1A1D23', popBorder: '#2E333D', popShadow: '0 16px 40px rgba(0,0,0,0.55)'
+    };
+    return { t: t };
+  }
+}
+</script>
+</body>
+</html>

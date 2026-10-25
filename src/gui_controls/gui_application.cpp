@@ -226,14 +226,7 @@ namespace interstice
         m_uiCache           = std::make_unique<UICacheManager>(m_frame, elementStorage, guiStateManager);
 
         RegisterFrameBalanceChecks();
-
-        // Keyed by item ID, so every list/grid view in a frame shares them; end-of-frame
-        // handlers read them, so they're only reset when the next frame's construction starts.
-        m_frame.OnPreConstruct([this](FrameContext&)
-        {
-            m_listItemIndexByID.clear();
-            m_gridItemRenameByID.clear();
-        });
+        RegisterFrameHooks();
 
         if (options.loadStyles && !InitializeStyles())
             return false;
@@ -258,6 +251,19 @@ namespace interstice
                     menuManager.CloseAll(guiStateManager, *windowManager);
             });
         return true;
+    }
+
+    void GUIApplication::RegisterFrameHooks()
+    {
+        // Keyed by item ID, so every list/grid view in a frame shares them; end-of-frame
+        // handlers read them, so they're only reset when the next frame's construction starts.
+        m_frame.OnPreConstruct([this](FrameContext&)
+        {
+            m_listItemIndexByID.clear();
+            m_gridItemRenameByID.clear();
+        });
+        // Scrims go over windows once everything in them is declared.
+        m_frame.OnPostConstruct([this](FrameContext& ctx) { DrawScrims(ctx.elapsedTimeSecs); });
     }
 
     void GUIApplication::RegisterFrameBalanceChecks()
@@ -466,6 +472,8 @@ namespace interstice
         styleManager.ClearAll();
         m_colorPickerSub->ForgetStyles();
         m_gradientEditorSub->ForgetStyles();
+        for (auto& [window, scrim] : m_scrims)
+            scrim.color = VisualColorStyleIndex::Invalid;
         if (textSystem) textSystem->ClearCache();
         if (!InitializeStyles())
             INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);

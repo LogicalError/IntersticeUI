@@ -1508,6 +1508,7 @@ namespace interstice
         std::vector<std::unique_ptr<FloatingDockWindow>> m_floatingDockWindows;
 
         // Debug asserts for Begin*/End* stacks left unbalanced at frame end. Also used by the headless tests.
+        void RegisterFrameHooks();   // per-frame stage hooks; Initialize (and test harnesses) call it
         void RegisterFrameBalanceChecks();
 
         // Rebuilds the styles when a reload is pending or the main window's
@@ -1567,6 +1568,11 @@ namespace interstice
         std::vector<ID> m_titleBarCaptions; // controls in the open title bar whose background drags the window
         std::unordered_set<ID> m_closeRequests;   // ConfirmClose windows whose title-bar close was clicked
         std::vector<TextStyle> m_mnemonicStyles;  // this frame's underlined mnemonic letters (MessageDialog)
+        // Windows dimmed under a modal dialog, by window ID: fading in while wanted, out after.
+        struct ScrimFade { float amount = 0.0f; bool wanted = false; VisualColorStyleIndex color = VisualColorStyleIndex::Invalid; };
+        std::unordered_map<ID, ScrimFade> m_scrims;
+        float m_scrimTime = -1.0f;
+        void DrawScrims(float now);
         // Render: AddCustomDrawAfter owners waiting for the walk to pass their subtree.
         struct PendingAfterDraw { uint32_t endIdx; ElementRef owner; };
         std::vector<PendingAfterDraw> m_pendingAfterDraws;

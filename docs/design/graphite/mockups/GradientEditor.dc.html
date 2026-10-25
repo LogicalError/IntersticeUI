@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gradient editor dialog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 800px; height: 620px; box-sizing: border-box; padding: 40px; display: flex; align-items: flex-start; justify-content: center; background: {{t.app}}; color: {{t.t2}}; font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 16px">
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; gap: 4px; padding: 4px; background: {{t.app}}">
+<span style="flex: 0 0 22%; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="flex: 1; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="flex: 0 0 28%; background: {{t.bpanel}}; border: 1px solid {{t.bborder}}; border-radius: 6px"></span>
+<span style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: {{t.scrim}}"></span>
+</div>
+
+
+<div role="dialog" aria-label="Gradient" style="position: relative; width: 720px; display: flex; flex-direction: column; background: {{t.panel}}; border: 1px solid {{t.border}}; border-radius: 8px; box-shadow: {{t.shadow}}; overflow: hidden">
+
+<div style="height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 16px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}">
+<span style="color: {{t.t1}}; font-size: 13px; font-weight: 600">Gradient</span>
+<span style="color: {{t.t3}}">Material / Sky ramp</span>
+<button aria-label="Close" style="margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+
+<div style="display: flex; align-items: center; gap: 6px; padding: 12px 16px 0">
+<span style="width: 60px; color: {{t.t3}}; font-size: 11px; font-weight: 500">Presets</span>
+<sc-for list="{{presets}}" as="p" hint-placeholder-count="7"><button aria-label="Preset: {{p.n}}" style="width: 64px; height: 22px; box-sizing: border-box; padding: 0; border: 0; border-radius: 4px; background: {{p.g}}; box-shadow: {{p.ring}}; cursor: pointer"></button></sc-for>
+<button style="margin-left: auto; height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M5 12h14M12 5v14"></path></svg>Save preset</button>
+</div>
+
+<div style="padding: 14px 24px 18px">
+<div aria-label="Alpha stops" style="position: relative; height: 22px">
+<sc-for list="{{alphaStops}}" as="s" hint-placeholder-count="3">
+<span style="position: absolute; left: {{s.p}}%; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center">
+<span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 3px; background: {{s.fill}}; border: 2px solid {{t.stopEdge}}; box-shadow: 0 0 0 1px {{t.stopOutline}}"></span>
+<span style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid {{t.stopEdge}}"></span>
+</span>
+</sc-for>
+</div>
+<div role="img" aria-label="Gradient preview: red to purple to blue, alpha dips to 40% at 82%" style="height: 44px; border-radius: 4px; background: linear-gradient(to right, rgba(255,45,45,1) 0%, rgba(139,45,214,1) 50%, rgba(79,54,240,0.4) 82%, rgba(45,59,255,1) 100%), {{t.checker}}; box-shadow: inset 0 0 0 1px {{t.line2}}"></div>
+<div aria-label="Color stops" style="position: relative; height: 26px">
+<sc-for list="{{colorStops}}" as="s" hint-placeholder-count="3">
+<span style="position: absolute; left: {{s.p}}%; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center">
+<span style="width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid {{s.edge}}"></span>
+<span style="width: 18px; height: 18px; box-sizing: border-box; border-radius: 4px; background: {{s.c}}; border: 2px solid {{s.edge}}; box-shadow: {{s.halo}}"></span>
+</span>
+</sc-for>
+<span style="position: absolute; left: 50%; top: 28px; transform: translateX(-50%); padding: 1px 6px; border-radius: 4px; background: {{t.accent}}; color: {{t.onAccent}}; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">50.0%</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 4px 16px 16px">
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="height: 24px; display: flex; align-items: center; gap: 6px">
+<span style="color: {{t.t1}}; font-weight: 600">Color stop</span>
+<span style="color: {{t.t3}}; font-family: 'JetBrains Mono', monospace; font-size: 11px">2 / 3</span>
+<button aria-label="Previous stop" style="margin-left: auto; width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></button>
+<button aria-label="Next stop" style="width: 24px; height: 24px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m9 18 6-6-6-6"></path></svg></button>
+</div>
+<div style="display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px">
+<span>Color</span>
+<div style="display: flex; gap: 6px"><button aria-label="Edit color" style="width: 40px; height: 24px; box-sizing: border-box; padding: 0; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: #8B2DD6; cursor: pointer"></button><span style="flex: 1; height: 24px; box-sizing: border-box; display: flex; align-items: center; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">#8B2DD6</span></div>
+<span>Location</span>
+<div style="display: flex; gap: 6px"><span style="flex: 1; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 8px; border: 1px solid {{t.line2}}; border-radius: 4px; background: {{t.input}}; color: {{t.t1}}; font-family: 'JetBrains Mono', monospace; font-size: 11.5px">50.0<span style="color: {{t.t3}}">%</span></span>
+<button aria-label="Duplicate stop" style="width: 24px; height: 24px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"></path></svg></button>
+<button aria-label="Delete stop" style="width: 24px; height: 24px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.error}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>
+</div>
+<div style="height: 1px; background: {{t.line}}; margin: 4px 0"></div>
+<div style="display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px">
+<span>Interpolation</span>
+<div role="group" aria-label="Interpolation" style="display: inline-flex; width: max-content; padding: 2px; gap: 2px; border-radius: 6px; background: {{t.well}}; border: 1px solid {{t.line}}">
+<button aria-pressed="true" style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: {{t.segOn}}; box-shadow: {{t.segShadow}}; color: {{t.t1}}; font: inherit; cursor: pointer">Linear</button>
+<button style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit; cursor: pointer">Smooth</button>
+<button style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit; cursor: pointer">Constant</button>
+</div>
+<span>Blend space</span>
+<div role="group" aria-label="Blend space" style="display: inline-flex; width: max-content; padding: 2px; gap: 2px; border-radius: 6px; background: {{t.well}}; border: 1px solid {{t.line}}">
+<button style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit; cursor: pointer">sRGB</button>
+<button style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: {{t.t2}}; font: inherit; cursor: pointer">Linear</button>
+<button aria-pressed="true" style="height: 20px; padding: 0 10px; border: 0; border-radius: 4px; background: {{t.segOn}}; box-shadow: {{t.segShadow}}; color: {{t.t1}}; font: inherit; cursor: pointer">Oklab</button>
+</div>
+<span></span>
+<div style="display: flex; gap: 6px">
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"></path></svg>Reverse</button>
+<button style="height: 24px; display: flex; align-items: center; gap: 6px; padding: 0 10px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4v16M21 4v16M12 7v10"></path></svg>Distribute evenly</button>
+</div>
+</div>
+</div>
+
+<div role="table" aria-label="Stops" style="display: flex; flex-direction: column; border: 1px solid {{t.line}}; border-radius: 6px; overflow: hidden; background: {{t.input}}; align-self: start">
+<div role="row" style="height: 26px; display: grid; grid-template-columns: 52px 30px minmax(0, 1fr) 64px; gap: 8px; align-items: center; padding: 0 10px; background: {{t.header}}; border-bottom: 1px solid {{t.line}}; color: {{t.t3}}; font-size: 11px; font-weight: 500">
+<span role="columnheader">Type</span><span role="columnheader"></span><span role="columnheader">Value</span><span role="columnheader" style="text-align: right">Location</span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<div role="row" style="height: 24px; display: grid; grid-template-columns: 52px 30px minmax(0, 1fr) 64px; gap: 8px; align-items: center; padding: 0 10px; background: {{r.bg}}; color: {{r.fg}}; box-shadow: {{r.bar}}">
+<span role="cell" style="color: {{t.t3}}">{{r.type}}</span>
+<span role="cell" style="width: 22px; height: 14px; border-radius: 3px; background: {{r.sw}}; box-shadow: inset 0 0 0 1px {{t.line2}}"></span>
+<span role="cell" style="font-family: 'JetBrains Mono', monospace; font-size: 11px">{{r.v}}</span>
+<span role="cell" style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px">{{r.p}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: {{t.header}}; border-top: 1px solid {{t.line}}">
+<span style="color: {{t.t3}}">3 color · 3 alpha stops · click the bar to add, drag a stop off to remove</span>
+<button style="margin-left: auto; height: 28px; padding: 0 14px; box-sizing: border-box; border: 1px solid {{t.ctlBorder}}; border-radius: 4px; background: {{t.control}}; color: {{t.t1}}; font: inherit; cursor: pointer">Cancel</button>
+<button style="height: 28px; padding: 0 18px; border: 0; border-radius: 4px; background: {{t.accent}}; color: {{t.onAccent}}; font: inherit; font-weight: 600; cursor: pointer">OK</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":800,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = {
+      app: '#0B0C0F', bpanel: '#121418', bborder: '#1C1F25', scrim: 'rgba(0,0,0,0.55)', caption: '#AEB4C0', panel: '#1B1E25', header: '#20242C', input: '#0F1115', control: '#272B34', well: '#13151A',
+      segOn: '#343945', segShadow: 'none', border: '#3A404C', line: '#2A2F39', line2: '#2E333D', ctlBorder: '#3A404C',
+      t1: '#E8EAEF', t2: '#AEB4C0', t3: '#8A92A2', accent: '#6B9BFF', onAccent: '#0B0C0F', soft: 'rgba(107,155,255,0.16)',
+      error: '#EF6A6A', checkA: '#2A2F39', checkB: '#1E2128', stopEdge: '#E8EAEF', stopOutline: 'rgba(0,0,0,0.5)',
+      shadow: '0 0 0 1px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+    };
+    const light = {
+      app: '#E6E8EC', bpanel: '#FBFBFC', bborder: '#DADDE3', scrim: 'rgba(16,24,40,0.30)', caption: '#1A1D23', panel: '#FFFFFF', header: '#F6F7F9', input: '#FFFFFF', control: '#FFFFFF', well: '#F6F7F9',
+      segOn: '#FFFFFF', segShadow: '0 1px 2px rgba(16,24,40,0.12)', border: '#C3C9D2', line: '#E6E8EC', line2: '#D5D9E0', ctlBorder: '#C9CED6',
+      t1: '#1A1D23', t2: '#464C57', t3: '#5F6673', accent: '#2F6FEB', onAccent: '#FFFFFF', soft: 'rgba(47,111,235,0.12)',
+      error: '#D64545', checkA: '#FFFFFF', checkB: '#E3E6EB', stopEdge: '#FFFFFF', stopOutline: 'rgba(16,24,40,0.35)',
+      shadow: '0 0 0 1px rgba(16,24,40,0.06), 0 24px 64px rgba(16,24,40,0.28)'
+    };
+    const t = (this.props.theme ?? 'dark') === 'light' ? light : dark;
+    t.checker = 'repeating-conic-gradient(' + t.checkA + ' 0% 25%, ' + t.checkB + ' 0% 50%) 0 0 / 8px 8px';
+
+    const ringSel = '0 0 0 2px ' + t.panel + ', 0 0 0 4px ' + t.accent;
+    const ringOff = 'inset 0 0 0 1px ' + t.line2;
+    const presets = [
+      ['Current', 'linear-gradient(to right, #FF2D2D, #8B2DD6, #2D3BFF)', true],
+      ['Grayscale', 'linear-gradient(to right, #000000, #FFFFFF)'],
+      ['Sky', 'linear-gradient(to right, #0B1D51, #3B82F6, #A5F3FC)'],
+      ['Heat', 'linear-gradient(to right, #1A0B00, #B85C10, #FFD27A, #FFFFFF)'],
+      ['Viridis', 'linear-gradient(to right, #440154, #3B528B, #21918C, #5EC962, #FDE725)'],
+      ['Hue', 'linear-gradient(to right, #FF0000, #FFFF00, #00FF00, #00FFFF, #0000FF, #FF00FF, #FF0000)'],
+      ['Fade', 'linear-gradient(to right, #2D3BFF, rgba(45,59,255,0)), ' + t.checker]
+    ].map(function (p) { return { n: p[0], g: p[1], ring: p[2] ? ringSel : ringOff }; });
+
+    const colorStops = [
+      { p: 0, c: '#FF2D2D' }, { p: 50, c: '#8B2DD6', sel: true }, { p: 100, c: '#2D3BFF' }
+    ].map(function (s) {
+      return {
+        p: s.p, c: s.c,
+        edge: s.sel ? t.accent : t.stopEdge,
+        halo: s.sel ? '0 0 0 3px ' + t.soft : '0 0 0 1px ' + t.stopOutline
+      };
+    });
+    const alphaStops = [{ p: 0, a: 100 }, { p: 82, a: 40 }, { p: 100, a: 100 }]
+      .map(function (s) { return { p: s.p, fill: 'hsl(0, 0%, ' + s.a + '%)' }; });
+
+    const rows = [
+      ['Color', '#FF2D2D', '#FF2D2D', '0.0%'],
+      ['Alpha', 'hsl(0,0%,100%)', '100%', '0.0%'],
+      ['Color', '#8B2DD6', '#8B2DD6', '50.0%', true],
+      ['Alpha', 'hsl(0,0%,40%)', '40%', '82.0%'],
+      ['Color', '#2D3BFF', '#2D3BFF', '100.0%'],
+      ['Alpha', 'hsl(0,0%,100%)', '100%', '100.0%']
+    ].map(function (r) {
+      return {
+        type: r[0], sw: r[1], v: r[2], p: r[3],
+        bg: r[4] ? t.soft : 'transparent', fg: r[4] ? t.t1 : t.t2,
+        bar: r[4] ? 'inset 2px 0 0 ' + t.accent : 'none'
+      };
+    });
+
+    return { t: t, presets: presets, colorStops: colorStops, alphaStops: alphaStops, rows: rows };
+  }
+}
+</script>
+</body>
+</html>

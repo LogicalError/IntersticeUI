@@ -265,7 +265,8 @@ namespace interstice
         if (textSystem)
             textSystem->SetCaretColor(lineColorFromCSS("--caret", color4f{ 0.42f, 0.61f, 1.0f, 1.0f }));
         nanTextColor          = lineColorFromCSS("--warn-text", color4f{ 0.9f, 0.7f, 0.33f, 1.0f });
-        scrimColor            = lineColorFromCSS("--scrim", color4f{ 0.0f, 0.0f, 0.0f, 0.55f });
+        if (const auto* prop = sheet.GetCustomProperty("--scrim"); prop && prop->hasColor) scrim = prop->color;
+        else                                                                                  scrim = color4b{ 0, 0, 0, 140 };
         checkerAColor         = lineColorFromCSS("--checker-a", color4f{ 0.16f, 0.18f, 0.22f, 1.0f });
         checkerBColor         = lineColorFromCSS("--checker-b", color4f{ 0.12f, 0.13f, 0.16f, 1.0f });
         alphaTrackColor       = lineColorFromCSS("--alpha-track", color4f{ 0.04f, 0.05f, 0.06f, 1.0f });

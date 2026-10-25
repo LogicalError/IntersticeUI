@@ -38,6 +38,7 @@ namespace interstice
         using GUIApplication::m_windowIdScopeStack;
 
         using GUIApplication::RegisterFrameBalanceChecks;
+        using GUIApplication::RegisterFrameHooks;
         using GUIApplication::ApplyPendingStyleReload;
         using GUIApplication::InvalidateCachedScopesForInput;
         using GUIApplication::BeginDockingFrame;

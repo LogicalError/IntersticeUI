@@ -1,0 +1,292 @@
+[
+ {
+  "theme": "dark",
+  "path": "dark/Main.png",
+  "title": "Main window — document tabs + panels"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Main--Hierarchy.png",
+  "title": "Main window — document tabs + panels › Hierarchy panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Main--NodeView.png",
+  "title": "Main window — document tabs + panels › NodeView panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Main--Profiler.png",
+  "title": "Main window — document tabs + panels › Profiler panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Main--Files.png",
+  "title": "Main window — document tabs + panels › Files panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Main--Log.png",
+  "title": "Main window — document tabs + panels › Log panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Inspector.png",
+  "title": "Viewport + Inspector panels"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Inspector--Viewport.png",
+  "title": "Viewport + Inspector panels › Viewport panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Inspector--Inspector.png",
+  "title": "Viewport + Inspector panels › Inspector panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/States.png",
+  "title": "States & transitions"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Timeline.png",
+  "title": "Timeline"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/CurveEditor.png",
+  "title": "Curve editor"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Tooltips.png",
+  "title": "Tooltips"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Progress.png",
+  "title": "Progress & loading"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Notifications.png",
+  "title": "Notifications & confirmations"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Settings.png",
+  "title": "Settings + Table panels"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Settings--Settings.png",
+  "title": "Settings + Table panels › Settings panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/Settings--Table.png",
+  "title": "Settings + Table panels › Table panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/DocumentWindow.png",
+  "title": "Second main window — dragged-out document"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/DocumentWindow--Prefab-hierarchy.png",
+  "title": "Second main window — dragged-out document › Prefab hierarchy panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/DocumentWindow--Prefab-viewport.png",
+  "title": "Second main window — dragged-out document › Prefab viewport panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/DocumentWindow--Animation.png",
+  "title": "Second main window — dragged-out document › Animation panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/panels/DocumentWindow--Inspector.png",
+  "title": "Second main window — dragged-out document › Inspector panel"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Docking.png",
+  "title": "Torn-off panel window"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/ColorPicker.png",
+  "title": "Color picker"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/Tokens.png",
+  "title": "Tokens & metrics"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/GradientEditor.png",
+  "title": "Gradient editor"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/InspectorLists.png",
+  "title": "Lists, dictionary, menus"
+ },
+ {
+  "theme": "light",
+  "path": "light/Main.png",
+  "title": "Main window — document tabs + panels"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Main--Hierarchy.png",
+  "title": "Main window — document tabs + panels › Hierarchy panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Main--NodeView.png",
+  "title": "Main window — document tabs + panels › NodeView panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Main--Profiler.png",
+  "title": "Main window — document tabs + panels › Profiler panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Main--Files.png",
+  "title": "Main window — document tabs + panels › Files panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Main--Log.png",
+  "title": "Main window — document tabs + panels › Log panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/Inspector.png",
+  "title": "Viewport + Inspector panels"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Inspector--Viewport.png",
+  "title": "Viewport + Inspector panels › Viewport panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Inspector--Inspector.png",
+  "title": "Viewport + Inspector panels › Inspector panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/States.png",
+  "title": "States & transitions"
+ },
+ {
+  "theme": "light",
+  "path": "light/Timeline.png",
+  "title": "Timeline"
+ },
+ {
+  "theme": "light",
+  "path": "light/CurveEditor.png",
+  "title": "Curve editor"
+ },
+ {
+  "theme": "light",
+  "path": "light/Tooltips.png",
+  "title": "Tooltips"
+ },
+ {
+  "theme": "light",
+  "path": "light/Progress.png",
+  "title": "Progress & loading"
+ },
+ {
+  "theme": "light",
+  "path": "light/Notifications.png",
+  "title": "Notifications & confirmations"
+ },
+ {
+  "theme": "light",
+  "path": "light/Settings.png",
+  "title": "Settings + Table panels"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Settings--Settings.png",
+  "title": "Settings + Table panels › Settings panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/Settings--Table.png",
+  "title": "Settings + Table panels › Table panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/DocumentWindow.png",
+  "title": "Second main window — dragged-out document"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/DocumentWindow--Prefab-hierarchy.png",
+  "title": "Second main window — dragged-out document › Prefab hierarchy panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/DocumentWindow--Prefab-viewport.png",
+  "title": "Second main window — dragged-out document › Prefab viewport panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/DocumentWindow--Animation.png",
+  "title": "Second main window — dragged-out document › Animation panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/panels/DocumentWindow--Inspector.png",
+  "title": "Second main window — dragged-out document › Inspector panel"
+ },
+ {
+  "theme": "light",
+  "path": "light/Docking.png",
+  "title": "Torn-off panel window"
+ },
+ {
+  "theme": "light",
+  "path": "light/ColorPicker.png",
+  "title": "Color picker"
+ },
+ {
+  "theme": "light",
+  "path": "light/Tokens.png",
+  "title": "Tokens & metrics"
+ },
+ {
+  "theme": "light",
+  "path": "light/GradientEditor.png",
+  "title": "Gradient editor"
+ },
+ {
+  "theme": "light",
+  "path": "light/InspectorLists.png",
+  "title": "Lists, dictionary, menus"
+ },
+ {
+  "theme": "dark",
+  "path": "dark/MessageBox.png",
+  "title": "Message boxes (yes / no / cancel)"
+ },
+ {
+  "theme": "light",
+  "path": "light/MessageBox.png",
+  "title": "Message boxes (yes / no / cancel)"
+ }
+]

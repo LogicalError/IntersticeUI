@@ -165,6 +165,191 @@ A tab dragged out of a dock becomes its own OS window, holding only that panel.
 - Resize grip (two diagonal strokes, text-3) in the bottom-right corner.
 - The tab strip in the title bar accepts more dragged tabs, so a torn-off window can host several panels.
 
+## Tooltips
+Mockup: `Tooltips.dc.html`.
+- Simple: 12px text, padding 5×8, radius 6, 8px arrow (rotated square) toward the anchor, 6–10px gap from the anchor.
+  Dark: bg #2A2F39, 1px #363C48, text-1. Light: inverted — bg #1A1D23, white text (no border).
+  Shortcut chip inside: mono 10.5, bg white @ 8% (dark) / 12% (light), muted text.
+- Rich (property help): popup surface (bg-popup, popup border, radius 8, popup shadow), 268 wide, padding 10×12:
+  title 600 · description text-2 · divider · mono 10.5 text-3 footer (API path · type). Labels with rich help get a dotted underline.
+- Truncated text: an expansion tooltip drawn exactly over the truncated text, same font, so it reads as the text growing.
+- Validation: popup surface with a 1px error border (arrow too); the field keeps its error border + 3px error @ 16% halo and an error icon.
+- Disabled controls get a tooltip that says why they are disabled (second line, muted).
+- Node pins: name · mono type · live value, second line = connection source.
+- Timing: show after 500 ms hover; instant when moving between tooltipped items; hide after 100 ms; never on touch-drag.
+
+## Timeline
+Mockup: `Timeline.dc.html` (1240 panel).
+- Toolbar 40: transport (start, prev key, play = accent fill, next key, end, loop = pressed toggle), time display in a well
+  (mono 13/500 current, text-3 total, frame chip), fps dropdown, Snap toggle, zoom slider right-aligned.
+- Track list 240: header 28 (Tracks caption, filter, +). Rows 28 with 1px row lines (#181B20 / #EEF0F3).
+  Group rows: chevron, 8px category chip, 600 name, eye + lock. Property rows indented to 34 with an add-key diamond on the right.
+  Audio rows: M / S chips (solo uses warn @ 18%). Selected track = accent-soft on both the list row and its lane.
+- Lanes are inset 12px left and right so keys at the range ends are fully visible.
+- Ruler 28 (bg-header): major tick every second (10px, text-3) with mono 10.5 labels, minor ticks every quarter second (5px).
+  Loop range = accent-soft band with 2px accent edges on the ruler; outside the range the lanes are dimmed (black @ 28% / navy @ 5%).
+- Keys: 10px diamonds, fill #C9CED8 / #5F6673, 1px panel-colored edge. Selected: 11px accent with light edge.
+  Group summary keys: 8px, #6B7280 / #9AA1AD. Box selection: 1px dashed accent on accent-soft.
+- Audio clip: teal @ 10% fill, teal @ 45–55% border, radius 4, waveform bars teal @ 65–70%.
+- Event markers: 2px orange line + small label chip (orange @ 16%).
+- Playhead: 1px accent line through ruler and lanes, mono label pill on the ruler (accent fill, on-accent text).
+
+## Curve editor
+Mockup: `CurveEditor.dc.html`.
+- Toolbar: Interpolation segmented with curve glyphs (Constant | Linear | Bezier), Tangents segmented (Auto | Aligned | Free | Flat),
+  Frame all (A), and numeric Frame / Value fields for the selected key on the right.
+- Channel list 238: tree with 10px channel color squares, the value at the playhead (mono), eye / eye-off; hidden channels at 55% opacity.
+- Plot bg #0E1013 / #FFFFFF. Grid: minor every 10 frames / 0.25 (#15181D / #F1F2F5), major every 30 frames / 0.5 (#1F232A / #E1E4E9),
+  zero line #343A45 / #C9CED6. Value labels mono 10 text-3 at the left edge; frame ruler 24 on top.
+- Channel colors = axis colors (X red, Y green, Z blue, scalar = warn). Active channel stroke 2px at full opacity; others 1.5px at 55%.
+  Pre/post infinity drawn dashed (3 4).
+- Keys 8px rounded squares in channel color with a plot-colored edge. Selected key 11px white with 2px accent border;
+  tangent handles: 1.25px accent lines to 8px hollow accent circles.
+- Key readout tooltip next to the selected key: "X · f 120 · 0.400" (mono 10.5, tooltip colors).
+- Playhead identical to the timeline (frame number in the pill).
+
+## Progress & loading
+Mockup: `Progress.dc.html`.
+- Bar: 6px (4px inside lists and status bar), radius 3, track #23272F / #E3E6EB, fill accent. Label row above (name + mono %),
+  detail line below (11px text-3: size, ETA). Cancel × on the label row.
+- Indeterminate: a 26% wide segment with soft (transparent) ends sliding left→right, ~1.2 s loop.
+- Failed: fill in error color, error icon in the label, reason in error text below, Retry button. Done: green check + duration.
+- Multi-step: 16px status glyph column (done = filled ok circle with check; active = spinner; pending = dashed ring) with a 4px bar under the active step.
+- Spinners: ring in track color + 90° accent arc, rotate 0.8 s linear. Sizes 12 / 16 / 24. Circular progress 40px, 3px stroke, mono % inside.
+- Busy button: keeps its width, spinner replaces the icon, label in -ing form ("Saving…"), aria-busy.
+- Skeletons: 10px rounded bars in #1C1F25 / #E9EBEF matching the real layout; a soft shine sweeps across (1.5 s).
+- Status bar: 12px spinner + label + 120px bar + mono count; a "3 tasks" pill opens the Background tasks popover
+  (popup surface, rows with 4px bars, mono %/state, cancel ×; paused tasks in warn color).
+
+## Notifications & confirmations
+Mockup: `Notifications.dc.html`.
+- Toasts: bottom-right of the main window, 16px from the edges, 8px apart, newest closest to the corner; older ones collapse into a "+N earlier" pill.
+  380 wide, popup surface, radius 8, padding 12. Grid: 24px severity circle (severity @ 14–16% with a 2.4-stroke glyph) | content | 22px dismiss.
+  Title 600 + relative time (11px text-3), body text-2 (mono 11 for code/file locations), optional 4px progress bar, text-button actions
+  (primary in link color, secondary text-2). Errors use role=alert and stay until dismissed; others auto-hide after ~6 s (paused on hover).
+  No colored side stripes — severity lives in the icon only.
+- Confirmation dialog (destructive): 32px error-soft circle with icon, title 14/600 as a question, consequence sentence,
+  list of affected items in a well (mono 11, max 3 + "and N more…"), optional "Don't ask again" checkbox.
+  Footer: Cancel (default focus, shown with focus ring) + destructive button in danger fill — #EF6A6A with dark text (dark) /
+  #C93C3C with white text (light); the button label repeats the action and count ("Delete 12 assets").
+- Inline banners at the top of a panel: full-width, 8×12 padding, severity @ 10–14% fill with a 1px severity @ 30–35% bottom line,
+  icon + message + actions right-aligned (primary accent button, secondary button, or a link).
+
+## Documents — top-level docking
+Mockups: `Main.dc.html` (document bar), `DocumentWindow.dc.html` (second main window).
+Two levels of docking:
+1. **Documents** (levels, prefabs/assets, material graphs, layouts, animations). Each document owns a complete panel layout;
+   switching the document tab swaps the entire workspace below the document bar.
+2. **Panels** inside a document (Hierarchy, Viewport, Inspector, …), docked as before.
+
+Document bar — "colored tabs"
+- Its own row directly under the title bar (the title bar keeps menus, search and window buttons): 36 high, bg-titlebar
+  (#08090B / #DADDE2), tabs aligned to the bottom, 3px apart, 8px side padding.
+- The bar's bottom edge is a 2px line in the active document's solid color, so the workspace below is visibly "owned" by it.
+- Tab: 30 high, min-width 150, radius 6 6 0 0, padding 0 8 0 12, gap 8. Type icon 14px, name + extension ("Forest" + ".level"),
+  dirty dot (6px) or close ×.
+- Every tab carries its document-type color:
+  inactive = type color @ 14% (dark) / 12% (light) fill, text-1 name, type-colored icon, text-3 extension;
+  active = solid type color, name 600 and icon in on-solid (#0B0C0F dark / #FFFFFF light), extension on-solid @ 62–78%.
+- Hover / pressed on inactive tabs: tint @ 22% / 30% (dark), 18% / 24% (light). Keyboard focus: inset 1px accent outline.
+- Right side: "N open ▾" overflow list. "+" after the last tab creates a document.
+- Document-type colors — tint (all themes use the normal palette) / solid in light theme (darkened so white text passes 4.5:1):
+  level #6B9BFF / #2F6FEB · material/graph #34D1BF / #0B7A6F · layout #F59E4B / #B35F0E · prefab #A98BFF / #7C5CE0 · animation #F472B6 / #B8306F.
+  In the dark theme the solid color equals the tint color (dark text on it).
+
+How they differ from panel tabs (on purpose)
+| | Panel tab | Document tab |
+|---|---|---|
+| Height | 24 | 30 |
+| Shape | floating pill (radius 4), neutral | top-rounded tab (radius 6 6 0 0) sitting on a colored 2px baseline |
+| Color | neutral grey, accent icon when active | always tinted in the document-type color; active is solid |
+| Name | label | name + muted extension, dirty dot |
+| Location | panel header | own bar under the title bar |
+
+Behaviour
+- Dragging a document tab out of the bar creates a new main window (full chrome: title bar, menus, document bar, status bar)
+  holding that document and its own panel layout. Dropping a document tab on another window's document bar moves it there.
+- Document tabs only drop on document bars; panel tabs only drop on panel docks. The two drop-target sets never mix.
+- Panels inside a document can still be torn off into panel windows (see Torn-off panel window); those belong to the document's main window.
+- The window title / status bar names the active document.
+
+## States & motion
+Mockup: `States.dc.html` (matrix of 12 controls × rest, hover, pressed, focus, selected/on, disabled, invalid).
+
+State model — every visual state is computed, not hand-picked:
+- **Base**: the control's rest colors.
+- **State layer**: the control's own content color over the base, at **8% hover**, **14% pressed**.
+  Dark secondary buttons therefore lighten; a primary button (dark text on accent) darkens; light theme darkens.
+  Exception: menu items and list rows highlight with accent-soft (they are keyboard-navigated).
+- **Selection / on**: accent-soft fill (16% dark / 12% light) or the control's own "on" visual (toggle track, check fill).
+- **Focus** (keyboard only, never on mouse click): 1px accent border + 3px accent @ 30%/25% halo for fields and controls;
+  inset 1px accent outline for tabs, rows and menu items (they sit flush with neighbours).
+- **Disabled**: 40% opacity on the whole control (menus 45%), no state layer, no focus.
+- **Invalid**: error border + 3px error @ 16–18% halo; stacks with focus and hover.
+
+Transitions
+| Change | Duration | Easing |
+|---|---|---|
+| Hover in | 70 ms | ease-out |
+| Hover out | 140 ms | ease-out |
+| Press | 0 ms | instant |
+| Release | 120 ms | ease-out |
+| Focus ring | 100 ms | ease-out (halo grows 0 → 3px) |
+| Selection | 0 ms | instant — highlight follows input exactly |
+| Toggle, check, radio | 120 ms | ease-in-out (knob + fill together) |
+| Tooltip | 100 ms in / 80 ms out | ease-out (after 500 ms delay) |
+| Menu, popup | 120 ms in / 80 ms out | ease-out, fade + 4px slide from the anchor |
+| Toast | 180 ms in / 140 ms out | ease-out, slide from the right edge |
+| Dock preview | 100 ms | ease-out |
+| Invalid | 0 ms (halo 150 ms) | instant border |
+| Theme switch | 200 ms | ease-in-out, every token at once |
+ease-out = cubic-bezier(0.2, 0, 0, 1); ease-in-out = cubic-bezier(0.4, 0, 0.2, 1).
+
+Color interpolation
+- Same-hue changes (state layers, selection fades): lerp in sRGB — the delta is small and it's cheapest.
+- Hue changes (ok → warn → error, accent → error on invalid, theme switch): lerp in **Oklab**; sRGB sags darker/greyer mid-way.
+  Convert each token's endpoints to Oklab once at theme load, not per frame.
+
+Implementation notes
+- Per widget keep one scalar per animated channel (hover, press, focus; 8 bits each is enough) in a compact array indexed by widget id;
+  colors are a lerp between precomputed endpoint colors, so no per-frame color math beyond one lerp per channel.
+- Only widgets with an unfinished transition are ticked; when none are active, don't redraw.
+- Retarget from the current value when a state flips mid-transition (never restart from 0).
+- Reduced-motion setting: all durations 0, except progress indicators and spinners.
+
+## Dialog surface (elevation)
+Modal dialogs, message boxes and pickers must stand out from the window, so they get their own surface tier instead of bg-panel:
+| Token | Dark | Light |
+|---|---|---|
+| dialog-bg | #1B1E25 | #FFFFFF |
+| dialog-header (title bar + footer) | #20242C | #F6F7F9 |
+| dialog-border | #3A404C | #C3C9D2 |
+| dialog-divider | #2A2F39 | #E6E8EC |
+| dialog-well (lists, details) | #13151A | #F6F7F9 |
+| dialog-input | #0F1115 | #FFFFFF |
+| dialog-control (buttons) | #272B34 | #FFFFFF |
+| dialog-control-border | #3A404C | #C9CED6 |
+| dialog-shadow | 0 0 0 1px rgba(0,0,0,.5), 0 24px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05) | 0 0 0 1px rgba(16,24,40,.06), 0 24px 64px rgba(16,24,40,.28) |
+| scrim (over the owning window) | rgba(0,0,0,0.55) | rgba(16,24,40,0.30) |
+- Dark: the dialog is a step *lighter* than panels (closer = lighter), with a 1px top highlight. Light: pure white over a dimmed window.
+- Modal dialogs always dim their owning window with the scrim (fade 120 ms); non-modal pickers skip the scrim but keep the surface + shadow.
+- Elevation order: panel < popup/menu (#1A1D23 / #FFFFFF) < dialog < tooltip. Toasts use the popup tier.
+
+## Message boxes (yes / no / cancel)
+Mockup: `MessageBox.dc.html`.
+- 456 wide, bg-panel, 1px border, radius 8, dialog shadow; no title bar — a 24px close × in the top-right corner (same as Cancel / Esc).
+- Body padding 20 (40 on the right to clear the ×): 32px severity circle (severity @ 12–16% with a 2.2-stroke glyph) |
+  title as a question, 14/600 · one or two sentences saying what happens · optional extra (affected-items list in a well,
+  "Don't ask again" checkbox, collapsible mono Details).
+- Footer 52, bg-header, top divider. Buttons 28 high. Order: [destructive-alternative left] … [Cancel] [primary] right-aligned.
+  Unsaved changes: "Don't save" alone on the left, Cancel, then "Save all" (primary).
+- Button labels are verbs that say what happens ("Reload", "Keep mine", "Quit") — never bare Yes/No.
+- Default button (Enter) has the focus ring. Safe default: the primary action when it's harmless (Save, Reload, OK);
+  Cancel when the action destroys or stops work (Quit with running tasks, Delete). Destructive buttons use the danger fill.
+- Esc = Cancel (or the close ×). Every button has an Alt mnemonic, shown underlined on its first letter.
+- Severity icon: warning for data loss, power/warning for quitting, question for neutral choices, error for failures.
+  The error box offers "Copy details" next to OK.
+
 ## Viewport
 - Floating toolbars over the view (bg rgba(22,25,30,.92), 1px line-subtle, radius 6, 30 high, 3px inset): file/undo group, shading-mode group, camera dropdown.
 - Vertical tool strip at left (select/move/rotate/scale); active tool = accent fill with on-accent icon.

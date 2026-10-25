@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <utility>
 
 // MessageDialog: a modal question with verb buttons (see MessageDialogDesc).
 
@@ -42,13 +43,10 @@ namespace interstice
         const int cancelButton  = desc.cancelButton >= 0 && desc.cancelButton < count ? desc.cancelButton : defaultButton;
         auto choose = [this, id](int index) { guiStateManager.GetElementDataStore().GetOrCreate<MessageDialogState>(id).choice = index; };
 
-        // A modal dialog dims the window it's asked from (drawn over all of it), and sits
-        // centered over it (out of its layout), by its size last frame.
-        const ID       ownerID = windowRegistry.GetCurrentWindowID();
-        const ElementRef owner = windowRegistry.GetWindowRef(ownerID);
-        if (elementStorage.IsValidRef(owner))
-            VERIFY(elementStorage.AddCustomDrawAfter(owner, [scrim = theme.scrimColor](CustomDrawContext& ctx)
-                { ctx.RenderQuad(ctx.ElementRect(), scrim); }));
+        // A modal dialog dims the window it's asked from (DrawScrims), and sits centered over
+        // it (out of its layout), by its size last frame.
+        const ID ownerID = windowRegistry.GetCurrentWindowID();
+        m_scrims[ownerID].wanted = true;
         const IntRect ownerRect = windowManager->GetWindowRect(ownerID);
         IntRect self = windowManager->GetWindowRect(id);
         if (self.w <= 0 || self.h <= 0) self.size = { styleManager.Px(456), styleManager.Px(160) };
@@ -194,6 +192,38 @@ namespace interstice
         if (pushed) (void)idManager.PopParent();
         EndWindow();
         return -1;
+    }
+
+    void GUIApplication::DrawScrims(float now)
+    {
+        // Each dimmed window's scrim fades in (or out, after its dialog closed) over 120 ms,
+        // eased out, drawn over everything in the window.
+        constexpr float kFadeSecs = 0.12f;
+        const float step = m_scrimTime < 0.0f ? 0.0f : std::max(0.0f, now - m_scrimTime) / kFadeSecs;
+        m_scrimTime = now;
+        for (auto it = m_scrims.begin(); it != m_scrims.end(); )
+        {
+            ScrimFade& scrim = it->second;
+            const bool wanted = std::exchange(scrim.wanted, false);
+            scrim.amount = std::clamp(scrim.amount + (wanted ? step : -step), 0.0f, 1.0f);
+            const ElementRef owner = windowRegistry.GetWindowRef(it->first);
+            if ((scrim.amount <= 0.0f && !wanted) || !elementStorage.IsValidRef(owner))
+            {
+                if (scrim.color != VisualColorStyleIndex::Invalid)
+                    styleManager.DestroyColorStyle(scrim.color);
+                it = m_scrims.erase(it);
+                continue;
+            }
+            const float eased = 1.0f - (1.0f - scrim.amount) * (1.0f - scrim.amount) * (1.0f - scrim.amount);
+            if (eased > 0.0f)
+            {
+                SetColorStyle(styleManager, scrim.color, color4f{ theme.scrim.r / 255.0f, theme.scrim.g / 255.0f,
+                                                                  theme.scrim.b / 255.0f, theme.scrim.a / 255.0f * eased });
+                VERIFY(elementStorage.AddCustomDrawAfter(owner, [color = scrim.color](CustomDrawContext& ctx)
+                    { ctx.RenderQuad(ctx.ElementRect(), color); }));
+            }
+            ++it;
+        }
     }
 
     bool GUIApplication::CloseRequested(ID windowID)
