@@ -1,0 +1,30 @@
+# The API reference. Doxygen runs it from the repository root, with DOXYGEN_OUTPUT the output
+# directory and INTERSTICE_VERSION the version: the interstice_docs target sets both, and so
+# does the Docs workflow that publishes it.
+PROJECT_NAME           = IntersticeUI
+PROJECT_NUMBER         = $(INTERSTICE_VERSION)
+OUTPUT_DIRECTORY       = $(DOXYGEN_OUTPUT)
+INPUT                  = src/gui_core src/gui_controls docs
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h *.md
+EXCLUDE                = docs/design
+EXCLUDE_PATTERNS       = *_internal.h */internal/*
+USE_MDFILE_AS_MAINPAGE = docs/README.md
+STRIP_FROM_PATH        = src
+STRIP_FROM_INC_PATH    = src
+JAVADOC_AUTOBRIEF      = YES
+DISTRIBUTE_GROUP_DOC   = YES
+# Heading anchors as on GitHub, so links between the guides work in both
+MARKDOWN_ID_STYLE      = GITHUB
+# Expands the LayoutOverride builder macro so its builders show up as functions
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+EXPAND_AS_DEFINED      = INTERSTICE_LO_BUILDER
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+WARN_IF_UNDOCUMENTED   = NO
+GENERATE_TREEVIEW      = YES
+HTML_DYNAMIC_SECTIONS  = YES
+GENERATE_LATEX         = NO
+HAVE_DOT               = NO
+QUIET                  = YES

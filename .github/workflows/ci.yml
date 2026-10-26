@@ -257,9 +257,6 @@ jobs:
 
   macos:
     # Untested on a Mac (#60): builds against MoltenVK and runs the headless tests.
-    # Only when run by hand (Actions > CI > Run workflow): a private repository's macOS
-    # minutes count ten times.
-    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v7.0.1

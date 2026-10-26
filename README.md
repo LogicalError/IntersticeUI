@@ -25,8 +25,8 @@ The library is two static libraries:
 | `gui_controls` | `GUIApplication`, controls, docking, menus, tooltips, transitions |
 
 The guides in [docs](docs/README.md) explain the frame model and IDs, every control,
-the CSS the themes use, and integrating the library into an engine; the headers'
-`///` comments build an API reference with Doxygen.
+the CSS the themes use, and integrating the library into an engine. The
+[API reference](https://logicalerror.github.io/IntersticeUI/) has them together with the headers' `///` comments.
 
 ## Requirements
 
@@ -36,7 +36,7 @@ the CSS the themes use, and integrating the library into an engine; the headers'
   X11 and Wayland development packages for SDL3 (see the Linux job in
   `.github/workflows/ci.yml` for the Ubuntu package list)
 - macOS (untested: CI builds it with Apple Clang against MoltenVK from Homebrew and runs
-  the headless tests when run by hand, but it has never run on a Mac)
+  the headless tests, but it has never run on a Mac)
 - The [Vulkan SDK](https://vulkan.lunarg.com/): headers, loader and
   `glslangValidator` for the shaders; the GPU tests also use its validation layers
 - Git with [Git LFS](https://git-lfs.com/): the fonts are stored in LFS, and a
@@ -411,8 +411,8 @@ Handled by the build:
 ## Status
 
 Version 0.1, a preview under active development. Windows x64 and Linux x64 with
-Vulkan are built and tested in CI; macOS builds (in CI runs started by hand) but is
-untested.
+Vulkan are built and tested in CI; macOS builds in CI but is
+untested on a Mac.
 
 Known issues:
 

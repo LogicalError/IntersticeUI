@@ -15,7 +15,8 @@ the [README](https://github.com/LogicalError/IntersticeUI#readme) has the requir
 
 ## API reference
 
-The headers carry `///` comments, from which Doxygen builds a reference. With Doxygen
+The headers carry `///` comments, from which Doxygen builds a reference, published at
+https://logicalerror.github.io/IntersticeUI/ with each change on main. To build it locally, with Doxygen
 installed, configure the project and build the `interstice_docs` target:
 
 ```text

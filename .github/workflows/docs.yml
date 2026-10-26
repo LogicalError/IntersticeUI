@@ -1,0 +1,53 @@
+name: Docs
+
+# Publishes the API reference (docs/Doxyfile) to GitHub Pages.
+on:
+  push:
+    branches: [main]
+    paths: ['src/**.h', 'docs/**', 'CMakeLists.txt', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer one waits instead of cutting the running one off.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      # Ubuntu's Doxygen is too old for GitHub-style heading anchors.
+      - name: Install Doxygen
+        run: |
+          mkdir "$RUNNER_TEMP/doxygen"
+          curl -fsSL https://github.com/doxygen/doxygen/releases/download/Release_1_18_0/doxygen-1.18.0.linux.bin.tar.gz \
+            | tar -xz --strip-components=1 -C "$RUNNER_TEMP/doxygen"
+          echo "$RUNNER_TEMP/doxygen/bin" >> "$GITHUB_PATH"
+
+      - name: Build the reference
+        run: |
+          export INTERSTICE_VERSION=$(grep -oP 'set\(INTERSTICE_VERSION \K[^)]+' CMakeLists.txt)
+          export DOXYGEN_OUTPUT="$RUNNER_TEMP/docs"
+          doxygen docs/Doxyfile
+
+      - uses: actions/configure-pages@v6.0.0
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: ${{ runner.temp }}/docs/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

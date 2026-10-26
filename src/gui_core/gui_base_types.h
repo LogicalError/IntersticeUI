@@ -464,7 +464,7 @@ namespace interstice
     uint16_t FloatToHalf(float value);
     float HalfToFloat(uint16_t value);
 
-    /// Monotonic steady_clock time in nanoseconds; a plain int64_t keeps <chrono> out of
+    /// Monotonic steady_clock time in nanoseconds; a plain int64_t keeps `<chrono>` out of
     /// widely-included headers.
     int64_t SteadyClockNowNanos();
 
