@@ -1,5 +1,8 @@
 # IntersticeUI
 
+[![CI](https://github.com/LogicalError/IntersticeUI/actions/workflows/ci.yml/badge.svg)](https://github.com/LogicalError/IntersticeUI/actions/workflows/ci.yml)
+[![Docs](https://github.com/LogicalError/IntersticeUI/actions/workflows/docs.yml/badge.svg)](https://logicalerror.github.io/IntersticeUI/)
+
 A C++20 GUI library for tools and editors. Build the UI each frame in code; the
 library keeps the state, lays it out with flexbox and grid, and draws it.
 
@@ -289,7 +292,7 @@ backend->SetExternalDevice(external);
 auto* vk = backend.get();   // for RegisterExternalImage below
 app.SetGraphicsBackend(std::move(backend));
 if (interstice::Result<void> result = app.Initialize(); !result)
-    LogError(result.GetError().message);   // e.g. the device lacks a feature the GUI needs
+    std::fprintf(stderr, "%s\n", result.GetError().message.c_str());   // e.g. a missing device feature
 ```
 
 If the host's device is lost, `RecordFrame` (and `Run`) returns an error with
@@ -371,10 +374,11 @@ if (BeginWindow(windowID, "Panel", theme.windowStyleRef, interstice::LayoutOverr
 EndWindow();
 
 // Each frame of the window is copied into the host's image (may be set before the window exists):
-vk.SetWindowImageTarget(windowID, hostImage, VkExtent2D{ 400, 300 });
+vk->SetWindowImageTarget(windowID, hostImage, VkExtent2D{ 400, 300 });
 
 // Or read the last frame back (BGRA8):
-app.ReadWindowPixels(windowID, pixels);
+if (interstice::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
+    std::fprintf(stderr, "%s\n", read.GetError().message.c_str());
 ```
 
 The window gets no input from the OS, so the host passes it in, with positions in
@@ -414,25 +418,10 @@ Version 0.1, a preview under active development. Windows x64 and Linux x64 with
 Vulkan are built and tested in CI; macOS builds in CI but is
 untested on a Mac.
 
-Known issues:
+## Contributing
 
-- Vulkan backend: the running editor reports validation errors; the descriptor
-  related ones are not yet investigated.
-- The Khronos validation layer shipped with Vulkan SDK 1.4.341.1 crashes (a null
-  read on one of its worker threads) in tests that present to a window. This is
-  not a GUI defect: it goes away with the 1.4.309 layer, with which all GPU tests
-  pass, including synchronization validation. Point the loader at an older layer
-  to work around it, for example `set VK_LAYER_PATH=C:\VulkanSDK\1.4.309.0\Bin`.
-  A debug build of an application that enables validation layers is affected the
-  same way. Crashes in the GPU tests print a symbolized stack trace, and
-  `INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION=1` runs them with core validation only.
-- CI builds with Visual Studio 2026 only; Visual Studio 2022 builds the project
-  too but isn't checked automatically.
-- Docking layouts can be saved and restored (`SerializeDockTree` / `ParseDockTree` in
-  `gui_controls/gui_dock_node.h`); the application chooses where to store them.
-  Floating windows are not part of the saved tree.
-- Text editor undo and redo (Ctrl+Z, Ctrl+Shift+Z) exist; whether they behave
-  correctly across focus changes and with application-level undo has not been checked.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting problems and sending changes, and
+[SECURITY.md](SECURITY.md) for reporting a vulnerability.
 
 ## Support
 

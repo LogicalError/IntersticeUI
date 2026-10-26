@@ -197,7 +197,7 @@ backend->SetExternalDevice(external);
 auto* vk = backend.get();   // for RegisterExternalImage and SetWindowImageTarget
 app.SetGraphicsBackend(std::move(backend));
 if (interstice::Result<void> result = app.Initialize(); !result)
-    LogError(result.GetError().message);   // e.g. the device lacks a feature the GUI needs
+    std::fprintf(stderr, "%s\n", result.GetError().message.c_str());   // e.g. a missing device feature
 ```
 
 `allocator` is optional: without one the GUI creates and owns its own `VmaAllocator`.
@@ -415,7 +415,7 @@ on the GPU:
 const interstice::IntRect rect = app.windowManager->GetWindowRect(windowID);   // pixels
 std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
 if (interstice::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
-    LogError(read.GetError().message);
+    std::fprintf(stderr, "%s\n", read.GetError().message.c_str());
 ```
 
 It fails with `ErrorCode::NotFound` for an unknown window and `ErrorCode::Unsupported`
