@@ -9,6 +9,9 @@ on:
     paths-ignore: ['**.md', 'docs/**']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # A newer push to the same branch or pull request cancels the run still going.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # Only the workflow's actions: the submodules in third_party are updated by hand, after a build and the tests
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
