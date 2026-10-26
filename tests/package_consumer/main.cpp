@@ -48,7 +48,12 @@ int main()
         return 1;
     }
     app.windowID = app.idManager.CreateStaticID();
-    app.Run();
+    if (const auto ran = app.Run(); !ran)
+    {
+        std::printf("GUIApplication::Run failed: %s\n", ran.GetError().message.c_str());
+        app.Cleanup();
+        return 1;
+    }
     app.Cleanup();
 
     std::printf("rendered %d frames\n", app.framesBuilt);

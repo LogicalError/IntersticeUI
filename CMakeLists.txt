@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
+# Libraries listed twice on a link line (a static library's private dependency that a
+# program also links) appear once where the linker doesn't need them repeated; Apple's
+# linker warns about the duplicates otherwise. CMake 3.29 and newer.
+if(POLICY CMP0156)
+  cmake_policy(SET CMP0156 NEW)
+endif()
 
 set(INTERSTICE_VERSION 0.1.0)
 project(IntersticeUI VERSION ${INTERSTICE_VERSION} LANGUAGES CXX)
