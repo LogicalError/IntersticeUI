@@ -213,6 +213,7 @@ namespace interstice
 		pending_text_valid = false;
 		pending_text.clear();
 		iconHandles.clear();
+		iconSources.clear();
 	}
 
 	skb_color_t toSKBColor(const color4b& color)

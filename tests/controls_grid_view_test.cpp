@@ -59,6 +59,106 @@ namespace interstice
             }
         };
 
+        // Dragging an item (as in the demo's files panel) starts a drag, and its visualizer
+        // shows a ghost window with the item's icon by the cursor.
+        TEST_F(ControlsGridViewTest, DraggingAnItemShowsItsGhost)
+        {
+            int sel = -1;
+            const ID ghostID = app.idManager.CreateStaticID();
+            std::vector<ID> ids;
+            for (int i = 0; i < 3; ++i)
+            {
+                ID id{};
+                id.value.dynamicParts.mode = IDMode::Static;
+                id.value.dynamicParts.hashValue = 3000 + i;
+                ids.push_back(id);
+            }
+            int visualized = 0;
+            ItemDragDropConfig dnd;
+            dnd.payloadType = 42;
+            dnd.getPayload  = [&](ID id) -> uintptr_t { for (size_t i = 0; i < ids.size(); ++i) if (ids[i] == id) return i; return uintptr_t(-1); };
+            dnd.onDrop      = [](uintptr_t, ID) {};
+            dnd.visualizer  = [&](const DragVisualContext& visual) {
+                ++visualized;
+                if (app.BeginCursorGhostWindow(ghostID, visual.screenPos))
+                    app.AddGhostIcon(app.theme.addIcon);
+                app.EndGhostWindow();
+            };
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginGridView(gridID, &sel, app.theme.gridViewStyleRef, nullptr, &dnd, LayoutOverride{}.Size(400, 300)))
+                {
+                    for (const ID id : ids)
+                        app.GridViewItem(id, "item", ElementState::None, nullptr, StyleRef{}, LayoutOverride{}.Size(80, 80));
+                    app.EndGridView();
+                }
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            const int2 from = app.CenterOf(ids[0]);
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            app.Frame(draw);
+            app.InjectMouseMove(from + int2{ 120, 160 }, MouseButtons::Left);
+            app.Frame(draw);
+            app.Frame(draw);
+
+            EXPECT_TRUE(app.guiStateManager.Drag().IsDragging());
+            EXPECT_GT(visualized, 0);
+            EXPECT_TRUE(app.HasElement(ghostID)) << "the ghost window is declared";
+
+            app.InjectMouseUp(from + int2{ 120, 160 });
+            app.Frame(draw);
+            app.Frame(draw);
+            EXPECT_FALSE(app.guiStateManager.Drag().IsDragging());
+        }
+
+        // The item a drag would drop into stands out (:active); one that refuses it doesn't.
+        TEST_F(ControlsGridViewTest, TheItemADragWouldDropIntoIsHighlighted)
+        {
+            int sel = -1;
+            std::vector<ID> ids;
+            for (int i = 0; i < 3; ++i)
+            {
+                ID id{};
+                id.value.dynamicParts.mode = IDMode::Static;
+                id.value.dynamicParts.hashValue = 3100 + i;
+                ids.push_back(id);
+            }
+            ItemDragDropConfig dnd;
+            dnd.payloadType = 43;
+            dnd.getPayload  = [&](ID id) -> uintptr_t { for (size_t i = 0; i < ids.size(); ++i) if (ids[i] == id) return i; return uintptr_t(-1); };
+            dnd.canDrop     = [&](uintptr_t, ID target) { return target != ids[2]; };   // item 2 refuses
+            dnd.onDrop      = [](uintptr_t, ID) {};
+            auto draw = [&] {
+                app.BeginRootWindow();
+                if (app.BeginGridView(gridID, &sel, app.theme.gridViewStyleRef, nullptr, &dnd, LayoutOverride{}.Size(400, 300)))
+                {
+                    for (const ID id : ids)
+                        app.GridViewItem(id, "item", ElementState::None, nullptr, StyleRef{}, LayoutOverride{}.Size(80, 80));
+                    app.EndGridView();
+                }
+                app.EndRootWindow();
+            };
+            auto state = [&](ID id) { return app.elementStorage.GetElementUnsafe(app.elementStorage.FindElementRefByID(id)).state; };
+            app.Frame(draw);
+            const int2 from = app.CenterOf(ids[0]);
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            app.Frame(draw);
+            for (const size_t over : { size_t(1), size_t(2) })
+            {
+                app.InjectMouseMove(app.CenterOf(ids[over]), MouseButtons::Left);
+                app.Frame(draw);
+                app.Frame(draw);
+                ASSERT_TRUE(app.guiStateManager.Drag().IsDragging());
+                const bool highlighted = (state(ids[over]) & ElementState::Active) != ElementState::None;
+                EXPECT_EQ(highlighted, over == 1) << "over item " << over;
+            }
+            app.InjectMouseUp(app.CenterOf(ids[2]));
+            app.Frame(draw);
+        }
+
         TEST_F(ControlsGridViewTest, GridRendersAllItems)
         {
             int sel = 0;
@@ -430,6 +530,85 @@ namespace interstice
         // ---------------------------------------------------------------------
         // VirtualGridView keyboard navigation and Shift-range selection.
         // ---------------------------------------------------------------------
+
+        // A slow second click on a selected item of a virtual grid (the files panel's) opens
+        // its rename; a press that became a drag, dropped back on the item, doesn't.
+        class VirtualGridRenameTest : public GridViewShrinkTest
+        {
+        protected:
+            interstice::ID gridID{};
+            interstice::MultiSelectState multi{};
+            std::vector<std::string> names = { "alpha", "beta", "gamma", "delta" };
+            std::vector<interstice::ID> itemIDs = std::vector<interstice::ID>(4, interstice::ID::Invalid());
+            ItemDragDropConfig* dragDrop = nullptr;
+
+            void SetUp() override
+            {
+                GridViewShrinkTest::SetUp();
+                gridID = app.idManager.CreateStaticID();
+            }
+
+            void GridFrame()
+            {
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    app.BeginArea(app.idManager.AllocateDynamicID("gridPane"), app.theme.emptyVertStyleRef,
+                                  LayoutOverride{}.Size(420, 220));
+                    app.VirtualGridView(gridID, vstate, int(names.size()), interstice::int2{ 100, 50 },
+                                        [&](int idx, interstice::ID itemID) {
+                                            itemIDs[size_t(idx)] = itemID;
+                                            app.GridViewItem(itemID, names[size_t(idx)], ElementState::None,
+                                                             &names[size_t(idx)], StyleRef{}, LayoutOverride{}.Size(100, 50));
+                                        },
+                                        nullptr, &multi, dragDrop, {}, {}, LayoutOverride{}.FlexGrow(1).MinHeight(0));
+                    app.EndArea();
+                    app.EndRootWindow();
+                });
+                FirePostLayout();
+            }
+        };
+
+        TEST_F(VirtualGridRenameTest, ASlowSecondClickStartsARename)
+        {
+            GridFrame();
+            GridFrame();
+            app.ClickAt(app.CenterOf(itemIDs[1]));
+            GridFrame();
+            vstate.internal.itemClickTracker.lastTimeNanos -= 800000000;   // the tracker reads the real clock
+            app.ClickAt(app.CenterOf(itemIDs[1]));
+            GridFrame();
+            GridFrame();
+            EXPECT_TRUE(app.m_renameSub->isActive);
+            EXPECT_TRUE(app.IsRenaming());
+        }
+
+        TEST_F(VirtualGridRenameTest, DraggingAnItemOntoItselfDoesNotStartARename)
+        {
+            ItemDragDropConfig dnd;
+            dnd.payloadType = 44;
+            dnd.getPayload  = [](interstice::ID) -> uintptr_t { return 0; };
+            dnd.onDrop      = [](uintptr_t, interstice::ID) {};
+            dragDrop = &dnd;
+            GridFrame();
+            GridFrame();
+            const int2 at = app.CenterOf(itemIDs[1]);
+            app.ClickAt(at);
+            GridFrame();
+            vstate.internal.itemClickTracker.lastTimeNanos -= 800000000;   // the tracker reads the real clock
+            app.InjectMouseMove(at);
+            app.InjectMouseDown(at);               // a slow second press: arms the rename
+            GridFrame();
+            app.InjectMouseMove(at + int2{ 150, 120 }, MouseButtons::Left);
+            GridFrame();
+            GridFrame();
+            ASSERT_TRUE(app.guiStateManager.Drag().IsDragging());
+            app.InjectMouseMove(at, MouseButtons::Left);
+            GridFrame();
+            app.InjectMouseUp(at);                 // dropped on itself
+            GridFrame();
+            GridFrame();
+            EXPECT_FALSE(app.m_renameSub->isActive);
+        }
 
         class VirtualGridKeyboardTest : public GridViewShrinkTest
         {

@@ -62,6 +62,7 @@ namespace interstice
         int GetMonitorFromWindow(OSWindowHandle window) const override;
         uint32_t GetTicks() const override;
         std::string GetPreferredLanguage() const override;
+        int32_t     GetCursorSize() const override;
 
     private:
         struct ImageWindow;

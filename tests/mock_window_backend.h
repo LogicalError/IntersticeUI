@@ -56,6 +56,7 @@ public:
     MOCK_METHOD(int, GetMonitorFromWindow, (interstice::OSWindowHandle handle), (const, override));
 
     MOCK_METHOD(uint32_t, GetTicks, (), (const, override));
+    MOCK_METHOD(int32_t, GetCursorSize, (), (const, override));
     MOCK_METHOD(void*, GetNativeHandle, (interstice::OSWindowHandle), (override));
     MOCK_METHOD(void, SetCursor, (interstice::MouseCursor), (override));
     MOCK_METHOD(void, SetTextInputArea, (interstice::OSWindowHandle, interstice::IntRect), (override));

@@ -44,6 +44,9 @@ namespace interstice
         Default     = TexturedLit
     };
 
+    // The demo's saved UI state, in the working directory.
+    inline constexpr const char* kUIStateFile = "ui_state.json";
+
     class Application : public GUIApplication
     {
     public:
@@ -387,6 +390,7 @@ namespace interstice
             std::string   dockNotes;
             bool          dockToggle = false;
             bool          dockInitialized = false;
+            std::string   savedUIState;   // kUIStateFile's text, applied once more when the dock exists
 
             // Settings panel chrome (page list, selection, tree width); page content
             // state lives in the fields below.

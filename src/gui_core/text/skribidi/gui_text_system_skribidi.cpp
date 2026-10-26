@@ -210,13 +210,20 @@ namespace interstice
 			return IconID::Invalid;
 
 		// Names are unique in the collection: a repeat registration (e.g. a theme
-		// reload re-creating its icons) gets the icon it registered before.
+		// reload re-creating its icons) gets the icon it registered before. Another
+		// shape under a taken name is a clash: warned, and the first icon kept.
+		const size_t source = std::hash<std::string_view>{}(std::string_view(svg_data, svg_size));
 		if (const skb_icon_handle_t existing = skb_icon_collection_find_icon(m_skribidiContext->icon_collection, name))
 		{
 			const auto& handles = m_skribidiContext->iconHandles;
 			for (size_t i = 0; i < handles.size(); i++)
 				if (handles[i] == existing)
+				{
+					if (m_skribidiContext->iconSources[i] != source)
+						INTERSTICE_LOG_WARNING(Diagnostics::MakeLogCategory("text"),
+							"an icon named \"{}\" is already registered with another shape; the first is kept", name);
 					return IconID{ (uint32_t)(i + 1) };
+				}
 		}
 
 		skb_icon_handle_t handle = RegisterNanoSVG(
@@ -229,6 +236,7 @@ namespace interstice
 			return IconID::Invalid;
 
 		m_skribidiContext->iconHandles.push_back(handle);
+		m_skribidiContext->iconSources.push_back(source);
 		return IconID { (uint32_t)m_skribidiContext->iconHandles.size() };
 	}
 

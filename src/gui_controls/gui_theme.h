@@ -259,6 +259,7 @@ namespace interstice
         StyleRef breadcrumbSeparatorStyleRef {};
         // Vector fields: the X/Y/Z/W label attached to each component, and the component's field.
         StyleRef axisLabelStyleRefs[4] {};
+        int32_t  axisLabelWidth = 0;   // the widest vector component name (X..W, R..A) in its label, measured
         StyleRef vectorComponentStyleRef {};
         StyleRef statusBarStyleRef {};
         StyleRef statusTextStyleRef {};

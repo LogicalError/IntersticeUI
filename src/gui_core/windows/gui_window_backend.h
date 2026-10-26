@@ -169,6 +169,10 @@ namespace interstice
         // when the platform doesn't say.
         virtual std::string GetPreferredLanguage() const { return {}; }
 
+        // The OS mouse cursor's size in pixels (its accessibility size at the display's
+        // scale), or 0 when the platform doesn't say.
+        virtual int32_t GetCursorSize() const { return 0; }
+
         // The graphics context the windows are made for and painted with (during an
         // OS live resize). GUIApplication::Initialize sets it before initializing the context.
         virtual void SetGraphicsContext(GraphicsContext* graphicsContext) { m_graphicsContext = graphicsContext; }

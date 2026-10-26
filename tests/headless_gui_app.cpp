@@ -184,6 +184,21 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     m_frame.RunStage(interstice::FrameStage::PostConstruct, ctx);
 
+    // As OnFrame: a drag's visual (a ghost window following the cursor) is declared now.
+    if (guiStateManager.Drag().IsDragging())
+    {
+        interstice::DragVisualContext visual;
+        visual.screenPos     = m_mousePos;
+        visual.sourceID      = guiStateManager.Drag().GetDraggedID();
+        visual.targetID      = guiStateManager.Drag().GetDragOverID();
+        visual.isDropValid   = guiStateManager.Drag().GetValidatedTargetID() != interstice::ID::Invalid();
+        visual.leftMouseDown = (m_buttonsHeld & interstice::MouseButtons::Left) != interstice::MouseButtons::None;
+        visual.payloadType   = guiStateManager.Drag().GetEventPayloadType();
+        visual.payloadValue  = guiStateManager.Drag().GetEventPayloadValue();
+        visual.payload       = &guiStateManager.Drag().GetPayload();
+        guiStateManager.Drag().InvokeActiveVisualizer(visual);
+    }
+
     VERIFY(elementStorage.EndConstruction());
 
     textSystem->Update();

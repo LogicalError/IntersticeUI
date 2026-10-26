@@ -2,6 +2,7 @@
 #include "../gui_controls/gui_tree_utils.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 
@@ -109,8 +110,20 @@ namespace interstice
                 gridEntries.push_back({ .folderFlat = i });
         }
         const auto& items = CurrentItems();
+        const size_t firstFile = gridEntries.size();
         for (int i = 0; i < int(items.size()); ++i)
             gridEntries.push_back({ .itemIdx = i });
+
+        // Folders, then files, each by name (case-insensitive): the view is sorted, not ordered by hand.
+        auto byName = [&](const GridEntry& a, const GridEntry& b) {
+            const std::string& na = a.IsFolder() ? folderRows[a.folderFlat].name : items[a.itemIdx].name;
+            const std::string& nb = b.IsFolder() ? folderRows[b.folderFlat].name : items[b.itemIdx].name;
+            return std::lexicographical_compare(na.begin(), na.end(), nb.begin(), nb.end(), [](char x, char y) {
+                return std::tolower(static_cast<unsigned char>(x)) < std::tolower(static_cast<unsigned char>(y));
+            });
+        };
+        std::stable_sort(gridEntries.begin(), gridEntries.begin() + std::ptrdiff_t(firstFile), byName);
+        std::stable_sort(gridEntries.begin() + std::ptrdiff_t(firstFile), gridEntries.end(), byName);
 
         gridVisible.clear();
         for (int e = 0; e < int(gridEntries.size()); ++e)
@@ -340,12 +353,15 @@ namespace interstice
                                     : static_cast<uintptr_t>(entry.itemIdx);
         };
         gridDnD.canDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
-            if (!IsFolderPayload(payloadValue)) return true;
-            // Folder targets take the payload; files and the background route
-            // it into the folder on view.
             const int e = FilesEntryIndex(GridItemIndex(targetID));
             const GridEntry* target = (e >= 0 && e < int(gridEntries.size()))
                                     ? &gridEntries[e] : nullptr;
+            // A file goes into a folder only: files are sorted, so dropping one on a file (or
+            // on its own folder's background) would do nothing.
+            if (!IsFolderPayload(payloadValue))
+                return target && target->IsFolder();
+            // Folder targets take a folder; files and the background route it into the
+            // folder on view.
             const int dst = (target && target->IsFolder()) ? target->folderFlat : currentFolder;
             return CanDropIntoFolder(payloadValue, dst);
         };
@@ -373,17 +389,6 @@ namespace interstice
                 folderItems[target->folderFlat].push_back(std::move(items[from]));
                 items.erase(items.begin() + from);
                 gridFilterDirty = true;
-            }
-            else if (target)
-            {
-                // Reorder: move `from` before the target file
-                size_t to = static_cast<size_t>(target->itemIdx);
-                if (to == from) return;
-                auto item = std::move(items[from]);
-                items.erase(items.begin() + from);
-                if (from < to) to--;
-                items.insert(items.begin() + to, std::move(item));
-                gridFilterDirty = true; // indices shifted - rebuild the filtered view
             }
         };
 
@@ -448,6 +453,12 @@ namespace interstice
     void Application::RenderFilesPanel()
     {
         // Refilter on demand: only when the search changed or the grid mutated.
+        // A rename moves the item to its new place in the sorted view once it's done.
+        static bool wasRenaming = false;
+        if (wasRenaming && !IsRenaming())
+            gridFilterDirty = true;
+        wasRenaming = IsRenaming();
+
         if (gridFilterDirty)
         {
             filesQueryLower = SearchToLower(filesSearch);

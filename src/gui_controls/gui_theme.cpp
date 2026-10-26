@@ -82,10 +82,12 @@ namespace interstice
         // Built-in icons: Lucide shapes (ISC), 24-unit strokes with round caps. One
         // neutral grey, so they draw as masks in the color of where they're shown.
         {
+            // Named "interstice/...", so an app's own "info" or "error" doesn't get the library's.
             auto registerIcon = [&](const char* name, const char* shapes) {
                 const std::string svg = std::string(R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#909090" )"
                                                     R"(stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)") + shapes + "</svg>";
-                return textSystem->RegisterIconFromSVG(name, svg.data(), svg.size());
+                const std::string fullName = std::string("interstice/") + name;
+                return textSystem->RegisterIconFromSVG(fullName.c_str(), svg.data(), svg.size());
             };
             treeArrowRight  = registerIcon("tree-arrow-right", R"(<path d="m9 18 6-6-6-6"/>)");
             treeArrowDown   = registerIcon("tree-arrow-down",  R"(<path d="m6 9 6 6 6-6"/>)");
@@ -728,6 +730,18 @@ namespace interstice
         };
         tableRowHeight = std::max(measure(tableCellStyleRef),
                                   measure(treeTableCellStyleRef));
+
+        // Vector component labels share one width, the widest name with its padding and border.
+        axisLabelWidth = 1;
+        for (const char* name : { "X", "Y", "Z", "W", "R", "G", "B", "A" })
+            for (const StyleRef style : axisLabelStyleRefs)
+            {
+                const TextID probeID = textSystem.RegisterText(ID::Invalid(), name, style, ElementState::None);
+                int32_t w = textSystem.GetTextMeasurement(probeID).maxWidth;
+                if (const LayoutStyle* ls = styleManager.GetLayoutStyle(style.layoutStyleIndex))
+                    w += ls->padding.Horizontal() + ls->borderWidths.Horizontal();
+                axisLabelWidth = std::max(axisLabelWidth, w);
+            }
 
         // Tree-table cell metrics: the stylesheet owns them; a missing value falls back to the
         // text line height so it still follows the font.

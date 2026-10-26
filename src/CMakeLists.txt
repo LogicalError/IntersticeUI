@@ -10,6 +10,8 @@ list(APPEND GUI_FILES
   gui_core/gui_id.h
   gui_core/gui_id_manager.h
   gui_core/gui_id_manager.cpp
+  gui_core/gui_json.h
+  gui_core/gui_json.cpp
 
   gui_core/gui_platform.h
 
@@ -235,6 +237,9 @@ target_link_libraries(gui_core
   PRIVATE Vulkan::Vulkan vkbootstrap skribidi nanosvg)
 if(INTERSTICE_SDL)
   target_link_libraries(gui_core PRIVATE SDL3::SDL3)
+  if(APPLE)   # the cursor size from the universal-access preferences
+    target_link_libraries(gui_core PRIVATE "-framework CoreFoundation")
+  endif()
 endif()
 # PUBLIC, so a host can tell whether the SDL backend is there.
 target_compile_definitions(gui_core PUBLIC INTERSTICE_SDL=$<BOOL:${INTERSTICE_SDL}>)
@@ -324,6 +329,7 @@ list(APPEND GUI_CONTROLS_FILES
   gui_controls/controls_tabs.cpp
   gui_controls/controls_docking.cpp
   gui_controls/controls_settings.cpp
+  gui_controls/gui_ui_state.cpp
   gui_controls/controls_toolbar_dock.h
   gui_controls/controls_toolbar_dock.cpp
 )

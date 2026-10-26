@@ -28,7 +28,12 @@ namespace interstice
         m_debug_dynamic_ids.clear();
         m_debug_ranges.clear();
 #endif
-        m_site_counts.clear();
+        if (++m_frame == 0)   // every slot of the last frame reads as empty now
+        {
+            for (SiteSlot& slot : m_site_slots) slot.frame = 0;   // the stamp wrapped around
+            m_frame = 1;
+        }
+        m_site_used = 0;
         m_parent_stack.clear(); // for release mode safety
         m_parent_stack.push_back(ParentData{ .id = ID::Invalid() });
         return true;
@@ -166,6 +171,37 @@ namespace interstice
                 (static_cast<uint32_t>(m_static_slots[index]) == gen);
     }
 
+    uint32_t IDManager::NextSiteCount(uint64_t site)
+    {
+        // Half full at most, so probes stay short; growing re-inserts this frame's slots.
+        if ((m_site_used + 1) * 2 > m_site_slots.size())
+        {
+            std::vector<SiteSlot> old(m_site_slots.size() * 2);
+            old.swap(m_site_slots);
+            const size_t mask = m_site_slots.size() - 1;
+            for (const SiteSlot& slot : old)
+                if (slot.frame == m_frame)
+                {
+                    size_t i = size_t(slot.site) & mask;
+                    while (m_site_slots[i].frame == m_frame) i = (i + 1) & mask;
+                    m_site_slots[i] = slot;
+                }
+        }
+        const size_t mask = m_site_slots.size() - 1;
+        for (size_t i = size_t(site) & mask;; i = (i + 1) & mask)
+        {
+            SiteSlot& slot = m_site_slots[i];
+            if (slot.frame != m_frame)
+            {
+                slot = { site, 1, m_frame };
+                ++m_site_used;
+                return 1;
+            }
+            if (slot.site == site)
+                return ++slot.count;
+        }
+    }
+
     ID IDManager::AllocateDynamicID(uint64_t hash)
     {
         if (!IsInsideFrame())
@@ -175,7 +211,7 @@ namespace interstice
         }
         m_dynamic_id_total++;
         const uint64_t site = Hash::Combine(hash, m_parent_stack.back().id.value.integer);
-        hash = Hash::Combine(site, ++m_site_counts[site]);
+        hash = Hash::Combine(site, NextSiteCount(site));
 
         // Ensure non-zero
         if (hash == 0) hash = 1;

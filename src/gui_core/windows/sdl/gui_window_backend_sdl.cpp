@@ -15,8 +15,13 @@
 #include <SDL3/SDL.h>
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <string>
+
+#if defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -25,6 +30,7 @@
 #include <windows.h>
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "advapi32.lib")   // RegGetValueW
 // Undefine Windows macro that conflicts with our CreateWindow method
 #undef CreateWindow
 #endif
@@ -1664,6 +1670,39 @@ namespace interstice
         }
         SDL_free(locales);
         return tag;
+    }
+
+    int32_t SDLWindowBackend::GetCursorSize() const
+    {
+        if (!m_sdlInitialized)
+            return 0;
+        const SDL_DisplayID display = SDL_GetPrimaryDisplay();
+        const float scale = display != 0 ? std::max(1.0f, SDL_GetDisplayContentScale(display)) : 1.0f;
+#if defined(_WIN32)
+        // The accessibility size (32 by default), at 96 DPI; the cursor grows with the display.
+        DWORD base = 0;
+        DWORD bytes = sizeof(base);
+        if (RegGetValueW(HKEY_CURRENT_USER, L"Control Panel\\Cursors", L"CursorBaseSize", RRF_RT_REG_DWORD,
+                         nullptr, &base, &bytes) != ERROR_SUCCESS || base == 0)
+            return 0;
+        return int32_t(float(base) * scale + 0.5f);
+#elif defined(__APPLE__)
+        // The universal-access cursor size: 1 (normal) to 4, on a 32 point cursor.
+        float multiplier = 1.0f;
+        if (CFPropertyListRef value = CFPreferencesCopyAppValue(CFSTR("mouseDriverCursorSize"), CFSTR("com.apple.universalaccess")))
+        {
+            if (CFGetTypeID(value) == CFNumberGetTypeID())
+                CFNumberGetValue(static_cast<CFNumberRef>(value), kCFNumberFloatType, &multiplier);
+            CFRelease(value);
+        }
+        return int32_t(32.0f * std::max(1.0f, multiplier) * scale + 0.5f);
+#else
+        // X11 and Wayland desktops: the Xcursor size, already in pixels.
+        if (const char* size = std::getenv("XCURSOR_SIZE"))
+            if (const int pixels = std::atoi(size); pixels > 0)
+                return pixels;
+        return 0;
+#endif
     }
 
     SDL_Window* SDLWindowBackend::GetTopModalWindowSDL() const

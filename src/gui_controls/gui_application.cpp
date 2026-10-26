@@ -381,6 +381,7 @@ namespace interstice
     Result<void> GUIApplication::InitializeStyles()
     {
         m_displayScale = windowManager ? windowManager->MainDisplayScale() : 1.0f;
+        m_cursorSize   = windowBackend ? windowBackend->GetCursorSize() : 0;
         styleManager.SetUIScale(m_displayScale * m_uiScale);
         theme.InitializeDefaultStyles(styleManager, textSystem);
         const float fontScale = m_globalFontScale > 0.0f ? m_globalFontScale : 1.0f;

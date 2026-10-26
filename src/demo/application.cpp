@@ -30,8 +30,8 @@ namespace interstice
         // The demo shows text in many scripts, so it loads the optional Noto fallbacks.
         InitializeOptions withFallbacks = options;
         withFallbacks.fallbackFonts = "fonts/Noto-otf";
-        if (!GUIApplication::Initialize(withFallbacks))
-            return Error{ ErrorCode::Failed, "initialization failed" };
+        if (Result<void> result = GUIApplication::Initialize(withFallbacks); !result)
+            return result;
 
         // Application-specific resources and styles
         if (!InitializeDemoResources() ||
@@ -40,6 +40,18 @@ namespace interstice
             return Error{ ErrorCode::Failed, "initialization failed" };
 
         SetDrawCacheEnabled(true);
+
+        // The saved UI state (the demo stores it next to its themes): the main window, the
+        // toolbars and the dock, which is applied again once the dock exists.
+        PersistWindow("main", demo.windowLayoutID2);
+        PersistToolbars("toolbars", toolbars.sides);
+        PersistDocking("dock", demo.dockingLayout);
+        if (std::ifstream file(kUIStateFile, std::ios::binary); file)
+        {
+            demo.savedUIState.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+            if (Result<void> restored = RestoreUIState(demo.savedUIState); !restored)
+                INTERSTICE_LOG_WARNING(kLogDemo, "{} not restored: {}", kUIStateFile, restored.GetError().message);
+        }
         return {};
     }
 
@@ -1252,6 +1264,8 @@ namespace interstice
                                     160  // minSecond
                                 );
                             demo.dockInitialized = true;
+                            if (!demo.savedUIState.empty())
+                                (void)RestoreUIState(demo.savedUIState);   // now with the dock's panels
 
                             // --panel: bring that panel to the front of its tab group.
                             auto selectStartPanel = [this](auto& self, DockNode* node) -> void {

@@ -5,6 +5,7 @@ build
 build-*/
 /third_party/install
 /workdirectory/shaders_compiled
+/workdirectory/ui_state.json
 /shaders/*.spv
 
 # CMake

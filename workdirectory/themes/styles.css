@@ -1211,7 +1211,7 @@
     margin: 0px;
     background-color: transparent;
     border-color: transparent;
-    color: transparent;
+    color: var(--text-1);   /* a single-color icon takes it; transparent hid file icons */
 }
 .ghost-window {
     border-width: 0px;
@@ -2963,7 +2963,7 @@
     flex-shrink: 0;
 }
 .grid-view-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
-.grid-view-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
+.grid-view-item:active { background-color: var(--accent-soft); border-color: var(--accent); }   /* pressed, or the target of a drop */
 .grid-view-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- gridViewListItemStyle: list-mode row (icon left, name right) --------- */
@@ -2986,7 +2986,7 @@
     flex-shrink: 0;
 }
 .grid-view-list-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
-.grid-view-list-item:active { background-color: var(--accent-soft); border-color: var(--accent-soft); }
+.grid-view-list-item:active { background-color: var(--accent-soft); border-color: var(--accent); }
 .grid-view-list-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- gridViewRenameItem: rename-mode grid cell --------------------------- */

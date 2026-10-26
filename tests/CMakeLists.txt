@@ -34,6 +34,9 @@ list(APPEND GUI_CORE_TEST_FILES
   frame_cost_bench.cpp
   units_test.cpp
   result_test.cpp
+  measured_sizes_test.cpp
+  ui_state_test.cpp
+  icon_names_test.cpp
   fuzz_test.cpp
   node_view_drop_test.cpp
   node_view_lane_offset_test.cpp

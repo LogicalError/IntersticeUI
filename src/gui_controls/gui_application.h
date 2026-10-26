@@ -6,6 +6,7 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 #include <cassert>
 #include <source_location>
@@ -61,6 +62,7 @@
 #include <gui_controls/gui_table_helpers.h>
 #include <gui_controls/gui_theme.h>
 #include <gui_controls/gui_content.h>
+#include <gui_controls/controls_toolbar_dock.h>
 #include <gui_core/gui_result.h>
 
 #include <gui_controls/gui_widget_state_types.h>
@@ -675,6 +677,10 @@ namespace interstice
         inline bool GridViewItem(const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
             { return GridViewItem(idManager.AllocateDynamicID(site), content, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
 
+        // Whether an inline rename editor (a grid item's, a tree row's) is open; an app that
+        // sorts by name re-sorts once it closes.
+        bool IsRenaming() const { return m_renameSub && m_renameSub->isActive; }
+
 
         // generateItem(index, itemID) must emit exactly one cell, typically GridViewItem(itemID, ...).
         // itemID is a stable ranged sub-ID (index = id.value.subRangeParts.index), used for
@@ -872,7 +878,7 @@ namespace interstice
                     for (int i = 0; i < TypeDimensions<T>::dimensions; i++)
                     {
                         DragLabel(TypeDimensions<T>::names[i], theme.axisLabelStyleRefs[i % 4],
-                            LayoutOverride::FixedWidth(20));
+                            LayoutOverride::FixedWidth(Pixels{ theme.axisLabelWidth }).KeepWithNext());   // wraps with its field
                         modified = Field(TypeDimensions<T>::GetComponent(value, i), textEditBehavior, componentStyle, config, LayoutOverride::Auto()
                             .MinWidth(40)) || modified;
                     }
@@ -1160,7 +1166,13 @@ namespace interstice
         }
 
         // Ghost offset from the cursor so the preview doesn't sit under the OS cursor.
-        int2 CursorGhostOffset() const { const int32_t o = styleManager.Px(14); return int2{ o, o }; }
+        // Clear of the OS cursor: 14 px for a 32 px cursor, in proportion for others; 14 CSS px
+        // when the backend can't tell the cursor's size.
+        int2 CursorGhostOffset() const
+        {
+            const int32_t o = m_cursorSize > 0 ? (m_cursorSize * 14 + 16) / 32 : styleManager.Px(14);
+            return int2{ o, o };
+        }
         bool BeginCursorGhostWindow(ID windowLayoutID, int2 cursorPos)
         {
             return BeginGhostWindow(windowLayoutID, cursorPos + CursorGhostOffset());
@@ -1260,6 +1272,8 @@ namespace interstice
             {
                 return false;
             }
+            if (!m_restoredWindows.empty())
+                ApplyRestoredWindow(windowLayoutID, constraints, flags);
 
             if (monitorIndex == -1)
             {
@@ -1495,6 +1509,30 @@ namespace interstice
         // Renders into the current container; the caller provides the outer panel.
         void RenderSettingsPanel(SettingsPanelState& state);
 
+        // ------------------------------------------------------------------
+        // Saved UI state (#21)
+        // ------------------------------------------------------------------
+        // The UI's state as JSON text, which the host stores where and when it likes. Name
+        // what to keep once, by keys that stay the same between runs; the named objects
+        // must outlive the naming:
+        //     PersistWindow("main", mainWindowID);         // position, size, mode
+        //     PersistDocking("dock", dockingLayout);       // panels by type, else title
+        //     PersistTable("assets", tableState, columns); // column widths and order, by header
+        //     PersistToolbars("toolbars", toolbarSides);   // items by debugName
+        //     PersistValue("zoom", zoom);                  // an app setting, if it wants
+        // RestoreUIState applies saved text: windows when they are next declared, the rest
+        // at once. What it doesn't know (keys, panels, columns) is skipped.
+        void PersistWindow(std::string key, ID windowID);
+        void PersistDocking(std::string key, DockingLayout& layout);
+        void PersistTable(std::string key, TableState& state, std::span<VirtualTableColumn> columns);
+        void PersistToolbars(std::string key, std::span<std::vector<ToolbarItem>, kToolbarSideCount> sides);
+        void PersistValue(std::string key, bool& value);
+        void PersistValue(std::string key, int& value);
+        void PersistValue(std::string key, float& value);
+        void PersistValue(std::string key, std::string& value);
+        std::string  SaveUIState() const;
+        Result<void> RestoreUIState(std::string_view json);
+
     private:
         // GUIApplicationInternals (gui_application_internal.h) re-exposes these to
         // the library's own code and the tests.
@@ -1623,6 +1661,22 @@ namespace interstice
         bool        m_initialized = false;   // Initialize succeeded; Cleanup clears it
         bool        m_inFrame     = false;   // inside OnFrame (a frame can't run inside another)
         Result<void> m_themeReload {};
+
+        // Saved UI state: what the app named, and windows waiting for their saved rect.
+        struct PersistedWindow   { std::string key; ID target; };
+        struct PersistedDock     { std::string key; DockingLayout* target; };
+        struct PersistedTable    { struct Target { TableState* state; std::span<VirtualTableColumn> columns; }; std::string key; Target target; };
+        struct PersistedToolbars { std::string key; std::span<std::vector<ToolbarItem>, kToolbarSideCount> target; };
+        struct PersistedValue    { using Target = std::variant<bool*, int*, float*, std::string*>; std::string key; Target target; };
+        struct RestoredWindow    { IntRect rect {}; WindowMode mode = WindowMode::Normal; bool hasPosition = false; bool rectDone = false; };
+        std::vector<PersistedWindow>   m_persistWindows;
+        std::vector<PersistedDock>     m_persistDocks;
+        std::vector<PersistedTable>    m_persistTables;
+        std::vector<PersistedToolbars> m_persistToolbars;
+        std::vector<PersistedValue>    m_persistValues;
+        std::unordered_map<ID, RestoredWindow> m_restoredWindows;
+        void ApplyRestoredWindow(ID windowID, LayoutOverride& constraints, ElementFlags& flags);
+        int32_t      m_cursorSize  = 0;   // the OS cursor's, in pixels (0: unknown); read with the styles
         // Begin/End contract: whether each open BeginWindow / BeginMenu (and BeginContextMenu)
         // / BeginTooltip / BeginCached scope is showing; its End pops it.
         std::vector<bool> m_windowOpen, m_menuOpen, m_tooltipOpen, m_cachedOpen;

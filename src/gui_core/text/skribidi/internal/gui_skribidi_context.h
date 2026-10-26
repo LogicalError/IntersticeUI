@@ -242,6 +242,7 @@ namespace interstice
 			return m_registry[index].textId;
 		}
 		std::vector<skb_icon_handle_t> iconHandles;  // skb handle per IconID, at index IconID - 1
+		std::vector<size_t>            iconSources;  // hash of each icon's SVG, to tell a repeat from a clash
 
 		// Returns 0 for an invalid or unknown icon
 		skb_icon_handle_t GetIconHandle(IconID iconId) const

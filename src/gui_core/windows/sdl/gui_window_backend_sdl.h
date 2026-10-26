@@ -86,6 +86,7 @@ namespace interstice
         // Platform-specific operations
         uint32_t GetTicks() const override;
         std::string GetPreferredLanguage() const override;
+        int32_t     GetCursorSize() const override;
         
         void* GetNativeHandle(OSWindowHandle) override;
 

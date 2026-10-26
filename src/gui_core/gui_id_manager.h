@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 #include <source_location>
-#include <unordered_map>
 #include <vector>
 #include <string_view>
 
@@ -162,8 +161,14 @@ namespace interstice
         // Parent stack for hierarchical hashing
         std::vector<ParentData> m_parent_stack;
         // Dynamic IDs made so far this frame per call site (or hint) and parent: only a
-        // repeat of the same site renumbers, so a widget appearing elsewhere doesn't.
-        std::unordered_map<uint64_t, uint32_t> m_site_counts;
+        // repeat of the same site renumbers, so a widget appearing elsewhere doesn't. A flat
+        // open-addressed table: a slot stamped with an older frame is empty, so a new frame
+        // clears nothing and allocates nothing once the table has grown.
+        struct SiteSlot { uint64_t site = 0; uint32_t count = 0; uint32_t frame = 0; };
+        std::vector<SiteSlot> m_site_slots = std::vector<SiteSlot>(1024);
+        uint32_t              m_site_used  = 0;
+        uint32_t              m_frame      = 0;
+        uint32_t NextSiteCount(uint64_t site);
         
         // Static ID management (slot map with generations)
         std::vector<int32_t> m_static_slots;

@@ -206,4 +206,5 @@ namespace interstice
 
     uint32_t ImageWindowBackend::GetTicks() const { return m_os.GetTicks(); }
     std::string ImageWindowBackend::GetPreferredLanguage() const { return m_os.GetPreferredLanguage(); }
+    int32_t     ImageWindowBackend::GetCursorSize() const        { return m_os.GetCursorSize(); }
 }

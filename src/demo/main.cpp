@@ -3,6 +3,7 @@
 #include <gui_core/diagnostics/gui_logging.h>
 
 #include <cstdlib>
+#include <fstream>
 #include <string_view>
 
 static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
@@ -38,6 +39,8 @@ int main(int argc, char* argv[])
         if (application->Initialize())
         {
             const interstice::Result<void> runResult = application->Run();
+            if (std::ofstream file(interstice::kUIStateFile, std::ios::binary); file)
+                file << application->SaveUIState();
             application->Cleanup();
             if (runResult)
             {

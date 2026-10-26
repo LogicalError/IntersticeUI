@@ -209,6 +209,10 @@ namespace interstice
         interstice::Element item{};
         item.id       = id;
         item.state    = guiStateManager.GetCurrentState(id) | extraState;
+        // The item a drag would drop into stands out: shown as pressed (:active).
+        if (dd && dd->payloadType != 0 && guiStateManager.Drag().IsDropTargetFor(id, dd->payloadType)
+            && (!dd->canDrop || dd->canDrop(guiStateManager.Drag().GetPayloadValue(), id)))
+            item.state |= interstice::ElementState::Active;
         item.styleRef = style;
         item.iconID   = icon;
         item.textID   = textSystem->RegisterText(id, icon, text, style, item.state);
@@ -327,6 +331,10 @@ namespace interstice
                     if (!dd || dd->payloadType == 0) break;
                     if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
                     guiStateManager.Drag().UpdateFromInput(event.state);
+                    // A press that became a drag doesn't rename on release, even dropped back on
+                    // the item: the drop ends the drag before the item sees its MouseUp.
+                    if (pendingRename && *pendingRename == id && guiStateManager.Drag().IsDragging())
+                        *pendingRename = interstice::ID::Invalid();
                     return guiStateManager.Drag().GetDraggedID() == id;
                 }
 
