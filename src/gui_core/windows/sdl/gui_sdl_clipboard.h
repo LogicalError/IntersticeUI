@@ -4,6 +4,7 @@
 
 namespace interstice
 {
+    /// The system clipboard, through SDL.
     class SDLClipboard : public IClipboard
     {
     public:

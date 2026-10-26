@@ -27,25 +27,28 @@ namespace interstice
     class StyleManager;
     class ElementDataStore;
 
-    // Invalid == 0 so zero-initialized handles are invalid; real handles are 1..N.
+    /// A handle to a stored scroll offset. Zero-initialized handles are Invalid; real handles
+    /// are 1..N.
     enum class ScrollOffsetHandle : uint32_t { Invalid = 0 };
 
 
 	// ------------------------------------------------------------------------
 	// Result type for element storage operations.
 	// ------------------------------------------------------------------------
+    /// Outcome of an ElementStorage call.
     enum class ElementStorageResult
     {
         Success,
-        NotConstructing,        // Called outside BeginConstruction/EndConstruction
-        MissingAdd,             // Called without first calling Add
-        MissingBeginChildren,   // EndChildren called without BeginChildren being called first
-        MissingEndChildren,     // BeginChildren called without EndChildren being called before construction ends
-        DuplicateCall,          // Method shouldn't be called more than once in a row
-        InvalidStyle,           // An invalid style was used
-        UnknownProblem          // Should not happen
+        NotConstructing,        ///< Called outside BeginConstruction/EndConstruction
+        MissingAdd,             ///< Called without first calling Add
+        MissingBeginChildren,   ///< EndChildren without an open BeginChildren
+        MissingEndChildren,     ///< BeginChildren left open when construction ended
+        DuplicateCall,          ///< Called again where once is allowed (e.g. BeginChildren twice)
+        InvalidStyle,           ///< The element's style is invalid
+        UnknownProblem          ///< An invalid ref or another unexpected state
     };
 
+    /// What Add returns: the new element's ref and status; true on success.
     struct AddResult 
     {
         ElementRef ref = ElementRef::Invalid();
@@ -64,47 +67,32 @@ namespace interstice
     // Element Storage - Main storage class
     // ------------------------------------------------------------------------
 
-    // Not thread safe.
-    // Elements are added per frame, in order, between BeginConstruction/EndConstruction.
-    // Afterwards elements can be queried and modified, but the structure is immutable
-    // until the next BeginConstruction resets it. Elements are never removed.
-    //
-    // All children of parents at depth D are stored contiguously at depth D+1,
-    // in the same order as their parents.
-    //
-    // Depth-scan iterators (top-down / bottom-up) are const-only and valid only
-    // after EndConstruction.
-    //
-    // Example:
-    //  ElementStorage storage;
-    // 
-    //  -- construction mode
-    // 
-    //  storage.BeginConstruction();
-    // 
-    //    storage.Add(root); -- root node
-    //    storage.BeginChildren();
-    //      storage.Add(leaf);
-    // 
-    //      storage.Add(elementWithChildren);
-    //      storage.BeginChildren();
-    //        storage.Add(leaf);
-    //        storage.Add(leaf);
-    //        storage.Add(leaf);
-    //      storage.EndChildren();
-    //      
-    //      storage.Add(leaf);
-    //      storage.BeginChildren();
-    //        storage.Add(leaf);
-    //      storage.EndChildren();
-    // 
-    //      storage.Add(leaf);
-    // 
-    //    storage.EndChildren();
-    // 
-    //    storage.Add(secondRoot);
-    // 
-    //  storage.EndConstruction();
+    /// The frame's element tree. Not thread safe.
+    /// Elements are added per frame, in order, between BeginConstruction/EndConstruction.
+    /// Afterwards elements can be queried and modified, but the structure is immutable
+    /// until the next BeginConstruction resets it. Elements are never removed.
+    ///
+    /// All children of parents at depth D are stored contiguously at depth D+1,
+    /// in the same order as their parents.
+    ///
+    /// Depth-scan iterators (top-down / bottom-up) are const-only and valid only
+    /// after EndConstruction.
+    ///
+    /// Example:
+    ///
+    ///     storage.BeginConstruction();
+    ///     storage.Add(root);
+    ///     storage.BeginChildren();
+    ///         storage.Add(leaf);
+    ///         storage.Add(elementWithChildren);
+    ///         storage.BeginChildren();
+    ///             storage.Add(leaf);
+    ///             storage.Add(leaf);
+    ///         storage.EndChildren();
+    ///         storage.Add(leaf);
+    ///     storage.EndChildren();
+    ///     storage.Add(secondRoot);
+    ///     storage.EndConstruction();
     class ElementStorage
     {
         static constexpr int32_t kMinimumReservedDepth = 32;
@@ -124,14 +112,15 @@ namespace interstice
         const StyleManager& GetStyleManager() const noexcept { return m_styleManager; }
 
         ElementStorage(ElementStorage&&) noexcept = default;
-        ElementStorage& operator=(ElementStorage&&) = delete;   // holds a StyleManager reference
+        ElementStorage& operator=(ElementStorage&&) = delete;   ///< holds a StyleManager reference
 
         ElementStorage(const ElementStorage&) = delete;
         ElementStorage& operator=(const ElementStorage&) = delete;
 
         // ----------------- Construction ------------------
         
-        // Fails with DuplicateCall if already constructing.
+        /// Starts building a new tree, clearing the previous one. DuplicateCall if already
+        /// constructing.
         [[nodiscard]] ElementStorageResult BeginConstruction()
         {
             if (m_constructionModeActive) return ElementStorageResult::DuplicateCall;
@@ -142,8 +131,8 @@ namespace interstice
             return ElementStorageResult::Success;
         }
 
-        // Fails if not constructing. An unmatched BeginChildren is closed here, so the
-        // frame still completes, and reported as MissingEndChildren.
+        /// Finishes the tree; NotConstructing if not constructing. An unmatched BeginChildren is
+        /// closed here, so the frame still completes, and reported as MissingEndChildren.
         [[nodiscard]] ElementStorageResult EndConstruction()
         {
             if (!m_constructionModeActive) return ElementStorageResult::NotConstructing;
@@ -154,29 +143,33 @@ namespace interstice
             return unclosed ? ElementStorageResult::MissingEndChildren : ElementStorageResult::Success;
         }
 
+        /// Adds `element` after the previous one at the current nesting level. `constraints` are
+        /// resolved from CSS px to pixels here. Fails outside construction or with an invalid style.
         [[nodiscard]] AddResult Add(Element&& element, LayoutOverride&& constraints = {});
 
-        // Fires before ref's children render. Coords are inner-rect-local LAYOUT pixels in
-        // ref's content space (they pan/zoom with ref's contentTransform).
+        /// Draws `callback` before `ref`'s children render. Coords are inner-rect-local LAYOUT
+        /// pixels in `ref`'s content space (they pan/zoom with its contentTransform).
         [[nodiscard]] ElementStorageResult AddCustomDraw(const ElementRef& ref, CustomDrawCallback callback);
 
-        // Fires after ref's whole subtree, in the same space as AddCustomDraw.
-        // Call after ref's EndChildren().
+        /// Draws `callback` after `ref`'s whole subtree, in the same space as AddCustomDraw.
+        /// Call after `ref`'s EndChildren().
         [[nodiscard]] ElementStorageResult AddCustomDrawAfter(const ElementRef& ref, CustomDrawCallback callback);
 
-        // Fires after layout, before rendering, with read-only final geometry.
+        /// Runs `callback` after layout, before rendering, with read-only final geometry.
         [[nodiscard]] ElementStorageResult AddPostLayout(const ElementRef& ref, PostLayoutCallback callback);
 
-        // Begins adding children to the last added element; elements without one are leaves.
-        // Fails outside construction or before any Add.
+        /// Begins adding children to the last added element; elements without BeginChildren are
+        /// leaves. MissingAdd when no element is open for children (none added, or just closed);
+        /// DuplicateCall when called twice for one element.
         [[nodiscard]] ElementStorageResult BeginChildren();
 
-        // Fails outside construction or without a matching BeginChildren.
+        /// Closes the innermost BeginChildren. Fails outside construction or without one open.
         [[nodiscard]] ElementStorageResult EndChildren();
 
-        // Moves a child (with its subtree) to another sibling position, during construction.
-        // fromLocal/toLocal are relative to rangeBegin, the absolute index of the first child
-        // at childDepth. Refs inside the storage follow; outMove lets other holders remap theirs.
+        /// Moves a child (with its subtree) to another sibling position, during construction.
+        /// `fromLocal` / `toLocal` are relative to `rangeBegin`, the absolute index of the first
+        /// child at `childDepth`. Refs inside the storage follow; `outMove` lets other holders
+        /// remap theirs.
         [[nodiscard]] ElementStorageResult MoveChild(uint32_t childDepth, uint32_t rangeBegin,
                                                      uint32_t fromLocal, uint32_t toLocal,
                                                      ElementMove* outMove = nullptr);
@@ -199,13 +192,13 @@ namespace interstice
 
         const ID GetElementIDAt(ElementRef root, int2 position) const;
 
-        // Converts a screen point into the space ref's own rect is stored in, applying each
-        // ancestor's inverse contentTransform like hit-testing does. Use it to compare
-        // event.state.screenPos with an element's rect under transformed ancestors.
+        /// Converts a screen point into the space `ref`'s own rect is stored in, applying each
+        /// ancestor's inverse contentTransform like hit-testing does. Use it to compare
+        /// event.state.screenPos with an element's rect under transformed ancestors.
         int2 ScreenToElementSpace(int2 screenPos, ElementRef ref) const;
 
-        // O(1); Invalid when not found (always for ID::Invalid).
-        // If an ID is used twice, the shallowest, earliest element wins.
+        /// The element with `id`; Invalid when not found (always for ID::Invalid). O(1). If an
+        /// ID is used twice, the shallowest, earliest element wins.
         ElementRef FindElementRefByID(ID id) const;
 
 
@@ -240,7 +233,7 @@ namespace interstice
             return ElementRef{ .depth = ref.depth, .index = nodeHierarchy->nextSiblingIndex };
         }
 
-        // nullptr on invalid ref
+        /// The element, or nullptr for an invalid ref.
         inline Element *GetElementPtr(const ElementRef &elementRef) { if (!IsValidRef(elementRef)) { return nullptr; } return &GetElementUnsafe(elementRef); }
 
         inline const Element *GetElementPtr(const ElementRef &elementRef) const { if (!IsValidRef(elementRef)) { return nullptr; } return &GetElementUnsafe(elementRef); }        
@@ -252,7 +245,8 @@ namespace interstice
         inline ElementRect &GetElementRectUnsafe(const ElementRef &elementRef) { return m_depths[elementRef.depth].elementRects[elementRef.index]; }
         inline const ElementRect& GetElementRectUnsafe(const ElementRef& elementRef) const { return m_depths[elementRef.depth].elementRects[elementRef.index]; }
 
-        // Call after Add() and before layout. Applied to children at render/hit-test time.
+        /// Sets the transform applied to `ref`'s children at render / hit-test time (pan, zoom).
+        /// Call after Add() and before layout. False for an invalid ref.
         inline bool SetContentTransform(const ElementRef& ref, const float3x2& transform)
         {
             if (!IsValidRef(ref)) return false;
@@ -267,7 +261,7 @@ namespace interstice
             return (cd.callback || cd.afterHead != UINT32_MAX) ? &cd : nullptr;
         }
 
-        // Fired in registration order between layout and rendering.
+        /// Fired in registration order between layout and rendering.
         struct PostLayoutEntry
         {
             PostLayoutCallback callback;
@@ -285,7 +279,7 @@ namespace interstice
             return m_postDrawEntries[index];
         }
 
-        // Valid until the next BeginConstruction. Empty on invalid ref or no children.
+        /// Valid until the next BeginConstruction. Empty on invalid ref or no children.
         std::span<Element> GetChildrenSpan(const ElementRef& parentRef)
         {
             auto range = GetChildRange(parentRef); // checks parentRef
@@ -293,13 +287,13 @@ namespace interstice
             return { m_depths[parentRef.depth + 1].elements.data() + range.begin, range.Size() };
         }
 
-        // Unchecked. Valid until the next BeginConstruction.
+        /// Unchecked. Valid until the next BeginConstruction.
         std::span<Element> GetChildrenSpanUnsafe(int depth, const IndexRange range)
         {
             return {m_depths[depth].elements.data() + range.begin, range.Size()};
         }
 
-        // Unchecked. Valid until the next BeginConstruction.
+        /// Unchecked. Valid until the next BeginConstruction.
         std::span<const Element> GetChildrenSpanUnsafe(int depth, const IndexRange range) const 
         {
             return {m_depths[depth].elements.data() + range.begin,
@@ -317,7 +311,7 @@ namespace interstice
             return {m_depths[depth].elementRects.data() + range.begin, range.Size()};
         }
 
-        // Valid until the next BeginConstruction. Empty on invalid ref or no children.
+        /// Valid until the next BeginConstruction. Empty on invalid ref or no children.
         std::span<const Element> GetChildrenSpan(const ElementRef& parentRef) const
         {
             auto range = GetChildRange(parentRef); // checks parentRef
@@ -325,7 +319,8 @@ namespace interstice
             return { m_depths[parentRef.depth + 1].elements.data() + range.begin, range.Size() };
         }
 
-        // Empty on invalid ref or no children.
+        /// The indices of `parentRef`'s children at the next depth; empty on invalid ref or no
+        /// children.
         IndexRange GetChildRange(const ElementRef& parentRef) const
         {
             if (!IsValidRef(parentRef)) return {};
@@ -376,7 +371,7 @@ namespace interstice
 
         void AdvanceTopDownDepthScan(DepthScanCursor& cursor) const;
 
-        // Deepest depth toward 0; parents left-to-right per depth.
+        /// Deepest depth toward 0; parents left-to-right per depth.
         void AdvanceBottomUpDepthScan(DepthScanCursor& cursor) const;
 
 
@@ -403,7 +398,7 @@ namespace interstice
             return &m_depths[elementRef.depth].hierarchy[elementRef.index];
         }
 
-        // GetChildRange without the ref check.
+        /// GetChildRange without the ref check.
         IndexRange GetChildRangeUnsafe(const ElementRef& parentRef) const
         {
             auto& parent = m_depths[parentRef.depth].hierarchy[parentRef.index];
@@ -411,17 +406,17 @@ namespace interstice
             return IndexRange{ parent.childOffset, parent.childOffset + parent.childCount };
         }
 
-        // Rotates all parallel arrays of a depth level.
+        /// Rotates all parallel arrays of a depth level.
         void RotateDepthLevel(uint32_t depth, uint32_t begin, uint32_t mid, uint32_t end);
 
         void RebuildSiblingLinks(uint32_t depth, uint32_t rangeBegin, uint32_t rangeEnd, uint32_t parentIndex);
 
-        // Keeps allocations for reuse.
+        /// Keeps allocations for reuse.
         void ClearStorage();
 
 
     private:
-        // Parallel arrays for one hierarchy depth.
+        /// Parallel arrays for one hierarchy depth.
         struct DepthLevel
         {
             std::vector<Element> elements;
@@ -462,14 +457,14 @@ namespace interstice
 
         std::vector<ParentStackEntry> m_parentStack;
 
-        // Invalid means BeginChildren is disallowed.
+        /// Invalid means BeginChildren is disallowed.
         ElementRef m_lastAddedRef = ElementRef::Invalid();
-        ID m_lastAddedID = ID::Invalid();  // persists across BeginChildren/EndChildren
+        ID m_lastAddedID = ID::Invalid();  ///< persists across BeginChildren/EndChildren
         bool m_childrenBegun = false;
 
         uint32_t m_elementCount = 0;
 
-        // Depth levels that contain elements.
+        /// Depth levels that contain elements.
         uint32_t m_usedDepthCount = 0;
 
         uint64_t m_generation = 1;
@@ -482,7 +477,7 @@ namespace interstice
         StyleManager &m_styleManager;
         ElementDataStore* m_elementDataStore = nullptr;
 
-        // Add keeps it current; MoveChild marks it stale and the next lookup rebuilds it.
+        /// Add keeps it current; MoveChild marks it stale and the next lookup rebuilds it.
         mutable std::unordered_map<ID, ElementRef> m_idIndex;
         mutable bool                               m_idIndexStale = false;
         void IndexElement(ID id, ElementRef ref) const;

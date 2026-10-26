@@ -14,38 +14,40 @@ namespace interstice
     class TabChainManager;
     class ITextSystem;
 
-    // A single OS input event recorded for dispatch this frame.
+    /// A single OS input event recorded for dispatch this frame.
     struct RecordedInputEvent
     {
         EventType  type     = EventType::None;
         InputState state    = {};
-        interstice::ID    windowId = interstice::ID::Invalid(); // OS window that received the event
-        bool       consumed = false; // true if already handled (event will be skipped during Dispatch)
+        interstice::ID    windowId = interstice::ID::Invalid(); ///< OS window that received the event
+        bool       consumed = false; ///< already handled; Dispatch skips it
     };
 
-    // Manages all frame input: receives raw OS events, records them, and processes
-    // the full input pipeline each frame (tab navigation, text editor focus, dispatch, post-dispatch).
+    /// Receives raw OS events, records them, and runs the frame's input pipeline (tab
+    /// navigation, text editor focus, dispatch, post-dispatch).
     class InputManager : public IPlatformInputHandler
     {
     public:
         InputManager() = default;
         ~InputManager() = default;
 
-        // IPlatformInputHandler - called by the platform backend when OS events arrive.
+        /// IPlatformInputHandler: record OS events for this frame's dispatch.
+        ///@{
         void OnKeyboard(interstice::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
         void OnMouseMove(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override;
         void OnMouseButton(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;
         void OnMouseScroll(interstice::ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) override;
         void OnTextComposition(interstice::ID, std::string_view, int32_t) override {} // the text editor shows it
+        ///@}
 
-        // Push a global handler onto the stack. Handlers are tried in LIFO order
-        // after element-level handlers have had a chance to consume the input.
+        /// Pushes a global handler. Global handlers are tried last-pushed first, after
+        /// element-level handlers had a chance to consume the input.
         void PushGlobalHandler(EventHandler h)
         {
             if (h) m_globalHandlers.push_back(std::move(h));
         }
 
-        // Pop the top-most global handler. Returns true if a handler was popped.
+        /// Pops the last pushed global handler; false when there is none.
         bool PopGlobalHandler()
         {
             if (m_globalHandlers.empty()) return false;
@@ -53,35 +55,34 @@ namespace interstice
             return true;
         }
 
-        // Mark the most recently recorded keyboard event as consumed.
-        // Consumed events are skipped during Dispatch.
+        /// Marks the most recently recorded keyboard event as consumed, so Dispatch skips it.
         void ConsumeKey();
 
-        // Inspect recorded events (e.g., read them before calling Process).
+        /// This frame's recorded events, e.g. to read them before Process.
         const std::vector<RecordedInputEvent>& GetRecordedEvents() const { return m_recordedEvents; }
 
-        // Mouse buttons held as of the last recorded button event.
+        /// Mouse buttons held as of the last recorded button event.
         MouseButtons GetCurrentButtons() const { return m_currentButtons; }
 
-        // Pre-hover step: must be called before hover/EndFrame. Updates the drag position.
+        /// Updates the drag position from the latest recorded mouse event; call before hover
+        /// resolution and GUIStateManager::EndFrame.
         void UpdatePreHover(GUIStateManager& guiStateManager);
 
-        // Detect mouse button presses that the OS swallowed (e.g. clicking behind
-        // a parented popup window on Windows) and inject synthetic MouseDown/MouseUp
-        // events so the GUI layer sees them. Call after WindowManager::Update(), before Process.
+        /// Detects mouse button presses the OS swallowed (e.g. clicking behind a parented popup
+        /// window on Windows) and injects synthetic MouseDown/MouseUp events for them. Call after
+        /// the window manager's Update, before Process.
         void SynthesizeMissingMouseEvents(int2 screenPos,MouseButtons lastPhysicalButtons, MouseButtons physicalButtons);
 
-        // Main per-frame input processing: tab navigation, text editor focus management,
-        // dispatch to element handlers, and post-dispatch state updates.
-        // Must be called after guiStateManager.EndFrame().
+        /// Per-frame input processing: tab navigation, text editor focus, dispatch to element
+        /// handlers, and post-dispatch state updates. Call after guiStateManager.EndFrame().
         void Process(GUIStateManager& guiStateManager,
                      ElementStorage& elementStorage,
                      TabChainManager& tabChainManager,
                      ITextSystem* textSystem,
                      ID overID);
 
-        // Dispatch each recorded event to elements using capture/focus/hover rules.
-        // Clears the event list at the end. (Also called internally by Process.)
+        /// Dispatches each recorded event to elements by capture / focus / hover rules, then
+        /// clears the events. Process calls it.
         void Dispatch(GUIStateManager& guiStateManager, ElementStorage& storage);
 
     private:
@@ -90,7 +91,7 @@ namespace interstice
 
         void DispatchSingleEvent(RecordedInputEvent& recorded, GUIStateManager& guiStateManager, ElementStorage& storage);
 
-        // Persists across frames for computing per-event position deltas and button states.
+        /// Persists across frames for computing per-event position deltas and button states.
         int2          m_prevScreenPos  {};
         MouseButtons  m_currentButtons { MouseButtons::None };
         ID            m_prevFocusedID  = ID::Invalid();

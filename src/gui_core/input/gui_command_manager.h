@@ -15,16 +15,16 @@
 
 namespace interstice
 {
-    // A set of shortcuts that is active while the app says so (e.g. a node view's while it has
-    // the focus). Opaque: other values come from CommandManager::RegisterMode. Default is
-    // always registered and is the fallback when the active mode has no matching command.
+    /// A set of shortcuts that is active while the app says so (e.g. a node view's while it has
+    /// the focus). Opaque: other values come from CommandManager::RegisterMode. Default is
+    /// always registered and is the fallback when the active mode has no matching command.
     enum class CommandMode : uint32_t
     {
         Default = 0
     };
 
-    // Handle to a registered command, stable for the manager's lifetime. The zero value is
-    // invalid, so structs holding one can be zero-initialized; real IDs start at 1.
+    /// Handle to a registered command, stable for the manager's lifetime. The zero value is
+    /// invalid, so structs holding one can be zero-initialized; real IDs start at 1.
     struct CommandID
     {
         uint32_t value = 0;
@@ -35,46 +35,50 @@ namespace interstice
         static constexpr CommandID Invalid() { return {}; }
     };
 
-    // A named action with an optional icon and an optional shortcut key, firing
-    // one callback when invoked (clicked from a menu / toolbar, or via its key).
-    // Commands are organized by named modes.
-    //
-    // Modes are registered by name and return an opaque CommandMode:
-    //   CommandMode sculpt = commandManager.RegisterMode("Sculpt");
-    //   commandManager.RegisterCommand(sculpt, KeyCode::KeyG, KeyModifier::None, []{ ... }, "Grab");
-    //
-    // A command may have no shortcut key (KeyCode::None): it never dispatches from
-    // the keyboard but is still listed in the panel, where the user can bind a key.
-    //
-    // Runs as a global InputManager handler, so focused controls, a focused text
-    // editor and state.consumed all take keys first.
-    //
-    // Shortcut lookup order: active mode first, then Default as fallback.
+    /// Registry of commands: named actions with an optional icon and an optional shortcut key,
+    /// each firing one callback when invoked (clicked from a menu / toolbar, or via its key).
+    /// Commands are organized by named modes.
+    ///
+    /// Modes are registered by name and return an opaque CommandMode:
+    ///
+    ///     CommandMode sculpt = commandManager.RegisterMode("Sculpt");
+    ///     commandManager.RegisterCommand(sculpt, KeyCode::KeyG, KeyModifier::None, []{ ... }, "Grab");
+    ///
+    /// A command may have no shortcut key (KeyCode::None): it never dispatches from
+    /// the keyboard but is still listed in the panel, where the user can bind a key.
+    ///
+    /// Runs as a global InputManager handler (MakeHandler), so focused controls, a focused
+    /// text editor and state.consumed all take keys first.
+    ///
+    /// Shortcut lookup order: active mode first, then Default as fallback.
     class CommandManager
     {
     public:
+        /// A registered command.
         struct Command
         {
             CommandMode           mode;
-            IconID                icon = IconID::Invalid; // optional
+            IconID                icon = IconID::Invalid; ///< optional
             KeyCode               key;
             KeyModifier           modifiers;
-            // Second key of a 2-key chord (e.g. Ctrl+K then Ctrl+S); None = single-key.
+            /// Second key of a 2-key chord (e.g. Ctrl+K then Ctrl+S); None = single-key.
             KeyCode               chord2Key  = KeyCode::None;
             KeyModifier           chord2Mods = KeyModifier::None;
             std::string           description;
-            std::string           displayString; // cached "Ctrl+Shift+D" or "Ctrl+K Ctrl+S"
-            // Instant: `callback` fires on press, `onEnd` is empty.
-            // Held (RegisterHeldCommand): `callback` on press, `onEnd` on release.
+            std::string           displayString; ///< cached "Ctrl+Shift+D" or "Ctrl+K Ctrl+S"
+            /// Instant: `callback` fires on press, `onEnd` is empty.
+            /// Held (RegisterHeldCommand): `callback` on press, `onEnd` on release.
+            ///@{
             std::function<void()> callback;
             std::function<void()> onEnd;
+            ///@}
 
             bool IsChord()     const { return chord2Key != KeyCode::None; }
             bool HasShortcut() const { return key != KeyCode::None; }
             bool IsHeld()      const { return static_cast<bool>(onEnd); }
         };
 
-        // The app's undo history (text fields push their edits to it).
+        /// The app's undo history (text fields push their edits to it).
         UndoHistory&       History()       { return m_history; }
         const UndoHistory& History() const { return m_history; }
 
@@ -84,9 +88,8 @@ namespace interstice
             m_byMode.emplace_back(); // bucket for Default
         }
 
-        // Register a named mode. Returns the CommandMode to use when registering commands or
-        // calling SetMode. Registering the same name twice returns the existing value
-        // without adding a duplicate.
+        /// Registers a named mode and returns the CommandMode to use when registering commands
+        /// or calling SetMode. Registering the same name twice returns the existing value.
         CommandMode RegisterMode(std::string_view name)
         {
             for (uint32_t i = 0; i < uint32_t(m_modeNames.size()); i++)
@@ -96,6 +99,7 @@ namespace interstice
             return CommandMode(m_modeNames.size() - 1);
         }
 
+        /// The name `mode` was registered with; empty for an unknown mode.
         std::string_view GetModeName(CommandMode mode) const
         {
             uint32_t index = uint32_t(mode);
@@ -104,7 +108,8 @@ namespace interstice
 
         uint32_t GetModeCount() const { return uint32_t(m_modeNames.size()); }
 
-        // Cancels any pending chord prefix.
+        /// Makes `mode` the active mode, whose shortcuts are tried before Default. Cancels any
+        /// pending chord prefix.
         void        SetMode(CommandMode mode)
         {
             m_currentMode       = mode;
@@ -113,9 +118,10 @@ namespace interstice
         }
         CommandMode GetMode() const { return m_currentMode; }
 
-        // key may be KeyCode::None (menu / toolbar only). Re-registering an existing
-        // (mode, key, modifiers) updates that slot in place instead of adding a
-        // command that could never dispatch. No-shortcut commands never collide.
+        /// Registers `callback` in `mode`; `description` names it in menus and shortcut lists.
+        /// `key` may be KeyCode::None (menu / toolbar only). Re-registering an existing
+        /// (mode, key, modifiers) updates that command in place instead of adding one that
+        /// could never dispatch. No-shortcut commands never collide.
         CommandID RegisterCommand(CommandMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
@@ -143,45 +149,43 @@ namespace interstice
             return id;
         }
 
-        // Convenience overloads forwarding to the master registration above.
-
-        // Default (fallback) mode, with icon.
+        /// RegisterCommand in the Default mode.
         CommandID RegisterCommand(IconID icon, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(CommandMode::Default, icon, key, modifiers, std::move(callback), description);
         }
 
-        // Specific mode, no icon.
+        /// RegisterCommand without an icon.
         CommandID RegisterCommand(CommandMode mode, KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(mode, IconID::Invalid, key, modifiers, std::move(callback), description);
         }
 
-        // Default (fallback) mode, no icon.
+        /// RegisterCommand in the Default mode, without an icon.
         CommandID RegisterCommand(KeyCode key, KeyModifier modifiers,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(CommandMode::Default, IconID::Invalid, key, modifiers, std::move(callback), description);
         }
 
-        // Specific mode, with icon, no shortcut key.
+        /// RegisterCommand without a shortcut key.
         CommandID RegisterCommand(CommandMode mode, IconID icon,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(mode, icon, KeyCode::None, KeyModifier::None, std::move(callback), description);
         }
 
-        // Default (fallback) mode, with icon, no shortcut key.
+        /// RegisterCommand in the Default mode, without a shortcut key.
         CommandID RegisterCommand(IconID icon,
                                   std::function<void()> callback, std::string_view description = {})
         {
             return RegisterCommand(CommandMode::Default, icon, KeyCode::None, KeyModifier::None, std::move(callback), description);
         }
 
-        // Hold-to-act command (pan, orbit, ...): onBegin on press, onEnd on release.
-        // Single-key only; OS key-repeat doesn't re-fire onBegin. Otherwise as RegisterCommand.
+        /// Registers a hold-to-act command (pan, orbit): `onBegin` on press, `onEnd` on release.
+        /// Single-key only; OS key-repeat doesn't re-fire `onBegin`. Otherwise as RegisterCommand.
         CommandID RegisterHeldCommand(CommandMode mode, IconID icon, KeyCode key, KeyModifier modifiers,
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
@@ -191,7 +195,7 @@ namespace interstice
             return id;
         }
 
-        // Default (fallback) mode, no icon.
+        /// RegisterHeldCommand in the Default mode, without an icon.
         CommandID RegisterHeldCommand(KeyCode key, KeyModifier modifiers,
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
@@ -200,7 +204,7 @@ namespace interstice
                                        std::move(onBegin), std::move(onEnd), description);
         }
 
-        // Specific mode, no icon.
+        /// RegisterHeldCommand without an icon.
         CommandID RegisterHeldCommand(CommandMode mode, KeyCode key, KeyModifier modifiers,
                                       std::function<void()> onBegin, std::function<void()> onEnd,
                                       std::string_view description = {})
@@ -209,8 +213,8 @@ namespace interstice
                                        std::move(onBegin), std::move(onEnd), description);
         }
 
-        // Find a single-key command by (mode, key, modifiers). Does NOT fall through
-        // to Default and does NOT match chord commands. Invalid if none.
+        /// The single-key command bound to (`mode`, `key`, `modifiers`); Invalid if none. Does not
+        /// fall back to Default and does not match chords.
         CommandID FindCommand(CommandMode mode, KeyCode key, KeyModifier modifiers) const
         {
             if (key == KeyCode::None) return {};
@@ -224,7 +228,7 @@ namespace interstice
             return {};
         }
 
-        // Find a chord command whose full (key1,mods1,key2,mods2) matches. Invalid if none.
+        /// The chord command in `mode` bound to exactly `k1`+`m1` then `k2`+`m2`; Invalid if none.
         CommandID FindChord(CommandMode mode, KeyCode k1, KeyModifier m1,
                             KeyCode k2, KeyModifier m2) const
         {
@@ -242,9 +246,9 @@ namespace interstice
             return {};
         }
 
-        // 2-key chord command (e.g. Ctrl+K then Ctrl+S). Re-registering the same
-        // sequence updates it in place. A single-key command sharing the first key
-        // always wins at dispatch, so treat them as mutually exclusive.
+        /// Registers a 2-key chord command (e.g. Ctrl+K then Ctrl+S). Re-registering the same
+        /// sequence updates it in place. A single-key command sharing the first key always
+        /// wins at dispatch, so treat them as mutually exclusive.
         CommandID RegisterChord(CommandMode mode,
                                 KeyCode key1, KeyModifier mods1,
                                 KeyCode key2, KeyModifier mods2,
@@ -271,9 +275,9 @@ namespace interstice
             return id;
         }
 
-        // Returns an EventHandler to push onto the InputManager as a global handler.
-        // KeyDown drives single-key / chord / rebind dispatch (and the begin of a
-        // held command); KeyUp drives the end of held commands.
+        /// An EventHandler to push onto the InputManager as a global handler.
+        /// KeyDown drives single-key / chord / rebind dispatch (and the begin of a
+        /// held command); KeyUp drives the end of held commands.
         EventHandler MakeHandler()
         {
             return [this](ElementEvent&& event) -> bool
@@ -286,18 +290,18 @@ namespace interstice
 
         // --- Inspection API (for command/shortcut viewer UI) ---
 
-        // Every command, in registration order: the one at index i has CommandID{ i + 1 }.
+        /// Every command, in registration order: the one at index i has CommandID{ i + 1 }.
         const std::vector<Command>& GetCommands() const { return m_commands; }
         static CommandID IDAt(size_t index) { return CommandID{ uint32_t(index) + 1 }; }
         static size_t    IndexOf(CommandID id) { return size_t(id.value) - 1; }   // a valid ID's index
 
-        // The command, or null for an invalid or unknown ID.
+        /// The command, or null for an invalid or unknown ID.
         const Command* GetCommand(CommandID id) const
         {
             return (id.value >= 1 && id.value <= m_commands.size()) ? &m_commands[id.value - 1] : nullptr;
         }
 
-        // Handles for a given mode, in registration order.
+        /// Handles for a given mode, in registration order.
         const std::vector<CommandID>& GetCommandsForMode(CommandMode mode) const
         {
             static const std::vector<CommandID> empty;
@@ -306,19 +310,19 @@ namespace interstice
         }
 
         // --- Rebind mode ---
-        //
-        // While active, the next non-modifier keydown becomes the target command's
-        // shortcut instead of firing anything. Escape cancels.
+
+        /// Makes the next non-modifier keydown the shortcut of `id` instead of firing anything.
+        /// Escape cancels.
         void      BeginRebind(CommandID id) { m_rebinding = GetCommand(id) ? id : CommandID{}; }
         void      CancelRebind()            { m_rebinding = {}; }
         bool      IsRebinding() const       { return m_rebinding.IsValid(); }
         CommandID RebindTarget() const      { return m_rebinding; }
 
-        // A chord prefix was pressed and awaits its second key.
+        /// True while a chord prefix was pressed and awaits its second key.
         bool IsChordPending() const { return m_pendingChord.key != KeyCode::None; }
 
-        // Format a chord shortcut as "Ctrl+K Ctrl+S". If k2 is None the single-key
-        // representation is returned. If k1 is None returns "(unbound)".
+        /// Formats a chord shortcut as "Ctrl+K Ctrl+S"; the single-key form when `k2` is None,
+        /// "(unbound)" when `k1` is None.
         static std::string FormatChordShortcut(KeyCode k1, KeyModifier m1,
                                                KeyCode k2, KeyModifier m2)
         {
@@ -332,8 +336,8 @@ namespace interstice
             return out;
         }
 
-        // Format a (key, modifiers) combo as a human-readable string like "Ctrl+Shift+D".
-        // An unbound shortcut (KeyCode::None) renders as "(unbound)" regardless of modifiers.
+        /// Formats a (key, modifiers) combo as a human-readable string like "Ctrl+Shift+D".
+        /// An unbound shortcut (KeyCode::None) renders as "(unbound)" regardless of modifiers.
         static std::string FormatShortcut(KeyCode key, KeyModifier modifiers)
         {
             if (key == KeyCode::None) return "(unbound)";
@@ -357,8 +361,7 @@ namespace interstice
             return out;
         }
 
-        // Name of a KeyCode as a short human-readable string. Returns e.g. "A",
-        // "F5", "Enter", "[". Unknown keys return "?".
+        /// A short human-readable key name, e.g. "A", "F5", "Enter", "["; "?" for unknown keys.
         static std::string KeyCodeName(KeyCode k)
         {
             switch (k)
@@ -443,8 +446,9 @@ namespace interstice
         }
 
     public:
-        // Runs a keydown InputState through dispatch; true if consumed.
-        // Public so tests and synthesized events can bypass MakeHandler.
+        /// Runs a keydown InputState through rebind / chord / shortcut dispatch; true when it
+        /// handled the key.
+        /// Public so tests and synthesized events can bypass MakeHandler.
         bool ProcessInput(const InputState& state)
         {
             if (state.lastKey == KeyCode::None)
@@ -498,8 +502,8 @@ namespace interstice
             return false;
         }
 
-        // Fires onEnd of every active held command on the released key (modifiers
-        // are ignored); true if any fired. Public like ProcessInput.
+        /// Fires onEnd of every active held command on the released key (modifiers
+        /// are ignored); true if any fired. Public like ProcessInput.
         bool ProcessKeyUp(const InputState& state)
         {
             if (state.lastKey == KeyCode::None) return false;
@@ -534,8 +538,8 @@ namespace interstice
             return false;
         }
 
-        // A held command stays active until key release; OS key-repeat KeyDowns
-        // are swallowed while active so onBegin fires once per press.
+        /// A held command stays active until key release; OS key-repeat KeyDowns
+        /// are swallowed while active so onBegin fires once per press.
         void BeginCommand(CommandID i)
         {
             const Command& s = At(i);
@@ -585,17 +589,16 @@ namespace interstice
             return false;
         }
 
-        // One per held command whose key is currently down.
         UndoHistory m_history;
         struct HeldActive { KeyCode key; CommandID cmd; };
 
         std::vector<std::string>           m_modeNames;
         std::vector<Command>               m_commands;
-        std::vector<std::vector<CommandID>> m_byMode;      // m_byMode[mode] = the mode's commands
+        std::vector<std::vector<CommandID>> m_byMode;      ///< m_byMode[mode] = the mode's commands
         CommandMode                        m_currentMode = CommandMode::Default;
-        CommandID                          m_rebinding;       // the command taking the next key, if any
-        KeyChord                           m_pendingChord {}; // prefix waiting for completion (key=None = no pending)
-        std::vector<HeldActive>            m_activeHeld;      // held commands with key currently down
+        CommandID                          m_rebinding;       ///< the command taking the next key, if any
+        KeyChord                           m_pendingChord {}; ///< prefix awaiting its second key; key None when none
+        std::vector<HeldActive>            m_activeHeld;      ///< held commands with key currently down
     };
 
 } // namespace interstice

@@ -10,12 +10,13 @@
 // Uncomment to enable debug ID tracking
 //#define INTERSTICE_ID_DEBUG
 
-// ID System
-// Provides static, dynamic, and ranged-based unique identifiers for GUI elements.
+// ID system: static, dynamic and ranged identifiers for GUI elements.
 namespace interstice 
 {
     struct ID;
-    class IDManager 
+    /// Makes element IDs: per-frame dynamic / ranged IDs (hashed from the call site or a hint
+    /// and the parent stack) and persistent static IDs.
+    class IDManager
     {
         // ------------------------------------------------------------------------
         // Constructor
@@ -31,40 +32,43 @@ namespace interstice
         // Frame Management
         // ------------------------------------------------------------------------
 
-        // Resets the parent stack and dynamic/ranged counters. Call before creating any IDs.
+        /// Resets the parent stack and dynamic/ranged counters. Call before creating any IDs.
+        /// False (misuse) when the previous frame was not ended.
         public: [[nodiscard]] bool BeginFrame();
-        
-        // Checks the parent stack is back to just the root Invalid ID.
+
+        /// Clears the parent stack; reports misuse when a PushParent was left unpopped.
         public: void EndFrame();
 
+        /// True between BeginFrame and EndFrame.
         public: [[nodiscard]] inline bool IsInsideFrame() const { return !m_parent_stack.empty(); }
 
         // ------------------------------------------------------------------------
         // Parent Stack
         // ------------------------------------------------------------------------
         
-        // Dynamic and ranged IDs created under it inherit its hash. Any ID type can be
-        // a parent; returns false for an Invalid ID.
+        /// Makes `parent_id` the parent: dynamic and ranged IDs created under it inherit its hash.
+        /// Any ID mode can be a parent; returns false for an Invalid ID or outside a frame.
         public: [[nodiscard]] bool PushParent(ID parent_id);
 
-        // Never pops the root ID.
+        /// Pops the last PushParent. Never pops the root; false on underflow or outside a frame.
         public: [[nodiscard]] bool PopParent();
 
         // ------------------------------------------------------------------------
         // Static IDs
         // ------------------------------------------------------------------------
 
-        // Persistent ID tracked by slot and generation; must be released explicitly.
+        /// A persistent ID tracked by slot and generation; release it with ReleaseStaticID.
         public: [[nodiscard]] ID CreateStaticID();
-        
-        // Bumps the slot's generation, invalidating old references. Only the current generation can be released.
+
+        /// Frees the slot and bumps its generation, invalidating copies of `id`. False when `id`
+        /// is not the slot's current generation.
         public: bool ReleaseStaticID(ID id);
 
         // Tests reach it through IDManagerTestAccess (defined in the tests).
         private: bool SetGenerationForSlot(uint32_t index, int32_t generation);
         friend struct IDManagerTestAccess;
 
-        // True if the slot is active and the generation matches.
+        /// True if the slot is active and the generation matches.
         public: bool IsStaticIDValid(ID id) const;
 
         // ------------------------------------------------------------------------
@@ -74,23 +78,23 @@ namespace interstice
         private: [[nodiscard]] ID AllocateDynamicID(uint64_t hash);
 
 #ifdef INTERSTICE_SUPPORT_CPP20
-        // Allocate a dynamic ID automatically using the source location.
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A dynamic ID from the caller's source location and the parent stack; different per
+        /// call site. Repeated calls from one site under one parent are numbered in call order.
         public: [[nodiscard]] inline ID AllocateDynamicID(const std::source_location location = std::source_location::current())
         {
             return AllocateDynamicID(location.file_name(), location.line());
         }
 #endif
 
-        // Allocate a dynamic ID using file and line information. (use __FILE__ and __LINE__)
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A dynamic ID from `file` and `line` (__FILE__, __LINE__) and the parent stack; different
+        /// per call site. Repeated calls from one site under one parent are numbered in call order.
         public: [[nodiscard]] ID AllocateDynamicID(std::string_view file, int line);
 
-        // Allocate a dynamic ID using a string hint.
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A dynamic ID from `hint` and the parent stack; different per hint. Repeated calls with
+        /// one hint under one parent are numbered in call order.
         public: [[nodiscard]] ID AllocateDynamicID(std::string_view hint);
 
-        // Debug: checks the tracking list (slow). Release: true for any non-Invalid Dynamic ID.
+        /// Debug: checks the tracking list (slow). Release: true for any non-Invalid Dynamic ID.
         public: [[nodiscard]] bool IsDynamicIDValid(ID id) const;
 
         // ------------------------------------------------------------------------
@@ -100,41 +104,41 @@ namespace interstice
         private: [[nodiscard]] ID AllocateRangedID(uint32_t size, uint64_t hash);
 
 #ifdef INTERSTICE_SUPPORT_CPP20
-        // Allocate a ranged ID automatically using the source location.
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A ranged ID of `size` sub-IDs from the caller's source location and the parent stack.
+        /// Unlike dynamic IDs, repeated calls from one site under one parent return the same ID.
         public: [[nodiscard]] inline ID AllocateRangedID(uint32_t size, const std::source_location location = std::source_location::current())
         {
             return AllocateRangedID(size, location.file_name(), location.line());
         }
 #endif
-        // Allocate a ranged ID using file and line information. (use __FILE__ and __LINE__)
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A ranged ID of `size` sub-IDs from `file` and `line` (__FILE__, __LINE__) and the
+        /// parent stack. Repeated calls from one site under one parent return the same ID.
         public: [[nodiscard]] ID AllocateRangedID(uint32_t size, std::string_view file, int line);
 
-        // Allocate a ranged of IDs using a string hint.
-        // Will return a different ID for each call site. Will be affected by parent stack.
+        /// A ranged ID of `size` sub-IDs from `hint` and the parent stack; different per hint.
         public: [[nodiscard]] ID AllocateRangedID(uint32_t size, std::string_view hint);
 
-        // Get the size of a ranged ID.
+        /// The number of sub-IDs in a ranged ID; 0 (and a misuse report) for other modes.
         public: uint32_t GetRangeSize(ID ranged_id) const;
 
-        // Debug: checks stored ranges (slow). Release: true for any non-Invalid Ranged ID.
+        /// Debug: checks stored ranges (slow). Release: true for any non-Invalid Ranged ID.
         public: bool IsRangedIDValid(ID id) const;
-                       
-        // Sub-range IDs inherit the range's hash and use the index within it.
+
+        /// The ID of item `index` (< range size) in a ranged ID, for indexed content such as
+        /// list rows. Invalid when `index` is out of range.
         public: [[nodiscard]] ID GetSubID(ID ranged_id, uint32_t index) const;
 
-        // Debug: checks stored ranges (slow). Release: true for any non-Invalid SubRange ID.
+        /// Debug: checks stored ranges (slow). Release: true for any non-Invalid SubRange ID.
         public: bool IsSubRangeIDValid(ID id) const;
 
         // ------------------------------------------------------------------------
         // Parent Stack Utilities
         // ------------------------------------------------------------------------
 
-        // Slow: linear search.
+        /// True when `id` is anywhere on the parent stack. Slow: linear search.
         public: bool IsInParentStack(ID id) const;
-              
-        // Get the current top parent ID from the stack.
+
+        /// The innermost parent; Invalid at the root or outside a frame.
         public: ID GetStackParent() const;
 
 
@@ -142,13 +146,15 @@ namespace interstice
         // Validation
         // ------------------------------------------------------------------------
 
-        // Validate any ID. (slow in debug mode)
-        // Returns true if the ID is valid.
+        /// True when `id` is valid for its mode (see the Is*IDValid functions); slow in debug builds.
         public: bool IsIDValid(ID id) const;
-                      
+
+        /// Live static IDs, and dynamic / ranged IDs made so far this frame.
+        ///@{
         public: inline size_t GetStaticIDCount() const { return m_static_id_count; }
         public: inline size_t GetDynamicIDCount() const { return m_dynamic_id_total; }
         public: inline size_t GetRangedIDCount() const { return m_ranged_count; }
+        ///@}
 
 
 

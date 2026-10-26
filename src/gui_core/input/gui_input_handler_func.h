@@ -7,30 +7,31 @@
 
 namespace interstice
 {
-    struct ElementRect;    // requires gui/gui_element_storage.h
-    struct ElementRef;     // requires gui/gui_element_storage.h
-    class  ElementStorage; // requires gui/gui_element_storage.h
-    struct InputState;     // requires gui/input/gui_input_state.h
+    struct ElementRect;    // gui_core/elements/gui_element.h
+    struct ElementRef;     // gui_core/elements/gui_element.h
+    class  ElementStorage; // gui_core/elements/gui_element_storage.h
+    struct InputState;     // gui_core/input/gui_input_state.h
 
+    /// An input event delivered to an element's EventHandler.
     struct ElementEvent
     {
-        interstice::ID             id;
+        interstice::ID             id;          ///< the targeted element
         EventType           type;
-        const InputState&   state;
-        const ElementRect*  rect;
+        const InputState&   state;       ///< the input snapshot of this event
+        const ElementRect*  rect;        ///< the element's layout rects
         const ElementRef&   elementRef;
 
-        // Cursor in the space `rect->rect` is stored in (inverse of ancestor
-        // contentTransforms). Compare against the rect with this, not
-        // `state.screenPos`, which differs under e.g. a pan/zoom canvas.
+        /// Cursor in the space `rect->rect` is stored in (inverse of ancestor
+        /// contentTransforms). Compare against the rect with this, not
+        /// `state.screenPos`, which differs under e.g. a pan/zoom canvas.
         int2 LocalCursor(const ElementStorage& storage) const;
     };
 
-    // Element-level input handler used by the immediate-mode dispatcher.
-    // id: element ID being targeted, event: what happened this dispatch, state: current input snapshot, rect: element bounds
+    /// Element-level input handler used by the immediate-mode dispatcher; returns true when it
+    /// consumed the event.
     using EventHandler = std::function<bool(ElementEvent&& input)>;
 
-    // Tries `first`, then `second` if first returns false.
+    /// A handler that tries `first`, then `second` when `first` returns false.
     inline EventHandler Chain(EventHandler first, EventHandler second)
     {
         return [f = std::move(first), s = std::move(second)](ElementEvent&& event) -> bool

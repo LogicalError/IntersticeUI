@@ -16,9 +16,8 @@
 
 namespace interstice::Diagnostics
 {
-    // Single-thread collector, opaque by design. Today there is one instance
-    // (the main thread); the explicit-collector entry points are the seam for
-    // per-thread collectors once a job system exists.
+    /// Collects scope timings for one thread; opaque. The INTERSTICE_PROFILE_* macros use
+    /// MainThreadCollector.
     class ProfilerCollector;
 
     ProfilerCollector& MainThreadCollector();
@@ -26,16 +25,18 @@ namespace interstice::Diagnostics
     bool IsProfilingEnabled();
     void SetProfilingEnabled(bool enabled);
 
-    // Frame boundaries: call once each, around all scopes for the frame.
+    /// Frame boundaries: call once each, around all scopes for the frame.
+    ///@{
     void BeginFrame(ProfilerCollector& collector);
     void EndFrame  (ProfilerCollector& collector);
+    ///@}
 
-    // Discards all nodes and history; cached scope sites re-resolve.
+    /// Discards all nodes and history; cached scope sites re-resolve.
     void Reset(ProfilerCollector& collector);
 
-    // Per-call-site descriptor, `static` at each INTERSTICE_PROFILE_SCOPE site. The cached* fields
-    // skip the node lookup when hit from the same call path; Reset invalidates them.
-    // Single-threaded.
+    /// Per-call-site descriptor, `static` at each INTERSTICE_PROFILE_SCOPE site. The cached* fields
+    /// skip the node lookup when hit from the same call path; Reset invalidates them.
+    /// Single-threaded.
     struct ScopeLocation
     {
         uint64_t    nameHash = 0;
@@ -49,15 +50,18 @@ namespace interstice::Diagnostics
         uint32_t    cachedGeneration = 0;
     };
 
-    // Fast cached entry/exit (used by the macros). `loc` must outlive the call.
+    /// Cached scope entry / exit, as the macros use. `loc` is normally a `static`
+    /// ScopeLocation; its strings must outlive the collector.
+    ///@{
     void EnterScope(ProfilerCollector& collector, ScopeLocation& loc) noexcept;
     void ExitScope (ProfilerCollector& collector) noexcept;
+    ///@}
 
-    // Uncached entry, for direct / test use.
+    /// Uncached scope entry, for direct use and tests; pair with ExitScope.
     void EnterScope(ProfilerCollector& collector, uint64_t nameHash, const char* name,
                     bool isWait = false, const char* file = "", int line = 0) noexcept;
 
-    // RAII guard; a disabled profiler costs one branch.
+    /// Times its own lifetime as a scope; a disabled profiler costs one branch.
     class ScopedTimer
     {
     public:
@@ -76,7 +80,7 @@ namespace interstice::Diagnostics
         bool               m_armed;
     };
 
-    // One finalized node, depth-first. Durations are windowed averages (~4 updates/s).
+    /// One finalized node, depth-first. Durations are windowed averages (~4 updates/s).
     struct ProfileSample
     {
         uint64_t    key       = 0;
@@ -93,10 +97,10 @@ namespace interstice::Diagnostics
         bool        isWait    = false;
     };
 
-    // The last finalized frame, depth-first. Valid until the next EndFrame.
+    /// The nodes of the last finalized frame, depth-first. Valid until the next EndFrame.
     std::span<const ProfileSample> LastFrameSamples(const ProfilerCollector& collector);
 
-    // Smoothed total of the root scope(s): the frame total, in milliseconds.
+    /// Smoothed total of the root scope(s): the frame total, in milliseconds.
     double LastFrameTotalMs(const ProfilerCollector& collector);
 }
 

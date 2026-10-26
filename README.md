@@ -24,6 +24,10 @@ The library is two static libraries:
 | `gui_core` | Windowing, rendering backends, input, layout, text, styles, element storage |
 | `gui_controls` | `GUIApplication`, controls, docking, menus, tooltips, transitions |
 
+The guides in [docs](docs/README.md) explain the frame model and IDs, every control,
+the CSS the themes use, and integrating the library into an engine; the headers'
+`///` comments build an API reference with Doxygen.
+
 ## Requirements
 
 - Windows x64 with Visual Studio 2026 (MSVC) and CMake 4.2 or newer; Visual Studio 2022
@@ -32,7 +36,7 @@ The library is two static libraries:
   X11 and Wayland development packages for SDL3 (see the Linux job in
   `.github/workflows/ci.yml` for the Ubuntu package list)
 - macOS (untested: CI builds it with Apple Clang against MoltenVK from Homebrew and runs
-  the headless tests, but it has never run on a Mac)
+  the headless tests when run by hand, but it has never run on a Mac)
 - The [Vulkan SDK](https://vulkan.lunarg.com/): headers, loader and
   `glslangValidator` for the shaders; the GPU tests also use its validation layers
 - Git with [Git LFS](https://git-lfs.com/): the fonts are stored in LFS, and a
@@ -165,7 +169,7 @@ leaves, taking the same arguments:
 
 ```cpp
 if (auto menu = Menu("File"))
-    MenuItem("Quit", [this] { RequestExit(); });
+    MenuItem("Quit", [this] { applicationQuit = true; });
 ```
 
 A control shows a `GUIContent`: a text, an icon or both, and an optional tooltip. A string or
@@ -407,7 +411,8 @@ Handled by the build:
 ## Status
 
 Version 0.1, a preview under active development. Windows x64 and Linux x64 with
-Vulkan are built and tested in CI; macOS builds but is untested.
+Vulkan are built and tested in CI; macOS builds (in CI runs started by hand) but is
+untested.
 
 Known issues:
 
@@ -428,6 +433,11 @@ Known issues:
   Floating windows are not part of the saved tree.
 - Text editor undo and redo (Ctrl+Z, Ctrl+Shift+Z) exist; whether they behave
   correctly across focus changes and with application-level undo has not been checked.
+
+## Support
+
+If IntersticeUI is useful to you, you can support its development through
+[GitHub Sponsors](https://github.com/sponsors/LogicalError).
 
 ## License
 

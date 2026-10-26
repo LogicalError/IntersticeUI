@@ -9,8 +9,8 @@ namespace interstice
 {
     inline constexpr uint32_t kInvalidCodepoint = 0xFFFFFFFFu;
 
-    // The codepoint starting at text[i], with i moved past it. kInvalidCodepoint for a
-    // malformed or cut-off sequence (i moves one byte).
+    /// The codepoint starting at text[i], with i moved past it. kInvalidCodepoint for a
+    /// malformed or cut-off sequence (i moves one byte).
     inline uint32_t NextUtf8Codepoint(std::string_view text, size_t& i)
     {
         const auto lead = static_cast<unsigned char>(text[i]);
@@ -43,7 +43,7 @@ namespace interstice
         else                          { out += char(0xF0 | (codepoint >> 18)); out += char(0x80 | ((codepoint >> 12) & 0x3F)); out += char(0x80 | ((codepoint >> 6) & 0x3F)); out += char(0x80 | (codepoint & 0x3F)); }
     }
 
-    // `text` with each malformed byte replaced by U+FFFD (the replacement character).
+    /// `text` with each malformed byte replaced by U+FFFD (the replacement character).
     inline std::string ToValidUtf8(std::string_view text)
     {
         std::string valid;
@@ -60,7 +60,7 @@ namespace interstice
         return valid;
     }
 
-    // The byte length of text's last codepoint (0 when empty).
+    /// The byte length of text's last codepoint (0 when empty).
     inline size_t LastUtf8CodepointSize(std::string_view text)
     {
         size_t size = 0;

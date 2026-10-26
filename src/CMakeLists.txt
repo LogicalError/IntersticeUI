@@ -15,6 +15,8 @@ list(APPEND GUI_FILES
   gui_core/gui_json.cpp
 
   gui_core/gui_platform.h
+  gui_core/gui_result.h
+  gui_core/gui_units.h
 
 
   # Frame
@@ -96,6 +98,7 @@ list(APPEND GUI_FILES
   gui_core/input/gui_input_state.h
   gui_core/input/gui_input_enums.h
   gui_core/input/gui_input_manager.h
+  gui_core/input/gui_undo_history.h
   gui_core/input/gui_input_manager.cpp
   gui_core/input/gui_platform_input_handler.h
   gui_core/input/gui_input_handler_func.h
@@ -251,7 +254,9 @@ target_compile_definitions(gui_core PUBLIC INTERSTICE_SDL=$<BOOL:${INTERSTICE_SD
 # GUI Controls - Widget toolkit library (controls, fields, frame handling, menu manager)
 list(APPEND GUI_CONTROLS_FILES
   gui_controls/gui_application.h
+  gui_controls/gui_application_internal.h
   gui_controls/gui_application.cpp
+  gui_controls/gui_content.h
   gui_controls/gui_widget_state_types.h
   gui_controls/gui_node_view_types.h
   gui_controls/gui_table_types.h
@@ -399,7 +404,7 @@ if(INTERSTICE_BUILD_DEMO)
   interstice_apply_compile_options(demo)
   interstice_precompile_headers(demo <gui_controls/gui_application.h>)
 
-  set_target_properties(demo PROPERTIES FOLDER "Core")
+  set_target_properties(demo PROPERTIES FOLDER "Examples")
 
   interstice_copy_runtime_dlls(demo)
 endif()

@@ -10,6 +10,7 @@
 
 namespace interstice
 {
+    /// Outcome of a WindowRegistry call.
     enum class RegistryResult
     {
         Success,
@@ -17,14 +18,14 @@ namespace interstice
         NoActiveWindow
     };
 
-    // Per-window lists of ElementRefs in addition (render) order, driven during
-    // ElementStorage construction:
-    //  - Clear() at BeginConstruction
-    //  - BeginWindowScope(windowRef) when a window element is added
-    //  - Add(elementRef) for every other element
-    //  - EndWindowScope() after the window's BeginChildren/EndChildren
-    // Nested windows are the active target until their scope ends.
-    // Kept out of ElementStorage so that stays a general-purpose element store.
+    /// Per-window lists of ElementRefs in addition (render) order, driven during
+    /// ElementStorage construction:
+    ///  - Clear() at BeginConstruction
+    ///  - BeginWindowScope(id, windowRef) when a window element is added
+    ///  - Add(elementRef) for every other element
+    ///  - EndWindowScope() after the window's BeginChildren/EndChildren
+    /// Nested windows are the active target until their scope ends.
+    /// Kept out of ElementStorage so that stays a general-purpose element store.
     class WindowRegistry
     {
         static constexpr uint32_t kInitialWindowCapacity = 16;
@@ -32,22 +33,23 @@ namespace interstice
     public:
         static constexpr uint32_t kInvalidIndex = ~(uint32_t)0;
 
-        // A single entry in the flat pre-order render list for a window.
-        // subtreeSkip is the flat-list index past this element's entire subtree - jump there to cull.
+        /// One entry in a window's flat pre-order render list. To cull an element's subtree,
+        /// jump to its subtreeSkip.
         struct RenderNode
         {
             ElementRef ref;
-            uint32_t   subtreeSkip = 0; // flat-list index past this subtree
-            uint32_t   _pad        = 0; // explicit padding -> 16 bytes, 4 nodes per cache line
+            uint32_t   subtreeSkip = 0; ///< flat-list index past this subtree
+            uint32_t   _pad        = 0; ///< explicit padding -> 16 bytes, 4 nodes per cache line
         };
 
+        /// A window of this frame and its render list.
         struct WindowEntry
         {
-            uint32_t    parentWindowEntry = kInvalidIndex;
+            uint32_t    parentWindowEntry = kInvalidIndex; ///< index of the enclosing window, if any
             ID          id                = ID::Invalid();
             ElementRef  windowRef         = ElementRef::Invalid();
 
-            std::vector<RenderNode> members; // pre-order, populated during construction
+            std::vector<RenderNode> members; ///< pre-order, populated during construction
         };
 
         WindowRegistry()
@@ -56,6 +58,7 @@ namespace interstice
             m_windowStack.reserve(kInitialWindowStackCapacity);
         }
 
+        /// Forgets all windows, keeping capacity; call at BeginConstruction.
         void Clear()
         {
             // Keep each window's member list so its capacity is reused next frame
@@ -69,10 +72,10 @@ namespace interstice
             m_windowIDToIndexMap.clear();
         }
 
-        // Returns the number of registered windows
+        /// The number of registered windows.
         uint32_t WindowCount() const { return static_cast<uint32_t>(m_windows.size()); }
 
-        // Returns ID of window at index or Invalid() if out-of-range
+        /// The ID of the window at `windowIndex`; Invalid when out of range.
         const ID GetWindowID(uint32_t windowIndex) const
         {
             if (windowIndex >= m_windows.size())
@@ -80,14 +83,14 @@ namespace interstice
             return m_windows[windowIndex].id;
         }
 
-        // Returns ElementRef of window at index or Invalid() if out-of-range
+        /// The element of the window at `windowIndex`; Invalid when out of range.
         ElementRef GetWindowRef(uint32_t windowIndex) const
         {
             if (windowIndex >= m_windows.size()) return ElementRef::Invalid();
             return m_windows[windowIndex].windowRef;
         }
 
-        // Returns ElementRef of window with ID or kInvalidIndex if out-of-range
+        /// The element of the window with `id`; Invalid when unknown.
         ElementRef GetWindowRef(ID id) const
         {
             auto it = m_windowIDToIndexMap.find(id);
@@ -96,7 +99,7 @@ namespace interstice
             return m_windows[it->second].windowRef;
         }
 
-        // Returns index of window with ID or kInvalidIndex if out-of-range
+        /// The index of the window with `id`; kInvalidIndex when unknown.
         uint32_t GetWindowIndex(ID id) const
         {
             auto it = m_windowIDToIndexMap.find(id);
@@ -105,41 +108,41 @@ namespace interstice
             return it->second;
         }
 
-        // Returns if a window with a given ID exists
+        /// True when a window with `id` is registered.
         inline bool Contains(ID id) const
         {
             auto it = m_windowIDToIndexMap.find(id);
             return it != m_windowIDToIndexMap.end();
         }
 
-        // Members of a window (nullptr if invalid index), for building its render data.
-        // Valid until Clear(), another window is added, or the registry moves; don't keep across frames.
+        /// A window's render list (nullptr for an invalid index), for building its render data.
+        /// Valid until Clear(), another window is added, or the registry moves.
         const std::vector<RenderNode>* GetWindowMembers(uint32_t windowIndex) const
         {
             if (windowIndex >= m_windows.size()) return nullptr;
             return &m_windows[windowIndex].members;
         }
 
-        // Get current nesting depth
+        /// How many window scopes are open.
         uint32_t GetWindowStackDepth() const
         {
             return static_cast<uint32_t>(m_windowStack.size());
         }
 
-        // The window being built (innermost window scope); Invalid outside one.
+        /// The window being built (innermost window scope); Invalid outside one.
         ID GetCurrentWindowID() const
         {
             return m_windowStack.empty() ? ID::Invalid() : GetWindowID(m_windowStack.back());
         }
 
-        // Check if any window is active
+        /// True inside a window scope.
         bool HasActiveWindow() const
         {
             return !m_windowStack.empty();
         }
 
-        // Register a window element that was just added to the ElementStorage.
-        // It becomes a new window entry and becomes the active window.
+        /// Registers a window element just added to the ElementStorage and opens its scope:
+        /// following Adds go to it until EndWindowScope.
         RegistryResult BeginWindowScope(ID id, const ElementRef& ref)
         {
             if (!ref.IsValid()) return RegistryResult::InvalidRef;
@@ -168,7 +171,7 @@ namespace interstice
             return RegistryResult::Success;
         }
 
-        // Register a non window element reference to ElementStorage.
+        /// Adds a non-window element to the innermost window scope's render list.
         RegistryResult Add(const ElementRef &ref)
         {
             if (!ref.IsValid()) return RegistryResult::InvalidRef;
@@ -178,9 +181,8 @@ namespace interstice
             return RegistryResult::Success;
         }
 
-        // Move an element's subtree to render last among its siblings (renders on top).
-        // Safe to call during construction before BuildRenderSkipLinks runs.
-        // subtreeSkip values are NOT updated here - BuildRenderSkipLinks() handles that.
+        /// Moves an element's subtree, in the innermost window scope, to render last among its
+        /// siblings (on top). Call during construction; BuildRenderSkipLinks updates subtreeSkip.
         void MoveSubtreeToEnd(const ElementRef& nodeRef)
         {
             if (m_windowStack.empty()) return;
@@ -212,8 +214,8 @@ namespace interstice
                 std::rotate(members.begin() + nodeStart, members.begin() + subtreeEnd, members.begin() + siblingGroupEnd);
         }
 
-        // Follows the elements an ElementStorage::MoveChild moved: remaps every ref,
-        // then reorders the moved siblings' subtrees so the list stays pre-order.
+        /// Follows the elements an ElementStorage::MoveChild moved: remaps every ref,
+        /// then reorders the moved siblings' subtrees so the list stays pre-order.
         void ApplyElementMove(const ElementMove& move)
         {
             for (auto& window : m_windows)
@@ -255,10 +257,8 @@ namespace interstice
             }
         }
 
-        // Compute subtreeSkip for every RenderNode in every window.
-        // Call once after construction + layout are complete, before rendering.
-        // O(n) per window using a monotone stack - no per-frame allocations
-        // (m_skipLinkStack is a reused scratch buffer).
+        /// Computes subtreeSkip for every RenderNode in every window. Call once after
+        /// construction and layout, before rendering. O(n) per window, allocation-free once warm.
         void BuildRenderSkipLinks()
         {
             for (auto& window : m_windows)
@@ -286,7 +286,7 @@ namespace interstice
             }
         }
 
-        // Pops the active window scope.
+        /// Closes the innermost window scope; NoActiveWindow when none is open.
         RegistryResult EndWindowScope()
         {
             if (m_windowStack.empty())
@@ -307,16 +307,18 @@ namespace interstice
             return RegistryResult::Success;
         }
 
-        // Range access to windows
+        /// The windows, in registration order.
+        ///@{
         auto begin() const { return m_windows.begin(); }
         auto end() const { return m_windows.end(); }
         const std::vector<WindowEntry>& Windows() const { return m_windows; }
+        ///@}
 
     private:
-        std::vector<WindowEntry> m_windows;        // stack of active window entries
-        std::vector<uint32_t>    m_windowStack;    // stack of active window indices (supports nested window scopes)
-        std::vector<uint32_t>    m_skipLinkStack;  // scratch buffer for BuildRenderSkipLinks, capacity reused across frames
-        std::vector<std::vector<RenderNode>> m_spareMembers; // member lists from last frame, reused by BeginWindowScope
+        std::vector<WindowEntry> m_windows;        ///< this frame's windows, in registration order
+        std::vector<uint32_t>    m_windowStack;    ///< indices of the open (nested) window scopes
+        std::vector<uint32_t>    m_skipLinkStack;  ///< BuildRenderSkipLinks scratch, reused
+        std::vector<std::vector<RenderNode>> m_spareMembers; ///< last frame's lists, for reuse
 
         uint32_t m_activeWindowIndex = kInvalidIndex;
         std::unordered_map<ID, uint32_t> m_windowIDToIndexMap;

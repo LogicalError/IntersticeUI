@@ -14,8 +14,8 @@ namespace interstice::vulkan
     struct DeletionQueue;
     struct FrameData;
 
-    // The Vulkan-side GUI pipeline set, built once at device init from
-    // kPrimitiveSpecs. Indexed by PrimitiveKind; all share one layout.
+    /// The Vulkan-side GUI pipeline set, built once at device init from
+    /// kPrimitiveSpecs. Indexed by PrimitiveKind; all share one layout.
     struct GUIRenderContext
     {
         bool Create(VulkanDeviceContext& deviceContext);
@@ -31,8 +31,8 @@ namespace interstice::vulkan
 
         interstice::RHI::GpuPipeline CreatePrimitivePipeline(const interstice::PrimitiveSpec& spec) override;
 
-        // All GUI pipelines share one layout (identical push range + image
-        // set). Created lazily by the first CreatePrimitivePipeline call.
+        /// All GUI pipelines share one layout (identical push range + image
+        /// set). Created lazily by the first CreatePrimitivePipeline call.
         VkPipelineLayout sharedGuiLayout = VK_NULL_HANDLE;
         void DestroySharedLayout();
 

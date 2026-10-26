@@ -602,7 +602,7 @@ private:
                     std::string inner = m_lex.Consume().text;
                     int bit = PseudoToBit(inner);
                     if (bit < 0 || bit >= Style::kDisabled)
-                        Error("Cannot negate ':" + inner + "' — only :hover, :active, :focus are supported in :not()");
+                        Error("Cannot negate ':" + inner + "' - :not() takes :hover, :active, :focus or :selected");
                     else
                         sel.notMask |= bit;
                     if (!m_lex.Consume(TT::CloseParen)) Error("Expected ')' after ':not(:" + inner + "'");

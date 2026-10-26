@@ -25,6 +25,7 @@ namespace interstice
     class ITextSystem;
     class StyleManager;
 
+    /// True for a KeyDown of Return, keypad Enter or Space.
     inline bool IsActivationKey(const ElementEvent& event)
     {
         if (event.type != EventType::KeyDown) return false;
@@ -35,13 +36,16 @@ namespace interstice
     }
     
     
-    // Whether a focused text editor acts on this key (KeyDown/KeyUp), so its handler
-    // takes it; the rest reach the app's shortcuts. Read-only text only selects and copies.
+    /// Whether a focused text editor acts on this key (KeyDown/KeyUp), so its handler
+    /// takes it; the rest reach the app's shortcuts. Read-only text only selects and copies.
     bool TextEditorUsesKey(const InputState& state, bool readOnly);
 
+    /// Text box handler: a left click focuses it for editing; while focused it takes text
+    /// input and the keys its editor uses.
     EventHandler MakeTextBoxHandler(GUIStateManager& guiStateManager);
 
 
+    /// Per-element state of MakeHorizontalSizerHandler (element data store); internal.
     struct HorizontalSizerState
     {
 		ID previousFocusID = ID::Invalid();
@@ -50,18 +54,20 @@ namespace interstice
         interstice::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenX = 0;
-        int64_t lastClickTimeNanos = 0;   // steady-clock ns; see SteadyClockNowNanos()
+        int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
         ID lastClickID = ID::Invalid();
     };
 
-    // sizeValue/minSize/maxSize are in units of pixelsPerUnit screen pixels (CSS pixels:
-    // pass StyleManager::GetUIScale()). onAutoSize: called on double-click; returns the
-    // desired size in pixels, or -1 to skip.
+    /// Sizer handler that drags `sizeValue` within [`minSize`, `maxSize`], calling `onChanged`
+    /// with each new size. Sizes are in units of `pixelsPerUnit` screen pixels (for CSS px pass
+    /// StyleManager::GetUIScale()). `onAutoSize` runs on double-click and returns the desired
+    /// size in screen pixels, or -1 to skip. `invertMouseDelta` grows the size when dragging left.
     EventHandler MakeHorizontalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
                                             std::function<void(int)> onChanged = nullptr,
                                             std::function<int()> onAutoSize = nullptr,
                                             bool invertMouseDelta = false, float pixelsPerUnit = 1.0f);
 
+    /// Per-element state of MakeVerticalSizerHandler (element data store); internal.
     struct VerticalSizerState
     {
         ID previousFocusID = ID::Invalid();
@@ -70,40 +76,45 @@ namespace interstice
         interstice::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenY = 0;
-        int64_t lastClickTimeNanos = 0;   // steady-clock ns; see SteadyClockNowNanos()
+        int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
         ID lastClickID = ID::Invalid();
     };
 
-    // Y-axis counterpart of MakeHorizontalSizerHandler.
+    /// Y-axis counterpart of MakeHorizontalSizerHandler; `invertMouseDelta` grows the size when
+    /// dragging up.
     EventHandler MakeVerticalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
                                           std::function<void(int)> onChanged = nullptr,
                                           std::function<int()> onAutoSize = nullptr,
                                           bool invertMouseDelta = false, float pixelsPerUnit = 1.0f);
 
+    /// Per-element state of MakeSliderHandler (element data store); internal.
     struct SliderState
     {
         ID draggingID = ID::Invalid();
-        interstice::int2 dragStartLocal{ 0,0 }; // mouse screen pos at MouseDown (click-vs-drag origin)
+        interstice::int2 dragStartLocal{ 0,0 }; ///< mouse screen pos at MouseDown (click-vs-drag origin)
         float startValue = 0.0f;
         bool cancelDrag = false;
         bool movedPastThreshold = false;
-        bool editMode = false;           // set by a clean click: in-place text editing
+        bool editMode = false;           ///< set by a clean click: in-place text editing
     };
 
-    // What pressing a slider does: Edit - a click (no drag) opens its value for typing;
-    // Jump - the value moves to the cursor at once and follows it while held.
+    /// What pressing a slider does: Edit - a click (no drag) opens its value for typing;
+    /// Jump - the value moves to the cursor at once and follows it while held.
     enum class SliderPress : uint8_t { Edit, Jump };
 
-    // elementWidth maps drag distance onto [minVal, maxVal] (<= 0 is treated as 1).
-    // Arrow keys step 1% of the range, PageUp/Down 10%.
+    /// Slider handler for `*value` in [`minVal`, `maxVal`]; `elementWidth` (pixels, <= 0 is
+    /// treated as 1) maps drag distance onto that range. Arrow keys step 1% of the range,
+    /// PageUp/Down 10%.
     EventHandler MakeSliderHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage,
                                    float* value, int elementWidth,
                                    std::function<void()> onChanged = nullptr,
                                    float minVal = 0.0f, float maxVal = 1.0f,
                                    SliderPress press = SliderPress::Edit);
 
+    /// Phase of a label drag: idle, pressed but under the drag threshold, or dragging.
     enum class DragScalarMode { Idle, Pressing, Dragging };
 
+    /// Per-element state of a draggable label (element data store); internal.
     struct DragLabelState
     {
         ID             activeID;
@@ -111,65 +122,74 @@ namespace interstice
         interstice::int2      dragStartPos{ 0, 0 };
     };
 
-    // Forwards LabelDrag* events to the next sibling element.
+    /// Turns mouse drags on a label into LabelDrag* events sent to the next sibling element.
     EventHandler MakeDraggableLabelHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage);
 
+    /// Label handler: a left click focuses the control bound to the label (else the label).
     EventHandler MakeLabelHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage);
 
-    // Shared by all labels in a group, so the edge highlight is synchronized.
+    /// Shared by all labels in a group, so the edge highlight is synchronized.
     struct LabelGroupVisualState {
-        int32_t* sharedWidth;
-        int32_t  minWidth;
-        int32_t  maxWidth;
-        bool* edgeHovered;
-        bool* edgeDragging;
-        std::vector<TextID>* labelTextIDs; // for double-click auto-size
-        ITextSystem* textSystem;           // for measuring label text widths
-        const StyleManager* styleManager;  // for resolving label padding
+        int32_t* sharedWidth;              ///< the group's label width, CSS px
+        int32_t  minWidth;                 ///< CSS px
+        int32_t  maxWidth;                 ///< CSS px
+        bool* edgeHovered;                 ///< a label's resize edge is hovered
+        bool* edgeDragging;                ///< a label's resize edge is being dragged
+        std::vector<TextID>* labelTextIDs; ///< for double-click auto-size
+        ITextSystem* textSystem;           ///< for measuring label text widths
+        const StyleManager* styleManager;  ///< for resolving label padding
         StyleRef labelStyleRef;
     };
 
-    // Label group variants: the right edge resizes the shared label width.
+    /// Label group variants: the right edge resizes the shared label width.
     EventHandler MakeGroupLabelHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage, LabelGroupVisualState groupVisual);
     EventHandler MakeGroupDraggableLabelHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage, LabelGroupVisualState groupVisual);
 
+    /// Button handler: a left click, or an activation key while focused, calls `onClick`.
     EventHandler MakeButtonHandler(GUIStateManager& guiStateManager, std::function<void()> onClick);
 
-    // wheelStep: pixels scrolled per wheel notch (StyleManager::Px(kWheelScrollStep)).
+    /// Wheel handler that scrolls the element's own scroll offset by `wheelStep` pixels per
+    /// notch (StyleManager::Px(kWheelScrollStep)).
     EventHandler MakeMouseWheelScrollHandler(ScrollManagement& scrollManagement, float wheelStep);
 
+    /// Per-element state of MakeScrollbarHandler (element data store); internal.
     struct ScrollbarDragState
     {
         ID  draggingID = ID::Invalid();
-        int thumbGrabOffset = 0; // mouse offset from the thumb's near edge at drag start (in track-local pixels)
+        int thumbGrabOffset = 0; ///< cursor offset from the thumb's near edge at drag start, pixels
     };
 
-    // Minimum thumb length in CSS pixels (scale with StyleManager::Px), so the thumb
-    // stays clickable over huge content. The thickness is GUITheme::scrollbarThickness.
+    /// Minimum thumb length in CSS pixels (scale with StyleManager::Px), so the thumb
+    /// stays clickable over huge content. The thickness is GUITheme::scrollbarThickness.
     constexpr int32_t kScrollbarMinThumbLength = 20;
 
-    // Scrollbar track/thumb handler; writes the scroll offset of containerID (the scrollable parent).
-    // trackLength = 0: span-and-clip, the bar spans kScrollbarAxisSpan and the track is the
-    // parent's innerRect. trackLength > 0: the bar is sized explicitly (e.g. to leave room
-    // for a corner cap) and the track is its own rect.
+    /// Scrollbar track/thumb handler; writes the scroll offset of `containerID` (the scrollable
+    /// parent). `trackLength` = 0: span-and-clip, the bar spans kScrollbarAxisSpan and the track
+    /// is the parent's innerRect. `trackLength` > 0: the bar is sized explicitly (to leave room
+    /// for a corner cap, say) and the track is its own rect.
     EventHandler MakeScrollbarHandler(GUIStateManager& guiStateManager,
                                       ElementStorage& elementStorage,
                                       ID containerID, bool vertical,
                                       int32_t trackLength = 0);
 
+    /// Drag source handler: a left press starts a drag of `payloadType`, with the value from
+    /// `getPayloadValue` (else 0) and the payload from `getPayload` (else that value).
     EventHandler MakeDragSourceHandler(GUIStateManager& guiStateManager,
                                        uint32_t payloadType,
                                        std::function<uintptr_t()> getPayloadValue = nullptr,
                                        std::function<std::any()> getPayload = nullptr,
                                        DragVisualizer sourceVisualizer = {});
 
-    // canDrop (optional): returning false makes the element a non-target for that payload.
+    /// Drop target handler for `acceptedPayloadType`; `onDrop` gets the payload value and the
+    /// source ID. `canDrop` (optional) returning false makes the element a non-target for that
+    /// payload.
     EventHandler MakeDropTargetHandler(uint32_t acceptedPayloadType,
                                        std::function<void(uintptr_t payloadValue, ID sourceID)> onDrop,
                                        std::function<bool(uintptr_t payloadValue)> canDrop = nullptr);
     
 
     
+    /// Label-drag speed multiplier: 0.1 with Ctrl, 10 with Shift (which wins), else 1.
     inline double LabelDragSpeedScale(const InputState& state)
     {
         double speed = 1.0;
@@ -178,6 +198,8 @@ namespace interstice
         return speed;
     }
 
+    /// Numeric field handler: a left click focuses it for typing, and LabelDrag* events from
+    /// its label drag `value` (a cancelled drag restores the start value).
     template<typename T>
     inline EventHandler MakeNumericalBoxHandler(GUIStateManager& guiStateManager, T& value, NumericFieldConfig<T> config = {})
     {
@@ -241,7 +263,7 @@ namespace interstice
 
 
 
-    // Applies LabelDrag* events to all components (multi-dimensional Field groups).
+    /// Applies LabelDrag* events to all components (multi-dimensional Field groups).
     template<typename T>
     inline EventHandler MakeMultiDimDragHandler(GUIStateManager& guiStateManager, T& value,
         NumericFieldConfig<typename TypeDimensions<T>::ComponentType> config = {})

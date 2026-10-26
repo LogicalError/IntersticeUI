@@ -5,10 +5,12 @@
 
 namespace interstice
 {
-    // Interaction distances in CSS pixels; scale them with StyleManager::Px.
-    constexpr float   kWheelScrollStep   = 30.0f; // content scrolled per wheel notch
-    constexpr int32_t kDragStartDistance = 4;     // pointer travel before a press becomes a drag
+    // Interaction distances in CSS px; scale them with StyleManager::Px.
+    constexpr float   kWheelScrollStep   = 30.0f; ///< scrolled per wheel notch (CSS px)
+    constexpr int32_t kDragStartDistance = 4;     ///< pointer travel before a press becomes a drag (CSS px)
 
+    /// Modifier keys held, combined with |. The Alt key reports as Option on macOS; Command is
+    /// the Cmd key there and the Windows or Super key elsewhere.
     enum class KeyModifier : uint8_t
     {
         None = 0,
@@ -20,6 +22,7 @@ namespace interstice
     };
     INTERSTICE_ENUM_OPERATORS(KeyModifier)
 
+    /// Mouse buttons, combined with |.
     enum class MouseButtons : uint8_t
     {
         None = 0,
@@ -31,6 +34,7 @@ namespace interstice
     };
     INTERSTICE_ENUM_OPERATORS(MouseButtons)
 
+    /// A keyboard event: a key down or up, or a typed character (KeyChar).
     enum class KeyAction : uint8_t
     {
         KeyDown,
@@ -38,18 +42,20 @@ namespace interstice
         KeyChar
     };
 
+    /// Whether a mouse button went down or up.
     enum class MouseAction : uint8_t
     {
         MouseDown,
         MouseUp
     };
 
+    /// The kind of input event the GUI dispatches to element handlers.
     enum class EventType : uint8_t
     {
         None = 0,
         MouseMove,
-        MouseDown,       // which button: state.buttons & ~state.prevButtons
-        MouseUp,         // which button: state.prevButtons & ~state.buttons
+        MouseDown,       ///< which button: state.buttons & ~state.prevButtons
+        MouseUp,         ///< which button: state.prevButtons & ~state.buttons
         MouseScroll,
         KeyDown,
         KeyUp,
@@ -59,12 +65,15 @@ namespace interstice
         DragOut,
         Drop,
 
-        LabelDragBegin,   // label -> control: drag starting; state.scroll.x = 0
-        LabelDrag,        // label -> control: drag in progress; state.scroll.x = cumulative pixel delta from start
-        LabelDragEnd,     // label -> control: drag committed
-        LabelDragCancel,  // label -> control: drag cancelled (Escape)
+        LabelDragBegin,   ///< label -> control: drag starting; state.scroll.x = 0
+        /// label -> control: drag in progress; state.scroll.x = pixels moved since the start
+        LabelDrag,
+        LabelDragEnd,     ///< label -> control: drag committed
+        LabelDragCancel,  ///< label -> control: drag cancelled (Escape)
     };
 
+    /// Keys by what the keyboard layout makes them, not by position. KeyAction::KeyChar
+    /// events carry a Unicode codepoint in this type instead.
     enum class KeyCode : uint32_t
     {
         None = 0,

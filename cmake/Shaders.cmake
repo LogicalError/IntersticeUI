@@ -18,15 +18,11 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
   "${PROJECT_SOURCE_DIR}/workdirectory/shaders/*.comp"
 )
 
-set(GLSL_INCLUDE_FILES
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/all_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/sdf_color.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/box_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/dot_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/glyph_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/line_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/triangle_common.glsl"
-  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/quad_common.glsl"
+# Every shader depends on every include (all_common.glsl includes bezier_sdf.glsl,
+# for one), so a changed include recompiles them all.
+file(GLOB GLSL_INCLUDE_FILES
+  CONFIGURE_DEPENDS
+  "${PROJECT_SOURCE_DIR}/workdirectory/shaders/*.glsl"
 )
 
 # The includes as one argument for CompileShader.cmake.
@@ -52,7 +48,7 @@ add_custom_target(interstice_shaders ALL
 )
 
 set_source_files_properties(${SPIRV_BINARY_FILES} PROPERTIES GENERATED TRUE)
-set_target_properties(interstice_shaders PROPERTIES FOLDER "Core")
+set_target_properties(interstice_shaders PROPERTIES FOLDER "Examples")
 
 if(NOT PROJECT_IS_TOP_LEVEL)
   # file(COPY) skips files that haven't changed, so this is cheap after the first build.
@@ -61,5 +57,5 @@ if(NOT PROJECT_IS_TOP_LEVEL)
             "-DDESTINATION=${INTERSTICE_BUILD_RESOURCE_DIR}" "-DFALLBACK_FONTS=${INTERSTICE_FALLBACK_FONTS}"
             -P ${CMAKE_CURRENT_LIST_DIR}/CopyResources.cmake
     VERBATIM)
-  set_target_properties(interstice_resources PROPERTIES FOLDER "Core")
+  set_target_properties(interstice_resources PROPERTIES FOLDER "Examples")
 endif()

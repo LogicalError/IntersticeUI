@@ -15,13 +15,13 @@ namespace interstice
 
     struct LineStyle
     {
-        // Defaults to VisualColorStyleIndex::Invalid.
+        /// Defaults to VisualColorStyleIndex::Invalid.
         VisualColorStyleIndex colorStyleIndex {};
         float lineWidth       = 0;
         float dashSize        = 0;
         float dashOffset      = 0;
-        float gradientOffset  = 0.0f; // start of gradient range [0,1]
-        float gradientScale   = 1.0f; // fraction of gradient to cover
+        float gradientOffset  = 0.0f; ///< start of gradient range [0,1]
+        float gradientScale   = 1.0f; ///< fraction of gradient to cover
     };
 
 	class GUIRenderer
@@ -34,10 +34,10 @@ namespace interstice
 
         virtual void SetTransform(interstice::float3x2 transformation) = 0;
 
-        // from/toStyleIndex are flat GPU style indices; blendT 0 = fully "from", 1 = fully "to".
-        // colorStyleIndex overrides the box style's background (Invalid = no override).
-        // snappedPx: the box in window pixels snapped relative to its parent
-        // (gui_pixel_snap.h); empty = snap the transformed rect to the pixel grid.
+        /// Draws a styled box, blended from `fromStyleIndex` to `toStyleIndex` (flat GPU style
+        /// indices) by `blendT` in [0, 1]. `colorStyleIndex` overrides the background (Invalid:
+        /// none). `snappedPx` is the box in window pixels snapped relative to its parent
+        /// (SnapToParent); empty snaps the transformed rect to the pixel grid.
         virtual void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect,
                                uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT,
                                interstice::VisualColorStyleIndex colorStyleIndex = {},
@@ -60,20 +60,21 @@ namespace interstice
         virtual void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color) = 0;
         virtual void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 
-        // A Box without SDF borders, style blending or element state.
+        /// Draws a filled, optionally rounded and textured rect: a box without borders, style
+        /// blending or element state.
         virtual void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
-        // A box shadow: `rect` is the shadow's shape, which fades out over `blur` pixels
-        // on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
+        /// A box shadow: `rect` is the shadow's shape, which fades out over `blur` pixels
+        /// on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
         virtual void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
 
         virtual void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 
-        // Convex polygon, fan-triangulated from points[0]; needs at least 3 points.
+        /// Convex polygon, fan-triangulated from points[0]; needs at least 3 points.
         void RenderFilledPolygon(std::span<const interstice::float2> points, interstice::IntRect clipRect,
                                  VisualColorStyleIndex colorIndex,
                                  interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
 
-        // Outlined polyline. closed=true adds a closing segment from last->first point.
+        /// Outlined polyline; `closed` adds a segment from the last point back to the first.
         void RenderPolyline(std::span<const interstice::int2> points, bool closed,
                             interstice::IntRect clipRect, const LineStyle& style);
 
@@ -84,17 +85,21 @@ namespace interstice
         virtual bool BeginWindow(ID id) = 0;
         virtual void EndWindow() = 0;
 
-        // Draw caching: capture a subtree's primitives once and replay them translated.
-        // Called inside BeginWindow/EndWindow; default no-ops.
-        //   Begin/EndScopeCapture: primitives are recorded under scopeId and also
-        //   emitted into the current window.
-        //   ReplayScopeCapture: re-emits a captured subtree moved by `delta`;
-        //   false if nothing is cached for scopeId.
+        // Draw caching: a subtree's primitives are captured once and replayed translated.
+        // Called between BeginWindow and EndWindow; the defaults do nothing.
+
+        /// Starts recording primitives under `scopeId`, replacing its previous capture.
+        /// Captures don't nest.
         virtual void BeginScopeCapture(ID /*scopeId*/) {}
+        /// Ends the capture of `scopeId` and draws it into the current window.
         virtual void EndScopeCapture(ID /*scopeId*/) {}
+        /// Draws the capture of `scopeId` again, moved by `delta` pixels; false if there is none.
         virtual bool ReplayScopeCapture(ID /*scopeId*/, interstice::int2 /*delta*/) { return false; }
+        /// True when `scopeId` has a non-empty capture.
         virtual bool HasScopeCapture(ID /*scopeId*/) const { return false; }
+        /// Drops the capture of `scopeId`.
         virtual void InvalidateScopeCapture(ID /*scopeId*/) {}
+        /// Drops every capture.
         virtual void ClearScopeCaptures() {}
     };
 

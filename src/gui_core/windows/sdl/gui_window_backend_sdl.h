@@ -17,29 +17,34 @@ namespace interstice
 {
     class GraphicsContext;
 
-    // SDLWindowBackend::Options. (Outside the class: GCC can't use a nested struct's
-    // member initializers in a default argument of the class being defined.)
+    // Outside the class: GCC can't use a nested struct's member initializers in a default
+    // argument of the class being defined.
+    /// Options for SDLWindowBackend (SDLWindowBackend::Options).
     struct SDLWindowBackendOptions
     {
-        // SDL's memory functions too, which are process-wide. Used only when
-        // this backend starts SDL and SDL holds no memory yet.
+        /// Hooks for SDL's memory functions, which are process-wide. Used only when this
+        /// backend starts SDL and SDL holds no memory yet.
         const AllocationHooks* hooks = nullptr;
-        // PollEvents empties SDL's event queue. A host that runs SDL's event loop
-        // itself turns this off; the GUI's windows still get their events while
-        // the host pumps (SDL_PollEvent / SDL_PumpEvents).
+        /// PollEvents empties SDL's event queue. A host that runs SDL's event loop
+        /// itself turns this off; the GUI's windows still get their events while
+        /// the host pumps (SDL_PollEvent / SDL_PumpEvents).
         bool pumpEvents = true;
     };
 
+    /// The default window backend, on SDL3. Starts SDL's video subsystem unless it already
+    /// runs, and then quits SDL again when destroyed.
     class SDLWindowBackend : public IWindowBackend
     {
     public:
+        /// See SDLWindowBackendOptions.
         using Options = SDLWindowBackendOptions;
 
+        /// Starts SDL video if needed; failing that, logs an error and the backend makes no windows.
         explicit SDLWindowBackend(const Options& options = {});
         ~SDLWindowBackend() override;
 
-        // Windows are created for graphicsContext->GetAPI(); for a VulkanGraphicsContext
-        // this also installs its SDL surface factory.
+        /// Windows are created for graphicsContext->GetAPI(); for a VulkanGraphicsContext
+        /// this also installs its SDL surface factory.
         void SetGraphicsContext(GraphicsContext* graphicsContext) override;
 
         // IWindowBackend
@@ -94,9 +99,11 @@ namespace interstice
         
         void* GetNativeHandle(OSWindowHandle) override;
 
-        // Helpers
+        /// Converts between handles and SDL windows: a handle is the SDL_Window pointer.
+        ///@{
         static SDL_Window* ToSDL(OSWindowHandle h) { return reinterpret_cast<SDL_Window*>(h); }
         static OSWindowHandle FromSDL(SDL_Window* w) { return reinterpret_cast<OSWindowHandle>(w); }
+        ///@}
 
     private:
         void UpdateMouseState();
@@ -104,41 +111,41 @@ namespace interstice
         Options m_options;
 
         std::unordered_set<SDL_Window*> m_windows;
-        // Track modal windows in creation order to support nested modals.
+        /// Track modal windows in creation order to support nested modals.
         std::vector<SDL_Window*> m_modalWindows;
-        // store last polled mouse state
+        /// Last polled mouse position.
         int2 m_mousePos{};
 
-        // OS window coordinates per physical pixel (1 / pixel density; 1 on Windows).
+        /// OS window coordinates per physical pixel (1 / pixel density; 1 on Windows).
         float OsPerPixel(SDL_Window* window) const;
     public:
-        // A position inside `window` (OS window coordinates) in screen pixels.
+        /// A position inside `window` (OS window coordinates) in screen pixels.
         int2  WindowPointToPixels(SDL_Window* window, float x, float y) const;
     private:
         MouseButtons m_mouseButtons = MouseButtons::None;
 
-        // track windows scheduled for destruction when received from events
+        /// Windows whose destruction an event scheduled.
         std::unordered_set<SDL_Window*> m_pendingDestroy;
-        std::unordered_set<SDL_Window*> m_closeRequests;   // ConfirmClose windows the OS asked to close
+        std::unordered_set<SDL_Window*> m_closeRequests;   ///< ConfirmClose windows the OS asked to close
         bool m_sdlInitialized = false;
-        bool m_ownsSDL        = false; // we started SDL, so we shut it down
-        bool m_routesSDLMemory = false; // SDL allocates through the allocation hooks
+        bool m_ownsSDL        = false; ///< this backend started SDL, so it shuts it down
+        bool m_routesSDLMemory = false; ///< SDL allocates through the allocation hooks
 		bool m_cursorVisible = true;
-        // One SDL cursor per system shape, created on first use; indexed by SDL_SystemCursor.
+        /// One SDL cursor per system shape, created on first use; indexed by SDL_SystemCursor.
         static constexpr int kSystemCursorSlots = 32;
         SDL_Cursor* m_systemCursors[kSystemCursorSlots] = {};
-        // Per-window SDL event watch (userdata = the window); removed when the window is destroyed.
+        /// Per-window SDL event watch (userdata = the window); removed when the window is destroyed.
         bool (*m_eventWatch)(void*, SDL_Event*) = nullptr;
-        // Live resize, window moves, close requests and modality; sees every event, drops none.
+        /// Live resize, window moves, close requests and modality; sees every event, drops none.
         static bool BackendEventWatch(void* userdata, SDL_Event* event);
         uint32_t m_focusChanges = 0;
-        bool m_checkFocusLeftApp = false;  // a window lost the focus: see whether the app did (exclusive fullscreen)
-        bool m_suppressLiveResize = false; // suppress the watch's RenderWindowFrame during programmatic window changes
-        SDL_Window* m_lastFocusableWindow = nullptr; // last window that can take focus (for rerouting tooltip input)
+        bool m_checkFocusLeftApp = false;  ///< a window lost focus: did the app?
+        bool m_suppressLiveResize = false; ///< no live-resize render during code changes
+        SDL_Window* m_lastFocusableWindow = nullptr; ///< reroutes tooltip input
         
         SDL_Window* GetTopModalWindowSDL() const;
     public:
-        // The modal window that blocks the event's window (one of ours), or null.
+        /// The modal window that blocks the event's window (one of ours), or null.
         SDL_Window* ModalBlockerFor(const SDL_Event* event) const;
     private:
     };

@@ -21,34 +21,39 @@ namespace interstice
     class GraphicsContext;
     class GradientManager;
 
+    /// Outcome of OSWindowManager::GetOrCreateWindow; negative values are failures.
     enum class AddWindowResult : int8_t
     {
-        SuccessCreate          =  0, // New window created
-        SuccessRecycle         =  1, // Existing window returned
-        CalledOutsideOfFrame   = -1, // Called outside of BeginFrame/EndFrame
-        IndexOutOfBounds       = -2, // Internal error: window index out of bounds
-        FailedToCreateOSWindow = -3, // OS window creation failed
-        InvalidID              = -4, // Provided ID was invalid
-        WindowUserClosed       = -5  // Window was manually closed by user and cannot be automatically reopened
+        SuccessCreate          =  0, ///< New window created
+        SuccessRecycle         =  1, ///< Existing window returned (a hidden one is shown again)
+        CalledOutsideOfFrame   = -1, ///< Called outside of BeginFrame/EndFrame
+        IndexOutOfBounds       = -2, ///< Internal error: window index out of bounds
+        FailedToCreateOSWindow = -3, ///< OS window creation failed
+        InvalidID              = -4, ///< Provided ID was invalid
+        WindowUserClosed       = -5  ///< The user closed it; not reopened until AllowReopenWindow
     };
 
+    /// Outcome of an OSWindowManager close request; negative values are failures.
     enum class RequestCloseResult : int8_t
     {
-        Success             =  0, // Window close requested 
-        CalledOutsideFrame  = -1, // Called outside of BeginFrame/EndFrame
-        IndexOutOfBounds    = -2, // Internal error: window index out of bounds
-        WindowAlreadyClosed = -3, // Window was already closed
-        UnknownError        = -4  // An Unknown error has occurred
+        Success             =  0, ///< Window close requested
+        CalledOutsideFrame  = -1, ///< Called outside of BeginFrame/EndFrame
+        IndexOutOfBounds    = -2, ///< Internal error: window index out of bounds
+        WindowAlreadyClosed = -3, ///< Window was already closed
+        UnknownError        = -4  ///< Another failure
     };
 
+    /// The life cycle of a managed window.
     enum class WindowState : uint8_t
     {
-        NotRegistered,  // window has not been created yet (initial state after GetOrCreateWindow)
-		Alive,          // normal
-		Closing,        // close requested (this frame) or already closed
-		Hidden          // OS window hidden but context alive (for fast reopen of popups/menus)
+        NotRegistered,  ///< no window with this ID (GetWindowState for an unknown ID)
+		Alive,          ///< normal
+		Closing,        ///< close requested (this frame) or already closed
+		Hidden          ///< OS window hidden but context alive (for fast reopen of popups/menus)
     };
 
+    /// Keeps the OS windows (through an IWindowBackend) and their window contexts for the GUI's
+    /// window elements, keyed by ID. Rects are in screen pixels.
     class OSWindowManager 
     {
     private:
@@ -66,16 +71,16 @@ namespace interstice
             ID              nextSiblingID = ID::Invalid();
             int32_t         childCount    = 0;
 
-            IntRect         rect{};             // client rect, pixels
-            IntRect         lastRect{};         // persisted
+            IntRect         rect{};             ///< client rect, pixels
+            IntRect         lastRect{};         ///< persisted
 
             int32_t         monitorIndex  = -1;
-            float           displayScale  = 1.0f; // the OS UI scale where the window is
-            uint32_t        sequence      = 0;    // creation order
+            float           displayScale  = 1.0f; ///< the OS UI scale where the window is
+            uint32_t        sequence      = 0;    ///< creation order
 
             OSWindowHandle  osHandle = nullptr;
             IWindowContext* context  = nullptr;
-            OnGuiFunc       onGui;              // the context's, to make it again
+            OnGuiFunc       onGui;              ///< the context's, to make it again
 
             OSWindowHandle  GetWindowHandle() const { return osHandle; }
         };
@@ -83,7 +88,7 @@ namespace interstice
         std::vector<MonitorInfo> monitors;
         uint32_t m_nextSequence = 0;
         ID      m_textInputWindow = ID::Invalid();
-        uint32_t m_focusChangeCount = 0;   // the backend's, when popups were last checked
+        uint32_t m_focusChangeCount = 0;   ///< the backend's, when popups were last checked
         IntRect m_textInputArea {};
         int primaryMonitorIndex = 0;
 
@@ -92,16 +97,18 @@ namespace interstice
     protected:
         OSWindowManager() = default;
 
-        // Application-owned; handed to each new window context for RenderFrame, so the
-        // graphics context itself has no style/gradient dependency.
+        /// Application-owned; handed to each new window context for RenderFrame, so the
+        /// graphics context itself has no style/gradient dependency.
+        ///@{
         StyleManager*    styleManager    = nullptr;
         GradientManager* gradientManager = nullptr;
+        ///@}
 
         IPlatformInputHandler* inputHandler = nullptr;
 
     public:
         virtual ~OSWindowManager() = default;
-        // 2-arg form for tests without real windows: no style/gradient managers, no context init.
+        /// For tests without real windows: no style / gradient managers, no context init.
         explicit OSWindowManager(GraphicsContext* graphicsContext, IWindowBackend* backend);
         OSWindowManager(GraphicsContext* graphicsContext, IWindowBackend* backendWindowManager,
                         IPlatformInputHandler* inputHandler, StyleManager& styleManager, GradientManager& gradientManager);
@@ -109,20 +116,25 @@ namespace interstice
 
         // ---------------- Frame Lifecycle ---------------- 
 
+        /// Brackets the frame's window work (GetOrCreateWindow, SetWindowRect, closes); false
+        /// (and a misuse report) when unbalanced.
+        ///@{
         bool BeginFrame();
 
         bool EndFrame();
+        ///@}
 
         // ---------------- Declared windows ----------------
 
-        // Windows the app no longer declares (declared(id) is false): popups are
-        // hidden for a fast reopen, the others closed, reopenable. Undeclared windows
-        // also lose their user-closed flag. Call each frame, before layout.
+        /// Releases the windows the app no longer declares (`declared(id)` is false): popups are
+        /// hidden for a fast reopen, the others closed, reopenable. Undeclared windows also lose
+        /// their user-closed flag. Call each frame, before layout.
         void ReleaseUndeclaredWindows(const std::function<bool(ID)>& declared);
 
         // ---------------- Input ----------------
 
-        // Gates synthetic mouse events: a parented popup can make the OS swallow a click on its parent.
+        /// True while a popup menu window is alive. Gates synthetic mouse events: a parented
+        /// popup can make the OS swallow a click on its parent.
         bool HasAlivePopupWindows() const
         {
             for (const auto& w : windows)
@@ -132,9 +144,9 @@ namespace interstice
             return false;
         }
 
-        // Any alive secondary top-level window (popup, tool window, drag ghost, ...).
-        // Clicking another of our windows then can make SDL swallow the click, so
-        // the input layer runs synthetic-event repair.
+        /// True while a secondary top-level window (popup or utility window) is alive. Clicking
+        /// another of the app's windows then can make SDL swallow the click, so the input layer
+        /// repairs it with synthetic events.
         bool HasAliveSecondaryWindows() const
         {
             const WindowFlags kSecondary = WindowFlags::PopupMenu
@@ -146,9 +158,8 @@ namespace interstice
             return false;
         }
 
-        // Hide a popup/menu OS window by ID. The window is cached (Hidden state)
-        // for fast reopen, not destroyed. Safe to call outside the normal frame
-        // lifecycle (e.g. during OS modal loops).
+        /// Hides a popup / menu window, kept (WindowState::Hidden) for a fast reopen. Safe to call
+        /// outside the frame (e.g. during OS modal loops).
         void HidePopupWindow(ID id)
         {
             auto* w = FindWindow(id);
@@ -157,8 +168,8 @@ namespace interstice
             windowBackendManager->SetWindowVisible(w->GetWindowHandle(), false);
         }
 
-        // Places the IME candidate window at `screenRect` (e.g. the text caret) in
-        // window `id`; only tells the OS when it changes.
+        /// Places the IME candidate window at `screenRect` (e.g. the text caret) in
+        /// window `id`; only tells the OS when it changes.
         void SetTextInputArea(ID id, IntRect screenRect)
         {
             auto* w = FindWindow(id);
@@ -170,10 +181,12 @@ namespace interstice
             windowBackendManager->SetTextInputArea(w->GetWindowHandle(), local);
         }
 
+        /// Polls the OS events and destroys closed windows' contexts; call outside
+        /// BeginFrame / EndFrame.
         bool Update();
 
-        // Destroy every window's IWindowContext. Call from the application's shutdown
-        // path before tearing down the graphics device and the window backend.
+        /// Destroys every window's IWindowContext. Call on shutdown, before tearing down the
+        /// graphics device and the window backend.
         void DestroyAllWindowContexts();
 
         std::optional<color4b> ReadScreenPixel(int2 screenPos)
@@ -181,7 +194,7 @@ namespace interstice
             return windowBackendManager->ReadScreenPixel(screenPos);
         }
 
-        // Whether the OS asked to close this (ConfirmClose) window since last asked.
+        /// Whether the OS asked to close this (ConfirmClose) window since last asked.
         bool TakeCloseRequest(ID id)
         {
             const int32_t index = IndexOf(id);
@@ -202,7 +215,9 @@ namespace interstice
 
         inline bool IsNotAlive(ID id) const { return IsNotAlive(IndexOf(id)); }
 
-        // NOTE: not multi-thread safe
+        /// Creates the OS window for `id` on first call (SuccessCreate), returns the existing one
+        /// after (SuccessRecycle). `rect` is the client rect in screen pixels. Call between
+        /// BeginFrame and EndFrame. Not thread safe.
         AddWindowResult
             GetOrCreateWindow(ID id, std::string_view title, IntRect rect,
                               OnGuiFunc onGui,
@@ -261,24 +276,23 @@ namespace interstice
             return monitors[primaryMonitorIndex];
         }        
 
-        // Request move/resize of an existing managed window (client-area coords).
-        // Returns true on success. Must be called between BeginFrame()/EndFrame().
+        /// Moves and resizes a window so its client area is `clientRect` (screen pixels). True on
+        /// success. Call between BeginFrame and EndFrame.
         bool SetWindowRect(ID id, const IntRect &clientRect);
                 
         // ---------------- Window State ---------------- 
 
         RequestCloseResult RequestClose(ID id) { return RequestClose(IndexOf(id)); }
 
-        // Closes a window on the user's behalf (e.g. its title bar's close button): like
-        // closing it through the OS, it isn't reopened while the app keeps declaring it.
+        /// Closes a window on the user's behalf (e.g. its title bar's close button): like
+        /// closing it through the OS, it isn't reopened while the app keeps declaring it.
         RequestCloseResult RequestUserClose(ID id)
         {
             userClosedWindows.insert(id);
             return RequestClose(IndexOf(id));
         }
         
-        // Programmatically close a window and allow it to be reopened
-        // (unlike user-initiated closes which prevent automatic reopening)
+        /// Closes a window from code; unlike RequestUserClose, declaring it again reopens it.
         RequestCloseResult RequestCloseAllowReopen(ID id)
         {
             // Remove from user-closed set if present (allow reopening)
@@ -286,15 +300,15 @@ namespace interstice
             return RequestClose(IndexOf(id));
         }
         
-        // Allow a window the user closed to be reopened programmatically.
-        // The flag also clears when a window isn't declared for a frame
-        // (ReleaseUndeclaredWindows), so stopping and resuming the declaration reopens it.
+        /// Lets a window the user closed be reopened by declaring it.
+        /// The flag also clears when a window isn't declared for a frame
+        /// (ReleaseUndeclaredWindows), so stopping and resuming the declaration reopens it.
         void AllowReopenWindow(ID id)
         {
             userClosedWindows.erase(id);
         }
         
-        // Check if a window was manually closed by the user
+        /// True when the user closed the window and it isn't reopened yet.
         bool WasUserClosed(ID id) const
         {
             return userClosedWindows.find(id) != userClosedWindows.end();
@@ -312,24 +326,23 @@ namespace interstice
             return index != -1;
         }
 
-        // The OS UI scale where the window is (see
-        // IWindowBackend::GetWindowDisplayScale); 1 when unknown.
+        /// The OS UI scale where the window is (see
+        /// IWindowBackend::GetWindowDisplayScale); 1 when unknown.
         float GetWindowDisplayScale(ID id) const
         {
             int32_t index = IndexOf(id);
             return index == -1 ? 1.0f : windows[index].displayScale;
         }
 
-        // The display scale of the main window (the first top-level window still
-        // open), or of the primary monitor before there is one.
+        /// The display scale of the main window (the first top-level window still
+        /// open), or of the primary monitor before there is one.
         float MainDisplayScale() const;
 
-        // Refresh rate in Hz of the monitor showing the main window, or of the
-        // primary monitor before there is one; 0 when unknown.
+        /// Refresh rate in Hz of the monitor showing the main window, or of the
+        /// primary monitor before there is one; 0 when unknown.
         float MainRefreshRate() const;
 
-        // Client rect in pixels.
-        // Null when the window doesn't exist.
+        /// The window's context; nullptr when the window doesn't exist.
         IWindowContext* GetWindowContext(ID id) const
         {
             const int32_t index = IndexOf(id);
@@ -340,7 +353,7 @@ namespace interstice
             const int32_t index = IndexOf(id);
             return index == -1 ? nullptr : windows[index].GetWindowHandle();
         }
-        // Invalid for a handle this manager doesn't own.
+        /// Invalid for a handle this manager doesn't own.
         ID GetWindowID(OSWindowHandle handle) const
         {
             const int32_t index = IndexOf(handle);
@@ -411,8 +424,8 @@ namespace interstice
         size_t WindowCount() const { return windows.size(); }
         const std::vector<Window> &AllWindows() const { return windows; }
 
-        // Any alive non-popup, non-tooltip window. The run loop exits without one, so
-        // cached popups and tooltips don't keep the application open.
+        /// Any alive non-popup, non-tooltip window. The run loop exits without one, so
+        /// cached popups and tooltips don't keep the application open.
         bool HasAliveMainWindow() const
         {
             const WindowFlags auxFlags = WindowFlags::PopupMenu | WindowFlags::NotFocusable;
@@ -423,8 +436,8 @@ namespace interstice
             return false;
         }
         
-        // Returns the ID of the top-most modal window (last created, still alive),
-        // or ID::Invalid() if there are no alive modal windows.
+        /// Returns the ID of the top-most modal window (last created, still alive),
+        /// or ID::Invalid() if there are no alive modal windows.
         ID GetTopModalWindow() const;
 
         bool WasWindowUserClosed(ID id) const
@@ -432,13 +445,15 @@ namespace interstice
             return userClosedWindows.find(id) != userClosedWindows.end();
         }
 
-        // Calls func for each live window's context with its render-target rect
-        // (OS position, size in physical pixels).
-        // A lost GPU device: the contexts go before the device, and come back on the new one
-        // for the same OS windows. False when one couldn't be made.
+        /// For a lost GPU device: the contexts go before the device, and come back on the new
+        /// one for the same OS windows. Recreate is false when one couldn't be made.
+        ///@{
         void DestroyWindowContexts();
         bool RecreateWindowContexts();
+        ///@}
 
+        /// Calls `func` for each live window's context with its render-target rect (OS position,
+        /// size in physical pixels).
         void ForEachAliveWindowContext(const std::function<void(IWindowContext*, IntRect)>& func)
         {
             for (const auto& w : windows)
@@ -458,8 +473,7 @@ namespace interstice
         std::unordered_map<ID, int32_t> IDToWindowIndex;
         std::unordered_map<OSWindowHandle, int32_t> HandleToWindowIndex;
         
-        // Track windows that were manually closed by the user (not through code)
-        // to prevent them from being automatically reopened
+        /// Windows the user closed (not code), which declaring doesn't reopen.
         std::unordered_set<ID> userClosedWindows;
 
         // ---------------- Internal ---------------- 
@@ -509,8 +523,8 @@ namespace interstice
         RequestCloseResult RequestClose(int32_t index, std::vector<ID> &detach_children);
         void RemoveWindowFromSiblingList(int32_t window_index);
         float QueryDisplayScale(OSWindowHandle handle) const;
-        // First top-level window still open; null when there is none.
         void RaisePopup(const Window& window);
+        /// First top-level window still open; null when there is none.
         const Window* MainWindow() const;
         void LinkToParent(int32_t window_index, ID parentID);
         void ClearParentIDInChildren(int32_t window_index);

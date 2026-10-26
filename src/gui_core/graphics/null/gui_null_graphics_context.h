@@ -4,9 +4,9 @@
 
 namespace interstice
 {
-    // A graphics backend that draws nothing: the UI is built, laid out and
-    // recorded as usual, but no GPU is used and windows stay empty. For headless
-    // runs and tests, and as the minimal example of a backend.
+    /// A graphics backend that draws nothing: the UI is built, laid out and
+    /// recorded as usual, but no GPU is used and windows stay empty. For headless
+    /// runs and tests, and as the minimal example of a backend.
     class NullGraphicsContext : public GraphicsContext
     {
     public:

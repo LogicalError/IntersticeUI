@@ -8,12 +8,13 @@
 
 namespace interstice
 {
-    // A window backend without an OS: windows are records with a rect, and no
-    // input arrives (inject it with GUIApplication::Inject*). For headless runs,
-    // builds without SDL, and as the minimal example of a window backend.
+    /// A window backend without an OS: windows are records with a rect, and no
+    /// input arrives (inject it with GUIApplication::Inject*). For headless runs,
+    /// builds without SDL, and as the minimal example of a window backend.
     class NullWindowBackend final : public IWindowBackend
     {
     public:
+        /// `monitor` is the one monitor GetMonitors reports, in screen pixels.
         explicit NullWindowBackend(IntRect monitor = { 0, 0, 1920, 1080 });
 
         OSWindowHandle CreateWindow(std::string_view title, int2 size, WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;

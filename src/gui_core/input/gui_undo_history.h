@@ -9,22 +9,23 @@
 
 namespace interstice
 {
-    // The app's undo history: steps that each undo and redo one change. Text fields push
-    // their committed edits here, and so can the app's own editors; Undo / Redo walk it.
+    /// The app's undo history: steps that each undo and redo one change. Text fields push
+    /// their committed edits here, and so can the app's own editors; Undo / Redo walk it.
     class UndoHistory
     {
     public:
         struct Step
         {
-            std::string           description;   // "Edit text", "Move node"
+            std::string           description;   ///< "Edit text", "Move node"
             std::function<void()> undo;
             std::function<void()> redo;
-            // Steps with the same non-zero key merge while merging is open (e.g. the typing
-            // in one field while it has the focus): the first's undo, the latest's redo.
+            /// Steps with the same non-zero key merge while merging is open (e.g. the typing
+            /// in one field while it has the focus): the first's undo, the latest's redo.
             uint64_t              mergeKey = 0;
         };
 
-        // Adds a step after the current one, dropping the steps undone before it.
+        /// Adds a step after the current one, dropping any undone steps (or merges it into the
+        /// last step, see Step::mergeKey). Does not run it.
         void Push(Step step)
         {
             m_steps.resize(m_current);
@@ -38,7 +39,7 @@ namespace interstice
             m_mergeOpen = true;
         }
 
-        // The next push starts a step of its own (e.g. when a field loses the focus).
+        /// The next push starts a step of its own (e.g. when a field loses the focus).
         void EndMerge() { m_mergeOpen = false; }
 
         bool CanUndo() const { return m_current > 0; }
@@ -72,7 +73,7 @@ namespace interstice
 
     private:
         std::vector<Step> m_steps;
-        size_t            m_current   = 0;       // steps before it are done, from it on undone
+        size_t            m_current   = 0;       ///< steps before it are done, from it on undone
         bool              m_mergeOpen = false;
     };
 }

@@ -6,187 +6,197 @@
 
 namespace interstice
 {
+    /// Handle for text registered with the text system (ITextSystem::RegisterText and friends).
     enum class TextID : uint32_t { Invalid = 0 };
+	/// Handle for an icon registered with ITextSystem::RegisterIconFromSVG / RegisterIconFromSVGFile.
 	enum class IconID : uint32_t { Invalid = 0 };
 
-    // Handle for a font family registered with ITextSystem::RegisterFontFamily().
-    // Derived from the family name, so styles can name a family before it is registered.
-    // Use FontID::Invalid for the default / family-based font selection.
+    /// Handle for a font family registered with ITextSystem::RegisterFontFamily().
+    /// Derived from the family name, so styles can name a family before it is registered.
+    /// Use FontID::Invalid for the default / family-based font selection.
     enum class FontID : uint32_t { Invalid = 0 };
 
-    // Case-insensitive, like CSS family names. Returns FontID::Invalid for an empty name.
+    /// Case-insensitive, like CSS family names. Returns FontID::Invalid for an empty name.
     FontID FontIDFromName(std::string_view familyName);
 
-    // A BCP 47 language tag ("ja", "zh-Hant", "ko-KR") stored inline, so text
-    // styles stay plain values. Empty = no language of its own. A tag that
-    // doesn't fit is dropped (empty).
+    /// A BCP 47 language tag ("ja", "zh-Hant", "ko-KR") stored inline, so text
+    /// styles stay plain values. Empty = no language of its own. A tag that
+    /// doesn't fit is dropped (empty).
     struct LanguageTag
     {
-        char value[16] = {};
+        char value[16] = {}; ///< null-terminated tag
 
         LanguageTag() = default;
+        /// Copies `tag`; a tag of 16 characters or more leaves it empty.
         explicit LanguageTag(std::string_view tag) noexcept
         {
             if (tag.size() < sizeof(value))
                 std::memcpy(value, tag.data(), tag.size());
         }
 
+        /// No tag set.
         bool             empty() const noexcept { return value[0] == '\0'; }
+        /// The tag as a null-terminated string.
         const char*      c_str() const noexcept { return value; }
+        /// The tag as a string view.
         std::string_view view()  const noexcept { return value; }
         bool operator==(const LanguageTag& other) const noexcept { return view() == other.view(); }
     };
 
     
-	// Enum describing text writing direction.
+	/// Writing direction of text (CSS: direction).
 	enum class TextDirection : uint8_t
 	{
-		Auto,		 // Auto, infer from the text.		
+		Auto,		 ///< inferred from the text
 		LeftToRight,
 		RightToLeft,
 	};
 
-	// Enum describing how text is wrapped to layout box.
+	/// How text wraps in its box (CSS: text-wrap).
 	enum class TextWrap : uint8_t
 	{
-		NoWrap = 0,	// No text wrapping (CSS: nowrap).
-		Wrap,		// Wrap text at word boundaries. If a single word is longer than the layout box, it will overflow (CSS: wrap).
-		WordChar,	// Wrap text at word boundaries. If a single word is longer than the layout box, it will be wrapped at a character (CSS: word-char).
+		NoWrap = 0,	///< a single line (nowrap)
+		Wrap,		///< at word boundaries; a word longer than the box overflows (wrap)
+		WordChar,	///< at word boundaries; a word longer than the box breaks between characters (word-char)
 	};
 
-	// Enum describing alignment of text relative to the layout box.
-	// Values match skribidi's skb_align_t.
+	/// Alignment of text in its box (CSS: text-align, -interstice-vertical-text-align).
 	enum class TextAlign : uint8_t
 	{
-		Start = 0,	// Horizontal: the language's start (left for LTR, right for RTL). Vertical: top.
-		Center,		// Horizontal and vertical: center.
-		End,		// Horizontal: the language's end (right for LTR, left for RTL). Vertical: bottom.
-		Left,		// Horizontal: left. Vertical: n/a (behaves like top).
-		Right,		// Horizontal: right. Vertical: n/a (behaves like bottom).
-		Top,		// Horizontal: n/a (behaves like left). Vertical: top.
-		Bottom,		// Horizontal: n/a (behaves like right). Vertical: bottom.
+		Start = 0,	///< Horizontal: the language's start (left for LTR, right for RTL). Vertical: top.
+		Center,		///< Horizontal and vertical: center.
+		End,		///< Horizontal: the language's end (right for LTR, left for RTL). Vertical: bottom.
+		Left,		///< Horizontal: left. Vertical: n/a (behaves like top).
+		Right,		///< Horizontal: right. Vertical: n/a (behaves like bottom).
+		Top,		///< Horizontal: n/a (behaves like left). Vertical: top.
+		Bottom,		///< Horizontal: n/a (behaves like right). Vertical: bottom.
 	};
 
-	// Enum describing specific font baseline.
+	/// Font baseline that text aligns on (TextLayoutStyle::baseline).
 	enum class TextBaseline : uint8_t
 	{
-		Alphabetic,	  // Alphabetic, or roman baseline.		
-		Ideographic,  // Ideographic baseline.		
-		Central,	  // Ideographic central baseline		
-		Hanging,	  // Hanging baseline.		
-		Mathematical, // Mathematic baseline.		
-		Middle,		  // Baseline positioned at the middle of x-height.		
-		TextTop,	  // Text top baseline.		
-		TextBottom,	  // Text bottom baseline.
-		Max,
+		Alphabetic,	  ///< alphabetic (roman) baseline
+		Ideographic,  ///< ideographic baseline
+		Central,	  ///< ideographic central baseline
+		Hanging,	  ///< hanging baseline
+		Mathematical, ///< mathematical baseline
+		Middle,		  ///< the middle of the x-height
+		TextTop,	  ///< top of the text
+		TextBottom,	  ///< bottom of the text
+		Max,          ///< count, not a baseline
 	};
 
-	// Enum describing how the decoration should be drawn.
+	/// Line style of a TextDecoration.
 	enum class DecorationStyle : uint8_t
 	{
-		Solid = 0,	// Solid line.		
-		Double,		// Double line.		
-		Dotted,		// Dotted line.		
-		Dashed,		// Dashed line.		
-		Wavy,		// Wave line.
+		Solid = 0,	///< solid line
+		Double,		///< double line
+		Dotted,		///< dotted line
+		Dashed,		///< dashed line
+		Wavy,		///< wavy line
 	};
 
-	// Enum describing some generic font families.
+	/// Generic font family, used when TextStyle::fontId names no registered family.
 	enum class FontFamily : uint8_t
 	{
-		Default,	// Default family, which is used if no family is specified.		
-		Emoji,		// Font family automatically assigned for emojis		
-		SansSerif,	// Generic sans-serif family.		
-		Serif,		// Generic serif family		
-		Monospace,	// Generic monospace family.		
-		Math,		// Generic math family.
+		Default,	///< the text system's default family
+		Emoji,		///< emoji; assigned to emoji automatically
+		SansSerif,	///< sans-serif
+		Serif,		///< serif
+		Monospace,	///< monospace
+		Math,		///< math
 	};
 
-	// Enum describing for weight.
+	/// Font weight (CSS: font-weight); the CSS weight is in parentheses.
 	enum class FontWeight : uint8_t
 	{
-		Normal,		// Normal (400), (Default, when zero initialized)		
-		Thin,		// Thin (100)		
-		ExtraLight,	// Extra light (200)		
-		UltraLight,	// Ultra light (200)		
-		Light,		// Light (300)		
-		Regular,	// Regular (400)		
-		Medium,		// Medium (500)		
-		DemiBold,	// Demibold (600)		
-		SemiBold,	// Semibold (600)		
-		Bold,		// Bold (700)		
-		ExtraBold,	// Extra bold (800)		
-		UltraBold,	// Ultra bold (800)		
-		Black,		// Black (900)
-		Heavy,		// Heavy (900)		
-		ExtraBlack,	// Extra black (950)		
-		UltraBlack,	// Ultra black (950)
+		Normal,		///< Normal (400); the zero-initialized default
+		Thin,		///< Thin (100)
+		ExtraLight,	///< Extra light (200)
+		UltraLight,	///< Ultra light (200)
+		Light,		///< Light (300)
+		Regular,	///< Regular (400)
+		Medium,		///< Medium (500)
+		DemiBold,	///< Demibold (600)
+		SemiBold,	///< Semibold (600)
+		Bold,		///< Bold (700)
+		ExtraBold,	///< Extra bold (800)
+		UltraBold,	///< Ultra bold (800)
+		Black,		///< Black (900)
+		Heavy,		///< Heavy (900)
+		ExtraBlack,	///< Extra black (950)
+		UltraBlack,	///< Ultra black (950)
 	};
 
-	// Enum describing font style.
+	/// Font slant (CSS: font-style).
 	enum class FontStyle : uint8_t
 	{
-		Normal = 0, // Normal font		
-		Italic,		// Italic font		
-		Oblique,	// Oblique font
+		Normal = 0, ///< upright
+		Italic,		///< italic
+		Oblique,	///< oblique
 	};
 
-	// Enum describing font stretch.
+	/// Font width (CSS: font-stretch); the width factor is in parentheses.
 	enum class FontStretch : uint8_t
 	{
-		Normal = 0,		// Normal (1.0), (Default, when zero initialized)		
-		UltraCondensed,	// Ultra condensed (0.5)		
-		ExtraCondensed,	// Extra condensed (0.625)		
-		Condensed,		// Condensed (0.75)		
-		SemiCondensed,	// Semi condensed (0.875)		
-		SemiExpanded,	// Semi expanded (1.125)		
-		Expanded,		// Expanded (1.25)		
-		ExtraExpanded,	// Extra expanded (1.5)		
-		UltraExpanded,	// Ultra expanded (2.0)
+		Normal = 0,		///< Normal (1.0); the zero-initialized default
+		UltraCondensed,	///< Ultra condensed (0.5)
+		ExtraCondensed,	///< Extra condensed (0.625)
+		Condensed,		///< Condensed (0.75)
+		SemiCondensed,	///< Semi condensed (0.875)
+		SemiExpanded,	///< Semi expanded (1.125)
+		Expanded,		///< Expanded (1.25)
+		ExtraExpanded,	///< Extra expanded (1.5)
+		UltraExpanded,	///< Ultra expanded (2.0)
 	};
 
-	// Enum describing how line height is calculated
+	/// How TextStyle::lineHeight is read.
 	enum class LineHeight : uint8_t
 	{
-		Normal = 0,		  // Line height comes from font metrics. No scaling applied.
-		MetricsRelative,  // Line height is multiple of line height specified in font metrics.
-		FontSizeRelative, // Line height is multiple of font size.
-		Absolute,		  // Line height is the specified value.
+		Normal = 0,		  ///< the font's metrics; lineHeight is ignored
+		MetricsRelative,  ///< a multiple of the font's metric line height
+		FontSizeRelative, ///< a multiple of the font size
+		Absolute,		  ///< the value itself
 	};
 
-	// Enum describing which font metrics define the line bounds for vertical alignment.
+	/// Font metrics that bound a line for vertical alignment (CSS: -interstice-vertical-trim).
 	enum class VerticalTrim : uint8_t
 	{
-		Default = 0,    // Ascender to descender - preserves room for accents/diacritics.
-		CapToBaseline,  // Cap height to baseline - tight, visually centered for UI widgets.
+		Default = 0,    ///< ascender to descender; leaves room for accents
+		CapToBaseline,  ///< cap height to baseline; tight, visually centered for widgets
 	};
 
+	/// Word wrapping mode of TextLayoutStyle::wrapMode. The text system doesn't read it;
+	/// wrapping is set by TextLayoutStyle::textWrapping (TextWrap).
 	enum class WordWrap : uint8_t
 	{
-		None,     // Single line, no wrapping
-		Normal,   // Break at word boundaries
-		BreakWord // Break within words if necessary
+		None,     ///< single line
+		Normal,   ///< break at word boundaries
+		BreakWord ///< break within words when needed
 	};
 
+    /// What happens to text that doesn't fit its box (CSS: text-overflow).
     enum class TextOverflow : uint8_t
     {
-        Clip,     // Simply clip the text
-        Ellipsis  // Show "..." at the end
+        Clip,     ///< clip the text
+        Ellipsis  ///< end with "..."
     };
 
+	/// How a text block is laid out in its box; shared by all states of a Style.
 	class TextLayoutStyle
 	{
 	public:
-		TextDirection	 textDirection		 = TextDirection::Auto;
-		TextWrap		 textWrapping		 = TextWrap::NoWrap;
-		TextAlign		 horizontalAlignment = TextAlign::Start;
-		// Vertical position of the text (+ icon) block in its box; only Start / Center / End
-		// (and their aliases) apply. CSS: `-interstice-vertical-text-align`.
+		TextDirection	 textDirection		 = TextDirection::Auto;     ///< CSS: direction
+		TextWrap		 textWrapping		 = TextWrap::NoWrap;        ///< CSS: text-wrap
+		TextAlign		 horizontalAlignment = TextAlign::Start;        ///< CSS: text-align
+		/// Vertical position of the text (+ icon) block in its box; only Start / Center / End
+		/// (and their aliases) apply. CSS: `-interstice-vertical-text-align`.
 		TextAlign		 verticalAlignment   = TextAlign::Start;
+		/// CSS: -interstice-text-baseline, dominant-baseline or vertical-align.
 		TextBaseline	 baseline			 = TextBaseline::Alphabetic;
-		TextOverflow     textOverflow        = TextOverflow::Clip;
-		WordWrap		 wrapMode			 = WordWrap::Normal;
-		VerticalTrim	 verticalTrim		 = VerticalTrim::Default;
+		TextOverflow     textOverflow        = TextOverflow::Clip;     ///< CSS: text-overflow
+		WordWrap		 wrapMode			 = WordWrap::Normal;       ///< not read by the text system; see textWrapping
+		VerticalTrim	 verticalTrim		 = VerticalTrim::Default;  ///< CSS: -interstice-vertical-trim
 
 		uint64_t GetHashCode() const noexcept;
 
@@ -203,14 +213,16 @@ namespace interstice
 		}
 	};
 
+	/// One text decoration line (underline, overline, ...). Drawn only when thickness > 0.
+	/// CSS: text-<under|over|through|bottom>line-<color|thickness|offset|style>.
 	class TextDecoration
 	{
 	public:
-		interstice::color4b	color = interstice::color4b{ 0,0,0,0 };
-		uint16_t		thickness = 0;
-		uint16_t		offset = 0;
-		DecorationStyle	style = DecorationStyle::Solid;
-		
+		interstice::color4b	color = interstice::color4b{ 0,0,0,0 }; ///< line color
+		uint16_t		thickness = 0; ///< line thickness in CSS px; 0 = no line
+		uint16_t		offset = 0;    ///< CSS px from the default position; grows down for under / bottom lines, up otherwise
+		DecorationStyle	style = DecorationStyle::Solid; ///< line style
+
 		uint64_t GetHashCode() const noexcept;
 
 		inline bool operator==(const TextDecoration& other) const noexcept
@@ -229,27 +241,32 @@ namespace interstice
 		}
 	};
 
+	/// Font and paint of text; one per state of a Style. Metrics are in CSS px until
+	/// StyleManager::Register (or ToPixels) scales them to the UI.
 	class TextStyle
 	{
 	public:
+		/// Solid text color (CSS: color); used when the state has no textColor of its own.
 		interstice::color4b		  color          = interstice::color4b{ 0,0,0,0 };
-		float				  fontSize       = 0;
-		// A fixed pitch, so a fallback font with tall metrics on a line can't stretch it.
+		float				  fontSize       = 0;              ///< CSS: font-size, in CSS px
+		/// CSS: line-height, read per lineHeightType (by default a multiple of fontSize).
+		/// A fixed pitch, so a fallback font with tall metrics can't stretch a line.
 		float				  lineHeight     = 1.25f;
-		float				  letterSpacing  = 0.0f;
-		float				  wordSpacing    = 0.0f;
-		FontFamily			  family         = FontFamily::Default;
+		float				  letterSpacing  = 0.0f;           ///< CSS px; stored and scaled, not applied by the text system
+		float				  wordSpacing    = 0.0f;           ///< CSS px; stored and scaled, not applied by the text system
+		FontFamily			  family         = FontFamily::Default; ///< generic family, used when fontId isn't registered
 		FontWeight			  weight         = FontWeight::Normal;
 		FontStyle			  style          = FontStyle::Normal;
 		FontStretch			  stretch        = FontStretch::Normal;
-		LineHeight			  lineHeightType = LineHeight::FontSizeRelative;
-		FontID                fontId         = FontID::Invalid; // overrides family when set
-		LanguageTag           language;                         // picks regional letterforms (e.g. CJK); empty = the text system's default
+		LineHeight			  lineHeightType = LineHeight::FontSizeRelative; ///< how lineHeight is interpreted
+		FontID                fontId         = FontID::Invalid; ///< overrides family when set
+		/// Picks regional letterforms (e.g. CJK); empty = the text system's default.
+		LanguageTag           language;
 							  
-		TextDecoration		  throughLine;
-		TextDecoration		  bottomLine;
-		TextDecoration		  underLine;
-		TextDecoration		  overLine;
+		TextDecoration		  throughLine; ///< through the text
+		TextDecoration		  bottomLine;  ///< under the descender
+		TextDecoration		  underLine;   ///< under the alphabetic baseline
+		TextDecoration		  overLine;    ///< over the ascender
 
 		uint64_t GetHashCode() const noexcept;
 
@@ -273,6 +290,8 @@ namespace interstice
 				   overLine       == other.overLine;
 		}
 		
+		/// Line pitch in the style's units. Normal / MetricsRelative need font metrics,
+		/// so they return fontSize.
 		inline float CalcLineHeight() const
 		{
 			switch (lineHeightType)

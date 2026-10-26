@@ -1,6 +1,3 @@
-// Hovered/active/focused/captured element, active window, one-shot click, hover
-// suppression and focus scroll axis. Owned by GUIStateManager.
-
 #pragma once
 
 #include <gui_core/gui_id.h>
@@ -11,6 +8,8 @@
 
 namespace interstice
 {
+    /// The hovered, active, focused and captured elements, the active window, the one-shot
+    /// click, hover suppression and the focus scroll axis. Owned by GUIStateManager.
     class InteractionState
     {
         ID m_hoveredID      = ID::Invalid();
@@ -20,32 +19,32 @@ namespace interstice
         ID m_activeWindowID = ID::Invalid();
         ID m_clickID        = ID::Invalid();
 
-        // Pressed look for keyboard/programmatic activation, which has no held button.
-        // Timed on the wall clock: one frame is imperceptible at high refresh rates.
+        /// Pressed look for keyboard/programmatic activation, which has no held button.
+        /// Timed on the wall clock: one frame is imperceptible at high refresh rates.
         ID    m_activeFlashID        = ID::Invalid();
         float m_activeFlashStartSecs = 0.0f;
-        static constexpr float kActiveFlashDuration = 0.12f; // ~120ms
+        static constexpr float kActiveFlashDuration = 0.12f; ///< ~120ms
 
-        // Seeded at BeginFrame so const queries can evaluate the flash window.
+        /// Seeded at BeginFrame so const queries can evaluate the flash window.
         float m_frameTimeSecs = 0.0f;
 
-        // PropagatesDescendantState ancestors of m_hoveredID / m_focusedID, recomputed each frame.
+        /// PropagatesDescendantState ancestors of m_hoveredID / m_focusedID, recomputed each frame.
         std::vector<ID> m_propagatedHoverIDs;
         std::vector<ID> m_propagatedFocusedIDs;
 
-        // Hides mouse hover during keyboard navigation. Set by widgets that consume a
-        // nav key, cleared by InputManager on the next MouseMove.
+        /// Hides mouse hover during keyboard navigation. Set by widgets that consume a
+        /// nav key, cleared by InputManager on the next MouseMove.
         bool m_hoverSuppressed = false;
 
-        // Capture is released one frame after all buttons go up, so the captured
-        // element receives the release event.
+        /// Capture is released one frame after all buttons go up, so the captured
+        /// element receives the release event.
         bool m_pendingCaptureClear = false;
 
-        // Axes for focus-change scroll-into-view; sizers narrow it so they don't
-        // scroll perpendicular to the drag.
+        /// Axes for focus-change scroll-into-view; sizers narrow it so they don't
+        /// scroll perpendicular to the drag.
         ScrollAxis m_focusScrollAxis = ScrollAxis::Both;
 
-        // Focus came from the keyboard (CSS :focus-visible): Tab sets it, a mouse press clears it.
+        /// Focus came from the keyboard (CSS :focus-visible): Tab sets it, a mouse press clears it.
         bool m_focusVisible = false;
 
         MouseButtons m_prevMouseButtonFlags = MouseButtons::None;
@@ -67,7 +66,7 @@ namespace interstice
         void SetFocusIDScrollAxis(ID id, ScrollAxis a) { m_focusedID = id; m_focusScrollAxis = a; }
         ScrollAxis ConsumeFocusScrollAxis()            { ScrollAxis v = m_focusScrollAxis; m_focusScrollAxis = ScrollAxis::Both; return v; }
 
-        // Shows the focus ring (:focus-visible), e.g. on a dialog's default button.
+        /// Shows the focus ring (:focus-visible), e.g. on a dialog's default button.
         void SetFocusVisible(bool visible) { m_focusVisible = visible; }
         bool IsFocusVisible() const        { return m_focusVisible; }
 
@@ -78,11 +77,12 @@ namespace interstice
         bool HasBeenClicked(ID id) const { return m_clickID == id; }
         void SetClicked(ID id)           { m_clickID = id; }
 
-        // Seed once at BeginFrame.
+        /// The frame time in seconds that FlashActive is timed against; set once at BeginFrame.
         void  SetFrameTime(float secs) { m_frameTimeSecs = secs; }
         float GetFrameTime() const     { return m_frameTimeSecs; }
 
-        // Reports id as Active for kActiveFlashDuration.
+        /// Reports `id` as Active for about 120 ms: the pressed look of a keyboard or
+        /// programmatic activation.
         void FlashActive(ID id)            { m_activeFlashID = id; m_activeFlashStartSecs = m_frameTimeSecs; }
         ID   GetActiveFlashID() const      { return m_activeFlashID; }
         bool IsActiveFlashing(ID id) const { return id == m_activeFlashID && (m_frameTimeSecs - m_activeFlashStartSecs) < kActiveFlashDuration; }
@@ -92,8 +92,8 @@ namespace interstice
         void SetPropagatedHoverIDs(std::vector<ID> v)   { m_propagatedHoverIDs   = std::move(v); }
         void SetPropagatedFocusedIDs(std::vector<ID> v) { m_propagatedFocusedIDs = std::move(v); }
 
-        // Applies hover, active-ID edges and deferred capture release; clears the click
-        // and expired flash.
+        /// Applies hover, active-ID edges and deferred capture release; clears the click
+        /// and expired flash.
         void EndFrame(ID overID, MouseButtons mouseButtons);
     };
 }

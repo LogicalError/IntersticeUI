@@ -10,12 +10,12 @@
 
 namespace interstice
 {
-    enum class MouseCursor : uint8_t;   // defined in gui_style.h
+    enum class MouseCursor : uint8_t;   // gui_core/style/gui_style.h
 
-    // Per-frame requested cursor.
+    /// The mouse cursor requested this frame.
     class CursorState
     {
-        // 0 = MouseCursor::Default.
+        /// 0 = MouseCursor::Default.
         MouseCursor m_requested{};
 
     public:
@@ -24,7 +24,7 @@ namespace interstice
         MouseCursor Get() const            { return m_requested; }
     };
 
-    // Focused text editor, plus last frame's for detecting transitions.
+    /// The focused text editor, plus the one as of the last Commit, to detect changes.
     class TextEditorFocusState
     {
         ID m_focusedID     = ID::Invalid();
@@ -32,8 +32,8 @@ namespace interstice
 
     public:
         ID GetFocusedID()     const { return m_focusedID;     }
-        // As of the last Commit, when the text system switched its editor to it: the field
-        // the editor holds.
+        /// The focused editor as of the last Commit, when the text system switched its editor
+        /// to it: the field the editor holds.
         ID GetPrevFocusedID() const { return m_prevFocusedID; }
 
         void Set(ID id) { m_focusedID = id; }
@@ -41,8 +41,8 @@ namespace interstice
         void Commit()   { m_prevFocusedID = m_focusedID; }
     };
 
-    // Construction-time Push/Pop nesting read by GUIStateManager::GetCurrentState.
-    // Reset at BeginFrame, balance-checked at EndFrame.
+    /// Construction-time Push/Pop nesting read by GUIStateManager::GetCurrentState.
+    /// Reset at BeginFrame, balance-checked at EndFrame.
     class ConstructionScopes
     {
         uint32_t m_disabledLevel      = 0;
@@ -67,7 +67,7 @@ namespace interstice
         bool IsBalanced() const { return m_disabledLevel == 0 && m_selectedLevel == 0 && m_indeterminateLevel == 0; }
 
     private:
-        // A Pop without its Push is reported and ignored.
+        /// A Pop without its Push is reported and ignored.
         static void ReportUnmatchedPop(const char* message)
         {
             Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("state"), message);

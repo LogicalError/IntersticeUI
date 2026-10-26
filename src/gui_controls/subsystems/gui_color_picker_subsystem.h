@@ -14,50 +14,56 @@ namespace interstice
     class FramePipeline;
     struct FrameContext;
 
-    // Persistent state for the color picker popup. The picker opens off a
-    // ColorField swatch (triggerID), edits HSV/RGB/etc. in the working
-    // copy, and writes the result back to the caller's color value. Lives
-    // across frames so the popup keeps its tab / palette / drag state when
-    // the dataflow re-enters BeginMenu each frame.
+    /// Persistent state of the color picker popup. The picker opens off a ColorField
+    /// swatch (triggerID), edits a working copy, and writes the result back to the
+    /// caller's color. It lives across frames so the popup keeps its tab, palette and
+    /// drag state while the popup is rebuilt each frame.
     struct ColorPickerState
     {
-        interstice::ID triggerID = interstice::ID::Invalid(); // swatch that opened the picker
-        interstice::ID windowID  = interstice::ID::Invalid(); // popup window ID
-        float h = 0, s = 0, v = 0, a = 1;       // working HSV+A copy
-        interstice::color4f originalColor {};           // color when picker was opened
-        bool  allowHDR      = false;
-        float hdrBrightness = 1.0f;
-        std::string hexText;                     // hex input field text
+        interstice::ID triggerID = interstice::ID::Invalid(); ///< swatch that opened the picker
+        interstice::ID windowID  = interstice::ID::Invalid(); ///< popup window ID
+        float h = 0, s = 0, v = 0, a = 1;       ///< working HSV+A copy
+        interstice::color4f originalColor {};           ///< color when picker was opened
+        bool  allowHDR      = false;                 ///< the opening field accepts HDR colors
+        float hdrBrightness = 1.0f;                  ///< HDR multiplier; > 1 brightens past 1
+        std::string hexText;                     ///< hex input field text
 
         interstice::ColorSpace activeSpace = interstice::ColorSpace::HSV;
 
-        // Components of the active space (H/S/V, R/G/B, L/a/b, ...). Members, since
-        // GradientSlider handlers keep pointers to them until dispatch.
+        /// Components of the active space (H/S/V, R/G/B, L/a/b, ...). Members, since
+        /// GradientSlider handlers keep pointers to them until dispatch.
         float comp[3]     = { 0, 0, 0 };
+        /// comp as last built; a difference next frame means a slider edited it.
         float snapComp[3] = { 0, 0, 0 };
         bool  slidersInitialized = false;
 
-        // Channel values shown 0-255 (and hue in degrees, S/V/L in percent), or 0-1.
+        /// Channel values shown 0-255 (and hue in degrees, S/V/L in percent), or 0-1.
         bool byteRange = true;
-        bool picking   = false;          // the eyedropper is held: the color follows the screen under the cursor
-        std::optional<bool> canPick;     // whether the platform reads the screen (asked once)
-        std::string context;   // what's being edited (the field's label), after the title
+        /// The eyedropper is held: the color follows the screen under the cursor.
+        bool picking   = false;
+        std::optional<bool> canPick;     ///< whether the platform reads the screen (asked once)
+        std::string context;   ///< what's being edited (the field's label), after the title
 
-        // OK keeps the color (and adds it to the recent ones), Cancel and the close button
-        // restore the one the picker opened with. Handled by the ColorField on its next frame.
+        /// OK keeps the color (and adds it to the recent ones), Cancel and the close button
+        /// restore the one the picker opened with. Handled by the ColorField on its next frame.
         enum class CloseRequest { None, Ok, Cancel } closeRequest = CloseRequest::None;
-        std::vector<interstice::color4f> recent;   // newest first
+        std::vector<interstice::color4f> recent;   ///< newest first
 
         interstice::VisualColorStyleIndex svQuadColor   = interstice::VisualColorStyleIndex::Invalid;
         interstice::VisualColorStyleIndex hueStrip      = interstice::VisualColorStyleIndex::Invalid;
         interstice::VisualColorStyleIndex alphaStrip    = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex hueColor      = interstice::VisualColorStyleIndex::Invalid; // the pure hue, in its handle
+        /// The pure hue, shown in the hue handle.
+        interstice::VisualColorStyleIndex hueColor      = interstice::VisualColorStyleIndex::Invalid;
         interstice::VisualColorStyleIndex whiteColor    = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex outlineColor  = interstice::VisualColorStyleIndex::Invalid; // around cursors and handles
-        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid; // the color, with its alpha
+        /// Outline around the cursors and handles.
+        interstice::VisualColorStyleIndex outlineColor  = interstice::VisualColorStyleIndex::Invalid;
+        /// The new color, with its alpha.
+        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid;
         interstice::VisualColorStyleIndex originalStyle = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex newOpaque      = interstice::VisualColorStyleIndex::Invalid; // the colors without their alpha,
-        interstice::VisualColorStyleIndex originalOpaque = interstice::VisualColorStyleIndex::Invalid; // for the preview's top half
+        /// The new color without its alpha, for the preview's top half.
+        interstice::VisualColorStyleIndex newOpaque      = interstice::VisualColorStyleIndex::Invalid;
+        /// The original color without its alpha, for the preview's top half.
+        interstice::VisualColorStyleIndex originalOpaque = interstice::VisualColorStyleIndex::Invalid;
 
         enum class DragTarget { None, Square, Hue, Alpha } drag = DragTarget::None;
 
@@ -73,25 +79,28 @@ namespace interstice
         };
     };
 
-    // The color picker popup's state plus swatch ColorStyles keyed by swatch ID.
-    // Claimed styles are updated in place across frames; unclaimed ones belong to
-    // vanished swatches and are destroyed next frame. The popup body is
-    // GUIApplication::EmitColorPicker.
+    /// The color picker popup's state plus swatch ColorStyles keyed by swatch ID.
+    /// Claimed styles are updated in place across frames; unclaimed ones belong to
+    /// vanished swatches and are destroyed next frame. The popup body is
+    /// GUIApplication::EmitColorPicker.
     class ColorPickerSubsystem
     {
     public:
         explicit ColorPickerSubsystem(FramePipeline& frame);
 
+        /// The picker popup's state.
         ColorPickerState& State() { return m_state; }
 
-        // Invalid for a new swatch: the caller creates the style, reused from then on.
+        /// The color style slot of swatch `swatchID`, kept alive this frame. Invalid for a new
+        /// swatch: the caller creates the style and stores it there, reused from then on.
         interstice::VisualColorStyleIndex& ClaimSwatchStyle(interstice::ID swatchID);
 
-        // Carry swatchID's style over without rebuilding it: a cache-hit scope
-        // doesn't re-claim its swatches, but its blitted primitives still use them.
+        /// Carries `swatchID`'s style over without rebuilding it: a cache-hit scope
+        /// doesn't re-claim its swatches, but its blitted primitives still use them.
         void KeepSwatchAlive(interstice::ID swatchID);
 
-        // After a theme reload (StyleManager::ClearAll): every style it held is gone.
+        /// Drops every held style index without destroying it; call after a theme reload
+        /// (StyleManager::ClearAll), which already freed them.
         void ForgetStyles();
 
     private:

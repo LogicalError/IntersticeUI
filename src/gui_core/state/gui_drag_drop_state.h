@@ -1,7 +1,3 @@
-// Drag & drop state, owned by GUIStateManager. A pending source is armed on mouse-down
-// and becomes the active drag once the pointer passes the start distance. Per-frame
-// events (enter/over/out/drop/validated) are cleared at the top of the next EndFrame.
-
 #pragma once
 
 #include <gui_core/gui_id.h>
@@ -16,6 +12,7 @@ namespace interstice
 {
     struct InputState;
 
+    /// What a DragVisualizer draws from: the pointer, the source and target, and the payload.
     struct DragVisualContext
     {
         interstice::int2 screenPos{ 0, 0 };
@@ -29,8 +26,12 @@ namespace interstice
         const std::any* payload = nullptr;
     };
 
+    /// Draws the dragged item while a drag is in progress.
     using DragVisualizer = std::function<void(const DragVisualContext& context)>;
 
+    /// Drag-and-drop state, owned by GUIStateManager. Begin arms a pending source on mouse-down;
+    /// it becomes the active drag once the pointer passes the start distance. Per-frame events
+    /// (enter / over / out / drop) are cleared at the top of the next EndFrame.
     class DragDropState
     {
         ID        m_pendingDragSourceID = ID::Invalid();
@@ -67,7 +68,8 @@ namespace interstice
         ID   GetDragOverID() const { return m_dragOverID; }
         uintptr_t GetPayloadValue() const { return m_dragPayloadValue; }
 
-        // acceptedPayloadType 0 = any type.
+        /// True when an active drag is over `id` and its payload type is `acceptedPayloadType`
+        /// (0 accepts any type).
         bool IsDropTargetFor(ID id, uint32_t acceptedPayloadType = 0) const;
 
         ID GetEnterTargetID()     const { return m_dragEnterTargetID;     }
@@ -82,11 +84,14 @@ namespace interstice
         const std::any& GetPayload()       const { return m_dragPayload; }
 
         // Mutation
+
+        /// Arms a pending drag from `sourceID`; ignored for an Invalid source or payload type 0.
+        /// `payload` defaults to `payloadValue`.
         void Begin(ID sourceID, uint32_t payloadType, uintptr_t payloadValue, int2 startScreenPos,
                    std::any payload = {}, DragVisualizer sourceVisualizer = {});
         void SetSourceVisualizer(DragVisualizer sourceVisualizer);
         void UpdateFromInput(const InputState& in);
-        // Pointer travel (pixels) before a pending drag starts.
+        /// Pointer travel in pixels before a pending drag starts.
         void SetStartDistance(int32_t pixels) { m_startDistance = pixels; }
         void Cancel();
 
@@ -96,7 +101,7 @@ namespace interstice
         void ClearFrameVisualizerOverride();
         bool InvokeActiveVisualizer(const DragVisualContext& context) const;
 
-        // Clears per-frame events. GUIStateManager::EndFrame calls it; the input manager may too.
+        /// Clears per-frame events. GUIStateManager::EndFrame calls it; the input manager may too.
         void ClearEvents();
 
         // Frame hooks

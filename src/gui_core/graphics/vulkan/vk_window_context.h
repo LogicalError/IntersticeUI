@@ -34,17 +34,16 @@ namespace interstice::vulkan
         VkCommandPool commandPool = {};
         VkCommandBuffer mainCommandBuffer = {};
 
-        // Fence-protected, persistently mapped upload arena for GUI primitive
-        // streams. Reused whenever this frame slot cycles back around.
+        /// Fence-protected, persistently mapped upload arena for GUI primitive
+        /// streams, reused each time this frame slot comes round again.
         Buffer          primitiveUploadBuffer {};
         VkDeviceAddress primitiveUploadAddress = 0;
         size_t          primitiveUploadCapacity = 0;
         size_t          primitiveUploadOffset = 0;
 
-        // Per-slot draw + depth images: the FRAME_OVERLAP in-flight frames must
-        // not share these (frame N's blit reads drawImage while frame N+1 would
-        // transition/write it - a cross-frame hazard). The slot's renderFence
-        // wait in BeginWindowFrame already gates reuse of this slot's images.
+        /// Per-slot draw and depth images, so in-flight frames don't share them (frame N's
+        /// blit reads drawImage while frame N+1 writes it). The slot's renderFence wait in
+        /// BeginWindowFrame gates their reuse.
         VulkanImage drawImage = {};
         VulkanImage depthImage = {};
     };
@@ -95,24 +94,23 @@ namespace interstice::vulkan
         interstice::int2                mouse_pos = { 0,0 };
         int                      frameNumber{ 0 };
 
-        // Frame-build timing measured between presents: from just after one
-        // vkQueuePresentKHR returns to just before the next is called. This is
-        // the CPU work per frame and excludes the vsync stall in present.
+        /// When the last vkQueuePresentKHR returned. The frame-build time runs from here to
+        /// just before the next present: the CPU work, without the vsync wait.
         std::chrono::steady_clock::time_point lastPresentEnd{};
         bool                     havePresentEnd{ false };
         double                   lastBuildSeconds{ 0.0 };
         bool                     lastBuildValid{ false };
-        // Recorded and submitted, waiting for PresentWindowFrame.
+        /// Recorded and submitted, waiting for PresentWindowFrame.
         bool                     presentPending{ false };
         FrameData*               readbackPending{ nullptr };
         interstice::int2         recordedPosition{};
 
-        // Transparent window support (Windows layered window readback)
+        /// Transparent window: each frame is read back for the Windows layered window.
         bool                     needsReadback{ false };
-        bool                     renderToImage{ false };      // WindowFlags::RenderToImage: no surface
-        VkImage                  targetImage{ VK_NULL_HANDLE }; // host image each frame is copied into
+        bool                     renderToImage{ false };      ///< WindowFlags::RenderToImage: no surface
+        VkImage                  targetImage{ VK_NULL_HANDLE }; ///< host image each frame is copied into
         VkExtent2D               targetExtent{};
-        bool                     targetWritten{ false };       // targetImage holds a previous frame
+        bool                     targetWritten{ false };       ///< targetImage holds a previous frame
         interstice::vulkan::AllocatedBuffer  readbackBuffer = {};
         std::vector<uint8_t>     cachedBitmap;
 
@@ -126,8 +124,8 @@ namespace interstice::vulkan
         void ResizeSwapchain(interstice::int2 size);
         void FlushWindowContext();
 
-        // Create / destroy a draw+depth image pair sized to windowExtent. One pair
-        // lives per FRAME_OVERLAP slot so in-flight frames don't share them.
+        /// Creates a draw and depth image pair sized to windowExtent; each FRAME_OVERLAP slot
+        /// has its own.
         void CreateDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage, VkFormat colorFormat);
         void DestroyDrawDepthImages(VulkanImage& drawImage, VulkanImage& depthImage);
 
@@ -136,7 +134,7 @@ namespace interstice::vulkan
 
         void PerformReadback(const VulkanImage& drawImage);
         bool ReadPixels(std::span<uint8_t> bgra) override;
-        // Host image each frame is copied into (render-to-image windows); null stops.
+        /// The host image each frame is copied into (render-to-image windows); VK_NULL_HANDLE stops.
         void SetImageTarget(VkImage image, VkExtent2D extent);
         void TransitionTarget(VkCommandBuffer cmd, VkImageLayout from, VkImageLayout to,
                               VkPipelineStageFlags2 srcStage, VkAccessFlags2 srcAccess,

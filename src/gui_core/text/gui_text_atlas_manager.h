@@ -4,7 +4,7 @@
 
 namespace interstice
 {
-	enum ImageIndex : uint32_t; // defined in gui_image.h
+	enum ImageIndex : uint32_t; ///< defined in gui_image.h
 	class GraphicsContext;
 	class ImageSet;
 

@@ -11,8 +11,8 @@
 
 namespace interstice
 {
-    // Offset of content inside a box along one axis. Values meant for the other axis
-    // map as skribidi does: Top/Bottom act as left/right, Left/Right as top/bottom.
+    /// X offset, in pixels, of `contentWidth` content aligned inside a `boxWidth` box.
+    /// Vertical values map as skribidi does: Top acts as left, Bottom as right.
     inline int32_t HorizontalAlignOffset(TextAlign horizontalAlignment, int32_t boxWidth, int32_t contentWidth)
     {
         switch (horizontalAlignment)
@@ -37,15 +37,15 @@ namespace interstice
         }
     }
 
-    // Placement of a text + icon pair inside `rect` (tests/icon_text_placement_test.cpp):
-    //   * The icon always sits adjacent to its label, never at a stretched rect's edge.
-    //   * Left / Right: icon and text share one centre line. For Left, textRect is
-    //     shifted past the icon so text-align: end can't render across it; for
-    //     Right, textRect keeps rect.x and shrinks to reserve the icon area.
-    //   * Top / Bottom: icon is centred on the [icon, text] column. Top hugs rect's
-    //     top; Bottom sits iconTextGap below the text, not at rect's bottom.
-    //   * Left / Right icons taller than the text may extend outside rect; the
-    //     caller sizes rect via measurement when it wants them contained.
+    /// Placement of a text + icon pair inside `rect`:
+    ///   * The icon always sits adjacent to its label, never at a stretched rect's edge.
+    ///   * Left / Right: icon and text share one centre line. For Left, textRect is
+    ///     shifted past the icon so text-align: end can't render across it; for
+    ///     Right, textRect keeps rect.x and shrinks to reserve the icon area.
+    ///   * Top / Bottom: icon is centred on the [icon, text] column. Top hugs rect's
+    ///     top; Bottom sits iconTextGap below the text, not at rect's bottom.
+    ///   * Left / Right icons taller than the text may extend outside rect; the
+    ///     caller sizes rect via measurement when it wants them contained.
     struct IconTextPlacement
     {
         IntRect textRect;
@@ -171,10 +171,8 @@ namespace interstice
         return out;
     }
 
-    // Companion helper: when the icon is on the left/right, the layout's
-    // max-width must exclude the icon + gap so text-align within the layout
-    // doesn't right-align all the way across the icon area. Top/Bottom icons
-    // don't steal horizontal space, so layoutMaxWidth == rect.w there.
+    /// The max width to lay text out in: `rectWidth` minus the icon and gap for a
+    /// Left / Right icon, so text-align can't reach into the icon area; `rectWidth` otherwise.
     inline int32_t IconAwareLayoutMaxWidth(
         int32_t                rectWidth,
         const IconMeasurement& iconMeasurement,

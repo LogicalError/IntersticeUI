@@ -6,24 +6,25 @@
 
 namespace interstice
 {
-    // Adds windows that render to an image (WindowFlags::RenderToImage) to another
-    // window backend. They have no OS window: the backend keeps their rect and
-    // attached context, and everything else goes to the wrapped backend. The host
-    // feeds their input; SetPointer and SetFocus say where it goes.
+    /// Adds windows that render to an image (WindowFlags::RenderToImage) to another
+    /// window backend. They have no OS window: the backend keeps their rect and
+    /// attached context, and everything else goes to the wrapped backend. The host
+    /// feeds their input; SetPointer and SetFocus say where it goes.
     class ImageWindowBackend final : public IWindowBackend
     {
     public:
         explicit ImageWindowBackend(IWindowBackend& osBackend);
         ~ImageWindowBackend() override;
 
+        /// True when `window` is one of this backend's image windows.
         bool IsImageWindow(OSWindowHandle window) const;
 
-        // The pointer is over an image window, at this screen position with these
-        // buttons held; it is then the window under the mouse. Null window: the
-        // pointer is back on the OS windows.
+        /// The pointer is over an image window, at this screen position with these
+        /// buttons held; it is then the window under the mouse. Null window: the
+        /// pointer is back on the OS windows.
         void SetPointer(OSWindowHandle window, int2 screenPos, MouseButtons buttons);
-        // The image window with keyboard focus, reported as the active window. Null:
-        // the OS decides again.
+        /// The image window with keyboard focus, reported as the active window. Null:
+        /// the OS decides again.
         void SetFocus(OSWindowHandle window);
 
         void SetGraphicsContext(GraphicsContext* graphicsContext) override { IWindowBackend::SetGraphicsContext(graphicsContext); m_os.SetGraphicsContext(graphicsContext); }
@@ -71,6 +72,6 @@ namespace interstice
         IWindowBackend& m_os;
         struct State;
         std::unique_ptr<State> m_state;
-        uint32_t m_focusChanges = 0;   // SetFocus moving the focus
+        uint32_t m_focusChanges = 0;   ///< SetFocus moving the focus
     };
 }

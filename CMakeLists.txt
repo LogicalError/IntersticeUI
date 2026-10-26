@@ -57,6 +57,10 @@ include(ThirdPartyCache)
 include(Shaders)
 
 add_subdirectory(src)
+# Visual Studio runs the demo on F5, not ALL_BUILD.
+if(PROJECT_IS_TOP_LEVEL AND TARGET demo)
+  set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT demo)
+endif()
 if(INTERSTICE_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
@@ -147,4 +151,35 @@ endif()
 if(INTERSTICE_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+# The API reference, where Doxygen is installed: cmake --build build --target interstice_docs
+# writes it to build/docs/html. The guides in docs/ are its pages.
+find_package(Doxygen QUIET)
+if(DOXYGEN_FOUND AND PROJECT_IS_TOP_LEVEL)
+  set(DOXYGEN_PROJECT_NAME "IntersticeUI")
+  set(DOXYGEN_PROJECT_NUMBER "${INTERSTICE_VERSION}")
+  set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/docs")
+  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/docs/README.md")
+  set(DOXYGEN_FILE_PATTERNS "*.h" "*.md")
+  set(DOXYGEN_EXCLUDE "${PROJECT_SOURCE_DIR}/docs/design")
+  set(DOXYGEN_EXCLUDE_PATTERNS "*_internal.h" "*/internal/*")
+  set(DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}/src")
+  set(DOXYGEN_STRIP_FROM_INC_PATH "${PROJECT_SOURCE_DIR}/src")
+  set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+  set(DOXYGEN_DISTRIBUTE_GROUP_DOC YES)
+  set(DOXYGEN_MARKDOWN_ID_STYLE GITHUB)   # heading anchors as on GitHub, so docs/ links work in both
+  # Expand the LayoutOverride builder macro so its builders show up as functions
+  set(DOXYGEN_MACRO_EXPANSION YES)
+  set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
+  set(DOXYGEN_EXPAND_AS_DEFINED INTERSTICE_LO_BUILDER)
+  set(DOXYGEN_EXTRACT_ALL YES)
+  set(DOXYGEN_EXTRACT_PRIVATE NO)
+  set(DOXYGEN_WARN_IF_UNDOCUMENTED NO)
+  set(DOXYGEN_GENERATE_TREEVIEW YES)
+  set(DOXYGEN_HTML_DYNAMIC_SECTIONS YES)
+  doxygen_add_docs(interstice_docs
+    "${PROJECT_SOURCE_DIR}/src/gui_core" "${PROJECT_SOURCE_DIR}/src/gui_controls" "${PROJECT_SOURCE_DIR}/docs"
+    COMMENT "Building the API reference")
+  set_target_properties(interstice_docs PROPERTIES FOLDER "CMakeTargets")
 endif()

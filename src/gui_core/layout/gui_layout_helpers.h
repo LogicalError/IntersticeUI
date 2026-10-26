@@ -18,9 +18,9 @@ namespace interstice
     {
         static int2 ClampScrollOffsetToContent(int2 childOffset, const ElementRect& parent);
 
-        // A leaf's MARGIN BOX at its natural (max-content) size. `minContentWidth` gets the
-        // margin box width flex shrink stops at: its text's min-content when the text
-        // overflows visibly, else 0.
+        /// A leaf's MARGIN BOX at its natural (max-content) size. `minContentWidth` gets the
+        /// margin box width flex shrink stops at: its text's min-content when the text
+        /// overflows visibly, else 0.
         static int2 CalculateLeafSize(ITextSystem& textSystem, const Element &element,
                                       const ElementRect &elementRect, int32_t& minContentWidth);
         
@@ -50,9 +50,9 @@ namespace interstice
             return size;
         }
 
-        // Margin-box size limits an item may be flexed to on `axis`: its CSS
-        // min / max (border box) plus its margin, and never below its own chrome
-        // (margin + border + padding), which would give a negative border box.
+        /// The smallest margin-box size an item may be flexed to on `axis`: its CSS min (border
+        /// box) plus its margin, and never below its own chrome (margin + border + padding,
+        /// which would give a negative border box) or, horizontally, its minContentWidth.
         template <int axis> requires(axis == 0 || axis == 1)
         static inline int32_t FlexMinSize(const ElementRect& c)
         {
@@ -65,6 +65,8 @@ namespace interstice
             return std::max({ chrome, int32_t(size.min + margin), content });
         }
 
+        /// The largest margin-box size an item may be flexed to on `axis`: its CSS max plus its
+        /// margin (kUnbounded when unset), never below FlexMinSize.
         template <int axis> requires(axis == 0 || axis == 1)
         static inline int32_t FlexMaxSize(const ElementRect& c)
         {
@@ -75,8 +77,8 @@ namespace interstice
             return std::max<int32_t>(FlexMinSize<axis>(c), size.max + margin);
         }
 
-        // flex-basis: an in-flow item's starting main size, before free space is
-        // shared out. An explicit size on the axis wins over the basis.
+        /// Sets each in-flow item's size on `axis` to its flex-basis, the starting main size
+        /// before free space is shared out. An explicit size on the axis wins over the basis.
         template <int axis> requires(axis == 0 || axis == 1)
         static inline void ApplyFlexBasis(std::span<ElementRect> items)
         {
@@ -90,13 +92,13 @@ namespace interstice
             }
         }
 
-        // Resolves flexible lengths on `axis` (CSS "resolve flexible lengths"):
-        // positive `freeSpace` grows the in-flow items by flex-grow, negative
-        // shrinks them by flex-shrink x size. Each item stays within
-        // [FlexMinSize, FlexMaxSize]; an item that hits a limit is frozen there
-        // and what it couldn't take is shared among the rest. Items with an
-        // explicit size on `axis` don't shrink. Shares use floor-boundary
-        // rounding so they sum exactly. Returns the total size change applied.
+        /// Resolves flexible lengths on `axis` (CSS "resolve flexible lengths"):
+        /// positive `freeSpace` grows the in-flow items by flex-grow, negative
+        /// shrinks them by flex-shrink x size. Each item stays within
+        /// [FlexMinSize, FlexMaxSize]; an item that hits a limit is frozen there
+        /// and what it couldn't take is shared among the rest. Items with an
+        /// explicit size on `axis` don't shrink. Shares use floor-boundary
+        /// rounding so they sum exactly. Returns the total size change applied.
         template <int axis> requires(axis == 0 || axis == 1)
         static inline int32_t ResolveFlexibleLengths(std::span<ElementRect> items, int32_t freeSpace)
         {
@@ -194,9 +196,9 @@ namespace interstice
             }
         }
 
-        // Content size along `axis` of an element with a fixed size on that axis.
-        // The fixed size is the border box, so only padding and border come off
-        // (the margin lies outside it).
+        /// Content size along `axis` of an element with a fixed size on that axis.
+        /// The fixed size is the border box, so only padding and border come off
+        /// (the margin lies outside it).
         template <int axis> requires(axis == 0 || axis == 1)
         static inline int32_t FixedContentSize(const ElementRect& rect)
         {
@@ -218,9 +220,10 @@ namespace interstice
             }
         }
                 
-        // totalContentSize includes the gaps between in-flow children. `reverse`
-        // places children from the far edge (row-/column-reverse), whose main
-        // start is that edge - so flex-end packs toward the near one.
+        /// Positions the children on the main `axis` per `justify`. `totalContentSize`
+        /// includes the gaps between in-flow children. `reverse`
+        /// places children from the far edge (row-/column-reverse), whose main
+        /// start is that edge - so flex-end packs toward the near one.
         template <int axis, bool reverse> requires(axis == 0 || axis == 1)
         static void JustifyChildren(std::span<ElementRect> childRects, 
                                           JustifyContent justify, int16_t gap, const IntRect &parentContentRect,

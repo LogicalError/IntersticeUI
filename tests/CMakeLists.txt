@@ -76,6 +76,7 @@ list(APPEND GUI_CORE_TEST_FILES
   sizer_render_test.cpp
   slider_handler_test.cpp
   state_manager_focus_test.cpp
+  tab_chain_manager_test.cpp
   focus_ring_test.cpp
   from_chars_test.cpp
   state_manager_test.cpp
@@ -101,6 +102,7 @@ list(APPEND GUI_CORE_TEST_FILES
   node_view_wire_route_test.cpp
   headless_gui_app.h
   misuse_reports.h
+  skribidi_test_fixture.h
   headless_gui_app.cpp
   mock_window_backend.h
   window_registry_test.cpp
@@ -112,6 +114,7 @@ list(APPEND GUI_CORE_TEST_FILES
 )
 
 add_executable(gui_core_tests ${GUI_CORE_TEST_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_CORE_TEST_FILES})
 
 # gui_controls gives us the widget layer (GUIApplication, BeginTable, etc.)
 # that integration tests drive through the headless harness. It transitively
@@ -170,6 +173,7 @@ if(INTERSTICE_SDL)
   )
 
   add_executable(gui_gpu_tests ${GUI_GPU_TEST_FILES})
+  source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_GPU_TEST_FILES})
 
   # gui_controls pulls in gui_core; vma/Vulkan/SDL3 are linked PRIVATE by gui_core
   # (a static lib), so the harness must link them directly to reach the backend.

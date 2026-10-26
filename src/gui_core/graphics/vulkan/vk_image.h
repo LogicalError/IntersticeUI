@@ -20,8 +20,8 @@ namespace interstice::vulkan
         VkFormat      imageFormat;
         VkSampler     imageSampler;
 
-        // How it was made, to make it again on a new device after the old one is lost;
-        // with its pixels when it was made from them.
+        /// How it was made, to make it again on a new device after the old one is lost;
+        /// with its pixels when it was made from them.
         struct Recipe
         {
             VkImageUsageFlags     usage     = 0;
@@ -34,13 +34,13 @@ namespace interstice::vulkan
     class VulkanImageSet : public interstice::ImageSet
     {
     public:
-        // Size of the shader's bindless texture array.
+        /// Size of the shader's bindless texture array.
         static constexpr uint32_t kCapacity = 256;
 
         std::vector<VkDescriptorImageInfo> textures;
-        std::vector<VulkanImage*>          owners;     // the image behind each index, or null
+        std::vector<VulkanImage*>          owners;     ///< the image behind each index, or null
 
-        // Points every index back at its image, after the images were made again.
+        /// Points every index back at its image, after the images were made again.
         void RefreshDescriptors();
 
     public:

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <gui/gui_tab_chain_manager.h>
-#include <gui/gui_state_manager.h>
-#include <gui/gui_id_manager.h>
+#include <gui_core/state/gui_tab_chain_manager.h>
+#include <gui_core/state/gui_state_manager.h>
+#include <gui_core/gui_id_manager.h>
 
 using namespace interstice;
 using namespace testing;
@@ -10,7 +10,7 @@ class TabChainManagerTest : public ::testing::Test
 {
 protected:
     IDManager idManager;
-    StateManager stateManager;
+    GUIStateManager stateManager;
     TabChainManager tabChainManager;
 
     ID windowID1;
@@ -22,7 +22,7 @@ protected:
 
     void SetUp() override
     {
-        idManager.BeginFrame();
+        ASSERT_TRUE(idManager.BeginFrame());
         stateManager.BeginFrame();
 
         // Allocate test IDs
@@ -288,7 +288,8 @@ TEST_F(TabChainManagerTest, GetDefaultFocus_FallsBackToFirst)
     EXPECT_EQ(tabChainManager.GetDefaultFocus(), elementID1);
 }
 
-TEST_F(TabChainManagerTest, FocusedElementNotInAnyWindow_ReturnsInvalid)
+// Focus outside the chain: Tab enters it at the first element, Shift+Tab at the last.
+TEST_F(TabChainManagerTest, FocusOutsideTheChain_EntersItAtEitherEnd)
 {
     ID orphanElementID = idManager.AllocateDynamicID();
     stateManager.Interaction().SetFocusID(orphanElementID);
@@ -302,12 +303,12 @@ TEST_F(TabChainManagerTest, FocusedElementNotInAnyWindow_ReturnsInvalid)
 
     tabChainManager.EndFrame();
 
-    // Since focused element is not in any window, should return invalid
-    EXPECT_EQ(tabChainManager.GetNextTabTarget(), ID::Invalid());
-    EXPECT_EQ(tabChainManager.GetPrevTabTarget(), ID::Invalid());
+    EXPECT_EQ(tabChainManager.GetNextTabTarget(), elementID1);
+    EXPECT_EQ(tabChainManager.GetPrevTabTarget(), elementID2);
 }
 
-TEST_F(TabChainManagerTest, GetFirstTabTarget_ReturnsFirstElement)
+// Without a default focus set, the default is the first element.
+TEST_F(TabChainManagerTest, GetDefaultFocus_IsTheFirstElementWithoutADefault)
 {
     stateManager.Interaction().SetFocusID(elementID2);
     stateManager.Interaction().SetActiveWindowID(windowID1);
@@ -321,7 +322,7 @@ TEST_F(TabChainManagerTest, GetFirstTabTarget_ReturnsFirstElement)
 
     tabChainManager.EndFrame();
 
-    EXPECT_EQ(tabChainManager.GetFirstTabTarget(), elementID1);
+    EXPECT_EQ(tabChainManager.GetDefaultFocus(), elementID1);
 }
 
 TEST_F(TabChainManagerTest, MultipleWindows_OnlyActiveWindowBuildsChain)

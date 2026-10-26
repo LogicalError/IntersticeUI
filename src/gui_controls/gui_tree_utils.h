@@ -14,6 +14,7 @@
 
 namespace interstice::TreeUtils
 {
+    /// A flat tree row: the caller sets depth and isOpen; RebuildTreeIndex derives the rest.
     template <typename Row>
     concept TreeRowLike = requires(Row r)
     {
@@ -24,10 +25,9 @@ namespace interstice::TreeUtils
         { r.isLastSibling }    -> std::convertible_to<bool>;
     };
 
-    // Recompute derived index fields (skipCount, ancestorLineMask,
-    // isLastSibling) from each row's depth. Call once after structural
-    // edits; toggling isOpen does not need a rebuild. O(n^2) worst case;
-    // fine for the hundreds-of-rows datasets these views target.
+    /// Recomputes the derived fields (skipCount, ancestorLineMask, isLastSibling) from
+    /// each row's depth. Call once after structural edits; toggling isOpen needs no rebuild.
+    /// O(n^2) worst case, fine for the hundreds-of-rows datasets these views target.
     template <TreeRowLike Row>
     void RebuildTreeIndex(std::vector<Row>& rows)
     {
@@ -62,11 +62,10 @@ namespace interstice::TreeUtils
         }
     }
 
-    // Move the subtree rooted at srcDs to a position determined by
-    // (dstDs, pos). Reparents (depth shifts) when the target depth differs.
-    // Rejects self-drop and drops into the source's own descendants. Caller
-    // must invoke RebuildTreeIndex afterwards. Returns the moved row's new
-    // flat index, or -1 on rejection.
+    /// Moves the subtree rooted at flat index `srcDs` to `pos` relative to row `dstDs`,
+    /// shifting depths when the target depth differs; Inside/InsideLast open the target.
+    /// Rejects a drop on itself or into its own descendants. Call RebuildTreeIndex
+    /// afterwards. Returns the moved row's new flat index, or -1 on rejection.
     template <TreeRowLike Row>
     int ReorderTreeRow(std::vector<Row>& rows, int srcDs, int dstDs,
                        interstice::TreeDropPosition pos)

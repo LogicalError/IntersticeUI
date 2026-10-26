@@ -16,7 +16,7 @@ struct skb_editor_t;
 
 namespace interstice
 {
-    // Implementation detail, private to the skribidi backend.
+    /// Implementation detail, private to the skribidi backend.
     class SkribidiContext;
     struct RegisteredText;
     struct EditSelection;
@@ -50,7 +50,7 @@ namespace interstice
 
         void SwitchTextEditor(ID from, ID to) override;
         void SetUndoHistory(UndoHistory* history) override { m_undoHistory = history; }
-        // The field the editor holds: the text focus as of the last switch.
+        /// The field the editor holds: the text focus as of the last switch.
         ID ActiveElementID() const;
         bool DoesTextEditorAcceptTabs(ID elementId) const override;
         bool IsTextEditor(ID elementId) const override;
@@ -69,7 +69,7 @@ namespace interstice
         // -------------------- Cache Management --------------------
 
         void ClearCache() override;
-        // Diagnostics: registered texts currently held (live entries).
+        /// Number of registered texts held, for diagnostics.
         size_t RegisteredTextCount() const;
 
 
@@ -126,13 +126,10 @@ namespace interstice
 
         // -------------------- Icon Registration --------------------
 
-        /// Check if an icon exists
         bool IsValidIcon(IconID iconId) const override;
 
-        /// Register icon for a specific element ID
         IconID RegisterIconFromSVG(const char* name, const char* svg_data, size_t svg_size) override;
 
-        /// Load an SVG file from disk and register it as an icon.
         IconID RegisterIconFromSVGFile(const char* path) override;
 
         // -------------------- Icon Measurement --------------------
@@ -149,8 +146,8 @@ namespace interstice
 
     private:
         void UpdateGlyphs();
-        // Recreates the font collection from the registered families, freeing replaced
-        // fonts. Returns whether family `fontId` loaded.
+        /// Recreates the font collection from the registered families, freeing replaced
+        /// fonts. Returns whether family `fontId` loaded.
         bool RebuildFontCollection(FontID fontId);
         void EvictUnusedTexts();
 
@@ -166,12 +163,12 @@ namespace interstice
         bool ApplyTextEditUpdate(ID elementId, std::string& currentText, bool& wasModified);
         void ClearComposition();
         bool TryGetActiveTextEditorLocalPoint(ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
-        // True if (localX, localY) in the active editor falls within a link run (uses the active
-        // entry's linkRanges). Lets read-only editors skip caret placement on a link press.
+        /// True if (`localX`, `localY`) in the active editor falls within a link run. Lets
+        /// read-only editors skip caret placement on a link press.
         bool IsActiveEditorPosOnLink(float localX, float localY) const;
         bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
         ID FindTextEditorAtScreenPoint(ID windowId, interstice::int2 screenSpace) const;
-        // The validator a text editor registered with (null: any text).
+        /// The validator a text editor registered with (null: any text).
         const ITextValidator* TextEditorValidator(ID elementId) const;
         bool CanDropDraggedTextInto(ID targetTextEditorId) const;
         void* UpdateLayoutWhenNecessary(RegisteredText* entry, float width) const;
@@ -184,29 +181,29 @@ namespace interstice
 
         std::unordered_map<uint64_t, TextID> m_elementIdToTextIdMap;
         std::unordered_map<uint64_t, TextID> m_textKeyToIdMap;
-        std::unordered_set<uint64_t> m_textEditorElements; // element IDs that are text editors
-        std::unordered_set<uint64_t> m_readOnlyEditorElements; // Subset of the above flagged TextEditBehavior::ReadOnly
+        std::unordered_set<uint64_t> m_textEditorElements; ///< element IDs that are text editors
+        std::unordered_set<uint64_t> m_readOnlyEditorElements; ///< element IDs of read-only text editors
 
         std::unordered_map<uint64_t, const ITextValidator*> m_textEditorValidators;
 
         ID m_textDragSourceId = ID::Invalid();
         UndoHistory* m_undoHistory = nullptr;
-        // Text an undo / redo (or a drop) sets on a field, by element: given to its bound
-        // value the next time it registers.
+        /// Text an undo / redo (or a drop) sets on a field, by element: given to its bound
+        /// value the next time it registers.
         std::unordered_map<uint64_t, std::string> m_externalText;
         void PushTextEdit(ID elementId, const std::string& before, const std::string& after);
-        // An undo / redo gives the focus back to the field it changed (without selecting all),
-        // with the selection it had then.
+        /// An undo / redo gives the focus back to the field it changed (without selecting all),
+        /// with the selection it had then.
         void FocusChangedField(ID elementId, EditSelection selection);
-        // Called before input that may change the text (see edit_selection_before).
+        /// Remembers the selection before input that may change the text, for the undo step
+        /// to restore. Call before such input.
         void NoteSelectionBeforeEdit();
         std::string m_textDragPayload;
         ID m_skipNextSelectAllId = ID::Invalid();
         bool m_textDragArmed = false;
         int2 m_textDragStartScreenPos = int2 { 0, 0 };
-        // ValueEditText: the focused value field and the text it edits.
-        ID          m_valueEditElementId = ID::Invalid();
-        std::string m_valueEditText;
+        ID          m_valueEditElementId = ID::Invalid(); ///< the focused value field (ValueEditText)
+        std::string m_valueEditText;                      ///< the text it edits
 
         ID m_pendingCursorVisibleEditorId = ID::Invalid();
 

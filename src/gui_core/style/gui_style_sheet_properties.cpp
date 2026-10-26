@@ -374,11 +374,9 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     }
     if (ICEq(p,"-interstice-vertical-trim"))
     {
-        if (!m_lex.Check(TT::Ident)) { Error("Expected identifier for '-interstice-vertical-trim'"); return false; }
-        const std::string vt = m_lex.Consume().text;
-        if      (ICEq(vt,"default")||ICEq(vt,"normal")) { d.enumVal=(int)VerticalTrim::Default;        return true; }
-        else if (ICEq(vt,"cap-to-baseline"))            { d.enumVal=(int)VerticalTrim::CapToBaseline;  return true; }
-        Error("Unknown -interstice-vertical-trim '"+vt+"'"); return false;
+        if      (ICEq(v,"default")||ICEq(v,"normal")) { d.enumVal=(int)VerticalTrim::Default;        return true; }
+        else if (ICEq(v,"cap-to-baseline"))           { d.enumVal=(int)VerticalTrim::CapToBaseline;  return true; }
+        Error("Unknown -interstice-vertical-trim '"+v+"'"); return false;
     }
     if (ICEq(p,"-interstice-vertical-text-align"))
     {

@@ -15,17 +15,17 @@
 
 namespace interstice
 {
-    // Round half up, the same rule the box shader uses.
+    /// Round half up, the same rule the box shader uses.
     inline int32_t SnapPx(float v) { return int32_t(std::floor(v + 0.5f)); }
 
-    // A box with no snapped parent: each edge to the nearest pixel.
+    /// A box with no snapped parent: each edge to the nearest pixel.
     inline IntRect SnapAbsolute(float4 px)
     {
         const int32_t x0 = SnapPx(px.x), y0 = SnapPx(px.y);
         return IntRect{ x0, y0, SnapPx(px.z) - x0, SnapPx(px.w) - y0 };
     }
 
-    // The bounds of a rect mapped to window pixels, { x0, y0, x1, y1 }.
+    /// The bounds of a rect mapped to window pixels, { x0, y0, x1, y1 }.
     inline float4 PixelBounds(const float3x2& toPixels, IntRect r)
     {
         const float2 a = toPixels.TransformPoint(float2{ float(r.x),       float(r.y) });
@@ -33,8 +33,8 @@ namespace interstice
         return float4{ std::min(a.x, b.x), std::min(a.y, b.y), std::max(a.x, b.x), std::max(a.y, b.y) };
     }
 
-    // A nested box: each edge keeps its rounded distance from the parent's
-    // snapped edge on the same side.
+    /// A nested box: each edge keeps its rounded distance from the parent's
+    /// snapped edge on the same side.
     inline IntRect SnapToParent(float4 parentPx, IntRect parentSnapped, float4 childPx)
     {
         const int32_t x0 = parentSnapped.x + SnapPx(childPx.x - parentPx.x);

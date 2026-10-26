@@ -9,8 +9,8 @@
 
 namespace interstice
 {
-    // Sends every platform input event to all handlers (e.g. InputManager + ITextSystem);
-    // none can block the others.
+    /// Sends every platform input event to all handlers (e.g. InputManager + ITextSystem);
+    /// none can block the others.
     class InputHandlerBroadcaster final : public IPlatformInputHandler
     {
     public:

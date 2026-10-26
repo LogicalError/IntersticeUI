@@ -26,35 +26,37 @@ namespace interstice::Diagnostics
 
     const char* LogSeverityName(LogSeverity severity);
 
-    // A subsystem's log category. `name` must be a static string; `id` is its hash,
-    // which is what filters and queries compare.
+    /// A subsystem's log category. `name` must be a static string; `id` is its hash,
+    /// which is what filters and queries compare.
     struct LogCategory
     {
-        uint64_t         id   = 0;
-        std::string_view name;
+        uint64_t         id   = 0;    ///< Hash of name
+        std::string_view name;        ///< Shown with each record
     };
 
+    /// A category named `staticName`, which must be a static string.
     constexpr LogCategory MakeLogCategory(std::string_view staticName)
     {
         return { Hash::CalculateConst(staticName), staticName };
     }
 
-    // One argument. While passed to LogMessage, `text` views the caller's string; inside
-    // a LogRecord it is empty and the text lives in the record (use LogArgText).
+    /// One argument. While passed to LogMessage, `text` views the caller's string; inside
+    /// a LogRecord it is empty and the text lives in the record (use LogArgText).
     struct LogArg
     {
+        /// Which value the argument holds.
         enum class Kind : uint8_t { None = 0, Int, Uint, Float, Text };
 
-        Kind kind = Kind::None;
+        Kind kind = Kind::None;   ///< Picks i, u, f or the text
         union
         {
             int64_t  i = 0;
             uint64_t u;
             double   f;
         };
-        std::string_view text;
-        uint16_t         textOffset = 0; // record only: where the text starts in LogRecord::text
-        uint16_t         textLength = 0;
+        std::string_view text;            ///< Kind::Text, while passed to LogMessage
+        uint16_t         textOffset = 0; ///< record only: where the text starts in LogRecord::text
+        uint16_t         textLength = 0; ///< record only: the text's length in bytes
     };
 
     template<typename T>
@@ -96,63 +98,71 @@ namespace interstice::Diagnostics
     }
 
     inline constexpr int kMaxLogArgs        = 4;
-    inline constexpr int kLogTextCapacity   = 384; // bytes shared by a record's text arguments
+    inline constexpr int kLogTextCapacity   = 384; ///< bytes shared by a record's text arguments
     inline constexpr int kLogRingCapacity   = 1024;
     inline constexpr int kMaxLogSinks       = 8;
 
+    /// One message as sinks and CopyRecentLogRecords see it. Fixed size; its strings are
+    /// static or inside the record.
     struct LogRecord
     {
-        uint64_t         sequence       = 0; // 1-based, increases by one per record
-        int64_t          timestampNanos = 0; // steady clock, see SteadyClockNowNanos
-        uint64_t         threadId       = 0;
-        LogCategory      category;
-        LogSeverity      severity       = LogSeverity::Info;
-        std::string_view messageTemplate;
-        const char*      file           = "";
-        uint32_t         line           = 0;
-        uint8_t          argCount       = 0;
-        LogArg           args[kMaxLogArgs];
-        char             text[kLogTextCapacity];
+        uint64_t         sequence       = 0; ///< 1-based, increases by one per record
+        int64_t          timestampNanos = 0; ///< steady clock, see SteadyClockNowNanos
+        uint64_t         threadId       = 0; ///< Hash of the emitting thread's std::thread::id
+        LogCategory      category;           ///< Where it comes from
+        LogSeverity      severity       = LogSeverity::Info; ///< How serious it is
+        std::string_view messageTemplate;    ///< Static, with a {} per argument
+        const char*      file           = ""; ///< Source file of the call (__FILE__)
+        uint32_t         line           = 0; ///< Source line of the call
+        uint8_t          argCount       = 0; ///< How many of args are used
+        LogArg           args[kMaxLogArgs];  ///< The arguments; read text ones with LogArgText
+        char             text[kLogTextCapacity]; ///< The text arguments' bytes
     };
 
     std::string_view LogArgText(const LogRecord& record, const LogArg& arg);
 
-    // Writes the template with its arguments substituted, NUL-terminated and truncated
-    // to `out`. Returns the length written (excluding the NUL).
+    /// Writes the template with its arguments substituted, NUL-terminated and truncated
+    /// to `out`. Returns the length written (excluding the NUL).
     size_t FormatLogMessage(const LogRecord& record, std::span<char> out);
 
-    // Records below the minimum are dropped before any work is done. [AnyThread]
+    /// Records below the minimum severity are dropped before any work is done. [AnyThread]
+    ///@{
     void        SetMinimumLogSeverity(LogSeverity severity);
     LogSeverity GetMinimumLogSeverity();
+    ///@}
 
-    // Turns the built-in stdout/stderr/debugger sink on or off (on by default). [AnyThread]
+    /// Turns the built-in stdout/stderr/debugger sink on or off (on by default). [AnyThread]
     void SetLogConsoleOutput(bool enabled);
 
-    // Sinks run on the emitting thread, under the logger's lock. Returns false when
-    // the sink is already registered or kMaxLogSinks are in use. [MainThread]
+    /// A log sink. Sinks run on the emitting thread, under the logger's lock.
     using LogSinkFn = void (*)(const LogRecord& record, void* context);
+    /// Registers `sink`, called with every record and `context`. False when this sink and
+    /// context are already registered or kMaxLogSinks are in use. [MainThread]
     bool AddLogSink(LogSinkFn sink, void* context);
+    /// Unregisters a sink added with the same `sink` and `context`. [MainThread]
     void RemoveLogSink(LogSinkFn sink, void* context);
 
-    // Emits one record. Prefer the LOG_* macros, which add the source location. [AnyThread]
+    /// Emits one record. Prefer the INTERSTICE_LOG_* macros, which add the source location. [AnyThread]
     void LogMessage(LogCategory category, LogSeverity severity, std::string_view messageTemplate,
                     std::span<const LogArg> args, const char* file = "", uint32_t line = 0);
 
-    // API misuse (an unbalanced Begin/End, a call outside its frame, ...) is reported, not
-    // fatal: the caller recovers and the app carries on. Logged as an error once per message,
-    // keyed by its address (pass a string literal), as a mistake in GUI code likely repeats
-    // every frame. [AnyThread]
+    /// API misuse (an unbalanced Begin/End, a call outside its frame, ...) is reported, not
+    /// fatal: the caller recovers and the app carries on. Logged as an error once per message,
+    /// keyed by its address (pass a string literal), as a mistake in GUI code likely repeats
+    /// every frame. [AnyThread]
     void ReportMisuse(LogCategory category, const char* message);
-    // Lets every misuse be reported again (tests). [AnyThread]
+    /// Lets every misuse be reported again (tests). [AnyThread]
     void ResetMisuseReports();
 
-    // Sequence number of the newest record (0 before the first). [AnyThread]
+    /// Sequence number of the newest record (0 before the first). [AnyThread]
     uint64_t LatestLogSequence();
 
-    // Copies up to out.size() of the most recent records, oldest first. Returns the
-    // number copied. [AnyThread]
+    /// Copies up to out.size() of the most recent records, oldest first. Returns the
+    /// number copied. [AnyThread]
     uint32_t CopyRecentLogRecords(std::span<LogRecord> out);
 
+    /// Emits a record with `args` (at most kMaxLogArgs) for the {} in `messageTemplate`; what
+    /// the INTERSTICE_LOG_* macros call. [AnyThread]
     template<typename... Args>
     void Log(LogCategory category, LogSeverity severity, const char* file, uint32_t line,
              std::string_view messageTemplate, const Args&... args)

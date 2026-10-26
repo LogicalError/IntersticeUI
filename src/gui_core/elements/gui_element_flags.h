@@ -9,6 +9,8 @@ namespace interstice
     // Element Flags
     // ------------------------------------------------------------------------
 
+    /// What an element is and how it behaves, combined with |. The indented flags go with
+    /// the kind above them (IsControl, IsWindow).
     enum class ElementFlags : uint32_t
     {
         None                      = 0,
@@ -32,15 +34,16 @@ namespace interstice
             WindowIsPopup         = 1u << 12,
             WindowCloseWithParent = 1u << 13,
             WindowNotFocusable    = 1u << 14,
-            WindowRenderToImage   = 1u << 18, // no OS window; see WindowFlags::RenderToImage
-            WindowCustomTitleBar  = 1u << 19, // draws its own title bar; see WindowFlags::CustomTitleBar
-            WindowConfirmClose    = 1u << 21, // closing it asks the app first: GUIApplication::CloseRequested
+            WindowRenderToImage   = 1u << 18, ///< no OS window; see WindowFlags::RenderToImage
+            WindowCustomTitleBar  = 1u << 19, ///< draws its own title bar; see WindowFlags::CustomTitleBar
+            WindowConfirmClose    = 1u << 21, ///< closing it asks the app first: GUIApplication::CloseRequested
 
-        Shadows                   = 1u << 15, // The window gets the OS's drop shadow (elements use CSS box-shadow)
-        PropagatesDescendantState = 1u << 16, // Hover/Focused when any descendant is
-        NoInput                   = 1u << 17, // Mouse hits pass through
-        IsCachedScope             = 1u << 20, // BeginCached scope; render blits its cached primitives while clean
-        SharesID                  = 1u << 22, // has an earlier element's ID on purpose (a part of it, e.g. a row's tree cell)
+        Shadows                   = 1u << 15, ///< OS drop shadow for windows (elements use CSS box-shadow)
+        PropagatesDescendantState = 1u << 16, ///< Hover/Focused when any descendant is
+        NoInput                   = 1u << 17, ///< Mouse hits pass through
+        IsCachedScope             = 1u << 20, ///< BeginCached scope; blits its cached primitives while clean
+        /// Has an earlier element's ID on purpose: a part of it, e.g. a row's tree cell.
+        SharesID                  = 1u << 22,
 
         IsMenuWindow = IsWindow | WindowUserControlled | WindowNoCaption | WindowIsPopup | Shadows
     };

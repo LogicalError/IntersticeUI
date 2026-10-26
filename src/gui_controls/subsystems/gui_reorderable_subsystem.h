@@ -10,37 +10,41 @@
 
 namespace interstice
 {
+    /// Main axis of a reorderable group.
     enum class ReorderDirection : uint8_t { Horizontal, Vertical };
 
-    // Persistent drag state; one drag at a time application-wide.
+    /// Persistent drag state; one drag at a time application-wide.
     struct ReorderableDragState
     {
         bool     isDragging    = false;
-        bool     dragActivated = false; // true once movement exceeds the drag threshold
-        bool     isWrapped     = false;
+        bool     dragActivated = false; ///< true once movement exceeds the drag threshold
+        bool     isWrapped     = false; ///< the group wraps its items onto several lines
         interstice::ID  groupID       = interstice::ID::Invalid();
-        int      draggedIndex   = -1;
-        int      insertionIndex = -1;
+        int      draggedIndex   = -1;   ///< slot the item was dragged from
+        int      insertionIndex = -1;   ///< slot it would drop into
         int      itemCount      = 0;
-        std::vector<interstice::IntRect> originalRects; // snapshot at drag start
-        // Child IDs at drag start, in slot order, so MouseUp can resolve slots by ID
-        // (storage is already visually reordered by then).
+        std::vector<interstice::IntRect> originalRects; ///< item rects at drag start, layout space
+        /// Child IDs at drag start, in slot order, so MouseUp can resolve slots by ID
+        /// (storage is already visually reordered by then).
         std::vector<interstice::ID> originalIDs;
         interstice::int2  dragStartMousePos{};
-        interstice::int2  dragOffset{};       // cumulative mouse delta from drag start
+        interstice::int2  dragOffset{};       ///< cumulative mouse delta from drag start
         ReorderDirection direction = ReorderDirection::Vertical;
-        interstice::IntRect groupRect{};      // snapshot of group bounds at drag start
+        interstice::IntRect groupRect{};      ///< group bounds at drag start, layout space
     };
 
-    // Valid only between BeginReorderableGroup / EndReorderableGroup; handlers must capture.
+    /// Construction state of the current reorderable group. Valid only between
+    /// BeginReorderableGroup and EndReorderableGroup; handlers must capture what they need.
     struct ReorderableConstructionState
     {
         interstice::ID groupID         = interstice::ID::Invalid();
         ReorderDirection direction = ReorderDirection::Vertical;
         bool    isWrapped       = false;
-        bool    reorderApplied  = false;
-        std::function<void(int, int)>             onReorder;
-        std::function<void(int, interstice::int2)>       onDragOut;       // captured into item lambdas
+        bool    reorderApplied  = false;   ///< the dragged item was moved in storage this frame
+        std::function<void(int, int)>             onReorder;   ///< from index, to index
+        /// Item index and screen cursor when an item is released outside the group.
+        std::function<void(int, interstice::int2)>       onDragOut;
+        /// Draws a ghost for the dragged item (index, cursor) while it is outside the group.
         std::function<void(int, interstice::int2)>       dragVisualizer;
         int                          nextItemIndex = 0;
         interstice::ElementRef              groupRef      = interstice::ElementRef::Invalid();
@@ -50,17 +54,17 @@ namespace interstice
     class FramePipeline;
     struct FrameContext;
 
-    // Drag and construction state of drag-to-reorder groups, used by the
-    // Begin/EndReorderableGroup and Begin/EndReorderableItem widgets.
+    /// Drag and construction state of drag-to-reorder groups, used by the
+    /// Begin/EndReorderableGroup and Begin/EndReorderableItem widgets.
     class ReorderableSubsystem
     {
     public:
         explicit ReorderableSubsystem(FramePipeline& frame);
 
-        ReorderableDragState&         Drag()         { return m_drag; }
-        ReorderableConstructionState& Construction() { return m_construction; }
+        ReorderableDragState&         Drag()         { return m_drag; }           ///< the drag in progress
+        ReorderableConstructionState& Construction() { return m_construction; }   ///< the group being built
 
-        // True iff every BeginReorderableGroup was matched by End.
+        /// True iff every BeginReorderableGroup was matched by EndReorderableGroup.
         bool IsBalanced() const { return m_construction.groupID == interstice::ID::Invalid(); }
 
     private:

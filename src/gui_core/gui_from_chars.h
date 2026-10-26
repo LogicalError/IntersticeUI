@@ -9,10 +9,10 @@
 
 namespace interstice
 {
-    // std::from_chars for a decimal number, through a classic-locale stream. For standard
-    // libraries without floating-point from_chars. The number is scanned first, as
-    // from_chars does ([-]digits[.digits][e[+-]digits], no '+' or whitespace before it):
-    // libc++'s stream would also take the letters of a hex float, so "0.25px" fails there.
+    /// std::from_chars for a decimal number, through a classic-locale stream. For standard
+    /// libraries without floating-point from_chars. The number is scanned first, as
+    /// from_chars does ([-]digits[.digits][e[+-]digits], no '+' or whitespace before it):
+    /// libc++'s stream would also take the letters of a hex float, so "0.25px" fails there.
     template <typename T>
     std::from_chars_result FromCharsStream(const char* first, const char* last, T& value)
     {
@@ -46,8 +46,8 @@ namespace interstice
         return { end, std::errc{} };
     }
 
-    // std::from_chars for floating point. libc++ before LLVM 20 (Apple's included)
-    // has no floating-point overloads.
+    /// std::from_chars, falling back to FromCharsStream on standard libraries without the
+    /// floating-point overloads (libc++ before LLVM 20, Apple's included).
     template <typename T>
     std::from_chars_result FromChars(const char* first, const char* last, T& value)
     {

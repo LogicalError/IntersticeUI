@@ -10,7 +10,7 @@ namespace interstice
 
     enum class NumericType
     {
-        None,       // not a numeric type,
+        None,       ///< not a numeric type
 
         TypeUnsignedBit = 16,
         TypeSignedBit   = 32,

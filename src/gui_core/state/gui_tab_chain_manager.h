@@ -6,20 +6,20 @@ namespace interstice
 {
     class GUIStateManager;
     
-    // Tracks the next/prev tab targets around the focused element, rebuilt each frame during
-    // construction and scoped to the active window. Without focus it falls back to the
-    // default focus ID, else the window's first target.
+    /// Tracks the next/prev tab targets around the focused element, rebuilt each frame during
+    /// construction and scoped to the active window. Without focus it falls back to the
+    /// default focus ID, else the window's first target.
     class TabChainManager
     {
         ID m_currentFocusedID = ID::Invalid();
         ID m_currentWindowID = ID::Invalid();
         ID m_activeWindowID = ID::Invalid();
         
-        // Results, for the active window only.
+        /// Results, for the active window only.
         ID m_nextTabTarget = ID::Invalid();
         ID m_prevTabTarget = ID::Invalid();
         
-        // Construction-time tracking for the current window.
+        /// Construction-time tracking for the current window.
         ID m_firstTabTarget = ID::Invalid();
         ID m_lastTabTarget = ID::Invalid();
         ID m_defaultFocusID = ID::Invalid();
@@ -27,12 +27,15 @@ namespace interstice
     public:
         void BeginFrame(const GUIStateManager& guiStateManager);
         
-        // e.g. a rename textbox that should take focus.
+        /// The target Tab moves to when nothing has focus, e.g. a rename textbox that should
+        /// take focus.
         void SetDefaultFocusID(ID defaultID) 
         { 
             m_defaultFocusID = defaultID; 
         }
         
+        /// Starts collecting `windowID`'s tab targets until EndWindow; only the active window
+        /// builds a chain.
         void BeginWindow(ID windowID)
         {
             m_currentWindowID = windowID;
@@ -43,6 +46,7 @@ namespace interstice
             }
         }
         
+        /// Adds `elementID` to the current window's tab chain, in call order.
         void RegisterTabTarget(ID elementID)
         {
             // Only the active window gets a tab chain.
@@ -67,6 +71,7 @@ namespace interstice
             m_lastTabTarget = elementID;
         }
         
+        /// Ends the window begun by BeginWindow; its chain wraps around.
         void EndWindow()
         {
             if (m_currentWindowID != m_activeWindowID)

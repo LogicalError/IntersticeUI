@@ -5,19 +5,20 @@
 
 namespace interstice
 {
-    // Stored as 2 bits for mode
+    /// How an ID was made; stored in 2 bits of the ID.
     enum class IDMode : uint64_t
     {
-        Static   = 0, // Manually allocated IDs with slot and generation for reuse
-        Dynamic  = 1, // IDs recreated each frame with hierarchical hashing for uniqueness without tracking
-        Ranged   = 2, // IDs recreated each frame, representing a range of sub-IDs, with a hash for validation and index-based sub-ID generation
-		SubRange = 3  // IDs recreated each frame, representing a single sub-ID within a parent range, inheriting the parent's hash and using an index for uniqueness
+        Static   = 0, ///< persistent; created and released through IDManager, checked by generation
+        Dynamic  = 1, ///< remade each frame from the call site or a hint and the parent stack
+        Ranged   = 2, ///< remade each frame; a block of sub-IDs for indexed content (IDManager::GetSubID)
+		SubRange = 3  ///< one item of a Ranged ID: the range's hash plus an index
     };
 
-    // ID is a 64-bit value with different bit layouts per mode
-    // NOT DESIGNED FOR SERIALIZATION, ONLY RUNTIME
+    /// A 64-bit element ID whose bit layout depends on its IDMode. Runtime only: not stable
+    /// across runs, so never serialize it.
     struct ID
     {
+        /// Bit layout sizes; internal.
         static constexpr uint64_t MODE_BITS = 2;
 
         static constexpr uint64_t MAX_STATIC_INDEX_BITS = 32;
@@ -30,6 +31,7 @@ namespace interstice
         static constexpr uint64_t MAX_RANGED_SIZE_MASK = (1ull << MAX_RANGED_SIZE_BITS) - 1;
         static constexpr uint64_t MAX_RANGED_HASH_MASK = (1ull << MAX_RANGED_HASH_BITS) - 1;
 
+        /// The packed bits, viewed per mode; internal (use GetMode / Value / IDManager).
         union Value
         {
             uint64_t integer;
@@ -57,11 +59,13 @@ namespace interstice
                 uint64_t parentHashValue : MAX_RANGED_HASH_BITS;
             } subRangeParts;
         } value;
+        /// The "no element" ID (all bits zero); also the default for optional ID parameters.
         static constexpr ID Invalid() { return { 0 }; }
 
-        // Get the mode of the ID
+        /// How the ID was made.
         inline IDMode GetMode() const { return static_cast<IDMode>(value.staticParts.mode); }
 
+        /// The raw 64 bits, e.g. as a hash or map key; not stable across runs.
 		inline uint64_t Value() const { return value.integer; }
 
         constexpr bool operator==(const ID& other) const noexcept { return value.integer == other.value.integer; }

@@ -8,7 +8,7 @@
 
 namespace interstice
 {
-    // Snapshot of input state for a single recorded OS event.
+    /// Snapshot of input state for a single recorded OS event.
     struct InputState
     {
         interstice::int2 screenPos{0,0};
@@ -20,20 +20,22 @@ namespace interstice
 
         interstice::KeyModifier modifiers = interstice::KeyModifier::None;
 
-        interstice::float2 scroll{}; // wheel notches (fractional on hi-res devices); label drags: pixels
+        interstice::float2 scroll{}; ///< wheel notches (fractional on hi-res devices); label drags: pixels
 
         interstice::KeyCode lastKey = interstice::KeyCode::None;
         interstice::KeyAction lastKeyAction = interstice::KeyAction::KeyDown;
 
-        // Drag/drop payload metadata (set by dispatcher when dispatching drag events)
+        /// Drag-and-drop source and payload; set for drag events.
+        ///@{
         interstice::ID dragSourceID = interstice::ID::Invalid();
         uint32_t dragPayloadType = 0;
         uintptr_t dragPayloadValue = 0;
+        ///@}
 
-        // Accumulated text input for this frame (UTF-8)
+        /// Text typed with this event (UTF-8).
         std::string textInput;
 
-        // Indicates that this event has already been consumed (e.g., Tab handled by tab navigation)
+        /// True when the event was already handled (e.g. Tab by tab navigation).
         bool consumed = false;
 
         bool LeftDown() const { return (buttons & interstice::MouseButtons::Left) != interstice::MouseButtons::None; }

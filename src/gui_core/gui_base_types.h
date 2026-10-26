@@ -10,8 +10,8 @@ namespace interstice
 {
     using OnGuiFunc = std::function<void()>;
 
-    // Trivial (no member initializers): IntRect overlays it in a union, which GCC and
-    // Clang allow only for trivial types. Initialize with {} where it must start at 0.
+    /// Integer 2D vector. Trivial (no member initializers) so IntRect can overlay it in a
+    /// union; initialize with {} to start at 0.
     struct int2
     {
         int32_t x, y;
@@ -209,9 +209,9 @@ namespace interstice
         float2x2 operator*(float2x2 const& m2);
     };
 
-    // 2D affine transform matrix (2 rows x 3 columns):
-    //   x' = r0.x*x + r0.y*y + r0.z
-    //   y' = r1.x*x + r1.y*y + r1.z
+    /// 2D affine transform matrix (2 rows x 3 columns):
+    ///   x' = r0.x*x + r0.y*y + r0.z
+    ///   y' = r1.x*x + r1.y*y + r1.z
     struct float3x2
     {
         float3 r0 = float3 { 1,0,0 }, r1 = float3 { 0,1,0 };
@@ -455,7 +455,7 @@ namespace interstice
 
         inline bool IsEmpty() const { return *this == IntRect{ 0,0,0,0 }; }
 
-        // Apply a 2D affine transform and return the axis-aligned bounding rect of the result
+        /// The axis-aligned bounding rect of this rect transformed by `m`.
         IntRect Transform(const float3x2& m) const;
         IntRect Transform(int2 offset, const float3x2& m) const;
         IntRect Transform(IntRect parentRect, const float3x2& m) const;
@@ -464,8 +464,8 @@ namespace interstice
     uint16_t FloatToHalf(float value);
     float HalfToFloat(uint16_t value);
 
-    // Monotonic timestamp in nanoseconds (steady_clock), as a plain int64_t so
-    // widely-included headers avoid <chrono>'s parse cost (~0.5s per TU).
+    /// Monotonic steady_clock time in nanoseconds; a plain int64_t keeps <chrono> out of
+    /// widely-included headers.
     int64_t SteadyClockNowNanos();
 
 }// namespace interstice

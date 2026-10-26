@@ -12,18 +12,19 @@ namespace interstice
     // Color and Gradient Types
     // ------------------------------------------------------------------------
 
-    // Color stops for gradients
+    /// Color stops for gradients
     struct ColorStop
     {
     private:
         color4b  color = {};
-        uint16_t offset = 0; // 0.0 to 1.0
+        uint16_t offset = 0; ///< 0.0 to 1.0
 
     public:
         bool operator==(const ColorStop& other) const noexcept = default;
 
         ColorStop& SetColor(color4b newColor) { color = newColor; return *this; }
 
+        /// Clamps each channel to 0..1 and stores it as 8 bits.
         ColorStop& SetColor(color4f newColor)
         {
             newColor.r = (newColor.r < 0) ? 0 : (newColor.r > 1) ? 1 : newColor.r;
@@ -45,6 +46,7 @@ namespace interstice
             return *this;
         }
 
+        /// Position along the gradient, 0..1 (clamped); stored as 16 bits.
         ColorStop& SetOffset(float newOffset)
         {
             if (newOffset < 0.0f) newOffset = 0.0f;
@@ -53,11 +55,15 @@ namespace interstice
             return *this;
         }
 
+        /// Position along the gradient, 0..1.
         float GetOffset() const { return (offset / 65535.0f); }
+        /// The color as 0..1 floats.
         color4f GetColor4f() const { return color4f { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f }; }
         color4b GetColor4b() const { return color; }
     };
 
+    /// Kind of Gradient. None marks an empty gradient; the shape a color style draws
+    /// comes from ColorStyle::type.
     enum class GradientType : uint8_t
     {
         None,
@@ -65,34 +71,37 @@ namespace interstice
         Radial
     };
 
-    // Color spaces for gradient interpolation
+    /// The space gradient stops are interpolated in.
     enum class ColorSpace : uint8_t
     {
-        sRGB,       // Default - standard sRGB interpolation
-        LinearRGB,  // Linear RGB interpolation
-        HSL,        // Hue-Saturation-Lightness interpolation
-        HSV,        // Hue-Saturation-Value interpolation
-        Lab,        // CIE Lab interpolation (perceptual)
-        Oklab       // Oklab interpolation (perceptual)
+        sRGB,       ///< the default, as CSS
+        LinearRGB,
+        HSL,
+        HSV,
+        Lab,        ///< CIE Lab, perceptual
+        Oklab       ///< perceptual
     };
 
+    /// Up to kMaxStops color stops plus an angle and interpolation color space.
+    /// Registering a color style bakes it into the gradient atlas.
     struct Gradient
     {
-        static constexpr int kMaxStops = 8;
+        static constexpr int kMaxStops = 8; ///< capacity of stops
         
-        std::array<ColorStop, kMaxStops> stops{};
-        uint16_t     value      = 0; // Angle for linear, Radius for radial
-        uint8_t      stopCount  = 0;
+        std::array<ColorStop, kMaxStops> stops{}; ///< the first stopCount are in use
+        uint16_t     value      = 0; ///< the angle, encoded by EncodeAngle
+        uint8_t      stopCount  = 0;                   ///< stops in use
         GradientType type       = GradientType::None;
-        ColorSpace   colorSpace = ColorSpace::sRGB;
+        ColorSpace   colorSpace = ColorSpace::sRGB; ///< space the stops are interpolated in
 
+        /// `value` as a fraction of a full turn (see EncodeAngle).
         float GetValue() const 
         {
             // multiply it by even number so that 90 degrees is exactly 0.25, 180 is 0.5, etc.
             return float(value) / 65534.0f;
         }
 
-        // Convenience builders for common patterns
+        /// One color: two equal stops at 0 and 1.
         static Gradient Solid(const color4f& color)
         {
             Gradient g;
@@ -102,6 +111,7 @@ namespace interstice
             return g;
         }
 
+        /// One color: two equal stops at 0 and 1.
         static Gradient Solid(const color4b& color)
         {
             Gradient g;
@@ -111,6 +121,7 @@ namespace interstice
             return g;
         }
 
+        /// Two stops at 0 and 1.
         static Gradient Linear(const color4f& c0, const color4f& c1)
         {
             Gradient g;
@@ -120,6 +131,7 @@ namespace interstice
             return g;
         }
 
+        /// Two stops at 0 and 1.
         static Gradient Linear(const color4b& c0, const color4b& c1)
         {
             Gradient g;
@@ -129,6 +141,7 @@ namespace interstice
             return g;
         }
 
+        /// Three stops at 0, 0.5 and 1.
         static Gradient Linear(const color4f& c0, const color4f& c1, const color4f& c2)
         {
             Gradient g;
@@ -139,6 +152,7 @@ namespace interstice
             return g;
         }
 
+        /// Three stops at 0, 0.5 and 1.
         static Gradient Linear(const color4b& c0, const color4b& c1, const color4b& c2)
         {
             Gradient g;
@@ -149,6 +163,7 @@ namespace interstice
             return g;
         }
 
+        /// Four stops at 0, 0.25, 0.5 and 1.
         static Gradient Linear(const color4f& c0, const color4f& c1, const color4f& c2, const color4f& c3)
         {
             Gradient g;
@@ -160,6 +175,7 @@ namespace interstice
             return g;
         }
 
+        /// Four stops at 0, 0.25, 0.5 and 1.
         static Gradient Linear(const color4b& c0, const color4b& c1, const color4b& c2, const color4b& c3)
         {
             Gradient g;
@@ -171,9 +187,9 @@ namespace interstice
             return g;
         }
 
-        // Angle as a fraction of a full turn in [0, 1), wrapping negative angles
-        // (-90deg == 270deg). Scaled by an even number so that 90 degrees is
-        // exactly 0.25, 180 is 0.5, etc.; the visual style turns this into a 2x2 transform.
+        /// Angle as a fraction of a full turn in [0, 1), wrapping negative angles
+        /// (-90deg == 270deg). Scaled by an even number so that 90 degrees is
+        /// exactly 0.25, 180 is 0.5, etc.; the visual style turns this into a 2x2 transform.
         static uint16_t EncodeAngle(float angleDegrees)
         {
             double whole;
@@ -182,6 +198,7 @@ namespace interstice
             return static_cast<uint16_t>(turn * 65534.0);
         }
 
+        /// An empty linear gradient at an angle in degrees; add stops with AddStop.
         static Gradient Linear(float angleDegrees = 0.0f)
         {
             Gradient g;
@@ -190,6 +207,8 @@ namespace interstice
             return g;
         }
 
+        /// An empty radial gradient; add stops with AddStop. The angle (degrees) is
+        /// encoded like Linear's and rotates the color style.
         static Gradient Radial(float angleDegrees = 1.0f)
         {
             Gradient g;
@@ -198,11 +217,12 @@ namespace interstice
             return g;
         }
 
-        // Fluent interface for building gradients
+        /// Sets the space the stops are interpolated in; returns *this.
         inline Gradient& WithColorSpace(ColorSpace cs) { colorSpace = cs; return *this; }
+        /// Space the stops are interpolated in.
         inline ColorSpace GetColorSpace() const { return colorSpace; }
 
-        // Add a color stop. Returns false if the stop list is full.
+        /// Adds a stop at `offset` (0..1); false when all kMaxStops are in use.
         inline bool AddStop(const color4f& color, float offset)
         {
             if (stopCount >= kMaxStops)
@@ -211,6 +231,7 @@ namespace interstice
             return true;
         }
 
+        /// Adds a stop at `offset` (0..1); false when all kMaxStops are in use.
         inline bool AddStop(const color4b& color, float offset)
         {
             if (stopCount >= kMaxStops)
@@ -219,18 +240,17 @@ namespace interstice
             return true;
         }
 
-        // Clear all stops
+        /// Removes all stops.
         inline void ClearStops() { stopCount = 0; }
 
-        // Check if gradient is effectively empty/transparent
-        // The stops in use: stopCount, but never past the stop array (a gradient built in code
-        // can set stopCount to anything).
+        /// The stops in use: stopCount, but never past the stop array (a gradient built in code
+        /// can set stopCount to anything).
         inline uint8_t StopCount() const { return stopCount < kMaxStops ? stopCount : uint8_t(kMaxStops); }
 
+        /// No stops, or type None: nothing to draw.
         inline bool IsEmpty() const { return type == GradientType::None || stopCount == 0; }
 
-        // Write the gradient into a preallocated span of `byte4` values.
-        // Output is sRGB encoded and packed to 0..255 per channel.
+        /// Samples the gradient evenly across `out`, sRGB encoded.
         void WriteTo(std::span<color4b> out) const;
 
         bool operator==(const Gradient& other) const noexcept

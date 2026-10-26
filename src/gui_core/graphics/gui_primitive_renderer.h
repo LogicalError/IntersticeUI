@@ -22,7 +22,7 @@ namespace interstice
 {
     using PipelineSet = std::array<RHI::GpuPipeline, kPrimitiveKindCount>;
 
-    // One contiguous same-kind run of primitives, drawn with one call.
+    /// One contiguous same-kind run of primitives, drawn with one call.
     struct PrimitiveRenderPass
     {
         int           firstPrimitive;
@@ -33,26 +33,25 @@ namespace interstice
     struct PrimitiveRenderTarget
     {
     public:
-        // Per-kind primitive stream: CPU bytes appended by the emit methods and
-        // packed together into the current frame slot's GPU upload arena.
+        /// Per-kind primitive stream: CPU bytes appended by the emit methods and
+        /// packed together into the current frame slot's GPU upload arena.
         struct Stream
         {
             std::vector<std::byte> cpu;
-            int                    passStart = 0; // primitive index at current pass start
+            int                    passStart = 0; ///< index of the open pass's first primitive
         };
         std::array<Stream, kPrimitiveKindCount> streams;
 
         std::vector<PrimitiveRenderPass> renderPasses;
-        int           currentKind = -1; // -1 = no open pass
+        int           currentKind = -1; ///< kind of the open pass; -1 when none
         interstice::float3x2 currentTransform;
 
     public:
         void FinishRenderPass();
         void StartRenderPass(PrimitiveKind kind);
 
-        // Append another target's passes, translated by `delta` in screen space.
-        // Kind-agnostic: every primitive starts with the same header (transform0,
-        // transform1, clipMin, clipMax).
+        /// Appends another target's passes, translated by `delta` pixels. Works for every kind:
+        /// each primitive starts with the same header (transform0, transform1, clipMin, clipMax).
         void AppendCaptured(const PrimitiveRenderTarget& src, interstice::int2 delta);
 
     public:
@@ -70,8 +69,7 @@ namespace interstice
         void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur);
 
     private:
-        // Close any open pass of a different kind, then append one primitive
-        // to its kind's stream.
+        /// Closes an open pass of a different kind, then appends `primitive` to its kind's stream.
         template <typename T>
         void Append(PrimitiveKind kind, const T& primitive)
         {
@@ -114,8 +112,8 @@ namespace interstice
             return target->second;
         }
 
-        // Drop the CPU-side target when its window is destroyed. Transient GPU
-        // storage belongs to the window's frame slots, not to this target.
+        /// Drops the CPU-side target of window `id`, when the window is destroyed. Transient GPU
+        /// storage belongs to the window's frame slots, not to this target.
         void ReleaseTarget(interstice::ID id);
         void ReleaseAllTargets();
 
@@ -153,9 +151,9 @@ namespace interstice
                     GPUDrawPushConstants& push_constants);
 
     private:
-        // Captured primitives per cached scope, kept across frames. m_captureSaved
-        // holds the window target while a capture redirects emit calls.
+        /// Captured primitives per cached scope, kept across frames.
         std::unordered_map<interstice::ID, PrimitiveRenderTarget> scopeCaptures;
+        /// The window target while a capture redirects emit calls.
         PrimitiveRenderTarget* m_captureSaved = nullptr;
     };
 }

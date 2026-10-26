@@ -19,7 +19,7 @@ namespace interstice
         uint32_t parentIndex = 0;
         uint32_t parentCountAtDepth = 0;
 
-        // This parent's children at parentDepth + 1
+        /// This parent's children at parentDepth + 1.
         IndexRange childRange = {0, 0};
 
         inline bool IsDone() const { return *this == EndCursor(); }

@@ -22,9 +22,9 @@ namespace interstice
     class InputManager;
     class IWindowBackend;
 
-    // Per-frame values plus references to long-lived managers, passed to every stage
-    // callback. Subsystems should keep their own manager references; this is the source
-    // of truth for per-frame values (elapsedTimeSecs).
+    /// Per-frame values plus references to long-lived managers, passed to every stage
+    /// callback. Subsystems should keep their own manager references; this is the source
+    /// of truth for per-frame values (elapsedTimeSecs).
     struct FrameContext
     {
         GUIApplication&    app;
@@ -45,30 +45,33 @@ namespace interstice
         float              elapsedTimeSecs;
     };
 
+    /// The stages of a frame, in run order.
     enum class FrameStage : uint8_t
     {
-        PreFrame,        // theme reload, synthetic mouse events, per-frame cache clears
-        PreConstruct,    // after elementStorage.BeginConstruction(), before OnGUI()
-        PostConstruct,   // after OnGUI() returns, before elementStorage.EndConstruction()
-        PreLayout,       // after textSystem->Update() and SyncWindowsBeforeLayout, before Layout()
-        PostLayout,      // after Layout() and per-element AddPostLayout callbacks
-        PreInput,        // hit-test, hover/active/cursor resolution, transitions
-        PostInput,       // after inputManager->Process; scroll-offset/rect snapshots
-        PreRender,       // before OnRender()
-        PostRender,      // after OnRender(); transition purge
-        EndFrame,        // before idManager.EndFrame / windowManager.EndFrame
+        PreFrame,        ///< theme reload, synthetic mouse events, per-frame cache clears
+        PreConstruct,    ///< after elementStorage.BeginConstruction(), before OnGUI()
+        PostConstruct,   ///< after OnGUI() returns, before elementStorage.EndConstruction()
+        PreLayout,       ///< after textSystem->Update() and SyncWindowsBeforeLayout, before Layout()
+        PostLayout,      ///< after Layout() and per-element AddPostLayout callbacks
+        PreInput,        ///< hit-test, hover/active/cursor resolution, transitions
+        PostInput,       ///< after inputManager->Process; scroll-offset/rect snapshots
+        PreRender,       ///< before OnRender()
+        PostRender,      ///< after OnRender(); transition purge
+        EndFrame,        ///< before idManager.EndFrame / windowManager.EndFrame
     };
 
     using StageCallback = std::function<void(FrameContext&)>;
 
-    // Stage callbacks run in registration order (no priorities): if A must run before B,
-    // construct A first (see GUIApplication::Initialize()).
-    //
-    // Lifetime: subsystems captured by callbacks (typically [this]) must stay alive as
-    // long as the pipeline can run them; declare subsystem members after the pipeline.
+    /// Stage callbacks run in registration order (no priorities): if A must run before B,
+    /// construct A first (see GUIApplication::Initialize()).
+    ///
+    /// Lifetime: subsystems captured by callbacks (typically [this]) must stay alive as
+    /// long as the pipeline can run them; declare subsystem members after the pipeline.
     class FramePipeline
     {
     public:
+        /// Adds `cb` to the end of that stage's callbacks.
+        ///@{
         void OnPreFrame      (StageCallback cb) { m_preFrame.push_back(std::move(cb)); }
         void OnPreConstruct  (StageCallback cb) { m_preConstruct.push_back(std::move(cb)); }
         void OnPostConstruct (StageCallback cb) { m_postConstruct.push_back(std::move(cb)); }
@@ -79,7 +82,9 @@ namespace interstice
         void OnPreRender     (StageCallback cb) { m_preRender.push_back(std::move(cb)); }
         void OnPostRender    (StageCallback cb) { m_postRender.push_back(std::move(cb)); }
         void OnEndFrame      (StageCallback cb) { m_endFrame.push_back(std::move(cb)); }
+        ///@}
 
+        /// Runs the callbacks of `stage` in registration order.
         void RunStage(FrameStage stage, FrameContext& ctx);
 
     private:

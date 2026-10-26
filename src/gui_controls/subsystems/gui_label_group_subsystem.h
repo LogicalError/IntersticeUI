@@ -15,27 +15,27 @@ namespace interstice
     class GUIStateManager;
     class GUITheme;
 
-    // Labels and DragLabels in a label group share a width; dragging any label's right
-    // edge resizes them all. Per-group state persists across frames, keyed by group ID.
-    //
-    //   OnPreConstruct  -> reset transient per-group fields
-    //   OnPostConstruct -> finalize edge state once all labels have emitted
+    /// Labels and DragLabels in a label group share a width; dragging any label's right
+    /// edge resizes them all. Per-group state persists across frames, keyed by group ID.
+    ///
+    ///   OnPreConstruct  -> reset transient per-group fields
+    ///   OnPostConstruct -> finalize edge state once all labels have emitted
     class LabelGroupSubsystem
     {
     public:
+        /// State of one label group, kept across frames by group ID.
         struct State
         {
-            // Widths in CSS pixels (laid out at the UI scale).
-            int32_t labelWidth = 120;
-            int32_t minWidth   = 40;
-            int32_t maxWidth   = 500;
-            bool    resizable  = true;
-            bool    edgeHovered     = false;
-            bool    edgeDragging    = false;
-            bool    anyLabelHovered = false; // transient: set during construction if any label has hover
-            std::vector<interstice::TextID> labelTextIDs; // transient: rebuilt each frame for auto-size
-            int32_t maxLabelWidthThisFrame = 0;    // transient: accumulator for non-resizable auto-width
-            std::vector<interstice::ElementRef> labelRefs; // transient: this frame's labels, in order
+            int32_t labelWidth = 120;   ///< shared label width, CSS px
+            int32_t minWidth   = 40;    ///< CSS px
+            int32_t maxWidth   = 500;   ///< CSS px
+            bool    resizable  = true;  ///< false: the width fits the widest label instead
+            bool    edgeHovered     = false;   ///< a label's resize edge is hovered
+            bool    edgeDragging    = false;   ///< a label's resize edge is being dragged
+            bool    anyLabelHovered = false; ///< transient: set during construction if any label has hover
+            std::vector<interstice::TextID> labelTextIDs; ///< transient: rebuilt each frame for auto-size
+            int32_t maxLabelWidthThisFrame = 0;    ///< transient: widest label (pixels), for auto-width
+            std::vector<interstice::ElementRef> labelRefs; ///< transient: this frame's labels, in order
         };
 
         LabelGroupSubsystem(FramePipeline& frame,
@@ -43,13 +43,17 @@ namespace interstice
                             GUIStateManager& guiStateManager,
                             GUITheme& theme);
 
-        // Called from GUIApplication's Begin/End/Label/DragLabel methods.
+        /// Opens group `id` at the current nesting depth; widths are CSS px, and `defaultWidth`
+        /// applies only when the group is new. Called by GUIApplication's label-group methods.
         void   BeginGroup(interstice::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable = true);
+        /// Closes the innermost group.
         void   EndGroup();
+        /// The innermost group when it was opened at the current nesting depth, else nullptr.
         State* GetActiveGroup();
+        /// Adds a label to the innermost group and draws its resize edge; a group must be open.
         void   AddDragger(interstice::ElementRef labelRef);
 
-        // True iff every BeginGroup was matched by EndGroup.
+        /// True iff every BeginGroup was matched by EndGroup.
         bool IsBalanced() const { return m_stack.empty(); }
 
     private:

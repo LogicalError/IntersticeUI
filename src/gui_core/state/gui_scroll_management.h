@@ -14,7 +14,7 @@ namespace interstice
     struct ElementRef;
     enum class ScrollOffsetHandle : uint32_t;
 
-    // Axis mask for scroll-into-view, so e.g. a horizontal sizer doesn't scroll vertically.
+    /// Axis mask for scroll-into-view, so e.g. a horizontal sizer doesn't scroll vertically.
     enum class ScrollAxis : uint8_t
     {
         None = 0,
@@ -24,6 +24,8 @@ namespace interstice
     };
     INTERSTICE_ENUM_OPERATORS(ScrollAxis)
 
+    /// Scroll containers' offsets (pixels), kept across frames by ID behind handles. EndFrame
+    /// drops the offsets of static IDs that were released and of other IDs not used this frame.
     class ScrollManagement
     {
         struct ScrollOffsetEntry
@@ -50,16 +52,17 @@ namespace interstice
         int2 GetScrollOffset(ScrollOffsetHandle handle);
         void SetScrollOffset(ScrollOffsetHandle handle, int2 offset);
 
-        // rectMin/rectMax are in the scroll container's content space.
+        /// Scrolls just enough to show `rectMin`..`rectMax` (content space) in a container of
+        /// `containerSize`; true when it scrolled. Oversized, partly visible rects stay put.
         bool MakeRectVisibleInScroll(ScrollOffsetHandle scrollHandle, int2 rectMin, int2 rectMax, int2 containerSize, ScrollAxis axis = ScrollAxis::Both);
-        // Target rect in screen space.
+        /// Scrolls `elementRef`'s scroll ancestors to show the target rect (screen space).
         bool MakeRectVisibleHierarchically(ElementStorage& elementStorage, int2 targetRectMin, int2 targetRectMax, const ElementRef& elementRef, ScrollAxis axis = ScrollAxis::Both);
         bool MakeRectVisibleHierarchically(ElementStorage& elementStorage, IntRect targetRect, const ElementRef& elementRef, ScrollAxis axis = ScrollAxis::Both)
         {
             return MakeRectVisibleHierarchically(elementStorage, targetRect.position, targetRect.position + targetRect.size, elementRef, axis);
         }
         bool MakeElementVisibleHierarchically(ElementStorage& elementStorage, const ElementRef& elementRef, ScrollAxis axis = ScrollAxis::Both);
-		// cursorPos is in the editor's content space.
+		/// Scrolls a text editor to show its cursor; `cursorPos` is in the editor's content space.
         bool MakeTextCursorVisibleInTextBox(ElementStorage& elementStorage, const ElementRef& textEditorRef, int2 cursorPos, int cursorHeight = 1);
     };
 }

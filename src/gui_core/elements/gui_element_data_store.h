@@ -1,12 +1,3 @@
-// Per-element typed state keyed by interstice::ID, persisted across frames (drag start,
-// double-click timing, etc.).
-//
-// Lifetime: Get/GetOrCreate touch an entry; EndFrame evicts untouched entries.
-// GUIStateManager touches IDs in a live interaction (capture, focus, drag, active)
-// so their state survives frames without events.
-//
-// Storage: 64-byte inline buffer; larger types go to the heap.
-
 #pragma once
 
 #include <gui_core/gui_id.h>
@@ -21,6 +12,10 @@
 
 namespace interstice
 {
+    /// Per-element typed state keyed by ID, kept across frames (drag start, double-click
+    /// timing). Get, GetOrCreate and Touch keep an entry alive; EndFrame evicts the rest.
+    /// GUIStateManager touches the IDs in a live interaction (capture, focus, drag, active),
+    /// so their state survives frames without events. Types up to 64 bytes are stored inline.
     class ElementDataStore
     {
     public:
@@ -28,31 +23,32 @@ namespace interstice
         ElementDataStore(const ElementDataStore&) = delete;
         ElementDataStore& operator=(const ElementDataStore&) = delete;
 
-        // Returns the existing T for id, or constructs one from args. Touches the entry.
+        /// The T stored for `id`, constructed from `args` when absent. Touches the entry. One
+        /// `id` holds one type: asserts on a type mismatch (release builds replace the entry).
         template<typename T, typename... Args>
         T& GetOrCreate(ID id, Args&&... args);
 
-        // Existing T for id, or nullptr. Touches the entry if found.
+        /// The T stored for `id`, or nullptr (also on a type mismatch). Touches the entry if found.
         template<typename T>
         T* Get(ID id);
 
-        // Keeps id alive through this frame's EndFrame eviction.
+        /// Keeps `id`'s entry alive through this frame's EndFrame.
         void Touch(ID id);
 
         void Remove(ID id);
 
         void Clear();
 
-        // Call at the start of each frame.
+        /// Starts a frame; call before any Get, GetOrCreate or Touch of the frame.
         void BeginFrame();
 
-        // Evict entries not touched during the frame that just ended.
+        /// Destroys the entries not touched since BeginFrame.
         void EndFrame();
 
         size_t EntryCount() const { return m_entries.size(); }
 
     private:
-        // Fits all built-in handler states (largest: HorizontalSizerState, ~56 bytes).
+        /// Fits all built-in handler states (largest: HorizontalSizerState, ~56 bytes).
         static constexpr size_t kInlineSize = 64;
 
         struct Entry
@@ -62,7 +58,7 @@ namespace interstice
 
             alignas(std::max_align_t) std::byte inlineBuffer[kInlineSize];
 
-            // inlineBuffer or a heap allocation; nullptr = empty.
+            /// inlineBuffer or a heap allocation; nullptr = empty.
             void* data           = nullptr;
             void (*destroyer)(void*) = nullptr;
             bool  heapAllocated  = false;
@@ -70,7 +66,7 @@ namespace interstice
             Entry() = default;
             Entry(const Entry&)            = delete;
             Entry& operator=(const Entry&) = delete;
-            // Non-movable: relocating the inline buffer needs T. unordered_map nodes never move.
+            /// Non-movable: relocating the inline buffer needs T. unordered_map nodes never move.
             Entry(Entry&&)            = delete;
             Entry& operator=(Entry&&) = delete;
 

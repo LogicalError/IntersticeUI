@@ -28,14 +28,14 @@ namespace interstice
         interstice::int2       size = { 0,0 };
 
         interstice::ImageIndex textureIndex  = interstice::ImageIndex::Invalid;
-        uint32_t        styleIndex    = 0; // "from" state GPU style index
-        int16_t         colorIndex    = 0; // Per-element ColorStyle override (0 = use box style's bg); supports gradients.
+        uint32_t        styleIndex    = 0; ///< "from" state GPU style index
+        int16_t         colorIndex    = 0; ///< color style overriding the background (gradients too); 0: none
         int16_t         _pad3         = 0;
-        uint32_t        styleIndexTo  = 0; // "to" state GPU style index
-        float           blendT        = 1.0f; // 0 = fully "from", 1 = fully "to"
+        uint32_t        styleIndexTo  = 0; ///< "to" state GPU style index
+        float           blendT        = 1.0f; ///< 0 = fully "from", 1 = fully "to"
         uint32_t        _pad0         = 0;
-        // The box in window pixels, snapped relative to its parent (see
-        // gui_pixel_snap.h); { x0, y0, x1, y1 }, all zero = snap absolutely.
+        /// The box in window pixels, snapped relative to its parent (SnapToParent);
+        /// { x0, y0, x1, y1 }, all zero = snap absolutely.
         int16_t         snappedPx[4]  = { 0, 0, 0, 0 };
     };
     static_assert(sizeof(Box) == 96, "Box struct size must be 96 bytes to match GLSL std430 layout");
@@ -74,10 +74,10 @@ namespace interstice
 
         interstice::color4f    color;
         float           size = 0;
-        // std430 aligns vec2 to 8 bytes: pos must start at offset 72, not 68.
+        /// std430 aligns vec2 to 8 bytes: pos must start at offset 72, not 68.
         float           _pad_size_to_pos = 0;
-        // Float so positions far from origin or under a pan/zoom transform don't
-        // wrap. The shader applies transform0/1 to both size and position.
+        /// Float so positions far from origin or under a pan/zoom transform don't
+        /// wrap. The shader applies transform0/1 to both size and position.
         float           pos[2] = { 0, 0 };
     };
 
@@ -138,12 +138,12 @@ namespace interstice
         interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid;
 
         int16_t         colorIndex = 0;
-        int16_t         blur = 0;           // pixels; a shadow: the rect includes the blur on every side
+        int16_t         blur = 0;           ///< shadow blur, pixels; pos/size include it on every side
         float           cornerRadius = 0.0f;
     };
 
-    // Shader-visible buffer address. uint64_t on every modern API
-    // (VkDeviceAddress / D3D12_GPU_VIRTUAL_ADDRESS / MTLGPUAddress).
+    /// Shader-visible buffer address. uint64_t on every modern API
+    /// (VkDeviceAddress / D3D12_GPU_VIRTUAL_ADDRESS / MTLGPUAddress).
     using DeviceAddress = uint64_t;
 
     enum class PrimitiveKind : uint8_t
@@ -160,16 +160,15 @@ namespace interstice
 
     struct PrimitiveSpec
     {
-        const char* shaderBaseName; // backend composes path + stage suffix + format
-        uint32_t    stride;         // per-primitive byte size (std430)
-        uint8_t     pushSlot;       // index into GPUDrawPushConstants::primitiveAddresses
+        const char* shaderBaseName; ///< backend composes path + stage suffix + format
+        uint32_t    stride;         ///< per-primitive byte size (std430)
+        uint8_t     pushSlot;       ///< index into GPUDrawPushConstants::primitiveAddresses
     };
 
-    // Push-constant slot order matches the GLSL push block (box, glyph, dot,
-    // line, triangle). The block is exactly 128 bytes - there is no room for
-    // a sixth address, so Quad aliases the Triangle slot; the dispatch loop
-    // writes each pass's own buffer address into its slot before drawing,
-    // and box/quad never share a draw call.
+    /// Push-constant slot order matches the GLSL push block (box, glyph, dot,
+    /// line, triangle). The block is exactly 128 bytes, with no room for a sixth
+    /// address, so Quad shares the Triangle slot: each pass writes its own buffer
+    /// address into its slot before drawing, and a draw call holds one kind.
     inline constexpr PrimitiveSpec kPrimitiveSpecs[kPrimitiveKindCount] = {
         /* Box      */ { "box_shader",      sizeof(Box),      0 },
         /* Glyph    */ { "glyph_shader",    sizeof(Glyph),    1 },
@@ -183,13 +182,13 @@ namespace interstice
     {
         interstice::float4x4 worldMatrix = {};
 
-        // Indexed by PrimitiveSpec::pushSlot (slot order is shader contract).
+        /// Indexed by PrimitiveSpec::pushSlot (slot order is shader contract).
         DeviceAddress primitiveAddresses[5] = {};
         DeviceAddress boxStyleBuffer = {};
         DeviceAddress colorStyleBuffer = {};
 
-        float elapsedTime = 0.0f; // seconds since app start
-        float _timePad    = 0.0f; // pad to 128 bytes (Vulkan minimum)
+        float elapsedTime = 0.0f; ///< frame clock seconds, for shader animation
+        float _timePad    = 0.0f; ///< pad to 128 bytes (Vulkan minimum)
     };
     static_assert(sizeof(GPUDrawPushConstants) == 128, "GPUDrawPushConstants must be 128 bytes");
 }

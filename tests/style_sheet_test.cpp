@@ -1667,6 +1667,15 @@ namespace interstice
             EXPECT_TRUE(ParseStyleSheet(src).HasErrors()) << src;
     }
 
+    TEST(StyleSheet, VerticalTrim)
+    {
+        auto s = ParseStyleSheet(".a { -interstice-vertical-trim: cap-to-baseline; } .b { -interstice-vertical-trim: normal; }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        EXPECT_EQ(s.GetStyle("a")->textLayoutStyle.verticalTrim, VerticalTrim::CapToBaseline);
+        EXPECT_EQ(s.GetStyle("b")->textLayoutStyle.verticalTrim, VerticalTrim::Default);
+        EXPECT_TRUE(ParseStyleSheet(".c { -interstice-vertical-trim: sideways; }").HasErrors());
+    }
+
     // A number may start with its decimal point, as in rgba(0, 0, 0, .35).
     TEST(StyleSheet, NumbersMayStartWithADecimalPoint)
     {

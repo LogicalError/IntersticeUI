@@ -17,15 +17,16 @@ namespace interstice
     // Valid only between Begin*/End* (reset in End*). Event handlers run at end of frame,
     // so they must capture the user-owned pointers instead of reading m_treeState.
     //
+    /// Construction state of the current TreeView / ListView; internal.
     struct TreeViewState {
         interstice::ID   containerID = interstice::ID::Invalid();
         int       nextItemIndex = 0;
         int       totalItemCount = 0;
-        int       depth = 0;                        // nesting depth (0 = top-level, no guide lines)
-        int*      selectedIndex = nullptr;          // for ListView index-based selection
-        interstice::ID*  selectedID = nullptr;             // for single-ID selection
-        MultiSelectState* multiSelect = nullptr;    // for multi-selection
-        ItemDragDropConfig* dragDrop = nullptr;     // drag & drop config
+        int       depth = 0;                        ///< nesting depth (0 = top-level, no guide lines)
+        int*      selectedIndex = nullptr;          ///< for ListView index-based selection
+        interstice::ID*  selectedID = nullptr;             ///< for single-ID selection
+        MultiSelectState* multiSelect = nullptr;    ///< for multi-selection
+        ItemDragDropConfig* dragDrop = nullptr;     ///< drag & drop config
     };
 
     // ---- GridView: icon grid ----
@@ -33,39 +34,46 @@ namespace interstice
     // Like TreeViewState: valid only between BeginGridView/EndGridView; handlers must
     // capture user-owned pointers.
     //
+    /// Construction state of the current GridView; internal.
     struct GridViewState {
         interstice::ID containerID = interstice::ID::Invalid();
         int     nextItemIndex = 0;
         int*    selectedIndex = nullptr;
         MultiSelectState* multiSelect = nullptr;
         ItemDragDropConfig* dragDrop = nullptr;
-        // Slow-re-click rename state in the user's GridViewVirtualState (null in the
-        // non-virtual grid, which offers only Ctrl+Shift+Click / F2).
+        /// Slow-re-click rename state in the user's GridViewVirtualState. Both pointers are
+        /// null in the non-virtual grid, which offers only Ctrl+Shift+Click and F2.
         DoubleClickTracker* clickTracker = nullptr;
-        interstice::ID*            pendingRenameClick = nullptr;
+        interstice::ID*            pendingRenameClick = nullptr;   ///< see clickTracker
     };
 
     // ---- GridView rename lookup ----
     // Filled by GridViewItem for items with a renameBuffer; read by end-of-frame rename handlers.
+    /// Rename buffer and original name of a grid item; internal.
     struct GridItemRenameInfo { std::string* renameBuf = nullptr; std::string renameSeed; };
 
     // ---- TreeView (flat-data, virtualized) -----------------------------
     // Caller-owned flat rows shown through a VirtualTable. Call RebuildTreeViewIndex after
     // structural changes. Selection, scroll and drag-drop live on the TableState; a row ID
     // maps to its flat index via visibleIdx[rowID.value.subRangeParts.index].
+    /// One row of a flat-data tree view (VirtualTreeView); rows are in depth-first order.
     struct TreeViewRow
     {
+        /// The caller's own ID for the row; the view does not read it.
         interstice::ID      id           = interstice::ID::Invalid();
-        std::string  name;
-        int          depth        = 0;
-        bool         isOpen       = false;
+        std::string  name;                     ///< label
+        int          depth        = 0;         ///< nesting level, 0 = root; defines the hierarchy
+        bool         isOpen       = false;     ///< expanded
         IconID       icon         = IconID::Invalid;
-        std::string* renameBuffer = nullptr;   // null = not renameable
+        std::string* renameBuffer = nullptr;   ///< null = not renameable
 
-        // Derived by RebuildTreeViewIndex. A row has children iff skipCount > 0.
+        // Derived by RebuildTreeViewIndex
+
+        /// Number of descendant rows (skipped when the row is closed); > 0 means it has children.
         int          skipCount        = 0;
+        /// Bit d is set when the ancestor at depth d+1 has a next sibling; drives guide lines.
         uint32_t     ancestorLineMask = 0;
-        bool         isLastSibling    = true;
+        bool         isLastSibling    = true;  ///< no later sibling at the same depth
 
         bool HasChildren() const { return skipCount > 0; }
     };
@@ -74,25 +82,28 @@ namespace interstice
     //
     // Like BeginGridView, but only visible rows are emitted. Column count and visible rows
     // come from last frame's viewport (one-frame settle on first show / resize).
+    /// User-owned, persistent state of a virtualized GridView; keep it alive across frames.
     struct GridViewVirtualState
     {
-        int32_t lastViewportW = 0;
-        int32_t lastViewportH = 0;
-        // Cell width that makes the columns exactly fill the viewport; use it for fill-width items.
+        int32_t lastViewportW = 0;   ///< last frame's viewport width, pixels
+        int32_t lastViewportH = 0;   ///< last frame's viewport height, pixels
+        /// Cell width (pixels) that makes the columns exactly fill the viewport; use it for
+        /// fill-width items.
         int32_t cellStretchedW = 0;
 
-        // Written by the grid view each frame; not part of the API.
+        /// Written by the grid view each frame; not part of the API.
         struct Internal
         {
-            // Slow-re-click rename state, and the items range ID so F2 can map selectedIndex to an ID.
+            // Slow-re-click rename state
             DoubleClickTracker itemClickTracker;
             interstice::ID     pendingRenameClick = interstice::ID::Invalid();
+            /// Items range ID, so F2 can map selectedIndex to an ID.
             interstice::ID     itemsRangeID       = interstice::ID::Invalid();
-            // For keyboard navigation, which runs after layout.
+            // Layout for keyboard navigation, which runs after layout
             int32_t            cols      = 1;
             int32_t            rowStride = 1;
             int32_t            cellH     = 1;
-        } internal;
+        } internal;  ///< not part of the API
     };
 
 }
