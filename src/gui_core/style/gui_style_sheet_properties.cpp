@@ -25,6 +25,9 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         ICEq(p,"text-throughline-color")  || ICEq(p,"text-bottomline-color"))
         return ParseColorValue(d.color4bVal);
 
+    if (ICEq(p,"box-shadow"))
+        return ParseShadowList(d.shadowVal);
+
     // --- Box model shorthands -----------------------------------------------
     if (ICEq(p,"margin") || ICEq(p,"padding") || ICEq(p,"border-width"))
         return ParseEdges(d.edges);
@@ -506,6 +509,12 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"border-bottom-color")) { s.states[si].borderColors[2] = d.colorStyleVal; return; }
     if (ICEq(p,"border-left-color"))   { s.states[si].borderColors[3] = d.colorStyleVal; return; }
     if (ICEq(p,"-interstice-icon-color")) { s.states[si].iconColor = d.colorStyleVal; return; }
+    if (ICEq(p,"box-shadow"))
+    {
+        for (int i = 0; i < kMaxBoxShadows; ++i)
+            s.states[si].boxShadow[i] = d.shadowVal[i];
+        return;
+    }
     if (ICEq(p,"color"))
     {
         s.states[si].textColor       = d.colorStyleVal;

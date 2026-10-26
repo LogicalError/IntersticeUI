@@ -548,4 +548,124 @@ namespace
         app.idManager.ReleaseStaticID(buttonID);
         app.Cleanup();
     }
+
+    // Two boxes in a render-to-image window: one with a green box-shadow spread around
+    // it, one with a red focus ring.
+    class BoxShadowApp : public interstice::GUIApplicationInternals
+    {
+    public:
+        interstice::ID     windowID = interstice::ID::Invalid();
+        interstice::ID     shadowedID = interstice::ID::Invalid();
+        interstice::ID     ringedID = interstice::ID::Invalid();
+        interstice::ID     outlinedID = interstice::ID::Invalid();
+        interstice::IntRect shadowedRect{}, ringedRect{}, outlinedRect{};
+
+        void OnGUI() override
+        {
+            interstice::Style shadowed{}, ringed{};
+            for (interstice::StyleState& state : shadowed.states)
+            {
+                state.backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 });
+                state.boxShadow[0]    = interstice::BoxShadow{ .spread = 6, .color = { 0, 255, 0, 255 } };
+            }
+            for (interstice::StyleState& state : ringed.states)
+                state.backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 });
+            ringed.focusRing = interstice::BoxShadow{ .spread = 6, .color = { 255, 0, 0, 255 } };
+            interstice::Style outlined = ringed;
+            outlined.focusRing = interstice::BoxShadow{ .spread = 2, .color = { 0, 0, 255, 255 }, .inset = true };
+
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
+                            interstice::ElementFlags::WindowRenderToImage))
+            {
+                BeginArea(shadowedID, styleManager.Register(shadowed), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(40, 40));
+                EndArea();
+                BeginArea(ringedID, styleManager.Register(ringed), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(140, 40));
+                EndArea();
+                BeginArea(outlinedID, styleManager.Register(outlined), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(140, 70));
+                EndArea();
+            }
+            EndWindow();
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            transitionManager.SetEnabled(false);
+            windowID   = idManager.CreateStaticID();
+            shadowedID = idManager.CreateStaticID();
+            ringedID   = idManager.CreateStaticID();
+            outlinedID = idManager.CreateStaticID();
+            m_frame.OnPostLayout([this](interstice::FrameContext&)
+            {
+                auto rectOf = [this](interstice::ID id) {
+                    const interstice::ElementRef ref = elementStorage.FindElementRefByID(id);
+                    return ref.IsValid() ? elementStorage.GetElementRectPtr(ref)->rect : interstice::IntRect{};
+                };
+                shadowedRect = rectOf(shadowedID);
+                ringedRect   = rectOf(ringedID);
+                outlinedRect = rectOf(outlinedID);
+            });
+            return true;
+        }
+
+        bool Frames(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (!UpdateFrame() || !RecordFrame()) return false;
+                PresentFrame();
+            }
+            return true;
+        }
+
+        // BGRA8 pixel of the window's image.
+        uint32_t PixelAt(interstice::int2 p)
+        {
+            const interstice::IntRect rect = windowManager->GetWindowRect(windowID);
+            std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
+            if (rect.w <= 0 || !ReadWindowPixels(windowID, pixels)) return 0;
+            const size_t i = (size_t(p.y) * rect.w + size_t(p.x)) * 4;
+            return uint32_t(pixels[i]) | uint32_t(pixels[i + 1]) << 8 | uint32_t(pixels[i + 2]) << 16;
+        }
+    };
+
+    // A style's box-shadow draws outside its box; its focus ring only while the element
+    // has focus and focus is visible (from the keyboard).
+    TEST(GpuApplicationInit, BoxShadowsAndTheFocusRingDrawOutsideTheBox)
+    {
+        BoxShadowApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        ASSERT_TRUE(app.Frames(3));
+        ASSERT_GT(app.shadowedRect.w, 0);
+        const interstice::IntRect s = app.shadowedRect, r = app.ringedRect;
+        EXPECT_EQ(app.PixelAt({ s.x - 3, s.y + s.h / 2 }), 0x00FF00u) << "the shadow, spread 6 around the box";
+        EXPECT_NE(app.PixelAt({ s.x - 9, s.y + s.h / 2 }), 0x00FF00u) << "past the spread";
+
+        const uint32_t besideRing = app.PixelAt({ r.x - 3, r.y + r.h / 2 });
+        EXPECT_NE(besideRing, 0xFF0000u) << "no ring without focus";
+
+        app.guiStateManager.Interaction().SetFocusID(app.ringedID);
+        ASSERT_TRUE(app.Frames(2));
+        EXPECT_EQ(app.PixelAt({ r.x - 3, r.y + r.h / 2 }), besideRing) << "no ring when focus came from the mouse";
+
+        app.guiStateManager.Interaction().SetFocusVisible(true);
+        ASSERT_TRUE(app.Frames(2));
+        EXPECT_EQ(app.PixelAt({ r.x - 3, r.y + r.h / 2 }), 0xFF0000u) << "the ring, with focus from the keyboard";
+
+        // An inset ring outlines the inside of the box and leaves the outside alone.
+        const interstice::IntRect o = app.outlinedRect;
+        const uint32_t outside = app.PixelAt({ o.x - 3, o.y + o.h / 2 });
+        const uint32_t fill    = app.PixelAt({ o.x + o.w / 2, o.y + o.h / 2 });
+        app.guiStateManager.Interaction().SetFocusID(app.outlinedID);
+        ASSERT_TRUE(app.Frames(2));
+        EXPECT_EQ(app.PixelAt({ o.x + 1, o.y + o.h / 2 }), 0x0000FFu) << "the outline, inside the edge";
+        EXPECT_EQ(app.PixelAt({ o.x + o.w / 2, o.y + o.h / 2 }), fill) << "the middle keeps its fill";
+        EXPECT_EQ(app.PixelAt({ o.x - 3, o.y + o.h / 2 }), outside) << "nothing outside the box";
+        app.Cleanup();
+    }
 }

@@ -340,6 +340,7 @@ namespace interstice
 		entry->iconOffsetY			  = visualTextStyle->iconOffsetY;
 		entry->horizontalAlignment	  = visualTextStyle->textLayoutStyle.horizontalAlignment;
 		entry->verticalAlignment	  = visualTextStyle->textLayoutStyle.verticalAlignment;
+		entry->textWrapping			  = visualTextStyle->textLayoutStyle.textWrapping;
 
 		// Hit-test coordinates come in outer-rect local space from input dispatch.
 		// Precompute the style-derived content origin offset (outer -> inner).
@@ -642,9 +643,15 @@ namespace interstice
 		entry->baseMeasurement = MeasureTextInternal(entry, layout);
 		skb_layout_destroy(layout);
 
-		// minWidth stays the line width: layout starts text elements at minWidth
-		// (TextWrappingLayoutTest), so a narrower min-content would change every
-		// wrapping label (#69).
+		// Min-content: wrapping text laid out as narrow as it goes (one word, or one
+		// character for word-char, per line). Text that doesn't wrap is one line either way.
+		if (entry->textWrapping != TextWrap::NoWrap && entry->baseMeasurement.maxWidth > 0)
+		{
+			skb_layout_t* narrow = m_skribidiContext->CreateLayout(entry, 1.0f, 16384.0f);
+			entry->baseMeasurement.minWidth = std::min(entry->baseMeasurement.maxWidth,
+			                                           MeasureTextInternal(entry, narrow).maxWidth);
+			skb_layout_destroy(narrow);
+		}
 		return entry->baseMeasurement;
 	}
 

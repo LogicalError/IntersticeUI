@@ -27,12 +27,14 @@ namespace interstice
         return int2 { contentBounds.x - clampedScrollPosX, contentBounds.y - clampedScrollPosY };
     }
 
-    // Minimum MARGIN BOX size for a leaf element (assigned to rect.size during sizing).
-    int2 LayoutHelpers::CalculateMinimumElementSize(ITextSystem& textSystem,
-                                                    const Element& element,
-                                                    const ElementRect& elementRect)
+    // Natural MARGIN BOX size for a leaf element (assigned to rect.size during sizing).
+    int2 LayoutHelpers::CalculateLeafSize(ITextSystem& textSystem,
+                                          const Element& element,
+                                          const ElementRect& elementRect,
+                                          int32_t& minContentWidth)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::CalculateMinimumElementSize");
+        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::CalculateLeafSize");
+        minContentWidth = 0;
         // Border box without content
         int2 minimumStyleSize;
         minimumStyleSize.x = elementRect.layoutStyle->padding.Horizontal() + elementRect.layoutStyle->borderWidths.Horizontal();
@@ -43,7 +45,8 @@ namespace interstice
         const bool isControlWithAutoOverflow = (element.flags & ElementFlags::DoNotMeasureText) == ElementFlags::DoNotMeasureText
                                               && elementRect.layoutStyle->overflowX == Overflow::Auto;
         const bool textDrivesWidth = !isControlWithAutoOverflow;
-        int2 borderBoxMinSize = minimumStyleSize;
+        int2    borderBoxMinSize = minimumStyleSize;
+        int32_t narrowerBy       = 0; // how much narrower the text gets at min-content
         if (element.iconID == IconID::Invalid)
         {
             if (element.textID != TextID::Invalid)
@@ -51,7 +54,10 @@ namespace interstice
                 const auto measurement =
                     textSystem.GetTextMeasurement(element.textID);
                 if (textDrivesWidth)
-                    borderBoxMinSize.x += measurement.minWidth;
+                {
+                    borderBoxMinSize.x += measurement.maxWidth;
+                    narrowerBy = measurement.maxWidth - measurement.minWidth;
+                }
                 borderBoxMinSize.y += measurement.minHeight;
             }
         } else 
@@ -73,7 +79,10 @@ namespace interstice
                     borderBoxMinSize.x += iconMeasurement.width;
                     borderBoxMinSize.x += elementRect.layoutStyle->iconTextGap;
                     if (textDrivesWidth)
-                        borderBoxMinSize.x += textMeasurement.minWidth;
+                    {
+                        borderBoxMinSize.x += textMeasurement.maxWidth;
+                        narrowerBy = textMeasurement.maxWidth - textMeasurement.minWidth;
+                    }
                     borderBoxMinSize.y += std::max(iconMeasurement.height, textMeasurement.minHeight);
                     break;
                 }
@@ -81,8 +90,11 @@ namespace interstice
                 case IconSide::Bottom:
                 {
                     borderBoxMinSize.x += textDrivesWidth
-                        ? std::max(iconMeasurement.width, textMeasurement.minWidth)
+                        ? std::max(iconMeasurement.width, textMeasurement.maxWidth)
                         : iconMeasurement.width;
+                    if (textDrivesWidth)
+                        narrowerBy = std::max(iconMeasurement.width, textMeasurement.maxWidth)
+                                   - std::max(iconMeasurement.width, textMeasurement.minWidth);
                     borderBoxMinSize.y += iconMeasurement.height;
                     borderBoxMinSize.y += elementRect.layoutStyle->iconTextGap;
                     borderBoxMinSize.y += textMeasurement.minHeight;
@@ -98,6 +110,12 @@ namespace interstice
         int2 marginBoxSize;
         marginBoxSize.x = clampedBorderBox.x + elementRect.layoutStyle->margin.Horizontal();
         marginBoxSize.y = clampedBorderBox.y + elementRect.layoutStyle->margin.Vertical();
+        // As CSS's automatic minimum: text that overflows visibly keeps its min-content
+        // width; clipped text (ellipsis) may shrink to nothing.
+        if (textDrivesWidth && element.textID != TextID::Invalid &&
+            elementRect.layoutStyle->overflowX == Overflow::Visible)
+            minContentWidth = elementRect.constraints.ApplyWidth(borderBoxMinSize.x - narrowerBy)
+                            + elementRect.layoutStyle->margin.Horizontal();
         return marginBoxSize;
     }
 

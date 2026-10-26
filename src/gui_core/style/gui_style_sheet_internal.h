@@ -117,7 +117,9 @@ private:
         case ':': Advance(); return { TT::Colon,      ":", sl, sc };
         case ';': Advance(); return { TT::Semicolon,  ";", sl, sc };
         case ',': Advance(); return { TT::Comma,      ",", sl, sc };
-        case '.': Advance(); return { TT::Dot,        ".", sl, sc };
+        case '.':
+            if (std::isdigit((unsigned char)Next())) break; // .35: a number
+            Advance(); return { TT::Dot, ".", sl, sc };
         case '*': Advance(); return { TT::Star,       "*", sl, sc };
         case '%': Advance(); return { TT::Percent,    "%", sl, sc };
         case '/': Advance(); return { TT::Slash,      "/", sl, sc };
@@ -150,10 +152,11 @@ private:
             return { TT::StringLit, std::move(t), sl, sc };
         }
 
-        if (std::isdigit((unsigned char)c) || (c == '-' && std::isdigit((unsigned char)Next())))
+        if (std::isdigit((unsigned char)c) || ((c == '-' || c == '.') && std::isdigit((unsigned char)Next())))
         {
             std::string t;
             if (c == '-') t += Advance();
+            if (Cur() == '.') t += '0';
             while (std::isdigit((unsigned char)Cur())) t += Advance();
             if (Cur() == '.') { t += Advance(); while (std::isdigit((unsigned char)Cur())) t += Advance(); }
             return { TT::Number, std::move(t), sl, sc };
@@ -215,6 +218,7 @@ struct StyleDecl
     FontID      fontIdVal    = FontID::Invalid;
     LanguageTag languageVal;
     GridTrack gridTrackVal = {};
+    BoxShadow shadowVal[kMaxBoxShadows] {};
     // Optional second integer value for properties that accept two numbers (e.g., flex-grow: <main> <cross>)
     uint16_t uVal2 = 0;
     bool hasSecondNumber = false;
@@ -363,16 +367,37 @@ private:
 
             if (!Expect(TT::Colon, "':'")) { SkipDecl(); continue; }
 
+            // `none` is a box-shadow value.
+            if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "none"))
+            {
+                m_lex.Consume();
+                m_lex.Consume(TT::Semicolon);
+                m_result.customProperties[name] = CustomProperty{ .hasShadow = true };
+                continue;
+            }
+
             // Try 1..4 numbers (optional px/em) first; multi-value vars feed shorthands like border-width.
+            // Numbers followed by a color are a box-shadow.
             if (m_lex.Check(TT::Number))
             {
                 CustomProperty prop{};
+                float values[4] {};
                 while (prop.dimCount < 4 && m_lex.Check(TT::Number))
                 {
                     float val = ConsumeFloat();
                     if (m_lex.Check(TT::Ident) && (ICEq(m_lex.Peek().text,"px") || ICEq(m_lex.Peek().text,"em")))
                         m_lex.Consume(); // consume unit
+                    values[prop.dimCount] = val;
                     prop.dims[prop.dimCount++] = (uint16_t)std::clamp((int)val, 0, 65535);
+                }
+                if (!m_lex.Check(TT::Semicolon) && !m_lex.Check(TT::CloseBrace))
+                {
+                    const int lengthCount = prop.dimCount;
+                    prop = CustomProperty{ .hasShadow = true };
+                    if (!ParseShadowList(prop.shadows, values, lengthCount)) { SkipDecl(); continue; }
+                    m_lex.Consume(TT::Semicolon);
+                    m_result.customProperties[name] = prop;
+                    continue;
                 }
                 m_lex.Consume(TT::Semicolon);
                 prop.number    = prop.dims[0];
@@ -513,7 +538,7 @@ private:
 
     bool ParseRule()
     {
-        struct Selector { std::string name; int stateIndex; int notMask = 0; };
+        struct Selector { std::string name; int stateIndex; int notMask = 0; bool focusVisible = false; };
         std::vector<Selector> selectors;
 
         do {
@@ -558,6 +583,13 @@ private:
 
                 if (!m_lex.Check(TT::Ident)) { Error("Expected pseudo-state name"); break; }
                 std::string pseudo = m_lex.Consume().text;
+
+                // :focus-visible sets the focus ring, shown while focus is from the keyboard.
+                if (ICEq(pseudo, "focus-visible"))
+                {
+                    sel.focusVisible = true;
+                    continue;
+                }
 
                 // :not(:pseudo) negation
                 if (ICEq(pseudo, "not"))
@@ -604,6 +636,24 @@ private:
 
         for (const auto& sel : selectors)
         {
+            if (!sel.focusVisible)
+                for (const StyleDecl& d : decls)
+                    if (ICEq(d.prop, "box-shadow") && (d.shadowVal[0].inset || d.shadowVal[1].inset))
+                        Error("An inset box-shadow is only supported in ':focus-visible'");
+            if (sel.focusVisible)
+            {
+                if (sel.stateIndex != 0 || sel.notMask != 0)
+                    Error("':focus-visible' can't be combined with other states");
+                else if (sel.name == "*")
+                {
+                    ApplyFocusVisible(m_result.baseStyle, decls);
+                    for (auto& [name, style] : m_result.styles)
+                        ApplyFocusVisible(style, decls);
+                }
+                else
+                    ApplyFocusVisible(GetOrCreate(sel.name), decls);
+                continue;
+            }
             // `*` applies to every style so far and to the base later ones start from.
             if (sel.name == "*")
             {
@@ -646,6 +696,23 @@ private:
                 if (stateIndex == 0)
                     ApplyDecl(style, Style::kDisabled, d);
             }
+        }
+    }
+
+    // :focus-visible holds one box-shadow, the focus ring.
+    void ApplyFocusVisible(Style& style, const std::vector<StyleDecl>& decls)
+    {
+        for (const StyleDecl& d : decls)
+        {
+            if (!ICEq(d.prop, "box-shadow"))
+                Error("Only box-shadow is supported in ':focus-visible', not '" + d.prop + "'");
+            else if (!d.shadowVal[1].IsNone())
+                Error("The ':focus-visible' box-shadow takes one layer");
+            else if (d.shadowVal[0].inset && (d.shadowVal[0].x != 0 || d.shadowVal[0].y != 0 ||
+                                              d.shadowVal[0].blur != 0 || d.shadowVal[0].spread <= 0))
+                Error("An inset focus ring is an outline: inset 0 0 0 <width> <color>");
+            else
+                style.focusRing = d.shadowVal[0];
         }
     }
 
@@ -1041,6 +1108,104 @@ private:
         else if (n == 2) out = BoxCorners(v[0], v[1], v[1], v[0]);
         else if (n == 3) out = BoxCorners(v[0], v[1], v[2], v[0]);
         else             out = BoxCorners(v[0], v[1], v[2], v[3]);
+        return true;
+    }
+
+    // var(--name): its custom property, or nullptr (reported) when undefined.
+    const CustomProperty* ConsumeVar()
+    {
+        m_lex.Consume(); // var
+        if (!Expect(TT::OpenParen, "'('")) return nullptr;
+        if (!m_lex.Check(TT::Ident)) { Error("Expected variable name in var()"); return nullptr; }
+        const std::string varName = m_lex.Consume().text;
+        if (!Expect(TT::CloseParen, "')'")) return nullptr;
+        auto it = m_result.customProperties.find(varName);
+        if (it == m_result.customProperties.end()) { Error("Undefined variable '" + varName + "'"); return nullptr; }
+        return &it->second;
+    }
+
+    // box-shadow: none | <layer> [, <layer>]. A layer is [inset] <x> <y> [<blur> [<spread>]]
+    // with a color before or after, or a var() holding shadows. `pre` holds lengths
+    // of the first layer that were already read.
+    bool ParseShadowList(BoxShadow (&out)[kMaxBoxShadows], const float* pre = nullptr, int preCount = 0)
+    {
+        for (BoxShadow& b : out) b = {};
+        if (preCount == 0 && m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "none"))
+        {
+            m_lex.Consume();
+            return true;
+        }
+
+        int count = 0;
+        auto add = [&](const BoxShadow& b) {
+            if (count == kMaxBoxShadows)
+            {
+                Error("box-shadow takes at most " + std::to_string(kMaxBoxShadows) + " layers");
+                return false;
+            }
+            out[count++] = b;
+            return true;
+        };
+        do
+        {
+            float len[4] {};
+            int   n = 0;
+            for (; n < preCount; ++n) len[n] = pre[n];
+            preCount = 0;
+            color4b color {};
+            bool    hasColor = false;
+            bool    fromVar  = false;
+            bool    inset    = false;
+            for (;;)
+            {
+                if (m_lex.Check(TT::Number))
+                {
+                    if (n == 4) { Error("box-shadow takes at most 4 lengths per layer"); return false; }
+                    len[n++] = ConsumeFloat();
+                    if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "px")) m_lex.Consume();
+                }
+                else if (!inset && m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "inset"))
+                {
+                    m_lex.Consume();
+                    inset = true;
+                }
+                else if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "var"))
+                {
+                    const CustomProperty* v = ConsumeVar();
+                    if (!v) return false;
+                    if (v->hasShadow && n == 0 && !hasColor && !inset)
+                    {
+                        for (const BoxShadow& b : v->shadows)
+                            if (!b.IsNone() && !add(b)) return false;
+                        fromVar = true;
+                        break;
+                    }
+                    if (!v->hasColor || hasColor) { Error("Expected a length or a color in box-shadow"); return false; }
+                    color    = v->color;
+                    hasColor = true;
+                }
+                else if (!hasColor && (m_lex.Check(TT::Hash) || m_lex.Check(TT::Ident)))
+                {
+                    if (!ParseColorValue(color)) return false;
+                    hasColor = true;
+                }
+                else
+                    break;
+            }
+            if (fromVar) continue;
+            if (n < 2 || !hasColor) { Error("box-shadow needs an x and a y offset and a color"); return false; }
+            if (len[2] < 0.0f)      { Error("box-shadow blur can't be negative"); return false; }
+
+            auto i16 = [](float v) { return int16_t(std::clamp(int(std::lround(v)), -32768, 32767)); };
+            BoxShadow b;
+            b.x      = i16(len[0]);
+            b.y      = i16(len[1]);
+            b.blur   = uint16_t(i16(len[2]));
+            b.spread = i16(len[3]);
+            b.color  = color;
+            b.inset  = inset;
+            if (!b.IsNone() && !add(b)) return false;
+        } while (m_lex.Consume(TT::Comma));
         return true;
     }
 

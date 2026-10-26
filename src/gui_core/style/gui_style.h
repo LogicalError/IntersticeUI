@@ -92,7 +92,25 @@ namespace interstice
 
         bool operator==(const BoxCorners&) const noexcept = default;
     };
-    
+
+    // CSS box-shadow layers per state; the first is drawn on top.
+    inline constexpr int kMaxBoxShadows = 2;
+
+    // One CSS box-shadow layer, outside the border box. A transparent color is no shadow.
+    // Inset is for the focus ring only: an outline `spread` wide inside the border box.
+    struct BoxShadow
+    {
+        int16_t  x      = 0;
+        int16_t  y      = 0;
+        uint16_t blur   = 0;
+        int16_t  spread = 0;
+        color4b  color  {};
+        bool     inset  = false;
+
+        constexpr bool IsNone() const { return color.a == 0; }
+        bool operator==(const BoxShadow&) const noexcept = default;
+    };
+
     // Absolute/fixed positioning
     struct EdgeInset
     {
@@ -553,6 +571,7 @@ namespace interstice
         ColorStyle borderColors[4] {};  // [0]=top, [1]=right, [2]=bottom, [3]=left
         ColorStyle textColor {};
         ColorStyle iconColor {};        // -interstice-icon-color; none = the text color
+        BoxShadow  boxShadow[kMaxBoxShadows] {};
 
         // Shorthand helper - sets all four edges to the same color.
         void SetBorderColor(const ColorStyle& c) { borderColors[0] = borderColors[1] = borderColors[2] = borderColors[3] = c; }
@@ -588,10 +607,11 @@ namespace interstice
         BoxCorners      borderRadius{};
         float           borderDashSize   = 0.0f; // pixels per dash (0 = solid)
         float           borderDashOffset = 0.0f; // pixel offset into dash pattern
-                        
+        BoxShadow       focusRing {};            // :focus-visible box-shadow, over the state's shadows
+
         // Flex, Grid properties etc.
         LayoutData      layoutData {};
-                        
+
         uint16_t        iconTextGap = 0; // Spacing between icon and text
         uint16_t        iconSize    = 0; // Icon render size (px); 0 = use natural size
         int16_t         iconOffsetY = 0; // Vertical pixel nudge for the icon rect; positive = up, negative = down
@@ -769,6 +789,30 @@ namespace interstice
         }
     };
 
+    // A BoxShadow in pixels with its color registered. No color is no shadow.
+    struct VisualShadow
+    {
+        int16_t               x      = 0;
+        int16_t               y      = 0;
+        uint16_t              blur   = 0;
+        int16_t               spread = 0;
+        VisualColorStyleIndex color  = VisualColorStyleIndex::Invalid;
+
+        constexpr bool IsNone() const { return color == VisualColorStyleIndex::Invalid; }
+        bool operator==(const VisualShadow&) const noexcept = default;
+    };
+
+    // A state's shadows; the ring is drawn only while focus is from the keyboard, outside
+    // the box or, for an inset ring, as a border-only box style over it.
+    struct VisualShadowStyle
+    {
+        VisualShadow layers[kMaxBoxShadows] {};
+        VisualShadow ring {};
+        uint32_t     insetRing = 0; // 1 + flat GPU index of the outline's box style, 0 = none
+
+        bool operator==(const VisualShadowStyle&) const noexcept = default;
+    };
+
     // Visual-only box properties - immutable, optimized form
     struct alignas(16) VisualBoxStyle
     {
@@ -783,7 +827,7 @@ namespace interstice
         VisualColorStyleIndex backgroundColorIndex = VisualColorStyleIndex::Invalid; // 2 bytes
         uint16_t borderDashSize   = 0;                                     // 2 bytes (pixels, 0 = solid)
         uint16_t borderDashOffset = 0;                                     // 2 bytes (pixels, start offset)
-        int16_t  _pad0 = 0;                                                // 2 bytes
+        uint16_t shadowIndex      = 0;                                     // 2 bytes (1-based VisualShadowStyle, 0 = none; CPU only)
         // Total: 32 bytes
 
         // Compute stable hash
@@ -797,7 +841,8 @@ namespace interstice
                                  Hash::Calculate(borderColorIndex[3]),
                                  Hash::Calculate(backgroundColorIndex),
                                  Hash::Calculate(borderDashSize),
-                                 Hash::Calculate(borderDashOffset));
+                                 Hash::Calculate(borderDashOffset),
+                                 Hash::Calculate(shadowIndex));
         }
 
         bool operator==(const VisualBoxStyle& other) const noexcept
@@ -810,7 +855,8 @@ namespace interstice
                    borderColorIndex[3] == other.borderColorIndex[3] &&
                    backgroundColorIndex == other.backgroundColorIndex &&
                    borderDashSize   == other.borderDashSize &&
-                   borderDashOffset == other.borderDashOffset;
+                   borderDashOffset == other.borderDashOffset &&
+                   shadowIndex      == other.shadowIndex;
         }
     };
 

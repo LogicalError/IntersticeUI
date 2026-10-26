@@ -248,7 +248,9 @@
     text-align: start;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
-    font-size: var(--font-size);
+    font-family: monospace;
+    font-size: 11.5px;
+    line-height: 16px;
     flex-grow: 1;
     flex-shrink: 1;
 }
@@ -309,7 +311,7 @@
 .group-drag-label::highlight(selected) { color: var(--text-1); }
 
 /* ---- textboxStyle --------------------------------------------------------- */
-.textbox {
+.textbox, .number-field {
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-node);
@@ -329,11 +331,14 @@
     flex-grow: 1;
     flex-shrink: 1;
 }
-.textbox:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
-.textbox:active { border-color: var(--accent); background-color: var(--bg-input); }
-.textbox:focus  { border-color: var(--accent); background-color: var(--bg-input); }
-.textbox::selection { color: var(--text-1); background-color: var(--selection); }
-.textbox:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
+.textbox:hover, .number-field:hover  { border-color: var(--line-strong); background-color: var(--bg-input); }
+.textbox:active, .number-field:active { border-color: var(--accent); background-color: var(--bg-input); }
+.textbox:focus, .number-field:focus  { border-color: var(--accent); background-color: var(--bg-input); }
+.textbox::selection, .number-field::selection { color: var(--text-1); background-color: var(--selection); }
+.textbox:not(:focus)::selection, .number-field:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
+
+/* Numbers: the textbox in the monospace font. Its line height keeps the textbox's. */
+.number-field { font-family: monospace; font-size: 11.5px; line-height: 16px; }
 
 /* ---- searchTextbox -------------------------------------------------------- */
 /* Search field: a textbox-looking container with a leading icon inside the
@@ -1664,18 +1669,21 @@
     color: var(--text-3);
     font-size: var(--font-size);
 }
-.command-search-key {
-    border-width: var(--border);
+.command-search-key {    /* a keycap */
+    border-width: 1px 1px 2px 1px;
     border-radius: var(--radius-sm);
-    border-color: var(--line-node);
-    background-color: var(--bg-control);
+    border-color: var(--line-strong);
+    background-color: var(--bg-keycap);
     padding: 0px 5px;
     margin: 0px;
+    min-width: 20px;
     text-wrap: nowrap;
+    text-align: center;
     vertical-align: middle;
     -interstice-vertical-text-align: middle;
     color: var(--text-3);
-    font-size: var(--font-size-sm);
+    font-family: monospace;
+    font-size: 10.5px;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -5139,7 +5147,7 @@
 /* ---- toolbar textboxStyle ------------------------------------------------- */
 /* Compact inline text input. Uses --accent2-dark (the regular textbox field   */
 /* fill) so the input area still reads as editable inside a toolbar.           */
-.toolbar-textbox {
+.toolbar-textbox, .toolbar-number-field {
     border-width: var(--border-toolbar);
     border-radius: var(--radius-toolbar);
     border-color: var(--line-node);
@@ -5158,11 +5166,13 @@
     font-size: var(--font-size);
     flex-grow: 0;
 }
-.toolbar-textbox:hover  { border-color: var(--line-strong); border-style: dotted; border-color: var(--line-strong); }
-.toolbar-textbox:active { border-color: var(--line-strong); border-style: dotted; border-color: var(--accent); }
-.toolbar-textbox:focus  { border-color: var(--accent); border-style: dotted; }
-.toolbar-textbox::selection { color: var(--text-1); background-color: var(--selection); }
-.toolbar-textbox:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
+.toolbar-textbox:hover, .toolbar-number-field:hover  { border-color: var(--line-strong); border-style: dotted; border-color: var(--line-strong); }
+.toolbar-textbox:active, .toolbar-number-field:active { border-color: var(--line-strong); border-style: dotted; border-color: var(--accent); }
+.toolbar-textbox:focus, .toolbar-number-field:focus  { border-color: var(--accent); border-style: dotted; }
+.toolbar-textbox::selection, .toolbar-number-field::selection { color: var(--text-1); background-color: var(--selection); }
+.toolbar-textbox:not(:focus)::selection, .toolbar-number-field:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
+
+.toolbar-number-field { font-family: monospace; font-size: 11.5px; line-height: 16px; }
 
 /* ---- toolbar menuTriggerStyle --------------------------------------------- */
 /* Like .toolbar-button but text-aligned to start - menu triggers usually     */
@@ -5215,4 +5225,32 @@
     flex-grow: 1;
     background-color: var(--bg-input);
     overflow: auto;
+}
+
+/* ==== Shadows and focus rings ===============================================
+   The palette sets the values (--shadow-*, --focus-ring, --selected-ring). The
+   focus ring shows only while focus came from the keyboard (:focus-visible). */
+.node                      { box-shadow: var(--shadow-node); }
+.node::highlight(selected) { box-shadow: var(--selected-ring), var(--shadow-node); }
+.button, .toggle, .menu-trigger { box-shadow: var(--shadow-control); }
+.first-button::highlight(selected), .mid-button::highlight(selected), .last-button::highlight(selected),
+.first-toggle::highlight(selected), .mid-toggle::highlight(selected), .last-toggle::highlight(selected) {
+    box-shadow: var(--shadow-chip);
+}
+
+.button:focus-visible, .toggle:focus-visible, .menu-trigger:focus-visible, .knob:focus-visible,
+.text-style:focus-visible, .textbox:focus-visible, .number-field:focus-visible, .search-textbox:focus-visible,
+.vector-component:focus-visible, .collection-value:focus-visible, .command-search:focus-visible,
+.dashed:focus-visible, .first-icon:focus-visible, .icon-left:focus-visible, .icon-right:focus-visible,
+.icon-top:focus-visible, .icon-bottom:focus-visible,
+.first-button:focus-visible, .mid-button:focus-visible, .last-button:focus-visible,
+.first-toggle:focus-visible, .mid-toggle:focus-visible, .last-toggle:focus-visible,
+.dialog-button:focus-visible, .dialog-button-primary:focus-visible, .dialog-button-danger:focus-visible {
+    box-shadow: var(--focus-ring);
+}
+
+/* Tabs, rows and menu items sit flush with their neighbours: an outline inside them instead. */
+.tab:focus-visible, .title-bar-tab:focus-visible, .list-item:focus-visible, .list-item-row:focus-visible,
+.menu-item:focus-visible, .menu-item-row:focus-visible, .menu-bar-trigger:focus-visible {
+    box-shadow: inset 0 0 0 1px var(--accent);
 }

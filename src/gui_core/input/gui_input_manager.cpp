@@ -332,6 +332,25 @@ namespace interstice
     {
         guiStateManager.Drag().SetStartDistance(elementStorage.GetStyleManager().Px(kDragStartDistance));
 
+        // A mouse press hides the focus ring; keyboard navigation (arrows, Home/End, Page
+        // Up/Down outside a text editor, and Tab below) shows it.
+        const bool inTextEditor = guiStateManager.TextEditorFocus().GetFocusedID() != ID::Invalid();
+        for (const auto& recorded : m_recordedEvents)
+        {
+            if (recorded.type == EventType::MouseDown)
+                guiStateManager.Interaction().SetFocusVisible(false);
+            if (recorded.type == EventType::KeyDown && !inTextEditor)
+                switch (recorded.state.lastKey)
+                {
+                    case KeyCode::Up:   case KeyCode::Down:   case KeyCode::Left:     case KeyCode::Right:
+                    case KeyCode::Home: case KeyCode::End:    case KeyCode::PageUp:   case KeyCode::PageDown:
+                        guiStateManager.Interaction().SetFocusVisible(true);
+                        break;
+                    default:
+                        break;
+                }
+        }
+
         // Handle Tab navigation (before dispatching to elements)
         for (auto& recorded : m_recordedEvents)
         {
@@ -364,7 +383,10 @@ namespace interstice
                     tabChainManager.GetNextTabTarget();
 
                 if (nextTarget != ID::Invalid())
+                {
                     guiStateManager.Interaction().SetFocusID(nextTarget);
+                    guiStateManager.Interaction().SetFocusVisible(true);
+                }
 
                 // Always consume Tab key when NOT inserting, even if navigation fails,
                 // to prevent text editor from inserting tab when AcceptTabs is not set

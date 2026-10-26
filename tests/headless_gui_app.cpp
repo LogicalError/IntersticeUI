@@ -286,6 +286,7 @@ bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementF
     windowRegistry.BeginWindowScope(m_rootWindowID, add.ref);
     VERIFY(elementStorage.BeginChildren());
 
+    tabChainManager.BeginWindow(m_rootWindowID);
     [[maybe_unused]] bool pushed = idManager.PushParent(m_rootWindowID);
 
     m_rootWindowOpen = true;
@@ -298,6 +299,7 @@ void HeadlessGUIApp::EndRootWindow()
     [[maybe_unused]] bool popped = idManager.PopParent();
     VERIFY(elementStorage.EndChildren());
     [[maybe_unused]] auto wrResult = windowRegistry.EndWindowScope();
+    tabChainManager.EndWindow();
     m_rootWindowOpen = false;
 }
 

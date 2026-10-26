@@ -28,6 +28,12 @@ namespace interstice
         std::function<void(int, interstice::int2)>    onDragOut;  // tab index + mouse release pos
     };
 
+    // A tab bar's keyboard navigation, kept across frames (element data store, by bar ID).
+    struct TabBarKeyboard {
+        int tabCount   = 0;  // last frame's
+        int focusIndex = -1; // the tab that takes focus as it's built, after an arrow key
+    };
+
     // ---- Panel + DockingContainer ----
     // Panel: a unit of UI content, built by onPanelGUI during OnGUI. DockNodes store only
     // panel IDs; the Panels live in the DockingLayout.

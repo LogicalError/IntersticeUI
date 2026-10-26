@@ -126,6 +126,24 @@ void PrimitiveRenderTarget::RenderQuad(interstice::IntRect rect, interstice::Int
                     });
 }
 
+void PrimitiveRenderTarget::RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
+{
+    blur = std::clamp(blur, 0, 4096);
+    Append(PrimitiveKind::Quad, Quad
+                    {
+                        .transform0 = { currentTransform.r0.x, currentTransform.r0.y, currentTransform.r0.z, 0 },
+                        .transform1 = { currentTransform.r1.x, currentTransform.r1.y, currentTransform.r1.z, 0 },
+                        .clipMin = { clipRect.Min(0), clipRect.Min(1) },
+                        .clipMax = { clipRect.Max(0), clipRect.Max(1) },
+
+                        .pos = { rect.x - blur, rect.y - blur }, .size = { rect.w + 2 * blur, rect.h + 2 * blur },
+
+                        .colorIndex = int16_t(colorStyleIndex),
+                        .blur = int16_t(blur),
+                        .cornerRadius = cornerRadius
+                    });
+}
+
 void PrimitiveRenderTarget::RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex)
 {
     Append(PrimitiveKind::Glyph, Glyph
@@ -412,6 +430,12 @@ void PrimitiveRenderer::RenderQuad(interstice::IntRect rect, interstice::IntRect
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderQuad(rect, clipRect, colorStyleIndex, cornerRadius, textureIndex);
+}
+
+void PrimitiveRenderer::RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
+{
+    assert(currentTarget != nullptr);
+    currentTarget->RenderShadow(rect, clipRect, colorStyleIndex, cornerRadius, blur);
 }
 
 }

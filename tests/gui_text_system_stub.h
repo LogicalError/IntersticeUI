@@ -419,8 +419,16 @@ namespace interstice
             int32_t widestLine = std::min<int32_t>(static_cast<int32_t>(text.length()), charsPerLine) * charWidth;
             int32_t height = static_cast<int32_t>(lines) * m_defaultLineHeight;
 
+            // Min-content: the longest word, as wrapping text measures.
+            size_t longestWord = 0, word = 0;
+            for (char c : text)
+            {
+                word = (c == ' ') ? 0 : word + 1;
+                longestWord = std::max(longestWord, word);
+            }
+
             return TextMeasurement{
-                .minWidth = charWidth,
+                .minWidth = std::min<int32_t>(widestLine, static_cast<int32_t>(longestWord) * charWidth),
                 .maxWidth = widestLine,
                 .minHeight = m_defaultLineHeight,
                 .maxHeight = height

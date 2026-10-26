@@ -70,6 +70,7 @@ namespace interstice
         ElementFlags flags = ElementFlags::None;
         Display display{};
         uint16_t wrapLineIndex = 0; // Row-wrap line, written by horizontal positioning, read by vertical positioning
+        int16_t  minContentWidth = 0; // Leaf with visibly overflowing text: the margin box width flex shrink stops at (CSS min-content)
     };
 
     // Render-time callback. Coordinates are inner-rect-local LAYOUT space; the renderer's

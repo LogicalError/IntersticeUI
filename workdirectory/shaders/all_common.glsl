@@ -20,7 +20,7 @@ struct BoxStyle // aka 'StyleState'
     int16_t  backgroundColorIndex;
     uint16_t borderDashSize;      // pixels per dash (0 = solid)
     uint16_t borderDashOffset;    // pixel start offset into dash pattern
-    int16_t  _pad0;
+    uint16_t shadowIndex;         // CPU only
 };
 
 layout(buffer_reference, std430)
@@ -130,7 +130,7 @@ struct Quad
 
     int        textureIndex;
     int16_t    colorIndex;
-    int16_t    _pad0;
+    int16_t    blur;         // pixels; a shadow: the rect includes the blur on every side
     float      cornerRadius;
 };
 

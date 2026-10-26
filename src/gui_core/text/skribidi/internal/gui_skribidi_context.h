@@ -79,6 +79,7 @@ namespace interstice
 		IconSide  iconSide;
 		TextAlign horizontalAlignment;
 		TextAlign verticalAlignment;
+		TextWrap  textWrapping = TextWrap::NoWrap;
 		VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid;
 		VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid;
 

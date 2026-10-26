@@ -82,7 +82,7 @@ namespace interstice
         StyleRef hierarchyVizCellStyleRef, hierarchyVizBgStyleRef, hierarchyVisibilityStyleRef;
         StyleRef logLevelIconStyleRef, logLevelWellStyleRef;
         StyleRef logLevelPillStyleRefs[3];   // indexed by LogLevel
-        StyleRef iconToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCountBadgeStyleRef;
+        StyleRef iconToggleStyleRef, logMessageStyleRef, logCellStyleRef, logCellTimeStyleRef, logCountBadgeStyleRef;
         StyleRef logTableStyleRef, filesToolbarStyleRef, appIconStyleRef;
         StyleRef inspectorPairHalfStyleRef, inspectorCaptionStyleRef, inspectorHeaderStyleRef, inspectorObjectIconStyleRef, inspectorObjectNamesStyleRef, inspectorObjectTitleStyleRef, inspectorObjectPathStyleRef, inspectorSearchRowStyleRef, inspectorSectionStyleRef, inspectorSectionFirstStyleRef, inspectorSectionBodyStyleRef;
         StyleRef profilerHeaderStyleRef, profilerRecordStyleRef, profilerPauseStyleRef, profilerMsStyleRef, profilerFpsStyleRef;

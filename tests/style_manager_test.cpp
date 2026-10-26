@@ -5,6 +5,7 @@
 #include <gui_core/style/gui_style_manager.h>
 #include <gui_core/style/gui_gradient_manager.h>
 #include <gui_core/style/gui_style.h>
+#include <gui_controls/gui_transition_manager.h>
 
 namespace interstice
 {
@@ -318,5 +319,72 @@ namespace interstice
         const LayoutStyle* layout = sm.GetLayoutStyle(ref.layoutStyleIndex);
         EXPECT_EQ(layout->iconSize, 37);
         EXPECT_EQ(layout->padding.top, 6);
+    }
+
+    // Shadows are registered per state at the UI scale; the focus ring only in focused states.
+    TEST(StyleManagerTest, ShadowsAreScaledAndTheFocusRingIsInFocusedStatesOnly)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        sm.SetUIScale(2.0f);
+
+        Style s{};
+        for (StyleState& state : s.states)
+            state.boxShadow[0] = BoxShadow{ .x = 1, .y = -2, .blur = 3, .spread = 4, .color = { 0, 0, 0, 90 } };
+        s.focusRing = BoxShadow{ .spread = 3, .color = { 0, 0, 255, 77 } };
+        const StyleRef ref = sm.Register(s);
+
+        const VisualShadowStyle* normal  = sm.GetVisualShadowStyle(ComputeGPUStyleIndex(ref.visualBoxStyleIndex, ElementState::None));
+        const VisualShadowStyle* focused = sm.GetVisualShadowStyle(ComputeGPUStyleIndex(ref.visualBoxStyleIndex, ElementState::Focused | ElementState::Hover));
+        ASSERT_NE(normal, nullptr);
+        ASSERT_NE(focused, nullptr);
+        EXPECT_EQ(normal->layers[0].x, 2);
+        EXPECT_EQ(normal->layers[0].y, -4);
+        EXPECT_EQ(normal->layers[0].blur, 6);
+        EXPECT_EQ(normal->layers[0].spread, 8);
+        EXPECT_FALSE(normal->layers[0].IsNone());
+        EXPECT_TRUE(normal->layers[1].IsNone());
+        EXPECT_TRUE(normal->ring.IsNone());
+        EXPECT_EQ(focused->ring.spread, 6);
+        EXPECT_FALSE(focused->ring.IsNone());
+    }
+
+    // An inset focus ring is a border-only box style with the element's corners.
+    TEST(StyleManagerTest, AnInsetFocusRingIsAnOutlineBoxStyle)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        Style s{};
+        s.borderRadius = BoxCorners(4);
+        s.focusRing    = BoxShadow{ .spread = 1, .color = { 0, 0, 255, 255 }, .inset = true };
+        const StyleRef ref = sm.Register(s);
+
+        const VisualShadowStyle* focused = sm.GetVisualShadowStyle(ComputeGPUStyleIndex(ref.visualBoxStyleIndex, ElementState::Focused));
+        ASSERT_NE(focused, nullptr);
+        EXPECT_TRUE(focused->ring.IsNone()) << "nothing outside the box";
+        ASSERT_NE(focused->insetRing, 0u);
+        const VisualBoxStyle& outline = sm.GetVisualBoxStylesSpan()[focused->insetRing - 1];
+        EXPECT_EQ(outline.borderWidths, BoxEdges(1));
+        EXPECT_EQ(outline.borderRadius, BoxCorners(4));
+        EXPECT_NE(outline.borderColorIndex[0], VisualColorStyleIndex::Invalid);
+    }
+
+    TEST(StyleManagerTest, AStyleWithoutShadowsHasNone)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        const StyleRef ref = sm.Register(Style{});
+        EXPECT_EQ(sm.GetVisualShadowStyle(ComputeGPUStyleIndex(ref.visualBoxStyleIndex, ElementState::None)), nullptr);
+    }
+
+    // Two styles that differ only in their shadow are two box styles.
+    TEST(StyleManagerTest, ShadowsTellBoxStylesApart)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        Style plain{};
+        Style shadowed{};
+        shadowed.states[Style::kNormal].boxShadow[0] = BoxShadow{ .y = 1, .blur = 2, .color = { 0, 0, 0, 40 } };
+        EXPECT_NE(sm.Register(plain).visualBoxStyleIndex, sm.Register(shadowed).visualBoxStyleIndex);
     }
 }

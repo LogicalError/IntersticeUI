@@ -1544,4 +1544,134 @@ namespace interstice
             EXPECT_TRUE(s.HasErrors()) << src;
         }
     }
+
+    // ============================================================================
+    // box-shadow and :focus-visible
+    // ============================================================================
+
+    TEST(StyleSheet, BoxShadowTakesOffsetsBlurSpreadAndAColor)
+    {
+        auto s = ParseStyleSheet(".a { box-shadow: 2px -3px 8px 1px rgba(16, 24, 40, .5); }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const BoxShadow& b = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        EXPECT_EQ(b.x, 2);
+        EXPECT_EQ(b.y, -3);
+        EXPECT_EQ(b.blur, 8);
+        EXPECT_EQ(b.spread, 1);
+        EXPECT_EQ(b.color, RGB(16, 24, 40, 128));
+        EXPECT_TRUE(s.GetStyle("a")->states[Style::kNormal].boxShadow[1].IsNone());
+    }
+
+    TEST(StyleSheet, BoxShadowColorMayComeFirstAndBlurIsOptional)
+    {
+        auto s = ParseStyleSheet(".a { box-shadow: #FF0000 0 1px; }");
+        ASSERT_FALSE(s.HasErrors());
+        const BoxShadow& b = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        EXPECT_EQ(b.y, 1);
+        EXPECT_EQ(b.blur, 0);
+        EXPECT_EQ(b.color, RGB(255, 0, 0));
+    }
+
+    // The first layer is the top one, as in CSS.
+    TEST(StyleSheet, BoxShadowTakesTwoLayersPerState)
+    {
+        auto s = ParseStyleSheet(R"(
+            .a { box-shadow: 0 0 0 3px blue, 0 8px 20px black; }
+            .a:hover { box-shadow: none; }
+        )");
+        ASSERT_FALSE(s.HasErrors());
+        const Style* a = s.GetStyle("a");
+        EXPECT_EQ(a->states[Style::kNormal].boxShadow[0].spread, 3);
+        EXPECT_EQ(a->states[Style::kNormal].boxShadow[1].blur, 20);
+        EXPECT_TRUE(a->states[Style::kHover].boxShadow[0].IsNone());
+        EXPECT_TRUE(a->states[Style::kHover].boxShadow[1].IsNone());
+        EXPECT_FALSE(a->states[Style::kFocus].boxShadow[0].IsNone());
+    }
+
+    // Palettes keep shadows in variables: one layer, none, or a color for a layer.
+    TEST(StyleSheet, BoxShadowVariables)
+    {
+        auto s = ParseStyleSheet(R"(
+            :root {
+                --shadow: 0 4px 14px rgba(16, 24, 40, 0.10);
+                --flat: none;
+                --ring-color: #6B9BFF4D;
+            }
+            .a { box-shadow: var(--shadow); }
+            .b { box-shadow: var(--flat); }
+            .c { box-shadow: 0 0 0 3px var(--ring-color), var(--shadow); }
+        )");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const BoxShadow& a = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        EXPECT_EQ(a.y, 4);
+        EXPECT_EQ(a.blur, 14);
+        EXPECT_EQ(a.color, RGB(16, 24, 40, 26));
+        EXPECT_TRUE(s.GetStyle("b")->states[Style::kNormal].boxShadow[0].IsNone());
+        const Style* c = s.GetStyle("c");
+        EXPECT_EQ(c->states[Style::kNormal].boxShadow[0].color, RGB(0x6B, 0x9B, 0xFF, 0x4D));
+        EXPECT_EQ(c->states[Style::kNormal].boxShadow[1].blur, 14);
+    }
+
+    TEST(StyleSheet, UnsupportedBoxShadowsAreErrors)
+    {
+        for (const char* src : { ".a { box-shadow: inset 0 1px 2px black; }",
+                                 ".a { box-shadow: 0 1px 2px; }",
+                                 ".a { box-shadow: 1px black; }",
+                                 ".a { box-shadow: 0 1px -2px black; }",
+                                 ".a { box-shadow: 0 1px 2px 3px 4px black; }",
+                                 ".a { box-shadow: 0 1px black, 0 2px black, 0 3px black; }" })
+        {
+            StyleSheet s;
+            EXPECT_NO_THROW(s = ParseStyleSheet(src)) << src;
+            EXPECT_TRUE(s.HasErrors()) << src;
+        }
+    }
+
+    // :focus-visible sets the focus ring, apart from :focus.
+    TEST(StyleSheet, FocusVisibleSetsTheFocusRing)
+    {
+        auto s = ParseStyleSheet(R"(
+            .a { box-shadow: 0 1px 2px black; }
+            .a:focus-visible { box-shadow: 0 0 0 3px blue; }
+        )");
+        ASSERT_FALSE(s.HasErrors());
+        const Style* a = s.GetStyle("a");
+        EXPECT_EQ(a->focusRing.spread, 3);
+        EXPECT_EQ(a->focusRing.color, RGB(0, 0, 255));
+        EXPECT_EQ(a->states[Style::kFocus].boxShadow[0].blur, 2) << ":focus keeps its own shadows";
+    }
+
+    TEST(StyleSheet, FocusVisibleTakesOneBoxShadowAndNoOtherState)
+    {
+        for (const char* src : { ".a:focus-visible { color: red; }",
+                                 ".a:focus-visible { box-shadow: 0 0 0 3px blue, 0 1px 2px black; }",
+                                 ".a:hover:focus-visible { box-shadow: 0 0 0 3px blue; }" })
+        {
+            StyleSheet s;
+            EXPECT_NO_THROW(s = ParseStyleSheet(src)) << src;
+            EXPECT_TRUE(s.HasErrors()) << src;
+        }
+    }
+
+    // Rows and menu items take an outline inside them: an inset ring of spread only.
+    TEST(StyleSheet, FocusVisibleTakesAnInsetOutline)
+    {
+        auto s = ParseStyleSheet(".a:focus-visible { box-shadow: inset 0 0 0 1px blue; }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        EXPECT_TRUE(s.GetStyle("a")->focusRing.inset);
+        EXPECT_EQ(s.GetStyle("a")->focusRing.spread, 1);
+
+        for (const char* src : { ".a:focus-visible { box-shadow: inset 0 1px 0 1px blue; }",
+                                 ".a:focus-visible { box-shadow: inset 0 0 2px 1px blue; }",
+                                 ".a:focus-visible { box-shadow: inset 0 0 0 0 blue; }" })
+            EXPECT_TRUE(ParseStyleSheet(src).HasErrors()) << src;
+    }
+
+    // A number may start with its decimal point, as in rgba(0, 0, 0, .35).
+    TEST(StyleSheet, NumbersMayStartWithADecimalPoint)
+    {
+        auto s = ParseStyleSheet(".a { color: rgba(0, 0, 0, .5); }");
+        ASSERT_FALSE(s.HasErrors());
+        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color, RGB(0, 0, 0, 128));
+    }
 }

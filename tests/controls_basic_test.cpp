@@ -36,6 +36,30 @@ namespace interstice
         // Button
         // ---------------------------------------------------------------------
 
+        // Numbers show in the monospace font (#79): numeric fields default to the number
+        // style, a textbox in the monospace font at the textbox's height.
+        TEST_F(ControlsBasicTest, NumericFieldsUseTheMonospaceNumberStyle)
+        {
+            const ID numberID = app.idManager.CreateStaticID();
+            const ID textID   = app.idManager.CreateStaticID();
+            float value = 1.5f;
+            std::string text = "1.5";
+            app.Frame([&] {
+                app.BeginRootWindow();
+                app.Field(numberID, value);
+                app.Field(textID, text);
+                app.EndRootWindow();
+            });
+
+            const ElementRef numberRef = app.elementStorage.FindElementRefByID(numberID);
+            ASSERT_TRUE(numberRef.IsValid());
+            EXPECT_EQ(app.elementStorage.GetElementUnsafe(numberRef).styleRef, app.theme.regularControls.number);
+            const VisualTextStyle* number = app.styleManager.GetVisualTextStyle(app.theme.regularControls.number.visualTextStyleIndex, ElementState::None);
+            ASSERT_NE(number, nullptr);
+            EXPECT_EQ(number->textStyle.family, FontFamily::Monospace);
+            EXPECT_EQ(app.GetElementRect(numberID).h, app.GetElementRect(textID).h) << "rows stay aligned";
+        }
+
         TEST_F(ControlsBasicTest, ButtonRendersAndIsHittable)
         {
             ID buttonID = app.idManager.CreateStaticID();

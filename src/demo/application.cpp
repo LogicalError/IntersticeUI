@@ -523,6 +523,7 @@ namespace interstice
         iconToggleStyleRef          = theme.GetStyle("icon-toggle");
         logMessageStyleRef          = theme.GetStyle("log-message");
         logCellStyleRef             = theme.GetStyle("log-cell");
+        logCellTimeStyleRef         = theme.GetStyle("log-cell-time");
         logTableStyleRef            = theme.GetStyle("log-table");
         filesToolbarStyleRef        = theme.GetStyle("files-toolbar");
         appIconStyleRef             = theme.GetStyle("app-icon");

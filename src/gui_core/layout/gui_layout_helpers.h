@@ -18,8 +18,11 @@ namespace interstice
     {
         static int2 ClampScrollOffsetToContent(int2 childOffset, const ElementRect& parent);
 
-        static int2 CalculateMinimumElementSize(ITextSystem& textSystem,
-                                                const Element &element, const ElementRect &elementRect);
+        // A leaf's MARGIN BOX at its natural (max-content) size. `minContentWidth` gets the
+        // margin box width flex shrink stops at: its text's min-content when the text
+        // overflows visibly, else 0.
+        static int2 CalculateLeafSize(ITextSystem& textSystem, const Element &element,
+                                      const ElementRect &elementRect, int32_t& minContentWidth);
         
         static int32_t RecalculateContentHeight(ITextSystem& textSystem,
                                                 const Element &element, const ElementRect &elementRect);
@@ -58,7 +61,8 @@ namespace interstice
             const LayoutStyle& s   = *c.layoutStyle;
             const int32_t margin   = (axis == 0) ? s.margin.Horizontal() : s.margin.Vertical();
             const int32_t chrome   = (axis == 0) ? s.GetMinWidth()       : s.GetMinHeight();
-            return std::max<int32_t>(chrome, size.min + margin);
+            const int32_t content  = (axis == 0) ? c.minContentWidth     : 0;
+            return std::max({ chrome, int32_t(size.min + margin), content });
         }
 
         template <int axis> requires(axis == 0 || axis == 1)

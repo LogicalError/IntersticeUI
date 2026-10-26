@@ -289,19 +289,6 @@ namespace interstice
         panelColor            = lineColorFromCSS("--bg-panel", color4f{ 0.07f, 0.08f, 0.09f, 1.0f });
         treeDropIndicatorStyle = lineColorFromCSS("--accent", color4f{ 0.0f, 0.478f, 0.8f, 1.0f });
 
-        {
-            // Distance-from-edge gradient (the quad shader feeds the rounded-box
-            // SDF in): transparent at the edge -> black just inside, giving the
-            // offset shadow a soft edge. Early dark stop keeps the ramp a few px
-            // wide rather than spanning half the box.
-            Gradient shadowGradient = Gradient::Linear(0.0f);
-            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.0f }, 0.00f);
-            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.5f }, 0.12f);
-            shadowGradient.AddStop(color4f{ 0.0f, 0.0f, 0.0f, 0.5f }, 1.00f);
-            shadowColorStyle = styleManager.RegisterColorStyle(
-                ColorStyle::Create(shadowGradient, ColorType::SDFGradient));
-        }
-
         marqueeFillColorStyle = styleManager.RegisterColorStyle(
             ColorStyle::Create(color4f{ 0.3f, 0.6f, 1.0f, 0.15f }));
 
@@ -328,11 +315,13 @@ namespace interstice
         regularControls.button       = registerCSS("button");
         regularControls.toggle       = registerCSS("toggle");
         regularControls.textbox      = registerCSS("textbox");
+        regularControls.number       = registerCSS("number-field");
         regularControls.menuTrigger  = registerCSS("menu-trigger");
 
         toolbarControls.button       = registerCSS("toolbar-button");
         toolbarControls.toggle       = registerCSS("toolbar-toggle");
         toolbarControls.textbox      = registerCSS("toolbar-textbox");
+        toolbarControls.number       = registerCSS("toolbar-number-field");
         toolbarControls.menuTrigger  = registerCSS("toolbar-menu-trigger");
 
         labelStyleRef                     = registerCSS("label");

@@ -24,6 +24,7 @@ namespace interstice
         StyleRef button;
         StyleRef toggle;
         StyleRef textbox;
+        StyleRef number;        // numeric fields: the textbox in the monospace font
         StyleRef menuTrigger;
     };
 
@@ -439,7 +440,6 @@ namespace interstice
         interstice::VisualColorStyleIndex accentColor, panelColor;          // a selected swatch's ring and gap
         interstice::VisualColorStyleIndex treeDropIndicatorStyle; // drop indicator lines + closed-branch outline
 
-        interstice::VisualColorStyleIndex shadowColorStyle;   // SDFGradient: transparent -> semi-opaque black, for drop shadows
         interstice::VisualColorStyleIndex marqueeFillColorStyle; // translucent accent for selection-marquee fill
 
         // Table row height in pixels, measured from real font metrics in ComputeRowMetrics.

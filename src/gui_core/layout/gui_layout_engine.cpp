@@ -98,10 +98,12 @@ namespace interstice
             } else 
             // leaf element
             {
+                int32_t minContentWidth = 0;
                 parentRect.rect.size = // both axes
-                    LayoutHelpers::CalculateMinimumElementSize(
+                    LayoutHelpers::CalculateLeafSize(
                         m_textSystem, cursor.CurrentElement(storage),
-                        parentRect);
+                        parentRect, minContentWidth);
+                parentRect.minContentWidth = int16_t(std::min<int32_t>(minContentWidth, parentRect.rect.w));
             }
         }
     }

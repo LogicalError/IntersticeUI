@@ -101,3 +101,12 @@
     --frame-bar-over: #E0A23A;
     --budget-line: #9AA1AD;
 }
+
+/* ---- Shadows and focus rings (box-shadow values) -------------------------- */
+:root {
+    --shadow-node: 0 4px 14px rgba(16, 24, 40, 0.10);
+    --shadow-control: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --shadow-chip: 0 1px 2px rgba(16, 24, 40, 0.12);
+    --focus-ring: 0 0 0 3px #2F6FEB40;      /* keyboard focus: the accent at 25% */
+    --selected-ring: 0 0 0 3px #2F6FEB29;   /* a selected node: the accent at 16% */
+}

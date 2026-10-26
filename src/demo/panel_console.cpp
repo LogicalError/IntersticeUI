@@ -395,6 +395,8 @@ namespace interstice
                         LayoutOverride::Auto().FlexGrow(1));
         logTableState.rowStyle         = theme.listRowStyleRef;
         logTableState.cellStyle        = logCellStyleRef;
+        if (!logColumns.empty())
+            logColumns[0].column.cellStyle = logCellTimeStyleRef; // styles change on a theme reload
         logTableState.showHeaders      = false;
         logTableState.columnSeparators = false;
         VirtualTable(idManager.AllocateDynamicID("consoleLog"),

@@ -36,7 +36,7 @@ namespace interstice
             WindowCustomTitleBar  = 1u << 19, // draws its own title bar; see WindowFlags::CustomTitleBar
             WindowConfirmClose    = 1u << 21, // closing it asks the app first: GUIApplication::CloseRequested
 
-        Shadows                   = 1u << 15, // Window or element casts a shadow on elements behind it
+        Shadows                   = 1u << 15, // The window gets the OS's drop shadow (elements use CSS box-shadow)
         PropagatesDescendantState = 1u << 16, // Hover/Focused when any descendant is
         NoInput                   = 1u << 17, // Mouse hits pass through
         IsCachedScope             = 1u << 20, // BeginCached scope; render blits its cached primitives while clean

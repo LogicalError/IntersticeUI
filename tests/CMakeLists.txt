@@ -76,6 +76,7 @@ list(APPEND GUI_CORE_TEST_FILES
   sizer_render_test.cpp
   slider_handler_test.cpp
   state_manager_focus_test.cpp
+  focus_ring_test.cpp
   state_manager_test.cpp
   style_geometry_test.cpp
   style_manager_test.cpp

@@ -73,6 +73,7 @@ namespace GUITest
         void RenderTriangle(interstice::float2, interstice::float2, interstice::float2, interstice::IntRect,
                             interstice::VisualColorStyleIndex, interstice::ImageIndex) override {}
         void RenderQuad(interstice::IntRect, interstice::IntRect, interstice::VisualColorStyleIndex, float, interstice::ImageIndex) override {}
+        void RenderShadow(interstice::IntRect, interstice::IntRect, interstice::VisualColorStyleIndex, float, int) override {}
         void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2, interstice::float2, float scale, int, int,
                          interstice::VisualColorStyleIndex, interstice::IntRect, interstice::ImageIndex) override
         {

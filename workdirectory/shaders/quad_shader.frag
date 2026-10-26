@@ -46,12 +46,24 @@ void main()
     // (alpha) and the SDFGradient color sample, so distance-based fills like the
     // drop shadow fade from the edge instead of sampling one fixed point.
     float cornerRadius = inSurface.cornerRadius * inSurface.transformScale * pixelrange;
-    float dist = sdf_roundedBox(uv, uvsize, cornerRadius);
+    // A shadow's quad extends its shape by the blur on every side.
+    float blurPx = float(quad.blur) * inSurface.transformScale;
+    vec2  shape  = max(uvsize - vec2(blurPx * pixelrange), vec2(0.0));
+    float dist = sdf_roundedBox(uv, shape, min(cornerRadius, min(shape.x, shape.y)));
 
     vec4 color = getSDFColor(int(quad.colorIndex), uv, uvsize, dist,
                              inSurface.textureIndex, inSurface.boxSize, weights);
 
     float alpha = clamp(1.0 - (dist / pixelrange), 0.0, 1.0);
+    if (blurPx > 0.0)
+    {
+        // Gaussian falloff across the edge (sigma = blur / 2, as CSS): 0.5 * erfc(d / (sigma * sqrt 2)).
+        float x  = (dist / pixelrange) / (blurPx * 0.70710678);
+        float x2 = x * x;
+        const float a = 0.147;
+        float erfx = sign(x) * sqrt(1.0 - exp(-x2 * (1.27323954 + a * x2) / (1.0 + a * x2)));
+        alpha = 0.5 * (1.0 - erfx);
+    }
 
     if (alpha <= (1.0 / 512.0))
         discard;

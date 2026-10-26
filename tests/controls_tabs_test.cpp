@@ -291,5 +291,61 @@ namespace interstice
             SUCCEED();
         }
 
-    } // namespace
-} // namespace interstice
+        // Keyboard focus on tabs (#95): Tab reaches the bar at its selected tab, arrows
+        // and Home/End move along it, selecting the tab moved to.
+        class TabKeyboardTest : public ControlsTabsTest
+        {
+        protected:
+            int selected = 1;
+            void Frame() { EmitTabBar(selected, 3); }
+            ID Focused() { return app.guiStateManager.Interaction().GetFocusedID(); }
+            bool FocusIsOnATab()
+            {
+                const ElementRef ref = app.elementStorage.FindElementRefByID(Focused());
+                return ref.IsValid() && app.elementStorage.GetElementUnsafe(ref).styleRef == app.theme.tabStyleRef;
+            }
+            void Press(KeyCode key) { app.InjectKey(key); Frame(); Frame(); }
+        };
+
+        TEST_F(TabKeyboardTest, TabReachesTheSelectedTab)
+        {
+            Frame();
+            Frame();
+            Press(KeyCode::Tab);
+            EXPECT_TRUE(FocusIsOnATab());
+            EXPECT_EQ(selected, 1) << "reaching the bar selects nothing new";
+            EXPECT_TRUE(app.guiStateManager.Interaction().IsFocusVisible());
+        }
+
+        TEST_F(TabKeyboardTest, ArrowsMoveAlongTheTabs)
+        {
+            Frame();
+            Frame();
+            Press(KeyCode::Tab);
+            const ID first = Focused();
+            Press(KeyCode::Right);
+            EXPECT_EQ(selected, 2);
+            EXPECT_TRUE(FocusIsOnATab());
+            EXPECT_NE(Focused(), first) << "focus moved with the selection";
+            Press(KeyCode::Right);
+            EXPECT_EQ(selected, 2) << "no wrapping past the last tab";
+            Press(KeyCode::Home);
+            EXPECT_EQ(selected, 0);
+            Press(KeyCode::Left);
+            EXPECT_EQ(selected, 0);
+            Press(KeyCode::End);
+            EXPECT_EQ(selected, 2);
+            Press(KeyCode::Left);
+            EXPECT_EQ(selected, 1);
+            EXPECT_EQ(Focused(), first) << "the same tab, the same focus";
+        }
+
+        // Without focus on the bar, arrows leave its tabs alone.
+        TEST_F(TabKeyboardTest, ArrowsDoNothingWithoutFocusOnTheBar)
+        {
+            Frame();
+            Press(KeyCode::Right);
+            EXPECT_EQ(selected, 1);
+        }
+    }
+}

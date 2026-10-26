@@ -33,6 +33,8 @@ namespace interstice
 
     void GUIApplication::EndTabBar()
     {
+        if (m_tabBarState.barID != ID::Invalid())
+            guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(m_tabBarState.barID).tabCount = m_tabBarState.nextTabIndex;
         EndReorderableGroup();
         m_tabBarState = {};
     }
@@ -56,9 +58,25 @@ namespace interstice
 
         BeginReorderableItem(id, std::move(constraints));
 
-        // Tab body: container only; icon+text and close button live as children.
+        // Tab body: container only; icon+text and close button live as children. Its ID is
+        // the tab's own, so keyboard focus stays on the tab when tabs move.
         auto capturedIndex = tabIndex;
-        interstice::ID bodyID  = idManager.AllocateDynamicID();
+        const ID barID = m_tabBarState.barID;
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+        interstice::ID bodyID  = idManager.AllocateDynamicID("tab_body");
+        interstice::ID contentID = idManager.AllocateDynamicID("tab_content");
+        if (pushed) (void)idManager.PopParent();
+
+        // The keyboard reaches the bar at its selected tab (the first without a selection);
+        // arrows then move along the tabs.
+        auto& keyboard = guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(barID);
+        if (isSelected || (!selectedIndex && tabIndex == 0))
+            tabChainManager.RegisterTabTarget(bodyID);
+        if (keyboard.focusIndex == tabIndex)
+        {
+            guiStateManager.Interaction().SetFocusID(bodyID);
+            keyboard.focusIndex = -1;
+        }
 
         auto state = guiStateManager.GetCurrentState(bodyID);
 
@@ -66,7 +84,7 @@ namespace interstice
             interstice::Element
             {
                 .id       = bodyID,
-                .eventHandler = [this, id, capturedIndex, selectedIndex](ElementEvent&& event) -> bool
+                .eventHandler = [this, id, barID, capturedIndex, selectedIndex](ElementEvent&& event) -> bool
                 {
                     if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
                     {
@@ -74,6 +92,29 @@ namespace interstice
                             *selectedIndex = capturedIndex;
                         guiStateManager.Interaction().SetClicked(id);
 					    // Not consumed, so MouseUp still arrives for drag-out detection.
+                    }
+                    if (event.type == interstice::EventType::KeyDown &&
+                        (guiStateManager.GetCurrentState(event.id) & ElementState::Focused) != ElementState::None)
+                    {
+                        auto& keys = guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(barID);
+                        int next = capturedIndex;
+                        switch (event.state.lastKey)
+                        {
+                            case KeyCode::Left:  next = capturedIndex - 1; break;
+                            case KeyCode::Right: next = capturedIndex + 1; break;
+                            case KeyCode::Home:  next = 0;                 break;
+                            case KeyCode::End:   next = keys.tabCount - 1; break;
+                            default: return false;
+                        }
+                        // Moving along the tabs shows the tab moved to, as in a tab list.
+                        next = std::clamp(next, 0, std::max(0, keys.tabCount - 1));
+                        if (next != capturedIndex)
+                        {
+                            if (selectedIndex)
+                                *selectedIndex = next;
+                            keys.focusIndex = next;
+                        }
+                        return true;
                     }
                     return false;
                 },
@@ -87,7 +128,6 @@ namespace interstice
         VERIFY(elementStorage.BeginChildren());
 
         // Icon+text child: NoInput so input reaches the body; shares the body's state so it restyles with it.
-        interstice::ID contentID = idManager.AllocateDynamicID();
         RegisterElement(
             interstice::Element
             {

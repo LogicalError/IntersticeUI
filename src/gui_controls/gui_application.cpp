@@ -655,6 +655,57 @@ namespace interstice
         m_themeReloadPending = true; // styles are registered at the UI scale
     }
 
+    // A shadow layer `t` of the way from `a` to `b`. A layer on one side only grows
+    // out from under the box: its other side is shrunk until the box covers it.
+    static VisualShadow BlendShadow(VisualShadow a, VisualShadow b, float t)
+    {
+        auto tucked = [](VisualShadow s) {
+            s.spread = int16_t(-(int(s.blur) + std::max(std::abs(int(s.x)), std::abs(int(s.y)))));
+            return s;
+        };
+        if (a.IsNone()) a = tucked(b);
+        if (b.IsNone()) b = tucked(a);
+        if (t >= 1.0f) return b;
+        auto lerp = [t](int from, int to) { return int(std::lround(float(from) + float(to - from) * t)); };
+        return VisualShadow{ .x      = int16_t(lerp(a.x, b.x)),
+                             .y      = int16_t(lerp(a.y, b.y)),
+                             .blur   = uint16_t(lerp(a.blur, b.blur)),
+                             .spread = int16_t(lerp(a.spread, b.spread)),
+                             .color  = t < 0.5f ? a.color : b.color };
+    }
+
+    void GUIApplication::RenderBoxShadows(IntRect rectLayout, IntRect clipRectScreen, const TransitionState& ts, bool ring)
+    {
+        const VisualShadowStyle* to   = styleManager.GetVisualShadowStyle(ts.toStyleIndex);
+        const VisualShadowStyle* from = ts.blendT < 1.0f ? styleManager.GetVisualShadowStyle(ts.fromStyleIndex) : to;
+        if (!to && !from)
+            return;
+        const VisualShadowStyle none{};
+        if (!to)   to   = &none;
+        if (!from) from = &none;
+
+        const auto  boxStyles = styleManager.GetVisualBoxStylesSpan();
+        const float radius    = ts.toStyleIndex < boxStyles.size() ? float(boxStyles[ts.toStyleIndex].borderRadius.topLeft) : 0.0f;
+        auto draw = [&](const VisualShadow& s) {
+            if (s.IsNone() || (s.blur == 0 && s.spread <= 0 && s.x == 0 && s.y == 0))
+                return; // under the box
+            IntRect r = rectLayout;
+            r.x = int16_t(r.x + s.x - s.spread);
+            r.y = int16_t(r.y + s.y - s.spread);
+            r.w = int16_t(r.w + 2 * s.spread);
+            r.h = int16_t(r.h + 2 * s.spread);
+            if (r.w <= 0 || r.h <= 0)
+                return;
+            // Offsets are in LAYOUT space, so they scale with the content transform (zoom).
+            guiRenderer->RenderShadow(r, clipRectScreen, s.color, std::max(0.0f, radius + float(s.spread)), s.blur);
+        };
+        // The first layer is on top, as in CSS; the focus ring over all of them.
+        for (int i = kMaxBoxShadows - 1; i >= 0; --i)
+            draw(BlendShadow(from->layers[i], to->layers[i], ts.blendT));
+        if (ring)
+            draw(BlendShadow(from->ring, to->ring, ts.blendT));
+    }
+
     void GUIApplication::OnRender(float elapsedTimeSecs)
     {
         // Per-depth render state, indexed by ElementRef.depth (parent = depth - 1).
@@ -902,35 +953,25 @@ namespace interstice
                     auto  state             = childElement.state;
                     auto  baseBoxStyleIndex = childElement.styleRef.visualBoxStyleIndex;
 
-                    // Windows get an OS-drawn shadow instead.
-                    const bool wantsShadow = (childElement.flags & ElementFlags::Shadows) != ElementFlags::None;
-                    const bool isWindow    = (childElement.flags & ElementFlags::IsWindow) != ElementFlags::None;
-                    if (wantsShadow && !isWindow &&
-                        theme.shadowColorStyle != VisualColorStyleIndex::Invalid)
-                    {
-                        const int kShadowOffsetPx = styleManager.Px(6);
-
-                        // Offset in LAYOUT space so it scales with the content transform (zoom).
-                        IntRect shadowRect = rectLayout;
-                        shadowRect.x += kShadowOffsetPx;
-                        shadowRect.y += kShadowOffsetPx;
-
-                        const VisualBoxStyle* bs = styleManager.GetVisualBoxStyle(baseBoxStyleIndex, state);
-                        const float baseRadius   = bs ? float(bs->borderRadius.topLeft) : 0.0f;
-                        const float shadowRadius = baseRadius;
-
-                        guiRenderer->RenderQuad(shadowRect, parentClipRectScreen,
-                                                theme.shadowColorStyle, shadowRadius);
-                    }
-
                     {
                         TransitionState ts = transitionManager.Resolve(childElement.id, baseBoxStyleIndex, state, elapsedTimeSecs);
                         // A mid-transition blend would freeze in the capture; rebuild until it settles.
                         if (capturing && ts.blendT < 1.0f)
                             m_uiCache->Invalidate(captureScopeId);
+                        // Windows get an OS-drawn shadow instead.
+                        const bool isWindow = (childElement.flags & ElementFlags::IsWindow) != ElementFlags::None;
+                        const bool ring     = !isWindow && (state & ElementState::Focused) != ElementState::None &&
+                                              guiStateManager.Interaction().IsFocusVisible();
+                        if (!isWindow)
+                            RenderBoxShadows(rectLayout, parentClipRectScreen, ts, ring);
                         // rect is LAYOUT space (mapped by SetTransform), the scissor is SCREEN space.
                         guiRenderer->RenderBox(rectLayout, parentClipRectScreen, ts.fromStyleIndex, ts.toStyleIndex, ts.blendT,
                                                childElement.colorStyleIndex, childElement.backgroundImage, elementSnappedRect);
+                        // An inset focus ring: an outline over the box, under its content.
+                        if (ring)
+                            if (const VisualShadowStyle* s = styleManager.GetVisualShadowStyle(ts.toStyleIndex); s && s->insetRing != 0)
+                                guiRenderer->RenderBox(rectLayout, parentClipRectScreen, s->insetRing - 1, s->insetRing - 1, 1.0f,
+                                                       {}, ImageIndex::Invalid, elementSnappedRect);
                     }
 
                     // RenderText handles plain text, rich text with inline icons, and TextEditor rendering.

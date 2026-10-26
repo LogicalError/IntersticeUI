@@ -773,7 +773,7 @@ namespace interstice
                     return false;
                 },
                 .styleRef = theme.nodeStyleRef,
-                .flags    = ElementFlags::PropagatesDescendantState | ElementFlags::Shadows,
+                .flags    = ElementFlags::PropagatesDescendantState,
                 .state    = outerState
             };
             // MinWidth (not Fixed): shrink-wraps content, floored at the grid-snapped width.

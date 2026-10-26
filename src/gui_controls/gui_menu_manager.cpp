@@ -94,6 +94,7 @@ namespace interstice
             if (currentMousePos.x != lastMousePos.x || currentMousePos.y != lastMousePos.y)
             {
                 mouseHiddenForMenu = false;
+                guiStateManager.Interaction().SetFocusVisible(false); // the mouse leads again
             }
         }
         else

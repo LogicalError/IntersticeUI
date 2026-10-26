@@ -62,6 +62,9 @@ namespace interstice
 
         // A Box without SDF borders, style blending or element state.
         virtual void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
+        // A box shadow: `rect` is the shadow's shape, which fades out over `blur` pixels
+        // on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
+        virtual void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
 
         virtual void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
 

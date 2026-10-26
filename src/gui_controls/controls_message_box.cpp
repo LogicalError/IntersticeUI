@@ -63,12 +63,15 @@ namespace interstice
         const ID buttonRange = idManager.AllocateRangedID(uint32_t(count), "message_box_button");
         auto buttonID = [&](int i) { return idManager.GetSubID(buttonRange, uint32_t(i)); };
 
-        // The keyboard stays on the buttons, starting on the default one.
+        // The keyboard stays on the buttons, starting on the default one, which shows the focus ring.
         const ID focused = guiStateManager.Interaction().GetFocusedID();
         bool onAButton = false;
         for (int i = 0; i < count; ++i) onAButton |= focused == buttonID(i);
         if (!onAButton)
+        {
             guiStateManager.Interaction().SetFocusID(buttonID(defaultButton));
+            guiStateManager.Interaction().SetFocusVisible(true);
+        }
 
         // The close button, top right: as Cancel.
         Button(idManager.AllocateDynamicID("message_box_close"), theme.tabCloseIcon, [choose, cancelButton] { choose(cancelButton); },

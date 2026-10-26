@@ -117,5 +117,32 @@ namespace interstice
             EXPECT_LT(m.maxWidth, 256)
                 << "Text(\":\") in wrap context measured at " << m.maxWidth << " px";
         }
+
+        // Min-content (#69): wrapping text measures its longest word; text that doesn't
+        // wrap measures its whole line either way.
+        TEST_F(SkribidiTextMeasurementTest, WrappingTextMeasuresItsLongestWordAsMinContent)
+        {
+            const StyleRef style = MakeStaticTextStyle();
+            const TextMeasurement sentence = textSystem->GetTextMeasurement(
+                textSystem->RegisterText(ID{ .value{ .integer = 3 } }, IconID::Invalid, "a wonderful day", style, ElementState::None));
+            const TextMeasurement word = textSystem->GetTextMeasurement(
+                textSystem->RegisterText(ID{ .value{ .integer = 4 } }, IconID::Invalid, "wonderful", style, ElementState::None));
+            EXPECT_LT(sentence.minWidth, sentence.maxWidth);
+            EXPECT_NEAR(sentence.minWidth, word.maxWidth, 1) << "the longest word";
+            EXPECT_EQ(word.minWidth, word.maxWidth);
+        }
+
+        TEST_F(SkribidiTextMeasurementTest, TextThatDoesNotWrapHasOneLineAsMinContent)
+        {
+            Style s{};
+            s.textLayoutStyle.textWrapping = TextWrap::NoWrap;
+            for (int i = 0; i < Style::kStateCount; ++i)
+                s.states[i].textStyle.fontSize = 13.0f;
+            const StyleRef style = styleManager.Register(s);
+            const TextMeasurement m = textSystem->GetTextMeasurement(
+                textSystem->RegisterText(ID{ .value{ .integer = 5 } }, IconID::Invalid, "a wonderful day", style, ElementState::None));
+            EXPECT_GT(m.maxWidth, 0);
+            EXPECT_EQ(m.minWidth, m.maxWidth);
+        }
     }
 }

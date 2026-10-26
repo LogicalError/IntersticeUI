@@ -35,6 +35,10 @@ namespace interstice
         uint8_t    dimCount = 0;
         float      number    = 0.0f; // == dims[0] when dimCount >= 1
         bool       hasNumber = false; // dimCount >= 1
+
+        // A box-shadow value (`--shadow: 0 8px 20px rgba(0,0,0,0.35);`, or none).
+        BoxShadow  shadows[kMaxBoxShadows] {};
+        bool       hasShadow = false;
     };
 
     // One @font-face rule. Faces sharing a family name form one family.

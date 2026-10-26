@@ -138,7 +138,7 @@ namespace interstice
         interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid;
 
         int16_t         colorIndex = 0;
-        int16_t         _pad0 = 0;
+        int16_t         blur = 0;           // pixels; a shadow: the rect includes the blur on every side
         float           cornerRadius = 0.0f;
     };
 

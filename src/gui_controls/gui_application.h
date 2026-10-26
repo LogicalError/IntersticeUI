@@ -874,7 +874,7 @@ namespace interstice
                 {
 					// Each component: a colored axis label (drag it to change the value) attached
                     // to the component's field. A caller's own style replaces the attached field.
-                    const StyleRef componentStyle = (style == theme.controls->textbox) ? theme.vectorComponentStyleRef : style;
+                    const StyleRef componentStyle = (style == theme.controls->number || style == theme.controls->textbox) ? theme.vectorComponentStyleRef : style;
                     for (int i = 0; i < TypeDimensions<T>::dimensions; i++)
                     {
                         DragLabel(TypeDimensions<T>::names[i], theme.axisLabelStyleRefs[i % 4],
@@ -888,11 +888,11 @@ namespace interstice
             }
         }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(ID id, T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(id, value, textEditBehavior, theme.controls->textbox, config, std::move(constraints)); }
+        inline bool Field(ID id, T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(id, value, textEditBehavior, theme.controls->number, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(ID id, T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}) { return Field<T>(id, value, textEditBehavior, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(ID id, T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}) { return Field<T>(id, value, textEditBehavior, theme.controls->number, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(ID id, T& value, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(ID id, T& value, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, theme.controls->number, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
         inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, style, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
@@ -900,13 +900,13 @@ namespace interstice
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
         inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, style, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->textbox, config, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->number, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(T& value, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, config, std::move(constraints)); }
+        inline bool Field(T& value, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->number, config, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(       T& value, TextEditBehavior textEditBehavior, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, theme.controls->number, {}, std::move(constraints)); }
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
-        inline bool Field(       T& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, {}, std::move(constraints)); }
+        inline bool Field(       T& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->number, {}, std::move(constraints)); }
         
 
         // A number's type as a short tag: f32, f64, i8 ... u64 (empty for other types).
@@ -1644,6 +1644,8 @@ namespace interstice
         void ApplyPendingStyleReload();
 
         void OnRender(float elapsedTimeSecs);
+        // The box style's CSS shadows (and the focus ring when `ring`), blended as the box is.
+        void RenderBoxShadows(IntRect rectLayout, IntRect clipRectScreen, const TransitionState& ts, bool ring);
         void OnFrame();
         Result<void> RecoverDevice();
 

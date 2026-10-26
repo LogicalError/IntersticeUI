@@ -416,6 +416,33 @@ namespace
                 EXPECT_LE(redness(PixelAt(ctx, x, y)), limit) << "corner pixel " << x << "," << y << ": " << std::hex << (PixelAt(ctx, x, y) & 0xFFFFFF) << std::dec << " fill " << fill << " border " << border;
     }
 
+    // A box shadow fades across its edge over the blur: full inside, about half at the
+    // edge, nearly gone a blur outside it, and steadily darker in between.
+    TEST_F(GpuReadbackTest, ShadowFadesOverItsBlur)
+    {
+        auto* ctx = CreateReadbackWindow();
+        if (ctx == nullptr)
+            GTEST_SKIP() << "no Vulkan device available";
+        RegisterColorStyles();
+
+        constexpr int kX = 100, kY = 60, kW = 120, kH = 120, kBlur = 16;
+        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
+            r->RenderShadow(interstice::IntRect{ kX, kY, kW, kH }, kFullClip, solidColor, 6.0f, kBlur);
+        });
+
+        auto level = [&](int x) { return int((PixelAt(ctx, x, kY + kH / 2) >> 8) & 0xFF); }; // green
+        const int bg     = int((PixelAt(ctx, 4, 4) >> 8) & 0xFF);
+        const int inside = level(kX + kW / 2);
+        ASSERT_GT(inside - bg, 200) << "full inside the shape";
+        const float atEdge = float(level(kX) - bg) / float(inside - bg);
+        EXPECT_GT(atEdge, 0.25f);
+        EXPECT_LT(atEdge, 0.85f);
+        EXPECT_LE(level(kX - kBlur) - bg, (inside - bg) / 10) << "a blur outside the edge";
+        EXPECT_EQ(level(kX - kBlur - 4), bg) << "past the quad, which extends one blur";
+        for (int x = kX - kBlur; x < kX + kBlur; ++x)
+            EXPECT_LE(level(x), level(x + 1) + 1) << "falls off steadily at " << x;
+    }
+
     // A child placed just inside its parent's 1-unit border (a node's header)
     // must meet the border at any scale: no background shows between them,
     // whichever way the edges round to pixels.

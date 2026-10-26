@@ -61,8 +61,8 @@ namespace interstice
     // Minimum element sizing from text content
     // ---------------------------------------------------------------------------
 
-    // An auto-sized leaf with text uses the text system's minWidth (= one char) for its width.
-    TEST_F(TextWrappingLayoutTest, AutoSizedTextLeaf_Width_IsMinimumCharWidth)
+    // An auto-sized leaf with text starts at its natural width: the text on one line.
+    TEST_F(TextWrappingLayoutTest, AutoSizedTextLeaf_Width_IsItsNaturalWidth)
     {
         Style style;
         style.padding = BoxEdges(0);
@@ -78,7 +78,7 @@ namespace interstice
         layoutEngine.Layout(*osWindowManager, storage);
 
         const ElementRect& rect = storage.GetElementRectUnsafe(r.ref);
-        EXPECT_EQ(rect.rect.w, kCharWidth);
+        EXPECT_EQ(rect.rect.w, 11 * kCharWidth);
     }
 
     // An auto-sized leaf with text uses the text system's minHeight (= one line) for its height.
@@ -101,7 +101,7 @@ namespace interstice
         EXPECT_EQ(rect.rect.h, kLineHeight);
     }
 
-    // Padding and border are added on top of the text's minimum dimensions.
+    // Padding and border are added on top of the text's natural dimensions.
     TEST_F(TextWrappingLayoutTest, AutoSizedTextLeaf_StyleDimensionsContributeTo_TotalSize)
     {
         const int32_t padding = 4;
@@ -127,7 +127,7 @@ namespace interstice
         // rect is the border box; margin is stripped off into rect.x/y
         EXPECT_EQ(rect.rect.x, margin);
         EXPECT_EQ(rect.rect.y, margin);
-        EXPECT_EQ(rect.rect.w, padding * 2 + border * 2 + kCharWidth);
+        EXPECT_EQ(rect.rect.w, padding * 2 + border * 2 + 5 * kCharWidth);
         EXPECT_EQ(rect.rect.h, padding * 2 + border * 2 + kLineHeight);
     }
 
@@ -271,9 +271,8 @@ namespace interstice
     // Text in flex layout
     // ---------------------------------------------------------------------------
 
-    // Text items in a flex row get their minimum (1-char) width, not the unwrapped
-    // text width, leaving the container to distribute the rest.
-    TEST_F(TextWrappingLayoutTest, FlexRow_TextChildren_Width_IsMinimumIntrinsicWidth)
+    // Text items in a flex row start at their natural (unwrapped) widths.
+    TEST_F(TextWrappingLayoutTest, FlexRow_TextChildren_Width_IsTheirNaturalWidth)
     {
         Style containerStyle;
         containerStyle.display = Display::Flex;
@@ -313,12 +312,87 @@ namespace interstice
 
         layoutEngine.Layout(*osWindowManager, storage);
 
-        // Both items have the same minimum width (one char) - their text length
-        // does not affect the element width without explicit size constraints.
+        // With room to spare, each item keeps its natural width.
         const ElementRect& r0 = storage.GetElementRectUnsafe(itemRefs[0]);
         const ElementRect& r1 = storage.GetElementRectUnsafe(itemRefs[1]);
-        EXPECT_EQ(r0.rect.w, kCharWidth);
-        EXPECT_EQ(r1.rect.w, kCharWidth);
+        EXPECT_EQ(r0.rect.w, 5 * kCharWidth);
+        EXPECT_EQ(r1.rect.w, 19 * kCharWidth);
+    }
+
+    // A row too narrow for its text shrinks it (flex-shrink), but no item below its
+    // min-content: the longest word stays whole (#69).
+    class TextShrinkTest : public TextWrappingLayoutTest
+    {
+    protected:
+        std::vector<ElementRef> RowOf(int32_t rowWidth, std::initializer_list<const char*> labels)
+        {
+            Style row;
+            row.layoutData.flex.direction = FlexDirection::Row;
+            row.layoutData.flex.wrap      = FlexWrap::NoWrap;
+            Style item;
+            item.layoutData.flex.flexShrink = 1;
+            item.SetOverflow(Overflow::Visible);
+            const StyleRef rowRef = styleManager.Register(row), itemRef = styleManager.Register(item);
+
+            std::vector<ElementRef> refs;
+            EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+            EXPECT_EQ(storage.Add([&] { Element e; e.id = ID{ .value{.integer = 20} }; e.styleRef = rowRef; return e; }(),
+                                  LayoutOverride::FixedWidth(rowWidth)).status, ElementStorageResult::Success);
+            EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            uint64_t next = 21;
+            for (const char* label : labels)
+                refs.push_back(storage.Add(MakeTextElement(itemRef, ID{ .value{.integer = next++} }, label)).ref);
+            EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+            EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+            layoutEngine.Layout(*osWindowManager, storage);
+            return refs;
+        }
+        int32_t Width(ElementRef ref) { return storage.GetElementRectUnsafe(ref).rect.w; }
+    };
+
+    TEST_F(TextShrinkTest, ShrinksTowardMinContentWhenSpaceRunsOut)
+    {
+        // Natural 88 + 16 in 100: both shrink a little.
+        auto refs = RowOf(100, { "Hello World", "Hi" });
+        EXPECT_EQ(Width(refs[0]) + Width(refs[1]), 100);
+        EXPECT_LT(Width(refs[0]), 11 * kCharWidth);
+        EXPECT_GE(Width(refs[1]), 2 * kCharWidth - 1);
+    }
+
+    TEST_F(TextShrinkTest, AnItemAtItsMinContentLeavesTheRestToTheOthers)
+    {
+        // 88 + 16 in 60: "Hi" can't lose a letter, so "Hello World" takes the whole cut.
+        auto refs = RowOf(60, { "Hello World", "Hi" });
+        EXPECT_EQ(Width(refs[1]), 2 * kCharWidth);
+        EXPECT_EQ(Width(refs[0]), 60 - 2 * kCharWidth);
+    }
+
+    TEST_F(TextShrinkTest, NoItemShrinksBelowItsLongestWord)
+    {
+        // Too narrow for both longest words: they stay whole and overflow the row.
+        auto refs = RowOf(30, { "Hello World", "Hi" });
+        EXPECT_EQ(Width(refs[0]), 5 * kCharWidth);
+        EXPECT_EQ(Width(refs[1]), 2 * kCharWidth);
+    }
+
+    // Clipped text (overflow hidden or auto, as ellipsis labels) has no such floor.
+    TEST_F(TextShrinkTest, ClippedTextShrinksPastItsLongestWord)
+    {
+        Style row;
+        row.layoutData.flex.direction = FlexDirection::Row;
+        Style item;
+        item.layoutData.flex.flexShrink = 1;
+        item.SetOverflow(Overflow::Hidden);
+        const StyleRef rowRef = styleManager.Register(row), itemRef = styleManager.Register(item);
+        ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.Add([&] { Element e; e.id = ID{ .value{.integer = 30} }; e.styleRef = rowRef; return e; }(),
+                              LayoutOverride::FixedWidth(20)).status, ElementStorageResult::Success);
+        ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        const ElementRef label = storage.Add(MakeTextElement(itemRef, ID{ .value{.integer = 31} }, "Hello")).ref;
+        ASSERT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+        layoutEngine.Layout(*osWindowManager, storage);
+        EXPECT_EQ(Width(label), 20);
     }
 
     // Text items in a flex column are all one line tall regardless of text length.

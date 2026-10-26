@@ -92,8 +92,17 @@ namespace interstice
         l.grid.column.track = track(in.layoutData.grid.column.track);
         l.grid.row.track    = track(in.layoutData.grid.row.track);
 
+        auto shadow = [&](BoxShadow b) {
+            b.x = px(b.x); b.y = px(b.y); b.blur = px(b.blur); b.spread = px(b.spread);
+            return b;
+        };
+        out.focusRing = shadow(in.focusRing);
         for (StyleState& state : out.states)
+        {
             state.textStyle = ScaledTextStyle(state.textStyle, s);
+            for (BoxShadow& b : state.boxShadow)
+                b = shadow(b);
+        }
         return out;
     }
 
@@ -198,6 +207,9 @@ namespace interstice
                 .backgroundColorIndex = backgroundColorIndex,
                 .borderDashSize       = (uint16_t)std::clamp((int)style.borderDashSize,   0, 65535),
                 .borderDashOffset     = (uint16_t)std::clamp((int)style.borderDashOffset, 0, 65535),
+                .shadowIndex          = RegisterShadows(styleState.boxShadow,
+                                                        (i & Style::kFocus) != 0 ? style.focusRing : BoxShadow{},
+                                                        style.borderRadius),
             };
             visualBoxHash = Hash::Combine(visualBoxHash, visualBoxStyle[i].GetHashCode());
 
@@ -494,6 +506,7 @@ namespace interstice
 
         m_visualBoxStyles.clear();
         m_visualBoxHashMap.clear();
+        m_visualShadowStyles.clear();
 
         m_visualTextStyles.clear();
         m_visualTextHashMap.clear();
@@ -564,5 +577,52 @@ namespace interstice
         state &= ElementState::VisualMask;
         if ((state & ElementState::Disabled) != ElementState::None) state = ElementState::Disabled;
         return &m_visualTextStyles[(idx * Style::kStateCount) + (int)state];
+    }
+
+    const VisualShadowStyle* StyleManager::GetVisualShadowStyle(uint32_t gpuStyleIndex) const noexcept
+    {
+        if (gpuStyleIndex >= m_visualBoxStyles.size()) return nullptr;
+        const uint16_t shadow = m_visualBoxStyles[gpuStyleIndex].shadowIndex;
+        return shadow == 0 ? nullptr : &m_visualShadowStyles[shadow - 1u];
+    }
+
+    uint16_t StyleManager::RegisterShadows(const BoxShadow (&layers)[kMaxBoxShadows], const BoxShadow& ring, BoxCorners radius) noexcept
+    {
+        auto visual = [this](const BoxShadow& b) {
+            if (b.IsNone()) return VisualShadow{};
+            return VisualShadow{ .x = b.x, .y = b.y, .blur = b.blur, .spread = b.spread,
+                                 .color = RegisterColorStyle(ColorStyle::Create(b.color)) };
+        };
+
+        VisualShadowStyle s;
+        bool any = !ring.IsNone();
+        for (int i = 0; i < kMaxBoxShadows; ++i)
+        {
+            s.layers[i] = visual(layers[i]);
+            any |= !layers[i].IsNone();
+        }
+        if (!any) return 0;
+        if (ring.inset)
+        {
+            // The outline is a border-only box with the element's corners (already in pixels).
+            Style outline{};
+            outline.borderWidths = BoxEdges(uint16_t(std::max<int>(1, ring.spread)));
+            outline.borderRadius = radius;
+            for (StyleState& state : outline.states)
+            {
+                state.backgroundColor = ColorStyle::Create(color4b{});
+                state.SetBorderColor(ColorStyle::Create(ring.color));
+            }
+            const VisualBoxStyleIndex box = Register(outline, StyleUnits::Pixels).visualBoxStyleIndex;
+            s.insetRing = 1u + uint32_t(int(box) - 1) * Style::kStateCount;
+        }
+        else
+            s.ring = visual(ring);
+
+        for (size_t i = 0; i < m_visualShadowStyles.size(); ++i)
+            if (m_visualShadowStyles[i] == s)
+                return uint16_t(i + 1);
+        m_visualShadowStyles.push_back(s);
+        return uint16_t(m_visualShadowStyles.size());
     }
 }

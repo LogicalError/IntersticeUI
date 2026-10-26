@@ -71,6 +71,8 @@ namespace interstice
         const VisualTextStyle*       GetSelectionVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state = interstice::ElementState::None) const noexcept;
         const VisualTextStyleStates* GetVisualTextStyles(VisualTextStyleIndex index) const noexcept;
         const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state) const noexcept;
+        // The shadows of a box style by its flat GPU index (ComputeGPUStyleIndex); nullptr if none.
+        const VisualShadowStyle*     GetVisualShadowStyle(uint32_t gpuStyleIndex) const noexcept;
 
         inline size_t LayoutStyleCount() const noexcept { return m_layoutStyles.size(); }
 
@@ -146,6 +148,8 @@ namespace interstice
                                                        uint64_t hash) const noexcept;
         VisualTextStyleIndex RegisterVisualTextStyles(const VisualTextStyle (&states)[Style::kStateCount],
                                                       uint64_t hash) noexcept;
+        // 1-based index of the deduplicated shadow style, 0 when there are no shadows.
+        uint16_t RegisterShadows(const BoxShadow (&layers)[kMaxBoxShadows], const BoxShadow& ring, BoxCorners radius) noexcept;
 
         GradientManager&             m_gradientManager;
         uint32_t                     m_generation = 0;
@@ -156,6 +160,7 @@ namespace interstice
         std::vector<VisualBoxStyle>   m_visualBoxStyles;
         std::vector<VisualTextStyle>  m_visualTextStyles;
         std::vector<VisualColorStyle> m_visualColorStyles;
+        std::vector<VisualShadowStyle> m_visualShadowStyles; // few: searched linearly at registration
 
         // Parallel to m_visualColorStyles; invalid for texture-only entries.
         std::vector<GradientHandle>   m_visualColorStyleHandles;

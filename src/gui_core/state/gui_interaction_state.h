@@ -45,6 +45,9 @@ namespace interstice
         // scroll perpendicular to the drag.
         ScrollAxis m_focusScrollAxis = ScrollAxis::Both;
 
+        // Focus came from the keyboard (CSS :focus-visible): Tab sets it, a mouse press clears it.
+        bool m_focusVisible = false;
+
         MouseButtons m_prevMouseButtonFlags = MouseButtons::None;
 
     public:
@@ -63,6 +66,10 @@ namespace interstice
         void SetFocusIDNoScroll(ID id)                 { m_focusedID = id; m_focusScrollAxis = ScrollAxis::None; }
         void SetFocusIDScrollAxis(ID id, ScrollAxis a) { m_focusedID = id; m_focusScrollAxis = a; }
         ScrollAxis ConsumeFocusScrollAxis()            { ScrollAxis v = m_focusScrollAxis; m_focusScrollAxis = ScrollAxis::Both; return v; }
+
+        // Shows the focus ring (:focus-visible), e.g. on a dialog's default button.
+        void SetFocusVisible(bool visible) { m_focusVisible = visible; }
+        bool IsFocusVisible() const        { return m_focusVisible; }
 
         void SuppressHover()           { m_hoverSuppressed = true; }
         void ClearHoverSuppression()   { m_hoverSuppressed = false; }
