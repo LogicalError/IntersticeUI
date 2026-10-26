@@ -437,7 +437,8 @@ Known issues:
 ## Support
 
 If IntersticeUI is useful to you, you can support its development through
-[GitHub Sponsors](https://github.com/sponsors/LogicalError).
+[GitHub Sponsors](https://github.com/sponsors/LogicalError) or
+[Patreon](https://www.patreon.com/c/logicalerror).
 
 ## License
 

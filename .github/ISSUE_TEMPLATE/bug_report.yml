@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in IntersticeUI doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem! The steps, or a small `OnGUI` snippet, that make it happen help us fix it much faster.
+
+        Check the known issues under [Status](https://github.com/LogicalError/IntersticeUI#status) in the README first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What goes wrong? Screenshots or a short video help.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected to happen
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The steps, in the demo or an example if you can, or a small piece of code that shows it.
+      render: cpp
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log output
+      description: Errors, validation layer messages or a stack trace.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: IntersticeUI version
+      description: The release, or the commit you built.
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and compiler
+      placeholder: Windows 11 with Visual Studio 2026, Ubuntu 24.04 with GCC 13...
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU, driver and Vulkan SDK
+      placeholder: NVIDIA RTX 4070, driver 581.42, Vulkan SDK 1.4.309
+  - type: input
+    id: backends
+    attributes:
+      label: Backends
+      description: The bundled Vulkan and SDL3 backends, or your own?
+      placeholder: Vulkan + SDL3
