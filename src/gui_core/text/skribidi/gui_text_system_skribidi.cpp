@@ -596,6 +596,7 @@ namespace interstice
 			}
             switch (entry->iconSide)
             {
+                case IconSide::None: break;
                 case IconSide::Left:
                 case IconSide::Right:
                 {

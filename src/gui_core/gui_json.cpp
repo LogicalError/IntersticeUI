@@ -1,4 +1,5 @@
 #include <gui_core/gui_json.h>
+#include <gui_core/gui_from_chars.h>
 
 #include <charconv>
 #include <cmath>
@@ -74,7 +75,7 @@ namespace interstice
                 while (m_pos < m_text.size() && std::string_view("0123456789.eE+-").find(m_text[m_pos]) != std::string_view::npos)
                     ++m_pos;
                 double value = 0.0;
-                const auto [end, ec] = std::from_chars(m_text.data() + start, m_text.data() + m_pos, value);
+                const auto [end, ec] = FromChars(m_text.data() + start, m_text.data() + m_pos, value);
                 if (ec != std::errc{} || end != m_text.data() + m_pos || m_pos == start)
                 {
                     m_pos = start;

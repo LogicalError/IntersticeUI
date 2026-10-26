@@ -79,15 +79,18 @@ function(interstice_apply_compile_options target)
       $<$<CONFIG:Release>:/OPT:ICF>
     )
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # -Wpedantic would reject nameless struct/union, which we rely on.
+    # -Wpedantic would reject nameless struct/union, which we rely on. Designated
+    # initializers leave fields at their defaults on purpose; GCC still reports them.
     target_compile_options(${target} PRIVATE
       -Wall
       -Wextra
+      -Wno-missing-field-initializers
     )
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       target_compile_options(${target} PRIVATE
         -Wno-gnu-anonymous-struct
         -Wno-nested-anon-types
+        -Wno-missing-braces    # IntRect{ x, y, w, h } fills its anonymous union by brace elision
       )
     endif()
   endif()

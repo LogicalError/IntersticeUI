@@ -36,7 +36,7 @@ namespace interstice
         static void ApplyVerticalPositionConstraints(OSWindowManager& osWindowManager, ElementStorage& storage, ElementRect& elementRect, const ElementRef& elementRef);
 
         template <int axis> requires(axis == 0 || axis == 1)
-        static inline const int32_t CalcLayoutAdd(std::span<const ElementRect> childRects, int32_t& count)
+        static inline int32_t CalcLayoutAdd(std::span<const ElementRect> childRects, int32_t& count)
         {
             int32_t size = 0;
             count = 0;
@@ -170,7 +170,7 @@ namespace interstice
         }
 
         template <int axis> requires(axis == 0 || axis == 1)
-        static inline const int32_t CalcLayoutMax(std::span<const ElementRect> childRects)
+        static inline int32_t CalcLayoutMax(std::span<const ElementRect> childRects)
         {
             int32_t size = 0;
             for (const ElementRect& childElem : childRects)
@@ -222,7 +222,7 @@ namespace interstice
         // places children from the far edge (row-/column-reverse), whose main
         // start is that edge - so flex-end packs toward the near one.
         template <int axis, bool reverse> requires(axis == 0 || axis == 1)
-        static const void JustifyChildren(std::span<ElementRect> childRects, 
+        static void JustifyChildren(std::span<ElementRect> childRects, 
                                           JustifyContent justify, int16_t gap, const IntRect &parentContentRect,
                                           int totalContentSize, int totalChildrenInFlow)
         {
@@ -263,7 +263,7 @@ namespace interstice
         }
         
         template <int axis> requires(axis == 0 || axis == 1)
-        static const void Align(AlignItems align, const IntRect &parentContentRect, ElementRect& childRect)
+        static void Align(AlignItems align, const IntRect &parentContentRect, ElementRect& childRect)
         {
             // Per-item align-self overrides the container's align-items
             if (childRect.layoutStyle && childRect.layoutStyle->alignSelf != AlignItems::Auto)

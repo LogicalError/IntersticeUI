@@ -248,7 +248,7 @@ namespace interstice
 
         int GetPrimaryMonitorIndex() const
         {
-            if (primaryMonitorIndex < 0 || primaryMonitorIndex >= monitors.size())
+            if (primaryMonitorIndex < 0 || size_t(primaryMonitorIndex) >= monitors.size())
                 return -1;
             return primaryMonitorIndex;
         }
@@ -256,7 +256,7 @@ namespace interstice
         const MonitorInfo &GetPrimaryMonitor() const
         {
             static MonitorInfo kEmptyInfo{.isPrimary = true};
-            if (primaryMonitorIndex < 0 || primaryMonitorIndex >= monitors.size())
+            if (primaryMonitorIndex < 0 || size_t(primaryMonitorIndex) >= monitors.size())
                 return kEmptyInfo; // no monitor connected
             return monitors[primaryMonitorIndex];
         }        
@@ -408,7 +408,7 @@ namespace interstice
         
         // ---------------- Queries ---------------- 
         
-        const size_t WindowCount() const { return windows.size(); }
+        size_t WindowCount() const { return windows.size(); }
         const std::vector<Window> &AllWindows() const { return windows; }
 
         // Any alive non-popup, non-tooltip window. The run loop exits without one, so
@@ -451,8 +451,8 @@ namespace interstice
         }
 
     protected:
-        IWindowBackend*  windowBackendManager = nullptr;
         GraphicsContext* graphicsContext = nullptr;
+        IWindowBackend*  windowBackendManager = nullptr;
 
         std::vector<Window> windows;
         std::unordered_map<ID, int32_t> IDToWindowIndex;

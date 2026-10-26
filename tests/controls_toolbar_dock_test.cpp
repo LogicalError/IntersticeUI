@@ -306,7 +306,7 @@ namespace interstice
     TEST_F(ToolbarDockTest, DropOutsideAllSidesFiresTearOff)
     {
         // SetUp's EmitDock has no onTearOff; this one captures tear-off calls.
-        struct TearOffEvent { ToolbarSide srcSide; int srcIdx; int2 mousePos; };
+        struct TearOffEvent { ToolbarSide srcSide; int srcIdx; int2 mousePos{}; };
         std::vector<TearOffEvent> tearOffs;
 
         auto emitWithTearOff = [&]()

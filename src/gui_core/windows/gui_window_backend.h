@@ -64,6 +64,8 @@ namespace interstice
     class IWindowContext
     {
     public:
+        virtual ~IWindowContext() = default;
+
         virtual ID             GetID() const = 0;
         virtual OSWindowHandle GetWindowHandle() const = 0;
 

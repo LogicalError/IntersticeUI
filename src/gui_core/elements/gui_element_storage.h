@@ -124,7 +124,7 @@ namespace interstice
         const StyleManager& GetStyleManager() const noexcept { return m_styleManager; }
 
         ElementStorage(ElementStorage&&) noexcept = default;
-        ElementStorage& operator=(ElementStorage&&) noexcept = default;
+        ElementStorage& operator=(ElementStorage&&) = delete;   // holds a StyleManager reference
 
         ElementStorage(const ElementStorage&) = delete;
         ElementStorage& operator=(const ElementStorage&) = delete;
@@ -340,11 +340,8 @@ namespace interstice
         {
             assert(!m_constructionModeActive);
             if (Empty()) return TopDownDepthScanTerminator();
-            DepthScanCursor cursor
-            {
-                .parentCountAtDepth = DepthSizeOf(0),
-                .childRange = GetChildRangeUnsafe(cursor.CurrentRef())
-            };
+            DepthScanCursor cursor{ .parentCountAtDepth = DepthSizeOf(0) };
+            cursor.childRange = GetChildRangeUnsafe(cursor.CurrentRef());
             return TopDownDepthScanIterator{*this, m_generation, cursor};
         }
         TopDownDepthScanIterator TopDownDepthScanEnd() const
@@ -358,12 +355,9 @@ namespace interstice
         {
             assert(!m_constructionModeActive);
             if (Empty()) return BottomUpDepthScanTerminator();
-            DepthScanCursor cursor
-            {
-                .parentDepth = m_usedDepthCount - 1, .parentIndex = 0,
-                .parentCountAtDepth = DepthSizeOf(cursor.parentDepth),
-                .childRange = GetChildRangeUnsafe(cursor.CurrentRef())
-            };
+            DepthScanCursor cursor{ .parentDepth = m_usedDepthCount - 1, .parentIndex = 0 };
+            cursor.parentCountAtDepth = DepthSizeOf(cursor.parentDepth);
+            cursor.childRange         = GetChildRangeUnsafe(cursor.CurrentRef());
             return BottomUpDepthScanIterator{*this, m_generation, cursor};
         }
         BottomUpDepthScanIterator BottomUpDepthScanEnd() const

@@ -70,9 +70,13 @@ namespace interstice
             {
                 const int2 a = route[i], b = route[i + 1];
                 if (i != 0)
+                {
                     EXPECT_FALSE(SegHitsRect(a, b, srcI)) << "segment " << i << " crosses the source body";
+                }
                 if (i != last)
+                {
                     EXPECT_FALSE(SegHitsRect(a, b, tgtI)) << "segment " << i << " crosses the target body";
+                }
             }
         }
 
@@ -351,7 +355,7 @@ namespace interstice
     // source): they nest, so no two cross or run on top of each other.
     namespace
     {
-        struct Seg { int2 a, b; };
+        struct Seg { int2 a{}, b{}; };
 
         std::vector<Seg> Segments(const std::vector<int2>& pts)
         {

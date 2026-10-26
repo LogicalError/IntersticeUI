@@ -18,7 +18,6 @@ namespace interstice
         auto pos = LayoutOverride{}.Anchored(targetID,
             AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
             {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
-        auto size = LayoutOverride::Auto();
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 
@@ -45,7 +44,6 @@ namespace interstice
         auto pos = LayoutOverride{}.Anchored(targetID,
             AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
             {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
-        auto size = LayoutOverride::Auto();
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 
@@ -76,7 +74,6 @@ namespace interstice
         auto pos = LayoutOverride{}.Anchored(targetID,
             AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
             {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
-        auto size = LayoutOverride::Auto();
 
         ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
 

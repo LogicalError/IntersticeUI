@@ -123,7 +123,7 @@ namespace interstice
             VERIFY(demoRes.status);
             VERIFY(windowRegistry.Add(demoRes.ref));
 
-            VERIFY(elementStorage.AddCustomDraw(demoRes.ref, [elapsedMilliseconds, this](interstice::CustomDrawContext& ctx)
+            VERIFY(elementStorage.AddCustomDraw(demoRes.ref, [this](interstice::CustomDrawContext& ctx)
             {
                 // Coords are inner-rect-local LAYOUT pixels.
                 const StyleManager& sm = styleManager;
@@ -138,7 +138,7 @@ namespace interstice
                 interstice::float2 hexPts[6];
                 for (int i = 0; i < 6; i++) {
                     float a = i * (3.14159f / 3.0f);
-                    hexPts[i] = hexCenter + interstice::float2{ std::cosf(a) * hexRadius, std::sinf(a) * hexRadius };
+                    hexPts[i] = hexCenter + interstice::float2{ std::cos(a) * hexRadius, std::sin(a) * hexRadius };
                 }
                 ctx.RenderFilledPolygon(hexPts, triangleFillStyle);
 
@@ -148,7 +148,7 @@ namespace interstice
                 interstice::int2 pentPts[5];
                 for (int i = 0; i < 5; i++) {
                     float a = i * (2.0f * 3.14159f / 5.0f) - 3.14159f / 2.0f;
-                    pentPts[i] = interstice::int2 { (int)(pentCenterF.x + std::cosf(a) * pentRadius), (int)(pentCenterF.y + std::sinf(a) * pentRadius) };
+                    pentPts[i] = interstice::int2 { (int)(pentCenterF.x + std::cos(a) * pentRadius), (int)(pentCenterF.y + std::sin(a) * pentRadius) };
                 }
                 interstice::LineStyle pentStyle { .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = sm.Px(2.5f) };
                 ctx.RenderPolyline(pentPts, /*closed=*/true, pentStyle);
@@ -216,7 +216,7 @@ namespace interstice
             iconButtonElem.state = guiStateManager.GetCurrentState(iconButtonElem.id);
             iconButtonElem.styleRef = theme.regularControls.button;
             iconButtonElem.textID = textSystem->RegisterRichText(iconButtonId, buttonContent, theme.regularControls.button, state);
-            iconButtonElem.eventHandler = MakeButtonHandler([this]()
+            iconButtonElem.eventHandler = MakeButtonHandler([]()
             {
                 INTERSTICE_LOG_INFO(kLogDemo, "Icon button clicked!");
             });

@@ -10,7 +10,7 @@ namespace interstice
         using Type = T;
         using ComponentType = T;
         static constexpr int dimensions = 1;
-        static T& GetComponent(T& value, int index) { return value; }
+        static T& GetComponent(T& value, int /*index*/) { return value; }
     };
 
     template<> struct TypeDimensions<int2>    { using Type = int2; using ComponentType = decltype(Type::x); static constexpr int dimensions = 2; inline static ComponentType& GetComponent(Type& value, int index) { return value[index]; } static constexpr char const*const names[dimensions] = {"X", "Y" }; };

@@ -144,6 +144,8 @@ endif()
 # skribidi's exported config references its dependencies as imported targets
 # but doesn't call find_dependency() on them - load them first so the targets
 # exist when skribidiConfig.cmake is parsed.
+# harfbuzz links Threads::Threads where it uses pthreads, without finding it.
+find_package(Threads REQUIRED)
 if(NOT TARGET harfbuzz::harfbuzz)
   find_package(harfbuzz CONFIG REQUIRED)
 endif()

@@ -299,8 +299,6 @@ namespace interstice
             {
                 const skb_layout_line_t* line = &lines[li];
 
-                float pen_x = ctx->view.cx + line->bounds.x;
-                skb_rect2_t run_bounds = skb_rect2_make_undefined();
 
 
                 for (int32_t ri = line->layout_run_range.start; ri < line->layout_run_range.end; ri++)
@@ -343,8 +341,6 @@ namespace interstice
                                             (quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : glyphColorIndex,
                                             (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
                                             clipRect);
-
-                        pen_x += glyph->advance_x;
                     }
                 }
             }

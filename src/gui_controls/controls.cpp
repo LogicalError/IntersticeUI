@@ -13,7 +13,7 @@ namespace interstice
     // Event handler factories
     // ---------------------------------------------------------------------------
 
-    interstice::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return interstice::MakeButtonHandler(guiStateManager, [this, &toggle]() { toggle = !toggle; }); }
+    interstice::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return interstice::MakeButtonHandler(guiStateManager, [&toggle]() { toggle = !toggle; }); }
     interstice::EventHandler GUIApplication::MakeButtonHandler(std::function<void()> onClick) { return interstice::MakeButtonHandler(guiStateManager, onClick); }
     interstice::EventHandler GUIApplication::MakeLabelHandler() { return interstice::MakeLabelHandler(guiStateManager, elementStorage); }
 
@@ -759,7 +759,7 @@ namespace interstice
             { 
                 .id = id, 
                 .eventHandler = interstice::MakeButtonHandler(guiStateManager, 
-                                                       [this, value, onToggle]() 
+                                                       [value, onToggle]() 
                                                        { 
                                                            onToggle(!value); 
                                                        }), 

@@ -13,7 +13,7 @@ namespace interstice
     void Application::RenderViewportPanel()
     {
         RenderToolbarDock(*this, toolbars.dockState, toolbars.sides, toolbarCallbacks,
-            [this]()
+            []()
             {
                 // Placeholder for actual view content (3D viewport etc.). Currently empty.
             });

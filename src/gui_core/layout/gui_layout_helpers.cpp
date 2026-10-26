@@ -73,6 +73,7 @@ namespace interstice
             const auto iconMeasurement = textSystem.GetIconMeasurement(element.iconID);
             switch (elementRect.layoutStyle->iconSide)
             {
+                case IconSide::None: break;
                 case IconSide::Left:
                 case IconSide::Right:
                 {

@@ -105,11 +105,15 @@ namespace GpuTestHarness
             // Synchronization validation is the most crash-prone layer feature. Set
             // INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION=1 to run with core validation only,
             // e.g. to tell a layer crash from a product bug.
+#if defined(_MSC_VER)
             char*  noSync    = nullptr;
             size_t noSyncLen = 0;
             _dupenv_s(&noSync, &noSyncLen, "INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION");
             cfg.enableSyncValidation = noSync == nullptr;
             free(noSync);
+#else
+            cfg.enableSyncValidation = std::getenv("INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION") == nullptr;
+#endif
             vk->deviceContext.SetInstanceDebugConfig(cfg);
 
             if (!graphicsContext->Initialize(windowBackend))
@@ -221,8 +225,10 @@ namespace GpuTestHarness
                 graphicsContext->Cleanup();
 
             if (m_checkLeaksAtTeardown)
+            {
                 EXPECT_FALSE(sink.HasErrors())
                     << "Vulkan objects leaked (reported at device destroy):\n" << sink.Dump();
+            }
 
             Teardown();
         }

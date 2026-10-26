@@ -137,7 +137,7 @@ namespace interstice
         // Increase generation
         generation = std::abs(generation);
         generation++;
-        if (generation < 0 || generation > ID::MAX_STATIC_GEN_MASK) generation = 1; // wrap around protection
+        if (generation < 0 || uint64_t(generation) > ID::MAX_STATIC_GEN_MASK) generation = 1; // wrap around protection
 
         // Mark slot as inactive (negative)
         generation = -generation; 
@@ -216,12 +216,10 @@ namespace interstice
         // Ensure non-zero
         if (hash == 0) hash = 1;
 
+        // Field by field: a braced initializer narrows into the bit-fields (an error on GCC).
         ID id = ID::Invalid();
-        id.value = { .dynamicParts =
-                    {
-                        .mode = IDMode::Dynamic,
-                        .hashValue = hash
-                    }};
+        id.value.dynamicParts.mode      = IDMode::Dynamic;
+        id.value.dynamicParts.hashValue = hash;
 #ifdef INTERSTICE_ID_DEBUG
         m_debug_dynamic_ids.push_back(id);
 #endif
@@ -281,12 +279,9 @@ namespace interstice
         if (hash == 0) hash = 1;
         m_ranged_count++;
         ID id = ID::Invalid();
-        id.value = { .rangedParts =
-                    {
-                        .mode = IDMode::Ranged,
-                        .rangedSize = size,
-                        .hashValue = hash
-                    }};
+        id.value.rangedParts.mode       = IDMode::Ranged;
+        id.value.rangedParts.rangedSize = size;
+        id.value.rangedParts.hashValue  = hash;
 #ifdef INTERSTICE_ID_DEBUG
         m_debug_ranges.push_back(id);
 #endif

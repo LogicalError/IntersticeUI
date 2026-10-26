@@ -90,7 +90,7 @@ namespace interstice
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
     
-            ElementRef parentRef = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(parentWidth, parentHeight)).ref;
+            [[maybe_unused]] ElementRef parentRef = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(parentWidth, parentHeight)).ref;
             EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
                 ElementRef childRef = storage.Add(Element{ .styleRef = childIdx}, LayoutOverride::FixedSize(childWidth, childHeight)).ref;
@@ -184,7 +184,7 @@ namespace interstice
         ElementRef parentRef = storage.Add(Element{.styleRef = parentIdx}).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
-        ElementRef childRef = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(30, 40)).ref;
+        [[maybe_unused]] ElementRef childRef = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(30, 40)).ref;
     
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
         EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
@@ -213,8 +213,8 @@ namespace interstice
         ElementRef parentRef = storage.Add(Element{.styleRef = parentIdx}).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
-        ElementRef child1Ref = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(20, 20)).ref;
-        ElementRef child2Ref = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(30, 20)).ref;
+        [[maybe_unused]] ElementRef child1Ref = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(20, 20)).ref;
+        [[maybe_unused]] ElementRef child2Ref = storage.Add(Element{.styleRef = childIdx}, LayoutOverride::FixedSize(30, 20)).ref;
     
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
         EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
@@ -315,7 +315,7 @@ namespace interstice
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
     
-        ElementRef gpRef = storage.Add(Element{.styleRef = gpIdx}, LayoutOverride::FixedSize(200, 100)).ref;
+        [[maybe_unused]] ElementRef gpRef = storage.Add(Element{.styleRef = gpIdx}, LayoutOverride::FixedSize(200, 100)).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
         ElementRef pRef = storage.Add(Element{.styleRef = pIdx}, LayoutOverride::FixedSize(100, 50)).ref;
@@ -368,10 +368,10 @@ namespace interstice
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
     
-        ElementRef gpRef = storage.Add(Element{.styleRef = gpIdx}, LayoutOverride::FixedSize(200, 100)).ref;
+        [[maybe_unused]] ElementRef gpRef = storage.Add(Element{.styleRef = gpIdx}, LayoutOverride::FixedSize(200, 100)).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
-        ElementRef pRef = storage.Add(Element{.styleRef = pIdx}, LayoutOverride::FixedSize(100, 50)).ref;
+        [[maybe_unused]] ElementRef pRef = storage.Add(Element{.styleRef = pIdx}, LayoutOverride::FixedSize(100, 50)).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
     
         ElementRef cRef = storage.Add(Element{.styleRef = cIdx}, LayoutOverride::FixedSize(150, 70)).ref;
@@ -401,7 +401,7 @@ namespace interstice
         StyleRef rowStyleIdx = styleManager.Register(rowStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
-        ElementRef rootRef = storage.Add(Element{.styleRef = rowStyleIdx}).ref;
+        [[maybe_unused]] ElementRef rootRef = storage.Add(Element{.styleRef = rowStyleIdx}).ref;
 
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
         ElementRef child1 = storage
@@ -430,7 +430,7 @@ namespace interstice
         ElementRef rootRef = storage.Add(Element{.styleRef = colStyleIdx}).ref;
 
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
-        ElementRef child1 = storage.Add(Element{.styleRef = defaultStyleIndex}, LayoutOverride::FixedSize(50,30)).ref;
+        [[maybe_unused]] ElementRef child1 = storage.Add(Element{.styleRef = defaultStyleIndex}, LayoutOverride::FixedSize(50,30)).ref;
         ElementRef child2 = storage.Add(Element{.styleRef = defaultStyleIndex}, LayoutOverride::FixedSize(50,40)).ref;
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
 
@@ -451,7 +451,7 @@ namespace interstice
         StyleRef styleIdx = styleManager.Register(centerStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
-        ElementRef rootRef =
+        [[maybe_unused]] ElementRef rootRef =
             storage
                 .Add(Element{.styleRef = styleIdx}, LayoutOverride::FixedSize(200, 100))
                 .ref;
@@ -1115,7 +1115,7 @@ namespace interstice
         StyleRef childIdx = styleManager.Register(childStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
-        auto parent = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(200, 50));
+        [[maybe_unused]] auto parent = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(200, 50));
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
         auto child = storage.Add(Element{ .styleRef = childIdx }, LayoutOverride::FixedSize(0, 20));
         EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
@@ -1462,7 +1462,7 @@ namespace interstice
         StyleRef innerIdx = styleManager.Register(innerRowStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
-        auto outer = storage.Add(Element{ .styleRef = outerIdx }, LayoutOverride::FixedSize(240, 400));
+        [[maybe_unused]] auto outer = storage.Add(Element{ .styleRef = outerIdx }, LayoutOverride::FixedSize(240, 400));
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
         // flex-grow:1 but no fixed size: the width comes from the outer stretch.
         auto row = storage.Add(Element{ .styleRef = innerIdx }, LayoutOverride{}.FlexGrow(1));

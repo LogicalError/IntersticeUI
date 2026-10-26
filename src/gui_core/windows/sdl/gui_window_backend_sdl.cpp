@@ -1556,9 +1556,9 @@ namespace interstice
 #elif defined(__APPLE__)
         return SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
 #elif defined(__linux__)
-        // X11 or Wayland window handle
-        void* x11_window = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_WINDOW_POINTER, nullptr);
-        if (x11_window) return x11_window;
+        // X11 (the window is a number) or Wayland window handle
+        if (const Sint64 x11Window = SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0))
+            return reinterpret_cast<void*>(static_cast<uintptr_t>(x11Window));
         return SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
 #else
         return nullptr;
@@ -1676,8 +1676,10 @@ namespace interstice
     {
         if (!m_sdlInitialized)
             return 0;
+#if defined(_WIN32) || defined(__APPLE__)
         const SDL_DisplayID display = SDL_GetPrimaryDisplay();
         const float scale = display != 0 ? std::max(1.0f, SDL_GetDisplayContentScale(display)) : 1.0f;
+#endif
 #if defined(_WIN32)
         // The accessibility size (32 by default), at 96 DPI; the cursor grows with the display.
         DWORD base = 0;

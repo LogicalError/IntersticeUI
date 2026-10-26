@@ -1,10 +1,12 @@
 #pragma once
 
 #include <gui_core/style/gui_style_sheet.h>
+#include <gui_core/gui_from_chars.h>
 
 #include <algorithm>
 #include <charconv>
 #include <cmath>
+#include <format>
 #include <cctype>
 #include <cstring>
 #include <sstream>
@@ -285,7 +287,7 @@ private:
     {
         float v = 0.0f;
         const char* end = tok.text.data() + tok.text.size();
-        const auto [ptr, ec] = std::from_chars(tok.text.data(), end, v);
+        const auto [ptr, ec] = FromChars(tok.text.data(), end, v);
         if (tok.type != TT::Number || ec != std::errc{} || !(std::fabs(v) <= kMaxNumber))
         {
             Error("Invalid number '" + tok.text + "'", tok.line, tok.col);
@@ -1140,7 +1142,7 @@ private:
         auto add = [&](const BoxShadow& b) {
             if (count == kMaxBoxShadows)
             {
-                Error("box-shadow takes at most " + std::to_string(kMaxBoxShadows) + " layers");
+                Error(std::format("box-shadow takes at most {} layers", kMaxBoxShadows));
                 return false;
             }
             out[count++] = b;

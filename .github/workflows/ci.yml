@@ -120,3 +120,171 @@ jobs:
           cmake --build "${{ runner.temp }}/consumer" --config Release
           & "${{ runner.temp }}/consumer/Release/package_consumer.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  linux:
+    # The pinned minimums (#59). GPU tests run on lavapipe; the build uses Ubuntu's
+    # Vulkan headers and glslang, the tests the SDK's loader and layers, the same
+    # version as Windows: Ubuntu's 1.3.275 synchronization validation reports
+    # hazards that the frame's fence wait already covers.
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { compiler: gcc,   cc: gcc-13,   cxx: g++-13 }
+          - { compiler: clang, cc: clang-17, cxx: clang++-17 }
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          submodules: recursive
+          lfs: false
+
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d' ' -f1 | sort > .lfs-assets-id
+      - id: lfs-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+      - name: Pull LFS objects
+        run: git lfs pull
+      - if: steps.lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: .git/lfs
+          key: ${{ steps.lfs-cache.outputs.cache-primary-key }}
+
+      # SDL3 finds X11 and Wayland through their development packages.
+      - name: Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build g++-13 clang-17 libvulkan-dev glslang-tools \
+            mesa-vulkan-drivers xvfb libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev libwayland-dev \
+            libdecor-0-dev libegl1-mesa-dev libdrm-dev libgbm-dev libdbus-1-dev libudev-dev
+
+      - id: sdk-cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: ${{ runner.temp }}/vulkansdk
+          key: vulkansdk-linux-1.4.309.0
+      - name: Vulkan SDK (loader and layers for the GPU tests)
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${{ runner.temp }}/vulkansdk"
+          curl -sSL https://sdk.lunarg.com/sdk/download/1.4.309.0/linux/vulkansdk-linux-x86_64-1.4.309.0.tar.xz \
+            | tar -xJ -C "${{ runner.temp }}/vulkansdk"
+
+      - name: Third-party cache key
+        run: git submodule status > .submodules-id
+      - id: third-party-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: build/third_party/install
+          key: third-party-linux-${{ matrix.compiler }}-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
+
+      - id: shader-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: workdirectory/shaders_compiled
+          key: shaders-linux-${{ hashFiles('workdirectory/shaders/**') }}
+      - name: Mark restored shaders current
+        if: steps.shader-cache.outputs.cache-hit == 'true'
+        run: find workdirectory/shaders_compiled -type f -exec touch {} +
+
+      - name: Configure
+        run: cmake -S . -B build -G "Ninja Multi-Config"
+      - if: steps.third-party-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: build/third_party/install
+          key: ${{ steps.third-party-cache.outputs.cache-primary-key }}
+
+      - name: Build Debug
+        run: cmake --build build --config Debug --parallel
+      - if: steps.shader-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: workdirectory/shaders_compiled
+          key: ${{ steps.shader-cache.outputs.cache-primary-key }}
+      - name: Build Release
+        run: cmake --build build --config Release --parallel
+
+      - name: Core tests (Debug)
+        run: xvfb-run -a bin/Debug/gui_core_tests
+      - name: Core tests (Release)
+        run: xvfb-run -a bin/Release/gui_core_tests
+
+      - name: GPU tests (Debug, lavapipe)
+        env:
+          LD_LIBRARY_PATH: ${{ runner.temp }}/vulkansdk/1.4.309.0/x86_64/lib
+          VK_LAYER_PATH: ${{ runner.temp }}/vulkansdk/1.4.309.0/x86_64/share/vulkan/explicit_layer.d
+        run: xvfb-run -a bin/Debug/gui_gpu_tests
+
+      - name: Install the package
+        run: |
+          cmake --install build --config Debug   --prefix "${{ runner.temp }}/pkg"
+          cmake --install build --config Release --prefix "${{ runner.temp }}/pkg"
+
+      - name: Package consumer renders a frame
+        run: |
+          cmake -S tests/package_consumer -B "${{ runner.temp }}/consumer" -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=${{ runner.temp }}/pkg"
+          cmake --build "${{ runner.temp }}/consumer"
+          xvfb-run -a "${{ runner.temp }}/consumer/package_consumer"
+
+  macos:
+    # Untested on a Mac (#60): builds against MoltenVK and runs the headless tests.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          submodules: recursive
+          lfs: false
+
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d' ' -f1 | sort > .lfs-assets-id
+      - id: lfs-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+      - name: Pull LFS objects
+        run: git lfs pull
+      - if: steps.lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: .git/lfs
+          key: ${{ steps.lfs-cache.outputs.cache-primary-key }}
+
+      - name: Packages
+        run: brew install ninja vulkan-headers vulkan-loader molten-vk glslang
+
+      - name: Third-party cache key
+        run: git submodule status > .submodules-id
+      - id: third-party-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: build/third_party/install
+          key: third-party-macos-${{ hashFiles('.submodules-id', 'third_party/CMakeLists.txt', 'third_party/nanosvg/CMakeLists.txt', 'cmake/ThirdPartyCache.cmake') }}
+
+      - name: Configure
+        run: cmake -S . -B build -G "Ninja Multi-Config" "-DCMAKE_PREFIX_PATH=$(brew --prefix)"
+      - if: steps.third-party-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: build/third_party/install
+          key: ${{ steps.third-party-cache.outputs.cache-primary-key }}
+
+      - name: Build Debug
+        run: cmake --build build --config Debug --parallel
+      - name: Build Release
+        run: cmake --build build --config Release --parallel
+
+      # No GPU tests: the runner has no display, and the GUI is untested on a Mac.
+      - name: Core tests (Debug)
+        run: bin/Debug/gui_core_tests
+      - name: Core tests (Release)
+        run: bin/Release/gui_core_tests

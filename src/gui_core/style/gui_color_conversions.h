@@ -24,9 +24,9 @@ namespace interstice::ColorConvert
 
     inline void RGBtoHSV(float r, float g, float b, float& h, float& s, float& v)
     {
-		if (!isfinite(r)) r = 0.0f;
-        if (!isfinite(g)) g = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+		if (!std::isfinite(r)) r = 0.0f;
+        if (!std::isfinite(g)) g = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
 		r = std::max(r, 0.0f);
         g = std::max(g, 0.0f);
@@ -51,9 +51,9 @@ namespace interstice::ColorConvert
 
     inline std::array<float, 3> HSVtoRGB(float h, float s, float v)
     {
-        if (!isfinite(h)) h = 0.0f;
-        if (!isfinite(s)) s = 0.0f;
-        if (!isfinite(v)) v = 0.0f;
+        if (!std::isfinite(h)) h = 0.0f;
+        if (!std::isfinite(s)) s = 0.0f;
+        if (!std::isfinite(v)) v = 0.0f;
 
         h = std::max(h, 0.0f);
         s = std::max(s, 0.0f);
@@ -82,9 +82,9 @@ namespace interstice::ColorConvert
 
     inline void RGBtoHSL(float r, float g, float b, float& h, float& s, float& l)
     {
-        if (!isfinite(r)) r = 0.0f;
-        if (!isfinite(g)) g = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+        if (!std::isfinite(r)) r = 0.0f;
+        if (!std::isfinite(g)) g = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
         r = std::max(r, 0.0f);
         g = std::max(g, 0.0f);
@@ -110,9 +110,9 @@ namespace interstice::ColorConvert
 
     inline std::array<float, 3> HSLtoRGB(float h, float s, float l)
     {
-        if (!isfinite(h)) h = 0.0f;
-        if (!isfinite(s)) s = 0.0f;
-        if (!isfinite(l)) l = 0.0f;
+        if (!std::isfinite(h)) h = 0.0f;
+        if (!std::isfinite(s)) s = 0.0f;
+        if (!std::isfinite(l)) l = 0.0f;
 
         h = std::max(h, 0.0f);
         s = std::max(s, 0.0f);
@@ -164,9 +164,9 @@ namespace interstice::ColorConvert
 
     inline void RGBtoLab(float r, float g, float b, float& L, float& a, float& bOut)
     {
-        if (!isfinite(r)) r = 0.0f;
-        if (!isfinite(g)) g = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+        if (!std::isfinite(r)) r = 0.0f;
+        if (!std::isfinite(g)) g = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
         r = std::max(r, 0.0f);
         g = std::max(g, 0.0f);
@@ -188,9 +188,9 @@ namespace interstice::ColorConvert
 
     inline std::array<float, 3> LabToRGB(float L, float a, float b)
     {
-        if (!isfinite(L)) L = 0.0f;
-        if (!isfinite(a)) a = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+        if (!std::isfinite(L)) L = 0.0f;
+        if (!std::isfinite(a)) a = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
         // a and b are signed opponent-color channels (green<->red, blue<->yellow)
         // and are legitimately negative - only lightness L is clamped to >= 0.
@@ -216,9 +216,9 @@ namespace interstice::ColorConvert
 
     inline void RGBtoOklab(float r, float g, float b, float& L, float& a, float& bOut)
     {
-        if (!isfinite(r)) r = 0.0f;
-        if (!isfinite(g)) g = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+        if (!std::isfinite(r)) r = 0.0f;
+        if (!std::isfinite(g)) g = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
         r = std::max(r, 0.0f);
         g = std::max(g, 0.0f);
@@ -236,9 +236,9 @@ namespace interstice::ColorConvert
 
     inline std::array<float, 3> OklabToRGB(float L, float a, float b)
     {
-        if (!isfinite(L)) L = 0.0f;
-        if (!isfinite(a)) a = 0.0f;
-        if (!isfinite(b)) b = 0.0f;
+        if (!std::isfinite(L)) L = 0.0f;
+        if (!std::isfinite(a)) a = 0.0f;
+        if (!std::isfinite(b)) b = 0.0f;
 
         // a and b are signed opponent-color channels (green<->red, blue<->yellow)
         // and are legitimately negative - only lightness L is clamped to >= 0.

@@ -4,7 +4,8 @@
 #include <cmath>
 #include <algorithm>
 
-void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout)
+void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout,
+                                          VkPipelineStageFlags2 afterStage)
 {
     VkImageMemoryBarrier2 imageBarrier {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
     imageBarrier.pNext = nullptr;
@@ -17,7 +18,7 @@ void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, Vk
 
     if (currentLayout == VK_IMAGE_LAYOUT_UNDEFINED)
     {
-        srcStage = VK_PIPELINE_STAGE_2_NONE;
+        srcStage = afterStage;
         srcAccess = 0;
     }
     else if (currentLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)

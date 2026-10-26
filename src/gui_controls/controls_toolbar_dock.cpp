@@ -170,7 +170,7 @@ namespace interstice
             // Runs each frame the cursor is outside the source side: either an animated
             // overlay on the hovered side, or a floating-toolbar preview at the cursor.
             // Both share state.ghostWindowID.
-            auto dragVisualizer = [&app, &state, &items, side, sideIdx]
+            auto dragVisualizer = [&app, &state, &items, sideIdx]
                                   (int fromIdx, int2 mousePos)
             {
                 if (fromIdx < 0 || fromIdx >= (int)items.size()) return;

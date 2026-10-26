@@ -13,6 +13,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_ref.h>
 
+#include <bit>
 #include <cstddef>
 #include <stdint.h>
 #include <optional>
@@ -148,7 +149,7 @@ namespace interstice
                     hash = Hash::Combine(hash, ((uint32_t)iconID), 0, 0);
                 } else
                 {
-                    hash = Hash::Combine(hash, ((uint32_t)iconID), *(uint32_t*)&iconWidth, *(uint32_t*)&iconHeight);
+                    hash = Hash::Combine(hash, ((uint32_t)iconID), std::bit_cast<uint32_t>(iconWidth), std::bit_cast<uint32_t>(iconHeight));
                 }
             }
             hash = Hash::Combine(hash, static_cast<uint64_t>(contentId), isLink ? 1u : 0u);

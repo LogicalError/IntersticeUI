@@ -1,6 +1,7 @@
 #include <gui_core/gui_base_types.h>
 
 #include <chrono>
+#include <cstring>
 
 
 namespace interstice

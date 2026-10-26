@@ -17,19 +17,23 @@ namespace interstice
 {
     class GraphicsContext;
 
+    // SDLWindowBackend::Options. (Outside the class: GCC can't use a nested struct's
+    // member initializers in a default argument of the class being defined.)
+    struct SDLWindowBackendOptions
+    {
+        // SDL's memory functions too, which are process-wide. Used only when
+        // this backend starts SDL and SDL holds no memory yet.
+        const AllocationHooks* hooks = nullptr;
+        // PollEvents empties SDL's event queue. A host that runs SDL's event loop
+        // itself turns this off; the GUI's windows still get their events while
+        // the host pumps (SDL_PollEvent / SDL_PumpEvents).
+        bool pumpEvents = true;
+    };
+
     class SDLWindowBackend : public IWindowBackend
     {
     public:
-        struct Options
-        {
-            // SDL's memory functions too, which are process-wide. Used only when
-            // this backend starts SDL and SDL holds no memory yet.
-            const AllocationHooks* hooks = nullptr;
-            // PollEvents empties SDL's event queue. A host that runs SDL's event loop
-            // itself turns this off; the GUI's windows still get their events while
-            // the host pumps (SDL_PollEvent / SDL_PumpEvents).
-            bool pumpEvents = true;
-        };
+        using Options = SDLWindowBackendOptions;
 
         explicit SDLWindowBackend(const Options& options = {});
         ~SDLWindowBackend() override;
@@ -103,7 +107,7 @@ namespace interstice
         // Track modal windows in creation order to support nested modals.
         std::vector<SDL_Window*> m_modalWindows;
         // store last polled mouse state
-        int2 m_mousePos;
+        int2 m_mousePos{};
 
         // OS window coordinates per physical pixel (1 / pixel density; 1 on Windows).
         float OsPerPixel(SDL_Window* window) const;

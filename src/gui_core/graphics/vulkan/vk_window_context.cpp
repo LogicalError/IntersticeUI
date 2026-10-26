@@ -226,7 +226,7 @@ void VulkanWindowContext::CreateSwapchain()
 
 void VulkanWindowContext::DestroySwapchain()
 {
-    for (int i = 0; i < swapchain.swapchainImageViews.size(); i++)
+    for (size_t i = 0; i < swapchain.swapchainImageViews.size(); i++)
     {
         vkDestroyImageView(deviceContext->device, swapchain.swapchainImageViews[i], deviceContext->AllocationCallbacks());
         swapchain.swapchainImageViews[i] = VK_NULL_HANDLE;
@@ -451,7 +451,9 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
             INTERSTICE_VK_CHECK(acq);
 
         interstice::vulkan::transition_image(state.commandBuffer, currentFrame.drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-        interstice::vulkan::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        // After the acquire semaphore's wait (ALL_COMMANDS, below), not racing it.
+        interstice::vulkan::transition_image(state.commandBuffer, swapchain.swapchainImages[swapchain.swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                             VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
 
         interstice::vulkan::copy_image_to_image(state.commandBuffer, currentFrame.drawImage.image, swapchain.swapchainImages[swapchain.swapchainImageIndex], drawExtent, swapchain.swapchainExtent);
 
@@ -902,7 +904,7 @@ VulkanWindowContext* VulkanWindowContext::Create(interstice::ID id, void* native
 
     // Commands
 
-    for (int i = 0; i < interstice::vulkan::FRAME_OVERLAP; i++)
+    for (uint32_t i = 0; i < interstice::vulkan::FRAME_OVERLAP; i++)
     {
         INTERSTICE_VK_CHECK(vkCreateCommandPool(context->deviceContext->device, &context->deviceContext->commandPoolInfo, context->deviceContext->AllocationCallbacks(), &context->state.frames[i].commandPool));
 
@@ -918,7 +920,7 @@ VulkanWindowContext* VulkanWindowContext::Create(interstice::ID id, void* native
 
     // Per frame data
 
-    for (int i = 0; i < FRAME_OVERLAP; i++)
+    for (uint32_t i = 0; i < FRAME_OVERLAP; i++)
     {
         auto& frame = context->state.frames[i];
         std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes =

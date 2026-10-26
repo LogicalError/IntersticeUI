@@ -172,7 +172,7 @@ namespace interstice
 		static uint64_t GetHashCode(ID elementId, const std::span<ContentRun>& contentRuns)
 		{
             uint64_t hash = Hash::Calculate(elementId);
-            for (int i = 0; i < contentRuns.size(); ++i)
+            for (size_t i = 0; i < contentRuns.size(); ++i)
 			{
 				hash = Hash::Combine(hash, contentRuns[i].GetHashCode());
 			}

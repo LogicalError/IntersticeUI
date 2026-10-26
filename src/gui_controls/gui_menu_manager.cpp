@@ -458,6 +458,7 @@ namespace interstice
                 guiStateManager.Interaction().SetFocusID(target);
                 return true;
             }
+            default: break;
         }
         return false;
     }
@@ -470,7 +471,7 @@ namespace interstice
     namespace
     {
         // Shared implementation for both menu items and submenu triggers.
-        EventHandler MakeMenuHandler(IDManager& idManager,
+        EventHandler MakeMenuHandler(IDManager& /*idManager*/,
                                      GUIStateManager& guiStateManager,
                                      ElementStorage& elementStorage,
                                      MenuManager& menuManager,
@@ -478,7 +479,7 @@ namespace interstice
                                      bool isSubmenuTrigger,
                                      std::function<void()> onClick)
         {
-            return [&idManager, &guiStateManager, &elementStorage, &menuManager, depth, isSubmenuTrigger, onClick](ElementEvent&& event)->bool
+            return [&guiStateManager, &elementStorage, &menuManager, depth, isSubmenuTrigger, onClick](ElementEvent&& event)->bool
             {
                 switch (event.type)
                 {
@@ -496,6 +497,7 @@ namespace interstice
                             return menuManager.ClickMenu(guiStateManager, isSubmenuTrigger, depth, event.id, onClick);
                         return menuManager.NavigateMenuSibling(guiStateManager, elementStorage, isSubmenuTrigger, depth, event.id, event.state.lastKey);
                     }
+                    default: break;
                 }
                 return false;
             };

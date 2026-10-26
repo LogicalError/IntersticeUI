@@ -273,6 +273,7 @@ namespace interstice
                         FrameAllNodes(view);
                         return true;
                     }
+                    default: break;
                 }
                 return false;
             },
@@ -769,6 +770,7 @@ namespace interstice
                             }
                             return true;
                         }
+                        default: break;
                     }
                     return false;
                 },

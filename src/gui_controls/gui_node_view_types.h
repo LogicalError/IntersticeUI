@@ -108,7 +108,7 @@ namespace interstice
     // Draggable interior segment; vertical segments drag horizontally and vice versa.
     struct WireSegmentHandle
     {
-        interstice::int2  a, b;     // segment endpoints, same space as the route points
+        interstice::int2  a{}, b{}; // segment endpoints, same space as the route points
         WireHandle role     = WireHandle::None;
         bool       vertical = false;
     };
@@ -127,7 +127,7 @@ namespace interstice
         uint32_t   wireKey  = 0;
         WireHandle role     = WireHandle::None;
         bool       vertical = false;
-        interstice::int2  a, b;
+        interstice::int2  a{}, b{};
     };
 
     // One thing the user did in a node view, as values before and after, so a host can keep

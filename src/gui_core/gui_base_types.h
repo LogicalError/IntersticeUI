@@ -10,9 +10,11 @@ namespace interstice
 {
     using OnGuiFunc = std::function<void()>;
 
+    // Trivial (no member initializers): IntRect overlays it in a union, which GCC and
+    // Clang allow only for trivial types. Initialize with {} where it must start at 0.
     struct int2
     {
-        int32_t x = 0, y = 0;
+        int32_t x, y;
         
         inline int32_t&       operator[](int index)       { assert(index >= 0 && index < 2); return (&x)[index]; }
         inline const int32_t& operator[](int index) const { assert(index >= 0 && index < 2); return (&x)[index]; }

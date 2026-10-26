@@ -105,8 +105,7 @@ namespace interstice
         // VisualStyle backgroundColor should be a valid atlas index (>= -1)
         EXPECT_GE(backgroundColor->colorUV.y, 0);
 
-        // If backgroundIndex is valid, texture row should be non-zero
-        if (backgroundColor->colorUV.y >= 0)
+        // The texture row should be non-zero
         {
             auto tex = gm.PageTextureData(backgroundColor->gradientPage);
             size_t width = gm.Width();

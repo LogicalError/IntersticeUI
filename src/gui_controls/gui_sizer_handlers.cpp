@@ -260,7 +260,7 @@ namespace interstice
             // The value follows the absolute mouse X across the element (no accumulated deltas).
             // Uses the live rect when available, since elementWidth may be last frame's;
             // tests dispatch without a rect and fall back to elementWidth.
-            auto setValueFromMouse = [value, minVal, maxVal, range, w, &event, &elementStorage, onChanged]() {
+            auto setValueFromMouse = [value, minVal, range, w, &event, &elementStorage, onChanged]() {
                 int32_t elementLeftX = event.rect ? event.rect->rect.position.x : 0;
                 int32_t elementW     = event.rect ? event.rect->rect.w           : w;
                 if (elementW <= 0) elementW = 1;

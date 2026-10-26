@@ -157,7 +157,7 @@ namespace interstice
         VERIFY(cRes.status);
         VERIFY(app.windowRegistry.Add(cRes.ref));
         auto cdRes = app.elementStorage.AddCustomDraw(cRes.ref,
-            [&app, capStyle](CustomDrawContext& ctx)
+            [capStyle](CustomDrawContext& ctx)
             {
                 const auto parentRef = ctx.GetParentRef(ctx.Ref());
                 const auto inner   = ctx.GetInnerSize(parentRef);

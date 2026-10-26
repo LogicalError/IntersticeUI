@@ -69,7 +69,7 @@ namespace interstice
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
         // 200x200 Grid with two 100px tracks
-        ElementRef parentRef = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(200, 200)).ref;
+        [[maybe_unused]] ElementRef parentRef = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(200, 200)).ref;
         EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
 
         // Child should occupy the bottom-right quadrant

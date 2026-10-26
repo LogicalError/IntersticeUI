@@ -158,7 +158,9 @@ namespace interstice
         GradientHandle h2 = gm.AcquireSolidColor(color4b{ 99, 99, 99, 99 });
         EXPECT_TRUE(gm.IsValid(h2));
         if (h2.SlotIndex() == stale.SlotIndex())
+        {
             EXPECT_NE(h2.Generation(), stale.Generation());
+        }
         EXPECT_FALSE(gm.IsValid(stale));
         gm.Release(h2);
     }

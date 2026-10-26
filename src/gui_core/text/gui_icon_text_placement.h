@@ -83,6 +83,7 @@ namespace interstice
         int32_t combinedHeight = textHeight;
         switch (iconSide)
         {
+            case IconSide::None: break;
             case IconSide::Left:
             case IconSide::Right:
                 combinedWidth  = textWidth + iconTextGap + iconMeasurement.width;
@@ -103,6 +104,7 @@ namespace interstice
 
         switch (iconSide)
         {
+            case IconSide::None: break;
             case IconSide::Left:
             {
                 const int32_t combinedStartX = rect.x + textAlignmentOffsetX;

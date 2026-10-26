@@ -200,12 +200,14 @@ if(_interstice_tp_standalone)
       CONFIGURATIONS Debug
       DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+    # The Debug file name on this platform: SheenBidid.lib, libSheenBidid.a.
+    set(_sheenbidi_debug "${CMAKE_STATIC_LIBRARY_PREFIX}SheenBidi${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/SheenBidiTargets-debug.cmake"
 "# Injected by IntersticeThirdParty: SheenBidi's own install rule is Release-only.\n"
 "set_property(TARGET SheenBidi::SheenBidi APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)\n"
 "set_target_properties(SheenBidi::SheenBidi PROPERTIES\n"
 "  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG \"C\"\n"
-"  IMPORTED_LOCATION_DEBUG \"\${_IMPORT_PREFIX}/lib/SheenBidid.lib\"\n"
+"  IMPORTED_LOCATION_DEBUG \"\${_IMPORT_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${_sheenbidi_debug}\"\n"
 ")\n")
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/SheenBidiTargets-debug.cmake"
       DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SheenBidi)

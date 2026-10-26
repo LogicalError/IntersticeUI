@@ -597,7 +597,7 @@ namespace interstice
             // "Color stop  2 / 3", previous, next.
             BeginHorizontal(idManager.AllocateDynamicID("ge_stop_head"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
             Text(idManager.AllocateDynamicID("ge_stop_title"), "Color stop", theme.gradientEditorHeadingStyleRef);
-            char count[16];
+            char count[32];
             std::snprintf(count, sizeof(count), "%d / %d", ge.selectedStop + 1, int(g.stopCount));
             Text(idManager.AllocateDynamicID("ge_stop_count"), count, theme.gradientEditorCountStyleRef, LayoutOverride{}.FlexGrow(1));
             Button(idManager.AllocateDynamicID("ge_prev"), theme.chevronLeftIcon, [this]() {

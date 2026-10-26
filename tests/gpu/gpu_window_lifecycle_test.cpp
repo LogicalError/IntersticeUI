@@ -168,7 +168,7 @@ TEST_F(GpuTest, PrimitiveUploadArenaGrowsAndThenStaysStable)
 // Present mode: prefer MAILBOX (vsync, no tearing, lowest latency) with a third
 // image to render ahead; otherwise FIFO double-buffered. Either way the image
 // count stays minimal - not vk-bootstrap's larger default - to keep present-queue
-// latency down.
+// latency down. A driver may create one more than asked (Mesa's X11 WSI does).
 TEST_F(GpuTest, SwapchainUsesLowLatencyPresentMode)
 {
     auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
@@ -178,13 +178,15 @@ TEST_F(GpuTest, SwapchainUsesLowLatencyPresentMode)
     const size_t count = ctx->swapchain.swapchainImages.size();
     if (ctx->swapchain.presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
     {
-        EXPECT_EQ(count, 3u) << "MAILBOX needs a third image to render ahead";
+        EXPECT_GE(count, 3u) << "MAILBOX needs a third image to render ahead";
+        EXPECT_LE(count, 4u) << "no deeper present queue than the driver insists on";
     }
     else
     {
         EXPECT_EQ(ctx->swapchain.presentMode, VK_PRESENT_MODE_FIFO_KHR)
             << "expected MAILBOX or the guaranteed FIFO fallback";
-        EXPECT_EQ(count, 2u) << "FIFO fallback should stay double-buffered";
+        EXPECT_GE(count, 2u);
+        EXPECT_LE(count, 3u) << "FIFO fallback should stay double-buffered";
     }
 }
 
@@ -367,6 +369,7 @@ TEST_F(GpuTest, WindowContextDestroyRightAfterPresentIsValidationClean)
     EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 }
 
+#ifdef _WIN32
 extern "C" __declspec(dllimport) int __stdcall IsWindow(void* hwnd);
 
 // A window closed through the backend hands its context to the cleanup callback
@@ -395,6 +398,7 @@ TEST_F(GpuTest, WindowCleanupRunsBeforeTheNativeWindowIsDestroyed)
     EXPECT_TRUE(nativeAliveDuringCleanup);
     EXPECT_EQ(IsWindow(native), 0) << "the window is still destroyed afterwards";
 }
+#endif
 
 // When no swapchain image becomes available in time (the compositor holds them
 // all), the frame is skipped instead of aborting the process.
@@ -469,18 +473,24 @@ TEST_F(GpuTest, ChildWindowSurvivesItsParentBeingDestroyed)
     interstice::OSWindowHandle child = windowBackend->CreateWindow("gpu-test-child", interstice::int2{ 150, 100 },
                                                             interstice::WindowFlags::Hidden, parent);
     ASSERT_NE(child, nullptr);
+#ifdef _WIN32
     void* childNative = windowBackend->GetNativeHandle(child);
+#endif
 
     ASSERT_TRUE(windowBackend->DestroyWindow(parent));
     windowBackend->PollEvents([](interstice::OSWindowHandle, interstice::IWindowContext*) {});
 
     EXPECT_FALSE(windowBackend->IsWindow(parent));
     EXPECT_TRUE(windowBackend->IsWindow(child));
+#ifdef _WIN32
     EXPECT_NE(IsWindow(childNative), 0) << "the child's native window went with its parent";
+#endif
 
     ASSERT_TRUE(windowBackend->DestroyWindow(child));
     windowBackend->PollEvents([](interstice::OSWindowHandle, interstice::IWindowContext*) {});
+#ifdef _WIN32
     EXPECT_EQ(IsWindow(childNative), 0);
+#endif
 }
 
 // The SDL backend reports the real display scale for windows and monitors.
@@ -526,6 +536,12 @@ TEST_F(GpuTest, FrameBuildTimeIncludesRecordingTheFrame)
     auto* ctx = CreateHiddenWindowContext(size, interstice::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
+    // A software rasterizer (lavapipe) draws on the CPU during submit and present, so
+    // presenting outweighs recording and the comparison below says nothing.
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(vk->deviceContext.chosenGPU, &props);
+    if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
+        GTEST_SKIP() << "timing needs a GPU; " << props.deviceName << " rasterizes on the CPU";
 
     double addSeconds = 0.0, renderSeconds = 0.0;
     for (int frame = 0; frame < 4; ++frame)

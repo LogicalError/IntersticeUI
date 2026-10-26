@@ -185,7 +185,7 @@ namespace interstice
         IntRect         m_clipRect;
         float3x2        m_renderTransform;   // immutable Local space -> window-local
         float3x2        m_currentTransform;  // current space -> window-local
-        int2            m_windowOffset;
+        int2            m_windowOffset{};
         ITextSystem*    m_textSystem = nullptr;
         // The registered element's border box in window pixels, unsnapped and
         // snapped; boxes drawn here snap relative to it (gui_pixel_snap.h).

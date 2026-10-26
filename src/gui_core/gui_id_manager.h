@@ -37,7 +37,7 @@ namespace interstice
         // Checks the parent stack is back to just the root Invalid ID.
         public: void EndFrame();
 
-        public: inline [[nodiscard]] bool IsInsideFrame() const { return !m_parent_stack.empty(); }
+        public: [[nodiscard]] inline bool IsInsideFrame() const { return !m_parent_stack.empty(); }
 
         // ------------------------------------------------------------------------
         // Parent Stack
@@ -76,7 +76,7 @@ namespace interstice
 #ifdef INTERSTICE_SUPPORT_CPP20
         // Allocate a dynamic ID automatically using the source location.
         // Will return a different ID for each call site. Will be affected by parent stack.
-        public: inline [[nodiscard]] ID AllocateDynamicID(const std::source_location location = std::source_location::current())
+        public: [[nodiscard]] inline ID AllocateDynamicID(const std::source_location location = std::source_location::current())
         {
             return AllocateDynamicID(location.file_name(), location.line());
         }
@@ -102,7 +102,7 @@ namespace interstice
 #ifdef INTERSTICE_SUPPORT_CPP20
         // Allocate a ranged ID automatically using the source location.
         // Will return a different ID for each call site. Will be affected by parent stack.
-        public: inline [[nodiscard]] ID AllocateRangedID(uint32_t size, const std::source_location location = std::source_location::current())
+        public: [[nodiscard]] inline ID AllocateRangedID(uint32_t size, const std::source_location location = std::source_location::current())
         {
             return AllocateRangedID(size, location.file_name(), location.line());
         }

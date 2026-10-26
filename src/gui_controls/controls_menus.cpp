@@ -64,7 +64,7 @@ namespace interstice
 
     static void MenuTriggerButton(GUIApplication& application, ID menuID, std::string_view text, StyleRef buttonStyle, bool isMenuBar, LayoutOverride&& constraints)
     {
-        auto handler = [&menuManager = application.menuManager, &idManager = application.idManager, &guiStateManager = application.guiStateManager, menuID, isMenuBar](ElementEvent&& event) -> bool
+        auto handler = [&menuManager = application.menuManager, &guiStateManager = application.guiStateManager, menuID, isMenuBar](ElementEvent&& event) -> bool
         {
             switch (event.type)
             {
@@ -119,6 +119,7 @@ namespace interstice
                     }
                     break;
                 }
+                default: break;
             }
             return false;
         };

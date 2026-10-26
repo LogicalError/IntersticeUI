@@ -54,7 +54,7 @@ namespace
         {
             const Result<JsonValue> v = JsonValue::Parse(text);
             EXPECT_FALSE(v) << text;
-            if (!v) EXPECT_EQ(v.GetError().code, ErrorCode::ParseFailed);
+            if (!v) { EXPECT_EQ(v.GetError().code, ErrorCode::ParseFailed); }
         }
         EXPECT_FALSE(JsonValue::Parse(std::string(100, '[') + std::string(100, ']'))) << "too deep";
     }

@@ -18,7 +18,7 @@ bool interstice::vulkan::VulkanTextAtlasManager::Initialize(interstice::Graphics
 	graphicsContext->deviceContext.mainDeletionQueue.
 		push_function([this]()
 		{
-			for (auto f = 0; f < fontTextures.size(); f++)
+			for (size_t f = 0; f < fontTextures.size(); f++)
 			{
 				if (fontTextures[f].used)
 				{
@@ -91,7 +91,7 @@ void interstice::vulkan::VulkanTextAtlasManager::UpdateTexture(interstice::Textu
 	}
 
 	int tex_index = ((uint32_t)textureIndex) - 1;
-	if (tex_index >= fontTextures.size())
+	if (tex_index < 0 || size_t(tex_index) >= fontTextures.size())
 	{
 		INTERSTICE_LOG_ERROR(kLogVulkan, "UpdateTexture: texture out of range");
 		return;

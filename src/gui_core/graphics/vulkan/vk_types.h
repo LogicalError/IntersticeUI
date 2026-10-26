@@ -7,7 +7,6 @@
 #include <gui_core/diagnostics/gui_logging.h>
 
 #include <vulkan/vulkan.h>
-#include <vulkan/vk_enum_string_helper.h>
 #define VMA_DEBUG_LOG_FORMAT
 #include <vk_mem_alloc.h>
 

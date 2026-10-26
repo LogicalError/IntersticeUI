@@ -28,6 +28,11 @@ The library is two static libraries:
 
 - Windows x64 with Visual Studio 2026 (MSVC) and CMake 4.2 or newer; Visual Studio 2022
   with CMake 3.22 or newer also works
+- Linux x64 with GCC 13 or Clang 17 or newer, Ninja and CMake 3.22 or newer, and the
+  X11 and Wayland development packages for SDL3 (see the Linux job in
+  `.github/workflows/ci.yml` for the Ubuntu package list)
+- macOS (untested: CI builds it with Apple Clang against MoltenVK from Homebrew and runs
+  the headless tests, but it has never run on a Mac)
 - The [Vulkan SDK](https://vulkan.lunarg.com/): headers, loader and
   `glslangValidator` for the shaders; the GPU tests also use its validation layers
 - Git with [Git LFS](https://git-lfs.com/): the fonts are stored in LFS, and a
@@ -44,6 +49,13 @@ The library is two static libraries:
 git clone --recursive https://github.com/LogicalError/IntersticeUI.git
 cd IntersticeUI
 cmake -S . -B build -G "Visual Studio 18 2026" -A x64   # or "Visual Studio 17 2022"
+cmake --build build --config Debug
+```
+
+On Linux and macOS:
+
+```text
+cmake -S . -B build -G "Ninja Multi-Config"
 cmake --build build --config Debug
 ```
 
@@ -381,7 +393,8 @@ needs the host to drive the frame loop (#55).
 
 ## Dependencies
 
-Install yourself: the Vulkan SDK, Visual Studio 2026 or 2022, CMake, Git and Git LFS
+Install yourself: the Vulkan SDK (on Linux, the distribution's Vulkan and glslang packages
+also do), a compiler, CMake, Git and Git LFS
 (see [Requirements](#requirements)).
 
 Handled by the build:
@@ -393,8 +406,8 @@ Handled by the build:
 
 ## Status
 
-Version 0.1, a preview under active development. Windows x64 with Vulkan is the
-only platform so far; the backends are separate from the rest so others can follow.
+Version 0.1, a preview under active development. Windows x64 and Linux x64 with
+Vulkan are built and tested in CI; macOS builds but is untested.
 
 Known issues:
 

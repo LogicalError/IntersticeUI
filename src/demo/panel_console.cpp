@@ -98,7 +98,7 @@ namespace interstice
         void AppendLogRecord(const Diagnostics::LogRecord& record)
         {
             const int64_t ms = std::max<int64_t>(0, (record.timestampNanos - logEpochNanos) / 1'000'000);
-            char ts[16];
+            char ts[48];
             std::snprintf(ts, sizeof(ts), "%02d:%02d:%02d.%03d", int(ms / 3600000), int(ms / 60000 % 60),
                           int(ms / 1000 % 60), int(ms % 1000));
 
@@ -436,7 +436,7 @@ namespace interstice
                 // real editor jump). Uses a stable id so selection/focus survive across frames.
                 SelectableText(logDetailTextID,
                     std::span<interstice::ContentRun>(logDetailRuns.data(), logDetailRuns.size()),
-                    [this](intptr_t contentId)
+                    [](intptr_t contentId)
                     {
                         for (const auto& lk : logDetailLinks)
                             if (lk.id == contentId) { INTERSTICE_LOG_INFO(kLogDemo, "open {}:{}", lk.file, lk.line); break; }

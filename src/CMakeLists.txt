@@ -10,6 +10,7 @@ list(APPEND GUI_FILES
   gui_core/gui_id.h
   gui_core/gui_id_manager.h
   gui_core/gui_id_manager.cpp
+  gui_core/gui_from_chars.h
   gui_core/gui_json.h
   gui_core/gui_json.cpp
 

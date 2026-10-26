@@ -841,7 +841,6 @@ namespace interstice
                 // Display::None skips this element but still traverses its children.
                 const bool displayNone = layoutStyle->display == interstice::Display::None;
 
-                const int2 elementPosLayout{ rectLayout.x, rectLayout.y };
 
                 if (!displayNone)
                 {

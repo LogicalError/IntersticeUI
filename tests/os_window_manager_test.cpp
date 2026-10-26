@@ -159,7 +159,7 @@ namespace interstice
 
     TEST_F(OSWindowManagerTest, IsNotAlive_BadID)
     {
-        EXPECT_TRUE(manager->IsNotAlive(ID{ .value = 1 }));
+        EXPECT_TRUE(manager->IsNotAlive(ID{ .value{ .integer = 1 } }));
     }
 
     // ============================================================================

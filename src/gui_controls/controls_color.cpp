@@ -1041,7 +1041,7 @@ namespace interstice
         // ---- Picker popup ----
         if (pickerIsOpen && cp.windowID != ID::Invalid())
         {
-            auto&& popupPos = LayoutOverride{}.Anchored(swatchID,
+            LayoutOverride popupPos = LayoutOverride{}.Anchored(swatchID,
                 AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
                 {0, int16_t(styleManager.Px(4))}, AutoFlipMode::FlipAvoidTarget);
 

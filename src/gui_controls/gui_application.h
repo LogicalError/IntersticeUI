@@ -124,6 +124,20 @@ namespace interstice
         std::string_view                   details;    // collapsible technical details (mono)
     };
 
+    // What GUIApplication::Initialize sets up besides the core systems. All on by default;
+    // a host that does one itself turns it off. (Outside the class: GCC can't use a nested
+    // struct's member initializers in a default argument of the class being defined.)
+    struct GUIApplicationInitializeOptions
+    {
+        bool loadStyles             = true;  // load the theme (InitializeStyles)
+        bool commandShortcuts       = true;  // route keys to commandManager's shortcuts
+        bool repaintWhileResizing   = true;  // onGui = OnFrame, unless onGui is already set
+        bool closeMenusOnWindowMove = true;  // open menus close when a window moves or resizes
+        // The optional fallback fonts (Noto: other scripts, emoji, symbols), relative to
+        // the resource root, e.g. "fonts/Noto-otf". Empty: only the built-in fonts.
+        std::string_view fallbackFonts {};
+    };
+
     class GUIApplication
     {
     public:
@@ -247,18 +261,7 @@ namespace interstice
 
                 virtual ~GUIApplication() = default;
 
-        // What Initialize sets up besides the core systems. All on by default; a host
-        // that does one itself turns it off.
-        struct InitializeOptions
-        {
-            bool loadStyles             = true;  // load the theme (InitializeStyles)
-            bool commandShortcuts       = true;  // route keys to commandManager's shortcuts
-            bool repaintWhileResizing   = true;  // onGui = OnFrame, unless onGui is already set
-            bool closeMenusOnWindowMove = true;  // open menus close when a window moves or resizes
-            // The optional fallback fonts (Noto: other scripts, emoji, symbols), relative to
-            // the resource root, e.g. "fonts/Noto-otf". Empty: only the built-in fonts.
-            std::string_view fallbackFonts {};
-        };
+        using InitializeOptions = GUIApplicationInitializeOptions;
 
         virtual Result<void> Initialize(const InitializeOptions& options = {});
         virtual void Cleanup();
@@ -1141,7 +1144,7 @@ namespace interstice
                 return false;
             }
 
-            auto&& constraints = LayoutOverride::FixedSize(size).Position(position.x, position.y);
+            LayoutOverride constraints = LayoutOverride::FixedSize(size).Position(position.x, position.y);
 
             ElementFlags elementFlags = interstice::ElementFlags::WindowNoCaption | interstice::ElementFlags::WindowIsTransparent;
             return BeginWindow(windowLayoutID, styleRef, std::move(constraints), elementFlags);
@@ -1160,7 +1163,7 @@ namespace interstice
                 m_windowOpen.push_back(false);   // its EndGhostWindow is still called
                 return false;
             }
-            auto&& constraints = LayoutOverride{}.Position(position.x, position.y);
+            LayoutOverride constraints = LayoutOverride{}.Position(position.x, position.y);
             ElementFlags elementFlags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsTransparent;
             return BeginWindow(windowLayoutID, styleRef, std::move(constraints), elementFlags);
         }

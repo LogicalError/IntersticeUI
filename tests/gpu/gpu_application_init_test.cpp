@@ -142,7 +142,9 @@ namespace
             SDL_GetMemoryFunctions(&current, nullptr, nullptr, nullptr);
             SDL_GetOriginalMemoryFunctions(&original, nullptr, nullptr, nullptr);
             if (sdlRoutable)
+            {
                 EXPECT_NE(current, original) << "SDL allocates through the hooks";
+            }
 
             app.windowID = app.idManager.CreateStaticID();
             for (int i = 0; i < 3; ++i)

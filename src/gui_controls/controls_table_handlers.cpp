@@ -19,10 +19,10 @@ namespace interstice
     using namespace interstice::TableInternal;
 
     interstice::EventHandler GUIApplication::BuildTableContainerHandler(TableState* state,
-                                                                 interstice::ID containerID)
+                                                                 interstice::ID /*containerID*/)
     {
         TableState* statePtr = state;
-        return [this, statePtr, containerID](ElementEvent&& event) -> bool
+        return [this, statePtr](ElementEvent&& event) -> bool
         {
             switch (event.type)
             {

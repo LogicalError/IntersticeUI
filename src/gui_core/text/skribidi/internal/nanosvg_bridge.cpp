@@ -1,10 +1,14 @@
 #include "nanosvg_bridge.h"
 
 #define NANOSVG_IMPLEMENTATION
+#if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning( disable: 4702)
+#endif
 #include <nanosvg.h>
+#if defined(_MSC_VER)
 #pragma warning(pop)
+#endif
 
 #include <skribidi/skb_common.h>
 #include <skribidi/skb_icon_collection.h>

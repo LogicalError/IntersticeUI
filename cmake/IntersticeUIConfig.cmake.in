@@ -24,6 +24,8 @@ find_dependency(Vulkan)
 if(@INTERSTICE_SDL@)
   find_dependency(SDL3 CONFIG)
 endif()
+# harfbuzz links Threads::Threads where it uses pthreads, without finding it.
+find_dependency(Threads)
 find_dependency(harfbuzz CONFIG)
 find_dependency(SheenBidi CONFIG)
 find_dependency(libunibreak CONFIG)

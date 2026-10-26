@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gui_core/diagnostics/gui_logging.h>
 
+#include <format>
 #include <string>
 #include <thread>
 #include <vector>
@@ -89,7 +90,7 @@ namespace interstice::Diagnostics
             const std::string longText(kLogTextCapacity * 2, 'a');
             INTERSTICE_LOG_WARNING(kTestCategory, "[{}]", longText);
             ASSERT_EQ(captured.messages.size(), 1u);
-            EXPECT_EQ(captured.messages[0], "[" + std::string(kLogTextCapacity, 'a') + "]");
+            EXPECT_EQ(captured.messages[0], std::format("[{}]", std::string(kLogTextCapacity, 'a')));
         }
 
         TEST_F(LoggingTest, FormattingHandlesMissingArgumentsAndSmallBuffers)

@@ -304,8 +304,6 @@ namespace interstice
             if (grid.row.start    >= 0) { result.row.start    = grid.row.start;    result.row.span    = grid.row.span;    }
             return result;
         }
-
-        bool operator==(const LayoutOverride&) const noexcept = default;
     };
 
 } // namespace interstice

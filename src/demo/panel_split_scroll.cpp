@@ -89,8 +89,8 @@ namespace interstice
 
         BeginHorizontal(LayoutOverride{}.NoGrow().NoShrink());
             Text(idManager.AllocateDynamicID(), "Selection mode:", theme.staticTextStyleRef);
-            Toggle(tableStyle.selectionMode == TableSelectionMode::Row, "Row", [this, &tableStyle](bool) { tableStyle.selectionMode = TableSelectionMode::Row; });
-            Toggle(tableStyle.selectionMode == TableSelectionMode::Cell, "Cell", [this, &tableStyle](bool) { tableStyle.selectionMode = TableSelectionMode::Cell; });
+            Toggle(tableStyle.selectionMode == TableSelectionMode::Row, "Row", [&tableStyle](bool) { tableStyle.selectionMode = TableSelectionMode::Row; });
+            Toggle(tableStyle.selectionMode == TableSelectionMode::Cell, "Cell", [&tableStyle](bool) { tableStyle.selectionMode = TableSelectionMode::Cell; });
         EndHorizontal(); 
         
         // flex-fill-row + table-fill (flex-basis:0) bound the table to the

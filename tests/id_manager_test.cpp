@@ -410,8 +410,8 @@ namespace interstice
         size_t initial_ranged = manager.GetRangedIDCount();
 
         ID static_id = manager.CreateStaticID();
-        ID dynamic_id = manager.AllocateDynamicID("foo");
-        ID range_id = manager.AllocateRangedID(4, "range");
+        [[maybe_unused]] ID dynamic_id = manager.AllocateDynamicID("foo");
+        [[maybe_unused]] ID range_id = manager.AllocateRangedID(4, "range");
 
         EXPECT_EQ(manager.GetStaticIDCount(), initial_static + 1);
         EXPECT_EQ(manager.GetDynamicIDCount(), initial_dynamic + 1);

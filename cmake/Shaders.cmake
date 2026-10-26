@@ -4,7 +4,7 @@
 # project also `interstice_resources`, which copies the other resources next to them.
 
 find_program(GLSL_VALIDATOR glslangValidator
-  HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
+  HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/ $ENV{VULKAN_SDK}/bin/)
 if(NOT GLSL_VALIDATOR)
   message(FATAL_ERROR
     "glslangValidator not found. Install the Vulkan SDK (and set VULKAN_SDK), "

@@ -53,11 +53,6 @@
 
 static constexpr interstice::Diagnostics::LogCategory kLogVulkan = interstice::Diagnostics::MakeLogCategory("vulkan");
 
-#if defined(_DEBUG)
-constexpr bool bUseValidationLayers = true;
-#else
-constexpr bool bUseValidationLayers = false;
-#endif
 
 
 using namespace interstice::vulkan;
@@ -426,7 +421,7 @@ void VulkanGraphicsContext::DestroyImage(interstice::Image* img)
     deviceContext.DestroyImage(img);
 }
 
-void VulkanGraphicsContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope, const std::source_location& loc)
+void VulkanGraphicsContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyImageAtEnd(img, scope, loc);
 }
@@ -441,7 +436,7 @@ void VulkanGraphicsContext::DestroyVisualColorStyles(interstice::Buffer* buffer)
     deviceContext.DestroyVisualColorStyles(buffer);
 }
 
-void VulkanGraphicsContext::DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, const std::source_location& loc)
+void VulkanGraphicsContext::DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyVisualColorStylesAtEnd(buffer, scope, loc);
 }
@@ -456,7 +451,7 @@ void VulkanGraphicsContext::DestroyVisualBoxStyles(interstice::Buffer* buffer)
     deviceContext.DestroyVisualBoxStyles(buffer);
 }
 
-void VulkanGraphicsContext::DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, const std::source_location& loc)
+void VulkanGraphicsContext::DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyVisualBoxStylesAtEnd(buffer, scope, loc);
 }
@@ -619,11 +614,11 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
         if (m_instanceDebugConfig.enableSyncValidation)
             instance_builder.add_validation_feature_enable(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT);
     }
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
     else
     {
         instance_builder
-            .request_validation_layers(bUseValidationLayers)
+            .request_validation_layers(true)
             .use_default_debug_messenger()
             .enable_validation_layers();
     }
@@ -953,7 +948,7 @@ bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
     if (vkCreateCommandPool(device, &commandPoolInfo, AllocationCallbacks(), &immCommandPool) != VK_SUCCESS)
         return failed("immediate command pool");
     GetDeletionQueue(interstice::DeviceScope::Application)
-        .push_function([=]() { vkDestroyCommandPool(device, immCommandPool, AllocationCallbacks()); });
+        .push_function([=, this]() { vkDestroyCommandPool(device, immCommandPool, AllocationCallbacks()); });
 
     VkCommandBufferAllocateInfo cmdAllocInfo = interstice::vulkan::command_buffer_allocate_info(immCommandPool, 1);
     if (vkAllocateCommandBuffers(device, &cmdAllocInfo, &immCommandBuffer) != VK_SUCCESS)
@@ -964,7 +959,7 @@ bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
     if (vkCreateFence(device, &fenceCreateInfo, AllocationCallbacks(), &immFence) != VK_SUCCESS)
         return failed("immediate fence");
     GetDeletionQueue(interstice::DeviceScope::Application)
-        .push_function([=]() { vkDestroyFence(device, immFence, AllocationCallbacks()); });
+        .push_function([=, this]() { vkDestroyFence(device, immFence, AllocationCallbacks()); });
 
     {
         DescriptorLayoutBuilder builder;
@@ -1252,11 +1247,11 @@ void interstice::vulkan::VulkanDeviceContext::RebuildLiveImages()
 }
 
 void interstice::vulkan::VulkanDeviceContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
-                                                    const std::source_location& loc)
+                                                    [[maybe_unused]] const std::source_location& loc)
 {
     m_liveImages.erase((VulkanImage*)img);
     VulkanImage vulkanImage = *(VulkanImage*)img;
-    auto func = [this, vulkanImage, img, loc]()
+    auto func = [this, vulkanImage, img]()
         {
             //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyImage(vulkanImage);
@@ -1272,9 +1267,9 @@ void interstice::vulkan::VulkanDeviceContext::DestroyVisualColorStyles(interstic
 }
 
 void interstice::vulkan::VulkanDeviceContext::DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
-                                                     const std::source_location& loc)
+                                                     [[maybe_unused]] const std::source_location& loc)
 {
-    auto func = [this, buffer, loc]()
+    auto func = [this, buffer]()
         {
             //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyVisualColorStyles(buffer);
@@ -1290,9 +1285,9 @@ void interstice::vulkan::VulkanDeviceContext::DestroyVisualBoxStyles(interstice:
 }
 
 void interstice::vulkan::VulkanDeviceContext::DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
-                                                     const std::source_location& loc)
+                                                     [[maybe_unused]] const std::source_location& loc)
 {
-    auto func = [this, buffer, loc]()
+    auto func = [this, buffer]()
         {
             //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyVisualBoxStyles(buffer);

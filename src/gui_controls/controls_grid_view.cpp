@@ -582,7 +582,7 @@ namespace interstice
 
         // Transparent, non-interactive block reserving the height of the rows
         // scrolled off above / below the visible window.
-        auto emitSpacer = [this, id](int height)
+        auto emitSpacer = [this](int height)
         {
             if (height <= 0) return;
             const interstice::ID spacerID = idManager.AllocateDynamicID("_grid_spacer");

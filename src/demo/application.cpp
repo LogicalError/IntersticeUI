@@ -159,7 +159,7 @@ namespace interstice
 					SetTooltip("Toggle textured view mode");
 
                     bool isLit = viewModeLit == (int)ViewMode::Lit;
-                    Button(isLit ? demo.lightOnIcon : demo.lightOffIcon,  [this, isLit, viewModeLit, viewModeNoLit]()
+                    Button(isLit ? demo.lightOnIcon : demo.lightOffIcon,  [this, isLit, viewModeNoLit]()
                     { 
                         if (!isLit) 
                         {
@@ -334,12 +334,6 @@ namespace interstice
 
         // --- Further commands so the Shortcuts panel has realistic content.
         // These are panel/keyboard only (not referenced by the menu or toolbar).
-        auto dummy = [this](interstice::CommandMode mode, interstice::KeyCode key, interstice::KeyModifier mods,
-            const char* desc)
-            {
-                commandManager.RegisterCommand(mode, key, mods,
-                    [desc]() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", desc); }, desc);
-            };
 
         // Default (global).
         commandManager.RegisterCommand(interstice::CommandMode::Default, demo.selectAllIcon, interstice::KeyCode::KeyA,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
@@ -1184,7 +1178,6 @@ namespace interstice
         auto&& sizeConstraints = LayoutOverride::FixedSize(1700, 900);
         
         {
-            interstice::int2 size{ styleManager.Px(100), styleManager.Px(50) };
             static bool mainWindowClosed = false;
             // Closed by the user; reset mainWindowClosed to reopen.
             if (!mainWindowClosed)
