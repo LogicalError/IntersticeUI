@@ -17,6 +17,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     enum class WindowFlags : uint32_t;
     enum class VisualColorStyleIndex : uint16_t;
 
@@ -132,4 +135,5 @@ namespace tachyon
         virtual float GetLastFrameBuildSeconds() const { return 0.0f; }
 
     };
+    /// @}
 }

@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup diagnostics
+    /// @{
+
     /// Allocation hooks that count what is live, for finding leaks. Logs a warning
     /// for every allocation still live when it is destroyed. Thread-safe.
     class TrackingAllocator
@@ -30,4 +33,5 @@ namespace tachyon
         struct State;
         State* m_state;
     };
+    /// @}
 }

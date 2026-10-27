@@ -14,6 +14,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_docking
+    /// @{
+
     class IDManager;
 
 
@@ -201,4 +204,5 @@ namespace tachyon
     /// saved layout uses this to place panels added since the layout was saved.
     std::vector<ID> UnplacedPanels(const DockNode& root, const std::vector<ID>& allPanels);
 
+    /// @}
 } // namespace tachyon

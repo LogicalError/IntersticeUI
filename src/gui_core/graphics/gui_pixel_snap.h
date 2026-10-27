@@ -15,6 +15,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     /// Round half up, the same rule the box shader uses.
     inline int32_t SnapPx(float v) { return int32_t(std::floor(v + 0.5f)); }
 
@@ -43,4 +46,5 @@ namespace tachyon
         const int32_t y1 = parentSnapped.y + parentSnapped.h - SnapPx(parentPx.w - childPx.w);
         return IntRect{ x0, y0, x1 - x0, y1 - y0 };
     }
+    /// @}
 }

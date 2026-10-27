@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     class FramePipeline;
     struct FrameContext;
     class ElementStorage;
@@ -73,4 +76,5 @@ namespace tachyon
         GUIStateManager& m_guiStateManager;
         GUITheme&        m_theme;
     };
+    /// @}
 }

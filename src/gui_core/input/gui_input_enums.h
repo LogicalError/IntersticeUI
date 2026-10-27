@@ -5,6 +5,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     // Interaction distances in CSS px; scale them with StyleManager::Px.
     constexpr float   kWheelScrollStep   = 30.0f; ///< scrolled per wheel notch (CSS px)
     constexpr int32_t kDragStartDistance = 4;     ///< pointer travel before a press becomes a drag (CSS px)
@@ -337,4 +340,5 @@ namespace tachyon
         Call,
         EndCall,
     };
+    /// @}
 }

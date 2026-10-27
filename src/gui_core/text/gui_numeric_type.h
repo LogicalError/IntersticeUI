@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
 	// ------------------------------------------------------------------------
 	// Numeric Value Union/Type - For editable numeric text fields
 	// ------------------------------------------------------------------------
@@ -115,4 +118,5 @@ namespace tachyon
             default: return false;
         }
     }
+    /// @}
 }

@@ -14,6 +14,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     struct AllocatedImage 
     {
         VkImage image;
@@ -56,4 +59,5 @@ namespace tachyon::vulkan
         } while (result == VK_TIMEOUT);
         TACHYON_VK_CHECK(result);
     }
+    /// @}
 }

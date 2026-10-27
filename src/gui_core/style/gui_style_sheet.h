@@ -9,6 +9,9 @@
 
 namespace tachyon 
 {
+    /// @addtogroup styling
+    /// @{
+
     // ============================================================================
     // StyleSheet - result of parsing a CSS-inspired style file
     // ============================================================================
@@ -71,4 +74,5 @@ namespace tachyon
     /// reported in StyleSheet::errors, and the rest is parsed.
     StyleSheet ParseStyleSheet(std::string_view source);
 
+    /// @}
 } // namespace tachyon

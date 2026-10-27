@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
     /// Handle for text registered with the text system (ITextSystem::RegisterText and friends).
     enum class TextID : uint32_t { Invalid = 0 };
 	/// Handle for an icon registered with ITextSystem::RegisterIconFromSVG / RegisterIconFromSVGFile.
@@ -305,4 +308,5 @@ namespace tachyon
 		}
 	};
 
+    /// @}
 }//namespace tachyon

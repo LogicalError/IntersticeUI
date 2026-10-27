@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     /// Outcome of a WindowRegistry call.
     enum class RegistryResult
     {
@@ -325,4 +328,5 @@ namespace tachyon
 
     };
 
+    /// @}
 } // namespace tachyon

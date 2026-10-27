@@ -18,6 +18,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_docking
+    /// @{
+
 
     // ---- TabBar: reorderable tabs ----
     /// Construction state of the current tab bar; internal.
@@ -75,6 +78,15 @@ namespace tachyon
     };
 
     /// A docking area: the split/tab tree and the panels its leaves refer to by ID.
+    ///
+    ///     const ID scene = CreatePanel(layout.panels, "Scene", IconID::Invalid, [this] { ScenePanel(); });
+    ///     const ID log   = CreatePanel(layout.panels, "Log",   IconID::Invalid, [this] { LogPanel(); });
+    ///     layout.root = MakeSplit(DockSplitMode::LeftPinned, 220, MakeLeaf({ scene }), MakeLeaf({ log }));
+    ///
+    ///     // In OnGUI, inside a window:
+    ///     BeginDockingContainer(dockID, &layout, LayoutOverride::Auto());
+    ///     EndDockingContainer();
+    ///     EmitFloatingDockWindows();
     struct DockingLayout {
         std::unique_ptr<tachyon::DockNode>     root;    ///< the dock tree; leaves hold panel tabs
         std::unordered_map<tachyon::ID, Panel> panels;  ///< every panel of this layout, by ID
@@ -120,4 +132,5 @@ namespace tachyon
         bool            dockRequested = false;                ///< Dock clicked; done next frame
     };
 
+    /// @}
 }

@@ -10,6 +10,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     class VulkanDeviceContext;
     struct DeletionQueue;
     struct FrameData;
@@ -62,4 +65,5 @@ namespace tachyon::vulkan
         VkDescriptorSet      imageSet;
         FrameData&           frame;
     };
+    /// @}
 }

@@ -14,6 +14,9 @@
 
 namespace tachyon::TreeUtils
 {
+    /// @addtogroup controls_data
+    /// @{
+
     /// A flat tree row: the caller sets depth and isOpen; RebuildTreeIndex derives the rest.
     template <typename Row>
     concept TreeRowLike = requires(Row r)
@@ -127,4 +130,5 @@ namespace tachyon::TreeUtils
                     std::make_move_iterator(lifted.end()));
         return insertAt;   // new flat index of the moved row's root
     }
+    /// @}
 }

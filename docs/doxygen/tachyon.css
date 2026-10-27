@@ -1,0 +1,150 @@
+/* TachyonUI colors and type for the API reference, on top of doxygen-awesome:
+   near-black surfaces and one blue accent. */
+
+html {
+    --primary-color: #2f6fcf;
+    --primary-dark-color: #24579f;
+    --primary-light-color: #6e9cf7;
+    --link-color: #2f6fcf;
+
+    --page-background-color: #ffffff;
+    --page-foreground-color: #1f232b;
+    --page-secondary-foreground-color: #5c6370;
+    --separator-color: #e3e5ea;
+    --side-nav-background: #f6f7f9;
+    --side-nav-foreground: #1f232b;
+    --code-background: #f1f3f6;
+    --tablehead-background: #f1f3f6;
+    --blockquote-background: #f6f7f9;
+
+    --font-family: Inter, "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    --font-family-monospace: "JetBrains Mono", "Cascadia Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --page-font-size: 15.5px;
+    --navigation-font-size: 14px;
+    --content-maxwidth: 980px;
+    --side-nav-fixed-width: 300px;
+    --border-radius-small: 6px;
+    --border-radius-medium: 8px;
+    --border-radius-large: 10px;
+}
+
+/* Dark is defined twice: for the OS preference and for the toggle. */
+@media (prefers-color-scheme: dark) {
+    html:not(.light-mode) {
+        --primary-color: #6e9cf7;
+        --primary-dark-color: #a9c3fa;
+        --primary-light-color: #3d5f9e;
+        --link-color: #8fb3fa;
+
+        --page-background-color: #0e1014;
+        --page-foreground-color: #d8dce3;
+        --page-secondary-foreground-color: #8b93a1;
+        --separator-color: #252a33;
+        --side-nav-background: #13161b;
+        --side-nav-foreground: #c9ced8;
+        --code-background: #1a1e25;
+        --tablehead-background: #171b21;
+        --blockquote-background: #13161b;
+        --odd-color: rgba(255, 255, 255, .025);
+        --fragment-background: #13161b;
+        --fragment-foreground: #d8dce3;
+        --fragment-keyword: #c3a6ff;
+        --fragment-keywordtype: #8fb3fa;
+        --fragment-keywordflow: #e8b44c;
+        --fragment-token: #5fd3bc;
+        --fragment-comment: #6f7785;
+        --fragment-link: #8fb3fa;
+        --fragment-preprocessor: #5fd3bc;
+        --fragment-linenumber-background: #13161b;
+        --fragment-linenumber-border: #252a33;
+    }
+}
+
+html.dark-mode {
+    --primary-color: #6e9cf7;
+    --primary-dark-color: #a9c3fa;
+    --primary-light-color: #3d5f9e;
+    --link-color: #8fb3fa;
+
+    --page-background-color: #0e1014;
+    --page-foreground-color: #d8dce3;
+    --page-secondary-foreground-color: #8b93a1;
+    --separator-color: #252a33;
+    --side-nav-background: #13161b;
+    --side-nav-foreground: #c9ced8;
+    --code-background: #1a1e25;
+    --tablehead-background: #171b21;
+    --blockquote-background: #13161b;
+    --odd-color: rgba(255, 255, 255, .025);
+    --fragment-background: #13161b;
+    --fragment-foreground: #d8dce3;
+    --fragment-keyword: #c3a6ff;
+    --fragment-keywordtype: #8fb3fa;
+    --fragment-keywordflow: #e8b44c;
+    --fragment-token: #5fd3bc;
+    --fragment-comment: #6f7785;
+    --fragment-link: #8fb3fa;
+    --fragment-preprocessor: #5fd3bc;
+    --fragment-linenumber-background: #13161b;
+    --fragment-linenumber-border: #252a33;
+}
+
+/* Readable prose: a comfortable line length and line height. */
+div.contents {
+    line-height: 1.65;
+}
+
+div.contents p, div.contents li, div.contents dd {
+    max-width: 78ch;
+}
+
+div.contents h1 {
+    font-size: 1.9em;
+    letter-spacing: -0.01em;
+}
+
+div.contents h2 {
+    margin-top: 2em;
+    padding-bottom: .35em;
+    border-bottom: 1px solid var(--separator-color);
+}
+
+div.contents h3 {
+    margin-top: 1.6em;
+}
+
+/* The project name links home; keep it in the heading color. */
+#projectname a, #projectname a:visited {
+    color: var(--page-foreground-color) !important;
+    text-decoration: none;
+}
+
+#projectbrief {
+    color: var(--page-secondary-foreground-color);
+}
+
+/* Tables of contents and page tables in the guides. */
+div.contents table.markdownTable td:first-child {
+    white-space: nowrap;
+}
+
+/* Member group headings on class pages ("Tables", "Fields", ...). */
+.memberdecls tr.heading h2.groupheader, h2.groupheader {
+    border-bottom: 1px solid var(--separator-color);
+    padding-bottom: .3em;
+}
+
+td.memSeparator {
+    border-color: var(--separator-color);
+}
+
+/* The brief under each member: secondary, so the signatures stand out. */
+.mdescLeft, .mdescRight {
+    color: var(--page-secondary-foreground-color);
+}
+
+/* Smaller breadcrumbs and page footer. */
+.navpath ul, address.footer {
+    font-size: .85em;
+}

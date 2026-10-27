@@ -13,6 +13,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     // ---- Multi-selection state (user-owned) ----
     /// Selected item IDs of a multi-select view; user-owned, keep it alive across frames.
     struct MultiSelectState {
@@ -91,4 +94,5 @@ namespace tachyon
         /// Forgets the previous click, so the next one never counts as a repeat.
         void Reset() { lastID = tachyon::ID::Invalid(); }
     };
+    /// @}
 }

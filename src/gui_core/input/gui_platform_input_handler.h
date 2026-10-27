@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     struct ID;
     enum class KeyCode : uint32_t;
     enum class KeyModifier : uint8_t;
@@ -34,4 +37,5 @@ namespace tachyon
         /// Committed text still arrives as KeyChar.
         virtual void OnTextComposition(tachyon::ID id, std::string_view text, int32_t cursor) = 0;
     };
+    /// @}
 };

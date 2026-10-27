@@ -16,6 +16,9 @@ struct skb_editor_t;
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// Implementation detail, private to the skribidi backend.
     class SkribidiContext;
     struct RegisteredText;
@@ -212,4 +215,5 @@ namespace tachyon
         std::string      m_fallbackFontDirectory;
     };
 
+    /// @}
 } // namespace tachyon

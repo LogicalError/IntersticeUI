@@ -12,6 +12,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     /// Per-element typed state keyed by ID, kept across frames (drag start, double-click
     /// timing). Get, GetOrCreate and Touch keep an entry alive; EndFrame evicts the rest.
     /// GUIStateManager touches the IDs in a live interaction (capture, focus, drag, active),
@@ -144,4 +147,5 @@ namespace tachyon
         it->second.touchedFrame = m_currentFrame;
         return static_cast<T*>(it->second.data);
     }
+    /// @}
 }

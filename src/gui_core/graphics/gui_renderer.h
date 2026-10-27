@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     enum class VisualBoxStyleIndex : uint16_t;
     enum class VisualColorStyleIndex : uint16_t;
     enum class ElementState : uint8_t;
@@ -103,4 +106,5 @@ namespace tachyon
         virtual void ClearScopeCaptures() {}
     };
 
+    /// @}
 }

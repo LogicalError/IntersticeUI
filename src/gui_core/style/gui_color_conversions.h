@@ -6,6 +6,9 @@
 
 namespace tachyon::ColorConvert
 {
+    /// @addtogroup styling
+    /// @{
+
     // ---- sRGB <-> Linear ----
 
     inline float SRGBToLinear(float c)
@@ -255,4 +258,5 @@ namespace tachyon::ColorConvert
                  std::clamp(LinearToSRGB(std::clamp(G, 0.0f, 1.0f)), 0.0f, 1.0f),
                  std::clamp(LinearToSRGB(std::clamp(B, 0.0f, 1.0f)), 0.0f, 1.0f) };
     }
+    /// @}
 }

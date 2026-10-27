@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     /// Adds windows that render to an image (WindowFlags::RenderToImage) to another
     /// window backend. They have no OS window: the backend keeps their rect and
     /// attached context, and everything else goes to the wrapped backend. The host
@@ -74,4 +77,5 @@ namespace tachyon
         std::unique_ptr<State> m_state;
         uint32_t m_focusChanges = 0;   ///< SetFocus moving the focus
     };
+    /// @}
 }

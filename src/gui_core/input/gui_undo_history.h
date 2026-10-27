@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     /// The app's undo history: steps that each undo and redo one change. Text fields push
     /// their committed edits here, and so can the app's own editors; Undo / Redo walk it.
     class UndoHistory
@@ -76,4 +79,5 @@ namespace tachyon
         size_t            m_current   = 0;       ///< steps before it are done, from it on undone
         bool              m_mergeOpen = false;
     };
+    /// @}
 }

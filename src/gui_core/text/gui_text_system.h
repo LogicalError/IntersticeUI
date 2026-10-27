@@ -24,6 +24,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// One face of a font family: a font file, or font data in memory that stays valid
     /// while the family is registered (embedded in the executable, say).
     struct FontFaceSource
@@ -442,4 +445,5 @@ namespace tachyon
         /// to place the IME candidate window. Empty when no editor is active.
         virtual std::optional<IntRect> GetCaretScreenRect() const = 0;
     };
+    /// @}
 } // namespace tachyon

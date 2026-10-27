@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     /// The hovered, active, focused and captured elements, the active window, the one-shot
     /// click, hover suppression and the focus scroll axis. Owned by GUIStateManager.
     class InteractionState
@@ -96,4 +99,5 @@ namespace tachyon
         /// and expired flash.
         void EndFrame(ID overID, MouseButtons mouseButtons);
     };
+    /// @}
 }

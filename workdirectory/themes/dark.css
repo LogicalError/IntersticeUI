@@ -1,7 +1,6 @@
 /* =============================================================================
-   Graphite dark palette for TachyonUI: neutral cool greys, one accent,
-   semantic colors only for state and data. Token values come from
-   docs/design/graphite/graphite-theme-spec.md; light.css has the same names.
+   Dark palette for TachyonUI: neutral cool greys, one accent, semantic
+   colors only for state and data. light.css has the same names.
    ============================================================================= */
 
 :root {

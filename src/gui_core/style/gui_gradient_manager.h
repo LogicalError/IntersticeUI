@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
     class Image;
     class GraphicsContext;
 
@@ -216,4 +219,5 @@ namespace tachyon
 
         bool m_pageTableDirty = true; ///< true whenever page count / mapping changes
     };
+    /// @}
 }

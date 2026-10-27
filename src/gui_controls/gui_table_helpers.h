@@ -12,6 +12,9 @@ namespace tachyon
 
 namespace tachyon::TableHelpers
 {
+    /// @addtogroup controls_data
+    /// @{
+
     /// Half-open [firstVisible, lastVisible) range of rows to emit.
     struct VirtualRowRange
     {
@@ -35,4 +38,5 @@ namespace tachyon::TableHelpers
                                     int                      fromCol,
                                     std::span<const IntRect> headerRects);
 
+    /// @}
 }

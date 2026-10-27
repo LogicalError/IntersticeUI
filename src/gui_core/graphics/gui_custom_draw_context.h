@@ -11,6 +11,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     class GUIRenderer;
     class ElementStorage;
     class ITextSystem;
@@ -237,4 +240,5 @@ namespace tachyon
         float3x2        m_contentTransform;
     };
 
+    /// @}
 } // namespace tachyon

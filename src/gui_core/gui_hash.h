@@ -5,6 +5,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup utilities
+    /// @{
+
     namespace Hash
     {
         /// FNV-1a 64-bit offset basis (Prime is the FNV-1a prime).
@@ -73,4 +76,5 @@ namespace tachyon
             return hash;
         }
     }
+    /// @}
 }

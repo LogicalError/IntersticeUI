@@ -11,6 +11,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// X offset, in pixels, of `contentWidth` content aligned inside a `boxWidth` box.
     /// Vertical values map as skribidi does: Top acts as left, Bottom as right.
     inline int32_t HorizontalAlignOffset(TextAlign horizontalAlignment, int32_t boxWidth, int32_t contentWidth)
@@ -185,4 +188,5 @@ namespace tachyon
             return std::max(0, rectWidth - iconTextGap - iconMeasurement.width);
         return rectWidth;
     }
+    /// @}
 }

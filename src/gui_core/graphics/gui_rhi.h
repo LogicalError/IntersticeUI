@@ -14,6 +14,9 @@
 
 namespace tachyon::RHI
 {
+    /// @addtogroup graphics
+    /// @{
+
     struct GpuPipeline
     {
         uint64_t pipeline = 0;          ///< backend pipeline handle (VkPipeline on Vulkan)
@@ -61,4 +64,5 @@ namespace tachyon::RHI
         virtual void UploadTransientBuffers(std::span<const UploadRequest> requests,
                                             std::span<DeviceAddress> addresses) = 0;
     };
+    /// @}
 }

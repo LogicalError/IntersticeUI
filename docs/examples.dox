@@ -1,0 +1,26 @@
+/**
+@example hello_world/hello_world.cpp
+The smallest app: a window, a text field and buttons, and the program around them.
+Walkthrough: @ref md_docs_2examples_2hello-world "Hello world".
+
+@example controls/controls.cpp
+The common controls as label/value rows: buttons, toggles, text and number fields, a
+slider, a color, a menu and tabs.
+Walkthrough: @ref md_docs_2examples_2controls "Controls".
+
+@example docking/docking.cpp
+Panels in a dock layout that the user can rearrange, tear off and dock again.
+Walkthrough: @ref md_docs_2examples_2docking "Docking".
+
+@example custom_theme/custom_theme.cpp
+Your own CSS classes next to the library's, and switching palettes and font size at
+runtime. Its classes are in custom_theme.css.
+Walkthrough: @ref md_docs_2examples_2custom-theme "Custom theme".
+
+@example custom_theme/custom_theme.css
+The custom_theme example's own CSS classes.
+
+@example host_device/host_device.cpp
+Running on a Vulkan device the application already owns, and showing an image it renders.
+Walkthrough: @ref md_docs_2examples_2host-device "Host device".
+*/

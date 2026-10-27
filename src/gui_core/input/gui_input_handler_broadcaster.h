@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     /// Sends every platform input event to all handlers (e.g. InputManager + ITextSystem);
     /// none can block the others.
     class InputHandlerBroadcaster final : public IPlatformInputHandler
@@ -52,4 +55,5 @@ namespace tachyon
     private:
         std::vector<IPlatformInputHandler*> m_handlers;
     };
+    /// @}
 } // namespace tachyon

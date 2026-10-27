@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     /// Snapshot of input state for a single recorded OS event.
     struct InputState
     {
@@ -50,4 +53,5 @@ namespace tachyon
         bool MiddlePressed() const { return MiddleDown() && ((prevButtons & tachyon::MouseButtons::Middle) == tachyon::MouseButtons::None); }
         bool MiddleReleased() const { return !MiddleDown() && ((prevButtons & tachyon::MouseButtons::Middle) != tachyon::MouseButtons::None); }
     };
+    /// @}
 }

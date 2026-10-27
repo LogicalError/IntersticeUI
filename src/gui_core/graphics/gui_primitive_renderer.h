@@ -20,6 +20,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     using PipelineSet = std::array<RHI::GpuPipeline, kPrimitiveKindCount>;
 
     /// One contiguous same-kind run of primitives, drawn with one call.
@@ -156,4 +159,5 @@ namespace tachyon
         /// The window target while a capture redirects emit calls.
         PrimitiveRenderTarget* m_captureSaved = nullptr;
     };
+    /// @}
 }

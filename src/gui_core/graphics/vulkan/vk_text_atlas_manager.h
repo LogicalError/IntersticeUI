@@ -4,6 +4,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
 	class VulkanGraphicsContext;
 	class VulkanImageSet;
 
@@ -33,4 +36,5 @@ namespace tachyon::vulkan
 		tachyon::ImageIndex GetImageIndex(tachyon::TextureIndex textureIndex) override;
 		void SyncTextureIndices() override;
 	};
+    /// @}
 }

@@ -13,6 +13,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     /// In-place rename of a tree / list / grid row (F2, Ctrl+Shift+Click or a slow re-click);
     /// the target row emits a text field instead of its label. One rename at a time.
     class RenameSubsystem
@@ -130,4 +133,5 @@ namespace tachyon
         std::unordered_map<tachyon::ID, tachyon::IntRect> m_triggerRects;
         std::unordered_map<tachyon::ID, tachyon::IntRect> m_windowRects;
     };
+    /// @}
 }

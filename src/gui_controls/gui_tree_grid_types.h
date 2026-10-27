@@ -12,6 +12,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_data
+    /// @{
+
     // ---- Transient tree/list construction state (valid between Begin/End) ----
     //
     // Valid only between Begin*/End* (reset in End*). Event handlers run at end of frame,
@@ -106,4 +109,5 @@ namespace tachyon
         } internal;  ///< not part of the API
     };
 
+    /// @}
 }

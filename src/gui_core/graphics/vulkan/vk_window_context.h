@@ -16,6 +16,9 @@ namespace tachyon
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     class VulkanGraphicsContext;
 
     constexpr unsigned int FRAME_OVERLAP = 2;
@@ -157,4 +160,5 @@ namespace tachyon::vulkan
         tachyon::OSWindowHandle GetWindowHandle() const override { return osHandle; }
     };
 
+    /// @}
 }

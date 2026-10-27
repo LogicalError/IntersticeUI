@@ -7,6 +7,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     inline constexpr uint32_t kInvalidCodepoint = 0xFFFFFFFFu;
 
     /// The codepoint starting at text[i], with i moved past it. kInvalidCodepoint for a
@@ -72,4 +75,5 @@ namespace tachyon
         }
         return size;
     }
+    /// @}
 }

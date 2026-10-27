@@ -20,6 +20,9 @@ namespace tachyon
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     struct FrameData;
     class VulkanImageSet;
     class VulkanWindowContext;
@@ -169,4 +172,5 @@ namespace tachyon::vulkan
         float                 m_lastElapsedTimeSecs{ 0.0f };
         float                 m_frameBuildSeconds{ 0.0f };
     };
+    /// @}
 }

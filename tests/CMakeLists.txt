@@ -20,7 +20,7 @@ list(APPEND GUI_CORE_TEST_FILES
   svg_stroke_test.cpp
   title_bar_test.cpp
   theme_metrics_test.cpp
-  graphite_rows_test.cpp
+  table_row_heights_test.cpp
   switch_test.cpp
   number_field_edit_test.cpp
   color_field_hex_test.cpp

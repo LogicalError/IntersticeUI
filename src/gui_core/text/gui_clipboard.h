@@ -5,6 +5,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// The clipboard text editors copy to and paste from; GUIApplication::SetClipboard sets
     /// one (default: SDL's, or LocalClipboard without SDL).
     class IClipboard
@@ -28,4 +31,5 @@ namespace tachyon
     private:
         std::string m_text;
     };
+    /// @}
 }

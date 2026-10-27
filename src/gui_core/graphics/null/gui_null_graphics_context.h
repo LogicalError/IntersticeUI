@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     /// A graphics backend that draws nothing: the UI is built, laid out and
     /// recorded as usual, but no GPU is used and windows stay empty. For headless
     /// runs and tests, and as the minimal example of a backend.
@@ -39,4 +42,5 @@ namespace tachyon
     private:
         ImageSet* m_imageSet = nullptr;
     };
+    /// @}
 }

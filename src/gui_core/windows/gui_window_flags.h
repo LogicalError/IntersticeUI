@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     /// How an OS window is made and behaves (IWindowBackend::CreateWindow); flags combine with |.
     enum class WindowFlags : uint32_t
     {
@@ -53,4 +56,5 @@ namespace tachyon
 		DefaultFlags = AllowHighDPI
     };
     TACHYON_ENUM_OPERATORS(WindowFlags)
+    /// @}
 };

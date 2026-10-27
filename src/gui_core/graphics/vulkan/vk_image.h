@@ -10,6 +10,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     class VulkanImage : public tachyon::Image
     {
     public:
@@ -57,4 +60,5 @@ namespace tachyon::vulkan
 
         std::vector<tachyon::ImageIndex> m_freeIndices;
     };
+    /// @}
 }

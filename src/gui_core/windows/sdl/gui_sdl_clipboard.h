@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     /// The system clipboard, through SDL.
     class SDLClipboard : public IClipboard
     {
@@ -11,4 +14,5 @@ namespace tachyon
         std::string Get() const override;
         void        Set(std::string_view text) override;
     };
+    /// @}
 }

@@ -81,6 +81,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     /// Checks the result of an element-storage call (e.g. elementStorage.Add): a failure is
     /// reported as API misuse and the caller carries on.
     void VERIFY(ElementStorageResult result);
@@ -151,6 +154,31 @@ namespace tachyon
 
     /// The application: owns the windows, the systems and the frame loop. Subclass it, build
     /// the UI in OnGUI, and call Initialize, then Run (or the frame calls), then Cleanup.
+    ///
+    ///     class HelloApp : public tachyon::GUIApplication
+    ///     {
+    ///     public:
+    ///         tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
+    ///         {
+    ///             if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
+    ///                 return result;
+    ///             windowID = idManager.CreateStaticID();   // windows need stable IDs
+    ///             return {};
+    ///         }
+    ///
+    ///         void OnGUI() override   // every frame: describe the whole UI
+    ///         {
+    ///             if (BeginWindow(windowID, "Hello", tachyon::LayoutOverride{}.Size(360, 160)))
+    ///                 Button("Greet", [this] { ++greetings; });
+    ///             EndWindow();   // always, whatever BeginWindow returned
+    ///         }
+    ///
+    ///     private:
+    ///         tachyon::ID windowID = tachyon::ID::Invalid();
+    ///         int         greetings = 0;
+    ///     };
+    ///
+    /// Every control is a member function, grouped below by family.
     class GUIApplication
     {
     public:
@@ -205,6 +233,9 @@ namespace tachyon
         std::unique_ptr<UICacheManager>            m_uiCache;
 
     public:
+        /// @name State
+        ///@{
+
         /// GPU pages for the gradients styles use.
         GradientManager     gradientManager{};
         /// The registered styles; Px converts CSS pixels to pixels at the UI scale.
@@ -246,6 +277,11 @@ namespace tachyon
         /// Copies the ring chronologically (oldest first) into out.
         void GetFrameTimingHistory(std::span<FrameTimingSample> out) const;
 
+        ///@}
+
+
+        /// @name Panels and floating windows
+        ///@{
 
         /// Adds a panel to `panels` (usually a DockingLayout's). onPanelGUI builds its content;
         /// onEnable / onDisable run when it becomes visible / hidden. panelType names its kind,
@@ -303,6 +339,11 @@ namespace tachyon
                                   DockingLayout* sourceLayout,
                                   DockingLayout* targetLayout);
 
+        ///@}
+
+        /// @name Setup and resources
+        ///@{
+
                 virtual ~GUIApplication() = default;
 
         /// See GUIApplicationInitializeOptions.
@@ -336,6 +377,11 @@ namespace tachyon
         void SetResourceRoot(std::string_view root) { m_resourceRoot = std::string(root); }
         const std::string& GetResourceRoot() const { return m_resourceRoot; }
 
+        ///@}
+
+        /// @name Input for render-to-image windows
+        ///@{
+
         /// Input for render-to-image windows (WindowFlags::RenderToImage), which get
         /// none from the OS. Positions are in the window's pixels. The window is under
         /// the pointer from a mouse event until InjectMouseLeave, and has keyboard
@@ -357,6 +403,11 @@ namespace tachyon
         /// The last rendered frame of a render-to-image window: BGRA8, tightly packed
         /// rows, bgra holding width x height x 4 bytes of its pixel size.
         Result<void> ReadWindowPixels(ID windowID, std::span<uint8_t> bgra);
+
+        ///@}
+
+        /// @name Backends, styles and scale
+        ///@{
 
         /// The graphics backend Initialize uses; without one it creates a
         /// vulkan::VulkanGraphicsContext. Set it up through its own API first, for
@@ -389,6 +440,11 @@ namespace tachyon
         void  SetUIScale(float scale);
         float GetUIScale() const { return m_uiScale; }
 
+        ///@}
+
+        /// @name The frame
+        ///@{
+
         /// Builds the UI; called each frame.
         virtual void OnGUI() = 0;
 
@@ -397,7 +453,9 @@ namespace tachyon
         Result<void> Run();
 
         /// One frame, for a host with its own main loop:
+        ///
         ///     while (app.UpdateFrame()) { app.RecordFrame(); /* the host's own work */ app.PresentFrame(); }
+        ///
         /// UpdateFrame pumps OS events and input (false once the app quits). RecordFrame builds
         /// the UI and records and submits every window; render-to-image windows are done then.
         /// A lost GPU device is made again first; an error when it can't be (a host's device).
@@ -407,6 +465,11 @@ namespace tachyon
         Result<void> RecordFrame();
         /// See UpdateFrame.
         void         PresentFrame();
+
+        ///@}
+
+        /// @name Event handlers and control building blocks
+        ///@{
 
         // ---- Event handler factories ----
         //
@@ -455,6 +518,11 @@ namespace tachyon
         /// Closes BeginIndeterminate.
         void EndIndeterminate()   { guiStateManager.Construction().PopIndeterminate(); }
 
+        ///@}
+
+        /// @name Buttons and toggles
+        ///@{
+
         /// Controls take (id, icon, text, ..., style, constraints), each part optional. A
         /// change is reported twice: input is handled after the frame it arrives in, where the
         /// callback runs; the return value is true in the next frame. Without an id, the
@@ -498,6 +566,11 @@ namespace tachyon
         inline bool Toggle(       bool& value, const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, content, [&value](bool newValue){ value = newValue; }, style, std::move(constraints)); }
         /// As above, with the call site as the ID, in the theme's toggle style.
         inline bool Toggle(       bool& value, const GUIContent& content,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Toggle(idManager.AllocateDynamicID(site), value, content, [&value](bool newValue){ value = newValue; }, theme.controls->toggle, std::move(constraints)); }
+
+        ///@}
+
+        /// @name Menus and message dialogs
+        ///@{
 
         /// A menu: a trigger button (in a menu bar or on its own), or a submenu item inside
         /// another menu. True while it is open: emit its items then. EndMenu is called either way.
@@ -554,6 +627,11 @@ namespace tachyon
         /// Closes BeginMenuBar.
         void EndMenuBar();
 
+        ///@}
+
+        /// @name Title bar, tooltips and context menus
+        ///@{
+
         // ---- Title bar: a menu bar the window is dragged by ----
         // Whatever in it isn't a control is the caption: dragging it moves the window and a
         // double-click maximizes it. In a window with ElementFlags::WindowCustomTitleBar,
@@ -602,6 +680,11 @@ namespace tachyon
         /// element; BeginContextMenu(targetID) then builds it.
         void OpenContextMenu(ID targetID, int2 screenPos);
 
+        ///@}
+
+        /// @name Label, button and toggle groups
+        ///@{
+
         /// Label group: Labels/DragLabels inside share one width, resizable by dragging
         /// any label's right edge. Widths in CSS pixels.
         bool        BeginLabelGroup(ID id, CssPx defaultWidth = 120, CssPx minWidth = 40, CssPx maxWidth = 500, bool resizable = true);
@@ -619,6 +702,11 @@ namespace tachyon
         bool        BeginToggleGroup(LayoutOverride&& constraints = {});
         /// Closes BeginToggleGroup.
         void        EndToggleGroup();
+
+        ///@}
+        /// @name Areas, caching and layout containers
+        ///@{
+
         /// A container drawn in `style`, for grouping content; it scrolls when bounded and
         /// its style has overflow: auto.
         bool        BeginArea(ID id, StyleRef style, LayoutOverride&& constraints = {});
@@ -701,6 +789,11 @@ namespace tachyon
         /// Closes BeginToolbar.
         void EndToolbar();
 
+        ///@}
+
+        /// @name Scrollbars
+        ///@{
+
         // ---- Scrollbars ----
         // Call from INSIDE the scrollable container `containerID`: the bar overlays
         // its border box, unaffected by its scroll offset. Paints nothing without
@@ -723,6 +816,11 @@ namespace tachyon
                               ID horzScrollBarID = ID::Invalid(),
                               bool emitVert = true,
                               bool emitHorz = true);
+
+        ///@}
+
+        /// @name Reorderable groups
+        ///@{
 
         // ---- Reorderable Group: drag-to-reorder container ----
         // onReorder(fromIndex, toIndex) fires on drop. isWrapped allows multi-line layout.
@@ -768,6 +866,11 @@ namespace tachyon
 
         /// Non-interactive drag handle for use inside BeginReorderableItem; clicks reach the item.
         void EmitDragHandle();
+
+        ///@}
+
+        /// @name List and tree views
+        ///@{
 
         // ---- ListView: scrollable list with selectable items ----
         /// Opens a list view of ListItems. selectedIndex (optional) holds the selection, which a
@@ -828,6 +931,11 @@ namespace tachyon
         /// Closes BeginDisabled.
         void EndDisabled()   { guiStateManager.Construction().PopDisabled(); }
 
+        ///@}
+
+        /// @name Grid views
+        ///@{
+
         // ---- GridView: 2D icon grid (like file explorer) ----
         /// Opens a grid view of GridViewItems. selectedIndex (optional) holds a single selection,
         /// multiSelect (optional) a multi-selection; dragDrop (optional) lets items be dragged.
@@ -869,6 +977,11 @@ namespace tachyon
                              StyleRef scrollStyle = {},
                              StyleRef rowStyle = {},
                              LayoutOverride&& constraints = {});
+
+        ///@}
+
+        /// @name Tables
+        ///@{
 
         // ---- Table: row x column data grid ----
         /// Opens a table. Columns are described each frame; widths, selection and sort state
@@ -941,6 +1054,11 @@ namespace tachyon
                           StyleRef style = {},
                           LayoutOverride&& constraints = {});
 
+        ///@}
+
+        /// @name Breadcrumb
+        ///@{
+
         // ---- Breadcrumb ----
         /// A path such as Graphs > Terrain material: segments separated by chevrons, the last
         /// one current. Clicking another segment calls onSelect(index) and returns true.
@@ -949,6 +1067,11 @@ namespace tachyon
         inline bool Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(id, segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Breadcrumb(idManager.AllocateDynamicID(site), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
+
+        ///@}
+
+        /// @name Status bar
+        ///@{
 
         // ---- Status bar ----
         /// A strip of short status texts, usually along a window's bottom edge. Give one
@@ -965,6 +1088,11 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { StatusText(idManager.AllocateDynamicID(site), text, std::move(constraints)); }
 
+        ///@}
+
+        /// @name Command search
+        ///@{
+
         // ---- Command search ----
         /// Finds and runs commandManager's commands: focused, it lists those whose description
         /// contains the query; Up / Down move through them, Enter or a click runs one, Escape
@@ -975,6 +1103,11 @@ namespace tachyon
         /// Puts the keyboard in the search next frame; bind it to a command such as Ctrl+K.
         static void FocusCommandSearch(CommandSearchState& state) { state.focusRequested = true; }
 
+        ///@}
+
+        /// @name Node view
+        ///@{
+
         // ---- Node view: self-contained graph editor ----
         // All state lives in `view`, so several views can coexist.
         /// Builds `view` (canvas, nodes, wires and overlays) in the current container.
@@ -983,6 +1116,11 @@ namespace tachyon
         /// Text property body aligned by the row's sockets: left => left, right => right,
         /// both => centre. Call inside NodeProperty::renderBody.
         void NodeText(std::string_view text);
+
+        ///@}
+
+        /// @name Tabs
+        ///@{
 
         // ---- TabBar: reorderable tabs ----
         /// Opens a tab bar of Tabs, which wrap onto more rows when it is narrow. selectedIndex
@@ -1005,6 +1143,11 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline bool Tab(       const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Tab(idManager.AllocateDynamicID(site), content, theme.tabStyleRef, std::move(constraints)); }
 
+        ///@}
+
+        /// @name Docking
+        ///@{
+
         // ---- DockingContainer ----
         /// Builds `layout`'s docked panels (each one's onPanelGUI) in a container, enabling the
         /// visible panels first. Then call EmitFloatingDockWindows.
@@ -1014,6 +1157,11 @@ namespace tachyon
             { return BeginDockingContainer(id, layout, theme.dockContainerStyleRef, std::move(constraints)); }
         /// Closes BeginDockingContainer.
         void EndDockingContainer();
+
+        ///@}
+
+        /// @name Fields
+        ///@{
 
         /// A bool as a Toggle labelled `text`.
         bool        Field(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
@@ -1291,6 +1439,11 @@ namespace tachyon
         /// A dictionary's header row: "Key string", "Value <type>".
         void CollectionHeader(std::string_view valueType);
 
+        ///@}
+
+
+        /// @name Color and gradient fields
+        ///@{
 
         // ---- ColorField: swatch + color picker popup ----
         /// A color swatch that opens a color picker; true when the color changed. allowHDR lets
@@ -1308,6 +1461,11 @@ namespace tachyon
         bool        GradientField(ID id, tachyon::Gradient& value, LayoutOverride&& constraints = {});
         /// As above, with the call site as the ID.
         inline bool GradientField(       tachyon::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+
+        ///@}
+
+        /// @name Sliders
+        ///@{
 
         // ---- SliderField: DragLabel + horizontal slider track + numeric textbox ----
         /// A label, a slider track and a number field for value in [minVal, maxVal]; true when
@@ -1331,6 +1489,11 @@ namespace tachyon
         inline bool Slider(int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Slider(idManager.AllocateDynamicID(site), value, minVal, maxVal, std::move(constraints)); }
 
 
+
+        ///@}
+
+        /// @name Text, labels and images
+        ///@{
 
         /// A label whose horizontal drag changes the value of the field after it; a click focuses
         /// that field and Escape cancels a drag. In a label group it takes the group's width.
@@ -1393,6 +1556,11 @@ namespace tachyon
         inline void Image(       ImageIndex image, uint2 sourceSize, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, sourceSize, style, std::move(constraints)); }
         /// As above, with the call site as the ID, in the theme's image style.
         inline void Image(       ImageIndex image, uint2 sourceSize,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Image(idManager.AllocateDynamicID(site), image, sourceSize, theme.imageStyleRef, std::move(constraints)); }
+
+        ///@}
+
+        /// @name Ghost windows
+        ///@{
 
         /// A ghost window: caption-less and transparent, e.g. a drag preview; 28 x 28 CSS px.
         /// Close it with EndGhostWindow, whether or not it opened.
@@ -1486,6 +1654,11 @@ namespace tachyon
         {
             EndWindow();
         }
+
+        ///@}
+
+        /// @name Windows
+        ///@{
 
         /// As the full BeginWindow below, in the theme's window style.
         bool BeginWindow(ID windowLayoutID, std::string_view title, ElementFlags flags = ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered, int monitorIndex = -1)
@@ -1608,8 +1781,11 @@ namespace tachyon
                 CloseWindow();
         }
 
+        ///@}
+
         /// A container's scope: its End runs when the scope leaves (or at End()). True when
         /// the container's content is to be built, as its Begin returned.
+        ///
         ///     if (auto menu = app.Menu("File")) { ...items... }
         template<void (GUIApplication::*EndFn)()>
         class [[nodiscard]] Scope
@@ -1671,6 +1847,9 @@ namespace tachyon
         template<class... A> auto DockingContainer(A&&... a) { return Scope<&GUIApplication::EndDockingContainer>(*this, BeginDockingContainer(std::forward<A>(a)...)); }
         template<class... A> auto DockingFrame(A&&... a)     { return Scope<&GUIApplication::EndDockingFrame>(*this, BeginDockingFrame(std::forward<A>(a)...)); }
         ///@}
+
+        /// @name Boxes
+        ///@{
 
         /// Internal: the body of EndWindow for an open window; call EndWindow.
         void CloseWindow()
@@ -1769,6 +1948,11 @@ namespace tachyon
             AddBox(idManager.AllocateDynamicID(site), size, styleRef, text);
         }
 
+        ///@}
+
+        /// @name Settings panel
+        ///@{
+
         // ------------------------------------------------------------------
         // Settings panel
         // ------------------------------------------------------------------
@@ -1816,19 +2000,23 @@ namespace tachyon
         /// Renders into the current container; the caller provides the outer panel.
         void RenderSettingsPanel(SettingsPanelState& state);
 
-        // ------------------------------------------------------------------
-        // Saved UI state (#21)
-        // ------------------------------------------------------------------
-        // The UI's state as JSON text, which the host stores where and when it likes. Name
-        // what to keep once, by keys that stay the same between runs; the named objects
-        // must outlive the naming:
-        //     PersistWindow("main", mainWindowID);         // position, size, mode
-        //     PersistDocking("dock", dockingLayout);       // panels by type, else title
-        //     PersistTable("assets", tableState, columns); // column widths and order, by header
-        //     PersistToolbars("toolbars", toolbarSides);   // items by debugName
-        //     PersistValue("zoom", zoom);                  // an app setting, if it wants
-        // RestoreUIState applies saved text: windows when they are next declared, the rest
-        // at once. What it doesn't know (keys, panels, columns) is skipped.
+        ///@}
+
+        /// @name Saved UI state
+        /// The UI's state as JSON text, which the host stores where and when it likes. Name
+        /// what to keep once, by keys that stay the same between runs; the named objects
+        /// must outlive the naming:
+        ///
+        ///     PersistWindow("main", mainWindowID);         // position, size, mode
+        ///     PersistDocking("dock", dockingLayout);       // panels by type, else title
+        ///     PersistTable("assets", tableState, columns); // column widths and order, by header
+        ///     PersistToolbars("toolbars", toolbarSides);   // items by debugName
+        ///     PersistValue("zoom", zoom);                  // an app setting, if it wants
+        ///
+        /// RestoreUIState applies saved text: windows when they are next declared, the rest
+        /// at once. What it doesn't know (keys, panels, columns) is skipped.
+        ///@{
+
         /// Keeps the window's position, size and mode.
         void PersistWindow(std::string key, ID windowID);
         /// Keeps the layout's dock tree; panels are matched by type, else by title.
@@ -1850,6 +2038,8 @@ namespace tachyon
         /// Applies JSON text from SaveUIState. An error when it doesn't parse, isn't an object
         /// or was saved by a newer version.
         Result<void> RestoreUIState(std::string_view json);
+
+        ///@}
 
     private:
         /// GUIApplicationInternals (gui_application_internal.h) re-exposes these to
@@ -2180,4 +2370,5 @@ namespace tachyon
 
     };
 
+    /// @}
 } // namespace tachyon

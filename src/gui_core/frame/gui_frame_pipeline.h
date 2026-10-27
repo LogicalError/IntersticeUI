@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     class GUIApplication;
     class IDManager;
     class GUIStateManager;
@@ -99,4 +102,5 @@ namespace tachyon
         std::vector<StageCallback> m_postRender;
         std::vector<StageCallback> m_endFrame;
     };
+    /// @}
 }

@@ -7,6 +7,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup layout
+    /// @{
+
     // ------------------------------------------------------------------------
     // Layout constraints - optional per-element size/position overrides
     // ------------------------------------------------------------------------
@@ -136,7 +139,13 @@ namespace tachyon
         bool operator==(const FlexOverride&) const noexcept = default;
     };
 
-    /// Per-element overrides of style layout properties.
+    /// Per-element overrides of style layout properties. Sizes are CSS px; the builders chain:
+    ///
+    ///     BeginWindow(windowID, "Hello", LayoutOverride{}.Size(360, 160));
+    ///     BeginVertical(LayoutOverride{}.FlexGrow(1));                  // fill the free space
+    ///     Button("Object", onClick, LayoutOverride{}.NoGrow());         // keep its natural width
+    ///     BeginWindow(windowID, "Docking", theme.mainWindowStyleRef,
+    ///                 LayoutOverride::FixedSize(900, 600).Centered());
     struct LayoutOverride
     {
         SizeConstraintAxis width {}, height {};   ///< Size constraints; set with the size builders
@@ -369,4 +378,5 @@ namespace tachyon
         }
     };
 
+    /// @}
 } // namespace tachyon

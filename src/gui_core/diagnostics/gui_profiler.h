@@ -16,6 +16,9 @@
 
 namespace tachyon::Diagnostics
 {
+    /// @addtogroup diagnostics
+    /// @{
+
     /// Collects scope timings for one thread; opaque. The TACHYON_PROFILE_* macros use
     /// MainThreadCollector.
     class ProfilerCollector;
@@ -102,6 +105,7 @@ namespace tachyon::Diagnostics
 
     /// Smoothed total of the root scope(s): the frame total, in milliseconds.
     double LastFrameTotalMs(const ProfilerCollector& collector);
+    /// @}
 }
 
 // Define TACHYON_PROFILE_ENABLED=0 to compile every macro out.

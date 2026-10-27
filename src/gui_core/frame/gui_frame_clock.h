@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     /// Animation time locked to the display refresh. Frames reach the screen on
     /// vsyncs, a whole number of refresh periods after the previous one, but the CPU
     /// sees those intervals with jitter. The clock advances by whole periods,
@@ -28,4 +31,5 @@ namespace tachyon
         double  m_seconds      = 0.0;
         double  m_deltaSeconds = 0.0;
     };
+    /// @}
 }

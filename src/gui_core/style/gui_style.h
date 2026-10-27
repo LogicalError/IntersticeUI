@@ -18,6 +18,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
     class GradientManager;
     struct GradientHandle;
 
@@ -966,4 +969,5 @@ namespace tachyon
                    iconSide          == other.iconSide;
         }
     };
+    /// @}
 }

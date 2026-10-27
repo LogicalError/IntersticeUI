@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
     // ------------------------------------------------------------------------
     // StyleRef - References into style pools
     // ------------------------------------------------------------------------
@@ -30,4 +33,5 @@ namespace tachyon
         inline bool operator==(const StyleRef& rhs) const { return layoutStyleIndex == rhs.layoutStyleIndex && visualBoxStyleIndex == rhs.visualBoxStyleIndex && visualTextStyleIndex == rhs.visualTextStyleIndex; }
         inline bool operator!=(const StyleRef& rhs) const { return !(*this == rhs); }
     };
+    /// @}
 }

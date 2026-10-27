@@ -23,6 +23,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_docking
+    /// @{
+
     class GUIApplication;
 
     /// A side of a toolbar dock; indexes the per-side arrays.
@@ -115,4 +118,5 @@ namespace tachyon
     // EmitFloatingToolbarWindows is a GUIApplication member (it needs the protected
     // BeginWindow / EndWindow): `app.EmitFloatingToolbarWindows(items, opts)`.
 
+    /// @}
 } // namespace tachyon

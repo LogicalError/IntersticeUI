@@ -39,5 +39,9 @@ public:
 
 namespace tachyon::vulkan 
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     bool load_shader_module(const char* filePath, VkDevice device, const VkAllocationCallbacks* callbacks, VkShaderModule* outShaderModule);
+    /// @}
 }
