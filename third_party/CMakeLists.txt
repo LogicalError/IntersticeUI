@@ -18,6 +18,12 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(CMAKE_POLICY_DEFAULT_CMP0141 NEW)
   project(TachyonThirdParty LANGUAGES C CXX)
 
+  # No vcpkg Visual Studio integration: it links vcpkg's libraries, another SDL3 among
+  # them, into these.
+  if(CMAKE_GENERATOR MATCHES "Visual Studio" AND NOT VCPKG_TOOLCHAIN)
+    list(APPEND CMAKE_VS_GLOBALS "VcpkgEnabled=false")
+  endif()
+
   set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)

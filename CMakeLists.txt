@@ -13,6 +13,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# vcpkg's Visual Studio integration links every library vcpkg has installed into every
+# project. With an SDL3 among them there are two SDLs in one process, and each SDL call
+# goes to either. Off, unless the build uses vcpkg's toolchain file.
+if(CMAKE_GENERATOR MATCHES "Visual Studio" AND NOT VCPKG_TOOLCHAIN)
+  list(APPEND CMAKE_VS_GLOBALS "VcpkgEnabled=false")
+endif()
+
 # Built on its own, programs go to bin/ and the resources load from workdirectory/.
 # Inside another project nothing is written to the source tree: the host decides
 # where programs go, and the resources (compiled shaders, copies of the fonts and

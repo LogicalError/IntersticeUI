@@ -44,9 +44,10 @@ else()
   endif()
 endif()
 
-# What the cache was built for; a cache built for other choices is rebuilt.
+# What the cache was built for; a cache built for other choices is rebuilt. vcpkg-msbuild:
+# built without vcpkg's Visual Studio integration.
 set(_tachyon_tp_signature
-  "sdl=${TACHYON_SDL};system-sdl=${TACHYON_SYSTEM_SDL};system-harfbuzz=${TACHYON_SYSTEM_HARFBUZZ};system-vma=${TACHYON_SYSTEM_VMA}")
+  "sdl=${TACHYON_SDL};system-sdl=${TACHYON_SYSTEM_SDL};system-harfbuzz=${TACHYON_SYSTEM_HARFBUZZ};system-vma=${TACHYON_SYSTEM_VMA};vcpkg-msbuild=off")
 
 function(_tachyon_build_third_party_config cfg)
   set(stamp "${TACHYON_TP_INSTALL}/.stamp-${cfg}")

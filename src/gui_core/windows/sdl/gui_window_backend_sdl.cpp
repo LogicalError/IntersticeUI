@@ -829,7 +829,10 @@ namespace tachyon
                                                  sd_window_flags);
 
         if (!sdlWindow)
+        {
+            TACHYON_LOG_ERROR(kLogSDL, "SDL_CreateWindow failed: {}", SDL_GetError());
             return nullptr;
+        }
 
         // Set window position after creation (SDL3 way)
         SDL_SetWindowPosition(sdlWindow, rect.x, rect.y);

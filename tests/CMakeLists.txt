@@ -168,6 +168,7 @@ if(TACHYON_SDL)
     gpu/gpu_external_device_test.cpp
     gpu/gpu_application_init_test.cpp
     gpu/gpu_sdl_host_event_loop_test.cpp
+    gpu/gpu_sdl_single_copy_test.cpp
     gpu/gpu_crash_trace.cpp
     main.cpp
   )
