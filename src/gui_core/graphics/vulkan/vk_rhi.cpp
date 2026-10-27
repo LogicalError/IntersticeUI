@@ -1,4 +1,5 @@
 #include <gui_core/diagnostics/gui_logging.h>
+#include <gui_core/gui_embedded_files_internal.h>
 #include <gui_core/graphics/vulkan/vk_types.h>
 #include <gui_core/graphics/vulkan/vk_rhi.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
@@ -66,15 +67,28 @@ static std::vector<uint32_t> ReadSpirvFile(const std::string& filePath)
     return words;
 }
 
-static VkShaderModule LoadShader(const tachyon::vulkan::VulkanDeviceContext& dc, const std::string& filePath)
+// A shader compiled into the library, copied into words; empty when there is none.
+static std::vector<uint32_t> BuiltInSpirv(const std::string& fileName)
 {
-    std::vector<uint32_t> words = ReadSpirvFile(filePath);
+    const std::span<const std::byte> data = tachyon::detail::FindEmbeddedFile(tachyon::detail::EmbeddedShaderFiles(), fileName);
+    if (data.empty() || data.size() % sizeof(uint32_t) != 0) return {};
+    std::vector<uint32_t> words(data.size() / sizeof(uint32_t));
+    std::memcpy(words.data(), data.data(), data.size());
+    return words;
+}
+
+// The shader `fileName` from the shader directory when one is set, else the built-in one.
+static VkShaderModule LoadShader(const tachyon::vulkan::VulkanDeviceContext& dc, const std::string& fileName)
+{
+    std::vector<uint32_t> words = dc.shaderDirectory.empty()
+        ? BuiltInSpirv(fileName)
+        : ReadSpirvFile((std::filesystem::path(dc.shaderDirectory) / fileName).string());
     return words.empty() ? nullptr : dc.CreateShader(words);
 }
 
 tachyon::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const tachyon::PrimitiveSpec& spec)
 {
-    const std::string base = (std::filesystem::path(dc.shaderDirectory) / spec.shaderBaseName).string();
+    const std::string base(spec.shaderBaseName);
 
     VkShaderModule frag = LoadShader(dc, base + ".frag.spv");
     if (frag == nullptr)

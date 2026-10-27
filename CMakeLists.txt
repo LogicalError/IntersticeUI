@@ -56,6 +56,10 @@ option(TACHYON_SYSTEM_VMA      "Use the host's VulkanMemoryAllocator instead of 
 # package carry only the built-in fonts.
 option(TACHYON_FALLBACK_FONTS "Ship the optional Noto fallback fonts with the resources" OFF)
 
+# The default themes and fonts are compiled into gui_core (about 3 MB), so an app needs no
+# resource files. Off: they load from the resource root only.
+option(TACHYON_EMBED_RESOURCES "Compile the default themes and fonts into the library" ON)
+
 find_package(Vulkan REQUIRED)
 
 include(CompilerOptions)
@@ -72,7 +76,7 @@ if(PROJECT_IS_TOP_LEVEL AND TARGET showcase)
   set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT showcase)
 endif()
 
-# The libraries load the compiled shaders at runtime.
+# gui_core compiles the shaders in.
 add_dependencies(gui_core tachyon_shaders)
 if(NOT PROJECT_IS_TOP_LEVEL)
   add_dependencies(gui_core tachyon_resources)
@@ -120,7 +124,6 @@ if(TACHYON_INSTALL)
       workdirectory/themes
       workdirectory/fonts
       workdirectory/icons
-      "${TACHYON_BUILD_RESOURCE_DIR}/shaders_compiled"
     DESTINATION "${TACHYON_RESOURCE_INSTALL_DIR}"
     ${_tachyon_resource_excludes})
 

@@ -38,9 +38,8 @@ int main()
         VK_API_VERSION_MINOR(requirements.apiVersion),
         requirements.deviceExtensions.size());
 
-    // Loads the installed resources, whatever the working directory is.
+    // No resource files: the shaders, themes and fonts are built into the library.
     ConsumerApp app;
-    app.SetResourceRoot(TACHYON_RESOURCE_DIR);
     if (!app.Initialize())
     {
         std::printf("GUIApplication::Initialize failed\n");

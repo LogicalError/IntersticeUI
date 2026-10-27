@@ -96,8 +96,9 @@ function(tachyon_apply_compile_options target)
   endif()
 endfunction()
 
-# Copies a program's runtime DLLs (SDL3) next to it so it can be launched. A
-# build without SDL has none, and copy_if_different fails on an empty list.
+# Copies a program's runtime DLLs (a host's shared SDL3, with TACHYON_SYSTEM_SDL) next to
+# it so it can be launched. The bundled SDL is static, so there are usually none, and
+# copy_if_different fails on an empty list.
 function(tachyon_copy_runtime_dlls target)
   set(dlls "$<TARGET_RUNTIME_DLLS:${target}>")
   add_custom_command(TARGET ${target} POST_BUILD

@@ -18,7 +18,6 @@ namespace tachyon
 
         GraphicsAPI GetAPI() const override { return GraphicsAPI::None; }
 
-        void SetShaderDirectory(std::string_view) override {}
         void SetAllocationHooks(const AllocationHooks&) override {}
         Result<void> Initialize(IWindowBackend* windowBackend) override;
         void Cleanup() override;

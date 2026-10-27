@@ -52,7 +52,6 @@ private:
 int main()
 {
     HelloApp app;
-    app.SetResourceRoot(TACHYON_RESOURCE_DIR);   // shaders, fonts and themes
     tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();   // until the last window closes

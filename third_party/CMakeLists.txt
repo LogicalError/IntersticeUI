@@ -89,10 +89,14 @@ else()
 endif()
 
 if((NOT DEFINED TACHYON_SDL OR TACHYON_SDL) AND NOT TACHYON_SYSTEM_SDL)
+  # A static SDL: programs have no SDL DLL to ship or find. A host with its own SDL uses
+  # TACHYON_SYSTEM_SDL, so there is never a second SDL in the process.
+  set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+  set(SDL_STATIC ON  CACHE BOOL "" FORCE)
   add_subdirectory(SDL ${_tachyon_tp_exclude})
   # SDL counts its live allocations, so the GUI can tell when it is safe to
   # route SDL's memory through a host's allocation hooks.
-  target_compile_definitions(SDL3-shared PRIVATE SDL_TRACK_ALLOCATION_COUNT)
+  target_compile_definitions(SDL3-static PRIVATE SDL_TRACK_ALLOCATION_COUNT)
 endif()
 # skribidi fetches these at configure time; the vendored submodules stand in for
 # the downloads, and with the fetches disconnected configure needs no network.
@@ -120,7 +124,7 @@ endif()
 # conflict with the engine's default /MD at link time. A per-target
 # property override sidesteps patching vendored code.
 set(_tachyon_third_party_targets
-  vma nanosvg SDL_uclibc SDL3-shared vkbootstrap
+  vma nanosvg SDL_uclibc SDL3-static vkbootstrap
   skribidi budouxc harfbuzz
   libunibreak SheenBidi
   gtest gtest_main gmock gmock_main

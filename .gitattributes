@@ -1,5 +1,8 @@
 # Text is stored with LF and checked out with the platform's line endings.
 * text=auto
+# Except the build scripts, which need their own platform's endings everywhere.
+*.sh  text eol=lf
+*.bat text eol=crlf
 
 # Fonts live in Git LFS.
 *.ttf filter=lfs diff=lfs merge=lfs -text

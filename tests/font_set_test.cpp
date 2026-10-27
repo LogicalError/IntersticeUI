@@ -3,6 +3,8 @@
 
 #include "skribidi_test_fixture.h"
 
+#include <gui_core/gui_resources.h>
+
 #include <cstring>
 #include <fstream>
 #include <iterator>
@@ -78,12 +80,32 @@ namespace tachyon
             EXPECT_LT(medium, semiBold);
         }
 
+        // Without font files the built-in copies compiled into the library are used, for text
+        // and monospace alike.
+        TEST_F(FontSetTest, BuiltInFontsNeedNoFiles)
+        {
+            if (FindBuiltInResource("fonts/Inter/Inter-Regular.ttf").empty())
+                GTEST_SKIP() << "built without TACHYON_EMBED_RESOURCES";
+            ASSERT_TRUE(Init("no-such-folder/fonts", ""));
+            EXPECT_GT(Width("Hello", TextStyle()), 0);
+
+            Style mono{};
+            for (int i = 0; i < Style::kStateCount; ++i)
+            {
+                mono.states[i].textStyle.fontSize = 13.0f;
+                mono.states[i].textStyle.family   = FontFamily::Monospace;
+            }
+            EXPECT_GT(Width("Hello", styleManager.Register(mono)), 0);
+        }
+
         TEST_F(FontSetTest, AMissingFallbackSetIsSkipped)
         {
             ASSERT_TRUE(Init("fonts", "fonts/no-such-folder"));
             EXPECT_GT(Width("Hello", TextStyle()), 0);
         }
 
+        // A font folder without the default fonts fails, unless it is a fonts/ folder whose
+        // files the library has built-in copies of.
         TEST_F(FontSetTest, MissingBuiltInFontsFailInitialization)
         {
             EXPECT_FALSE(Init("fonts/no-such-folder", ""));

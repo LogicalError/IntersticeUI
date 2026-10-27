@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows (Visual Studio)",
+      "description": "The newest installed Visual Studio, into build/.",
+      "binaryDir": "${sourceDir}/build",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "ninja",
+      "displayName": "Linux and macOS (Ninja Multi-Config)",
+      "description": "Ninja Multi-Config, into build/.",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build",
+      "condition": { "type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-debug",   "displayName": "Debug",   "configurePreset": "windows", "configuration": "Debug" },
+    { "name": "windows-release", "displayName": "Release", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "ninja-debug",     "displayName": "Debug",   "configurePreset": "ninja",   "configuration": "Debug" },
+    { "name": "ninja-release",   "displayName": "Release", "configurePreset": "ninja",   "configuration": "Release" }
+  ],
+  "testPresets": [
+    { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug", "output": { "outputOnFailure": true } },
+    { "name": "ninja-debug",   "configurePreset": "ninja",   "configuration": "Debug", "output": { "outputOnFailure": true } }
+  ]
+}

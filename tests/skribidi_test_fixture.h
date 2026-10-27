@@ -101,7 +101,6 @@ namespace GUITest
         StubGraphicsContext() { guiRenderer = &renderer; }
         StubGUIRenderer& Renderer() { return renderer; }
         tachyon::GraphicsAPI GetAPI() const override { return tachyon::GraphicsAPI::None; }
-        void SetShaderDirectory(std::string_view) override {}
         void SetAllocationHooks(const tachyon::AllocationHooks&) override {}
         tachyon::Result<void> Initialize(tachyon::IWindowBackend*) override { return {}; }
         void Cleanup() override {}

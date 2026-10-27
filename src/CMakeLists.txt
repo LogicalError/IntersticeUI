@@ -15,6 +15,9 @@ list(APPEND GUI_FILES
   gui_core/gui_json.cpp
 
   gui_core/gui_platform.h
+  gui_core/gui_resources.h
+  gui_core/gui_resources.cpp
+  gui_core/gui_embedded_files_internal.h
   gui_core/gui_result.h
   gui_core/gui_units.h
 
@@ -222,7 +225,54 @@ if(TACHYON_SDL)
     gui_core/windows/sdl/gui_sdl_clipboard.h)
 endif()
 
-add_library(gui_core STATIC ${GUI_FILES})
+# Files compiled into gui_core: the default themes and fonts (TACHYON_EMBED_RESOURCES), and
+# the Vulkan backend's shaders.
+set(_tachyon_embedded_resources
+  themes/dark.css
+  themes/light.css
+  themes/styles.css
+  fonts/Inter/Inter-Regular.ttf
+  fonts/Inter/Inter-Medium.ttf
+  fonts/Inter/Inter-SemiBold.ttf
+  fonts/Inter/Inter-Bold.ttf
+  fonts/Inter/Inter-Italic.ttf
+  fonts/Inter/Inter-BoldItalic.ttf
+  fonts/JetBrainsMono/JetBrainsMono-Regular.ttf
+  fonts/JetBrainsMono/JetBrainsMono-Bold.ttf)
+set(_tachyon_resource_entries "")
+set(_tachyon_resource_inputs "")
+if(TACHYON_EMBED_RESOURCES)
+  foreach(_resource IN LISTS _tachyon_embedded_resources)
+    list(APPEND _tachyon_resource_entries "${_resource}=${PROJECT_SOURCE_DIR}/workdirectory/${_resource}")
+    list(APPEND _tachyon_resource_inputs "${PROJECT_SOURCE_DIR}/workdirectory/${_resource}")
+  endforeach()
+endif()
+set(_tachyon_shader_entries "")
+foreach(_spirv IN LISTS SPIRV_BINARY_FILES)
+  get_filename_component(_spirv_name "${_spirv}" NAME)
+  list(APPEND _tachyon_shader_entries "${_spirv_name}=${_spirv}")
+endforeach()
+
+set(_tachyon_resources_source "${PROJECT_BINARY_DIR}/generated/gui_core/gui_embedded_resources.cpp")
+set(_tachyon_shaders_source   "${PROJECT_BINARY_DIR}/generated/gui_core/vk_embedded_shaders.cpp")
+string(REPLACE ";" "|" _tachyon_resource_arg "${_tachyon_resource_entries}")
+string(REPLACE ";" "|" _tachyon_shader_arg "${_tachyon_shader_entries}")
+add_custom_command(
+  OUTPUT "${_tachyon_resources_source}"
+  COMMAND "${CMAKE_COMMAND}" "-DOUTPUT=${_tachyon_resources_source}" -DFUNCTION=EmbeddedResourceFiles
+          "-DFILES=${_tachyon_resource_arg}" -P "${PROJECT_SOURCE_DIR}/cmake/EmbedFiles.cmake"
+  DEPENDS ${_tachyon_resource_inputs} "${PROJECT_SOURCE_DIR}/cmake/EmbedFiles.cmake"
+  COMMENT "Compiling the default themes and fonts into gui_core"
+  VERBATIM)
+add_custom_command(
+  OUTPUT "${_tachyon_shaders_source}"
+  COMMAND "${CMAKE_COMMAND}" "-DOUTPUT=${_tachyon_shaders_source}" -DFUNCTION=EmbeddedShaderFiles
+          "-DFILES=${_tachyon_shader_arg}" -P "${PROJECT_SOURCE_DIR}/cmake/EmbedFiles.cmake"
+  DEPENDS ${SPIRV_BINARY_FILES} "${PROJECT_SOURCE_DIR}/cmake/EmbedFiles.cmake"
+  COMMENT "Compiling the shaders into gui_core"
+  VERBATIM)
+add_library(gui_core STATIC ${GUI_FILES} "${_tachyon_resources_source}" "${_tachyon_shaders_source}")
+source_group("Generated" FILES "${_tachyon_resources_source}" "${_tachyon_shaders_source}")
 
 # Version header, generated from the project version.
 configure_file(gui_core/gui_version.h.in "${PROJECT_BINARY_DIR}/generated/gui_core/gui_version.h" @ONLY)
@@ -240,7 +290,7 @@ target_link_libraries(gui_core
   PUBLIC  vma Vulkan::Headers
   PRIVATE Vulkan::Vulkan vkbootstrap skribidi nanosvg)
 if(TACHYON_SDL)
-  target_link_libraries(gui_core PRIVATE SDL3::SDL3)
+  target_link_libraries(gui_core PRIVATE ${TACHYON_SDL_TARGET})
   if(APPLE)   # the cursor size from the universal-access preferences
     target_link_libraries(gui_core PRIVATE "-framework CoreFoundation")
   endif()

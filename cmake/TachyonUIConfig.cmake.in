@@ -7,7 +7,8 @@
 #
 # Provides:
 #   TachyonUI::gui_core, TachyonUI::gui_controls   static libraries
-#   TachyonUI_RESOURCE_DIR                            themes, fonts, icons, compiled shaders
+#   TachyonUI_RESOURCE_DIR                            optional themes, fonts and icons; the
+#                                                        library has the default ones built in
 #   TACHYON_RESOURCE_DIR (compile definition)         the same folder, for
 #                                                        GUIApplication::SetResourceRoot
 #

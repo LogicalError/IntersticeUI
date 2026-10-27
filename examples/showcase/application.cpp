@@ -46,7 +46,7 @@ namespace tachyon
         PersistWindow("main", showcase.windowLayoutID2);
         PersistToolbars("toolbars", toolbars.sides);
         PersistDocking("dock", showcase.dockingLayout);
-        if (std::ifstream file(kUIStateFile, std::ios::binary); file)
+        if (std::ifstream file(ResourceFile(kUIStateFile), std::ios::binary); file)
         {
             showcase.savedUIState.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             if (Result<void> restored = RestoreUIState(showcase.savedUIState); !restored)
@@ -894,104 +894,104 @@ namespace tachyon
                 showcase.chevronRightIcon = textSystem->RegisterIconFromSVG("chevron-right", chevronRightSvg, strlen(chevronRightSvg));
 
                 // Folder icons for GridView demo - closed and open variants
-                showcase.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
-                showcase.folderOpenIcon      = textSystem->RegisterIconFromSVGFile("icons/folder_open.svg"); 
+                showcase.folderClosedIcon    = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/folder_closed.svg").c_str());
+                showcase.folderOpenIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/folder_open.svg").c_str()); 
                                          
-                showcase.audioOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-2.svg");
-                showcase.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-x.svg");
+                showcase.audioOnIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/volume-2.svg").c_str());
+                showcase.audioOffIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/volume-x.svg").c_str());
                                          
-                showcase.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-3x3.svg");
-                showcase.layoutGridIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
-                showcase.boxIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
-                showcase.chevronDownIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
-                showcase.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-2x2-x.svg");
+                showcase.gridOnIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/grid-3x3.svg").c_str());
+                showcase.layoutGridIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/layout-grid.svg").c_str());
+                showcase.boxIcon             = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/box.svg").c_str());
+                showcase.chevronDownIcon     = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/chevron-down.svg").c_str());
+                showcase.gridOffIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/grid-2x2-x.svg").c_str());
                                          
-                showcase.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb.svg");
-                showcase.lightOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb-off.svg");
+                showcase.lightOnIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/lightbulb.svg").c_str());
+                showcase.lightOffIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/lightbulb-off.svg").c_str());
                                          
-                showcase.toolSelectIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/square-dashed.svg");
-                showcase.toolMoveIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/move.svg");
-                showcase.toolScaleIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize-2.svg");
-                showcase.toolRotateIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/rotate-cw.svg");
+                showcase.toolSelectIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/square-dashed.svg").c_str());
+                showcase.toolMoveIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/move.svg").c_str());
+                showcase.toolScaleIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/maximize-2.svg").c_str());
+                showcase.toolRotateIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/rotate-cw.svg").c_str());
                                          
-                showcase.viewWireframe       = textSystem->RegisterIconFromSVGFile("icons/lucide/globe.svg");
-                showcase.viewSolid           = textSystem->RegisterIconFromSVGFile("icons/lucide/circle.svg");
-                showcase.viewTextured        = textSystem->RegisterIconFromSVGFile("icons/lucide/view-textured.svg");
+                showcase.viewWireframe       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/globe.svg").c_str());
+                showcase.viewSolid           = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/circle.svg").c_str());
+                showcase.viewTextured        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/view-textured.svg").c_str());
 
-                showcase.panelFilesIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/folder.svg");
-				showcase.panelGameIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/gamepad-2.svg");
-                showcase.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/list-tree.svg");
-				showcase.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/info.svg");
-				showcase.panelLogIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/terminal.svg");
-				showcase.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/workflow.svg");
-				showcase.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/activity.svg");
-				showcase.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sliders-horizontal.svg");
-				showcase.panelViewportIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/monitor.svg");
-                showcase.panelMiscIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
+                showcase.panelFilesIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/folder.svg").c_str());
+				showcase.panelGameIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/gamepad-2.svg").c_str());
+                showcase.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/list-tree.svg").c_str());
+				showcase.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/info.svg").c_str());
+				showcase.panelLogIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/terminal.svg").c_str());
+				showcase.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/workflow.svg").c_str());
+				showcase.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/activity.svg").c_str());
+				showcase.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/sliders-horizontal.svg").c_str());
+				showcase.panelViewportIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/monitor.svg").c_str());
+                showcase.panelMiscIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/layout-grid.svg").c_str());
                 
-				showcase.objectIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
-				showcase.object2Icon         = textSystem->RegisterIconFromSVGFile("icons/lucide/shapes.svg");
+				showcase.objectIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/box.svg").c_str());
+				showcase.object2Icon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/shapes.svg").c_str());
                                          
-				showcase.fileImageIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-image.svg");
-				showcase.fileAudioIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-audio.svg");
-                showcase.fileVideoIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-video.svg");
-				showcase.fileModelIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-box.svg");
-                showcase.fileTextIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/file-text.svg");
-				showcase.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/file-archive.svg");
+				showcase.fileImageIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-image.svg").c_str());
+				showcase.fileAudioIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-audio.svg").c_str());
+                showcase.fileVideoIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-video.svg").c_str());
+				showcase.fileModelIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-box.svg").c_str());
+                showcase.fileTextIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-text.svg").c_str());
+				showcase.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-archive.svg").c_str());
                                          
                                          
-                showcase.openFileIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/folder-open.svg");
-                showcase.saveIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/save.svg");
-                showcase.saveAsIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/save-all.svg");
-                showcase.closeIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/x.svg");
-                showcase.addIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/plus.svg");
-                showcase.removeIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/minus.svg");
-                showcase.undoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/undo-2.svg");
-                showcase.redoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/redo-2.svg");
-                showcase.cutIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/scissors.svg");
-                showcase.copyIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/copy.svg");
-                showcase.pasteIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/clipboard-paste.svg");
-                showcase.blockIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/ban.svg");
-                showcase.syncIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/refresh-cw.svg");
-                showcase.downloadIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/download.svg");
-                showcase.uploadIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/upload.svg");
-                showcase.publishIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/send.svg");
-                showcase.openInWindowIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/external-link.svg");
+                showcase.openFileIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/folder-open.svg").c_str());
+                showcase.saveIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/save.svg").c_str());
+                showcase.saveAsIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/save-all.svg").c_str());
+                showcase.closeIcon           = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/x.svg").c_str());
+                showcase.addIcon             = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/plus.svg").c_str());
+                showcase.removeIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/minus.svg").c_str());
+                showcase.undoIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/undo-2.svg").c_str());
+                showcase.redoIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/redo-2.svg").c_str());
+                showcase.cutIcon             = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/scissors.svg").c_str());
+                showcase.copyIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/copy.svg").c_str());
+                showcase.pasteIcon           = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/clipboard-paste.svg").c_str());
+                showcase.blockIcon           = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/ban.svg").c_str());
+                showcase.syncIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/refresh-cw.svg").c_str());
+                showcase.downloadIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/download.svg").c_str());
+                showcase.uploadIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/upload.svg").c_str());
+                showcase.publishIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/send.svg").c_str());
+                showcase.openInWindowIcon    = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/external-link.svg").c_str());
                                          
-                showcase.duplicateIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/copy-plus.svg");
-                showcase.newIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/file-plus.svg");
-                showcase.selectAllIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/text-select.svg");
-                showcase.deleteIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/trash-2.svg");
-                showcase.zoomInIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-in.svg");
-                showcase.zoomOutIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-out.svg");
-                showcase.findIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/search.svg");
-                showcase.playIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/play.svg");
-                showcase.stopIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/square.svg");
-                showcase.recenterIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/locate-fixed.svg");
-                showcase.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/scan.svg");
-                showcase.brushIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/brush.svg");
-                showcase.eraserIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/eraser.svg");
-                showcase.draggableIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/grip-vertical.svg");
+                showcase.duplicateIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/copy-plus.svg").c_str());
+                showcase.newIcon             = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/file-plus.svg").c_str());
+                showcase.selectAllIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/text-select.svg").c_str());
+                showcase.deleteIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/trash-2.svg").c_str());
+                showcase.zoomInIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/zoom-in.svg").c_str());
+                showcase.zoomOutIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/zoom-out.svg").c_str());
+                showcase.findIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/search.svg").c_str());
+                showcase.playIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/play.svg").c_str());
+                showcase.stopIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/square.svg").c_str());
+                showcase.recenterIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/locate-fixed.svg").c_str());
+                showcase.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/scan.svg").c_str());
+                showcase.brushIcon           = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/brush.svg").c_str());
+                showcase.eraserIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/eraser.svg").c_str());
+                showcase.draggableIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/grip-vertical.svg").c_str());
                 
-				showcase.darkModeIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/moon.svg");
-                showcase.lightModeIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/sun.svg");
-                showcase.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sun-moon.svg");
-                showcase.fullscreenIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize.svg");
-                showcase.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/minimize.svg");
-                showcase.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/scan-eye.svg");
-                showcase.dropperIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/pipette.svg");
-                showcase.editIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/pencil.svg");
-                showcase.tagIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/tag.svg");
-                showcase.targetIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/target.svg");
-                showcase.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/lock.svg");
-                showcase.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-dashed.svg");
-                showcase.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-off.svg");
-                showcase.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/eye.svg");
+				showcase.darkModeIcon        = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/moon.svg").c_str());
+                showcase.lightModeIcon       = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/sun.svg").c_str());
+                showcase.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/sun-moon.svg").c_str());
+                showcase.fullscreenIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/maximize.svg").c_str());
+                showcase.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/minimize.svg").c_str());
+                showcase.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/scan-eye.svg").c_str());
+                showcase.dropperIcon         = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/pipette.svg").c_str());
+                showcase.editIcon            = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/pencil.svg").c_str());
+                showcase.tagIcon             = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/tag.svg").c_str());
+                showcase.targetIcon          = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/target.svg").c_str());
+                showcase.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/lock.svg").c_str());
+                showcase.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/eye-dashed.svg").c_str());
+                showcase.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/eye-off.svg").c_str());
+                showcase.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/eye.svg").c_str());
 
-                showcase.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
-                showcase.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/chevrons-down-up.svg");
+                showcase.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/chevron-down.svg").c_str());
+                showcase.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/chevrons-down-up.svg").c_str());
 
-				showcase.keyCommandIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/command.svg");
+				showcase.keyCommandIcon      = textSystem->RegisterIconFromSVGFile(ResourceFile("icons/lucide/command.svg").c_str());
 
                 // Must run after icon registration; the pages capture IconIDs.
                 InitSettingsPages();

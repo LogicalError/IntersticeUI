@@ -54,7 +54,9 @@ namespace tachyon::vulkan
         /// How surfaces are made for the window backend's windows; SDLWindowBackend installs its own.
         void SetSurfaceFactory(VulkanDeviceContext::SurfaceFactory factory) { deviceContext.SetSurfaceFactory(std::move(factory)); }
 
-        void SetShaderDirectory(std::string_view directory) override { deviceContext.shaderDirectory = std::string(directory); }
+        /// Loads the compiled shaders (`box_shader.vert.spv`, ...) from `directory` instead of
+        /// the ones built into the library, for working on the shaders.
+        void SetShaderDirectory(std::string_view directory) { deviceContext.shaderDirectory = std::string(directory); }
         void SetAllocationHooks(const tachyon::AllocationHooks& hooks) override { deviceContext.SetAllocationHooks(hooks); }
         Result<void> Initialize(tachyon::IWindowBackend* windowBackend) override;
         void Cleanup() override;

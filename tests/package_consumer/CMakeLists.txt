@@ -17,11 +17,4 @@ find_package(TachyonUI 0.1 CONFIG REQUIRED)
 
 add_executable(package_consumer main.cpp)
 target_link_libraries(package_consumer PRIVATE TachyonUI::gui_controls)
-
-# Windows finds DLLs next to the executable; elsewhere the build RPATH finds SDL3.
-if(WIN32)
-  add_custom_command(TARGET package_consumer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:package_consumer> $<TARGET_FILE_DIR:package_consumer>
-    COMMAND_EXPAND_LISTS)
-endif()
+# Nothing to copy next to it: the bundled SDL is a static library.

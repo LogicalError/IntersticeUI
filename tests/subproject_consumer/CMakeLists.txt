@@ -30,7 +30,9 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../.." TachyonUI)
 add_executable(subproject_consumer ../package_consumer/main.cpp)
 target_link_libraries(subproject_consumer PRIVATE TachyonUI::gui_controls)
 
+# The host's own SDL3 may be a DLL; the bundled one is static, and then there is nothing
+# to copy (copy_if_different fails on an empty list).
+set(_dlls "$<TARGET_RUNTIME_DLLS:subproject_consumer>")
 add_custom_command(TARGET subproject_consumer POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          $<TARGET_RUNTIME_DLLS:subproject_consumer> $<TARGET_FILE_DIR:subproject_consumer>
+  COMMAND "$<$<BOOL:${_dlls}>:${CMAKE_COMMAND};-E;copy_if_different;${_dlls};$<TARGET_FILE_DIR:subproject_consumer>>"
   COMMAND_EXPAND_LISTS)

@@ -1,7 +1,8 @@
 # Compiles GLSL sources under workdirectory/shaders into SPIR-V, in
-# ${TACHYON_BUILD_RESOURCE_DIR}/shaders_compiled. Creates the
-# `tachyon_shaders` custom target that gui_core depends on; inside another
-# project also `tachyon_resources`, which copies the other resources next to them.
+# ${PROJECT_BINARY_DIR}/shaders (SPIRV_BINARY_FILES), which the Vulkan backend compiles
+# in. Creates the `tachyon_shaders` custom target that gui_core depends on; inside
+# another project also `tachyon_resources`, which copies the optional resources (themes,
+# fonts, icons) into the build tree.
 
 find_program(GLSL_VALIDATOR glslangValidator
   HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/ $ENV{VULKAN_SDK}/bin/)
@@ -27,10 +28,11 @@ file(GLOB GLSL_INCLUDE_FILES
 
 # The includes as one argument for CompileShader.cmake.
 string(REPLACE ";" "|" _tachyon_shader_includes "${GLSL_INCLUDE_FILES}")
+file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/shaders")
 set(SPIRV_BINARY_FILES "")
 foreach(GLSL ${GLSL_SOURCE_FILES})
   get_filename_component(FILE_NAME ${GLSL} NAME)
-  set(SPIRV "${TACHYON_BUILD_RESOURCE_DIR}/shaders_compiled/${FILE_NAME}.spv")
+  set(SPIRV "${PROJECT_BINARY_DIR}/shaders/${FILE_NAME}.spv")
   add_custom_command(
     OUTPUT ${SPIRV}
     COMMAND ${CMAKE_COMMAND} -DVALIDATOR=${GLSL_VALIDATOR} -DSOURCE=${GLSL} -DOUTPUT=${SPIRV}

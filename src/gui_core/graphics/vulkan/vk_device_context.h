@@ -219,7 +219,7 @@ namespace tachyon::vulkan
         }
 
     public:
-        std::string      shaderDirectory { "shaders_compiled" };  ///< Where the compiled shaders are
+        std::string      shaderDirectory;  ///< Where to load the compiled shaders from; empty uses the built-in ones
         /// Library internal: the GUI's pipelines.
         GUIRenderContext renderContext;
 
