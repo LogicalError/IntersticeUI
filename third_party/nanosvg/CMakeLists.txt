@@ -7,7 +7,7 @@ target_include_directories(nanosvg INTERFACE
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/nanosvg>
 )
 
-if(_interstice_tp_standalone)
+if(_tachyon_tp_standalone)
   install(TARGETS nanosvg EXPORT nanosvgTargets)
   install(FILES nanosvg.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanosvg)

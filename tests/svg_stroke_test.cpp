@@ -24,7 +24,7 @@ namespace
             const std::string svg = R"(<svg xmlns="http://www.w3.org/2000/svg" width="32" height="16" viewBox="0 0 32 16">)"
                                   + body + "</svg>";
             skb_icon_collection_t* icons = skb_icon_collection_create();
-            const skb_icon_handle_t handle = interstice::RegisterNanoSVG(icons, "test", svg.data(), svg.size());
+            const skb_icon_handle_t handle = tachyon::RegisterNanoSVG(icons, "test", svg.data(), svg.size());
             pixels.assign(size_t(kWidth * kHeight), 0);
             if (handle)
             {
@@ -138,7 +138,7 @@ namespace
         const std::string svg = R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" )"
                                 R"(stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>)";
         skb_icon_collection_t* icons = skb_icon_collection_create();
-        const skb_icon_handle_t handle = interstice::RegisterNanoSVG(icons, "minus", svg.data(), svg.size());
+        const skb_icon_handle_t handle = tachyon::RegisterNanoSVG(icons, "minus", svg.data(), svg.size());
         ASSERT_NE(handle, 0u);
         const skb_icon_t* icon = skb_icon_collection_get_icon(icons, handle);
         std::vector<uint8_t> pixels(24 * 24, 0);

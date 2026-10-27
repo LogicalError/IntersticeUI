@@ -22,7 +22,7 @@
 #include <string_view>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// One face of a font family: a font file, or font data in memory that stays valid
     /// while the family is registered (embedded in the executable, say).
@@ -100,7 +100,7 @@ namespace interstice
         AcceptTabs = 1 << 2,        ///< Tab inserts a tab character instead of moving focus
         ReadOnly = 1 << 3           ///< selectable and copyable, but not editable
     };
-    INTERSTICE_ENUM_OPERATORS(TextEditBehavior)
+    TACHYON_ENUM_OPERATORS(TextEditBehavior)
 
         
     // ----------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ namespace interstice
         // -------------------- Font Registration --------------------
 
         /// The default language as a BCP 47 tag ("ja", "zh-Hant", "ko"), for text whose
-        /// style has no language of its own (TextStyle::language / -interstice-language).
+        /// style has no language of its own (TextStyle::language / -tachyon-language).
         /// It picks regional letterforms, e.g. Japanese kanji vs Chinese hanzi; empty
         /// means Simplified Chinese forms. Changing it lays all text out again.
         virtual void SetLanguage(std::string_view languageTag) = 0;
@@ -375,13 +375,13 @@ namespace interstice
         virtual void OnKeyboard(ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) = 0;
 
         /// Mouse movement for text selection and drag-drop.
-        virtual void OnMouseMove(ID windowId, interstice::int2 screenPos, MouseButtons button, KeyModifier modifiers) = 0;
+        virtual void OnMouseMove(ID windowId, tachyon::int2 screenPos, MouseButtons button, KeyModifier modifiers) = 0;
 
         /// Mouse buttons for text editors: caret placement, selection, drag-drop.
-        virtual void OnMouseButton(ID windowId, interstice::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action) = 0;
+        virtual void OnMouseButton(ID windowId, tachyon::int2 screenPos, MouseButtons button, KeyModifier modifiers, MouseAction action) = 0;
 
         /// Mouse wheel input for text editors.
-        virtual void OnMouseScroll(ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) = 0;
+        virtual void OnMouseScroll(ID windowId, tachyon::int2 screenPos, tachyon::float2 scrollOffset, KeyModifier modifiers) = 0;
 
         /// The focused text field changed (GUIStateManager::TextEditorFocus): commit `from`
         /// (ID::Invalid if none) and move the editor to `to` (ID::Invalid: no editor).
@@ -413,14 +413,14 @@ namespace interstice
         virtual void Paste(std::string_view text) = 0;
 
         /// True when the screen point `screenSpace` is over selected text in `textEditorId`.
-        virtual bool IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const = 0;
+        virtual bool IsHoveringSelectedText(ID textEditorId, ID windowId, tachyon::int2 screenSpace) const = 0;
 
         /// The mouse cursor to show while text is dragged; true when it overrides the hover cursor.
-        virtual bool TryGetTextDragCursor(ID windowId, interstice::int2 screenSpace, MouseCursor& outCursor) const = 0;
+        virtual bool TryGetTextDragCursor(ID windowId, tachyon::int2 screenSpace, MouseCursor& outCursor) const = 0;
 
         /// While text is dragged, sets `outTargetId` to the drop target under the cursor
         /// (ID::Invalid if none) and returns true. False when no text drag is in progress.
-        virtual bool TryGetTextDragHoverTarget(ID windowId, interstice::int2 screenSpace, ID& outTargetId) const = 0;
+        virtual bool TryGetTextDragHoverTarget(ID windowId, tachyon::int2 screenSpace, ID& outTargetId) const = 0;
 
         // -------------------- Cache Management --------------------
 
@@ -442,4 +442,4 @@ namespace interstice
         /// to place the IME candidate window. Empty when no editor is active.
         virtual std::optional<IntRect> GetCaretScreenRect() const = 0;
     };
-} // namespace interstice
+} // namespace tachyon

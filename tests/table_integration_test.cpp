@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -24,13 +24,13 @@ namespace interstice
 
             // A tiny, stable test dataset. Sortable on all three columns so we can
             // exercise click-to-sort paths and verify the sort-column resolution.
-            interstice::VirtualTableColumn kColumns[3] = {
+            tachyon::VirtualTableColumn kColumns[3] = {
                 { {.header = "Name",  .initialWidth = 120, .minWidth = 40, .maxWidth = 400, .sortable = true } },
                 { {.header = "Type",  .initialWidth = 100, .minWidth = 40, .maxWidth = 400, .sortable = true } },
                 { {.header = "Value", .initialWidth = 140, .minWidth = 40, .maxWidth = 400, .sortable = true } },
             };
 
-            interstice::ID  tableID{};
+            tachyon::ID  tableID{};
 
             void SetUp() override
             {
@@ -47,7 +47,7 @@ namespace interstice
 
             // Convenience: render a 3-row, 3-column table. Row IDs are allocated
             // with a fixed seed so selectedRowID stays consistent across frames.
-            void EmitSimpleTable(interstice::TableState& state)
+            void EmitSimpleTable(tachyon::TableState& state)
             {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, kColumns, state, LayoutOverride{}.Size(400, 200)))
@@ -79,7 +79,7 @@ namespace interstice
         {
             // Driving a single frame is enough to verify the table container and
             // header cells actually land in ElementStorage at sensible rects.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_TRUE(app.HasElement(tableID));
             auto rect = app.GetElementRect(tableID);
@@ -108,11 +108,11 @@ namespace interstice
         // and no row IDs accumulate.
         TEST_F(TableIntegrationTest, EmptyColumnArrayDoesNotCrash)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID,
-                                   /*columns*/static_cast<interstice::VirtualTableColumn*>(nullptr),
+                                   /*columns*/static_cast<tachyon::VirtualTableColumn*>(nullptr),
                                    /*columnCount*/0u, state,
                                    LayoutOverride{}.Size(200, 100)))
                     app.EndTable();
@@ -126,7 +126,7 @@ namespace interstice
         // _orderedRowIDs stays empty.
         TEST_F(TableIntegrationTest, ZeroRowsEmitsHeaderButNoBackdrops)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, kColumns, state, LayoutOverride{}.Size(400, 200)))
@@ -140,7 +140,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, ColumnWidthsLazyInitFromDefaults)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             EXPECT_TRUE(state.columnWidths.empty());
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.columnWidths.size(), 3u);
@@ -152,7 +152,7 @@ namespace interstice
         // Column widths are CSS pixels: they follow a live UI scale change.
         TEST_F(TableIntegrationTest, ColumnWidthsFollowTheUIScale)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
             app.Frame([&] { EmitSimpleTable(state); });
             auto headerWidth = [&] {
@@ -172,7 +172,7 @@ namespace interstice
         {
             // Default sortColumn is -1. BeginTable should auto-resolve it to the
             // first sortable column (here, col 0).
-            interstice::TableState state{};
+            tachyon::TableState state{};
             EXPECT_EQ(state.sortColumn, -1);
             app.Frame([&] { EmitSimpleTable(state); });
             EXPECT_EQ(state.sortColumn, 0);
@@ -181,7 +181,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, SortColumnClampsToSortableWhenOutOfRange)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.sortColumn = 99;  // absurd value
             app.Frame([&] { EmitSimpleTable(state); });
             // Clamped back to the first sortable column.
@@ -194,7 +194,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, ClickingDifferentColumnHeaderChangesSortColumn)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Frame 1 establishes the table (default sort = column 0 asc).
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.sortColumn, 0);
@@ -203,7 +203,7 @@ namespace interstice
             // the top of the table container; column 2 starts at 120+100 = 220
             // from the table's left edge. Add a little padding offset.
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 col2HeaderPos{ tableRect.x + 120 + 100 + 20, tableRect.y + 8 };
+            tachyon::int2 col2HeaderPos{ tableRect.x + 120 + 100 + 20, tableRect.y + 8 };
 
             app.InjectMouseMove(col2HeaderPos);
             app.InjectMouseDown(col2HeaderPos);
@@ -215,7 +215,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, ClickingSameColumnHeaderTogglesDirection)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.sortColumn, 0);
             ASSERT_FALSE(state.sortDescending);
@@ -224,7 +224,7 @@ namespace interstice
             // (Down + Up) so each click is actually a fresh press (LeftPressed()
             // needs prevButtons == None != buttons == Left).
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 col0HeaderPos{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 col0HeaderPos{ tableRect.x + 40, tableRect.y + 8 };
             auto clickAtCol0 = [&] {
                 app.InjectMouseMove(col0HeaderPos);
                 app.InjectMouseDown(col0HeaderPos);
@@ -250,13 +250,13 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, ClickingRowSelectsIt)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
-            EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
+            EXPECT_EQ(state.selectedRowID, tachyon::ID::Invalid());
 
             // Row IDs are positional sub-range IDs; unsorted, visual == dataset.
             ASSERT_EQ(state.internal.totalRowCount, 3);
-            const interstice::ID row1ID = state.RowIDForIndex(1);
+            const tachyon::ID row1ID = state.RowIDForIndex(1);
 
             // Derive the hit position from the row backdrop's actual rect - row
             // heights depend on font metrics so hard-coding a y-offset is fragile.
@@ -276,7 +276,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, DraggingHeaderFiresReorderCallback)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             struct { int from = -1, to = -1; int calls = 0; } seen;
             state.onReorderColumns = [&](int f, int t) { seen.from = f; seen.to = t; seen.calls++; };
 
@@ -285,14 +285,14 @@ namespace interstice
 
             // Press on column 0 header (x in [0,120)).
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
 
             // Drag past column 1's left edge (x=120) by a wide margin so the
             // drag-threshold is crossed and the edge-crossing logic targets col 2.
-            interstice::int2 dragTo{ tableRect.x + 250, tableRect.y + 8 };
+            tachyon::int2 dragTo{ tableRect.x + 250, tableRect.y + 8 };
             app.InjectMouseMove(dragTo, MouseButtons::Left);
             app.Frame([&] { EmitSimpleTable(state); });
 
@@ -310,7 +310,7 @@ namespace interstice
             // When onReorderColumns is set, a simple click (no drag) on a sortable
             // header still toggles sort state - the threshold check distinguishes
             // the gestures.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             bool reorderCalled = false;
             state.onReorderColumns = [&](int, int) { reorderCalled = true; };
 
@@ -318,7 +318,7 @@ namespace interstice
             ASSERT_EQ(state.sortColumn, 0);
 
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 click{ tableRect.x + 40 + 120 + 10, tableRect.y + 8 }; // column 1
+            tachyon::int2 click{ tableRect.x + 40 + 120 + 10, tableRect.y + 8 }; // column 1
             app.InjectMouseMove(click);
             app.InjectMouseDown(click);
             app.InjectMouseUp(click);  // no mouse move -> below threshold
@@ -333,7 +333,7 @@ namespace interstice
             // Dragging column 0 past column 2 shifts columns 1 and 2 left by
             // (draggedWidth + column-gap) to open the drop slot, as in
             // BeginReorderableGroup. Checked on the final element rects.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int) {};  // enable reorder path
 
             app.Frame([&] { EmitSimpleTable(state); });
@@ -344,7 +344,7 @@ namespace interstice
 
             // Start drag on column 0.
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
@@ -377,11 +377,11 @@ namespace interstice
             // and dragging its header must not fire onReorderColumns no matter
             // how far the user drags. Click-to-sort on a sortable locked column
             // still works.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             int reorderCalls = 0;
             state.onReorderColumns = [&](int, int) { reorderCalls++; };
 
-            interstice::VirtualTableColumn cols[] = {
+            tachyon::VirtualTableColumn cols[] = {
                 { {.header = "Pinned", .initialWidth = 120, .sortable = true, .locked = true } },
                 { {.header = "B",      .initialWidth = 100, .sortable = true } },
                 { {.header = "C",      .initialWidth = 100, .sortable = true } },
@@ -403,7 +403,7 @@ namespace interstice
             // Drag the locked column far to the right - should be inert for
             // reorder purposes.
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame(build);
@@ -419,11 +419,11 @@ namespace interstice
         {
             // Locked column at index 0 acts as a left barrier: dragging columns
             // to its left should clamp the insertion index to 1, never 0.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             std::pair<int, int> lastReorder{ -1, -1 };
             state.onReorderColumns = [&](int f, int t) { lastReorder = { f, t }; };
 
-            interstice::VirtualTableColumn cols[] = {
+            tachyon::VirtualTableColumn cols[] = {
                 { {.header = "Pinned", .initialWidth = 80,  .locked = true } },
                 { {.header = "B",      .initialWidth = 100 } },
                 { {.header = "C",      .initialWidth = 100 } },
@@ -446,7 +446,7 @@ namespace interstice
             // not 0 (the locked pinned column keeps the left edge fixed).
             auto tableRect = app.GetElementRect(tableID);
             // Column 2 starts after 80 + gap + 100 + gap = ~188 from table edge.
-            interstice::int2 start{ tableRect.x + 220, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 220, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame(build);
@@ -463,11 +463,11 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, LockedColumnAtEndPreventsOthersFromMovingPast)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             std::pair<int, int> lastReorder{ -1, -1 };
             state.onReorderColumns = [&](int f, int t) { lastReorder = { f, t }; };
 
-            interstice::VirtualTableColumn cols[] = {
+            tachyon::VirtualTableColumn cols[] = {
                 { {.header = "A",      .initialWidth = 100 } },
                 { {.header = "B",      .initialWidth = 100 } },
                 { {.header = "Pinned", .initialWidth = 80,  .locked = true } },
@@ -489,7 +489,7 @@ namespace interstice
             // Drag column 0 ("A") all the way to the right - should stop at 1,
             // not 2 (the locked column pins the right edge).
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame(build);
@@ -508,21 +508,21 @@ namespace interstice
         {
             // If the drag never crosses another column's edge (target == from),
             // onReorderColumns should be skipped even though a real drag happened.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             int reorderCalls = 0;
             state.onReorderColumns = [&](int, int) { reorderCalls++; };
 
             app.Frame([&] { EmitSimpleTable(state); });
 
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
 
             // Commit to drag via a small right-ward motion - past the 4px threshold
             // but not past column 1's left edge (at x=120 from the table's origin).
-            interstice::int2 nudge{ tableRect.x + 50, tableRect.y + 8 };
+            tachyon::int2 nudge{ tableRect.x + 50, tableRect.y + 8 };
             app.InjectMouseMove(nudge, MouseButtons::Left);
             app.Frame([&] { EmitSimpleTable(state); });
 
@@ -536,14 +536,14 @@ namespace interstice
         {
             // During a column drag the header holds mouse capture; Escape reaches it
             // through keyboard-to-capture routing, without moving focus.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             int reorderCalls = 0;
             state.onReorderColumns = [&](int, int) { reorderCalls++; };
 
             app.Frame([&] { EmitSimpleTable(state); });
 
             auto tableRect = app.GetElementRect(tableID);
-            interstice::int2 start{ tableRect.x + 40, tableRect.y + 8 };
+            tachyon::int2 start{ tableRect.x + 40, tableRect.y + 8 };
             app.InjectMouseMove(start);
             app.InjectMouseDown(start);
             app.Frame([&] { EmitSimpleTable(state); });
@@ -571,10 +571,10 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, VirtualTableEmitsOnlyVisibleRows)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             int cellsEmitted = 0;
 
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "#",     .initialWidth = 80 },
                   [&](int rowIdx) { char b[16]; std::snprintf(b, sizeof(b), "%d", rowIdx); app.Cell(b); cellsEmitted++; } },
                 { {.header = "Name",  .initialWidth = 160 },
@@ -601,10 +601,10 @@ namespace interstice
             // A VirtualTable body's intrinsic height is enormous (50 000 rows of
             // spacer). With flex-basis honoured its rect stays the same across frames
             // instead of oscillating with the sampled viewport height.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.internal.lastViewportH = 400;
 
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
                   [&](int rowIdx) { (void)rowIdx; app.Cell("a"); } },
                 { {.header = "B", .initialWidth = 80 },
@@ -640,10 +640,10 @@ namespace interstice
         {
             // In a table wider than its fixed columns, the last (Fractional) column is
             // at least its initialWidth and absorbs the leftover width.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Three columns with configured widths summing to 80+100+120 = 300.
             // Table width 600 -> 300px of leftover width should go to the last col.
-            interstice::VirtualTableColumn cols[] = {
+            tachyon::VirtualTableColumn cols[] = {
                 { {.header = "A", .initialWidth = 80 } },
                 { {.header = "B", .initialWidth = 100 } },
                 { {.header = "C", .initialWidth = 120 } },
@@ -681,8 +681,8 @@ namespace interstice
             // Symmetric: even when the table is NARROWER than the sum of fixed
             // columns, the last column must not collapse - it uses its configured
             // width as a floor and the outer wrapper handles horizontal overflow.
-            interstice::TableState state{};
-            interstice::VirtualTableColumn cols[] = {
+            tachyon::TableState state{};
+            tachyon::VirtualTableColumn cols[] = {
                 { {.header = "A", .initialWidth = 200 } },
                 { {.header = "B", .initialWidth = 200 } },
                 { {.header = "C", .initialWidth = 200 } },
@@ -714,10 +714,10 @@ namespace interstice
         {
             // The header section must not shrink: the body's huge intrinsic height
             // (50 000 spacer rows) would otherwise squeeze the header to ~0px.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.internal.lastViewportH = 400;
 
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
                   [&](int rowIdx) { (void)rowIdx; app.Cell("a"); } },
                 { {.header = "B", .initialWidth = 80 },
@@ -748,10 +748,10 @@ namespace interstice
         {
             // Header and body are sibling grids, so scrolling the body leaves the
             // header's Y unchanged.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.internal.lastViewportH = 400;
 
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 },
                   [&](int rowIdx) { (void)rowIdx; app.Cell("a"); } },
                 { {.header = "B", .initialWidth = 80 },
@@ -770,23 +770,23 @@ namespace interstice
             app.Frame(build);
 
             const auto headerAID0 = !vcols[0].internal.headerRef.IsValid()
-                ? interstice::ID::Invalid()
+                ? tachyon::ID::Invalid()
                 : app.elementStorage.GetElementUnsafe(vcols[0].internal.headerRef).id;
-            ASSERT_NE(headerAID0, interstice::ID::Invalid());
-            ASSERT_NE(state.internal.bodyID, interstice::ID::Invalid());
+            ASSERT_NE(headerAID0, tachyon::ID::Invalid());
+            ASSERT_NE(state.internal.bodyID, tachyon::ID::Invalid());
             const auto headerY_unscrolled = app.GetElementRect(headerAID0).y;
 
             // Scroll the body, which holds overflow:auto (not the outer wrapper).
             auto handle = app.guiStateManager.GetScrollManagement().GetOrCreateScrollOffsetHandle(state.internal.bodyID);
-            app.guiStateManager.GetScrollManagement().SetScrollOffset(handle, interstice::int2{ 0, -100 });
+            app.guiStateManager.GetScrollManagement().SetScrollOffset(handle, tachyon::int2{ 0, -100 });
 
             // Frame 2: body rows shift up; header stays.
             app.Frame(build);
 
             const auto headerAID = !vcols[0].internal.headerRef.IsValid()
-                ? interstice::ID::Invalid()
+                ? tachyon::ID::Invalid()
                 : app.elementStorage.GetElementUnsafe(vcols[0].internal.headerRef).id;
-            ASSERT_NE(headerAID, interstice::ID::Invalid());
+            ASSERT_NE(headerAID, tachyon::ID::Invalid());
             const auto headerY_scrolled = app.GetElementRect(headerAID).y;
 
             EXPECT_NEAR(headerY_scrolled, headerY_unscrolled, 1)
@@ -799,8 +799,8 @@ namespace interstice
         // room) keeps its scroll position for when it comes back.
         TEST_F(TableIntegrationTest, SqueezedTableKeepsItsScrollPosition)
         {
-            interstice::TableState state{};
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::TableState state{};
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 }, [&](int) { app.Cell("a"); } },
             };
             int siblingHeight = 100;
@@ -818,9 +818,9 @@ namespace interstice
             };
             app.Frame(build);
             app.Frame(build);
-            ASSERT_NE(state.internal.bodyID, interstice::ID::Invalid());
+            ASSERT_NE(state.internal.bodyID, tachyon::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
-            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(state.SectionBodyID(0)), interstice::int2{ 0, -100 });
+            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(state.SectionBodyID(0)), tachyon::int2{ 0, -100 });
             app.Frame(build);
             ASSERT_EQ(sm.GetScrollOffset(sm.GetScrollOffsetHandle(state.internal.bodyID)).y, -100) << "scrolled before the squeeze";
 
@@ -840,14 +840,14 @@ namespace interstice
         // rather than estimating from the font size.
         TEST_F(TableIntegrationTest, RowHeightFallbackIsMeasured)
         {
-            const TextID probe = app.textSystem->RegisterText(interstice::ID::Invalid(), "Mg", app.theme.tableCellStyleRef, interstice::ElementState::None);
+            const TextID probe = app.textSystem->RegisterText(tachyon::ID::Invalid(), "Mg", app.theme.tableCellStyleRef, tachyon::ElementState::None);
             int32_t expected = app.textSystem->GetTextMeasurement(probe).minHeight;
             if (const auto* ls = app.styleManager.GetLayoutStyle(app.theme.tableCellStyleRef.layoutStyleIndex))
                 expected += ls->padding.Vertical() + ls->borderWidths.Vertical();
 
             app.theme.tableRowHeight = 0;
-            interstice::TableState state{};
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::TableState state{};
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "A", .initialWidth = 80 }, [&](int) { app.Cell("a"); } },
             };
             app.Frame([&] {
@@ -864,11 +864,11 @@ namespace interstice
             // callback that only runs during RENDER. Our headless harness stops at
             // layout, so we simulate the sampled height directly on the TableState
             // and verify VirtualTable uses it on the next frame.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             int cellsEmitted = 0;
             int* counter = &cellsEmitted;
 
-            interstice::VirtualTableColumn vcols[] = {
+            tachyon::VirtualTableColumn vcols[] = {
                 { {.header = "#",     .initialWidth = 80 },
                   [&](int rowIdx) { (void)rowIdx; app.Cell("n"); (*counter)++; } },
             };
@@ -905,7 +905,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, DownArrowAdvancesSelectedRow)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.internal.totalRowCount, 3);
 
@@ -937,7 +937,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, HomeAndEndJumpToBoundaryRows)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitSimpleTable(state); });
             ASSERT_EQ(state.internal.totalRowCount, 3);
 
@@ -969,11 +969,11 @@ namespace interstice
         struct PagingTable
         {
             HeadlessGUIApp& app;
-            interstice::ID tableID;
-            interstice::VirtualTableColumn* cols;
+            tachyon::ID tableID;
+            tachyon::VirtualTableColumn* cols;
             size_t colCount;
             int rowCount;
-            void emit(interstice::TableState& state) const
+            void emit(tachyon::TableState& state) const
             {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, cols, colCount, state,
@@ -993,7 +993,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, PageDownAdvancesByVisibleRowCount)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
@@ -1002,7 +1002,7 @@ namespace interstice
             state.internal.lastViewportH = 200;
 
             // Click row 0 to focus the container.
-            const interstice::ID firstID = state.RowIDForIndex(0);
+            const tachyon::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);
             app.InjectMouseMove(firstCenter);
             app.InjectMouseDown(firstCenter);
@@ -1023,7 +1023,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, PageUpRetreatsByVisibleRowCount)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
@@ -1032,7 +1032,7 @@ namespace interstice
             // Click row 0 to give the container focus. Rows past the viewport
             // aren't hit-testable; set cursor state directly to "near the
             // bottom" instead of clicking it.
-            const interstice::ID firstID = state.RowIDForIndex(0);
+            const tachyon::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);
             app.InjectMouseMove(firstCenter);
             app.InjectMouseDown(firstCenter);
@@ -1053,7 +1053,7 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, PageDownStopsAtLastRow)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
@@ -1062,13 +1062,13 @@ namespace interstice
             // Click first row to focus the container, then point the cursor
             // at the last row by hand - the last row is offscreen so a click
             // there won't dispatch.
-            const interstice::ID firstID = state.RowIDForIndex(0);
+            const tachyon::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);
             app.InjectMouseMove(firstCenter);
             app.InjectMouseDown(firstCenter);
             app.InjectMouseUp(firstCenter);
             app.Frame(build);
-            const interstice::ID lastID = state.RowIDForIndex(state.internal.totalRowCount - 1);
+            const tachyon::ID lastID = state.RowIDForIndex(state.internal.totalRowCount - 1);
             state.selectedRowID = lastID;
 
             app.InjectKey(KeyCode::PageDown);
@@ -1078,13 +1078,13 @@ namespace interstice
 
         TEST_F(TableIntegrationTest, PageUpStopsAtFirstRow)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             PagingTable t{ app, tableID, kColumns, 3, 30 };
             auto build = [&] { t.emit(state); };
             app.Frame(build);
             state.internal.lastViewportH = 200;   // simulate render-time sampling
 
-            const interstice::ID firstID = state.RowIDForIndex(0);
+            const tachyon::ID firstID = state.RowIDForIndex(0);
             const auto firstCenter = app.CenterOf(firstID);
             app.InjectMouseMove(firstCenter);
             app.InjectMouseDown(firstCenter);

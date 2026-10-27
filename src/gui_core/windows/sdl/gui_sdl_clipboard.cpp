@@ -2,7 +2,7 @@
 
 #include <SDL3/SDL.h>
 
-namespace interstice
+namespace tachyon
 {
     std::string SDLClipboard::Get() const
     {
@@ -20,4 +20,4 @@ namespace interstice
         std::string buffer(text);
         SDL_SetClipboardText(buffer.c_str());
     }
-} // namespace interstice
+} // namespace tachyon

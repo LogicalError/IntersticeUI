@@ -16,23 +16,23 @@
 #include <cstdint>
 #include <cstring>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
         TEST(PrimitiveCacheTest, AppendCapturedTranslatesAndPreservesPasses)
         {
             PrimitiveRenderTarget src;
-            src.SetTransform(interstice::float3x2::Translate(100.0f, 50.0f));
-            src.RenderBox(interstice::IntRect{ 10, 20, 30, 40 }, interstice::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
+            src.SetTransform(tachyon::float3x2::Translate(100.0f, 50.0f));
+            src.RenderBox(tachyon::IntRect{ 10, 20, 30, 40 }, tachyon::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
             // Different kind -> a second pass.
-            src.RenderGlyph(interstice::float2{ 5, 6 }, interstice::float2{ 7, 8 }, interstice::float2{ 0, 0 }, interstice::float2{ 1, 1 },
-                            1.0f, 1, 0, interstice::VisualColorStyleIndex{}, interstice::IntRect{ 0, 0, 200, 200 });
+            src.RenderGlyph(tachyon::float2{ 5, 6 }, tachyon::float2{ 7, 8 }, tachyon::float2{ 0, 0 }, tachyon::float2{ 1, 1 },
+                            1.0f, 1, 0, tachyon::VisualColorStyleIndex{}, tachyon::IntRect{ 0, 0, 200, 200 });
             src.FinishRenderPass();
             ASSERT_EQ(src.renderPasses.size(), 2u);
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, interstice::int2{ 10, 20 });
+            dst.AppendCaptured(src, tachyon::int2{ 10, 20 });
 
             // Passes preserved in order.
             ASSERT_EQ(dst.renderPasses.size(), 2u);
@@ -57,12 +57,12 @@ namespace interstice
         TEST(PrimitiveCacheTest, AppendCapturedZeroDeltaIsVerbatim)
         {
             PrimitiveRenderTarget src;
-            src.SetTransform(interstice::float3x2::Translate(100.0f, 50.0f));
-            src.RenderBox(interstice::IntRect{ 10, 20, 30, 40 }, interstice::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
+            src.SetTransform(tachyon::float3x2::Translate(100.0f, 50.0f));
+            src.RenderBox(tachyon::IntRect{ 10, 20, 30, 40 }, tachyon::IntRect{ 0, 0, 200, 200 }, 1, 1, 1.0f);
             src.FinishRenderPass();
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, interstice::int2{ 0, 0 });
+            dst.AppendCaptured(src, tachyon::int2{ 0, 0 });
 
             const auto& sb = src.streams[size_t(PrimitiveKind::Box)].cpu;
             const auto& db = dst.streams[size_t(PrimitiveKind::Box)].cpu;
@@ -73,20 +73,20 @@ namespace interstice
         TEST(PrimitiveCacheTest, ScopeCaptureReplayMatchesDirectRender)
         {
             PrimitiveRenderer r;
-            r.BeginWindow(interstice::ID::Invalid()); // any id works for a CPU-only target
+            r.BeginWindow(tachyon::ID::Invalid()); // any id works for a CPU-only target
 
             // Capture a "subtree" of two primitives under scope S.
-            const interstice::ID scope = interstice::ID::Invalid();
+            const tachyon::ID scope = tachyon::ID::Invalid();
             r.BeginScopeCapture(scope);
-            r.SetTransform(interstice::float3x2::Translate(0.0f, 0.0f));
-            r.RenderBox(interstice::IntRect{ 0, 0, 50, 50 }, interstice::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f);
+            r.SetTransform(tachyon::float3x2::Translate(0.0f, 0.0f));
+            r.RenderBox(tachyon::IntRect{ 0, 0, 50, 50 }, tachyon::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f);
             r.EndScopeCapture(scope); // emits into the window (delta 0) and stores the capture
 
             EXPECT_TRUE(r.HasScopeCapture(scope));
 
             // Replaying translated appends another, shifted copy.
             const size_t before = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
-            EXPECT_TRUE(r.ReplayScopeCapture(scope, interstice::int2{ 5, 7 }));
+            EXPECT_TRUE(r.ReplayScopeCapture(scope, tachyon::int2{ 5, 7 }));
             const size_t after = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
             EXPECT_EQ(after, before + sizeof(Box));
 
@@ -97,12 +97,12 @@ namespace interstice
         TEST(PrimitiveScaleTest, ReplayMovesTheSnappedRect)
         {
             PrimitiveRenderTarget src;
-            src.RenderBox(interstice::IntRect{ 0, 0, 10, 10 }, interstice::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f, {},
-                          interstice::ImageIndex::Invalid, interstice::IntRect{ 3, 4, 15, 16 });
+            src.RenderBox(tachyon::IntRect{ 0, 0, 10, 10 }, tachyon::IntRect{ 0, 0, 100, 100 }, 1, 1, 1.0f, {},
+                          tachyon::ImageIndex::Invalid, tachyon::IntRect{ 3, 4, 15, 16 });
             src.FinishRenderPass();
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, interstice::int2{ 10, 20 });
+            dst.AppendCaptured(src, tachyon::int2{ 10, 20 });
             const Box* b = reinterpret_cast<const Box*>(dst.streams[size_t(PrimitiveKind::Box)].cpu.data());
             EXPECT_EQ(b->snappedPx[0], 13);
             EXPECT_EQ(b->snappedPx[1], 24);
@@ -115,15 +115,15 @@ namespace interstice
         TEST(PrimitiveScaleTest, ASnappedRectPastTheRangeSaturates)
         {
             PrimitiveRenderTarget src;
-            src.RenderBox(interstice::IntRect{ 211, 11, 4, 32768 }, interstice::IntRect{ 0, 0, 800, 600 }, 1, 1, 1.0f, {},
-                          interstice::ImageIndex::Invalid, interstice::IntRect{ 211, 11, 4, 32768 });
+            src.RenderBox(tachyon::IntRect{ 211, 11, 4, 32768 }, tachyon::IntRect{ 0, 0, 800, 600 }, 1, 1, 1.0f, {},
+                          tachyon::ImageIndex::Invalid, tachyon::IntRect{ 211, 11, 4, 32768 });
             src.FinishRenderPass();
             const Box* b = reinterpret_cast<const Box*>(src.streams[size_t(PrimitiveKind::Box)].cpu.data());
             EXPECT_EQ(b->snappedPx[1], 11);
             EXPECT_EQ(b->snappedPx[3], INT16_MAX);
 
             PrimitiveRenderTarget dst;
-            dst.AppendCaptured(src, interstice::int2{ 0, 20 });
+            dst.AppendCaptured(src, tachyon::int2{ 0, 20 });
             const Box* moved = reinterpret_cast<const Box*>(dst.streams[size_t(PrimitiveKind::Box)].cpu.data());
             EXPECT_EQ(moved->snappedPx[1], 31);
             EXPECT_EQ(moved->snappedPx[3], INT16_MAX) << "a moved cached box saturates too";
@@ -133,16 +133,16 @@ namespace interstice
         // runs meet there instead of stopping short for a corner that's never drawn.
         TEST(PrimitiveScaleTest, RoundedPolylineHasNoGapWhereItRunsStraight)
         {
-            interstice::GradientManager gradients{ 16 };
-            interstice::StyleManager    styles{ gradients };
-            interstice::ElementStorage  storage{ styles };
+            tachyon::GradientManager gradients{ 16 };
+            tachyon::StyleManager    styles{ gradients };
+            tachyon::ElementStorage  storage{ styles };
             PrimitiveRenderer    r;
-            r.BeginWindow(interstice::ID::Invalid());
-            interstice::CustomDrawContext ctx{ r, storage, interstice::ElementRef::Invalid(), interstice::IntRect{ 0, 0, 200, 60 },
-                                        interstice::IntRect{ 0, 0, 200, 60 }, interstice::IntRect{ 0, 0, 500, 500 },
-                                        interstice::float3x2{}, interstice::int2{ 0, 0 } };
-            const interstice::int2 points[] = { { 10, 20 }, { 100, 20 }, { 190, 20 } };
-            ctx.RenderPolyline(points, /*closed=*/false, interstice::LineStyle{ .lineWidth = 2.0f }, 10.0f);
+            r.BeginWindow(tachyon::ID::Invalid());
+            tachyon::CustomDrawContext ctx{ r, storage, tachyon::ElementRef::Invalid(), tachyon::IntRect{ 0, 0, 200, 60 },
+                                        tachyon::IntRect{ 0, 0, 200, 60 }, tachyon::IntRect{ 0, 0, 500, 500 },
+                                        tachyon::float3x2{}, tachyon::int2{ 0, 0 } };
+            const tachyon::int2 points[] = { { 10, 20 }, { 100, 20 }, { 190, 20 } };
+            ctx.RenderPolyline(points, /*closed=*/false, tachyon::LineStyle{ .lineWidth = 2.0f }, 10.0f);
             r.currentTarget->FinishRenderPass();
 
             const auto& stream = r.currentTarget->streams[size_t(PrimitiveKind::Line)].cpu;
@@ -160,20 +160,20 @@ namespace interstice
         // drawing, like element boxes snap to their parent (here under a 1.5x zoom).
         TEST(PrimitiveScaleTest, CustomDrawBoxSnapsToItsOwner)
         {
-            interstice::GradientManager gradients{ 16 };
-            interstice::StyleManager    styles{ gradients };
-            interstice::ElementStorage  storage{ styles };
+            tachyon::GradientManager gradients{ 16 };
+            tachyon::StyleManager    styles{ gradients };
+            tachyon::ElementStorage  storage{ styles };
             PrimitiveRenderer    r;
-            r.BeginWindow(interstice::ID::Invalid());
+            r.BeginWindow(tachyon::ID::Invalid());
 
             // Owner zoomed 1.5x (a node view) at layout (20.5, 20.5): pixels from 30.75.
-            const interstice::float3x2 layoutToWindow = interstice::float3x2::Scale(1.5f) * interstice::float3x2::Translate(20.5f, 20.5f);
-            const interstice::float4   ownerPx{ 30.75f, 30.75f, 120.75f, 120.75f };
-            const interstice::IntRect  ownerSnapped = interstice::SnapAbsolute(ownerPx);
-            interstice::CustomDrawContext ctx{ r, storage, interstice::ElementRef::Invalid(), interstice::IntRect{ 0, 0, 60, 60 },
-                                        interstice::IntRect{ 0, 0, 60, 60 }, interstice::IntRect{ 0, 0, 500, 500 },
-                                        layoutToWindow, interstice::int2{ 0, 0 }, nullptr, ownerPx, ownerSnapped };
-            ctx.RenderBox(interstice::IntRect{ 1, 1, 58, 10 }, interstice::VisualBoxStyleIndex::Invalid);
+            const tachyon::float3x2 layoutToWindow = tachyon::float3x2::Scale(1.5f) * tachyon::float3x2::Translate(20.5f, 20.5f);
+            const tachyon::float4   ownerPx{ 30.75f, 30.75f, 120.75f, 120.75f };
+            const tachyon::IntRect  ownerSnapped = tachyon::SnapAbsolute(ownerPx);
+            tachyon::CustomDrawContext ctx{ r, storage, tachyon::ElementRef::Invalid(), tachyon::IntRect{ 0, 0, 60, 60 },
+                                        tachyon::IntRect{ 0, 0, 60, 60 }, tachyon::IntRect{ 0, 0, 500, 500 },
+                                        layoutToWindow, tachyon::int2{ 0, 0 }, nullptr, ownerPx, ownerSnapped };
+            ctx.RenderBox(tachyon::IntRect{ 1, 1, 58, 10 }, tachyon::VisualBoxStyleIndex::Invalid);
             r.currentTarget->FinishRenderPass();
 
             const Box* b = reinterpret_cast<const Box*>(r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.data());

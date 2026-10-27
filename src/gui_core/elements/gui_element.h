@@ -16,7 +16,7 @@
 #include <functional>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class GUIRenderer;
     class ElementStorage;
@@ -197,4 +197,4 @@ namespace interstice
         IntRect            afterDrawSnappedRect        = {};  ///< snapped pixel rect custom-draw boxes snap to
     };
 
-} // namespace interstice
+} // namespace tachyon

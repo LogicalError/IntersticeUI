@@ -5,7 +5,7 @@
 #include <iterator>
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     class ElementStorage;
 
@@ -47,7 +47,7 @@ namespace interstice
         inline void SetDone() { *this = EndCursor(); }
     };
 
-    #define INTERSTICE_ITERATOR_TRAITS_USING_DECLS(type) \
+    #define TACHYON_ITERATOR_TRAITS_USING_DECLS(type) \
             using value_type = type; \
             using difference_type = std::ptrdiff_t; \
             using reference = const value_type&; \
@@ -63,7 +63,7 @@ namespace interstice
         uint64_t generation = 0;
         DepthScanCursor cursor;
 
-        INTERSTICE_ITERATOR_TRAITS_USING_DECLS(DepthScanCursor);
+        TACHYON_ITERATOR_TRAITS_USING_DECLS(DepthScanCursor);
         using iterator_category = std::input_iterator_tag;
 
         inline bool Validate() const;
@@ -88,7 +88,7 @@ namespace interstice
         uint64_t generation = 0;
         DepthScanCursor cursor;
 
-        INTERSTICE_ITERATOR_TRAITS_USING_DECLS(DepthScanCursor);
+        TACHYON_ITERATOR_TRAITS_USING_DECLS(DepthScanCursor);
         using iterator_category = std::input_iterator_tag;
 
         inline bool Validate() const;
@@ -103,7 +103,7 @@ namespace interstice
         BottomUpDepthScanIterator operator++(int);
     };
 
-    #undef INTERSTICE_ITERATOR_TRAITS_USING_DECLS
+    #undef TACHYON_ITERATOR_TRAITS_USING_DECLS
 
     // ------------------------------------------------------------------------
     // Range Wrappers - Enable idiomatic for-each loops
@@ -128,4 +128,4 @@ namespace interstice
     using TopDownDepthScanRangeIterator = Range<TopDownDepthScanIterator>;
     using BottomUpDepthScanRangeIterator = Range<BottomUpDepthScanIterator>;
 
-} // namespace interstice
+} // namespace tachyon

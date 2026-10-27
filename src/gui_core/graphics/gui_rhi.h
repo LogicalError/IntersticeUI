@@ -12,7 +12,7 @@
 
 #include <span>
 
-namespace interstice::RHI
+namespace tachyon::RHI
 {
     struct GpuPipeline
     {

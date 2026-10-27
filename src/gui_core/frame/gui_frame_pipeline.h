@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class GUIApplication;
     class IDManager;

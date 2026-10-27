@@ -12,7 +12,7 @@
 // files and folders between the grid and the folder tree.
 //
 
-namespace interstice
+namespace tachyon
 {
 
     // Files have no stored ID: a grid entry's identity is VirtualGridView's
@@ -21,9 +21,9 @@ namespace interstice
         std::string name;
         IconID icon = IconID::Invalid;
     };
-    static interstice::ItemDragDropConfig gridDnD;
-    static interstice::ItemDragDropConfig folderDnD;
-    static interstice::GridViewVirtualState gridScrollState;
+    static tachyon::ItemDragDropConfig gridDnD;
+    static tachyon::ItemDragDropConfig folderDnD;
+    static tachyon::GridViewVirtualState gridScrollState;
     constexpr uint32_t kGridPayload = 0x47524944; // 'GRID'
 
     // Drag payload: a file's index in the current folder's item list, or a
@@ -48,10 +48,10 @@ namespace interstice
 
     // Folder tree left of the grid (flat VirtualTreeView rows). folderItems is
     // parallel to folderRows and holds each folder's files.
-    static std::vector<interstice::TreeViewRow>  folderRows;
+    static std::vector<tachyon::TreeViewRow>  folderRows;
     static std::vector<std::vector<GridDemoItem>>    folderItems;
     static std::vector<int>                          folderVisibleIdx;
-    static interstice::TableState                folderTreeState;
+    static tachyon::TableState                folderTreeState;
     static int                                       folderTreeWidth = 180; // CSS pixels
     static int                                       currentFolder   = 0;
 
@@ -63,9 +63,9 @@ namespace interstice
     static std::string                               filesSearch;
     static std::string                               filesQueryLower;
     static bool                                      gridFilterDirty = true;
-    static std::vector<interstice::TreeViewRow>  filteredFolderRows;
+    static std::vector<tachyon::TreeViewRow>  filteredFolderRows;
     static std::vector<int>                          filteredFolderVisibleIdx;
-    static interstice::TableState                filteredFolderState;
+    static tachyon::TableState                filteredFolderState;
     static std::vector<int>                          filteredToMaster; // filtered flat idx -> master flat idx
 
     static std::vector<GridDemoItem>& CurrentItems()
@@ -82,17 +82,17 @@ namespace interstice
     }
 
     // Visible position encoded in a grid item's ranged sub-ID (-1 if not one).
-    static int GridItemIndex(interstice::ID id)
+    static int GridItemIndex(tachyon::ID id)
     {
-        if (id.GetMode() != interstice::IDMode::SubRange) return -1;
+        if (id.GetMode() != tachyon::IDMode::SubRange) return -1;
         return static_cast<int>(id.value.subRangeParts.index);
     }
 
     // Flat row index a tree's single-selection points at (-1 if none).
-    static int SelectedFlat(const interstice::TableState& state,
+    static int SelectedFlat(const tachyon::TableState& state,
                             const std::vector<int>& visibleIdx)
     {
-        if (state.selectedRowID.GetMode() != interstice::IDMode::SubRange) return -1;
+        if (state.selectedRowID.GetMode() != tachyon::IDMode::SubRange) return -1;
         const int visIdx = static_cast<int>(state.selectedRowID.value.subRangeParts.index);
         if (visIdx < 0 || visIdx >= int(visibleIdx.size())) return -1;
         return visibleIdx[visIdx];
@@ -155,10 +155,10 @@ namespace interstice
         const int n = static_cast<int>(folderRows.size());
         if (src < 0 || src >= n || dst < 0 || dst >= n) return;
 
-        const interstice::ID curID = folderRows[currentFolder].id;
+        const tachyon::ID curID = folderRows[currentFolder].id;
         const int     count = 1 + folderRows[src].skipCount;
         const int     newFlat = TreeUtils::ReorderTreeRow(
-            folderRows, src, dst, interstice::TreeDropPosition::InsideLast);
+            folderRows, src, dst, tachyon::TreeDropPosition::InsideLast);
         if (newFlat < 0) return;
 
         // Apply the identical splice to the parallel per-folder item lists.
@@ -176,7 +176,7 @@ namespace interstice
         for (int i = 0; i < int(folderRows.size()); ++i)
             if (folderRows[i].id == curID) { currentFolder = i; break; }
         // Visible indices shifted - the render pass re-selects currentFolder.
-        folderTreeState.selectedRowID = interstice::ID::Invalid();
+        folderTreeState.selectedRowID = tachyon::ID::Invalid();
         gridFilterDirty = true;
     }
 
@@ -204,7 +204,7 @@ namespace interstice
         for (int i = 0; i < int(folderRows.size()); ++i)
         {
             if (!keep[i]) continue;
-            interstice::TreeViewRow r = folderRows[i];
+            tachyon::TreeViewRow r = folderRows[i];
             r.isOpen       = true;
             r.renameBuffer = nullptr; // copies don't write back - no rename
             filteredFolderRows.push_back(std::move(r));
@@ -217,7 +217,7 @@ namespace interstice
     {
         // Seed the folder tree.
         auto addFolder = [this](const char* name, int depth, bool isOpen) {
-            interstice::TreeViewRow row{};
+            tachyon::TreeViewRow row{};
             row.id     = idManager.CreateStaticID();
             row.name   = name;
             row.depth  = depth;
@@ -230,7 +230,7 @@ namespace interstice
         addFolder("Images",       1, false);  // 2
         addFolder("Music",        1, false);  // 3
         addFolder("Projects",     1, true);   // 4
-        addFolder("IntersticeUI", 2, false);  // 5
+        addFolder("TachyonUI", 2, false);  // 5
         addFolder("Vulkan",       2, false);  // 6
         addFolder("Downloads",    1, false);  // 7
         RebuildTreeViewIndex(folderRows);
@@ -280,7 +280,7 @@ namespace interstice
             { "readme.txt", demo.fileTextIcon },
         };
 
-        folderItems[5] = // IntersticeUI
+        folderItems[5] = // TachyonUI
         {
             { "application.cpp",  demo.fileTextIcon },
             { "application.h",    demo.fileTextIcon },
@@ -318,7 +318,7 @@ namespace interstice
 
         // Ghost icon that follows the mouse cursor during the drag. The
         // payload identifies the icon for either source view (grid or tree).
-        auto ghost = [this](const interstice::DragVisualContext& visual) {
+        auto ghost = [this](const tachyon::DragVisualContext& visual) {
             IconID icon = IconID::Invalid;
             if (IsFolderPayload(visual.payloadValue))
             {
@@ -345,14 +345,14 @@ namespace interstice
         // The item ID's sub-ID index is a position in gridVisible; the payload
         // is the underlying file index or tagged folder index, so drops stay
         // valid across refilters.
-        gridDnD.getPayload = [](interstice::ID id) -> uintptr_t {
+        gridDnD.getPayload = [](tachyon::ID id) -> uintptr_t {
             const int e = FilesEntryIndex(GridItemIndex(id));
             if (e < 0) return static_cast<uintptr_t>(-1);
             const auto& entry = gridEntries[e];
             return entry.IsFolder() ? FolderPayload(entry.folderFlat)
                                     : static_cast<uintptr_t>(entry.itemIdx);
         };
-        gridDnD.canDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
+        gridDnD.canDrop = [](uintptr_t payloadValue, tachyon::ID targetID) {
             const int e = FilesEntryIndex(GridItemIndex(targetID));
             const GridEntry* target = (e >= 0 && e < int(gridEntries.size()))
                                     ? &gridEntries[e] : nullptr;
@@ -366,7 +366,7 @@ namespace interstice
             return CanDropIntoFolder(payloadValue, dst);
         };
         gridDnD.visualizer = ghost;
-        gridDnD.onDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
+        gridDnD.onDrop = [](uintptr_t payloadValue, tachyon::ID targetID) {
             // A non-item target (the grid background) drops into the folder on view.
             const int targetEntry = FilesEntryIndex(GridItemIndex(targetID));
             const GridEntry* target = (targetEntry >= 0 && targetEntry < static_cast<int>(gridEntries.size()))
@@ -397,14 +397,14 @@ namespace interstice
         // zone on a row means "into this folder".
         folderDnD.payloadType    = kGridPayload;
         folderDnD.dropInsideOnly = true;
-        folderDnD.getPayload = [](interstice::ID rowID) -> uintptr_t {
-            if (rowID.GetMode() != interstice::IDMode::SubRange) return static_cast<uintptr_t>(-1);
+        folderDnD.getPayload = [](tachyon::ID rowID) -> uintptr_t {
+            if (rowID.GetMode() != tachyon::IDMode::SubRange) return static_cast<uintptr_t>(-1);
             const int visIdx = static_cast<int>(rowID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= static_cast<int>(folderVisibleIdx.size())) return static_cast<uintptr_t>(-1);
             return FolderPayload(folderVisibleIdx[visIdx]);
         };
-        folderDnD.canDrop = [](uintptr_t payloadValue, interstice::ID targetID) {
-            if (targetID.GetMode() != interstice::IDMode::SubRange) return false;
+        folderDnD.canDrop = [](uintptr_t payloadValue, tachyon::ID targetID) {
+            if (targetID.GetMode() != tachyon::IDMode::SubRange) return false;
             const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
             if (targetVis < 0 || targetVis >= static_cast<int>(folderVisibleIdx.size())) return false;
             const int dst = folderVisibleIdx[targetVis];
@@ -413,8 +413,8 @@ namespace interstice
             return CanDropIntoFolder(payloadValue, dst);
         };
         folderDnD.visualizer = ghost;
-        folderDnD.onReorder = [](uintptr_t srcPayload, interstice::ID targetID, TreeDropPosition) {
-            if (targetID.GetMode() != interstice::IDMode::SubRange) return;
+        folderDnD.onReorder = [](uintptr_t srcPayload, tachyon::ID targetID, TreeDropPosition) {
+            if (targetID.GetMode() != tachyon::IDMode::SubRange) return;
             const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
             if (targetVis < 0 || targetVis >= static_cast<int>(folderVisibleIdx.size())) return;
             const int dst = folderVisibleIdx[targetVis];
@@ -474,7 +474,7 @@ namespace interstice
         // grid's virtual content scrolls inside it instead of stretching the row.
         BeginHorizontal(idManager.AllocateDynamicID("filesSplit"),
                         theme.flexFillRowStyleRef,
-                        interstice::LayoutOverride::Auto().FlexGrow(1));
+                        tachyon::LayoutOverride::Auto().FlexGrow(1));
 
         if (searching)
         {
@@ -483,7 +483,7 @@ namespace interstice
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             filteredFolderRows, filteredFolderVisibleIdx, filteredFolderState,
                             theme.treeViewStyleRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
+                            tachyon::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
 
             const int selFiltered = SelectedFlat(filteredFolderState, filteredFolderVisibleIdx);
             const int selMaster   = (selFiltered >= 0 && selFiltered < int(filteredToMaster.size()))
@@ -505,7 +505,7 @@ namespace interstice
                 row.renameBuffer = &row.name;
             }
             if (guiStateManager.Drag().IsDragging()
-                && TreeDropTargetRow() != interstice::ID::Invalid())
+                && TreeDropTargetRow() != tachyon::ID::Invalid())
             {
                 for (size_t vi = 0; vi < folderVisibleIdx.size(); ++vi)
                     if (folderTreeState.RowIDForIndex(static_cast<int>(vi)) == TreeDropTargetRow())
@@ -518,7 +518,7 @@ namespace interstice
             VirtualTreeView(idManager.AllocateDynamicID("filesFolderTree"),
                             folderRows, folderVisibleIdx, folderTreeState,
                             theme.treeViewStyleRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
+                            tachyon::LayoutOverride::Auto().FixedWidth(CssPx(folderTreeWidth)).NoGrow());
 
             const int selFlat = SelectedFlat(folderTreeState, folderVisibleIdx);
             if (selFlat >= 0 && selFlat != currentFolder)
@@ -528,7 +528,7 @@ namespace interstice
             }
             // First frame: highlight the initial folder (the sub-ID needs the
             // range the table just allocated).
-            else if (folderTreeState.selectedRowID == interstice::ID::Invalid())
+            else if (folderTreeState.selectedRowID == tachyon::ID::Invalid())
             {
                 for (size_t i = 0; i < folderVisibleIdx.size(); ++i)
                     if (folderVisibleIdx[i] == currentFolder)
@@ -542,14 +542,14 @@ namespace interstice
         // 4px draggable sizer reusing the dock-sizer style (same cursor and hit
         // region as the dock splitter).
         {
-            interstice::ID sizerID = idManager.AllocateDynamicID("filesSizer");
-            interstice::Element sizer{};
+            tachyon::ID sizerID = idManager.AllocateDynamicID("filesSizer");
+            tachyon::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
+            sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
                 guiStateManager, folderTreeWidth, 120, 480, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
+            auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -560,10 +560,10 @@ namespace interstice
         // MinHeight(0) bounds it to the split height so the grid scrolls.
         BeginVertical(idManager.AllocateDynamicID("filesGridPane"),
                       theme.flexFillColStyleRef,
-                      interstice::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
+                      tachyon::LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
 
         BeginHorizontal(idManager.AllocateDynamicID("filesToolbar"), filesToolbarStyleRef,
-                        interstice::LayoutOverride::Auto().NoShrink());
+                        tachyon::LayoutOverride::Auto().NoShrink());
         {
             // The open folder's path; a segment opens that folder.
             std::vector<std::string> path;
@@ -582,14 +582,14 @@ namespace interstice
             Breadcrumb(idManager.AllocateDynamicID("filesPath"), path,
                        [pathFolders](int segment) {
                            currentFolder = pathFolders[size_t(segment)];
-                           folderTreeState.selectedRowID = interstice::ID::Invalid();   // re-selected from currentFolder
+                           folderTreeState.selectedRowID = tachyon::ID::Invalid();   // re-selected from currentFolder
                            gridFilterDirty = true;
                        },
-                       interstice::LayoutOverride{}.FlexGrow(1));
+                       tachyon::LayoutOverride{}.FlexGrow(1));
 
             if (SearchField(idManager.AllocateDynamicID("filesSearch"), filesSearch, demo.findIcon,
                             TextEditBehavior::ContinuousUpdate,
-                            interstice::LayoutOverride{}.Width(150).NoGrow()))
+                            tachyon::LayoutOverride{}.Width(150).NoGrow()))
                 gridFilterDirty = true;
             Toggle(idManager.AllocateDynamicID("filesGridMode"), !filesListMode, demo.layoutGridIcon,
                    [](bool) { filesListMode = false; }, iconToggleStyleRef);
@@ -619,11 +619,11 @@ namespace interstice
 
         // Only the visible rows are built, so the count can run into the thousands.
         // List mode forces one column by making the cell wider than any viewport.
-        const interstice::int2 cellSize = listMode ? interstice::int2{ 1 << 20, rowH }
-                                            : interstice::int2{ cellW, cellH };
+        const tachyon::int2 cellSize = listMode ? tachyon::int2{ 1 << 20, rowH }
+                                            : tachyon::int2{ cellW, cellH };
         VirtualGridView(idManager.AllocateDynamicID("filesGrid"), gridScrollState,
                         static_cast<int>(gridVisible.size()), cellSize,
-                        [this, listMode, itemStyleFor, cellW, cellH, rowH](int i, interstice::ID itemID)
+                        [this, listMode, itemStyleFor, cellW, cellH, rowH](int i, tachyon::ID itemID)
                         {
                             const int e = FilesEntryIndex(i);
                             if (e < 0 || e >= int(gridEntries.size())) return;
@@ -653,7 +653,7 @@ namespace interstice
                             }
 
                             if (listMode)
-                                GridViewItem(itemID, { icon, name }, interstice::ElementState::None,
+                                GridViewItem(itemID, { icon, name }, tachyon::ElementState::None,
                                              renameBuffer,
                                              theme.gridViewListItemStyleRef,
                                              LayoutOverride{}.Height(Pixels{ rowH }).FlexGrow(1));
@@ -661,7 +661,7 @@ namespace interstice
                                 // Stretched width: the grid's columns split the
                                 // viewport evenly, so the cells fill each row
                                 // instead of leaving a gap on the right.
-                                GridViewItem(itemID, { icon, name }, interstice::ElementState::None,
+                                GridViewItem(itemID, { icon, name }, tachyon::ElementState::None,
                                              renameBuffer,
                                              itemStyleFor(icon),
                                              LayoutOverride{}.Size(

@@ -12,14 +12,14 @@
 namespace
 {
     // Create/update a VisualColorStyleIndex that renders a user Gradient horizontally.
-    void SetGradientPreviewStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
-                                 const interstice::Gradient& gradient)
+    void SetGradientPreviewStyle(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx,
+                                 const tachyon::Gradient& gradient)
     {
-        interstice::Gradient g = gradient;
-        g.type = interstice::GradientType::Linear;
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
-        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        tachyon::Gradient g = gradient;
+        g.type = tachyon::GradientType::Linear;
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(g, tachyon::ColorType::LinearGradient);
+        cs.SetTransformation(tachyon::float3(0, 1, 0), tachyon::float3(1, 0, 0)); // horizontal
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -27,7 +27,7 @@ namespace
 }
 
 
-namespace interstice
+namespace tachyon
 {
     // ---------------------------------------------------------------------------
     // Gradient slider: horizontal gradient bar + triangle indicator

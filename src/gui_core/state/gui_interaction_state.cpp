@@ -1,6 +1,6 @@
 #include <gui_core/state/gui_interaction_state.h>
 
-namespace interstice
+namespace tachyon
 {
     void InteractionState::EndFrame(ID overID, MouseButtons mouseButtons)
     {

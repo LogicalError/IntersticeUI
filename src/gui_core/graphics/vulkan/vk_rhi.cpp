@@ -17,17 +17,17 @@
 #include <string>
 #include <vector>
 
-static constexpr interstice::Diagnostics::LogCategory kLogVulkan = interstice::Diagnostics::MakeLogCategory("vulkan");
+static constexpr tachyon::Diagnostics::LogCategory kLogVulkan = tachyon::Diagnostics::MakeLogCategory("vulkan");
 
-using namespace interstice::vulkan;
+using namespace tachyon::vulkan;
 
-bool GUIRenderContext::Create(interstice::vulkan::VulkanDeviceContext& deviceContext)
+bool GUIRenderContext::Create(tachyon::vulkan::VulkanDeviceContext& deviceContext)
 {
     VulkanRenderDevice device(deviceContext);
 
-    for (size_t k = 0; k < interstice::kPrimitiveKindCount; k++)
+    for (size_t k = 0; k < tachyon::kPrimitiveKindCount; k++)
     {
-        pipelines[k] = device.CreatePrimitivePipeline(interstice::kPrimitiveSpecs[k]);
+        pipelines[k] = device.CreatePrimitivePipeline(tachyon::kPrimitiveSpecs[k]);
         if (!pipelines[k].IsValid())
         {
             for (size_t j = 0; j < k; j++)
@@ -66,26 +66,26 @@ static std::vector<uint32_t> ReadSpirvFile(const std::string& filePath)
     return words;
 }
 
-static VkShaderModule LoadShader(const interstice::vulkan::VulkanDeviceContext& dc, const std::string& filePath)
+static VkShaderModule LoadShader(const tachyon::vulkan::VulkanDeviceContext& dc, const std::string& filePath)
 {
     std::vector<uint32_t> words = ReadSpirvFile(filePath);
     return words.empty() ? nullptr : dc.CreateShader(words);
 }
 
-interstice::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const interstice::PrimitiveSpec& spec)
+tachyon::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const tachyon::PrimitiveSpec& spec)
 {
     const std::string base = (std::filesystem::path(dc.shaderDirectory) / spec.shaderBaseName).string();
 
     VkShaderModule frag = LoadShader(dc, base + ".frag.spv");
     if (frag == nullptr)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "Error when building the {} fragment shader module", spec.shaderBaseName);
+        TACHYON_LOG_ERROR(kLogVulkan, "Error when building the {} fragment shader module", spec.shaderBaseName);
         return {};
     }
     VkShaderModule vert = LoadShader(dc, base + ".vert.spv");
     if (vert == nullptr)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "Error when building the {} vertex shader module", spec.shaderBaseName);
+        TACHYON_LOG_ERROR(kLogVulkan, "Error when building the {} vertex shader module", spec.shaderBaseName);
         vkDestroyShaderModule(dc.device, frag, dc.AllocationCallbacks());
         return {};
     }
@@ -94,15 +94,15 @@ interstice::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const i
     {
         VkPushConstantRange bufferRange{};
         bufferRange.offset = 0;
-        bufferRange.size = sizeof(interstice::GPUDrawPushConstants);
+        bufferRange.size = sizeof(tachyon::GPUDrawPushConstants);
         bufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        VkPipelineLayoutCreateInfo layoutInfo = interstice::vulkan::pipeline_layout_create_info();
+        VkPipelineLayoutCreateInfo layoutInfo = tachyon::vulkan::pipeline_layout_create_info();
         layoutInfo.pSetLayouts = &dc.singleImageDescriptorLayout;
         layoutInfo.setLayoutCount = 1;
         layoutInfo.pPushConstantRanges = &bufferRange;
         layoutInfo.pushConstantRangeCount = 1;
-        INTERSTICE_VK_CHECK(vkCreatePipelineLayout(dc.device, &layoutInfo, dc.AllocationCallbacks(), &sharedGuiLayout));
+        TACHYON_VK_CHECK(vkCreatePipelineLayout(dc.device, &layoutInfo, dc.AllocationCallbacks(), &sharedGuiLayout));
     }
 
     // The fixed GUI pipeline state, identical for every primitive kind.
@@ -115,8 +115,8 @@ interstice::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const i
     builder.set_multisampling_none();
     builder.enable_blending_premultipliedalphablend();
     builder.enable_depthtest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
-    builder.set_color_attachment_format(interstice::vulkan::drawImageFormat);
-    builder.set_depth_format(interstice::vulkan::depthImageFormat);
+    builder.set_color_attachment_format(tachyon::vulkan::drawImageFormat);
+    builder.set_depth_format(tachyon::vulkan::depthImageFormat);
 
     VkPipeline pipeline = builder.build_pipeline(dc.device, dc.AllocationCallbacks());
 
@@ -135,8 +135,8 @@ void VulkanRenderDevice::DestroySharedLayout()
     }
 }
 
-void VulkanRenderCommandList::DrawPrimitives(const interstice::RHI::GpuPipeline& pipeline,
-                                             const interstice::GPUDrawPushConstants& pushConstants,
+void VulkanRenderCommandList::DrawPrimitives(const tachyon::RHI::GpuPipeline& pipeline,
+                                             const tachyon::GPUDrawPushConstants& pushConstants,
                                              uint32_t primitiveCount, uint32_t firstPrimitive)
 {
     const auto vkPipeline = reinterpret_cast<VkPipeline>(pipeline.pipeline);
@@ -145,17 +145,17 @@ void VulkanRenderCommandList::DrawPrimitives(const interstice::RHI::GpuPipeline&
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vkLayout, 0, 1, &imageSet, 0, nullptr);
     vkCmdPushConstants(cmd, vkLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                       0, sizeof(interstice::GPUDrawPushConstants), &pushConstants);
+                       0, sizeof(tachyon::GPUDrawPushConstants), &pushConstants);
     // The GUI shaders expand each primitive to 6 vertices.
     vkCmdDraw(cmd, primitiveCount * 6, 1, firstPrimitive * 6, 0);
 }
 
 void VulkanRenderCommandList::UploadTransientBuffers(
-    std::span<const interstice::RHI::UploadRequest> requests,
-    std::span<interstice::DeviceAddress> addresses)
+    std::span<const tachyon::RHI::UploadRequest> requests,
+    std::span<tachyon::DeviceAddress> addresses)
 {
     assert(requests.size() == addresses.size());
-    std::fill(addresses.begin(), addresses.end(), interstice::DeviceAddress{ 0 });
+    std::fill(addresses.begin(), addresses.end(), tachyon::DeviceAddress{ 0 });
 
     auto calculateEnd = [&](size_t start) -> size_t
     {

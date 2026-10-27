@@ -10,7 +10,7 @@
 
 using ::testing::Return;
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -106,7 +106,7 @@ namespace interstice
     // its own or the library's, by name.
     TEST(ThemeTest, StyleFilesAddClassesFoundByName)
     {
-        const auto extra = std::filesystem::temp_directory_path() / "interstice_theme_test.css";
+        const auto extra = std::filesystem::temp_directory_path() / "tachyon_theme_test.css";
         {
             std::ofstream out(extra);
             out << ".app-panel { padding: 7px; }" << std::endl;

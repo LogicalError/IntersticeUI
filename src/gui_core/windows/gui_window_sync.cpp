@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

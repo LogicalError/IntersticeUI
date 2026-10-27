@@ -10,7 +10,7 @@
 #include <gui_controls/gui_dock_node.h>
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -20,9 +20,9 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::DockingLayout layout;
-            interstice::ID containerID{};
-            interstice::ID panelA{}, panelB{}, panelC{};
+            tachyon::DockingLayout layout;
+            tachyon::ID containerID{};
+            tachyon::ID panelA{}, panelB{}, panelC{};
             int drawsA = 0, drawsB = 0, drawsC = 0;
             int enables[3] = {}, disables[3] = {};
 
@@ -52,7 +52,7 @@ namespace interstice
             {
                 app.BeginRootWindow();
                 app.BeginDockingContainer(containerID, &layout,
-                                          interstice::LayoutOverride{}.Size(800, 600));
+                                          tachyon::LayoutOverride{}.Size(800, 600));
                 app.EndDockingContainer();
                 app.EndRootWindow();
             }
@@ -60,7 +60,7 @@ namespace interstice
             void Frame() { app.Frame([&] { EmitDock(); }); }
 
             // The content element of a leaf, as registered during construction.
-            interstice::IntRect ContentRect(const DockNode* leaf) const
+            tachyon::IntRect ContentRect(const DockNode* leaf) const
             {
                 return app.GetElementRect(leaf->lastContentID);
             }
@@ -123,14 +123,14 @@ namespace interstice
 
             // The 4px sizer sits in the gap between the panes; grab its middle.
             const int sizerX = (a0.x + a0.w + b0.x) / 2;
-            const interstice::int2 from{ sizerX, a0.y + a0.h / 2 };
-            const interstice::int2 to  { sizerX + 80, from.y };
+            const tachyon::int2 from{ sizerX, a0.y + a0.h / 2 };
+            const tachyon::int2 to  { sizerX + 80, from.y };
             const int before = layout.root->splitSize.value;
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
             Frame();
-            app.InjectMouseMove(to, interstice::MouseButtons::Left);
+            app.InjectMouseMove(to, tachyon::MouseButtons::Left);
             Frame();
             app.InjectMouseUp(to);
             Frame();
@@ -152,12 +152,12 @@ namespace interstice
             const auto a0 = ContentRect(layout.root->first.get());
             const auto b0 = ContentRect(layout.root->second.get());
             const int sizerX = (a0.x + a0.w + b0.x) / 2;
-            const interstice::int2 from{ sizerX, a0.y + a0.h / 2 };
-            const interstice::int2 to  { sizerX + 80, from.y };
+            const tachyon::int2 from{ sizerX, a0.y + a0.h / 2 };
+            const tachyon::int2 to  { sizerX + 80, from.y };
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
             Frame();
-            app.InjectMouseMove(to, interstice::MouseButtons::Left);
+            app.InjectMouseMove(to, tachyon::MouseButtons::Left);
             Frame();
             app.InjectMouseUp(to);
             Frame();

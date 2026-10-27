@@ -7,7 +7,7 @@
 #include <gui_core/elements/gui_element_data_store.h>
 #include <gui_core/diagnostics/gui_logging.h>
 
-namespace interstice
+namespace tachyon
 {
     [[nodiscard]] AddResult ElementStorage::Add(Element &&element, LayoutOverride&& constraints)
     {
@@ -548,4 +548,4 @@ namespace interstice
         return it == m_idIndex.end() ? ElementRef::Invalid() : it->second;
     }
 
-}//namespace interstice
+}//namespace tachyon

@@ -20,7 +20,7 @@
 
 #include <gui_core/gui_hash.h>
 
-namespace interstice::Diagnostics
+namespace tachyon::Diagnostics
 {
     enum class LogSeverity : uint8_t { Trace = 0, Debug, Info, Warning, Error, Critical };
 
@@ -142,7 +142,7 @@ namespace interstice::Diagnostics
     /// Unregisters a sink added with the same `sink` and `context`. [MainThread]
     void RemoveLogSink(LogSinkFn sink, void* context);
 
-    /// Emits one record. Prefer the INTERSTICE_LOG_* macros, which add the source location. [AnyThread]
+    /// Emits one record. Prefer the TACHYON_LOG_* macros, which add the source location. [AnyThread]
     void LogMessage(LogCategory category, LogSeverity severity, std::string_view messageTemplate,
                     std::span<const LogArg> args, const char* file = "", uint32_t line = 0);
 
@@ -162,7 +162,7 @@ namespace interstice::Diagnostics
     uint32_t CopyRecentLogRecords(std::span<LogRecord> out);
 
     /// Emits a record with `args` (at most kMaxLogArgs) for the {} in `messageTemplate`; what
-    /// the INTERSTICE_LOG_* macros call. [AnyThread]
+    /// the TACHYON_LOG_* macros call. [AnyThread]
     template<typename... Args>
     void Log(LogCategory category, LogSeverity severity, const char* file, uint32_t line,
              std::string_view messageTemplate, const Args&... args)
@@ -175,9 +175,9 @@ namespace interstice::Diagnostics
     }
 }
 
-#define INTERSTICE_LOG_TRACE(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Trace,    __FILE__, __LINE__, __VA_ARGS__)
-#define INTERSTICE_LOG_DEBUG(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Debug,    __FILE__, __LINE__, __VA_ARGS__)
-#define INTERSTICE_LOG_INFO(category, ...)     ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Info,     __FILE__, __LINE__, __VA_ARGS__)
-#define INTERSTICE_LOG_WARNING(category, ...)  ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Warning,  __FILE__, __LINE__, __VA_ARGS__)
-#define INTERSTICE_LOG_ERROR(category, ...)    ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Error,    __FILE__, __LINE__, __VA_ARGS__)
-#define INTERSTICE_LOG_CRITICAL(category, ...) ::interstice::Diagnostics::Log(category, ::interstice::Diagnostics::LogSeverity::Critical, __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_TRACE(category, ...)    ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Trace,    __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_DEBUG(category, ...)    ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Debug,    __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_INFO(category, ...)     ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Info,     __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_WARNING(category, ...)  ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Warning,  __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_ERROR(category, ...)    ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Error,    __FILE__, __LINE__, __VA_ARGS__)
+#define TACHYON_LOG_CRITICAL(category, ...) ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Critical, __FILE__, __LINE__, __VA_ARGS__)

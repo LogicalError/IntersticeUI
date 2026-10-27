@@ -1,14 +1,14 @@
 @PACKAGE_INIT@
 
-# IntersticeUI: C++ GUI library (gui_core, gui_controls).
+# TachyonUI: C++ GUI library (gui_core, gui_controls).
 #
-#   find_package(IntersticeUI 0.1 CONFIG REQUIRED)
-#   target_link_libraries(my_app PRIVATE IntersticeUI::gui_controls)
+#   find_package(TachyonUI 0.1 CONFIG REQUIRED)
+#   target_link_libraries(my_app PRIVATE TachyonUI::gui_controls)
 #
 # Provides:
-#   IntersticeUI::gui_core, IntersticeUI::gui_controls   static libraries
-#   IntersticeUI_RESOURCE_DIR                            themes, fonts, icons, compiled shaders
-#   INTERSTICE_RESOURCE_DIR (compile definition)         the same folder, for
+#   TachyonUI::gui_core, TachyonUI::gui_controls   static libraries
+#   TachyonUI_RESOURCE_DIR                            themes, fonts, icons, compiled shaders
+#   TACHYON_RESOURCE_DIR (compile definition)         the same folder, for
 #                                                        GUIApplication::SetResourceRoot
 #
 # The package is built with MSVC for Windows x64 and links the same toolchain
@@ -21,7 +21,7 @@ include(CMakeFindDependencyMacro)
 # The install prefix doubles as the prefix of the bundled third-party libraries.
 list(PREPEND CMAKE_PREFIX_PATH "${PACKAGE_PREFIX_DIR}")
 find_dependency(Vulkan)
-if(@INTERSTICE_SDL@)
+if(@TACHYON_SDL@)
   find_dependency(SDL3 CONFIG)
 endif()
 # harfbuzz links Threads::Threads where it uses pthreads, without finding it.
@@ -31,7 +31,7 @@ find_dependency(SheenBidi CONFIG)
 find_dependency(libunibreak CONFIG)
 find_dependency(budouxc CONFIG)
 find_dependency(skribidi CONFIG)
-if(@INTERSTICE_SYSTEM_VMA@)
+if(@TACHYON_SYSTEM_VMA@)
   find_dependency(VulkanMemoryAllocator CONFIG)
 else()
   find_dependency(vma CONFIG)
@@ -44,12 +44,12 @@ if(TARGET skribidi::skribidi AND NOT TARGET skribidi)
   add_library(skribidi ALIAS skribidi::skribidi)
 endif()
 
-if(NOT TARGET IntersticeUI::gui_core)
-  include("${CMAKE_CURRENT_LIST_DIR}/IntersticeUITargets.cmake")
+if(NOT TARGET TachyonUI::gui_core)
+  include("${CMAKE_CURRENT_LIST_DIR}/TachyonUITargets.cmake")
 endif()
 
-set_and_check(IntersticeUI_RESOURCE_DIR "@PACKAGE_INTERSTICE_RESOURCE_INSTALL_DIR@")
-set_property(TARGET IntersticeUI::gui_controls APPEND PROPERTY
-  INTERFACE_COMPILE_DEFINITIONS "INTERSTICE_RESOURCE_DIR=\"${IntersticeUI_RESOURCE_DIR}\"")
+set_and_check(TachyonUI_RESOURCE_DIR "@PACKAGE_TACHYON_RESOURCE_INSTALL_DIR@")
+set_property(TARGET TachyonUI::gui_controls APPEND PROPERTY
+  INTERFACE_COMPILE_DEFINITIONS "TACHYON_RESOURCE_DIR=\"${TachyonUI_RESOURCE_DIR}\"")
 
-check_required_components(IntersticeUI)
+check_required_components(TachyonUI)

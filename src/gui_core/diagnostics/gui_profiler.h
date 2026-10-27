@@ -3,7 +3,7 @@
 // Hierarchical CPU timing: scoped zones accumulated into a per-frame tree, keyed by
 // the hash of their call path (parent path + name) so nodes are stable across frames.
 //
-// Hot path: each INTERSTICE_PROFILE_SCOPE site caches its node index, and timestamps are raw
+// Hot path: each TACHYON_PROFILE_SCOPE site caches its node index, and timestamps are raw
 // ticks (rdtsc on x86) converted to ms only at frame end.
 //
 // See engine design doc 28 (Diagnostics).
@@ -14,9 +14,9 @@
 #include <gui_core/gui_base_types.h>   // SteadyClockNowNanos
 #include <gui_core/gui_hash.h>         // Hash::CalculateConst / Combine
 
-namespace interstice::Diagnostics
+namespace tachyon::Diagnostics
 {
-    /// Collects scope timings for one thread; opaque. The INTERSTICE_PROFILE_* macros use
+    /// Collects scope timings for one thread; opaque. The TACHYON_PROFILE_* macros use
     /// MainThreadCollector.
     class ProfilerCollector;
 
@@ -34,7 +34,7 @@ namespace interstice::Diagnostics
     /// Discards all nodes and history; cached scope sites re-resolve.
     void Reset(ProfilerCollector& collector);
 
-    /// Per-call-site descriptor, `static` at each INTERSTICE_PROFILE_SCOPE site. The cached* fields
+    /// Per-call-site descriptor, `static` at each TACHYON_PROFILE_SCOPE site. The cached* fields
     /// skip the node lookup when hit from the same call path; Reset invalidates them.
     /// Single-threaded.
     struct ScopeLocation
@@ -104,51 +104,51 @@ namespace interstice::Diagnostics
     double LastFrameTotalMs(const ProfilerCollector& collector);
 }
 
-// Define INTERSTICE_PROFILE_ENABLED=0 to compile every macro out.
-#ifndef INTERSTICE_PROFILE_ENABLED
-#  define INTERSTICE_PROFILE_ENABLED 1
+// Define TACHYON_PROFILE_ENABLED=0 to compile every macro out.
+#ifndef TACHYON_PROFILE_ENABLED
+#  define TACHYON_PROFILE_ENABLED 1
 #endif
 
-#if INTERSTICE_PROFILE_ENABLED
-#  define INTERSTICE_PROFILE_CONCAT2(a, b) a##b
-#  define INTERSTICE_PROFILE_CONCAT(a, b)  INTERSTICE_PROFILE_CONCAT2(a, b)
+#if TACHYON_PROFILE_ENABLED
+#  define TACHYON_PROFILE_CONCAT2(a, b) a##b
+#  define TACHYON_PROFILE_CONCAT(a, b)  TACHYON_PROFILE_CONCAT2(a, b)
 
    // name must be a string literal so the hash folds at compile time.
-#  define INTERSTICE_PROFILE_SCOPE(name)                                                                           \
-       static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
-           { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                      \
-       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::interstice::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
+#  define TACHYON_PROFILE_SCOPE(name)                                                                           \
+       static ::tachyon::Diagnostics::ScopeLocation TACHYON_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
+           { ::tachyon::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                      \
+       ::tachyon::Diagnostics::ScopedTimer TACHYON_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::tachyon::Diagnostics::MainThreadCollector(), TACHYON_PROFILE_CONCAT(s_profLoc_, __LINE__))
 
-#  define INTERSTICE_PROFILE_SCOPE_WAIT(name)                                                                      \
-       static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
-           { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, true };                       \
-       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::interstice::Diagnostics::MainThreadCollector(), INTERSTICE_PROFILE_CONCAT(s_profLoc_, __LINE__))
+#  define TACHYON_PROFILE_SCOPE_WAIT(name)                                                                      \
+       static ::tachyon::Diagnostics::ScopeLocation TACHYON_PROFILE_CONCAT(s_profLoc_, __LINE__)             \
+           { ::tachyon::Hash::CalculateConst(name), name, __FILE__, __LINE__, true };                       \
+       ::tachyon::Diagnostics::ScopedTimer TACHYON_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::tachyon::Diagnostics::MainThreadCollector(), TACHYON_PROFILE_CONCAT(s_profLoc_, __LINE__))
 
    // Times a scope from a caller-owned ScopeLocation (e.g. an entry of a per-stage table).
-#  define INTERSTICE_PROFILE_SCOPE_REF(locationLValue)                                                             \
-       ::interstice::Diagnostics::ScopedTimer INTERSTICE_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
-           ::interstice::Diagnostics::MainThreadCollector(), (locationLValue))
+#  define TACHYON_PROFILE_SCOPE_REF(locationLValue)                                                             \
+       ::tachyon::Diagnostics::ScopedTimer TACHYON_PROFILE_CONCAT(profTimer_, __LINE__)(                     \
+           ::tachyon::Diagnostics::MainThreadCollector(), (locationLValue))
 
    // Root frame scope plus collector frame boundaries; wrap the whole loop iteration.
-#  define INTERSTICE_PROFILE_FRAME_BEGIN(name)                                                                     \
+#  define TACHYON_PROFILE_FRAME_BEGIN(name)                                                                     \
        do {                                                                                             \
-           static ::interstice::Diagnostics::ScopeLocation INTERSTICE_PROFILE_CONCAT(s_frameLoc_, __LINE__)        \
-               { ::interstice::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                  \
-           ::interstice::Diagnostics::BeginFrame(::interstice::Diagnostics::MainThreadCollector());                   \
-           ::interstice::Diagnostics::EnterScope(::interstice::Diagnostics::MainThreadCollector(),                    \
-               INTERSTICE_PROFILE_CONCAT(s_frameLoc_, __LINE__));                                           \
+           static ::tachyon::Diagnostics::ScopeLocation TACHYON_PROFILE_CONCAT(s_frameLoc_, __LINE__)        \
+               { ::tachyon::Hash::CalculateConst(name), name, __FILE__, __LINE__, false };                  \
+           ::tachyon::Diagnostics::BeginFrame(::tachyon::Diagnostics::MainThreadCollector());                   \
+           ::tachyon::Diagnostics::EnterScope(::tachyon::Diagnostics::MainThreadCollector(),                    \
+               TACHYON_PROFILE_CONCAT(s_frameLoc_, __LINE__));                                           \
        } while (0)
-#  define INTERSTICE_PROFILE_FRAME_END()                                                                           \
+#  define TACHYON_PROFILE_FRAME_END()                                                                           \
        do {                                                                                             \
-           ::interstice::Diagnostics::ExitScope(::interstice::Diagnostics::MainThreadCollector());                    \
-           ::interstice::Diagnostics::EndFrame(::interstice::Diagnostics::MainThreadCollector());                     \
+           ::tachyon::Diagnostics::ExitScope(::tachyon::Diagnostics::MainThreadCollector());                    \
+           ::tachyon::Diagnostics::EndFrame(::tachyon::Diagnostics::MainThreadCollector());                     \
        } while (0)
 #else
-#  define INTERSTICE_PROFILE_SCOPE(name)              ((void)0)
-#  define INTERSTICE_PROFILE_SCOPE_WAIT(name)         ((void)0)
-#  define INTERSTICE_PROFILE_SCOPE_REF(locationLValue) ((void)0)
-#  define INTERSTICE_PROFILE_FRAME_BEGIN(name)        ((void)0)
-#  define INTERSTICE_PROFILE_FRAME_END()              ((void)0)
+#  define TACHYON_PROFILE_SCOPE(name)              ((void)0)
+#  define TACHYON_PROFILE_SCOPE_WAIT(name)         ((void)0)
+#  define TACHYON_PROFILE_SCOPE_REF(locationLValue) ((void)0)
+#  define TACHYON_PROFILE_FRAME_BEGIN(name)        ((void)0)
+#  define TACHYON_PROFILE_FRAME_END()              ((void)0)
 #endif

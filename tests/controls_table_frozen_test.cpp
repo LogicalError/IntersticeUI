@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -29,7 +29,7 @@ namespace interstice
             //   [#] | [Name] [Hex] [Multiple] | [Status]
             //   sec 0      sec 1                sec 2
             // The middle section (~308 wide) overflows its 240px area.
-            interstice::VirtualTableColumn kColumns[5] = {
+            tachyon::VirtualTableColumn kColumns[5] = {
                 { .column = { .header = "#",        .initialWidth =  60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 0 },
                 { .column = { .header = "Name",     .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                  .sectionId = 1 },
                 { .column = { .header = "Hex",      .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                  .sectionId = 1 },
@@ -37,7 +37,7 @@ namespace interstice
                 { .column = { .header = "Status",   .initialWidth =  60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 2 },
             };
 
-            interstice::ID tableID{};
+            tachyon::ID tableID{};
 
             void SetUp() override
             {
@@ -53,7 +53,7 @@ namespace interstice
             // Render N rows of dummy data inside a container small enough that
             // both axes overflow. Width 400 is ~100 short of the columns'
             // intrinsic 480; height 200 with ~30 rows x 24px overflows Y.
-            void EmitFrozen(interstice::TableState& state, int rowCount = 30,
+            void EmitFrozen(tachyon::TableState& state, int rowCount = 30,
                             int width = 400, int height = 200)
             {
                 app.BeginRootWindow();
@@ -78,18 +78,18 @@ namespace interstice
 
             // Sizer ID for the boundary after global column `c` (pre-allocated by
             // BeginTable, so safe to read outside a frame).
-            interstice::ID SizerID(int c)
+            tachyon::ID SizerID(int c)
             {
-                if (c < 0 || c >= int(std::size(kColumns))) return interstice::ID::Invalid();
+                if (c < 0 || c >= int(std::size(kColumns))) return tachyon::ID::Invalid();
                 return kColumns[c].internal.sizerID;
             }
 
             // Read section[s]'s body scroll offset.
-            int2 SectionBodyScroll(const interstice::TableState& state, size_t s)
+            int2 SectionBodyScroll(const tachyon::TableState& state, size_t s)
             {
-                if (s >= size_t(interstice::TableState::kMaxTableSections)) return int2{0, 0};
-                const interstice::ID id = state.SectionBodyID(int(s));
-                if (id == interstice::ID::Invalid()) return int2{0, 0};
+                if (s >= size_t(tachyon::TableState::kMaxTableSections)) return int2{0, 0};
+                const tachyon::ID id = state.SectionBodyID(int(s));
+                if (id == tachyon::ID::Invalid()) return int2{0, 0};
                 auto& sm = app.guiStateManager.GetScrollManagement();
                 auto handle = sm.GetScrollOffsetHandle(id);
                 if (!sm.IsScrollOffsetHandleValid(handle)) return int2{0, 0};
@@ -103,7 +103,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, FrozenModeCreatesThreeBodySections)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             ASSERT_EQ(state.internal.sectionCount, 3);
@@ -128,7 +128,7 @@ namespace interstice
                 const uint32_t n = a.elementStorage.DepthSizeOf(d);
                 for (uint32_t i = 0; i < n; i++)
                 {
-                    interstice::ElementRef ref{ d, i };
+                    tachyon::ElementRef ref{ d, i };
                     if (a.elementStorage.IsValidRef(ref)
                         && a.elementStorage.GetElementUnsafe(ref).styleRef == sep)
                         count++;
@@ -144,14 +144,14 @@ namespace interstice
             // Reassign sectionIds so there are exactly two sections:
             //   [Name Hex Multiple] | [Status]   (cols 1..3 then col 4;
             // col 0 also lives in the leading section).
-            interstice::VirtualTableColumn cols[5] = {
+            tachyon::VirtualTableColumn cols[5] = {
                 { .column = { .header = "#",        .initialWidth =  60 }, .sectionId = 0 },
                 { .column = { .header = "Name",     .initialWidth = 100 }, .sectionId = 0 },
                 { .column = { .header = "Hex",      .initialWidth = 100 }, .sectionId = 0 },
                 { .column = { .header = "Multiple", .initialWidth = 100 }, .sectionId = 0 },
                 { .column = { .header = "Status",   .initialWidth =  60 }, .sectionId = 1 },
             };
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, cols, state, LayoutOverride{}.Size(400, 200)))
@@ -170,14 +170,14 @@ namespace interstice
         // Mirror: leading single-column section + everything else.
         TEST_F(FrozenTableTest, NoSeparatorWhenRightFrozenIsZero)
         {
-            interstice::VirtualTableColumn cols[5] = {
+            tachyon::VirtualTableColumn cols[5] = {
                 { .column = { .header = "#",        .initialWidth =  60 }, .sectionId = 0 },
                 { .column = { .header = "Name",     .initialWidth = 100 }, .sectionId = 0 },
                 { .column = { .header = "Hex",      .initialWidth = 100 }, .sectionId = 1 },
                 { .column = { .header = "Multiple", .initialWidth = 100 }, .sectionId = 1 },
                 { .column = { .header = "Status",   .initialWidth =  60 }, .sectionId = 1 },
             };
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, cols, state, LayoutOverride{}.Size(400, 200)))
@@ -196,7 +196,7 @@ namespace interstice
         // Three sections (default kColumns layout) - both boundaries non-empty.
         TEST_F(FrozenTableTest, BothSeparatorsEmittedWhenAllSectionsNonEmpty)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state, /*rowCount*/3); });
             EXPECT_EQ(CountSeparators(app), 2)
                 << "Two boundaries → 2 separators.";
@@ -209,7 +209,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, SizerIdsAreDeterministicPerColumn)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             // Section 1 (cols 1..3) has two interior boundaries, between
@@ -222,7 +222,7 @@ namespace interstice
         // header cell right edge - same invariant in every section.
         TEST_F(FrozenTableTest, SizerXAlignsWithHeaderCellRightEdge)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             // Boundaries between section-1 cols (1|2 and 2|3).
@@ -244,7 +244,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, VerticalWheelOverMiddleScrollsY)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             // Center of the middle section's body grid.
@@ -262,7 +262,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, VerticalWheelOverLeftFrozenScrollsY)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto leftRect = app.GetElementRect(state.SectionBodyID(0));
@@ -281,13 +281,13 @@ namespace interstice
         // when it is the one that changed.
         TEST_F(FrozenTableTest, VerticalWheelOverFirstOfTwoSectionsScrollsY)
         {
-            interstice::VirtualTableColumn cols[4] = {
+            tachyon::VirtualTableColumn cols[4] = {
                 { .column = { .header = "#",    .initialWidth =  60, .locked = true }, .sectionId = 0 },
                 { .column = { .header = "Name", .initialWidth = 100 },                 .sectionId = 1 },
                 { .column = { .header = "Hex",  .initialWidth = 100 },                 .sectionId = 1 },
                 { .column = { .header = "Val",  .initialWidth = 100 },                 .sectionId = 1 },
             };
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto emit = [&] {
                 app.BeginRootWindow();
                 if (app.BeginTable(tableID, cols, state, LayoutOverride{}.Size(400, 200)))
@@ -318,7 +318,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, VerticalWheelOverRightFrozenScrollsY)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto rightRect = app.GetElementRect(state.SectionBodyID(2));
@@ -335,7 +335,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, HorizontalWheelOverMiddleScrollsX)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto midRect = app.GetElementRect(state.SectionBodyID(1));
@@ -353,7 +353,7 @@ namespace interstice
         {
             // The wheel scrolls the leading section under the cursor, which fits its
             // content, so X clamps to 0 and must stay valid.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto leftRect = app.GetElementRect(state.SectionBodyID(0));
@@ -372,7 +372,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, VerticalScrollIsMirroredToFrozenSides)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto midRect = app.GetElementRect(state.SectionBodyID(1));
@@ -396,7 +396,7 @@ namespace interstice
         // body section scrolls on a horizontal wheel.
         TEST_F(FrozenTableTest, MiddleSectionScrollsHorizontally)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             const auto midRect = app.GetElementRect(state.SectionBodyID(1));
@@ -420,15 +420,15 @@ namespace interstice
         //   Frame N:   Move(from) + Down(from) - activeID := sizer
         //   Frame N+1: Move(to, Left held)     - handler updates width
         //   Frame N+2: Up(to)                  - drag teardown
-        static void DragSizer(HeadlessGUIApp& app, interstice::TableState& state,
-                              interstice::int2 from, interstice::int2 to,
+        static void DragSizer(HeadlessGUIApp& app, tachyon::TableState& state,
+                              tachyon::int2 from, tachyon::int2 to,
                               std::function<void()> emitFn)
         {
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
             app.Frame(emitFn);
 
-            app.InjectMouseMove(to, interstice::MouseButtons::Left);
+            app.InjectMouseMove(to, tachyon::MouseButtons::Left);
             app.Frame(emitFn);
 
             app.InjectMouseUp(to);
@@ -438,10 +438,10 @@ namespace interstice
 
         TEST_F(FrozenTableTest, SizerDragFromHeaderResizesColumn)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
-            const interstice::ID sizerID = SizerID(1);
+            const tachyon::ID sizerID = SizerID(1);
             ASSERT_TRUE(app.HasElement(sizerID));
 
             // Header cells are sticky-pinned at the top of the section body
@@ -460,11 +460,11 @@ namespace interstice
 
         TEST_F(FrozenTableTest, SizerDragFromBodyResizesColumn)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             // Same ID as the header copy; a body-level Y hits the body copy.
-            const interstice::ID sizerID = SizerID(2);  // Hex|Multiple boundary
+            const tachyon::ID sizerID = SizerID(2);  // Hex|Multiple boundary
             ASSERT_TRUE(app.HasElement(sizerID));
 
             const int beforeWidth = state.columnWidths[2];
@@ -482,7 +482,7 @@ namespace interstice
         // scrolls vertically, so it remains clickable.
         TEST_F(FrozenTableTest, SizerStaysHittableAfterVerticalScroll)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             app.Frame([&] { EmitFrozen(state); });
 
             // Scroll ~half the content height directly, independent of wheel geometry.
@@ -493,7 +493,7 @@ namespace interstice
             app.Frame([&] { EmitFrozen(state); });
 
             // Had the sizer scrolled with the body, this click would land on a cell.
-            const interstice::ID sizerID = SizerID(1);
+            const tachyon::ID sizerID = SizerID(1);
             ASSERT_TRUE(app.HasElement(sizerID));
             const int beforeWidth = state.columnWidths[1];
             const auto sizerRect = app.GetElementRect(sizerID);
@@ -522,14 +522,14 @@ namespace interstice
             // 3 sections: [L0 L1] | [M0 M1] | [R0]. Boundary 0 (between
             // cols 0 and 1) lives ENTIRELY inside the leading section
             // and should be a draggable sizer.
-            interstice::VirtualTableColumn cols[5] = {
+            tachyon::VirtualTableColumn cols[5] = {
                 { .column = { .header = "L0", .initialWidth = 60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 0 },
                 { .column = { .header = "L1", .initialWidth = 60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 0 },
                 { .column = { .header = "M0", .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                 .sectionId = 1 },
                 { .column = { .header = "M1", .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                 .sectionId = 1 },
                 { .column = { .header = "R0", .initialWidth = 60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 2 },
             };
-            interstice::TableState state{};
+            tachyon::TableState state{};
 
             auto emit = [&] {
                 app.BeginRootWindow();
@@ -552,7 +552,7 @@ namespace interstice
             app.Frame(emit);
 
             // The sizer between L0 and L1 should be present.
-            const interstice::ID sizerID = cols[0].internal.sizerID;
+            const tachyon::ID sizerID = cols[0].internal.sizerID;
             ASSERT_TRUE(app.HasElement(sizerID));
 
             const int beforeWidth = state.columnWidths[0];
@@ -571,15 +571,15 @@ namespace interstice
         {
             // 3 sections where the leading [L0 L1] section's L0 is Stretch, so the
             // L0|L1 boundary is a 1px separator, not a sizer.
-            interstice::VirtualTableColumn cols[5] = {
+            tachyon::VirtualTableColumn cols[5] = {
                 { .column = { .header = "L0", .initialWidth = 60, .minWidth = 30, .maxWidth = 200,
-                              .locked = true, .sizing = interstice::ColumnSizing::Stretch }, .sectionId = 0 },
+                              .locked = true, .sizing = tachyon::ColumnSizing::Stretch }, .sectionId = 0 },
                 { .column = { .header = "L1", .initialWidth = 60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 0 },
                 { .column = { .header = "M0", .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                 .sectionId = 1 },
                 { .column = { .header = "M1", .initialWidth = 100, .minWidth = 30, .maxWidth = 400 },                 .sectionId = 1 },
                 { .column = { .header = "R0", .initialWidth = 60, .minWidth = 30, .maxWidth = 200, .locked = true }, .sectionId = 2 },
             };
-            interstice::TableState state{};
+            tachyon::TableState state{};
 
             app.Frame([&] {
                 app.BeginRootWindow();
@@ -606,7 +606,7 @@ namespace interstice
         // stop at the corner, so neither bar nor thumb extends into it.
         TEST_F(FrozenTableTest, BothScrollbarsEndAtCornerWithoutOverlap)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Run an unprimed frame so the section bodies get laid out.
             app.Frame([&] { EmitFrozen(state); });
             // Headless skips render, so feed the rightmost section's real size into
@@ -642,7 +642,7 @@ namespace interstice
         // emitted at the bottom-right (rightmost section).
         TEST_F(FrozenTableTest, ScrollbarCornerMaskExistsWhenBothScrollbarsVisible)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Headless skips render, so force both overflow flags.
             auto build = [&] {
                 state.internal.anyHorzOverflow = state.internal.anyVertOverflow = true;
@@ -674,7 +674,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, VerticalScrollbarDragWritesYOffset)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Headless skips render: set _lastViewport{W,H} and the overflow flags each
             // build (the prologue resets them).
             auto build = [&] {
@@ -706,7 +706,7 @@ namespace interstice
 
         TEST_F(FrozenTableTest, HorizontalScrollbarDragWritesXOffset)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto build = [&] {
                 state.internal.lastViewportW = 200;
                 state.internal.lastViewportH = 150;
@@ -734,9 +734,9 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -752,8 +752,8 @@ namespace interstice
             static constexpr bool kTableFillsPanel     = true;
 
             GUITest::HeadlessGUIApp app;
-            interstice::TableState state{};
-            std::vector<interstice::VirtualTableColumn> cols;
+            tachyon::TableState state{};
+            std::vector<tachyon::VirtualTableColumn> cols;
             static constexpr int kPaneW = 530, kPaneH = 400;
             static constexpr int kRows  = 50;   // taller than the panel, within 16-bit layout coordinates
 
@@ -780,8 +780,8 @@ namespace interstice
                     app.BeginRootWindow();
                     app.BeginArea(app.idManager.AllocateDynamicID("pane"), app.theme.emptyVertStyleRef,
                                   LayoutOverride{}.Size(kPaneW, kPaneH));
-                    std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
-                    const interstice::ID tableID = app.idManager.AllocateDynamicID("multiSectionTable");
+                    std::span<tachyon::VirtualTableColumn> sp(cols.data(), cols.size());
+                    const tachyon::ID tableID = app.idManager.AllocateDynamicID("multiSectionTable");
                     if (kTableFillsPanel)
                     {
                         app.BeginHorizontal(app.idManager.AllocateDynamicID("splitScrollFill"),
@@ -805,17 +805,17 @@ namespace interstice
 
             void Settle() { for (int i = 0; i < 4; ++i) Frame(); }
 
-            interstice::IntRect Section(int s) const { return app.GetElementRect(state.SectionBodyID(s)); }
+            tachyon::IntRect Section(int s) const { return app.GetElementRect(state.SectionBodyID(s)); }
 
             // Horizontal scrollbar tracks whose left edge lies in section `s`.
-            std::vector<std::pair<interstice::ID, interstice::IntRect>> HorzTracksIn(int s) const
+            std::vector<std::pair<tachyon::ID, tachyon::IntRect>> HorzTracksIn(int s) const
             {
                 const auto sec = Section(s);
-                std::vector<std::pair<interstice::ID, interstice::IntRect>> out;
+                std::vector<std::pair<tachyon::ID, tachyon::IntRect>> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        interstice::ElementRef e{ d, i };
+                        tachyon::ElementRef e{ d, i };
                         if (!app.elementStorage.IsValidRef(e)) continue;
                         const auto& el = app.elementStorage.GetElementUnsafe(e);
                         if (el.styleRef != app.theme.scrollbarHorizontalTrackStyleRef) continue;

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     enum class ElementState : uint8_t;
     enum class VisualBoxStyleIndex : uint16_t;
@@ -63,4 +63,4 @@ namespace interstice
         bool m_enabled = true;
     };
 
-} // namespace interstice
+} // namespace tachyon

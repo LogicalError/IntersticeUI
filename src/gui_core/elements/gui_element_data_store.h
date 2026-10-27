@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace interstice
+namespace tachyon
 {
     /// Per-element typed state keyed by ID, kept across frames (drag start, double-click
     /// timing). Get, GetOrCreate and Touch keep an entry alive; EndFrame evicts the rest.

@@ -6,7 +6,7 @@
 #include <thread>
 #include <vector>
 
-namespace interstice::Diagnostics
+namespace tachyon::Diagnostics
 {
     namespace
     {
@@ -54,7 +54,7 @@ namespace interstice::Diagnostics
 
         TEST_F(LoggingTest, ArgumentsAreFormattedIntoTheTemplate)
         {
-            INTERSTICE_LOG_INFO(kTestCategory, "loaded {} items ({} skipped) in {} ms from {}", 12, 3u, 1.5, "disk");
+            TACHYON_LOG_INFO(kTestCategory, "loaded {} items ({} skipped) in {} ms from {}", 12, 3u, 1.5, "disk");
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], "loaded 12 items (3 skipped) in 1.5 ms from disk");
 
@@ -76,7 +76,7 @@ namespace interstice::Diagnostics
         {
             {
                 std::string path = "themes/styles.css";
-                INTERSTICE_LOG_ERROR(kTestCategory, "{}:{}: {}", path, 7, std::string("bad value"));
+                TACHYON_LOG_ERROR(kTestCategory, "{}:{}: {}", path, 7, std::string("bad value"));
                 path.assign(path.size(), 'x'); // the record must not view the caller's string
             }
             ASSERT_EQ(captured.records.size(), 1u);
@@ -88,14 +88,14 @@ namespace interstice::Diagnostics
         TEST_F(LoggingTest, OversizedTextIsTruncated)
         {
             const std::string longText(kLogTextCapacity * 2, 'a');
-            INTERSTICE_LOG_WARNING(kTestCategory, "[{}]", longText);
+            TACHYON_LOG_WARNING(kTestCategory, "[{}]", longText);
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], std::format("[{}]", std::string(kLogTextCapacity, 'a')));
         }
 
         TEST_F(LoggingTest, FormattingHandlesMissingArgumentsAndSmallBuffers)
         {
-            INTERSTICE_LOG_INFO(kTestCategory, "{} and {}", 1);
+            TACHYON_LOG_INFO(kTestCategory, "{} and {}", 1);
             ASSERT_EQ(captured.messages.size(), 1u);
             EXPECT_EQ(captured.messages[0], "1 and {}");
 
@@ -108,10 +108,10 @@ namespace interstice::Diagnostics
         {
             SetMinimumLogSeverity(LogSeverity::Warning);
             const uint64_t before = LatestLogSequence();
-            INTERSTICE_LOG_INFO(kTestCategory, "info");
-            INTERSTICE_LOG_DEBUG(kTestCategory, "debug");
-            INTERSTICE_LOG_WARNING(kTestCategory, "warning");
-            INTERSTICE_LOG_CRITICAL(kTestCategory, "critical");
+            TACHYON_LOG_INFO(kTestCategory, "info");
+            TACHYON_LOG_DEBUG(kTestCategory, "debug");
+            TACHYON_LOG_WARNING(kTestCategory, "warning");
+            TACHYON_LOG_CRITICAL(kTestCategory, "critical");
             ASSERT_EQ(captured.records.size(), 2u);
             EXPECT_EQ(captured.records[0].severity, LogSeverity::Warning);
             EXPECT_EQ(captured.records[1].severity, LogSeverity::Critical);
@@ -122,7 +122,7 @@ namespace interstice::Diagnostics
         {
             const uint64_t before = LatestLogSequence();
             for (int i = 0; i < kLogRingCapacity + 10; ++i)
-                INTERSTICE_LOG_INFO(kTestCategory, "record {}", i);
+                TACHYON_LOG_INFO(kTestCategory, "record {}", i);
             EXPECT_EQ(LatestLogSequence(), before + kLogRingCapacity + 10);
 
             std::vector<LogRecord> recent(kLogRingCapacity + 5);
@@ -143,9 +143,9 @@ namespace interstice::Diagnostics
             int count = 0;
             EXPECT_TRUE(AddLogSink(CountSink, &count));
             EXPECT_FALSE(AddLogSink(CountSink, &count)) << "the same sink twice is rejected";
-            INTERSTICE_LOG_INFO(kTestCategory, "one");
+            TACHYON_LOG_INFO(kTestCategory, "one");
             RemoveLogSink(CountSink, &count);
-            INTERSTICE_LOG_INFO(kTestCategory, "two");
+            TACHYON_LOG_INFO(kTestCategory, "two");
             EXPECT_EQ(count, 1);
             EXPECT_EQ(captured.records.size(), 2u);
         }
@@ -155,7 +155,7 @@ namespace interstice::Diagnostics
             int count = 0;
             ASSERT_TRUE(AddLogSink(CountSink, &count));
             constexpr int kPerThread = 500;
-            auto emit = [] { for (int i = 0; i < kPerThread; ++i) INTERSTICE_LOG_DEBUG(kTestCategory, "tick {}", i); };
+            auto emit = [] { for (int i = 0; i < kPerThread; ++i) TACHYON_LOG_DEBUG(kTestCategory, "tick {}", i); };
             std::thread a(emit), b(emit);
             a.join();
             b.join();

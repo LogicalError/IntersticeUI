@@ -5,14 +5,14 @@
 
 namespace
 {
-    constexpr interstice::Diagnostics::LogCategory kLogApp = interstice::Diagnostics::MakeLogCategory("app");
+    constexpr tachyon::Diagnostics::LogCategory kLogApp = tachyon::Diagnostics::MakeLogCategory("app");
 }
 
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/style/gui_style_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     ButtonGroupSubsystem::ButtonGroupSubsystem(FramePipeline& frame,
                                                ElementStorage& elementStorage,
@@ -32,9 +32,9 @@ namespace interstice
         }
     }
 
-    static void UpdateElementStyleRef(interstice::ElementStorage& storage,
-                                      interstice::StyleManager& styleManager,
-                                      interstice::ElementRef ref, interstice::StyleRef newStyleRef)
+    static void UpdateElementStyleRef(tachyon::ElementStorage& storage,
+                                      tachyon::StyleManager& styleManager,
+                                      tachyon::ElementRef ref, tachyon::StyleRef newStyleRef)
     {
         if (auto* el = storage.GetElementPtr(ref))
             el->styleRef = newStyleRef;
@@ -94,7 +94,7 @@ namespace interstice
         return &entry.state;
     }
 
-    interstice::StyleRef ButtonGroupSubsystem::NextItemStyleRef(ItemState& state)
+    tachyon::StyleRef ButtonGroupSubsystem::NextItemStyleRef(ItemState& state)
     {
         const int currentCount = state.itemCount;
         state.itemCount++;

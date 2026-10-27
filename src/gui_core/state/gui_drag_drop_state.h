@@ -8,14 +8,14 @@
 #include <functional>
 #include <stdint.h>
 
-namespace interstice
+namespace tachyon
 {
     struct InputState;
 
     /// What a DragVisualizer draws from: the pointer, the source and target, and the payload.
     struct DragVisualContext
     {
-        interstice::int2 screenPos{ 0, 0 };
+        tachyon::int2 screenPos{ 0, 0 };
         ID sourceID = ID::Invalid();
         ID targetID = ID::Invalid();
         bool isDropValid = false;

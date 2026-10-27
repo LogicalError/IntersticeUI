@@ -1,8 +1,8 @@
-# IntersticeUI documentation
+# TachyonUI documentation
 
-IntersticeUI is an immediate-mode GUI library for C++20 on Vulkan, with windows and
+TachyonUI is an immediate-mode GUI library for C++20 on Vulkan, with windows and
 input through SDL3 by default. These guides explain how it works and how to use it;
-the [README](https://github.com/LogicalError/IntersticeUI#readme) has the requirements, the build and a first program.
+the [README](https://github.com/LogicalError/TachyonUI#readme) has the requirements, the build and a first program.
 
 - [Overview](overview.md): the frame model, IDs, the Begin/End rules, results and
   errors, units, saving UI state.
@@ -16,12 +16,12 @@ the [README](https://github.com/LogicalError/IntersticeUI#readme) has the requir
 ## API reference
 
 The headers carry `///` comments, from which Doxygen builds a reference, published at
-https://logicalerror.github.io/IntersticeUI/ with each change on main. To build it locally, with Doxygen
-installed, configure the project and build the `interstice_docs` target:
+https://logicalerror.github.io/TachyonUI/ with each change on main. To build it locally, with Doxygen
+installed, configure the project and build the `tachyon_docs` target:
 
 ```text
 cmake -S . -B build
-cmake --build build --target interstice_docs
+cmake --build build --target tachyon_docs
 ```
 
 The reference is written to `build/docs/html/index.html`.

@@ -22,7 +22,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
     using GUITest::MisuseReports;
 

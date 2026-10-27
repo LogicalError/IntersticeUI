@@ -29,7 +29,7 @@
 #define SKB_CURRENT_SELECTION_END \
 	skb_text_position_t { .offset = INT32_MIN, .affinity = SKB_AFFINITY_NONE }
 
-namespace interstice
+namespace tachyon
 {
 	namespace
 	{
@@ -172,11 +172,11 @@ namespace interstice
 					const skb_image_t* image = skb_image_atlas_get_texture(m_skribidiContext->atlas, i);
 					assert(image);
 					auto textAtlasManager = m_skribidiContext->textAtlasManager;
-					auto textureIndex = (interstice::TextureIndex)skb_image_atlas_get_texture_user_data(m_skribidiContext->atlas, i);
-					if (textureIndex == interstice::TextureIndex::Invalid)
+					auto textureIndex = (tachyon::TextureIndex)skb_image_atlas_get_texture_user_data(m_skribidiContext->atlas, i);
+					if (textureIndex == tachyon::TextureIndex::Invalid)
 					{
 						textureIndex = textAtlasManager->CreateTexture(image->buffer, uint2 { uint32_t(image->width), uint32_t(image->height) }, image->bpp);
-						assert(textureIndex != interstice::TextureIndex::Invalid);
+						assert(textureIndex != tachyon::TextureIndex::Invalid);
 						skb_image_atlas_set_texture_user_data(m_skribidiContext->atlas, i, (uint32_t)textureIndex);
 					} else
 					{
@@ -220,7 +220,7 @@ namespace interstice
 				if (handles[i] == existing)
 				{
 					if (m_skribidiContext->iconSources[i] != source)
-						INTERSTICE_LOG_WARNING(Diagnostics::MakeLogCategory("text"),
+						TACHYON_LOG_WARNING(Diagnostics::MakeLogCategory("text"),
 							"an icon named \"{}\" is already registered with another shape; the first is kept", name);
 					return IconID{ (uint32_t)(i + 1) };
 				}
@@ -303,7 +303,7 @@ namespace interstice
 			entry->textColorIndex = color;
 	}
 
-	void SkribidiTextSystem::UpdateRegisteredTextStyleState(RegisteredText* entry, interstice::StyleRef styleIndex, interstice::ElementState state)
+	void SkribidiTextSystem::UpdateRegisteredTextStyleState(RegisteredText* entry, tachyon::StyleRef styleIndex, tachyon::ElementState state)
 	{
 		assert(entry != nullptr);
 
@@ -440,7 +440,7 @@ namespace interstice
 		ctx.font_collection = skb_font_collection_create();
 		ctx.m_fontFallback.attempts.clear();
 		if (!skribidi_load_fonts(ctx.font_collection, ctx.m_fontFallback))
-			INTERSTICE_LOG_ERROR(kLogText, "could not reload the default fonts");
+			TACHYON_LOG_ERROR(kLogText, "could not reload the default fonts");
 
 		bool loaded = false;
 		for (const auto& [key, stored] : ctx.m_fontFamilyFaces)
@@ -499,7 +499,7 @@ namespace interstice
 		return textId;
 	}
 
-	TextID SkribidiTextSystem::RegisterText(ID elementId, IconID iconId, std::string_view text, interstice::StyleRef styleIndex, interstice::ElementState state)
+	TextID SkribidiTextSystem::RegisterText(ID elementId, IconID iconId, std::string_view text, tachyon::StyleRef styleIndex, tachyon::ElementState state)
 	{
 		if (!m_skribidiContext)
 			return TextID::Invalid;
@@ -545,7 +545,7 @@ namespace interstice
 	TextMeasurement SkribidiTextSystem::MeasureText(TextID textId, const TextWrapContext& wrapContext) const
 	{
 		if (!m_skribidiContext) return {};
-		//INTERSTICE_PROFILE_SCOPE("MeasureText");
+		//TACHYON_PROFILE_SCOPE("MeasureText");
 		auto registeredText = m_skribidiContext->GetRegisteredText(textId);
 		if (registeredText == nullptr) return {};
 		if (wrapContext.maxWidth == INT32_MAX)
@@ -562,7 +562,7 @@ namespace interstice
 
 		if (!layout) return {};
 
-		INTERSTICE_PROFILE_SCOPE("MeasureTextInternal");
+		TACHYON_PROFILE_SCOPE("MeasureTextInternal");
 		auto bounds = skb_layout_get_content_bounds(layout);
 
 		// Content bounds give the line box width (the full layout width, e.g. 16384
@@ -635,7 +635,7 @@ namespace interstice
 			return entry->baseMeasurement;
 		}
 
-		//INTERSTICE_PROFILE_SCOPE("UpdateBaseMeasurementWhenNecessary");
+		//TACHYON_PROFILE_SCOPE("UpdateBaseMeasurementWhenNecessary");
 
 		entry->base_measurement_valid = true;
 		
@@ -660,7 +660,7 @@ namespace interstice
 	{
 		if (entry == nullptr) return {};
 
-		//INTERSTICE_PROFILE_SCOPE("UpdateWrapMeasurementWhenNecessary");
+		//TACHYON_PROFILE_SCOPE("UpdateWrapMeasurementWhenNecessary");
 		[[maybe_unused]]
 		auto layout = (skb_layout_t*)UpdateLayoutWhenNecessary(entry, (float)wrapContext.maxWidth);
 		if (entry->wrapMeasurement.IsEmpty())
@@ -682,7 +682,7 @@ namespace interstice
 			return entry->wrap_layout;
 		}
 
-		INTERSTICE_PROFILE_SCOPE("UpdateLayoutWhenNecessary");
+		TACHYON_PROFILE_SCOPE("UpdateLayoutWhenNecessary");
 		m_skribidiContext->ResetLayout(entry);
 		entry->wrap_width = 0;
 
@@ -722,7 +722,7 @@ namespace interstice
 				const ID hoveredTextEditor = FindTextEditorAtScreenPoint(ID::Invalid(), screenMousePos);
 				if (hoveredTextEditor == entry->elementId)
 				{
-					interstice::float2 localPos{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
+					tachyon::float2 localPos{ static_cast<float>(screenMousePos.x), static_cast<float>(screenMousePos.y) };
 					if (TryGetTextEditorLocalPoint(entry->elementId, ID::Invalid(), screenMousePos, localPos))
 					{
 						const auto* layout = static_cast<const skb_layout_t*>(UpdateLayoutWhenNecessary(entry, static_cast<float>(rect.w)));
@@ -736,8 +736,8 @@ namespace interstice
 							const float x1 = rect.x + caretInfo.x + caretInfo.ascender * caretInfo.slope;
 							const float y1 = rect.y + caretInfo.y + caretInfo.ascender;
 
-							const interstice::int2 p0 = { static_cast<int>(x0), static_cast<int>(y0) };
-							const interstice::int2 p1 = { static_cast<int>(x1), static_cast<int>(y1) };
+							const tachyon::int2 p0 = { static_cast<int>(x0), static_cast<int>(y0) };
+							const tachyon::int2 p1 = { static_cast<int>(x1), static_cast<int>(y1) };
 
 							m_skribidiContext->guiRenderer->RenderLine(p0, p1, clipRect, LineStyle{ .colorStyleIndex = m_skribidiContext->caretColorStyleIndex, .lineWidth = m_skribidiContext->Px(2.0f) });
 						}
@@ -1079,4 +1079,4 @@ namespace interstice
 		}
 	}
 
-} // namespace interstice
+} // namespace tachyon

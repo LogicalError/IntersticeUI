@@ -6,7 +6,7 @@
 #include <gui_core/state/gui_scroll_management.h>
 #include <gui_core/text/gui_text_system.h>
 
-namespace interstice
+namespace tachyon
 {
     UICacheManager::UICacheManager(FramePipeline& frame, ElementStorage& storage, GUIStateManager& stateManager)
         : m_storage(storage)

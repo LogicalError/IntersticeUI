@@ -5,7 +5,7 @@
 
 #include <gui_core/diagnostics/gui_logging.h>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -229,7 +229,7 @@ namespace interstice
             Diagnostics::ReportMisuse(kLogWindows, "OSWindowManager: Update called inside BeginFrame/EndFrame");
             return false;
         }
-        windowBackendManager->PollEvents([this](interstice::OSWindowHandle handle, IWindowContext* context)
+        windowBackendManager->PollEvents([this](tachyon::OSWindowHandle handle, IWindowContext* context)
             {
                 // Destroy the window context before its window is destroyed
                 if (context != nullptr)
@@ -310,7 +310,7 @@ namespace interstice
 
     AddWindowResult
         OSWindowManager::GetOrCreateWindow(ID id, std::string_view title, IntRect rect,
-                                           interstice::OnGuiFunc onGui,
+                                           tachyon::OnGuiFunc onGui,
                                            WindowFlags windowFlags,
                                            ID parentID, int monitorIndex)
     {
@@ -381,7 +381,7 @@ namespace interstice
 
         Window* parentWindow = FindWindow(parentID);
         
-        interstice::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect, windowFlags,
+        tachyon::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect, windowFlags,
                 parentWindow != nullptr ? parentWindow->GetWindowHandle() : nullptr);
         if (osHandle == nullptr)
             return AddWindowResult::FailedToCreateOSWindow;
@@ -759,4 +759,4 @@ namespace interstice
         return topModalID;
     }
 
-} // namespace interstice
+} // namespace tachyon

@@ -1,17 +1,17 @@
-// Unit tests for interstice::CommandManager.
+// Unit tests for tachyon::CommandManager.
 
 #include <gtest/gtest.h>
 
 #include <gui_core/input/gui_command_manager.h>
 #include <gui_core/input/gui_input_state.h>
 
-using interstice::CommandManager;
-using interstice::CommandID;
-using interstice::CommandMode;
-using interstice::IconID;
-using interstice::KeyCode;
-using interstice::KeyModifier;
-using interstice::InputState;
+using tachyon::CommandManager;
+using tachyon::CommandID;
+using tachyon::CommandMode;
+using tachyon::IconID;
+using tachyon::KeyCode;
+using tachyon::KeyModifier;
+using tachyon::InputState;
 
 namespace
 {

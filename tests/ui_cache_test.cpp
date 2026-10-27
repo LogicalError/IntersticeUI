@@ -17,7 +17,7 @@
 
 #include <optional>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -49,7 +49,7 @@ namespace interstice
                     app.BeginRootWindow();
                     app.Button(outsideID, "Out", [] {});
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, signature,
-                                        interstice::LayoutOverride{}.Width(400).Height(CssPx(height))))
+                                        tachyon::LayoutOverride{}.Width(400).Height(CssPx(height))))
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [] {});
@@ -125,12 +125,12 @@ namespace interstice
                     app.BeginRootWindow();
                     // Inner 100px, content 3x80px -> overflows -> gets a scroll handle.
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(200).Height(100)))
+                                        tachyon::LayoutOverride{}.Width(200).Height(100)))
                     {
                         bodyRuns++;
-                        app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
+                        app.Button(btnA, "A", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnB, "B", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnC, "C", [] {}, tachyon::LayoutOverride{}.Height(80));
                     }
                     app.EndCached();
                     app.EndRootWindow();
@@ -162,7 +162,7 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(300)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(300)))
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [&] { clicks++; });
@@ -183,7 +183,7 @@ namespace interstice
             ASSERT_FALSE(app.HasElement(btnA));
 
             const int before = clicks;
-            app.InjectKey(interstice::KeyCode::Return);
+            app.InjectKey(tachyon::KeyCode::Return);
             frame(); // key dispatched to the (rebuilt) focused button
             frame(); // the activation is observed here, so the scope must rebuild again
             EXPECT_EQ(clicks, before + 1) << "Enter must activate the focused button even though its panel was clean";
@@ -198,7 +198,7 @@ namespace interstice
             RunFrame();
             ASSERT_EQ(bodyRuns, settled) << "precondition: scope is clean";
 
-            app.InjectKey(interstice::KeyCode::Tab);
+            app.InjectKey(tachyon::KeyCode::Tab);
             RunFrame();
             EXPECT_EQ(bodyRuns, settled + 1);
         }
@@ -266,7 +266,7 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(300)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(300)))
                     {
                         bodyRuns++;
                         app.Button(btnA, "A", [&] { clicks++; });
@@ -304,11 +304,11 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(outerID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(300)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(300)))
                     {
                         outerRuns++;
                         if (app.BeginCached(innerID, app.theme.emptyVertStyleRef, 0,
-                                            interstice::LayoutOverride{}.Width(200).Height(100)))
+                                            tachyon::LayoutOverride{}.Width(200).Height(100)))
                         {
                             innerRuns++;
                             app.Button(btnA, "A", [] {});
@@ -342,11 +342,11 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(s1, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(150)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(150)))
                     { r1++; app.Button(btnA, "A", [] {}); }
                     app.EndCached();
                     if (app.BeginCached(s2, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(150)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(150)))
                     { r2++; app.Button(btnB, "B", [] {}); }
                     app.EndCached();
                     app.EndRootWindow();
@@ -388,12 +388,12 @@ namespace interstice
                     app.BeginRootWindow();
                     // Container 100px tall, content 240px -> overflows -> it scrolls.
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(200).Height(100)))
+                                        tachyon::LayoutOverride{}.Width(200).Height(100)))
                     {
                         bodyRuns++;
-                        app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
+                        app.Button(btnA, "A", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnB, "B", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnC, "C", [] {}, tachyon::LayoutOverride{}.Height(80));
                     }
                     app.EndCached();
                     app.EndRootWindow();
@@ -424,12 +424,12 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(200).Height(100)))
+                                        tachyon::LayoutOverride{}.Width(200).Height(100)))
                     {
                         bodyRuns++;
-                        app.Button(btnA, "A", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnB, "B", [] {}, interstice::LayoutOverride{}.Height(80));
-                        app.Button(btnC, "C", [] {}, interstice::LayoutOverride{}.Height(80));
+                        app.Button(btnA, "A", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnB, "B", [] {}, tachyon::LayoutOverride{}.Height(80));
+                        app.Button(btnC, "C", [] {}, tachyon::LayoutOverride{}.Height(80));
                     }
                     app.EndCached();
                     app.EndRootWindow();
@@ -458,14 +458,14 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(300)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(300)))
                     {
                         bodyRuns++;
-                        interstice::Element e{};
+                        tachyon::Element e{};
                         e.id       = btnA;
                         e.styleRef = app.theme.collectionStyleRef;
-                        const interstice::ElementRef ref = app.RegisterElement(std::move(e), {});
-                        (void)app.elementStorage.AddPostLayout(ref, [](interstice::PostLayoutContext&) {});
+                        const tachyon::ElementRef ref = app.RegisterElement(std::move(e), {});
+                        (void)app.elementStorage.AddPostLayout(ref, [](tachyon::PostLayoutContext&) {});
                     }
                     app.EndCached();
                     app.EndRootWindow();
@@ -488,7 +488,7 @@ namespace interstice
                 app.Frame([&] {
                     app.BeginRootWindow();
                     if (app.BeginCached(scopeID, app.theme.emptyVertStyleRef, 0,
-                                        interstice::LayoutOverride{}.Width(400).Height(300)))
+                                        tachyon::LayoutOverride{}.Width(400).Height(300)))
                     {
                         bodyRuns++;
                         app.Field(btnA, text); // editable text field
@@ -523,11 +523,11 @@ namespace interstice
             ASSERT_TRUE(app.Initialize());
             app.InjectMouseMove({ 1900, 1000 });
 
-            interstice::DockingLayout layout;
-            const interstice::ID containerID = app.idManager.CreateStaticID();
+            tachyon::DockingLayout layout;
+            const tachyon::ID containerID = app.idManager.CreateStaticID();
             int draws = 0;
             uint64_t sig = 1;
-            const interstice::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] {
+            const tachyon::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] {
                 draws++;
                 app.Button(app.idManager.AllocateDynamicID("cell"), "x", [] {});
             });
@@ -537,7 +537,7 @@ namespace interstice
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    app.BeginDockingContainer(containerID, &layout, interstice::LayoutOverride{}.Size(800, 600));
+                    app.BeginDockingContainer(containerID, &layout, tachyon::LayoutOverride{}.Size(800, 600));
                     app.EndDockingContainer();
                     app.EndRootWindow();
                 });
@@ -561,16 +561,16 @@ namespace interstice
             ASSERT_TRUE(app.Initialize());
             app.InjectMouseMove({ 1900, 1000 });
 
-            interstice::DockingLayout layout;
-            const interstice::ID containerID = app.idManager.CreateStaticID();
+            tachyon::DockingLayout layout;
+            const tachyon::ID containerID = app.idManager.CreateStaticID();
             int draws = 0;
-            const interstice::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
+            const tachyon::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
             layout.root = MakeLeaf({ panel });
 
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    app.BeginDockingContainer(containerID, &layout, interstice::LayoutOverride{}.Size(800, 600));
+                    app.BeginDockingContainer(containerID, &layout, tachyon::LayoutOverride{}.Size(800, 600));
                     app.EndDockingContainer();
                     app.EndRootWindow();
                 });
@@ -589,17 +589,17 @@ namespace interstice
             ASSERT_TRUE(app.Initialize());
             app.InjectMouseMove({ 1900, 1000 });
 
-            interstice::DockingLayout layout;
-            const interstice::ID containerID = app.idManager.CreateStaticID();
+            tachyon::DockingLayout layout;
+            const tachyon::ID containerID = app.idManager.CreateStaticID();
             int draws = 0;
-            const interstice::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
+            const tachyon::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
             layout.panels[panel].cacheSignature = [] { return std::optional<uint64_t>{}; }; // opt out
             layout.root = MakeLeaf({ panel });
 
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    app.BeginDockingContainer(containerID, &layout, interstice::LayoutOverride{}.Size(800, 600));
+                    app.BeginDockingContainer(containerID, &layout, tachyon::LayoutOverride{}.Size(800, 600));
                     app.EndDockingContainer();
                     app.EndRootWindow();
                 });
@@ -617,16 +617,16 @@ namespace interstice
             ASSERT_TRUE(app.Initialize());
             app.InjectMouseMove({ 1900, 1000 });
 
-            interstice::DockingLayout layout;
-            const interstice::ID containerID = app.idManager.CreateStaticID();
+            tachyon::DockingLayout layout;
+            const tachyon::ID containerID = app.idManager.CreateStaticID();
             int draws = 0;
-            const interstice::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
+            const tachyon::ID panel = app.CreatePanel(layout.panels, "P", IconID::Invalid, [&] { draws++; });
             layout.root = MakeLeaf({ panel });
 
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    app.BeginDockingContainer(containerID, &layout, interstice::LayoutOverride{}.Size(800, 600));
+                    app.BeginDockingContainer(containerID, &layout, tachyon::LayoutOverride{}.Size(800, 600));
                     app.EndDockingContainer();
                     app.EndRootWindow();
                 });

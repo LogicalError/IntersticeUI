@@ -3,7 +3,7 @@
 #include <gui_core/gui_base_types.h>
 #include <gui_core/gui_enum_operators.h>
 
-namespace interstice
+namespace tachyon
 {
     // ------------------------------------------------------------------------
     // Element Flags
@@ -47,6 +47,6 @@ namespace interstice
 
         IsMenuWindow = IsWindow | WindowUserControlled | WindowNoCaption | WindowIsPopup | Shadows
     };
-    INTERSTICE_ENUM_OPERATORS(ElementFlags)
+    TACHYON_ENUM_OPERATORS(ElementFlags)
 
-} // namespace interstice
+} // namespace tachyon

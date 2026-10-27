@@ -1,9 +1,9 @@
 #pragma once
 
 #include <gui_core/gui_base_types.h>
-#include <gui_core/graphics/gui_graphics_context.h>   // interstice::DeviceScope
+#include <gui_core/graphics/gui_graphics_context.h>   // tachyon::DeviceScope
 #include <gui_core/graphics/gui_image.h>
-#include <gui_core/windows/gui_window_backend.h>      // interstice::OSWindowHandle
+#include <gui_core/windows/gui_window_backend.h>      // tachyon::OSWindowHandle
 
 #include <gui_core/graphics/vulkan/vk_image.h>
 #include <gui_core/graphics/vulkan/vk_meshes.h>
@@ -24,14 +24,14 @@
 #include <source_location>
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     class Buffer;
     class VisualColorStyle;
     struct VisualBoxStyle;
 }
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
     struct Style;
 
@@ -72,13 +72,13 @@ namespace interstice::vulkan
     public:
         /// Makes a VkSurfaceKHR for one of the window backend's windows with the given instance
         /// and allocation callbacks; VK_NULL_HANDLE on failure. The GUI destroys the surfaces.
-        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle)>;
+        using SurfaceFactory = std::function<VkSurfaceKHR(VkInstance, const VkAllocationCallbacks*, tachyon::OSWindowHandle)>;
         /// How surfaces are made; set before initialization. SDLWindowBackend installs its own.
         void SetSurfaceFactory(SurfaceFactory factory) { m_surfaceFactory = std::move(factory); }
 
         /// Host memory functions for every Vulkan object, vk-bootstrap and VMA.
         /// Call before initialization.
-        void SetAllocationHooks(const interstice::AllocationHooks& hooks);
+        void SetAllocationHooks(const tachyon::AllocationHooks& hooks);
         /// What the vkCreate*/vkDestroy* calls pass; null when no hooks are set.
         const VkAllocationCallbacks* AllocationCallbacks() const { return m_hooks.IsSet() ? &m_allocationCallbacks : nullptr; }
 
@@ -157,51 +157,51 @@ namespace interstice::vulkan
 
     public:
         /// An image nothing is uploaded to (undefined contents), for sampling only.
-        interstice::Image* CreateImage(interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false) const;
+        tachyon::Image* CreateImage(tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped = false) const;
         /// An image from `data` pixels (null: cleared). Doesn't wait for the GPU: the upload and
         /// mip generation are recorded at the start of the next window frame (RecordPendingUploads).
-        interstice::Image* CreateImage(const void* data, interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped = false);
+        tachyon::Image* CreateImage(const void* data, tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped = false);
         /// Records the queued uploads into `cmd`, outside any rendering scope.
         void RecordPendingUploads(VkCommandBuffer cmd);
         /// Destroys the image's Vulkan objects now, without waiting for the GPU; doesn't delete
         /// the object.
-        void DestroyImage(interstice::Image* img);
+        void DestroyImage(tachyon::Image* img);
         /// After a device loss: frees the live images' Vulkan objects; the image objects stay.
         void ReleaseLiveImages();
         /// Makes the released images again on the new device, uploading the pixels they were
         /// made from.
         void RebuildLiveImages();
         /// Destroys the image and deletes the object when the scope's deletion queue flushes.
-        void DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
+        void DestroyImageAtEnd(tachyon::Image* img, tachyon::DeviceScope scope,
                                const std::source_location& loc =
                                std::source_location::current());
 
         /// Library internal: the color styles in a GPU buffer for the shaders.
-        interstice::Buffer* UploadVisualColorStyles(::std::span<const interstice::VisualColorStyle> colorStyles) const;
+        tachyon::Buffer* UploadVisualColorStyles(::std::span<const tachyon::VisualColorStyle> colorStyles) const;
         /// Library internal: destroys the buffer's GPU objects now.
-        void DestroyVisualColorStyles(interstice::Buffer* buffer);
+        void DestroyVisualColorStyles(tachyon::Buffer* buffer);
         /// Library internal: destroys and deletes the buffer when the scope's queue flushes.
-        void DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
+        void DestroyVisualColorStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope,
                                            const std::source_location& loc =
                                            std::source_location::current());
 
         /// Library internal: the box styles in a GPU buffer for the shaders.
-        interstice::Buffer* UploadVisualBoxStyles(::std::span<const interstice::VisualBoxStyle> styles) const;
+        tachyon::Buffer* UploadVisualBoxStyles(::std::span<const tachyon::VisualBoxStyle> styles) const;
         /// Library internal: destroys the buffer's GPU objects now.
-        void DestroyVisualBoxStyles(interstice::Buffer* buffer);
+        void DestroyVisualBoxStyles(tachyon::Buffer* buffer);
         /// Library internal: destroys and deletes the buffer when the scope's queue flushes.
-        void DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
+        void DestroyVisualBoxStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope,
                                          const std::source_location& loc =
                                          std::source_location::current());
 
         /// Library internal: the current frame's deletion queue, or for DeviceScope::Application
         /// the one flushed at Destroy.
-        DeletionQueue& GetDeletionQueue(interstice::DeviceScope scope)
+        DeletionQueue& GetDeletionQueue(tachyon::DeviceScope scope)
         {
             switch (scope)
             {
-                case interstice::DeviceScope::Frame:       return frameDeletionQueues[frameNumber % FRAME_DELETION_SLOT_COUNT];
-                case interstice::DeviceScope::Application: return mainDeletionQueue;
+                case tachyon::DeviceScope::Frame:       return frameDeletionQueues[frameNumber % FRAME_DELETION_SLOT_COUNT];
+                case tachyon::DeviceScope::Application: return mainDeletionQueue;
                 default: throw;
             }
         }
@@ -269,7 +269,7 @@ namespace interstice::vulkan
 
         /// Whether the device is up (made or adopted).
         bool initialized{ false };
-        interstice::Error initError{};   ///< why the bring-up failed, when it did
+        tachyon::Error initError{};   ///< why the bring-up failed, when it did
 
         /// Library internal: finishes the bring-up that the first CreateSurface does; false when
         /// that failed (see initError).
@@ -279,7 +279,7 @@ namespace interstice::vulkan
 
         /// A surface for the window, through the surface factory. The first call also makes the
         /// device (or adopts the host's) on a GPU that can present to it. VK_NULL_HANDLE on failure.
-        VkSurfaceKHR CreateSurface(interstice::OSWindowHandle windowHandle);
+        VkSurfaceKHR CreateSurface(tachyon::OSWindowHandle windowHandle);
 
     private:
         /// Creates the command pool, fence, descriptor layout and samplers, for owned
@@ -288,7 +288,7 @@ namespace interstice::vulkan
         bool AdoptExternalDevice();
 
         SurfaceFactory m_surfaceFactory;
-        interstice::AllocationHooks  m_hooks;
+        tachyon::AllocationHooks  m_hooks;
         VkAllocationCallbacks m_allocationCallbacks{};
         InstanceDebugConfig m_instanceDebugConfig;
         std::optional<ExternalDevice> m_externalDevice;
@@ -321,9 +321,9 @@ namespace interstice::vulkan
         void DestroyImage(const VulkanImage& img);
 
         /// Library internal: the box styles in GPU buffers. Per-primitive uploads go through the RHI.
-        VisualBoxStyleBuffers   UploadMesh(::std::span<const interstice::VisualBoxStyle> visualBoxStyles) const;
+        VisualBoxStyleBuffers   UploadMesh(::std::span<const tachyon::VisualBoxStyle> visualBoxStyles) const;
         /// Library internal: the color styles in GPU buffers.
-        VisualColorStyleBuffers UploadMesh(::std::span<const interstice::VisualColorStyle> colorStyles) const;
+        VisualColorStyleBuffers UploadMesh(::std::span<const tachyon::VisualColorStyle> colorStyles) const;
         /// Library internal: destroys the style buffers now.
         void  DestroyMesh(const VisualBoxStyleBuffers& mesh) const;
         /// Library internal: destroys the style buffers now.

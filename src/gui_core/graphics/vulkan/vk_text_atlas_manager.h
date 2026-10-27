@@ -2,7 +2,7 @@
 
 #include <gui_core/text/gui_text_atlas_manager.h>
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
 	class VulkanGraphicsContext;
 	class VulkanImageSet;
@@ -10,27 +10,27 @@ namespace interstice::vulkan
 	struct FontTexture
 	{
 		VkDescriptorImageInfo descriptorInfo {};
-		interstice::Image*		image { nullptr };
-		interstice::uint2		size { 0,0 };
+		tachyon::Image*		image { nullptr };
+		tachyon::uint2		size { 0,0 };
 		int32_t			bpp { 0 };
-		interstice::ImageIndex	imageIndex { interstice::ImageIndex::Invalid };
+		tachyon::ImageIndex	imageIndex { tachyon::ImageIndex::Invalid };
 		bool			used = false;
 	};
 
-	class VulkanTextAtlasManager : public interstice::TextAtlasManager
+	class VulkanTextAtlasManager : public tachyon::TextAtlasManager
 	{
 	public:
 		std::vector<FontTexture>       fontTextures;
-		interstice::vulkan::VulkanGraphicsContext* graphicsContext = nullptr;
-		interstice::vulkan::VulkanImageSet*        imageSet        = nullptr;
+		tachyon::vulkan::VulkanGraphicsContext* graphicsContext = nullptr;
+		tachyon::vulkan::VulkanImageSet*        imageSet        = nullptr;
 
 	public:
-		bool Initialize(interstice::GraphicsContext* graphicsContext, interstice::ImageSet* imageSet) override;
+		bool Initialize(tachyon::GraphicsContext* graphicsContext, tachyon::ImageSet* imageSet) override;
 
-		interstice::TextureIndex CreateTexture(const uint8_t* imageData, interstice::uint2 imageSize, uint8_t bpp) override;
-		void UpdateTexture(interstice::TextureIndex textureIndex, const uint8_t* imageData, interstice::uint2 imageSize) override;
+		tachyon::TextureIndex CreateTexture(const uint8_t* imageData, tachyon::uint2 imageSize, uint8_t bpp) override;
+		void UpdateTexture(tachyon::TextureIndex textureIndex, const uint8_t* imageData, tachyon::uint2 imageSize) override;
 
-		interstice::ImageIndex GetImageIndex(interstice::TextureIndex textureIndex) override;
+		tachyon::ImageIndex GetImageIndex(tachyon::TextureIndex textureIndex) override;
 		void SyncTextureIndices() override;
 	};
 }

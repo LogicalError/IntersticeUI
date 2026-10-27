@@ -10,7 +10,7 @@
 
 // TreeView / ListView / GridView data + construction state.
 
-namespace interstice
+namespace tachyon
 {
     // ---- Transient tree/list construction state (valid between Begin/End) ----
     //
@@ -19,12 +19,12 @@ namespace interstice
     //
     /// Construction state of the current TreeView / ListView; internal.
     struct TreeViewState {
-        interstice::ID   containerID = interstice::ID::Invalid();
+        tachyon::ID   containerID = tachyon::ID::Invalid();
         int       nextItemIndex = 0;
         int       totalItemCount = 0;
         int       depth = 0;                        ///< nesting depth (0 = top-level, no guide lines)
         int*      selectedIndex = nullptr;          ///< for ListView index-based selection
-        interstice::ID*  selectedID = nullptr;             ///< for single-ID selection
+        tachyon::ID*  selectedID = nullptr;             ///< for single-ID selection
         MultiSelectState* multiSelect = nullptr;    ///< for multi-selection
         ItemDragDropConfig* dragDrop = nullptr;     ///< drag & drop config
     };
@@ -36,7 +36,7 @@ namespace interstice
     //
     /// Construction state of the current GridView; internal.
     struct GridViewState {
-        interstice::ID containerID = interstice::ID::Invalid();
+        tachyon::ID containerID = tachyon::ID::Invalid();
         int     nextItemIndex = 0;
         int*    selectedIndex = nullptr;
         MultiSelectState* multiSelect = nullptr;
@@ -44,7 +44,7 @@ namespace interstice
         /// Slow-re-click rename state in the user's GridViewVirtualState. Both pointers are
         /// null in the non-virtual grid, which offers only Ctrl+Shift+Click and F2.
         DoubleClickTracker* clickTracker = nullptr;
-        interstice::ID*            pendingRenameClick = nullptr;   ///< see clickTracker
+        tachyon::ID*            pendingRenameClick = nullptr;   ///< see clickTracker
     };
 
     // ---- GridView rename lookup ----
@@ -60,7 +60,7 @@ namespace interstice
     struct TreeViewRow
     {
         /// The caller's own ID for the row; the view does not read it.
-        interstice::ID      id           = interstice::ID::Invalid();
+        tachyon::ID      id           = tachyon::ID::Invalid();
         std::string  name;                     ///< label
         int          depth        = 0;         ///< nesting level, 0 = root; defines the hierarchy
         bool         isOpen       = false;     ///< expanded
@@ -96,9 +96,9 @@ namespace interstice
         {
             // Slow-re-click rename state
             DoubleClickTracker itemClickTracker;
-            interstice::ID     pendingRenameClick = interstice::ID::Invalid();
+            tachyon::ID     pendingRenameClick = tachyon::ID::Invalid();
             /// Items range ID, so F2 can map selectedIndex to an ID.
-            interstice::ID     itemsRangeID       = interstice::ID::Invalid();
+            tachyon::ID     itemsRangeID       = tachyon::ID::Invalid();
             // Layout for keyboard navigation, which runs after layout
             int32_t            cols      = 1;
             int32_t            rowStride = 1;

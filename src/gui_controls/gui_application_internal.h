@@ -4,7 +4,7 @@
 
 #include <gui_controls/gui_application.h>
 
-namespace interstice
+namespace tachyon
 {
     // Derive from this instead of GUIApplication to reach its internals.
     class GUIApplicationInternals : public GUIApplication

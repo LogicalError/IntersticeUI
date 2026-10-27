@@ -5,7 +5,7 @@
 // graph data is built in application.cpp.
 //
 
-namespace interstice
+namespace tachyon
 {
 
     void Application::RenderNodeViewPanel()

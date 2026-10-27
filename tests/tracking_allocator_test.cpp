@@ -7,8 +7,8 @@
 
 namespace
 {
-    using interstice::AllocationHooks;
-    using interstice::TrackingAllocator;
+    using tachyon::AllocationHooks;
+    using tachyon::TrackingAllocator;
 
     TEST(TrackingAllocator, CountsLiveAllocationsAndBytes)
     {

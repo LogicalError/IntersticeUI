@@ -16,7 +16,7 @@
 
 // Node-view (graph editor) data model. The caller owns one NodeView per view.
 
-namespace interstice
+namespace tachyon
 {
     /// A property on a node. Default-constructed is invalid: in a socket it means "present, unwired".
     struct PropertyEndpoint
@@ -42,7 +42,7 @@ namespace interstice
         std::function<void()> renderBody;
 
         /// Socket dot colour, also used for wires leaving this output.
-        interstice::color4f socketColor{ 0.9f, 0.9f, 0.9f, 1.0f };
+        tachyon::color4f socketColor{ 0.9f, 0.9f, 0.9f, 1.0f };
 
         /// Row height in row pitches, for tall bodies (previews, multi-line). Whole pitches
         /// keep later sockets on the grid.
@@ -54,18 +54,18 @@ namespace interstice
     {
         /// Assigned once on creation; the node's element ID and the salt for its sub-IDs, so
         /// ID-keyed state survives z-order changes (dynamic IDs depend on render order).
-        interstice::ID                    stableID     = interstice::ID::Invalid();
+        tachyon::ID                    stableID     = tachyon::ID::Invalid();
 
         std::string                title;        ///< header text
         /// Category name, shown right-aligned in the header.
         std::string                category;
         /// Color of the header's category square; alpha 0 uses the accent.
-        interstice::color4f               categoryColor = {};
+        tachyon::color4f               categoryColor = {};
         /// Top-left in canvas layout space (whole pixels relative to the canvas, before pan/zoom).
-        interstice::int2                  pos          = {};
-        interstice::int2                  startPos     = {};   ///< internal: pos at drag start
-        interstice::int2                  startScreen  = {};   ///< internal: cursor at drag start
-        interstice::int2                  lastSize     = {};   ///< outer-rect size from last frame's layout
+        tachyon::int2                  pos          = {};
+        tachyon::int2                  startPos     = {};   ///< internal: pos at drag start
+        tachyon::int2                  startScreen  = {};   ///< internal: cursor at drag start
+        tachyon::int2                  lastSize     = {};   ///< outer-rect size from last frame's layout
         bool                       isDragging   = false;   ///< internal
         bool                       collapsed    = false;   ///< rows hidden, header only (double-click toggles)
         std::vector<NodeProperty>  properties;              ///< the rows, top to bottom
@@ -76,7 +76,7 @@ namespace interstice
     {
         bool             active        = false;  ///< a wire drag is in progress
         PropertyEndpoint source        = {};     ///< the output the wire starts from
-        interstice::int2        currentScreen = {};   ///< most recent mouse screen pos
+        tachyon::int2        currentScreen = {};   ///< most recent mouse screen pos
         PropertyEndpoint target        = {};   ///< this frame: the input it is over and may connect to
         std::optional<PropertyEndpoint> detachedInput; ///< the input the wire was pulled off, if any
     };
@@ -112,7 +112,7 @@ namespace interstice
     /// Draggable interior segment; vertical segments drag horizontally and vice versa.
     struct WireSegmentHandle
     {
-        interstice::int2  a{}, b{}; ///< segment endpoints, same space as the route points
+        tachyon::int2  a{}, b{}; ///< segment endpoints, same space as the route points
         WireHandle role     = WireHandle::None;  ///< which lane dragging it changes
         bool       vertical = false;
     };
@@ -120,7 +120,7 @@ namespace interstice
     /// Polyline plus its draggable interior segments (never the end stubs).
     struct WireRoute
     {
-        std::vector<interstice::int2>         points;   ///< the polyline, output to input
+        std::vector<tachyon::int2>         points;   ///< the polyline, output to input
         std::vector<WireSegmentHandle> handles;
     };
 
@@ -131,7 +131,7 @@ namespace interstice
         uint32_t   wireKey  = 0;
         WireHandle role     = WireHandle::None;
         bool       vertical = false;
-        interstice::int2  a{}, b{};
+        tachyon::int2  a{}, b{};
     };
 
     /// One thing the user did in a node view, as values before and after, so a host can keep
@@ -139,7 +139,7 @@ namespace interstice
     struct NodeViewEdit
     {
         /// A node (index) moved; positions in node.pos space.
-        struct Move     { int node = -1; interstice::int2 from {}, to {}; };
+        struct Move     { int node = -1; tachyon::int2 from {}, to {}; };
         /// An input's source changed; an invalid endpoint means unwired.
         struct Rewire   { PropertyEndpoint input, from, to; };
         /// A node (index) collapsed or expanded.
@@ -160,7 +160,7 @@ namespace interstice
     struct DrawnWire
     {
         uint32_t                      wireKey = 0;
-        std::vector<interstice::int2> points;
+        std::vector<tachyon::int2> points;
     };
 
     /// Segment drag via mouse capture rather than DnD, so the resize cursor sticks.
@@ -170,7 +170,7 @@ namespace interstice
         uint32_t   wireKey    = 0;
         WireHandle role       = WireHandle::None;
         bool       vertical   = false;
-        interstice::int2  startScreen = {};
+        tachyon::int2  startScreen = {};
         int32_t    startValue  = 0;   ///< lane coordinate at drag start (node.pos space)
         WireRouteOverrides lanesBefore {}; ///< the wire's overrides at drag start, for the edit
     };
@@ -190,20 +190,20 @@ namespace interstice
 
         /// Last frame's minimap mapping (canvas = origin + minimap pixels / scale), for clicks.
         float                           minimapScale  = 0.0f;
-        interstice::float2              minimapOrigin {};
+        tachyon::float2              minimapOrigin {};
 
         PendingConnection       pendingConnection;   ///< internal: the wire being dragged
-        interstice::float3x2           transform;                  ///< identity = centered view (no pan/zoom)
-        interstice::int2               lastInnerSize{ 0, 0 };      ///< last frame's canvas size, for centering
+        tachyon::float3x2           transform;                  ///< identity = centered view (no pan/zoom)
+        tachyon::int2               lastInnerSize{ 0, 0 };      ///< last frame's canvas size, for centering
         /// Command mode set while the canvas has focus.
         CommandMode             commandMode = CommandMode::Default;
         /// Z-order, last == front (a clicked node moves there).
         std::vector<int>        ordering;
 
         /// Selected node stableIDs.
-        std::unordered_set<interstice::ID>     selectedNodeIDs;
+        std::unordered_set<tachyon::ID>     selectedNodeIDs;
         /// StableID of the last clicked node.
-        interstice::ID                         lastClickedNodeID = interstice::ID::Invalid();
+        tachyon::ID                         lastClickedNodeID = tachyon::ID::Invalid();
 
         /// Double-click-to-collapse, per view so views (and test frames) don't share it.
         DoubleClickTracker              nodeDoubleClick;
@@ -211,9 +211,9 @@ namespace interstice
         /// A marquee drag from the empty background is in progress; its points are screen space.
         bool                            marqueeActive        = false;
         bool                            marqueePastThreshold = false;
-        interstice::int2                       marqueeStartScreen   {};
-        interstice::int2                       marqueeCurrentScreen {};
-        std::unordered_set<interstice::ID>     marqueeBaseSelection;     ///< selection snapshot before the drag
+        tachyon::int2                       marqueeStartScreen   {};
+        tachyon::int2                       marqueeCurrentScreen {};
+        std::unordered_set<tachyon::ID>     marqueeBaseSelection;     ///< selection snapshot before the drag
         bool                            marqueeShift = false;     ///< modifier snapshot at start
         bool                            marqueeCtrl  = false;
 
@@ -229,7 +229,7 @@ namespace interstice
         /// Called once per finished user edit (a whole drag is one), after it is applied.
         std::function<void(const NodeViewEdit&)> onEdit;
         std::optional<uint32_t> wireMenuWire;          ///< the wire the open context menu is for
-        interstice::int2        rightPressScreen {};   ///< a right press that pans isn't a click
+        tachyon::int2        rightPressScreen {};   ///< a right press that pans isn't a click
 
         /// Whether an output -> input wire is allowed; null allows any. Called only for
         /// bounds-checked, cross-node endpoints, so it may index view.nodes directly.
@@ -238,7 +238,7 @@ namespace interstice
                            PropertyEndpoint input)> canConnect;
 
         /// Packed RGBA -> registered color style, since RenderPolyline takes a style index.
-        std::unordered_map<uint32_t, interstice::VisualColorStyleIndex> wireColorStyles;
+        std::unordered_map<uint32_t, tachyon::VisualColorStyleIndex> wireColorStyles;
         uint32_t wireColorStylesGeneration = 0; ///< StyleManager::Generation() of the cache
     };
 }

@@ -8,9 +8,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
-    class VulkanImage : public interstice::Image
+    class VulkanImage : public tachyon::Image
     {
     public:
         VkImage       image;
@@ -25,13 +25,13 @@ namespace interstice::vulkan
         struct Recipe
         {
             VkImageUsageFlags     usage     = 0;
-            interstice::Sampler   sampler   = interstice::Sampler::UNDEFINED;
+            tachyon::Sampler   sampler   = tachyon::Sampler::UNDEFINED;
             bool                  mipmapped = false;
             std::vector<uint8_t>  pixels;
         } recipe;
     };
 
-    class VulkanImageSet : public interstice::ImageSet
+    class VulkanImageSet : public tachyon::ImageSet
     {
     public:
         /// Size of the shader's bindless texture array.
@@ -45,16 +45,16 @@ namespace interstice::vulkan
 
     public:
         void Clear() override;
-        interstice::ImageIndex Add(interstice::Image* image) override;
-        void Remove(interstice::ImageIndex index) override;
-        bool SetImage(interstice::ImageIndex index, VulkanImage* image);
-        bool SetDescriptor(interstice::ImageIndex index, const VkDescriptorImageInfo& descriptor);
-        interstice::ImageIndex ReserveIndex();
+        tachyon::ImageIndex Add(tachyon::Image* image) override;
+        void Remove(tachyon::ImageIndex index) override;
+        bool SetImage(tachyon::ImageIndex index, VulkanImage* image);
+        bool SetDescriptor(tachyon::ImageIndex index, const VkDescriptorImageInfo& descriptor);
+        tachyon::ImageIndex ReserveIndex();
 
     private:
-        interstice::ImageIndex Allocate(const VkDescriptorImageInfo& descriptor);
-        bool IsInRange(interstice::ImageIndex index) const;
+        tachyon::ImageIndex Allocate(const VkDescriptorImageInfo& descriptor);
+        bool IsInRange(tachyon::ImageIndex index) const;
 
-        std::vector<interstice::ImageIndex> m_freeIndices;
+        std::vector<tachyon::ImageIndex> m_freeIndices;
     };
 }

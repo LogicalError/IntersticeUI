@@ -16,7 +16,7 @@
 
 #include <gui_controls/gui_default_handlers.h>
 
-namespace interstice
+namespace tachyon
 {
 
     namespace

@@ -16,7 +16,7 @@
 #include <limits>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -639,4 +639,4 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon

@@ -2,7 +2,7 @@
 #include <gui_core/gui_hash.h>
 #include <gui_core/style/gui_style_text.h>
 
-namespace interstice
+namespace tachyon
 {
     FontID FontIDFromName(std::string_view familyName)
     {
@@ -37,7 +37,7 @@ namespace interstice
             static uint64_t defaultEmptyHash = Hash::Combine(Hash::Calculate(DecorationStyle::Solid),
                                                                 Hash::Calculate(0),
                                                                 Hash::Calculate(0),
-                                                                Hash::Calculate(interstice::color4b { 0,0,0,0 }));
+                                                                Hash::Calculate(tachyon::color4b { 0,0,0,0 }));
             return defaultEmptyHash;
         }
         return Hash::Combine(Hash::Calculate(style),
@@ -66,4 +66,4 @@ namespace interstice
                                 overLine.GetHashCode());
     }
 
-}//namespace interstice
+}//namespace tachyon

@@ -9,7 +9,7 @@
 #include <chrono>
 #include <vector>
 
-namespace interstice::TableInternal
+namespace tachyon::TableInternal
 {
     // Hit-strip width of an active (draggable) sizer overlay (CSS pixels).
     constexpr int32_t kActiveSizerWidth   = 4;
@@ -18,7 +18,7 @@ namespace interstice::TableInternal
 
 
     // Double-click / slow-re-click tracker; each TableState holds its own.
-    using DoubleClickTracker = interstice::DoubleClickTracker;
+    using DoubleClickTracker = tachyon::DoubleClickTracker;
 
 
     // Column GridTrack: 1fr when stretchy, else Fixed. The table's last column
@@ -27,7 +27,7 @@ namespace interstice::TableInternal
     inline GridTrack ComputeColumnTrack(const StyleManager& sm,
                                         int c,
                                         int globalColumnCount,
-                                        const interstice::VirtualTableColumn* /*columns*/,
+                                        const tachyon::VirtualTableColumn* /*columns*/,
                                         const std::vector<int32_t>& columnWidths,
                                         bool dragActive,
                                         int32_t lastColDragFixedWidth,
@@ -47,13 +47,13 @@ namespace interstice::TableInternal
     // Overload with implicit stretch on the table's last column. Frozen mode passes
     // `isStretch` explicitly (only the middle section's last column stretches).
     inline GridTrack ComputeColumnTrack(const StyleManager& sm, int c, int globalColumnCount,
-                                        const interstice::VirtualTableColumn* columns,
+                                        const tachyon::VirtualTableColumn* columns,
                                         const std::vector<int32_t>& columnWidths,
                                         bool dragActive, int32_t lastColDragFixedWidth)
     {
         const bool isLastGlobal = (c + 1 == globalColumnCount);
         const bool isStretch    = isLastGlobal
-                               || columns[c].column.sizing == interstice::ColumnSizing::Stretch;
+                               || columns[c].column.sizing == tachyon::ColumnSizing::Stretch;
         return ComputeColumnTrack(sm, c, globalColumnCount, columns, columnWidths,
                                   dragActive, lastColDragFixedWidth, isStretch);
     }
@@ -63,30 +63,30 @@ namespace interstice::TableInternal
     // TreeCell stays hittable so its arrow/text can be clicked).
     struct CellStateBits
     {
-        interstice::ElementState state;
+        tachyon::ElementState state;
         bool              selected;
     };
 
     inline CellStateBits ComputeCellSelectionBits(GUIStateManager& sm,
-                                                  const interstice::TableState* userState,
-                                                  interstice::ID cellID, interstice::ID currentRowID,
+                                                  const tachyon::TableState* userState,
+                                                  tachyon::ID cellID, tachyon::ID currentRowID,
                                                   int c, bool cellMode)
     {
-        interstice::ElementState st = sm.GetCurrentState(cellID);
+        tachyon::ElementState st = sm.GetCurrentState(cellID);
         const bool selected = cellMode
             && userState->selectedRowID  == currentRowID
             && userState->selectedColumn == c;
-        if (selected) st |= interstice::ElementState::Selected;
+        if (selected) st |= tachyon::ElementState::Selected;
         return { st, selected };
     }
 }
 
-namespace interstice
+namespace tachyon
 {
     // Tree-cell flex-row children - emitted at drain time by EndTable's
     // body-section drain. Defined in controls_table_cells.cpp.
     void EmitTreeCellIndent(GUIApplication& app, int depth);
     void EmitTreeCellArrowOrLeafSpacer(GUIApplication& app, bool* isOpen);
     void EmitTreeCellIcon(GUIApplication& app, IconID icon, bool* isOpen,
-                          interstice::DoubleClickTracker* tracker);
+                          tachyon::DoubleClickTracker* tracker);
 }

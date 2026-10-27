@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 

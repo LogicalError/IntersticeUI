@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class IDManager;
     class ElementStorage;
@@ -22,7 +22,7 @@ namespace interstice
         Y    = 1 << 1,
         Both = X | Y,
     };
-    INTERSTICE_ENUM_OPERATORS(ScrollAxis)
+    TACHYON_ENUM_OPERATORS(ScrollAxis)
 
     /// Scroll containers' offsets (pixels), kept across frames by ID behind handles. EndFrame
     /// drops the offsets of static IDs that were released and of other IDs not used this frame.

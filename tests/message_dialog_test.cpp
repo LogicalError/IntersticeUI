@@ -8,7 +8,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     class MessageDialogTest : public ::testing::Test

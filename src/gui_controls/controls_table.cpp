@@ -11,9 +11,9 @@
 #include <algorithm>
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
-    using namespace interstice::TableInternal;
+    using namespace tachyon::TableInternal;
 
     // BeginTable opens a recording. Cell()/TreeCell() push records onto
     // m_tableEmit->columnCells; EndTable hands the populated optional to
@@ -52,7 +52,7 @@ namespace interstice
         for (size_t c = 0; c < columnCount; c++)
         {
             columns[c].internal.maxContentWidth = 0;
-            columns[c].internal.headerRef       = interstice::ElementRef::Invalid();
+            columns[c].internal.headerRef       = tachyon::ElementRef::Invalid();
             columns[c].internal.dragOffsetX     = 0;
         }
 
@@ -73,9 +73,9 @@ namespace interstice
         TableState&         state       = *m_tableEmit->userState;
         VirtualTableColumn* columns     = m_tableEmit->columns;
         const size_t        columnCount = m_tableEmit->columnCount;
-        const interstice::ID       containerID = m_tableEmit->containerID;
+        const tachyon::ID       containerID = m_tableEmit->containerID;
         const StyleRef      style       = m_tableEmit->style;
-        interstice::LayoutOverride constraints = std::move(m_tableEmit->constraints);
+        tachyon::LayoutOverride constraints = std::move(m_tableEmit->constraints);
         const int           rowCount    = m_tableEmit->rowCount;
         const auto          recorded    = std::move(m_tableEmit->columnCells);
 

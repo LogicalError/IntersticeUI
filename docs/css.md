@@ -1,7 +1,7 @@
 # CSS and theming
 
-IntersticeUI styles come from CSS files. The parser reads a subset of CSS plus a few
-`-interstice-*` properties, and turns each class into an `interstice::Style`. This page lists
+TachyonUI styles come from CSS files. The parser reads a subset of CSS plus a few
+`-tachyon-*` properties, and turns each class into an `tachyon::Style`. This page lists
 exactly what it accepts. For the library's layout and controls, see [overview.md](overview.md)
 and [controls.md](controls.md).
 
@@ -212,8 +212,8 @@ layout and apply to the style as a whole.
 | `border-color` | color or gradient (all four edges) | state |
 | `border-top-color`, `-right-`, `-bottom-`, `-left-color` | color or gradient | state |
 | `border-style` | `solid`, `dashed` (6px dashes), `dotted` (2px dashes) | |
-| `-interstice-border-dash-size` | dash length, 0 = solid | |
-| `-interstice-border-dash-offset` | where the dash pattern starts | |
+| `-tachyon-border-dash-size` | dash length, 0 = solid | |
+| `-tachyon-border-dash-offset` | where the dash pattern starts | |
 
 There is no `border` shorthand; set width, color and style separately.
 
@@ -223,7 +223,7 @@ There is no `border` shorthand; set width, color and style separately.
 | --- | --- | --- |
 | `background-color` | color or gradient | state |
 | `color` | color or gradient: the text color | state |
-| `-interstice-icon-color` | color or gradient: the icon color. Unset = the text color | state |
+| `-tachyon-icon-color` | color or gradient: the icon color. Unset = the text color | state |
 
 ### Box shadow and focus ring
 
@@ -263,10 +263,10 @@ have the form `inset 0 0 0 <width> <color>`:
 | `font-stretch` | `normal`, `ultra-condensed`, `extra-condensed`, `condensed`, `semi-condensed`, `semi-expanded`, `expanded`, `extra-expanded`, `ultra-expanded` | state |
 | `line-height` | `normal`, a bare number (times the font size), `<n>em` (same), `<n>px` | state |
 | `letter-spacing`, `word-spacing` | number or `var()` | state |
-| `-interstice-language` | a BCP 47 tag (`ja`, `"zh-Hans"`) for shaping and font fallback, or `none` | state |
+| `-tachyon-language` | a BCP 47 tag (`ja`, `"zh-Hans"`) for shaping and font fallback, or `none` | state |
 | `text-align` | `start`, `end`, `center`, `left`, `right`, `top`, `bottom` | |
-| `-interstice-vertical-text-align` | `start`/`top`, `center`/`middle`, `end`/`bottom`: where the text (and icon) block sits vertically in the box | |
-| `vertical-align`, `dominant-baseline`, `-interstice-text-baseline` | `auto`/`baseline`/`alphabetic`, `ideographic`, `central`, `hanging`, `mathematical`, `middle`, `text-top`, `text-bottom`: the glyph baseline, not the block position | |
+| `-tachyon-vertical-text-align` | `start`/`top`, `center`/`middle`, `end`/`bottom`: where the text (and icon) block sits vertically in the box | |
+| `vertical-align`, `dominant-baseline`, `-tachyon-text-baseline` | `auto`/`baseline`/`alphabetic`, `ideographic`, `central`, `hanging`, `mathematical`, `middle`, `text-top`, `text-bottom`: the glyph baseline, not the block position | |
 | `text-wrap` | `nowrap`, `wrap`, `word-char` (wrap at words, break a too-long word between characters) | |
 | `text-overflow` | `clip`, `ellipsis` | |
 | `direction` | `auto`, `initial` (same as auto), `ltr`, `rtl` | |
@@ -313,7 +313,7 @@ Every box is a flex container unless it is `display: grid`.
 | `justify-items` | `stretch` (default: items fill their cell), or a `justify-content` value to place items in the cell |
 | `grid-column`, `grid-row` | `<start>`, `auto`, `span <n>`, or `<start> / span <n>` |
 | `grid-column-start`, `grid-row-start` | number or `auto` |
-| `-interstice-grid-column-track`, `-interstice-grid-row-track` | `auto`, `<n>px` (or a bare number), `<n>fr`. Set on an item: the size of the column or row it sits in. Items in the same track merge (fr wins over auto, auto over px; equal kinds take the larger value) |
+| `-tachyon-grid-column-track`, `-tachyon-grid-row-track` | `auto`, `<n>px` (or a bare number), `<n>fr`. Set on an item: the size of the column or row it sits in. Items in the same track merge (fr wins over auto, auto over px; equal kinds take the larger value) |
 
 There are no `grid-template-*` properties.
 
@@ -335,7 +335,7 @@ Sizes don't take `var()` or percentages. Code can override them per element with
 | `overflow` | `auto` (clip, scroll when needed), `hidden` (clip), `visible`; sets both axes |
 | `overflow-x`, `overflow-y` | same values, one axis |
 | `visibility` | `visible`, `collapsed` (not drawn, takes no space) |
-| `-interstice-clamp-scroll` | `true`/`1` (default), `false`/`0`: let the content scroll past its edges |
+| `-tachyon-clamp-scroll` | `true`/`1` (default), `false`/`0`: let the content scroll past its edges |
 
 ### Cursor
 
@@ -349,18 +349,18 @@ For controls that show an icon next to their text.
 
 | Property | Values | |
 | --- | --- | --- |
-| `-interstice-icon-side` | `left` (default), `right`, `top`, `bottom` | |
-| `-interstice-icon-text-gap` | length or `var()`: space between icon and text | |
-| `-interstice-icon-size` | length or `var()`; 0 = the icon's own size | |
-| `-interstice-icon-offset-y` | length (may be negative) or `var()`: moves the icon up | |
-| `-interstice-icon-color` | color or gradient, see above | state |
+| `-tachyon-icon-side` | `left` (default), `right`, `top`, `bottom` | |
+| `-tachyon-icon-text-gap` | length or `var()`: space between icon and text | |
+| `-tachyon-icon-size` | length or `var()`; 0 = the icon's own size | |
+| `-tachyon-icon-offset-y` | length (may be negative) or `var()`: moves the icon up | |
+| `-tachyon-icon-color` | color or gradient, see above | state |
 
 ```css
 .icon-label {
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
 }
 ```
 
@@ -413,13 +413,13 @@ up each frame, or store them again in `OnStylesReloaded`.
 A style can also be filled in code and registered with the `StyleManager`:
 
 ```cpp
-interstice::Style s;
-s.padding      = interstice::BoxEdges(4, 8);
-s.borderWidths = interstice::BoxEdges(1);
-s.borderRadius = interstice::BoxCorners(4);
-s.states[interstice::Style::kNormal].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 30, 33, 40, 255 });
-s.states[interstice::Style::kHover].backgroundColor  = interstice::ColorStyle::Create(interstice::color4b{ 35, 39, 47, 255 });
-interstice::StyleRef ref = styleManager.Register(s);
+tachyon::Style s;
+s.padding      = tachyon::BoxEdges(4, 8);
+s.borderWidths = tachyon::BoxEdges(1);
+s.borderRadius = tachyon::BoxCorners(4);
+s.states[tachyon::Style::kNormal].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 30, 33, 40, 255 });
+s.states[tachyon::Style::kHover].backgroundColor  = tachyon::ColorStyle::Create(tachyon::color4b{ 35, 39, 47, 255 });
+tachyon::StyleRef ref = styleManager.Register(s);
 ```
 
 Each of the 33 state slots in `Style::states` is set separately: the bits are `kActive` (1),
@@ -437,7 +437,7 @@ a style by the UI scale, which is the main window's display scale times `SetUISc
   tracks) is rounded to whole pixels. A border or text decoration that is set stays at least
   1 pixel. `auto` sizes stay `auto`.
 
-`Register(style, interstice::StyleUnits::Pixels)` registers a style that is already in device
+`Register(style, tachyon::StyleUnits::Pixels)` registers a style that is already in device
 pixels, and `styleManager.ToPixels(style)` gives the scaled copy. For sizes in code,
 `styleManager.Px(n)` converts CSS pixels to whole device pixels (a non-zero size stays at
 least 1).

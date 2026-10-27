@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
 
 //
 // This file is for testing and prototyping various GUI features related to inspector-like panels, such as field layouts, context menus, etc.
@@ -14,7 +14,7 @@ static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Dia
 // collapsible sections under the inspected object's header.
 //
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -64,7 +64,7 @@ namespace interstice
             Label("Toggle");
             if (Switch(demo.toggleValue, demo.toggleValue ? "On" : "Off"))
             {
-                INTERSTICE_LOG_INFO(kLogDemo, "toggle");
+                TACHYON_LOG_INFO(kLogDemo, "toggle");
             }
             SetTooltip("Switch on or off");
         });
@@ -103,10 +103,10 @@ namespace interstice
             SetTooltip("Single-line text field");
             if (BeginContextMenu())
             {
-                MenuItem("Cut",        "Ctrl+X", []() { INTERSTICE_LOG_INFO(kLogDemo, "Cut"); });
-                MenuItem("Copy",       "Ctrl+C", []() { INTERSTICE_LOG_INFO(kLogDemo, "Copy"); });
-                MenuItem("Paste",      "Ctrl+V", []() { INTERSTICE_LOG_INFO(kLogDemo, "Paste"); });
-                MenuItem("Select All", "Ctrl+A", []() { INTERSTICE_LOG_INFO(kLogDemo, "Select All"); });
+                MenuItem("Cut",        "Ctrl+X", []() { TACHYON_LOG_INFO(kLogDemo, "Cut"); });
+                MenuItem("Copy",       "Ctrl+C", []() { TACHYON_LOG_INFO(kLogDemo, "Copy"); });
+                MenuItem("Paste",      "Ctrl+V", []() { TACHYON_LOG_INFO(kLogDemo, "Paste"); });
+                MenuItem("Select All", "Ctrl+A", []() { TACHYON_LOG_INFO(kLogDemo, "Select All"); });
             }
             EndContextMenu();
         });
@@ -173,15 +173,15 @@ namespace interstice
         section = Lists;
         add("String list", [this]() {
             Label("String list", std::to_string(demo.stringList.size()) + " items");
-            Field(demo.reorderStringListID, demo.stringList, interstice::LayoutOverride{}.FlexGrow(1));
+            Field(demo.reorderStringListID, demo.stringList, tachyon::LayoutOverride{}.FlexGrow(1));
         });
         add("Float list", [this]() {
             Label("Float list", std::to_string(demo.floatList.size()) + " items");
-            Field(demo.reorderFloatListID, demo.floatList, interstice::LayoutOverride{}.FlexGrow(1));
+            Field(demo.reorderFloatListID, demo.floatList, tachyon::LayoutOverride{}.FlexGrow(1));
         });
         add("Dictionary", [this]() {
             Label("Dictionary", std::to_string(demo.dictionary.size()) + " entries");
-            Field(demo.dictionary, interstice::LayoutOverride{}.FlexGrow(1));
+            Field(demo.dictionary, tachyon::LayoutOverride{}.FlexGrow(1));
         });
 
         // ---- Menus ----------------------------------------------------------
@@ -190,7 +190,7 @@ namespace interstice
         add("Small menu", [this]() {
             Label("Small menu");
             if (BeginMenu(demo.smallMenuID, "Open",
-                          interstice::LayoutOverride{}.NoGrow().NoShrink()))
+                          tachyon::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 ID item1ID = idManager.AllocateDynamicID();
                 ID item2ID = idManager.AllocateDynamicID();
@@ -202,18 +202,18 @@ namespace interstice
                 ID subItem3ID = idManager.AllocateDynamicID();
                 ID subItem4ID = idManager.AllocateDynamicID();
 
-                MenuItem(item1ID, "Item 1", []() { INTERSTICE_LOG_INFO(kLogDemo, "Item 1 selected"); });
-                MenuItem(item2ID, "Item 2", []() { INTERSTICE_LOG_INFO(kLogDemo, "Item 2 selected"); });
+                MenuItem(item1ID, "Item 1", []() { TACHYON_LOG_INFO(kLogDemo, "Item 1 selected"); });
+                MenuItem(item2ID, "Item 2", []() { TACHYON_LOG_INFO(kLogDemo, "Item 2 selected"); });
                 if (BeginMenu(more1ID, "More 1..."))
                 {
-                    MenuItem(subItem1ID, "Sub 1", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 1"); });
-                    MenuItem(subItem2ID, "Sub 2", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 2"); });
+                    MenuItem(subItem1ID, "Sub 1", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 1"); });
+                    MenuItem(subItem2ID, "Sub 2", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 2"); });
                 }
                 EndMenu();
                 if (BeginMenu(more2ID, "More 2..."))
                 {
-                    MenuItem(subItem3ID, "Sub 3", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 3"); });
-                    MenuItem(subItem4ID, "Sub 4", []() { INTERSTICE_LOG_INFO(kLogDemo, "Sub 4"); });
+                    MenuItem(subItem3ID, "Sub 3", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 3"); });
+                    MenuItem(subItem4ID, "Sub 4", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 4"); });
                 }
                 EndMenu();
             }
@@ -224,14 +224,14 @@ namespace interstice
         add("Big menu", [this]() {
             Label("Big menu");
             if (BeginMenu(demo.bigMenuID, "Open",
-                          interstice::LayoutOverride{}.NoGrow().NoShrink()))
+                          tachyon::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 for (int i = 0; i < 100; i++)
                 {
                     char label[32];
                     snprintf(label, sizeof(label), "Item %d", i + 1);
                     int idx = i;
-                    MenuItem(label, [idx]() { INTERSTICE_LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
+                    MenuItem(label, [idx]() { TACHYON_LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
                 }
             }
             EndMenu();
@@ -252,12 +252,12 @@ namespace interstice
     {
         // ---- The inspected object: icon, name and where it is ----------------
         BeginHorizontal(idManager.AllocateDynamicID("inspectorHeader"), inspectorHeaderStyleRef,
-                        interstice::LayoutOverride::Auto().NoShrink());
+                        tachyon::LayoutOverride::Auto().NoShrink());
         {
-            interstice::Element icon{};
+            tachyon::Element icon{};
             icon.id       = idManager.AllocateDynamicID("inspectorObjectIcon");
             icon.iconID   = demo.boxIcon;
-            icon.flags    = interstice::ElementFlags::NoInput;
+            icon.flags    = tachyon::ElementFlags::NoInput;
             icon.state    = guiStateManager.GetCurrentState(icon.id);
             icon.styleRef = inspectorObjectIconStyleRef;
             RegisterElement(std::move(icon), LayoutOverride{});
@@ -274,9 +274,9 @@ namespace interstice
 
         // Search box: filters the rows by label.
         BeginHorizontal(idManager.AllocateDynamicID("inspectorSearchRow"),
-                        inspectorSearchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
+                        inspectorSearchRowStyleRef, tachyon::LayoutOverride::Auto().NoShrink());
         if (SearchField(inspectorSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
-                        interstice::LayoutOverride{}.FlexGrow(1)))
+                        tachyon::LayoutOverride{}.FlexGrow(1)))
             inspectorFilterDirty = true;
         EndHorizontal();
 

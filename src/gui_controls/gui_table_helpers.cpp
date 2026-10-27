@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace interstice::TableHelpers
+namespace tachyon::TableHelpers
 {
     VirtualRowRange ComputeVirtualRowRange(int32_t scrollY,
                                            int32_t viewportH,

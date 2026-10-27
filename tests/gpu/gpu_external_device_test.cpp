@@ -48,7 +48,7 @@ namespace
             if (!builtInstance) return false;
             instance = builtInstance.value();
 
-            auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();   // vk-bootstrap fills in the sTypes
+            auto requirements = tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements();   // vk-bootstrap fills in the sTypes
             vkb::PhysicalDeviceSelector selector{ instance };
             auto selected = selector
                 .set_minimum_version(1, 3)
@@ -71,9 +71,9 @@ namespace
             return true;
         }
 
-        interstice::vulkan::VulkanDeviceContext::ExternalDevice Describe()
+        tachyon::vulkan::VulkanDeviceContext::ExternalDevice Describe()
         {
-            interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
+            tachyon::vulkan::VulkanDeviceContext::ExternalDevice external;
             external.instance            = instance.instance;
             external.physicalDevice      = physicalDevice.physical_device;
             external.device              = device.device;
@@ -95,21 +95,21 @@ namespace
     class GpuExternalDeviceTest : public ::testing::Test
     {
     protected:
-        interstice::GraphicsContext*          graphicsContext = nullptr;
-        interstice::SDLWindowBackend*         windowBackend   = nullptr;
-        interstice::vulkan::VulkanGraphicsContext* vk              = nullptr;
+        tachyon::GraphicsContext*          graphicsContext = nullptr;
+        tachyon::SDLWindowBackend*         windowBackend   = nullptr;
+        tachyon::vulkan::VulkanGraphicsContext* vk              = nullptr;
         ValidationSink                 sink;
         HostDevice                     host;
-        interstice::GradientManager           gradientManager{ 256 };
-        interstice::StyleManager              styleManager{ gradientManager };
+        tachyon::GradientManager           gradientManager{ 256 };
+        tachyon::StyleManager              styleManager{ gradientManager };
 
         void SetUp() override
         {
-            vk              = new interstice::vulkan::VulkanGraphicsContext();
+            vk              = new tachyon::vulkan::VulkanGraphicsContext();
             graphicsContext = vk;
-            windowBackend   = new interstice::SDLWindowBackend();
+            windowBackend   = new tachyon::SDLWindowBackend();
             windowBackend->SetGraphicsContext(graphicsContext);
-            styleManager.Register(interstice::Style{});
+            styleManager.Register(tachyon::Style{});
         }
 
         void TearDown() override
@@ -126,7 +126,7 @@ TEST_F(GpuExternalDeviceTest, HostDeviceMeetsPublishedRequirements)
 {
     if (!host.Create(sink)) GTEST_SKIP() << "No suitable Vulkan device available";
     std::string problems;
-    EXPECT_TRUE(interstice::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(
+    EXPECT_TRUE(tachyon::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(
         host.physicalDevice.physical_device, &problems)) << problems;
 }
 
@@ -144,25 +144,25 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
     EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
     // Render one frame into a render-to-image window.
-    const interstice::int2 size{ 64, 64 };
-    interstice::ID id{};
-    id.value.dynamicParts.mode      = interstice::IDMode::Static;
+    const tachyon::int2 size{ 64, 64 };
+    tachyon::ID id{};
+    id.value.dynamicParts.mode      = tachyon::IDMode::Static;
     id.value.dynamicParts.hashValue = 9100;
-    auto* window = interstice::vulkan::VulkanWindowContext::Create(
-        id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage,
+    auto* window = tachyon::vulkan::VulkanWindowContext::Create(
+        id, nullptr, nullptr, size, tachyon::WindowFlags::RenderToImage,
         &vk->deviceContext, [] {});
     ASSERT_NE(window, nullptr);
 
     graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-    interstice::GUIRenderer* renderer = graphicsContext->guiRenderer;
+    tachyon::GUIRenderer* renderer = graphicsContext->guiRenderer;
     renderer->Reset();
     if (renderer->BeginWindow(window->GetID()))
     {
-        renderer->RenderDot(interstice::float2{ 32.0f, 32.0f }, interstice::IntRect{ 0, 0, size.x, size.y },
-                            10.0f, interstice::color4f{ 1, 1, 1, 1 });
+        renderer->RenderDot(tachyon::float2{ 32.0f, 32.0f }, tachyon::IntRect{ 0, 0, size.x, size.y },
+                            10.0f, tachyon::color4f{ 1, 1, 1, 1 });
         renderer->EndWindow();
     }
-    window->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
+    window->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, size.x, size.y }, false);
     EXPECT_FALSE(sink.HasErrors()) << "Validation errors rendering on the host device:\n" << sink.Dump();
 
     window->Destroy();
@@ -182,7 +182,7 @@ TEST_F(GpuExternalDeviceTest, RendersOnHostDeviceAndLeavesItIntact)
 
 TEST_F(GpuExternalDeviceTest, RejectsIncompleteHostDevice)
 {
-    interstice::vulkan::VulkanDeviceContext::ExternalDevice incomplete;   // all handles null
+    tachyon::vulkan::VulkanDeviceContext::ExternalDevice incomplete;   // all handles null
     vk->deviceContext.SetExternalDevice(incomplete);
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend))
         << "An external device without handles must fail cleanly, not crash";
@@ -276,27 +276,27 @@ TEST_F(GpuExternalDeviceTest, SamplesHostRenderedImageInGuiPrimitive)
         ASSERT_EQ(vkQueueSubmit2(host.queue, 1, &submit, VK_NULL_HANDLE), VK_SUCCESS);
     }
 
-    const interstice::ImageIndex hostImageIndex = vk->RegisterExternalImage(hostView, dc.defaultSamplerNearest);
-    ASSERT_NE(hostImageIndex, interstice::ImageIndex::Invalid);
+    const tachyon::ImageIndex hostImageIndex = vk->RegisterExternalImage(hostView, dc.defaultSamplerNearest);
+    ASSERT_NE(hostImageIndex, tachyon::ImageIndex::Invalid);
 
-    const interstice::int2 size{ 64, 64 };
-    interstice::ID id{};
-    id.value.dynamicParts.mode      = interstice::IDMode::Static;
+    const tachyon::int2 size{ 64, 64 };
+    tachyon::ID id{};
+    id.value.dynamicParts.mode      = tachyon::IDMode::Static;
     id.value.dynamicParts.hashValue = 9200;
-    auto* window = interstice::vulkan::VulkanWindowContext::Create(
-        id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage, &dc, [] {});
+    auto* window = tachyon::vulkan::VulkanWindowContext::Create(
+        id, nullptr, nullptr, size, tachyon::WindowFlags::RenderToImage, &dc, [] {});
     ASSERT_NE(window, nullptr);
 
     // Only texture-typed color styles sample the image passed to a primitive.
-    const auto white = styleManager.RegisterColorStyle(interstice::ColorStyle::Create(
-        interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 }, interstice::ColorType::StretchedTexture));
+    const auto white = styleManager.RegisterColorStyle(tachyon::ColorStyle::Create(
+        tachyon::color4b{ 255, 255, 255, 255 }, tachyon::color4b{ 255, 255, 255, 255 }, tachyon::ColorType::StretchedTexture));
     graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-    interstice::GUIRenderer* renderer = graphicsContext->guiRenderer;
+    tachyon::GUIRenderer* renderer = graphicsContext->guiRenderer;
     renderer->Reset();
-    const interstice::IntRect full{ 0, 0, size.x, size.y };
+    const tachyon::IntRect full{ 0, 0, size.x, size.y };
     if (renderer->BeginWindow(window->GetID()))
     {
-        renderer->RenderQuad(interstice::IntRect{ 0, 0, size.x / 2, size.y }, full, white, 0.0f, hostImageIndex);
+        renderer->RenderQuad(tachyon::IntRect{ 0, 0, size.x / 2, size.y }, full, white, 0.0f, hostImageIndex);
         renderer->EndWindow();
     }
     window->RenderWindowFrame(graphicsContext, full, false);

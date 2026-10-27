@@ -1,13 +1,13 @@
 # Controls reference
 
-Every control and container is a member function of `interstice::GUIApplication`,
+Every control and container is a member function of `tachyon::GUIApplication`,
 called from `OnGUI()` each frame. This page lists them by family, with their main
 signatures, what they return, the callback they take and the CSS class they use by
 default. How IDs, Begin / End pairs and return values work in general is in
 [overview.md](overview.md); how to style the classes named here is in [css.md](css.md).
 
 The snippets run inside `OnGUI()` of a `GUIApplication` subclass, with
-`using namespace interstice;`. The programs in `examples/` show the same calls in
+`using namespace tachyon;`. The programs in `examples/` show the same calls in
 context.
 
 ## Common conventions
@@ -118,7 +118,7 @@ Useful flags: `WindowUserControlled` (move and resize), `WindowIsCentered`,
 if (BeginWindow(windowID, "Hello", LayoutOverride{}.Size(360, 160)))
 {
     BeginVertical(LayoutOverride{}.FlexGrow(1));
-    Text("Hello from IntersticeUI!");
+    Text("Hello from TachyonUI!");
     EndVertical();
 }
 EndWindow();

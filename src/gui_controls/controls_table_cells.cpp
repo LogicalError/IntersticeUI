@@ -12,20 +12,20 @@
 #include <cassert>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
-    using namespace interstice::TableInternal;
+    using namespace tachyon::TableInternal;
 
     namespace
     {
         // 300 ms double-click toggle for `*isOpen`. Cell mode only - in
         // row mode the equivalent lives in BuildRowBackdropHandler (the
         // tree cell shares rowID with the backdrop, which catches dispatch first).
-        interstice::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, interstice::EventHandler inner)
+        tachyon::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, tachyon::EventHandler inner)
         {
-            return [tracker, isOpen, inner = std::move(inner)](interstice::ElementEvent&& event) -> bool
+            return [tracker, isOpen, inner = std::move(inner)](tachyon::ElementEvent&& event) -> bool
             {
-                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
                     const auto r = tracker->Update(event.id);
                     if (r.sameAsPrevious && r.elapsedMs < 300.0f && isOpen)
@@ -43,7 +43,7 @@ namespace interstice
         // Recording mode: store one replay closure at (currentCol, current
         // row), padding skipped cells, then advance to the next column.
         // EndTable replays the closures through VirtualTable's row loop.
-        void RecordReplayCell(interstice::TableEmit& emit, std::function<void()> replay)
+        void RecordReplayCell(tachyon::TableEmit& emit, std::function<void()> replay)
         {
             assert(emit.rowCount > 0 && "Cell() outside BeginRow/EndRow");
             assert(emit.currentCol < int(emit.columnCount) && "more Cell() calls than columns");
@@ -60,12 +60,12 @@ namespace interstice
     void EmitTreeCellIndent(GUIApplication& app, int depth)
     {
         if (depth <= 0) return;
-        interstice::Element spacer{};
+        tachyon::Element spacer{};
         spacer.id       = app.idManager.AllocateDynamicID();
         spacer.styleRef = app.theme.treeTableIndentStyleRef;
-        spacer.flags    = interstice::ElementFlags::NoInput;
+        spacer.flags    = tachyon::ElementFlags::NoInput;
         auto res = app.elementStorage.Add(std::move(spacer),
-            interstice::LayoutOverride::FixedWidth(Pixels{ depth * app.theme.treeTableIndent }));
+            tachyon::LayoutOverride::FixedWidth(Pixels{ depth * app.theme.treeTableIndent }));
         VERIFY(res.status);
         VERIFY(app.windowRegistry.Add(res.ref));
     }
@@ -77,38 +77,38 @@ namespace interstice
     {
         if (isOpen)
         {
-            interstice::ID arrowID = app.idManager.AllocateDynamicID();
-            interstice::Element arrow{};
+            tachyon::ID arrowID = app.idManager.AllocateDynamicID();
+            tachyon::Element arrow{};
             arrow.id       = arrowID;
             arrow.styleRef = app.theme.treeTableArrowStyleRef;
             arrow.state    = app.guiStateManager.GetCurrentState(arrowID);
             arrow.eventHandler = [isOpen](ElementEvent&& event) -> bool {
-                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                     { *isOpen = !*isOpen; return true; }
                 return false;
             };
-            auto res = app.elementStorage.Add(std::move(arrow), interstice::LayoutOverride{});
+            auto res = app.elementStorage.Add(std::move(arrow), tachyon::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(app.windowRegistry.Add(res.ref));
 
             VERIFY(app.elementStorage.BeginChildren());
             {
-                interstice::ID glyphID = app.idManager.AllocateDynamicID();
-                interstice::Element glyph{};
+                tachyon::ID glyphID = app.idManager.AllocateDynamicID();
+                tachyon::Element glyph{};
                 glyph.id       = glyphID;
                 glyph.styleRef = app.theme.treeTableArrowGlyphStyleRef;
-                glyph.flags    = interstice::ElementFlags::NoInput;
+                glyph.flags    = tachyon::ElementFlags::NoInput;
                 glyph.state    = app.guiStateManager.GetCurrentState(glyphID);
                 // Explicit size - the arrow SVG is 8x8 intrinsic.
                 const float glyphSize = static_cast<float>(app.theme.treeTableArrowGlyphSize);
-                interstice::ContentRun arrowRun[] = {
-                    { .type = interstice::ContentRun::Icon,
+                tachyon::ContentRun arrowRun[] = {
+                    { .type = tachyon::ContentRun::Icon,
                       .iconID = (*isOpen ? app.theme.treeArrowDown : app.theme.treeArrowRight),
                       .iconWidth = glyphSize, .iconHeight = glyphSize }
                 };
                 glyph.textID = app.textSystem->RegisterRichText(glyphID, arrowRun,
                                                                 app.theme.treeTableArrowGlyphStyleRef, glyph.state);
-                auto gRes = app.elementStorage.Add(std::move(glyph), interstice::LayoutOverride::Auto());
+                auto gRes = app.elementStorage.Add(std::move(glyph), tachyon::LayoutOverride::Auto());
                 VERIFY(gRes.status);
                 VERIFY(app.windowRegistry.Add(gRes.ref));
             }
@@ -116,11 +116,11 @@ namespace interstice
         }
         else
         {
-            interstice::Element spacer{};
+            tachyon::Element spacer{};
             spacer.id       = app.idManager.AllocateDynamicID();
             spacer.styleRef = app.theme.treeTableArrowStyleRef;
-            spacer.flags    = interstice::ElementFlags::NoInput;
-            auto res = app.elementStorage.Add(std::move(spacer), interstice::LayoutOverride{});
+            spacer.flags    = tachyon::ElementFlags::NoInput;
+            auto res = app.elementStorage.Add(std::move(spacer), tachyon::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(app.windowRegistry.Add(res.ref));
         }
@@ -131,28 +131,28 @@ namespace interstice
     // clicks return false so the row backdrop's selection / drag-prime still
     // sees them.
     void EmitTreeCellIcon(GUIApplication& app, IconID icon, bool* isOpen,
-                          interstice::DoubleClickTracker* tracker)
+                          tachyon::DoubleClickTracker* tracker)
     {
         if (icon == IconID::Invalid) return;
-        interstice::ID iconElemID = app.idManager.AllocateDynamicID();
-        interstice::Element iconElem{};
+        tachyon::ID iconElemID = app.idManager.AllocateDynamicID();
+        tachyon::Element iconElem{};
         iconElem.id       = iconElemID;
         iconElem.styleRef = app.theme.treeTableIconStyleRef;
         const bool hittable = (isOpen != nullptr);
         iconElem.state    = app.guiStateManager.GetCurrentState(iconElemID);
-        if (!hittable) iconElem.flags |= interstice::ElementFlags::NoInput;
+        if (!hittable) iconElem.flags |= tachyon::ElementFlags::NoInput;
         const float iconSize = static_cast<float>(app.theme.treeTableIconSize);
-        interstice::ContentRun iconRun[] = {
-            { .type = interstice::ContentRun::Icon, .iconID = icon,
+        tachyon::ContentRun iconRun[] = {
+            { .type = tachyon::ContentRun::Icon, .iconID = icon,
               .iconWidth = iconSize, .iconHeight = iconSize }
         };
         iconElem.textID = app.textSystem->RegisterRichText(iconElemID, iconRun,
                                                            app.theme.treeTableIconStyleRef, iconElem.state);
         if (hittable)
         {
-            iconElem.eventHandler = [isOpen, tracker](interstice::ElementEvent&& event) -> bool
+            iconElem.eventHandler = [isOpen, tracker](tachyon::ElementEvent&& event) -> bool
             {
-                if (event.type != interstice::EventType::MouseDown) return false;
+                if (event.type != tachyon::EventType::MouseDown) return false;
                 if (!event.state.LeftPressed()) return false;
                 const auto r = tracker->Update(event.id);
                 if (r.sameAsPrevious && r.elapsedMs < 300.0f)
@@ -164,7 +164,7 @@ namespace interstice
                 return false;
             };
         }
-        auto res = app.elementStorage.Add(std::move(iconElem), interstice::LayoutOverride::Auto());
+        auto res = app.elementStorage.Add(std::move(iconElem), tachyon::LayoutOverride::Auto());
         VERIFY(res.status);
         VERIFY(app.windowRegistry.Add(res.ref));
     }
@@ -186,26 +186,26 @@ namespace interstice
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const interstice::ID rowID    = emit.currentRowID;
+        const tachyon::ID rowID    = emit.currentRowID;
         const StyleRef columnStyle = emit.columns[c].column.cellStyle;
         const StyleRef styleRef = (columnStyle.layoutStyleIndex != LayoutStyleIndex::Invalid) ? columnStyle
             : (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid) ? emit.cellStyleRef
             : theme.tableCellStyleRef;
 
-        const interstice::ID cellID = idManager.AllocateDynamicID();
+        const tachyon::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        const interstice::ElementFlags cellFlags =
-            cellMode ? interstice::ElementFlags::None : interstice::ElementFlags::NoInput;
+        const tachyon::ElementFlags cellFlags =
+            cellMode ? tachyon::ElementFlags::None : tachyon::ElementFlags::NoInput;
 
-        const interstice::TextID textID = textSystem->RegisterText(
+        const tachyon::TextID textID = textSystem->RegisterText(
             cellID, text, styleRef, cellState);
 
         const int32_t cellW = textSystem->GetTextMeasurement(textID).maxWidth;
         emit.columns[c].internal.maxContentWidth =
             std::max(emit.columns[c].internal.maxContentWidth, cellW);
 
-        interstice::EventHandler cellHandler;
+        tachyon::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -237,22 +237,22 @@ namespace interstice
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const interstice::ID rowID    = emit.currentRowID;
+        const tachyon::ID rowID    = emit.currentRowID;
         const StyleRef columnStyle = emit.columns[c].column.cellStyle;
         const StyleRef styleRef = (columnStyle.layoutStyleIndex != LayoutStyleIndex::Invalid) ? columnStyle
             : (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid) ? emit.cellStyleRef
             : theme.tableCellStyleRef;
 
-        const interstice::ID cellID = idManager.AllocateDynamicID();
+        const tachyon::ID cellID = idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
         // Row-mode cells are NoInput (click -> select row), except columns that
         // host their own widget - those stay hittable so the widget gets input.
         const bool cellInteractive = cellMode || emit.columns[c].column.interactiveContent;
-        const interstice::ElementFlags cellFlags =
-            cellInteractive ? interstice::ElementFlags::None : interstice::ElementFlags::NoInput;
+        const tachyon::ElementFlags cellFlags =
+            cellInteractive ? tachyon::ElementFlags::None : tachyon::ElementFlags::NoInput;
 
-        interstice::EventHandler cellHandler;
+        tachyon::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -290,7 +290,7 @@ namespace interstice
         TableEmit&    emit     = *m_tableEmit;
         TableState*   state    = emit.userState;
         const bool    cellMode = emit.cellMode;
-        const interstice::ID rowID    = emit.currentRowID;
+        const tachyon::ID rowID    = emit.currentRowID;
 
         // Tree-row metadata; slots are reused across frames (no steady-state allocation).
         auto& info = state->EnsureTreeRowInfo()[rowID];
@@ -301,13 +301,13 @@ namespace interstice
         if (renameBuffer != nullptr) info.renameSeed.assign(text);
         else                         info.renameSeed.clear();
 
-        const interstice::ID cellID = cellMode ? idManager.AllocateDynamicID() : rowID;
+        const tachyon::ID cellID = cellMode ? idManager.AllocateDynamicID() : rowID;
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
         // In row mode the cell is the row (its state follows the row's): it shares the row's ID.
-        const interstice::ElementFlags cellFlags = cellID == rowID ? interstice::ElementFlags::SharesID : interstice::ElementFlags::None;
+        const tachyon::ElementFlags cellFlags = cellID == rowID ? tachyon::ElementFlags::SharesID : tachyon::ElementFlags::None;
 
-        const interstice::ID bodyID = idManager.AllocateDynamicID();
+        const tachyon::ID bodyID = idManager.AllocateDynamicID();
 
         if (renameBuffer && (*m_renameSub).isActive &&
             (*m_renameSub).targetID == rowID &&
@@ -320,7 +320,7 @@ namespace interstice
                                   (*m_renameSub).isActive &&
                                   (*m_renameSub).targetID == rowID;
 
-        interstice::EventHandler cellHandler;
+        tachyon::EventHandler cellHandler;
         if (cellMode)
         {
             state->EnsureCellLookup()[cellID] = { rowID, c };
@@ -334,8 +334,8 @@ namespace interstice
             cellHandler = MakeTreeCellDoubleClickToggle(&state->internal.treeCellClickTracker, isOpen, std::move(cellHandler));
 
         const StyleRef textStyle = theme.treeTableTextStyleRef;
-        const interstice::ElementState textState = guiStateManager.GetCurrentState(bodyID);
-        const interstice::TextID bodyTextID = textSystem->RegisterText(
+        const tachyon::ElementState textState = guiStateManager.GetCurrentState(bodyID);
+        const tachyon::TextID bodyTextID = textSystem->RegisterText(
             bodyID, text, textStyle, textState);
         // Branches always reserve the arrow / leaf-spacer column (the arrow lives
         // there); leaves only when reserveExpander is set.
@@ -343,7 +343,7 @@ namespace interstice
         int32_t prefix = (depth > 0 ? depth * theme.treeTableIndent : 0)
                        + (hasExpanderColumn ? theme.treeTableExpanderWidth : 0)
                        + (icon != IconID::Invalid ? theme.treeTableIconSize : 0);
-        if (const interstice::LayoutStyle* ts = styleManager.GetLayoutStyle(textStyle.layoutStyleIndex))
+        if (const tachyon::LayoutStyle* ts = styleManager.GetLayoutStyle(textStyle.layoutStyleIndex))
             prefix += ts->padding.Horizontal() + ts->borderWidths.Horizontal();
         const int32_t treeRowW = textSystem->GetTextMeasurement(bodyTextID).maxWidth + prefix;
         emit.columns[c].internal.maxContentWidth =
@@ -363,22 +363,22 @@ namespace interstice
 
 
     void GUIApplication::EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
-                                            interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                            interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
-                                            interstice::TextID textID,
+                                            tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                            tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
+                                            tachyon::TextID textID,
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column.internal.columnTrack;
 
-        interstice::Element cell{};
+        tachyon::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.textID       = textID;
         cell.eventHandler = std::move(cellHandler);
-        interstice::LayoutOverride cellLo;
+        tachyon::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -391,8 +391,8 @@ namespace interstice
 
 
     void GUIApplication::EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
-                                              interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                              interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                              tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                              tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
                                               bool cellSelected,
                                               std::function<void()> emit_fn,
                                               int colIdx, int colStart, int16_t gridRow)
@@ -400,13 +400,13 @@ namespace interstice
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column.internal.columnTrack;
 
-        interstice::Element cell{};
+        tachyon::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.eventHandler = std::move(cellHandler);
-        interstice::LayoutOverride cellLo;
+        tachyon::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -425,26 +425,26 @@ namespace interstice
 
 
     void GUIApplication::EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
-                                            interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                            interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                            tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                            tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
                                             bool cellSelected,
-                                            interstice::TextID textID,
+                                            tachyon::TextID textID,
                                             int treeDepth, bool* treeIsOpen, IconID treeIcon,
                                             uint32_t treeAncestorMask, bool treeIsLastSibling,
                                             std::string* treeRenameBuffer, bool treeRenameActive,
-                                            interstice::ID treeBodyID, bool reserveExpander,
+                                            tachyon::ID treeBodyID, bool reserveExpander,
                                             int colIdx, int colStart, int16_t gridRow)
     {
         // Pre-resolved per-column track from VirtualTable's setup pass.
         const GridTrack& track = column.internal.columnTrack;
 
-        interstice::Element cell{};
+        tachyon::Element cell{};
         cell.id           = cellID;
         cell.flags        = cellFlags;
         cell.state        = cellState;
         cell.styleRef     = cellStyleRef;
         cell.eventHandler = std::move(cellHandler);
-        interstice::LayoutOverride cellLo;
+        tachyon::LayoutOverride cellLo;
         cellLo = ApplyColumnDragOffsetX(
                     std::move(cellLo)
                         .GridColumn(static_cast<int16_t>(colIdx - colStart))
@@ -468,7 +468,7 @@ namespace interstice
                  treeIndent     = theme.treeTableIndent,
                  sm             = &styleManager,
                  cellStyle      = theme.treeTableCellStyleRef]
-                (interstice::CustomDrawContext& ctx)
+                (tachyon::CustomDrawContext& ctx)
                 {
                     // Vertical guides span the full OUTER row so consecutive rows'
                     // guides stay connected (no padding-sized gaps between rows).
@@ -478,12 +478,12 @@ namespace interstice
                     const int32_t topY = outer.y - inner.y;
                     const int32_t leftX = outer.x - inner.x;
                     int32_t padLeft = 0;
-                    if (const interstice::LayoutStyle* ls = sm->GetLayoutStyle(cellStyle.layoutStyleIndex))
+                    if (const tachyon::LayoutStyle* ls = sm->GetLayoutStyle(cellStyle.layoutStyleIndex))
                         padLeft = ls->borderWidths.left + ls->padding.left;
                     const int32_t indent  = treeIndent;
                     const int32_t centerY = topY + h / 2;
 
-                    interstice::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = sm->Px(1.f) };
+                    tachyon::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = sm->Px(1.f) };
 
                     for (int d = 0; d < depth - 1; d++)
                     {
@@ -518,13 +518,13 @@ namespace interstice
         }
         else
         {
-            interstice::Element textElem{};
+            tachyon::Element textElem{};
             textElem.id       = treeBodyID;
             textElem.styleRef = theme.treeTableTextStyleRef;
-            textElem.flags    = interstice::ElementFlags::NoInput;
+            textElem.flags    = tachyon::ElementFlags::NoInput;
             textElem.state    = guiStateManager.GetCurrentState(treeBodyID);
             textElem.textID   = textID;
-            auto res = elementStorage.Add(std::move(textElem), interstice::LayoutOverride::Auto());
+            auto res = elementStorage.Add(std::move(textElem), tachyon::LayoutOverride::Auto());
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
         }

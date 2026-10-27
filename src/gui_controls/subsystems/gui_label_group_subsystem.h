@@ -7,7 +7,7 @@
 #include <gui_core/elements/gui_element.h>
 #include <gui_core/text/gui_text_system.h>
 
-namespace interstice
+namespace tachyon
 {
     class FramePipeline;
     struct FrameContext;
@@ -33,9 +33,9 @@ namespace interstice
             bool    edgeHovered     = false;   ///< a label's resize edge is hovered
             bool    edgeDragging    = false;   ///< a label's resize edge is being dragged
             bool    anyLabelHovered = false; ///< transient: set during construction if any label has hover
-            std::vector<interstice::TextID> labelTextIDs; ///< transient: rebuilt each frame for auto-size
+            std::vector<tachyon::TextID> labelTextIDs; ///< transient: rebuilt each frame for auto-size
             int32_t maxLabelWidthThisFrame = 0;    ///< transient: widest label (pixels), for auto-width
-            std::vector<interstice::ElementRef> labelRefs; ///< transient: this frame's labels, in order
+            std::vector<tachyon::ElementRef> labelRefs; ///< transient: this frame's labels, in order
         };
 
         LabelGroupSubsystem(FramePipeline& frame,
@@ -45,13 +45,13 @@ namespace interstice
 
         /// Opens group `id` at the current nesting depth; widths are CSS px, and `defaultWidth`
         /// applies only when the group is new. Called by GUIApplication's label-group methods.
-        void   BeginGroup(interstice::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable = true);
+        void   BeginGroup(tachyon::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable = true);
         /// Closes the innermost group.
         void   EndGroup();
         /// The innermost group when it was opened at the current nesting depth, else nullptr.
         State* GetActiveGroup();
         /// Adds a label to the innermost group and draws its resize edge; a group must be open.
-        void   AddDragger(interstice::ElementRef labelRef);
+        void   AddDragger(tachyon::ElementRef labelRef);
 
         /// True iff every BeginGroup was matched by EndGroup.
         bool IsBalanced() const { return m_stack.empty(); }
@@ -66,7 +66,7 @@ namespace interstice
             uint32_t nestingDepth;
         };
 
-        std::unordered_map<interstice::ID, State> m_states;
+        std::unordered_map<tachyon::ID, State> m_states;
         std::vector<StackEntry>            m_stack;
 
         ElementStorage&  m_elementStorage;

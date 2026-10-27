@@ -16,7 +16,7 @@
 
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -36,8 +36,8 @@ namespace interstice
         {
         protected:
             SettingsHostApp app;
-            interstice::TableState state;
-            std::vector<interstice::VirtualTableColumn> cols;
+            tachyon::TableState state;
+            std::vector<tachyon::VirtualTableColumn> cols;
 
             void SetUp() override
             {
@@ -74,9 +74,9 @@ namespace interstice
             {
                 app.BeginRootWindow();
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<interstice::VirtualTableColumn>(cols),
+                                 std::span<tachyon::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 interstice::LayoutOverride{}.Width(500).Height(300));
+                                 tachyon::LayoutOverride{}.Width(500).Height(300));
                 app.EndRootWindow();
             }
 
@@ -87,43 +87,43 @@ namespace interstice
                 app.BeginRootWindow();
                 app.BeginArea(app.idManager.AllocateDynamicID("pane"),
                               app.theme.settingsPageStyleRef,
-                              interstice::LayoutOverride{}.Size(700, 300).NoGrow().NoShrink());
+                              tachyon::LayoutOverride{}.Size(700, 300).NoGrow().NoShrink());
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("fill"),
                                     app.theme.flexFillRowStyleRef,
-                                    interstice::LayoutOverride::Auto().FlexGrow(1));
+                                    tachyon::LayoutOverride::Auto().FlexGrow(1));
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<interstice::VirtualTableColumn>(cols),
+                                 std::span<tachyon::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 interstice::LayoutOverride::Auto().FlexGrow(1));
+                                 tachyon::LayoutOverride::Auto().FlexGrow(1));
                 app.EndHorizontal();
                 app.EndArea();
                 app.EndRootWindow();
             }
 
-            interstice::IntRect BarRect() const { return app.GetElementRect(state.internal.vertScrollbarID); }
+            tachyon::IntRect BarRect() const { return app.GetElementRect(state.internal.vertScrollbarID); }
 
             // A table whose columns (sum 500) far exceed the host width, using
             // the given outer style. The container is fixed at 300 wide.
-            void BuildWideColumns(interstice::StyleRef tableStyle)
+            void BuildWideColumns(tachyon::StyleRef tableStyle)
             {
-                std::vector<interstice::VirtualTableColumn> wide(2);
+                std::vector<tachyon::VirtualTableColumn> wide(2);
                 wide[0].column = { .header = "A", .initialWidth = 250, .minWidth = 200, .maxWidth = 400 };
                 wide[0].generateCell = [this](int r){ (void)r; app.Cell("aaaa"); };
                 wide[1].column = { .header = "B", .initialWidth = 250, .minWidth = 200, .maxWidth = 400 };
                 wide[1].generateCell = [this](int r){ (void)r; app.Cell("bbbb"); };
                 // Keep them alive for the frame; static so the sizer pointers
                 // (if any) stay valid like the demo's persistent columns.
-                static std::vector<interstice::VirtualTableColumn> held;
+                static std::vector<tachyon::VirtualTableColumn> held;
                 held = std::move(wide);
 
                 app.BeginRootWindow();
                 app.BeginArea(app.idManager.AllocateDynamicID("wpane"),
                               app.theme.flexFillRowStyleRef,
-                              interstice::LayoutOverride{}.Size(300, 300).NoGrow().NoShrink());
+                              tachyon::LayoutOverride{}.Size(300, 300).NoGrow().NoShrink());
                 app.VirtualTable(app.idManager.AllocateDynamicID("wtbl"), state,
-                                 std::span<interstice::VirtualTableColumn>(held),
+                                 std::span<tachyon::VirtualTableColumn>(held),
                                  /*rows*/200, 0, tableStyle,
-                                 interstice::LayoutOverride{}.FlexGrow(1));
+                                 tachyon::LayoutOverride{}.FlexGrow(1));
                 app.EndArea();
                 app.EndRootWindow();
             }
@@ -175,9 +175,9 @@ namespace interstice
         TEST_F(TableScrollbarTest, ShortcutsShapedSettingsPageEmitsVerticalScrollbar)
         {
             auto& sp = app.settings;
-            std::vector<interstice::TreeViewRow> catRows;
+            std::vector<tachyon::TreeViewRow> catRows;
             std::vector<int>           catVisible;
-            interstice::TableState catTable;
+            tachyon::TableState catTable;
             std::string searchText;
             int  catWidth = 160;
 
@@ -188,7 +188,7 @@ namespace interstice
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("searchRow"),
                                     app.theme.searchRowStyleRef,
-                                    interstice::LayoutOverride::Auto().NoShrink());
+                                    tachyon::LayoutOverride::Auto().NoShrink());
                 app.BeginLabelGroup(140, 40, 500, /*resizable*/false);
                 app.Label("Search");
                 app.Field(searchText, TextEditBehavior::ContinuousUpdate);
@@ -197,10 +197,10 @@ namespace interstice
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("split"),
                                     app.theme.flexFillRowStyleRef,
-                                    interstice::LayoutOverride::Auto().FlexGrow(1));
+                                    tachyon::LayoutOverride::Auto().FlexGrow(1));
 
                 catRows.clear();
-                interstice::TreeViewRow r{};
+                tachyon::TreeViewRow r{};
                 r.id   = app.idManager.AllocateDynamicID("cat");
                 r.name = "All";
                 catRows.push_back(std::move(r));
@@ -208,26 +208,26 @@ namespace interstice
                 app.VirtualTreeView(app.idManager.AllocateDynamicID("catTree"),
                                     catRows, catVisible, catTable,
                                     app.theme.treeViewStyleRef,
-                                    interstice::LayoutOverride::Auto().FixedWidth(CssPx(catWidth)).NoGrow());
+                                    tachyon::LayoutOverride::Auto().FixedWidth(CssPx(catWidth)).NoGrow());
 
-                interstice::Element sizer{};
+                tachyon::Element sizer{};
                 sizer.id       = app.idManager.AllocateDynamicID("catSizer");
                 sizer.styleRef = app.theme.dockSizerHorzStyleRef;
                 sizer.state    = app.guiStateManager.GetCurrentState(sizer.id);
-                sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
+                sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
                     app.guiStateManager, catWidth, 100, 400);
                 auto sRes = app.elementStorage.Add(std::move(sizer),
-                                                   interstice::LayoutOverride::FixedWidth(4));
+                                                   tachyon::LayoutOverride::FixedWidth(4));
                 VERIFY(sRes.status);
                 VERIFY(app.windowRegistry.Add(sRes.ref));
 
                 app.BeginHorizontal(app.idManager.AllocateDynamicID("gridCol"),
                                     app.theme.flexFillRowStyleRef,
-                                    interstice::LayoutOverride::Auto().FlexGrow(1));
+                                    tachyon::LayoutOverride::Auto().FlexGrow(1));
                 app.VirtualTable(app.idManager.AllocateDynamicID("tbl"), state,
-                                 std::span<interstice::VirtualTableColumn>(cols),
+                                 std::span<tachyon::VirtualTableColumn>(cols),
                                  /*rows*/200, 0, app.theme.tableStyleRef,
-                                 interstice::LayoutOverride::Auto().FlexGrow(1));
+                                 tachyon::LayoutOverride::Auto().FlexGrow(1));
                 app.EndHorizontal();
 
                 app.EndHorizontal(); // split
@@ -242,10 +242,10 @@ namespace interstice
                 // EmitDockLeaf wraps a panel's onPanelGUI.
                 app.BeginArea(app.idManager.AllocateDynamicID("leaf"),
                               app.theme.flexFillRowStyleRef,
-                              interstice::LayoutOverride{}.Size(900, 400).NoGrow().NoShrink());
+                              tachyon::LayoutOverride{}.Size(900, 400).NoGrow().NoShrink());
                 app.BeginArea(app.idManager.AllocateDynamicID("dockContent"),
                               app.theme.dockContentStyleRef,
-                              interstice::LayoutOverride{}.FlexGrow(1));
+                              tachyon::LayoutOverride{}.FlexGrow(1));
                 app.RenderSettingsPanel(sp);
                 app.EndArea(); // dockContent
                 app.EndArea(); // leaf

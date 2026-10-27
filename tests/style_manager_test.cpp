@@ -7,7 +7,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_controls/gui_transition_manager.h>
 
-namespace interstice
+namespace tachyon
 {
 
     static Gradient MakeTwoStopGradient()

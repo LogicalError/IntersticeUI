@@ -15,16 +15,16 @@ using namespace GpuTestHarness;
 // mustn't fire it in the middle of the frame: the menu would close under its own click.
 TEST_F(GpuTest, ProgrammaticWindowChangesDontFireTheMovedCallback)
 {
-    const interstice::OSWindowHandle window =
-        windowBackend->CreateWindow("moved-test", interstice::IntRect{ -3000, -3000, 200, 100 },
-                                    interstice::WindowFlags::Hidden | interstice::WindowFlags::Resizable, nullptr);
+    const tachyon::OSWindowHandle window =
+        windowBackend->CreateWindow("moved-test", tachyon::IntRect{ -3000, -3000, 200, 100 },
+                                    tachyon::WindowFlags::Hidden | tachyon::WindowFlags::Resizable, nullptr);
     ASSERT_NE(window, nullptr);
     int moved = 0;
     windowBackend->SetWindowMovedCallback([&] { ++moved; });
 
-    windowBackend->SetWindowRect(window, interstice::IntRect{ -2900, -2900, 300, 200 });
-    windowBackend->SetWindowMode(window, interstice::WindowMode::Maximized);
-    windowBackend->SetWindowMode(window, interstice::WindowMode::Normal);
+    windowBackend->SetWindowRect(window, tachyon::IntRect{ -2900, -2900, 300, 200 });
+    windowBackend->SetWindowMode(window, tachyon::WindowMode::Maximized);
+    windowBackend->SetWindowMode(window, tachyon::WindowMode::Normal);
     EXPECT_EQ(moved, 0);
 
     windowBackend->SetWindowMovedCallback(nullptr);
@@ -68,13 +68,13 @@ TEST_F(GpuTest, MinimizeFrameStopsBeforeRecordingAndRestores)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
     ctx->resize_requested = true;
-    ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, 0, 0 }, false);
+    ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, 0, 0 }, false);
     EXPECT_TRUE(ctx->freeze_rendering);
     EXPECT_EQ(ctx->GetCurrentFrame().drawImage.image, VK_NULL_HANDLE);
 
     // The cleared image extent makes the restored size request a resize even
     // while frozen. That resize must recreate resources before recording.
-    ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, 320, 240 }, false);
+    ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, 320, 240 }, false);
     EXPECT_FALSE(ctx->freeze_rendering);
     EXPECT_NE(ctx->GetLastFrame().drawImage.image, VK_NULL_HANDLE);
 }
@@ -82,7 +82,7 @@ TEST_F(GpuTest, MinimizeFrameStopsBeforeRecordingAndRestores)
 // Drives a real upload + draw + present frame to a window under sync-validation.
 TEST_F(GpuTest, RenderFrameToWindowIsValidationClean)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
@@ -96,17 +96,17 @@ TEST_F(GpuTest, RenderFrameToWindowIsValidationClean)
 // per-slot upload-arena reuse run under sync-validation.
 TEST_F(GpuTest, RenderMultipleFramesIsValidationClean)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
     sink.Clear();
-    for (int i = 0; i < int(interstice::vulkan::FRAME_OVERLAP); ++i)
+    for (int i = 0; i < int(tachyon::vulkan::FRAME_OVERLAP); ++i)
         RenderOneFrameWithDot(ctx, { 320, 240 });
 
-    std::array<VkBuffer, interstice::vulkan::FRAME_OVERLAP> arenaHandles{};
-    std::array<size_t, interstice::vulkan::FRAME_OVERLAP> arenaCapacities{};
-    for (size_t i = 0; i < interstice::vulkan::FRAME_OVERLAP; ++i)
+    std::array<VkBuffer, tachyon::vulkan::FRAME_OVERLAP> arenaHandles{};
+    std::array<size_t, tachyon::vulkan::FRAME_OVERLAP> arenaCapacities{};
+    for (size_t i = 0; i < tachyon::vulkan::FRAME_OVERLAP; ++i)
     {
         arenaHandles[i] = ctx->state.frames[i].primitiveUploadBuffer.buffer;
         arenaCapacities[i] = ctx->state.frames[i].primitiveUploadCapacity;
@@ -117,7 +117,7 @@ TEST_F(GpuTest, RenderMultipleFramesIsValidationClean)
     for (int i = 0; i < 6; ++i)
         RenderOneFrameWithDot(ctx, { 320, 240 });
 
-    for (size_t i = 0; i < interstice::vulkan::FRAME_OVERLAP; ++i)
+    for (size_t i = 0; i < tachyon::vulkan::FRAME_OVERLAP; ++i)
     {
         EXPECT_EQ(ctx->state.frames[i].primitiveUploadBuffer.buffer, arenaHandles[i]);
         EXPECT_EQ(ctx->state.frames[i].primitiveUploadCapacity, arenaCapacities[i]);
@@ -128,7 +128,7 @@ TEST_F(GpuTest, RenderMultipleFramesIsValidationClean)
 
 TEST_F(GpuTest, PrimitiveUploadArenaGrowsAndThenStaysStable)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
@@ -139,17 +139,17 @@ TEST_F(GpuTest, PrimitiveUploadArenaGrowsAndThenStaysStable)
     const size_t oldCapacity = ctx->state.frames[0].primitiveUploadCapacity;
 
     graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-    interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+    tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
     r->Reset();
     if (r->BeginWindow(ctx->GetID()))
     {
         for (int i = 0; i < 2048; ++i)
-            r->RenderDot(interstice::float2{ float(i % 320), float((i / 320) % 240) },
-                         interstice::IntRect{ 0, 0, 320, 240 }, 2.0f,
-                         interstice::color4f{ 1, 1, 1, 1 });
+            r->RenderDot(tachyon::float2{ float(i % 320), float((i / 320) % 240) },
+                         tachyon::IntRect{ 0, 0, 320, 240 }, 2.0f,
+                         tachyon::color4f{ 1, 1, 1, 1 });
         r->EndWindow();
     }
-    ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, 320, 240 }, false);
+    ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, 320, 240 }, false);
 
     auto& grownSlot = ctx->state.frames[0];
     EXPECT_NE(grownSlot.primitiveUploadBuffer.buffer, oldHandle);
@@ -171,7 +171,7 @@ TEST_F(GpuTest, PrimitiveUploadArenaGrowsAndThenStaysStable)
 // latency down. A driver may create one more than asked (Mesa's X11 WSI does).
 TEST_F(GpuTest, SwapchainUsesLowLatencyPresentMode)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
@@ -204,16 +204,16 @@ TEST_F(GpuTest, WindowDestroyReclaimsRenderTargetBuffers)
     const int kCycles = 6;
     for (int i = 0; i < kCycles; ++i)
     {
-        auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+        auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
         if (ctx == nullptr)
             GTEST_SKIP() << "no window/swapchain available in this environment";
         RenderOneFrameWithDot(ctx, { 320, 240 });
 
-        const interstice::ID windowID = ctx->GetID();
+        const tachyon::ID windowID = ctx->GetID();
         graphicsContext->DestroyWindowContext(ctx);   // deletes ctx; the native window stays tracked
         m_windowContexts.back().context = nullptr;
 
-        auto* renderer = static_cast<interstice::PrimitiveRenderer*>(graphicsContext->guiRenderer);
+        auto* renderer = static_cast<tachyon::PrimitiveRenderer*>(graphicsContext->guiRenderer);
         EXPECT_EQ(renderer->idTargets.find(windowID), renderer->idTargets.end());
         vk->deviceContext.Flush();     // drain the frame deletion queues
 
@@ -229,12 +229,12 @@ TEST_F(GpuTest, WindowDestroyReclaimsRenderTargetBuffers)
 // shape rather than creating (and leaking) a new one on every call.
 TEST_F(GpuTest, SetCursorReusesSystemCursors)
 {
-    windowBackend->SetCursor(interstice::MouseCursor::Text);
+    windowBackend->SetCursor(tachyon::MouseCursor::Text);
     SDL_Cursor* text = SDL_GetCursor();
     ASSERT_NE(text, nullptr);
 
-    windowBackend->SetCursor(interstice::MouseCursor::Default);
-    windowBackend->SetCursor(interstice::MouseCursor::Text);
+    windowBackend->SetCursor(tachyon::MouseCursor::Default);
+    windowBackend->SetCursor(tachyon::MouseCursor::Text);
     EXPECT_EQ(SDL_GetCursor(), text);
 }
 
@@ -243,7 +243,7 @@ TEST_F(GpuTest, SetCursorReusesSystemCursors)
 // back around while that present may still be pending.
 TEST_F(GpuTest, PresentSemaphoresArePerSwapchainImage)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
@@ -271,23 +271,23 @@ TEST_F(GpuTest, PresentSemaphoresArePerSwapchainImage)
 // pressed while another app had focus, then a Ctrl-click into ours).
 TEST_F(GpuTest, MouseEventsCarryCurrentModifiers)
 {
-    struct Recorder : interstice::IPlatformInputHandler
+    struct Recorder : tachyon::IPlatformInputHandler
     {
-        interstice::KeyModifier lastMods = interstice::KeyModifier::None;
+        tachyon::KeyModifier lastMods = tachyon::KeyModifier::None;
         int              presses  = 0;
-        void OnKeyboard(interstice::ID, interstice::KeyCode, int, interstice::KeyModifier, interstice::KeyAction) override {}
-        void OnMouseMove(interstice::ID, interstice::int2, interstice::MouseButtons, interstice::KeyModifier) override {}
-        void OnMouseButton(interstice::ID, interstice::int2, interstice::MouseButtons, interstice::KeyModifier mods, interstice::MouseAction) override
+        void OnKeyboard(tachyon::ID, tachyon::KeyCode, int, tachyon::KeyModifier, tachyon::KeyAction) override {}
+        void OnMouseMove(tachyon::ID, tachyon::int2, tachyon::MouseButtons, tachyon::KeyModifier) override {}
+        void OnMouseButton(tachyon::ID, tachyon::int2, tachyon::MouseButtons, tachyon::KeyModifier mods, tachyon::MouseAction) override
         {
             lastMods = mods;
             presses++;
         }
-        void OnMouseScroll(interstice::ID, interstice::int2, interstice::float2, interstice::KeyModifier) override {}
-        void OnTextComposition(interstice::ID, std::string_view, int32_t) override {}
+        void OnMouseScroll(tachyon::ID, tachyon::int2, tachyon::float2, tachyon::KeyModifier) override {}
+        void OnTextComposition(tachyon::ID, std::string_view, int32_t) override {}
     } recorder;
 
-    interstice::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-mods", interstice::int2{ 200, 100 },
-                                                             interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-mods", tachyon::int2{ 200, 100 },
+                                                             tachyon::WindowFlags::Hidden, nullptr);
     if (window == nullptr)
         GTEST_SKIP() << "no window available in this environment";
     windowBackend->AttachInputHandlerToWindow(window, &recorder);
@@ -295,7 +295,7 @@ TEST_F(GpuTest, MouseEventsCarryCurrentModifiers)
     SDL_SetModState(SDL_KMOD_LCTRL);
     SDL_Event down{};
     down.type             = SDL_EVENT_MOUSE_BUTTON_DOWN;
-    down.button.windowID  = SDL_GetWindowID(interstice::SDLWindowBackend::ToSDL(window));
+    down.button.windowID  = SDL_GetWindowID(tachyon::SDLWindowBackend::ToSDL(window));
     down.button.button    = SDL_BUTTON_LEFT;
     down.button.down      = true;
     SDL_PushEvent(&down);
@@ -306,27 +306,27 @@ TEST_F(GpuTest, MouseEventsCarryCurrentModifiers)
     windowBackend->DestroyWindow(window);
 
     ASSERT_EQ(recorder.presses, 1);
-    EXPECT_NE(recorder.lastMods & interstice::KeyModifier::Control, interstice::KeyModifier::None);
+    EXPECT_NE(recorder.lastMods & tachyon::KeyModifier::Control, tachyon::KeyModifier::None);
 }
 
 // IME composition (SDL_EVENT_TEXT_EDITING) reaches the window's input handler
 // with its text and caret, so the focused editor can show it.
 TEST_F(GpuTest, TextEditingEventsReachTheInputHandler)
 {
-    struct Recorder : interstice::IPlatformInputHandler
+    struct Recorder : tachyon::IPlatformInputHandler
     {
         std::string text;
         int32_t     cursor = -1;
         int         calls  = 0;
-        void OnKeyboard(interstice::ID, interstice::KeyCode, int, interstice::KeyModifier, interstice::KeyAction) override {}
-        void OnMouseMove(interstice::ID, interstice::int2, interstice::MouseButtons, interstice::KeyModifier) override {}
-        void OnMouseButton(interstice::ID, interstice::int2, interstice::MouseButtons, interstice::KeyModifier, interstice::MouseAction) override {}
-        void OnMouseScroll(interstice::ID, interstice::int2, interstice::float2, interstice::KeyModifier) override {}
-        void OnTextComposition(interstice::ID, std::string_view t, int32_t c) override { text = t; cursor = c; ++calls; }
+        void OnKeyboard(tachyon::ID, tachyon::KeyCode, int, tachyon::KeyModifier, tachyon::KeyAction) override {}
+        void OnMouseMove(tachyon::ID, tachyon::int2, tachyon::MouseButtons, tachyon::KeyModifier) override {}
+        void OnMouseButton(tachyon::ID, tachyon::int2, tachyon::MouseButtons, tachyon::KeyModifier, tachyon::MouseAction) override {}
+        void OnMouseScroll(tachyon::ID, tachyon::int2, tachyon::float2, tachyon::KeyModifier) override {}
+        void OnTextComposition(tachyon::ID, std::string_view t, int32_t c) override { text = t; cursor = c; ++calls; }
     } recorder;
 
-    interstice::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-ime", interstice::int2{ 200, 100 },
-                                                             interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-ime", tachyon::int2{ 200, 100 },
+                                                             tachyon::WindowFlags::Hidden, nullptr);
     if (window == nullptr)
         GTEST_SKIP() << "no window available in this environment";
     windowBackend->AttachInputHandlerToWindow(window, &recorder);
@@ -334,7 +334,7 @@ TEST_F(GpuTest, TextEditingEventsReachTheInputHandler)
     static char composition[] = "\xE3\x81\x8B"; // U+304B, one codepoint
     SDL_Event edit{};
     edit.type          = SDL_EVENT_TEXT_EDITING;
-    edit.edit.windowID = SDL_GetWindowID(interstice::SDLWindowBackend::ToSDL(window));
+    edit.edit.windowID = SDL_GetWindowID(tachyon::SDLWindowBackend::ToSDL(window));
     edit.edit.text     = composition;
     edit.edit.start    = 1;
     edit.edit.length   = 0;
@@ -354,7 +354,7 @@ TEST_F(GpuTest, TextEditingEventsReachTheInputHandler)
 // GPU still uses is a validation error (and a driver crash in practice).
 TEST_F(GpuTest, WindowContextDestroyRightAfterPresentIsValidationClean)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
 
@@ -377,8 +377,8 @@ extern "C" __declspec(dllimport) int __stdcall IsWindow(void* hwnd);
 // destroyed before the window they belong to.
 TEST_F(GpuTest, WindowCleanupRunsBeforeTheNativeWindowIsDestroyed)
 {
-    interstice::OSWindowHandle os = windowBackend->CreateWindow("gpu-test-close", interstice::int2{ 200, 100 },
-                                                         interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle os = windowBackend->CreateWindow("gpu-test-close", tachyon::int2{ 200, 100 },
+                                                         tachyon::WindowFlags::Hidden, nullptr);
     if (os == nullptr)
         GTEST_SKIP() << "no window available in this environment";
     void* native = windowBackend->GetNativeHandle(os);
@@ -387,7 +387,7 @@ TEST_F(GpuTest, WindowCleanupRunsBeforeTheNativeWindowIsDestroyed)
     ASSERT_TRUE(windowBackend->DestroyWindow(os));
     bool cleanedUp = false;
     bool nativeAliveDuringCleanup = false;
-    windowBackend->PollEvents([&](interstice::OSWindowHandle handle, interstice::IWindowContext*)
+    windowBackend->PollEvents([&](tachyon::OSWindowHandle handle, tachyon::IWindowContext*)
         {
             if (handle != os) return;
             cleanedUp = true;
@@ -404,7 +404,7 @@ TEST_F(GpuTest, WindowCleanupRunsBeforeTheNativeWindowIsDestroyed)
 // all), the frame is skipped instead of aborting the process.
 TEST_F(GpuTest, AcquireTimeoutSkipsTheFrameInsteadOfAborting)
 {
-    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, interstice::WindowFlags::None);
+    auto* ctx = CreateHiddenWindowContext({ 320, 240 }, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
     RenderOneFrameWithDot(ctx, { 320, 240 });
@@ -443,7 +443,7 @@ TEST(SDLWindowBackendOwnership, LeavesAHostStartedSDLRunning)
 {
     ASSERT_TRUE(SDL_Init(SDL_INIT_VIDEO)) << SDL_GetError();
     {
-        interstice::SDLWindowBackend backend;
+        tachyon::SDLWindowBackend backend;
     }
     EXPECT_NE(SDL_WasInit(SDL_INIT_VIDEO), 0u);
     SDL_Quit();
@@ -454,7 +454,7 @@ TEST(SDLWindowBackendOwnership, InstallsNoEventFilter)
 {
     ASSERT_TRUE(SDL_Init(SDL_INIT_VIDEO)) << SDL_GetError();
     {
-        interstice::SDLWindowBackend backend;
+        tachyon::SDLWindowBackend backend;
     }
     SDL_EventFilter filter   = nullptr;
     void*           userdata = nullptr;
@@ -466,19 +466,19 @@ TEST(SDLWindowBackendOwnership, InstallsNoEventFilter)
 // (Detach policy) must survive its parent closing; one it closes goes on its own.
 TEST_F(GpuTest, ChildWindowSurvivesItsParentBeingDestroyed)
 {
-    interstice::OSWindowHandle parent = windowBackend->CreateWindow("gpu-test-parent", interstice::int2{ 300, 200 },
-                                                             interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle parent = windowBackend->CreateWindow("gpu-test-parent", tachyon::int2{ 300, 200 },
+                                                             tachyon::WindowFlags::Hidden, nullptr);
     if (parent == nullptr)
         GTEST_SKIP() << "no window available in this environment";
-    interstice::OSWindowHandle child = windowBackend->CreateWindow("gpu-test-child", interstice::int2{ 150, 100 },
-                                                            interstice::WindowFlags::Hidden, parent);
+    tachyon::OSWindowHandle child = windowBackend->CreateWindow("gpu-test-child", tachyon::int2{ 150, 100 },
+                                                            tachyon::WindowFlags::Hidden, parent);
     ASSERT_NE(child, nullptr);
 #ifdef _WIN32
     void* childNative = windowBackend->GetNativeHandle(child);
 #endif
 
     ASSERT_TRUE(windowBackend->DestroyWindow(parent));
-    windowBackend->PollEvents([](interstice::OSWindowHandle, interstice::IWindowContext*) {});
+    windowBackend->PollEvents([](tachyon::OSWindowHandle, tachyon::IWindowContext*) {});
 
     EXPECT_FALSE(windowBackend->IsWindow(parent));
     EXPECT_TRUE(windowBackend->IsWindow(child));
@@ -487,7 +487,7 @@ TEST_F(GpuTest, ChildWindowSurvivesItsParentBeingDestroyed)
 #endif
 
     ASSERT_TRUE(windowBackend->DestroyWindow(child));
-    windowBackend->PollEvents([](interstice::OSWindowHandle, interstice::IWindowContext*) {});
+    windowBackend->PollEvents([](tachyon::OSWindowHandle, tachyon::IWindowContext*) {});
 #ifdef _WIN32
     EXPECT_EQ(IsWindow(childNative), 0);
 #endif
@@ -496,11 +496,11 @@ TEST_F(GpuTest, ChildWindowSurvivesItsParentBeingDestroyed)
 // The SDL backend reports the real display scale for windows and monitors.
 TEST_F(GpuTest, BackendReportsDisplayScales)
 {
-    interstice::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-scale", interstice::int2{ 200, 100 },
-                                                             interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle window = windowBackend->CreateWindow("gpu-test-scale", tachyon::int2{ 200, 100 },
+                                                             tachyon::WindowFlags::Hidden, nullptr);
     if (window == nullptr)
         GTEST_SKIP() << "no window available in this environment";
-    SDL_Window* sdlWindow = interstice::SDLWindowBackend::ToSDL(window);
+    SDL_Window* sdlWindow = tachyon::SDLWindowBackend::ToSDL(window);
     EXPECT_FLOAT_EQ(windowBackend->GetWindowDisplayScale(window), SDL_GetWindowDisplayScale(sdlWindow));
     EXPECT_GT(windowBackend->GetWindowDisplayScale(window), 0.0f);
 
@@ -514,11 +514,11 @@ TEST_F(GpuTest, BackendReportsDisplayScales)
 // false instead of terminating the process.
 TEST(GpuInitFailure, MissingSurfaceReturnsFalseInsteadOfTerminating)
 {
-    auto* vk = new interstice::vulkan::VulkanGraphicsContext();
-    interstice::GraphicsContext* graphicsContext = vk;
-    auto* windowBackend = new interstice::SDLWindowBackend();
+    auto* vk = new tachyon::vulkan::VulkanGraphicsContext();
+    tachyon::GraphicsContext* graphicsContext = vk;
+    auto* windowBackend = new tachyon::SDLWindowBackend();
     windowBackend->SetGraphicsContext(graphicsContext);
-    vk->SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, interstice::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
+    vk->SetSurfaceFactory([](VkInstance, const VkAllocationCallbacks*, tachyon::OSWindowHandle) { return VkSurfaceKHR(VK_NULL_HANDLE); });
 
     EXPECT_FALSE(graphicsContext->Initialize(windowBackend));
     graphicsContext->Cleanup(); // shutdown paths run it even after a failed start
@@ -532,8 +532,8 @@ TEST(GpuInitFailure, MissingSurfaceReturnsFalseInsteadOfTerminating)
 // commands (here: uploading many primitives) and not the previous frame's present.
 TEST_F(GpuTest, FrameBuildTimeIncludesRecordingTheFrame)
 {
-    const interstice::int2 size{ 320, 240 };
-    auto* ctx = CreateHiddenWindowContext(size, interstice::WindowFlags::None);
+    const tachyon::int2 size{ 320, 240 };
+    auto* ctx = CreateHiddenWindowContext(size, tachyon::WindowFlags::None);
     if (ctx == nullptr)
         GTEST_SKIP() << "no window/swapchain available in this environment";
     // A software rasterizer (lavapipe) draws on the CPU during submit and present, so
@@ -548,18 +548,18 @@ TEST_F(GpuTest, FrameBuildTimeIncludesRecordingTheFrame)
     {
         graphicsContext->BeginFrame();
         graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-        interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+        tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
         r->Reset();
         const auto addStart = std::chrono::steady_clock::now();
         if (r->BeginWindow(ctx->GetID()))
         {
             for (int i = 0; i < 100000; ++i)
-                r->RenderDot(interstice::float2{ float(i % 300), float(i / 300 % 220) },
-                             interstice::IntRect{ 0, 0, size.x, size.y }, 2.0f, interstice::color4f{ 1, 1, 1, 1 });
+                r->RenderDot(tachyon::float2{ float(i % 300), float(i / 300 % 220) },
+                             tachyon::IntRect{ 0, 0, size.x, size.y }, 2.0f, tachyon::color4f{ 1, 1, 1, 1 });
             r->EndWindow();
         }
         const auto renderStart = std::chrono::steady_clock::now();
-        ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
+        ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, size.x, size.y }, false);
         const auto renderEnd = std::chrono::steady_clock::now();
         addSeconds    = std::chrono::duration<double>(renderStart - addStart).count();
         renderSeconds = std::chrono::duration<double>(renderEnd - renderStart).count();

@@ -1,6 +1,6 @@
-# Integrating IntersticeUI
+# Integrating TachyonUI
 
-How to put IntersticeUI into a program that has its own build, Vulkan device, windows
+How to put TachyonUI into a program that has its own build, Vulkan device, windows
 or main loop, such as a game engine hosting it as its editor. Each part is optional: a
 program can take the defaults for everything and only call `Initialize` and `Run`, as
 in the README's hello world.
@@ -17,40 +17,40 @@ names.
 ### As a subproject
 
 ```cmake
-add_subdirectory(external/IntersticeUI)
-target_link_libraries(my_app PRIVATE IntersticeUI::gui_controls)
+add_subdirectory(external/TachyonUI)
+target_link_libraries(my_app PRIVATE TachyonUI::gui_controls)
 ```
 
 As a subproject only the libraries are built: the demo, examples, tests and install
-rules are off by default. Nothing is written to the IntersticeUI source tree; the
+rules are off by default. Nothing is written to the TachyonUI source tree; the
 compiled shaders and copies of the fonts and themes go into the build tree, in
-`<IntersticeUI build dir>/resources`.
+`<TachyonUI build dir>/resources`.
 
 Options, set before `add_subdirectory`:
 
 | Option | Default | |
 | --- | --- | --- |
-| `INTERSTICE_BUILD_DEMO` | on when top-level | The demo application |
-| `INTERSTICE_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
-| `INTERSTICE_BUILD_TESTS` | on when top-level | The unit and GPU tests |
-| `INTERSTICE_INSTALL` | on when top-level | The install rules and the CMake package |
-| `INTERSTICE_INSTALL_THIRD_PARTY` | on | Bundle the third-party libraries into the install |
-| `INTERSTICE_SDL` | on | The SDL window backend and clipboard; off builds without SDL |
-| `INTERSTICE_SYSTEM_SDL` | off | Use the host's SDL3 |
-| `INTERSTICE_SYSTEM_HARFBUZZ` | off | Use the host's HarfBuzz |
-| `INTERSTICE_SYSTEM_VMA` | off | Use the host's VulkanMemoryAllocator |
-| `INTERSTICE_VMA_IMPLEMENTATION` | on | Compile VMA's implementation into `gui_core`; off when the host links its own |
-| `INTERSTICE_FALLBACK_FONTS` | off | Copy (and install) the Noto fallback fonts with the resources |
+| `TACHYON_BUILD_DEMO` | on when top-level | The demo application |
+| `TACHYON_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
+| `TACHYON_BUILD_TESTS` | on when top-level | The unit and GPU tests |
+| `TACHYON_INSTALL` | on when top-level | The install rules and the CMake package |
+| `TACHYON_INSTALL_THIRD_PARTY` | on | Bundle the third-party libraries into the install |
+| `TACHYON_SDL` | on | The SDL window backend and clipboard; off builds without SDL |
+| `TACHYON_SYSTEM_SDL` | off | Use the host's SDL3 |
+| `TACHYON_SYSTEM_HARFBUZZ` | off | Use the host's HarfBuzz |
+| `TACHYON_SYSTEM_VMA` | off | Use the host's VulkanMemoryAllocator |
+| `TACHYON_VMA_IMPLEMENTATION` | on | Compile VMA's implementation into `gui_core`; off when the host links its own |
+| `TACHYON_FALLBACK_FONTS` | off | Copy (and install) the Noto fallback fonts with the resources |
 
-The `INTERSTICE_SYSTEM_*` options take a target the host already defined
+The `TACHYON_SYSTEM_*` options take a target the host already defined
 (`SDL3::SDL3`, `harfbuzz::harfbuzz`, `GPUOpen::VulkanMemoryAllocator`), or else one
 `find_package` finds:
 
 ```cmake
 find_package(SDL3 CONFIG REQUIRED)
-set(INTERSTICE_SYSTEM_SDL      ON)
-set(INTERSTICE_SYSTEM_HARFBUZZ ON)
-add_subdirectory(external/IntersticeUI)
+set(TACHYON_SYSTEM_SDL      ON)
+set(TACHYON_SYSTEM_HARFBUZZ ON)
+add_subdirectory(external/TachyonUI)
 ```
 
 On Windows, SDL3 is a DLL that must be next to the executable. The consumers in
@@ -78,11 +78,11 @@ cmake --install build --config Debug   --prefix <prefix>
 cmake --install build --config Release --prefix <prefix>
 ```
 
-A consumer then needs no IntersticeUI source or build tree:
+A consumer then needs no TachyonUI source or build tree:
 
 ```cmake
-find_package(IntersticeUI 0.1 CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE IntersticeUI::gui_controls)
+find_package(TachyonUI 0.1 CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE TachyonUI::gui_controls)
 ```
 
 The package finds its dependencies (Vulkan, SDL3, HarfBuzz and the other bundled
@@ -107,20 +107,20 @@ Where they are:
 
 | Build | Folder |
 | --- | --- |
-| IntersticeUI built on its own | `workdirectory/` in the source tree |
-| As a subproject | `resources/` in IntersticeUI's build directory |
-| Installed package | `share/IntersticeUI/resources` in the prefix |
+| TachyonUI built on its own | `workdirectory/` in the source tree |
+| As a subproject | `resources/` in TachyonUI's build directory |
+| Installed package | `share/TachyonUI/resources` in the prefix |
 
 `GUIApplication::SetResourceRoot` sets the folder they load from; without it they load
 relative to the working directory. Linking `gui_controls` defines
-`INTERSTICE_RESOURCE_DIR` as the folder of that build or package, so this loads them
+`TACHYON_RESOURCE_DIR` as the folder of that build or package, so this loads them
 from any working directory:
 
 ```cpp
-app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);   // before Initialize
+app.SetResourceRoot(TACHYON_RESOURCE_DIR);   // before Initialize
 ```
 
-CMake code that uses the package gets the same folder as `IntersticeUI_RESOURCE_DIR`,
+CMake code that uses the package gets the same folder as `TachyonUI_RESOURCE_DIR`,
 for example to copy it next to a shipped program. A shipped program sets the root to
 wherever it put the files.
 
@@ -132,7 +132,7 @@ already owns a device hands its handles to the GUI so both render on the same de
 
 ### Device requirements
 
-`interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()` returns what the
+`tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements()` returns what the
 device must enable:
 
 ```cpp
@@ -151,7 +151,7 @@ The feature structs have no `pNext` chain; the host chains them itself. With
 vk-bootstrap, as in the example:
 
 ```cpp
-auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();
+auto requirements = tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements();
 auto selected = vkb::PhysicalDeviceSelector{ instance }
     .set_minimum_version(1, 3)
     .set_required_features(requirements.features)
@@ -183,8 +183,8 @@ Set the device on a `VulkanGraphicsContext` and give that to the app, both befor
 ```cpp
 #include <gui_core/graphics/vulkan/vk_graphics_context.h>
 
-auto backend = std::make_unique<interstice::vulkan::VulkanGraphicsContext>();
-interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
+auto backend = std::make_unique<tachyon::vulkan::VulkanGraphicsContext>();
+tachyon::vulkan::VulkanDeviceContext::ExternalDevice external;
 external.instance            = hostInstance;
 external.physicalDevice      = hostPhysicalDevice;
 external.device              = hostDevice;
@@ -196,7 +196,7 @@ backend->SetExternalDevice(external);
 
 auto* vk = backend.get();   // for RegisterExternalImage and SetWindowImageTarget
 app.SetGraphicsBackend(std::move(backend));
-if (interstice::Result<void> result = app.Initialize(); !result)
+if (tachyon::Result<void> result = app.Initialize(); !result)
     std::fprintf(stderr, "%s\n", result.GetError().message.c_str());   // e.g. a missing device feature
 ```
 
@@ -221,10 +221,10 @@ A host can render into an image it owns and show it in the UI, for example a 3D
 viewport:
 
 ```cpp
-interstice::ImageIndex index = vk->RegisterExternalImage(view, sampler);   // once
+tachyon::ImageIndex index = vk->RegisterExternalImage(view, sampler);   // once
 vk->UpdateExternalImage(index, newView, sampler);                          // after a resize
 
-Image(index, interstice::uint2{ width, height });   // in OnGUI
+Image(index, tachyon::uint2{ width, height });   // in OnGUI
 ```
 
 The view and sampler stay owned by the host and must outlive every GUI frame that
@@ -250,7 +250,7 @@ synchronization validation.
 ## Your own window and input
 
 The GUI gets its OS windows and their input from a window backend, an
-`interstice::IWindowBackend` (`gui_core/windows/gui_window_backend.h`). Without one,
+`tachyon::IWindowBackend` (`gui_core/windows/gui_window_backend.h`). Without one,
 `Initialize` creates an `SDLWindowBackend`. A host passes its own before `Initialize`:
 
 ```cpp
@@ -259,7 +259,7 @@ app.SetClipboard(std::make_unique<MyClipboard>());   // optional
 ```
 
 The clipboard defaults to SDL's, or to a `LocalClipboard` in builds without SDL
-(`INTERSTICE_SDL=OFF`). In those builds `Initialize` fails with
+(`TACHYON_SDL=OFF`). In those builds `Initialize` fails with
 `ErrorCode::Unsupported` unless the host passed a window backend.
 
 ### Writing a window backend
@@ -299,9 +299,9 @@ pumping:
 ```cpp
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
 
-interstice::SDLWindowBackend::Options options;
+tachyon::SDLWindowBackend::Options options;
 options.pumpEvents = false;
-app.SetWindowBackend(std::make_unique<interstice::SDLWindowBackend>(options));
+app.SetWindowBackend(std::make_unique<tachyon::SDLWindowBackend>(options));
 ```
 
 The backend reads events through SDL event watches, not the event filter, so the
@@ -373,8 +373,8 @@ put the UI inside an engine viewport, composite it into the host's frame, or ren
 without anything appearing on screen, as the GPU tests do.
 
 ```cpp
-if (BeginWindow(windowID, "Panel", theme.windowStyleRef, interstice::LayoutOverride{}.Size(400, 300),
-                interstice::ElementFlags::WindowRenderToImage))
+if (BeginWindow(windowID, "Panel", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(400, 300),
+                tachyon::ElementFlags::WindowRenderToImage))
 {
     // controls as usual
 }
@@ -412,9 +412,9 @@ packed rows. It works on the GUI's own device too, and waits for that frame to f
 on the GPU:
 
 ```cpp
-const interstice::IntRect rect = app.windowManager->GetWindowRect(windowID);   // pixels
+const tachyon::IntRect rect = app.windowManager->GetWindowRect(windowID);   // pixels
 std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
-if (interstice::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
+if (tachyon::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
     std::fprintf(stderr, "%s\n", read.GetError().message.c_str());
 ```
 
@@ -429,11 +429,11 @@ window's pixels:
 
 ```cpp
 app.InjectMouseMove(windowID, pos);
-app.InjectMouseButton(windowID, pos, interstice::MouseButtons::Left, true);    // down
-app.InjectMouseButton(windowID, pos, interstice::MouseButtons::Left, false);   // up
-app.InjectMouseScroll(windowID, pos, interstice::float2{ 0.0f, 1.0f });
+app.InjectMouseButton(windowID, pos, tachyon::MouseButtons::Left, true);    // down
+app.InjectMouseButton(windowID, pos, tachyon::MouseButtons::Left, false);   // up
+app.InjectMouseScroll(windowID, pos, tachyon::float2{ 0.0f, 1.0f });
 app.InjectMouseLeave(windowID);
-app.InjectKey(windowID, key, interstice::KeyAction::KeyDown);
+app.InjectKey(windowID, key, tachyon::KeyAction::KeyDown);
 app.InjectText(windowID, "text");   // UTF-8
 app.InjectFocus(windowID, false);
 ```
@@ -450,7 +450,7 @@ A host that tracks memory gives the library its own memory functions, before
 ```cpp
 #include <gui_core/memory/gui_allocation_hooks.h>
 
-interstice::AllocationHooks hooks;
+tachyon::AllocationHooks hooks;
 hooks.allocate   = &MyAllocate;     // void* (size_t size, size_t alignment, void* user)
 hooks.reallocate = &MyReallocate;   // void* (void* ptr, size_t size, size_t alignment, void* user)
 hooks.free       = &MyFree;         // void  (void* ptr, void* user)
@@ -465,7 +465,7 @@ and be thread-safe, since drivers may call them from their own threads. SDL can 
 a few allocations past `SDL_Quit` and then keeps using the hooks, so they should live
 as long as the process.
 
-`interstice::TrackingAllocator` (`gui_core/memory/gui_tracking_allocator.h`) is a set
+`tachyon::TrackingAllocator` (`gui_core/memory/gui_tracking_allocator.h`) is a set
 of hooks that counts live allocations and reports leaks; `Hooks()` returns them.
 
 ## Headless backends
@@ -476,9 +476,9 @@ stay empty. With `NullWindowBackend` there is no OS either, and input comes only
 the `Inject*` calls. Together they run an app with no GPU and no display, for tests:
 
 ```cpp
-app.SetGraphicsBackend(std::make_unique<interstice::NullGraphicsContext>());
-app.SetWindowBackend(std::make_unique<interstice::NullWindowBackend>());
+app.SetGraphicsBackend(std::make_unique<tachyon::NullGraphicsContext>());
+app.SetWindowBackend(std::make_unique<tachyon::NullWindowBackend>());
 ```
 
-Both are also the smallest examples of a graphics backend (`interstice::GraphicsContext`)
+Both are also the smallest examples of a graphics backend (`tachyon::GraphicsContext`)
 and a window backend.

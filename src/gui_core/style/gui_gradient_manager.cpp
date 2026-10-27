@@ -9,7 +9,7 @@
 #include <cstring>
 #include <bit>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -80,7 +80,7 @@ namespace interstice
             if (page.image != nullptr)
             {
                 if (graphicsContext != nullptr)
-                    graphicsContext->DestroyImageAtEnd(page.image, interstice::DeviceScope::Application);
+                    graphicsContext->DestroyImageAtEnd(page.image, tachyon::DeviceScope::Application);
                 page.image = nullptr;
             }
         }
@@ -573,7 +573,7 @@ namespace interstice
         {
             if (page.image != nullptr && graphicsContext != nullptr)
             {
-                graphicsContext->DestroyImageAtEnd(page.image, interstice::DeviceScope::Frame);
+                graphicsContext->DestroyImageAtEnd(page.image, tachyon::DeviceScope::Frame);
                 page.image = nullptr;
             }
             if (graphicsContext != nullptr)
@@ -581,12 +581,12 @@ namespace interstice
                 page.image = graphicsContext->CreateImage(
                     page.data.data(),
                     uint2{ page.width, page.height },
-                    interstice::ImageFormat::R8G8B8A8,
-                    interstice::Sampler::NearestRepeat);
+                    tachyon::ImageFormat::R8G8B8A8,
+                    tachyon::Sampler::NearestRepeat);
             }
             page.modified = false;
         }
         return page.image;
     }
 
-} // namespace interstice
+} // namespace tachyon

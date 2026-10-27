@@ -6,7 +6,7 @@
 // Top-level stylesheet API. The CSS lexer/parser live in
 // gui_style_sheet_internal.h; per-property parsing in gui_style_sheet_properties.cpp.
 
-namespace interstice {
+namespace tachyon {
 
 // ============================================================================
 // StyleSheet::GetStyle
@@ -39,4 +39,4 @@ StyleSheet ParseStyleSheet(std::string_view source)
     return parser.Parse();
 }
 
-} // namespace interstice
+} // namespace tachyon

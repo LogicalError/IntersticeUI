@@ -9,7 +9,7 @@
 #include <cmath>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     // subClip arrives in the current space; m_clipRect is in window-local SCREEN space.
     // Map the subClip corners through the current space -> window-local transform and take
@@ -296,4 +296,4 @@ namespace interstice
         return rect->innerRect.size;
     }
 
-} // namespace interstice
+} // namespace tachyon

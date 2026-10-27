@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// A set of shortcuts that is active while the app says so (e.g. a node view's while it has
     /// the focus). Opaque: other values come from CommandManager::RegisterMode. Default is
@@ -127,7 +127,7 @@ namespace interstice
         {
             if (const CommandID existing = FindCommand(mode, key, modifiers))
             {
-                INTERSTICE_LOG_DEBUG(::interstice::Diagnostics::MakeLogCategory("input"), "updating existing command: {}", description);
+                TACHYON_LOG_DEBUG(::tachyon::Diagnostics::MakeLogCategory("input"), "updating existing command: {}", description);
                 Command& s    = At(existing);
                 s.icon        = icon;
                 s.description = std::string(description);
@@ -601,4 +601,4 @@ namespace interstice
         std::vector<HeldActive>            m_activeHeld;      ///< held commands with key currently down
     };
 
-} // namespace interstice
+} // namespace tachyon

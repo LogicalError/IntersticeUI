@@ -13,7 +13,7 @@
 
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::SkribidiHeadlessTest;
 

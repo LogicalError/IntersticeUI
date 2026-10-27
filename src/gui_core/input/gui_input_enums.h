@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <gui_core/gui_enum_operators.h>
 
-namespace interstice
+namespace tachyon
 {
     // Interaction distances in CSS px; scale them with StyleManager::Px.
     constexpr float   kWheelScrollStep   = 30.0f; ///< scrolled per wheel notch (CSS px)
@@ -20,7 +20,7 @@ namespace interstice
         Option = 8,
         Command = 16,
     };
-    INTERSTICE_ENUM_OPERATORS(KeyModifier)
+    TACHYON_ENUM_OPERATORS(KeyModifier)
 
     /// Mouse buttons, combined with |.
     enum class MouseButtons : uint8_t
@@ -32,7 +32,7 @@ namespace interstice
         X1 = 8,
         X2 = 16,
     };
-    INTERSTICE_ENUM_OPERATORS(MouseButtons)
+    TACHYON_ENUM_OPERATORS(MouseButtons)
 
     /// A keyboard event: a key down or up, or a typed character (KeyChar).
     enum class KeyAction : uint8_t

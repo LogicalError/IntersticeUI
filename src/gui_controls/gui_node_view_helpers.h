@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class CustomDrawContext;
     struct LineStyle;

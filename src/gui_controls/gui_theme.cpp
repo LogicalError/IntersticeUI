@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -33,18 +33,18 @@ namespace interstice
         // Used for boxes rendered with an invalid style index.
         {
             Style invalidStyle{};
-            invalidStyle.textLayoutStyle = interstice::TextLayoutStyle
+            invalidStyle.textLayoutStyle = tachyon::TextLayoutStyle
             {
-                .textDirection = interstice::TextDirection::Auto,
-                .textWrapping = interstice::TextWrap::WordChar,
-                .horizontalAlignment = interstice::TextAlign::Start,
-                .baseline = interstice::TextBaseline::Middle
+                .textDirection = tachyon::TextDirection::Auto,
+                .textWrapping = tachyon::TextWrap::WordChar,
+                .horizontalAlignment = tachyon::TextAlign::Start,
+                .baseline = tachyon::TextBaseline::Middle
             };
             invalidStyle.borderWidths = noBorder;
             invalidStyle.borderRadius = noRadius;
             invalidStyle.margin = BoxEdges(2);
-            invalidStyle.SetOverflow(interstice::Overflow::Hidden);
-            invalidStyle.padding = interstice::BoxEdges(10);
+            invalidStyle.SetOverflow(tachyon::Overflow::Hidden);
+            invalidStyle.padding = tachyon::BoxEdges(10);
             auto normal_border_color_style = ColorStyle::Create(color4b(121, 153, 169, 255));
             auto normal_background_color_style = ColorStyle::Create(color4b(101, 133, 149, 255));
             for (int i = 0; i < Style::kStateCount; i++)
@@ -62,15 +62,15 @@ namespace interstice
             newStyle.textLayoutStyle = {};
             newStyle.borderWidths = noBorder;
             newStyle.borderRadius = noRadius;
-            newStyle.SetOverflow(interstice::Overflow::Visible);
-            newStyle.display = interstice::Display::Flex;
-            newStyle.layoutData.flex.direction = interstice::FlexDirection::Row;
-            newStyle.layoutData.flex.wrap = interstice::FlexWrap::Wrap;
-            newStyle.layoutData.flex.alignItems = interstice::AlignItems::Stretch;
-            newStyle.layoutData.flex.justifyContent = interstice::JustifyContent::FlexStart;
+            newStyle.SetOverflow(tachyon::Overflow::Visible);
+            newStyle.display = tachyon::Display::Flex;
+            newStyle.layoutData.flex.direction = tachyon::FlexDirection::Row;
+            newStyle.layoutData.flex.wrap = tachyon::FlexWrap::Wrap;
+            newStyle.layoutData.flex.alignItems = tachyon::AlignItems::Stretch;
+            newStyle.layoutData.flex.justifyContent = tachyon::JustifyContent::FlexStart;
             newStyle.layoutData.flex.flexGrow = 1;
             newStyle.layoutData.flex.gap = 0;
-            newStyle.padding = interstice::BoxEdges(0);
+            newStyle.padding = tachyon::BoxEdges(0);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 newStyle.states[i].SetBorderColor({});
@@ -82,11 +82,11 @@ namespace interstice
         // Built-in icons: Lucide shapes (ISC), 24-unit strokes with round caps. One
         // neutral grey, so they draw as masks in the color of where they're shown.
         {
-            // Named "interstice/...", so an app's own "info" or "error" doesn't get the library's.
+            // Named "tachyon/...", so an app's own "info" or "error" doesn't get the library's.
             auto registerIcon = [&](const char* name, const char* shapes) {
                 const std::string svg = std::string(R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#909090" )"
                                                     R"(stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)") + shapes + "</svg>";
-                const std::string fullName = std::string("interstice/") + name;
+                const std::string fullName = std::string("tachyon/") + name;
                 return textSystem->RegisterIconFromSVG(fullName.c_str(), svg.data(), svg.size());
             };
             treeArrowRight  = registerIcon("tree-arrow-right", R"(<path d="m9 18 6-6-6-6"/>)");
@@ -124,19 +124,19 @@ namespace interstice
 
         {
             // Undecorated flex containers: the BeginHorizontal / BeginVertical defaults.
-            auto makeEmptyFlexStyle = [&](interstice::FlexDirection dir, interstice::FlexWrap wrap) -> StyleRef
+            auto makeEmptyFlexStyle = [&](tachyon::FlexDirection dir, tachyon::FlexWrap wrap) -> StyleRef
             {
                 Style newStyle{};
                 newStyle.textLayoutStyle = {};
                 newStyle.borderWidths = noBorder;
                 newStyle.borderRadius = noRadius;
-                newStyle.SetOverflow(interstice::Overflow::Auto);
-                newStyle.display = interstice::Display::Flex;
+                newStyle.SetOverflow(tachyon::Overflow::Auto);
+                newStyle.display = tachyon::Display::Flex;
                 newStyle.layoutData.flex.direction = dir;
                 newStyle.layoutData.flex.wrap = wrap;
-                newStyle.layoutData.flex.alignItems = interstice::AlignItems::Stretch;
-                newStyle.layoutData.flex.justifyContent = interstice::JustifyContent::FlexStart;
-                newStyle.padding = interstice::BoxEdges(0);
+                newStyle.layoutData.flex.alignItems = tachyon::AlignItems::Stretch;
+                newStyle.layoutData.flex.justifyContent = tachyon::JustifyContent::FlexStart;
+                newStyle.padding = tachyon::BoxEdges(0);
                 for (int i = 0; i < Style::kStateCount; i++)
                 {
                     newStyle.states[i].SetBorderColor({});
@@ -144,10 +144,10 @@ namespace interstice
                 }
                 return styleManager.Register(newStyle);
             };
-            emptyHorzStyleRef     = makeEmptyFlexStyle(interstice::FlexDirection::Row, interstice::FlexWrap::NoWrap);
-            emptyHorzWrapStyleRef = makeEmptyFlexStyle(interstice::FlexDirection::Row, interstice::FlexWrap::Wrap);
-            emptyVertStyleRef     = makeEmptyFlexStyle(interstice::FlexDirection::Column, interstice::FlexWrap::NoWrap);
-            emptyVertWrapStyleRef = makeEmptyFlexStyle(interstice::FlexDirection::Column, interstice::FlexWrap::Wrap);
+            emptyHorzStyleRef     = makeEmptyFlexStyle(tachyon::FlexDirection::Row, tachyon::FlexWrap::NoWrap);
+            emptyHorzWrapStyleRef = makeEmptyFlexStyle(tachyon::FlexDirection::Row, tachyon::FlexWrap::Wrap);
+            emptyVertStyleRef     = makeEmptyFlexStyle(tachyon::FlexDirection::Column, tachyon::FlexWrap::NoWrap);
+            emptyVertWrapStyleRef = makeEmptyFlexStyle(tachyon::FlexDirection::Column, tachyon::FlexWrap::Wrap);
         }
     }
 
@@ -170,7 +170,7 @@ namespace interstice
                     paths.push_back((baseDir / face.src).lexically_normal().string());
             const std::vector<std::string_view> views(paths.begin(), paths.end());
             if (textSystem.RegisterFontFamily(first.family, views) == FontID::Invalid)
-                INTERSTICE_LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
+                TACHYON_LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
         }
     }
 
@@ -186,7 +186,7 @@ namespace interstice
         if (it != m_classStyles.end())
             return it->second;
         if (m_missingWarned.emplace(cssClass).second)
-            INTERSTICE_LOG_WARNING(kLogTheme, "no style file defines the class .{}", cssClass);
+            TACHYON_LOG_WARNING(kLogTheme, "no style file defines the class .{}", cssClass);
         return StyleRef{};
     }
 
@@ -210,7 +210,7 @@ namespace interstice
         std::ifstream paletteFile(themePath);
         if (!paletteFile.good())
         {
-            INTERSTICE_LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
+            TACHYON_LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
             return false;
         }
 
@@ -237,7 +237,7 @@ namespace interstice
             std::ifstream file(path);
             if (!file.good())
             {
-                INTERSTICE_LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
+                TACHYON_LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
                 return false;
             }
             append(path.string(), file);
@@ -249,12 +249,12 @@ namespace interstice
             const Part* part = &parts.front();
             for (const Part& p : parts)
                 if (err.line >= p.firstLine) part = &p;
-            INTERSTICE_LOG_ERROR(kLogTheme, "{}:{}:{}: {}", part->name, err.line - part->firstLine + 1, err.column, err.message);
+            TACHYON_LOG_ERROR(kLogTheme, "{}:{}:{}: {}", part->name, err.line - part->firstLine + 1, err.column, err.message);
         }
 
         if (textSystem)
             RegisterFontFaces(*textSystem, sheet.fontFaces, themeDir);
-        INTERSTICE_LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
+        TACHYON_LOG_INFO(kLogTheme, "loaded {}: {} styles, {} errors", themePath, sheet.styles.size(), sheet.errors.size());
 
         m_paletteColors.clear();
         for (const auto& [name, prop] : sheet.customProperties)
@@ -262,7 +262,7 @@ namespace interstice
                 m_paletteColors[name] = { prop.color.r / 255.0f, prop.color.g / 255.0f, prop.color.b / 255.0f, prop.color.a / 255.0f };
 
         // Line color styles from CSS custom properties (with fallbacks)
-        auto lineColorFromCSS = [&](const char* varName, color4f fallback) -> interstice::VisualColorStyleIndex
+        auto lineColorFromCSS = [&](const char* varName, color4f fallback) -> tachyon::VisualColorStyleIndex
             {
                 const auto* prop = sheet.GetCustomProperty(varName);
                 if (prop && prop->hasColor)
@@ -335,10 +335,10 @@ namespace interstice
         // texture-typed colour styles (StretchedTexture), which CSS can't express.
         {
             Style imageStyle{};
-            imageStyle.borderWidths = interstice::BoxEdges(1);
-            imageStyle.padding      = interstice::BoxEdges(0);
-            imageStyle.margin       = interstice::BoxEdges(8);
-            imageStyle.SetOverflow(interstice::Overflow::Hidden);
+            imageStyle.borderWidths = tachyon::BoxEdges(1);
+            imageStyle.padding      = tachyon::BoxEdges(0);
+            imageStyle.margin       = tachyon::BoxEdges(8);
+            imageStyle.SetOverflow(tachyon::Overflow::Hidden);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 imageStyle.states[i].backgroundColor = ColorStyle::Create(
@@ -776,4 +776,4 @@ namespace interstice
         fieldHeight /= 2.0f;   // one property row = two grid cells
         nodeGridSize = (int)ceil(fieldHeight);
     }
-} // namespace interstice
+} // namespace tachyon

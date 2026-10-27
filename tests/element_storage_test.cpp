@@ -8,7 +8,7 @@
 #include <gui_core/windows/gui_window_registry.h>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
 
     class ElementStorageTest : public ::testing::Test

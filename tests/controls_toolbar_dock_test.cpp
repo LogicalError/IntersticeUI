@@ -1,4 +1,4 @@
-// Integration tests for interstice::RenderToolbarDock: ID lifetime, side groups, the
+// Integration tests for tachyon::RenderToolbarDock: ID lifetime, side groups, the
 // side rect cache, and reorder / cross-side drop / tear-off callbacks.
 
 #include <gtest/gtest.h>
@@ -8,7 +8,7 @@
 #include <gui_controls/controls_toolbar_dock.h>
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -423,4 +423,4 @@ namespace interstice
     }
 
     } // anonymous namespace
-} // namespace interstice
+} // namespace tachyon

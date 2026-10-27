@@ -4,7 +4,7 @@
 #include <gui_core/gui_base_types.h>
 #include <algorithm>
 
-namespace interstice
+namespace tachyon
 {
 
     static color4b ReadPixel(const GradientManager& gm, const AtlasLocation& loc, uint16_t colOffset = 0)

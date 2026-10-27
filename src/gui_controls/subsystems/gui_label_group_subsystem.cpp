@@ -6,7 +6,7 @@
 
 namespace
 {
-    constexpr interstice::Diagnostics::LogCategory kLogApp = interstice::Diagnostics::MakeLogCategory("app");
+    constexpr tachyon::Diagnostics::LogCategory kLogApp = tachyon::Diagnostics::MakeLogCategory("app");
 }
 #include <cmath>
 
@@ -17,7 +17,7 @@ namespace
 #include <gui_core/graphics/gui_renderer.h>
 #include <gui_core/state/gui_state_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     LabelGroupSubsystem::LabelGroupSubsystem(FramePipeline& frame,
                                              ElementStorage& elementStorage,
@@ -41,7 +41,7 @@ namespace interstice
         return entry.state;
     }
 
-    void LabelGroupSubsystem::BeginGroup(interstice::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
+    void LabelGroupSubsystem::BeginGroup(tachyon::ID id, int32_t defaultWidth, int32_t minWidth, int32_t maxWidth, bool resizable)
     {
         // No per-frame reset here (it's in OnPreConstruct): a group may be entered several
         // times per frame (e.g. once per row), and a reset would drop an earlier hover.
@@ -95,18 +95,18 @@ namespace interstice
         }
     }
 
-    void LabelGroupSubsystem::AddDragger(interstice::ElementRef labelRef)
+    void LabelGroupSubsystem::AddDragger(tachyon::ElementRef labelRef)
     {
         auto* groupState = m_stack.back().state;
 
         // Hover from last frame's hit-test, so edge state persists without a MouseMove.
-        interstice::ID labelID = m_elementStorage.GetElementUnsafe(labelRef).id;
-        interstice::ElementState labelState = m_guiStateManager.GetCurrentState(labelID);
-        if ((labelState & interstice::ElementState::Hover) != interstice::ElementState::None)
+        tachyon::ID labelID = m_elementStorage.GetElementUnsafe(labelRef).id;
+        tachyon::ElementState labelState = m_guiStateManager.GetCurrentState(labelID);
+        if ((labelState & tachyon::ElementState::Hover) != tachyon::ElementState::None)
         {
             groupState->anyLabelHovered = true;
             if (groupState->edgeHovered || groupState->edgeDragging)
-                m_guiStateManager.Cursor().Request(interstice::MouseCursor::ColResize);
+                m_guiStateManager.Cursor().Request(tachyon::MouseCursor::ColResize);
         }
 
         auto* state = groupState;
@@ -115,7 +115,7 @@ namespace interstice
         auto lineColor = m_theme.dividerHoverLineStyle;   // like the other dividers' hover
         [[maybe_unused]] auto cdRes = m_elementStorage.AddCustomDraw(labelRef,
             [state, labelIndex, storage = &m_elementStorage, lineColor,
-             edgeWidth = m_elementStorage.GetStyleManager().Px(4)](interstice::CustomDrawContext& ctx)
+             edgeWidth = m_elementStorage.GetStyleManager().Px(4)](tachyon::CustomDrawContext& ctx)
             {
                 if (!state->edgeHovered && !state->edgeDragging)
                     return;
@@ -139,7 +139,7 @@ namespace interstice
                         yBot = (outer.y + (nextRect->rect.y - selfRect->rect.y)) - inner.y;
                 }
 
-                interstice::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
+                tachyon::LineStyle style{ .colorStyleIndex = lineColor, .lineWidth = float(edgeWidth) };
                 ctx.RenderLine({ xRight, yTop }, { xRight, yBot }, style);
             });
         assert(cdRes == ElementStorageResult::Success);

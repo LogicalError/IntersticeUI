@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace interstice
+namespace tachyon
 {
     /// What a control shows: a text, an icon or both, and an optional tooltip. It converts
     /// from a string or an icon, so a control showing one of them takes it as is:

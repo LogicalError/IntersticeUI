@@ -4,7 +4,7 @@
 
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     struct IntRect;
 	struct ElementRect;
@@ -27,4 +27,4 @@ namespace interstice
                                            const IntRect&         clipRect,
                                            std::span<ElementRect> childRects);
     };
-} // namespace interstice
+} // namespace tachyon

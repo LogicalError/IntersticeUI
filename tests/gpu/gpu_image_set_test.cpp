@@ -6,9 +6,9 @@ using namespace GpuTestHarness;
 
 namespace
 {
-    interstice::vulkan::VulkanImage FakeImage(uintptr_t view)
+    tachyon::vulkan::VulkanImage FakeImage(uintptr_t view)
     {
-        interstice::vulkan::VulkanImage image{};
+        tachyon::vulkan::VulkanImage image{};
         image.imageView = reinterpret_cast<VkImageView>(view);
         return image;
     }
@@ -17,33 +17,33 @@ namespace
 // The shader's texture array has a fixed size; a slot past it can't be bound.
 TEST(VulkanImageSet, RefusesMoreTexturesThanTheShaderArrayHolds)
 {
-    interstice::vulkan::VulkanImageSet set;
-    interstice::vulkan::VulkanImage image = FakeImage(1);
-    for (uint32_t i = 0; i < interstice::vulkan::VulkanImageSet::kCapacity; ++i)
-        ASSERT_NE(set.Add(&image), interstice::ImageIndex::Invalid);
+    tachyon::vulkan::VulkanImageSet set;
+    tachyon::vulkan::VulkanImage image = FakeImage(1);
+    for (uint32_t i = 0; i < tachyon::vulkan::VulkanImageSet::kCapacity; ++i)
+        ASSERT_NE(set.Add(&image), tachyon::ImageIndex::Invalid);
 
-    EXPECT_EQ(set.Add(&image), interstice::ImageIndex::Invalid);
-    EXPECT_EQ(set.ReserveIndex(), interstice::ImageIndex::Invalid);
-    EXPECT_EQ(set.textures.size(), interstice::vulkan::VulkanImageSet::kCapacity);
+    EXPECT_EQ(set.Add(&image), tachyon::ImageIndex::Invalid);
+    EXPECT_EQ(set.ReserveIndex(), tachyon::ImageIndex::Invalid);
+    EXPECT_EQ(set.textures.size(), tachyon::vulkan::VulkanImageSet::kCapacity);
 }
 
 TEST(VulkanImageSet, IgnoresIndicesItNeverHandedOut)
 {
-    interstice::vulkan::VulkanImageSet set;
-    interstice::vulkan::VulkanImage image = FakeImage(1);
-    const interstice::ImageIndex index = set.Add(&image);
+    tachyon::vulkan::VulkanImageSet set;
+    tachyon::vulkan::VulkanImage image = FakeImage(1);
+    const tachyon::ImageIndex index = set.Add(&image);
 
-    EXPECT_FALSE(set.SetDescriptor(interstice::ImageIndex(uint32_t(index) + 4), VkDescriptorImageInfo{}));
-    EXPECT_FALSE(set.SetImage(interstice::ImageIndex(uint32_t(index) + 4), &image));
+    EXPECT_FALSE(set.SetDescriptor(tachyon::ImageIndex(uint32_t(index) + 4), VkDescriptorImageInfo{}));
+    EXPECT_FALSE(set.SetImage(tachyon::ImageIndex(uint32_t(index) + 4), &image));
     EXPECT_EQ(set.textures.size(), 1u);
 }
 
 TEST(VulkanImageSet, RemovedSlotsAreReused)
 {
-    interstice::vulkan::VulkanImageSet set;
-    interstice::vulkan::VulkanImage a = FakeImage(1), b = FakeImage(2), c = FakeImage(3);
-    const interstice::ImageIndex ia = set.Add(&a);
-    const interstice::ImageIndex ib = set.Add(&b);
+    tachyon::vulkan::VulkanImageSet set;
+    tachyon::vulkan::VulkanImage a = FakeImage(1), b = FakeImage(2), c = FakeImage(3);
+    const tachyon::ImageIndex ia = set.Add(&a);
+    const tachyon::ImageIndex ib = set.Add(&b);
 
     set.Remove(ia);
     EXPECT_EQ(set.Add(&c), ia);
@@ -62,16 +62,16 @@ TEST_F(GpuTest, UnregisteredImageSlotIsNotBoundNextFrame)
 
     auto& dc = vk->deviceContext;
     uint32_t pixel = 0xffffffffu;
-    interstice::Image* img = dc.CreateImage(&pixel, interstice::uint2{ 1, 1 }, interstice::ImageFormat::R8G8B8A8,
-                                     interstice::Sampler::LinearClampToEdge, false);
+    tachyon::Image* img = dc.CreateImage(&pixel, tachyon::uint2{ 1, 1 }, tachyon::ImageFormat::R8G8B8A8,
+                                     tachyon::Sampler::LinearClampToEdge, false);
     ASSERT_NE(img, nullptr);
-    const interstice::ImageIndex index = vk->RegisterImage(img);
-    ASSERT_NE(index, interstice::ImageIndex::Invalid);
+    const tachyon::ImageIndex index = vk->RegisterImage(img);
+    ASSERT_NE(index, tachyon::ImageIndex::Invalid);
     RenderOneFrameWithDot(ctx, { 320, 240 });
 
     vk->UnregisterImage(index);
-    dc.DestroyImageAtEnd(img, interstice::DeviceScope::Frame);
-    static_cast<interstice::vulkan::VulkanImageSet*>(vk->GetImageSet())->ReserveIndex(); // reserved, never set
+    dc.DestroyImageAtEnd(img, tachyon::DeviceScope::Frame);
+    static_cast<tachyon::vulkan::VulkanImageSet*>(vk->GetImageSet())->ReserveIndex(); // reserved, never set
     sink.Clear();
     for (int i = 0; i < 3; ++i)
     {

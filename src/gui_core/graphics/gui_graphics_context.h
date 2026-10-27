@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     enum class WindowFlags : uint32_t;
     enum class VisualColorStyleIndex : uint16_t;

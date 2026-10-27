@@ -12,7 +12,7 @@
 
 #include <cstdio>
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
     struct AllocatedImage 
     {
@@ -36,12 +36,12 @@ namespace interstice::vulkan
     bool IsDeviceLost();
     void SetDeviceLost(bool lost);
 
-    #define INTERSTICE_VK_CHECK(x)                                              \
+    #define TACHYON_VK_CHECK(x)                                              \
         do                                                                  \
         {                                                                   \
-            const VkResult interstice_vk_result = (x);                      \
-            if (interstice_vk_result != VK_SUCCESS)                         \
-                ::interstice::vulkan::OnVulkanError(interstice_vk_result, #x); \
+            const VkResult tachyon_vk_result = (x);                      \
+            if (tachyon_vk_result != VK_SUCCESS)                         \
+                ::tachyon::vulkan::OnVulkanError(tachyon_vk_result, #x); \
         } while (0)
 
     /// Waits for `fence` however long the GPU takes: VK_TIMEOUT only means the GPU is slow (a busy
@@ -54,6 +54,6 @@ namespace interstice::vulkan
         {
             result = vkWaitForFences(device, 1, &fence, VK_TRUE, 1000000000);
         } while (result == VK_TIMEOUT);
-        INTERSTICE_VK_CHECK(result);
+        TACHYON_VK_CHECK(result);
     }
 }

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace interstice
+namespace tachyon
 {
     // ------------------------------------------------------------------------
     // StyleRef - References into style pools

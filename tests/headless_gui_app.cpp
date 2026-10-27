@@ -17,7 +17,7 @@ namespace GUITest
 HeadlessGUIApp::HeadlessGUIApp(std::string themePath)
     : m_themePath(std::move(themePath))
 {
-    m_rootWindowID.value.dynamicParts.mode      = interstice::IDMode::Static;
+    m_rootWindowID.value.dynamicParts.mode      = tachyon::IDMode::Static;
     m_rootWindowID.value.dynamicParts.hashValue = 0xBEEF;
 }
 
@@ -26,45 +26,45 @@ HeadlessGUIApp::~HeadlessGUIApp()
     Cleanup();
 }
 
-interstice::Result<void> HeadlessGUIApp::Initialize(const InitializeOptions& options)
+tachyon::Result<void> HeadlessGUIApp::Initialize(const InitializeOptions& options)
 {
     using ::testing::_;
 
     // One fake 1920x1080 monitor; layout queries GetMonitorArea for absolute
     // elements and auto-centered windows.
-    interstice::MonitorInfo monitor{};
-    monitor.workArea   = interstice::IntRect{ 0, 0, 1920, 1080 };
+    tachyon::MonitorInfo monitor{};
+    monitor.workArea   = tachyon::IntRect{ 0, 0, 1920, 1080 };
     monitor.isPrimary  = true;
-    std::vector<interstice::MonitorInfo> monitors{ monitor };
+    std::vector<tachyon::MonitorInfo> monitors{ monitor };
     ON_CALL(mockBackend, GetMonitors()).WillByDefault(Return(monitors));
     ON_CALL(mockBackend, GetMonitorAt(_)).WillByDefault(Return(0));
     ON_CALL(mockBackend, GetMonitorFromWindow(_)).WillByDefault(Return(0));
-    ON_CALL(mockBackend, GetScreenMousePos()).WillByDefault(Return(interstice::int2{0,0}));
-    ON_CALL(mockBackend, GetMouseButtons()).WillByDefault(Return(interstice::MouseButtons::None));
+    ON_CALL(mockBackend, GetScreenMousePos()).WillByDefault(Return(tachyon::int2{0,0}));
+    ON_CALL(mockBackend, GetMouseButtons()).WillByDefault(Return(tachyon::MouseButtons::None));
     // Popup/tooltip window creation returns a stable non-null sentinel so
     // OSWindowManager registers the window; GetWindowRect returns the monitor
     // area so layout doesn't collapse popups.
     static int dummyHandleStorage = 0;
-    interstice::OSWindowHandle fakeHandle = &dummyHandleStorage;
-    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<interstice::int2>(), _, _))
+    tachyon::OSWindowHandle fakeHandle = &dummyHandleStorage;
+    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<tachyon::int2>(), _, _))
         .WillByDefault(Return(fakeHandle));
-    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<interstice::IntRect>(), _, _))
+    ON_CALL(mockBackend, CreateWindow(_, ::testing::An<tachyon::IntRect>(), _, _))
         .WillByDefault(Return(fakeHandle));
     ON_CALL(mockBackend, IsWindow(_)).WillByDefault(Return(true));
     ON_CALL(mockBackend, GetWindowRect(_))
-        .WillByDefault(Return(interstice::IntRect{ 0, 0, 200, 300 }));
-    ON_CALL(mockBackend, GetWindowPos(_)).WillByDefault(Return(interstice::int2{ 0, 0 }));
-    ON_CALL(mockBackend, GetWindowSize(_)).WillByDefault(Return(interstice::int2{ 200, 300 }));
+        .WillByDefault(Return(tachyon::IntRect{ 0, 0, 200, 300 }));
+    ON_CALL(mockBackend, GetWindowPos(_)).WillByDefault(Return(tachyon::int2{ 0, 0 }));
+    ON_CALL(mockBackend, GetWindowSize(_)).WillByDefault(Return(tachyon::int2{ 200, 300 }));
     ON_CALL(mockBackend, GetTicks()).WillByDefault(Return(0u));
 
     // Slots GUIApplication's Initialize() normally fills. StubTextSystem measures
     // text by character count; no font backend.
     textSystem    = &ownedTextSystem;
     windowBackend = &mockBackend;
-    inputManager  = std::make_unique<interstice::InputManager>();
-    layoutEngine  = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
+    inputManager  = std::make_unique<tachyon::InputManager>();
+    layoutEngine  = std::make_unique<tachyon::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
     // Menus, tooltips and popups reach the mock-backed OSWindowManager through this.
-    windowManager = std::make_unique<interstice::OSWindowManager>(nullptr, &mockBackend);
+    windowManager = std::make_unique<tachyon::OSWindowManager>(nullptr, &mockBackend);
 
     // Static window IDs Initialize() reserves for tooltip / context-menu /
     // tab-drag-ghost popups; widgets using them assert otherwise.
@@ -74,16 +74,16 @@ interstice::Result<void> HeadlessGUIApp::Initialize(const InitializeOptions& opt
 
     // Subsystems, as Initialize() creates them after the manager wiring; widgets
     // dereference these.
-    m_sliderFieldTrack  = std::make_unique<interstice::SliderFieldTrackSubsystem>();
-    m_menuRects         = std::make_unique<interstice::MenuRectsSubsystem>();
-    m_labelGroup        = std::make_unique<interstice::LabelGroupSubsystem>(m_frame, elementStorage, guiStateManager, theme);
-    m_buttonGroup       = std::make_unique<interstice::ButtonGroupSubsystem>(m_frame, elementStorage, styleManager);
-    m_colorPickerSub    = std::make_unique<interstice::ColorPickerSubsystem>(m_frame);
-    m_gradientEditorSub = std::make_unique<interstice::GradientEditorSubsystem>(m_frame);
-    m_renameSub         = std::make_unique<interstice::RenameSubsystem>();
-    m_reorderable       = std::make_unique<interstice::ReorderableSubsystem>(m_frame);
-    m_dockTabDragSub    = std::make_unique<interstice::DockTabDragSubsystem>();
-    m_uiCache           = std::make_unique<interstice::UICacheManager>(m_frame, elementStorage, guiStateManager);
+    m_sliderFieldTrack  = std::make_unique<tachyon::SliderFieldTrackSubsystem>();
+    m_menuRects         = std::make_unique<tachyon::MenuRectsSubsystem>();
+    m_labelGroup        = std::make_unique<tachyon::LabelGroupSubsystem>(m_frame, elementStorage, guiStateManager, theme);
+    m_buttonGroup       = std::make_unique<tachyon::ButtonGroupSubsystem>(m_frame, elementStorage, styleManager);
+    m_colorPickerSub    = std::make_unique<tachyon::ColorPickerSubsystem>(m_frame);
+    m_gradientEditorSub = std::make_unique<tachyon::GradientEditorSubsystem>(m_frame);
+    m_renameSub         = std::make_unique<tachyon::RenameSubsystem>();
+    m_reorderable       = std::make_unique<tachyon::ReorderableSubsystem>(m_frame);
+    m_dockTabDragSub    = std::make_unique<tachyon::DockTabDragSubsystem>();
+    m_uiCache           = std::make_unique<tachyon::UICacheManager>(m_frame, elementStorage, guiStateManager);
 
     RegisterFrameBalanceChecks();
     RegisterFrameHooks();
@@ -123,7 +123,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     // Rebuilt each frame; the stage points mirror production's OnFrame so
     // subsystem hooks fire under test.
-    interstice::FrameContext ctx{
+    tachyon::FrameContext ctx{
         .app               = *this,
         .idManager         = idManager,
         .guiStateManager   = guiStateManager,
@@ -142,7 +142,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
         .elapsedTimeSecs   = static_cast<float>(m_timeMs) / 1000.0f,
     };
 
-    m_frame.RunStage(interstice::FrameStage::PreFrame, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PreFrame, ctx);
     ApplyPendingStyleReload();
 
     // -- BeginFrame on every manager that matters for construction/dispatch.
@@ -161,10 +161,10 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     {
         for (const auto& e : inputManager->GetRecordedEvents())
         {
-            if (e.type == interstice::EventType::MouseMove)   hasMouseMove = true;
-            if (e.type == interstice::EventType::MouseDown)   hasMousePress = true;
-            if (e.type == interstice::EventType::KeyDown)     hasKeyboard = true;
-            if (e.type == interstice::EventType::MouseScroll) hasScroll = true;
+            if (e.type == tachyon::EventType::MouseMove)   hasMouseMove = true;
+            if (e.type == tachyon::EventType::MouseDown)   hasMousePress = true;
+            if (e.type == tachyon::EventType::KeyDown)     hasKeyboard = true;
+            if (e.type == tachyon::EventType::MouseScroll) hasScroll = true;
         }
     }
     tooltipManager.BeginFrame(guiStateManager.Interaction().GetHoveredID(),
@@ -177,22 +177,22 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     VERIFY(elementStorage.BeginConstruction());
     windowRegistry.Clear();
 
-    m_frame.RunStage(interstice::FrameStage::PreConstruct, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PreConstruct, ctx);
 
     // -- User construction.
     if (onGuiFn) onGuiFn();
 
-    m_frame.RunStage(interstice::FrameStage::PostConstruct, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PostConstruct, ctx);
 
     // As OnFrame: a drag's visual (a ghost window following the cursor) is declared now.
     if (guiStateManager.Drag().IsDragging())
     {
-        interstice::DragVisualContext visual;
+        tachyon::DragVisualContext visual;
         visual.screenPos     = m_mousePos;
         visual.sourceID      = guiStateManager.Drag().GetDraggedID();
         visual.targetID      = guiStateManager.Drag().GetDragOverID();
-        visual.isDropValid   = guiStateManager.Drag().GetValidatedTargetID() != interstice::ID::Invalid();
-        visual.leftMouseDown = (m_buttonsHeld & interstice::MouseButtons::Left) != interstice::MouseButtons::None;
+        visual.isDropValid   = guiStateManager.Drag().GetValidatedTargetID() != tachyon::ID::Invalid();
+        visual.leftMouseDown = (m_buttonsHeld & tachyon::MouseButtons::Left) != tachyon::MouseButtons::None;
         visual.payloadType   = guiStateManager.Drag().GetEventPayloadType();
         visual.payloadValue  = guiStateManager.Drag().GetEventPayloadValue();
         visual.payload       = &guiStateManager.Drag().GetPayload();
@@ -203,36 +203,36 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     textSystem->Update();
 
-    m_frame.RunStage(interstice::FrameStage::PreLayout, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PreLayout, ctx);
 
     // -- Layout. SyncWindowsBeforeLayout is skipped (no live OS windows).
     layoutEngine->Layout(*windowManager, elementStorage);
 
     // Per-element AddPostLayout callbacks are skipped (they need a
     // PostLayoutContext the stub doesn't model); subsystem OnPostLayout runs.
-    m_frame.RunStage(interstice::FrameStage::PostLayout, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PostLayout, ctx);
 
     windowRegistry.BuildRenderSkipLinks();
 
-    m_frame.RunStage(interstice::FrameStage::PreInput, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PreInput, ctx);
 
     // -- EndFrame hit-tests the one root window and commits the hover/active
     // targets for Process(), which runs after it.
     inputManager->UpdatePreHover(guiStateManager);
-    interstice::FrameInput frameInput
+    tachyon::FrameInput frameInput
     {
         .activeWindowID   = m_rootWindowID,
         .windowUnderMouse = m_rootWindowID,
         .mousePos         = m_mousePos,
         .mouseButtons     = m_buttonsHeld,
-        .hitTest = [this](interstice::ID window, interstice::int2 pos)
+        .hitTest = [this](tachyon::ID window, tachyon::int2 pos)
         {
-            const interstice::ElementRef windowRef = windowRegistry.GetWindowRef(window);
-            return windowRef != interstice::ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, pos)
-                                                                  : interstice::ID::Invalid();
+            const tachyon::ElementRef windowRef = windowRegistry.GetWindowRef(window);
+            return windowRef != tachyon::ElementRef::Invalid() ? elementStorage.GetElementIDAt(windowRef, pos)
+                                                                  : tachyon::ID::Invalid();
         },
     };
-    const interstice::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
+    const tachyon::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
 
     menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
     InvalidateCachedScopesForInput(overID);
@@ -240,13 +240,13 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     // -- Dispatch the queued input events to element handlers.
     inputManager->Process(guiStateManager, elementStorage, tabChainManager, textSystem, overID);
 
-    m_frame.RunStage(interstice::FrameStage::PostInput, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PostInput, ctx);
 
     EndDockingFrame();
 
     // No render pass, but fire PreRender/PostRender for subsystems that hook them.
-    m_frame.RunStage(interstice::FrameStage::PreRender,  ctx);
-    m_frame.RunStage(interstice::FrameStage::PostRender, ctx);
+    m_frame.RunStage(tachyon::FrameStage::PreRender,  ctx);
+    m_frame.RunStage(tachyon::FrameStage::PostRender, ctx);
 
     guiStateManager.GetScrollManagement().EndFrame(idManager);
     tabChainManager.EndFrame();
@@ -254,7 +254,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     menuManager.EndFrame(elementStorage, guiStateManager);
     [[maybe_unused]] bool wmEnd = windowManager->EndFrame();
 
-    m_frame.RunStage(interstice::FrameStage::EndFrame, ctx);
+    m_frame.RunStage(tachyon::FrameStage::EndFrame, ctx);
 
     idManager.EndFrame();
 }
@@ -263,21 +263,21 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 // Root window
 // ---------------------------------------------------------------------------
 
-bool HeadlessGUIApp::BeginRootWindow(interstice::int2 size, interstice::ElementFlags extraFlags, interstice::StyleRef style)
+bool HeadlessGUIApp::BeginRootWindow(tachyon::int2 size, tachyon::ElementFlags extraFlags, tachyon::StyleRef style)
 {
     // Stand-in for BeginWindow() without an OS window: an IsWindow + NotFocusable
     // content root.
-    interstice::Element root{};
+    tachyon::Element root{};
     root.id    = m_rootWindowID;
-    root.flags = interstice::ElementFlags::IsWindow
-               | interstice::ElementFlags::WindowNoCaption
-               | interstice::ElementFlags::WindowNotFocusable
+    root.flags = tachyon::ElementFlags::IsWindow
+               | tachyon::ElementFlags::WindowNoCaption
+               | tachyon::ElementFlags::WindowNotFocusable
                | extraFlags;
     // Production window style, for its padding + Display::Flex defaults.
-    root.styleRef = style != interstice::StyleRef::Invalid() ? style : theme.windowStyleRef;
+    root.styleRef = style != tachyon::StyleRef::Invalid() ? style : theme.windowStyleRef;
     root.state    = guiStateManager.GetCurrentState(m_rootWindowID);
 
-    interstice::LayoutOverride lo = interstice::LayoutOverride{}
+    tachyon::LayoutOverride lo = tachyon::LayoutOverride{}
         .Size(size)   // the root window's pixels
         .Position(0, 0);
 
@@ -307,36 +307,36 @@ void HeadlessGUIApp::EndRootWindow()
 // Input injection
 // ---------------------------------------------------------------------------
 
-void HeadlessGUIApp::InjectMouseMove(interstice::int2 pos, interstice::MouseButtons buttonsHeld,
-                                      interstice::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseMove(tachyon::int2 pos, tachyon::MouseButtons buttonsHeld,
+                                      tachyon::KeyModifier mods)
 {
     m_mousePos    = pos;
     m_buttonsHeld = buttonsHeld;
     inputManager->OnMouseMove(m_rootWindowID, pos, buttonsHeld, mods);
 }
 
-void HeadlessGUIApp::InjectMouseDown(interstice::int2 pos, interstice::MouseButtons button,
-                                      interstice::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseDown(tachyon::int2 pos, tachyon::MouseButtons button,
+                                      tachyon::KeyModifier mods)
 {
     m_mousePos = pos;
     m_buttonsHeld = m_buttonsHeld | button;
     // A MouseDown needs a preceding MouseMove to establish the element under the
     // cursor.
     inputManager->OnMouseButton(m_rootWindowID, pos, m_buttonsHeld, mods,
-                                 interstice::MouseAction::MouseDown);
+                                 tachyon::MouseAction::MouseDown);
 }
 
-void HeadlessGUIApp::InjectMouseUp(interstice::int2 pos, interstice::MouseButtons button,
-                                    interstice::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseUp(tachyon::int2 pos, tachyon::MouseButtons button,
+                                    tachyon::KeyModifier mods)
 {
     m_mousePos = pos;
     m_buttonsHeld = m_buttonsHeld & ~button;
     inputManager->OnMouseButton(m_rootWindowID, pos, m_buttonsHeld, mods,
-                                 interstice::MouseAction::MouseUp);
+                                 tachyon::MouseAction::MouseUp);
 }
 
-void HeadlessGUIApp::InjectKey(interstice::KeyCode key, interstice::KeyAction action,
-                                interstice::KeyModifier mods)
+void HeadlessGUIApp::InjectKey(tachyon::KeyCode key, tachyon::KeyAction action,
+                                tachyon::KeyModifier mods)
 {
     inputManager->OnKeyboard(m_rootWindowID, key, /*repeat*/0, mods, action);
     // Like the SDL backend, keyboard events also go to the text system.
@@ -344,24 +344,24 @@ void HeadlessGUIApp::InjectKey(interstice::KeyCode key, interstice::KeyAction ac
         textSystem->OnKeyboard(m_rootWindowID, key, /*repeat*/0, mods, action);
 }
 
-void HeadlessGUIApp::InjectMouseScroll(interstice::int2 pos, interstice::int2 scrollOffset,
-                                        interstice::KeyModifier mods)
+void HeadlessGUIApp::InjectMouseScroll(tachyon::int2 pos, tachyon::int2 scrollOffset,
+                                        tachyon::KeyModifier mods)
 {
     m_mousePos = pos;
     inputManager->OnMouseScroll(m_rootWindowID, pos,
-                                interstice::float2{ float(scrollOffset.x), float(scrollOffset.y) }, mods);
+                                tachyon::float2{ float(scrollOffset.x), float(scrollOffset.y) }, mods);
 }
 
-void HeadlessGUIApp::ClickAt(interstice::int2 pos, interstice::MouseButtons button,
-                              interstice::KeyModifier mods)
+void HeadlessGUIApp::ClickAt(tachyon::int2 pos, tachyon::MouseButtons button,
+                              tachyon::KeyModifier mods)
 {
     InjectMouseMove(pos, m_buttonsHeld, mods);
     InjectMouseDown(pos, button, mods);
     InjectMouseUp(pos, button, mods);
 }
 
-void HeadlessGUIApp::DragFrom(interstice::int2 from, interstice::int2 to,
-                               interstice::MouseButtons button, interstice::KeyModifier mods)
+void HeadlessGUIApp::DragFrom(tachyon::int2 from, tachyon::int2 to,
+                               tachyon::MouseButtons button, tachyon::KeyModifier mods)
 {
     // The move at `to` carries the held button: drag handlers only see drags
     // through such moves.
@@ -376,10 +376,10 @@ void HeadlessGUIApp::InjectText(std::string_view text)
     // One KeyChar per codepoint, as the OS backend sends typed text; malformed text stops.
     for (size_t i = 0; i < text.size(); )
     {
-        const uint32_t codepoint = interstice::NextUtf8Codepoint(text, i);
-        if (codepoint == interstice::kInvalidCodepoint)
+        const uint32_t codepoint = tachyon::NextUtf8Codepoint(text, i);
+        if (codepoint == tachyon::kInvalidCodepoint)
             return;
-        InjectKey(static_cast<interstice::KeyCode>(codepoint), interstice::KeyAction::KeyChar);
+        InjectKey(static_cast<tachyon::KeyCode>(codepoint), tachyon::KeyAction::KeyChar);
     }
 }
 
@@ -392,23 +392,23 @@ void HeadlessGUIApp::AdvanceTime(uint32_t deltaMs)
 // Inspection helpers
 // ---------------------------------------------------------------------------
 
-interstice::IntRect HeadlessGUIApp::GetElementRect(interstice::ID id) const
+tachyon::IntRect HeadlessGUIApp::GetElementRect(tachyon::ID id) const
 {
     auto ref = elementStorage.FindElementRefByID(id);
-    if (ref == interstice::ElementRef::Invalid()) return interstice::IntRect{};
+    if (ref == tachyon::ElementRef::Invalid()) return tachyon::IntRect{};
     auto* rp = elementStorage.GetElementRectPtr(ref);
-    return rp ? rp->rect : interstice::IntRect{};
+    return rp ? rp->rect : tachyon::IntRect{};
 }
 
-bool HeadlessGUIApp::HasElement(interstice::ID id) const
+bool HeadlessGUIApp::HasElement(tachyon::ID id) const
 {
-    return elementStorage.FindElementRefByID(id) != interstice::ElementRef::Invalid();
+    return elementStorage.FindElementRefByID(id) != tachyon::ElementRef::Invalid();
 }
 
-interstice::int2 HeadlessGUIApp::CenterOf(interstice::ID id) const
+tachyon::int2 HeadlessGUIApp::CenterOf(tachyon::ID id) const
 {
     auto r = GetElementRect(id);
-    return interstice::int2{ r.x + r.w / 2, r.y + r.h / 2 };
+    return tachyon::int2{ r.x + r.w / 2, r.y + r.h / 2 };
 }
 
 } // namespace GUITest

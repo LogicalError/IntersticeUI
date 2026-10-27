@@ -8,10 +8,10 @@
 #include <string_view>
 
 // Uncomment to enable debug ID tracking
-//#define INTERSTICE_ID_DEBUG
+//#define TACHYON_ID_DEBUG
 
 // ID system: static, dynamic and ranged identifiers for GUI elements.
-namespace interstice 
+namespace tachyon 
 {
     struct ID;
     /// Makes element IDs: per-frame dynamic / ranged IDs (hashed from the call site or a hint
@@ -77,7 +77,7 @@ namespace interstice
 
         private: [[nodiscard]] ID AllocateDynamicID(uint64_t hash);
 
-#ifdef INTERSTICE_SUPPORT_CPP20
+#ifdef TACHYON_SUPPORT_CPP20
         /// A dynamic ID from the caller's source location and the parent stack; different per
         /// call site. Repeated calls from one site under one parent are numbered in call order.
         public: [[nodiscard]] inline ID AllocateDynamicID(const std::source_location location = std::source_location::current())
@@ -103,7 +103,7 @@ namespace interstice
 
         private: [[nodiscard]] ID AllocateRangedID(uint32_t size, uint64_t hash);
 
-#ifdef INTERSTICE_SUPPORT_CPP20
+#ifdef TACHYON_SUPPORT_CPP20
         /// A ranged ID of `size` sub-IDs from the caller's source location and the parent stack.
         /// Unlike dynamic IDs, repeated calls from one site under one parent return the same ID.
         public: [[nodiscard]] inline ID AllocateRangedID(uint32_t size, const std::source_location location = std::source_location::current())
@@ -187,10 +187,10 @@ namespace interstice
         // Ranged ID tracking
         size_t m_ranged_count = 0;
 
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         std::vector<ID> m_debug_dynamic_ids;
         std::vector<ID> m_debug_ranges;
 #endif
     };
 
-} // namespace interstice
+} // namespace tachyon

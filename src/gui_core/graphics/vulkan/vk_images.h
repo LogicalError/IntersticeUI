@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace interstice::vulkan 
+namespace tachyon::vulkan 
 {
 	/// Records a layout transition of `image` into `cmd`.
 	/// `afterStage`: for an image coming from UNDEFINED, a stage the transition waits for. A

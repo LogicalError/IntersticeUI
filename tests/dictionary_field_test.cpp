@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -164,7 +164,7 @@ namespace interstice
                 {
                     app.BeginLabelGroup(120, 40, 300);
                     app.Label("Dictionary");
-                    app.Field(dict, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(dict, tachyon::LayoutOverride{}.FlexGrow(1));
                     app.EndLabelGroup();
                     app.EndArea();
                 }
@@ -191,7 +191,7 @@ namespace interstice
                 {
                     app.BeginLabelGroup(120, 40, 300);
                     app.Label("Dictionary");
-                    app.Field(dict, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(dict, tachyon::LayoutOverride{}.FlexGrow(1));
                     app.EndLabelGroup();
                     app.EndArea();
                 }
@@ -255,13 +255,13 @@ namespace interstice
                     app.EndIndeterminate();
 
                     app.Label("String List");
-                    app.Field(stringListID, stringList, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(stringListID, stringList, tachyon::LayoutOverride{}.FlexGrow(1));
 
                     app.Label("Float List");
-                    app.Field(floatListID, floatList, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(floatListID, floatList, tachyon::LayoutOverride{}.FlexGrow(1));
 
                     app.Label("Dictionary");
-                    app.Field(dict, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(dict, tachyon::LayoutOverride{}.FlexGrow(1));
 
                     app.EndLabelGroup();
                     app.EndArea();
@@ -345,7 +345,7 @@ namespace interstice
                 if (app.BeginArea(outerID, app.theme.dockContentStyleRef,
                                   LayoutOverride::FixedWidth(CssPx(outerWidth)).NoGrow()))
                 {
-                    app.Field(dict, interstice::LayoutOverride{}.FlexGrow(1));
+                    app.Field(dict, tachyon::LayoutOverride{}.FlexGrow(1));
                     app.EndArea();
                 }
                 app.EndRootWindow();

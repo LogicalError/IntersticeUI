@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using PipelineSet = std::array<RHI::GpuPipeline, kPrimitiveKindCount>;
 
@@ -44,7 +44,7 @@ namespace interstice
 
         std::vector<PrimitiveRenderPass> renderPasses;
         int           currentKind = -1; ///< kind of the open pass; -1 when none
-        interstice::float3x2 currentTransform;
+        tachyon::float3x2 currentTransform;
 
     public:
         void FinishRenderPass();
@@ -52,21 +52,21 @@ namespace interstice
 
         /// Appends another target's passes, translated by `delta` pixels. Works for every kind:
         /// each primitive starts with the same header (transform0, transform1, clipMin, clipMax).
-        void AppendCaptured(const PrimitiveRenderTarget& src, interstice::int2 delta);
+        void AppendCaptured(const PrimitiveRenderTarget& src, tachyon::int2 delta);
 
     public:
         void Render(RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
                     GPUDrawPushConstants& push_constants);
         void Reset();
 
-        void SetTransform(interstice::float3x2 transform);
-        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex = {}, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
-        void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
-        void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const interstice::LineStyle& lineStyle);
-        void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color);
-        void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
-        void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
-        void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur);
+        void SetTransform(tachyon::float3x2 transform);
+        void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex = {}, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {});
+        void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid);
+        void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle);
+        void RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color);
+        void RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid);
+        void RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid);
+        void RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur);
 
     private:
         /// Closes an open pass of a different kind, then appends `primitive` to its kind's stream.
@@ -85,23 +85,23 @@ namespace interstice
     class PrimitiveRenderer : public GUIRenderer
     {
     public:
-        std::unordered_map<interstice::ID, PrimitiveRenderTarget> idTargets;
+        std::unordered_map<tachyon::ID, PrimitiveRenderTarget> idTargets;
         PrimitiveRenderTarget* currentTarget{ nullptr };
         PrimitiveRenderTarget* resizingTarget{ nullptr };
 
     public:
         void Reset() override;
-        void SetTransform(interstice::float3x2 transform) override;
-        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex = {}, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {}) override;
-        void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
-        void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const interstice::LineStyle& lineStyle) override;
-        void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color) override;
-        void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
-        void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) override;
-        void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) override;
+        void SetTransform(tachyon::float3x2 transform) override;
+        void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex = {}, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {}) override;
+        void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) override;
+        void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle) override;
+        void RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color) override;
+        void RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) override;
+        void RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) override;
+        void RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) override;
 
     public:
-        PrimitiveRenderTarget& GetTarget(interstice::ID id)
+        PrimitiveRenderTarget& GetTarget(tachyon::ID id)
         {
             auto target = idTargets.find(id);
             if (target == idTargets.end())
@@ -114,10 +114,10 @@ namespace interstice
 
         /// Drops the CPU-side target of window `id`, when the window is destroyed. Transient GPU
         /// storage belongs to the window's frame slots, not to this target.
-        void ReleaseTarget(interstice::ID id);
+        void ReleaseTarget(tachyon::ID id);
         void ReleaseAllTargets();
 
-        bool StartResizing(interstice::ID id) override
+        bool StartResizing(tachyon::ID id) override
         {
             assert(resizingTarget == nullptr);
             auto target = idTargets.find(id);
@@ -135,24 +135,24 @@ namespace interstice
             resizingTarget = nullptr;
         }
 
-        bool BeginWindow(interstice::ID id) override;
+        bool BeginWindow(tachyon::ID id) override;
         void EndWindow() override;
 
         // Draw caching. Capture targets are CPU-only; their primitives are merged
         // into the window target on capture/replay.
-        void BeginScopeCapture(interstice::ID scopeId) override;
-        void EndScopeCapture(interstice::ID scopeId) override;
-        bool ReplayScopeCapture(interstice::ID scopeId, interstice::int2 delta) override;
-        bool HasScopeCapture(interstice::ID scopeId) const override;
-        void InvalidateScopeCapture(interstice::ID scopeId) override;
+        void BeginScopeCapture(tachyon::ID scopeId) override;
+        void EndScopeCapture(tachyon::ID scopeId) override;
+        bool ReplayScopeCapture(tachyon::ID scopeId, tachyon::int2 delta) override;
+        bool HasScopeCapture(tachyon::ID scopeId) const override;
+        void InvalidateScopeCapture(tachyon::ID scopeId) override;
         void ClearScopeCaptures() override;
 
-        void Render(interstice::ID id, RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
+        void Render(tachyon::ID id, RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
                     GPUDrawPushConstants& push_constants);
 
     private:
         /// Captured primitives per cached scope, kept across frames.
-        std::unordered_map<interstice::ID, PrimitiveRenderTarget> scopeCaptures;
+        std::unordered_map<tachyon::ID, PrimitiveRenderTarget> scopeCaptures;
         /// The window target while a capture redirects emit calls.
         PrimitiveRenderTarget* m_captureSaved = nullptr;
     };

@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
 	// Owned by the context; the fallback callback reads and updates it.
 	struct FontFallbackState

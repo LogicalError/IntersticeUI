@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_id.h>
 
-namespace interstice
+namespace tachyon
 {
     /// Decides which element's tooltip shows: the hovered one after a delay, or at once
     /// for focus moved by the keyboard. Presses, keys, scrolling and open menus dismiss it.
@@ -38,4 +38,4 @@ namespace interstice
         bool  m_pressedLastFrame = false; ///< a press's focus change lands on the next frame
     };
 
-} // namespace interstice
+} // namespace tachyon

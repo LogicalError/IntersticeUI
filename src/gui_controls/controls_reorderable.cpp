@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace interstice
+namespace tachyon
 {
 
 
@@ -13,8 +13,8 @@ namespace interstice
 
     bool GUIApplication::BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped,
         std::function<void(int, int)> onReorder, StyleRef style, LayoutOverride&& constraints,
-        std::function<void(int, interstice::int2)> onDragOut,
-        std::function<void(int, interstice::int2)> dragVisualizer)
+        std::function<void(int, tachyon::int2)> onDragOut,
+        std::function<void(int, tachyon::int2)> dragVisualizer)
     {
         m_reorderable->Construction() = {};
         m_reorderable->Construction().groupID = id;
@@ -24,7 +24,7 @@ namespace interstice
         m_reorderable->Construction().onDragOut = std::move(onDragOut);
         m_reorderable->Construction().dragVisualizer = std::move(dragVisualizer);
 
-        interstice::Element container
+        tachyon::Element container
         {
             .id       = id,
             .styleRef = style,
@@ -44,21 +44,21 @@ namespace interstice
         int itemIndex = m_reorderable->Construction().nextItemIndex++;
 
         // Capture by value: construction state is reset in EndReorderableGroup, before input dispatch.
-        interstice::ID groupID = m_reorderable->Construction().groupID;
-        interstice::ElementRef groupRef = m_reorderable->Construction().groupRef;
+        tachyon::ID groupID = m_reorderable->Construction().groupID;
+        tachyon::ElementRef groupRef = m_reorderable->Construction().groupRef;
         auto onReorder = m_reorderable->Construction().onReorder;
         auto onDragOut = m_reorderable->Construction().onDragOut;
         ReorderDirection direction = m_reorderable->Construction().direction;
         bool isWrapped = m_reorderable->Construction().isWrapped;
 
-        interstice::Element item
+        tachyon::Element item
         {
             .id       = id,
             .styleRef = style,
         };
         item.state = guiStateManager.GetCurrentState(id);
         item.eventHandler = [this, groupID, id, itemIndex, direction, isWrapped, groupRef, onReorder, onDragOut]
-            (interstice::ElementEvent&& event) -> bool
+            (tachyon::ElementEvent&& event) -> bool
         {
             int mainAxis = (direction == ReorderDirection::Horizontal) ? 0 : 1;
             int crossAxis = 1 - mainAxis;
@@ -66,7 +66,7 @@ namespace interstice
 
             switch (event.type)
             {
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                 {
                     if (!event.state.LeftPressed()) break;
 
@@ -96,9 +96,9 @@ namespace interstice
                     uint32_t childDepth = groupRef.depth + 1;
                     for (uint32_t i = childRange.begin; i < childRange.end; i++)
                     {
-                        interstice::ElementRef childRef{childDepth, i};
+                        tachyon::ElementRef childRef{childDepth, i};
                         auto* rect = elementStorage.GetElementRectPtr(childRef);
-                        drag.originalRects.push_back(rect ? rect->rect : interstice::IntRect{});
+                        drag.originalRects.push_back(rect ? rect->rect : tachyon::IntRect{});
                         const auto& childElem = elementStorage.GetElementUnsafe(childRef);
                         drag.originalIDs.push_back(childElem.id);
                     }
@@ -107,13 +107,13 @@ namespace interstice
                     return true;
                 }
 
-                case interstice::EventType::MouseMove:
+                case tachyon::EventType::MouseMove:
                 {
                     if (!drag.isDragging || drag.draggedIndex != itemIndex) break;
                     if (!event.state.LeftDown()) break;
 
                     // Update drag offset
-                    interstice::int2 delta = event.state.screenPos - drag.dragStartMousePos;
+                    tachyon::int2 delta = event.state.screenPos - drag.dragStartMousePos;
 
                     // Drag threshold: ignore tiny movements so an accidental
                     // cursor jitter during a click doesn't start reordering.
@@ -129,12 +129,12 @@ namespace interstice
 
                     // Cursor in layout space (like originalRects/groupRect), not screenPos,
                     // so an ancestor contentTransform doesn't skew the hit-test.
-                    const interstice::int2 localMouse = event.LocalCursor(elementStorage);
+                    const tachyon::int2 localMouse = event.LocalCursor(elementStorage);
 
                     // Outside the group with drag-out enabled: no in-place reorder.
                     if (onDragOut)
                     {
-                        const interstice::IntRect& r = drag.groupRect;
+                        const tachyon::IntRect& r = drag.groupRect;
                         if (localMouse.x < r.x || localMouse.x > r.x + r.w ||
                             localMouse.y < r.y || localMouse.y > r.y + r.h)
                         {
@@ -230,7 +230,7 @@ namespace interstice
                     return true;
                 }
 
-                case interstice::EventType::MouseUp:
+                case tachyon::EventType::MouseUp:
                 {
                     if (!drag.isDragging || drag.draggedIndex != itemIndex) break;
 
@@ -242,8 +242,8 @@ namespace interstice
                         if (targetIndex < 0 ||
                             static_cast<size_t>(targetIndex) >= drag.originalIDs.size())
                             return;
-                        const interstice::ID rowID = drag.originalIDs[targetIndex];
-                        const interstice::ElementRef rowRef = elementStorage.FindElementRefByID(rowID);
+                        const tachyon::ID rowID = drag.originalIDs[targetIndex];
+                        const tachyon::ElementRef rowRef = elementStorage.FindElementRefByID(rowID);
                         if (!rowRef.IsValid()) return;
                         const ID firstControl =
                             LabelBinding::FindFirstControlInSubtree(elementStorage, rowRef);
@@ -277,8 +277,8 @@ namespace interstice
                     // The release position lets the caller hit-test other containers.
                     if (onDragOut)
                     {
-                        const interstice::int2 mouse  = event.state.screenPos;
-                        const interstice::IntRect& r  = drag.groupRect;
+                        const tachyon::int2 mouse  = event.state.screenPos;
+                        const tachyon::IntRect& r  = drag.groupRect;
                         const int dragOutThreshold = styleManager.Px(8);
                         const bool outsideX = mouse.x < r.x - dragOutThreshold
                                            || mouse.x > r.x + r.w + dragOutThreshold;
@@ -333,10 +333,10 @@ namespace interstice
                     return true;
                 }
 
-                case interstice::EventType::KeyDown:
+                case tachyon::EventType::KeyDown:
                 {
                     if (drag.isDragging && drag.draggedIndex == itemIndex
-                        && event.state.lastKey == interstice::KeyCode::Escape)
+                        && event.state.lastKey == tachyon::KeyCode::Escape)
                     {
                         drag.isDragging = false;
                         drag.dragActivated = false;
@@ -412,12 +412,12 @@ namespace interstice
             uint32_t rangeBegin = m_reorderable->Construction().itemRefs[0].index;
             uint32_t draggedLocalIdx = m_reorderable->Construction().reorderApplied
                 ? static_cast<uint32_t>(to) : static_cast<uint32_t>(from);
-            interstice::ElementRef draggedRef{childDepth, rangeBegin + draggedLocalIdx};
+            tachyon::ElementRef draggedRef{childDepth, rangeBegin + draggedLocalIdx};
 
             // Ghost hand-off checks both axes; the in-place cross-axis pull-out only needs the
             // cross axis (the main axis stays constrained to the group's siblings).
             int crossAxis = 1 - mainAxis;
-            const interstice::int2 mouse = drag.dragStartMousePos + drag.dragOffset;
+            const tachyon::int2 mouse = drag.dragStartMousePos + drag.dragOffset;
             const bool outsideCross = mouse[crossAxis] < drag.groupRect.position[crossAxis]
                                    || mouse[crossAxis] > drag.groupRect.position[crossAxis] + drag.groupRect.size[crossAxis];
             const bool outsideMain  = mouse[mainAxis]  < drag.groupRect.position[mainAxis]
@@ -473,7 +473,7 @@ namespace interstice
                     int16_t offsetY = (mainAxis == 1) ? mainOffset : crossOffset;
 
                     auto& elemRect = elementStorage.GetElementRectUnsafe(draggedRef);
-                    auto pc = interstice::LayoutOverride{}.Relative(offsetX, offsetY);
+                    auto pc = tachyon::LayoutOverride{}.Relative(offsetX, offsetY);
                     elemRect.constraints.x = pc.x;
                     elemRect.constraints.y = pc.y;
                 }
@@ -486,7 +486,7 @@ namespace interstice
                     int16_t offsetY = (mainAxis == 1) ? mainOffset : crossOffset;
 
                     auto& elemRect = elementStorage.GetElementRectUnsafe(draggedRef);
-                    auto pc = interstice::LayoutOverride{}.Relative(offsetX, offsetY);
+                    auto pc = tachyon::LayoutOverride{}.Relative(offsetX, offsetY);
                     elemRect.constraints.x = pc.x;
                     elemRect.constraints.y = pc.y;
                 }
@@ -530,8 +530,8 @@ namespace interstice
     // reorderable item. Icon size and cursor come from the -horz/-vert knob style.
     void GUIApplication::EmitDragHandle()
     {
-        interstice::ID handleID = idManager.AllocateDynamicID("reorder_drag_handle");
-        interstice::Element handle{};
+        tachyon::ID handleID = idManager.AllocateDynamicID("reorder_drag_handle");
+        tachyon::Element handle{};
         handle.id       = handleID;
         handle.state    = guiStateManager.GetCurrentState(handleID);
         handle.styleRef = (m_reorderable->Construction().direction == ReorderDirection::Horizontal)

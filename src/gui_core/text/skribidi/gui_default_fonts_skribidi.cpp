@@ -18,7 +18,7 @@
 #include <vector>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
 
 static constexpr Diagnostics::LogCategory k_log_text = Diagnostics::MakeLogCategory("text");
@@ -137,7 +137,7 @@ static bool add_font(skb_font_collection_t* font_collection, const std::string& 
 {
 	if (skb_font_collection_add_font(font_collection, path.c_str(), family, params))
 		return true;
-	INTERSTICE_LOG_WARNING(k_log_text, "could not load font {}", path);
+	TACHYON_LOG_WARNING(k_log_text, "could not load font {}", path);
 	return false;
 }
 
@@ -152,7 +152,7 @@ static bool add_face(skb_font_collection_t* font_collection, const FontFaceSourc
 	if (skb_font_collection_add_font_from_data(font_collection, name.c_str(), face.data.data(), face.data.size(),
 	                                           nullptr, nullptr, family, params))
 		return true;
-	INTERSTICE_LOG_WARNING(k_log_text, "could not load a font from memory ({} bytes)", face.data.size());
+	TACHYON_LOG_WARNING(k_log_text, "could not load a font from memory ({} bytes)", face.data.size());
 	return false;
 }
 
@@ -165,7 +165,7 @@ static bool add_optional_font(skb_font_collection_t* font_collection, const std:
 	if (skb_font_collection_add_font(font_collection, path.c_str(), family, params))
 		return true;
 	fonts.missing.insert(path);
-	INTERSTICE_LOG_WARNING(k_log_text, "optional fallback font {} is missing; skipped", path);
+	TACHYON_LOG_WARNING(k_log_text, "optional fallback font {} is missing; skipped", path);
 	return false;
 }
 
@@ -283,4 +283,4 @@ bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackSta
 	return true;
 }
 
-} // namespace interstice
+} // namespace tachyon

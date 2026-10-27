@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace interstice
+namespace tachyon
 {
 	// ------------------------------------------------------------------------
 	// Numeric Value Union/Type - For editable numeric text fields

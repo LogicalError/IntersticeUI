@@ -7,8 +7,8 @@
 
 namespace
 {
-    using interstice::ElementRef;
-    using interstice::ID;
+    using tachyon::ElementRef;
+    using tachyon::ID;
     using GUITest::HeadlessGUIApp;
 
     // The IDs of an element's children, in order.

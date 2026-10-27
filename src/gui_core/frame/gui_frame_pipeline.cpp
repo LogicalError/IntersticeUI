@@ -2,9 +2,9 @@
 
 #include <gui_core/diagnostics/gui_profiler.h>
 
-namespace interstice
+namespace tachyon
 {
-#if INTERSTICE_PROFILE_ENABLED
+#if TACHYON_PROFILE_ENABLED
     namespace
     {
         // Indexed by FrameStage; each caches its node index after the first hit.
@@ -26,7 +26,7 @@ namespace interstice
 
     void FramePipeline::RunStage(FrameStage stage, FrameContext& ctx)
     {
-        INTERSTICE_PROFILE_SCOPE_REF(kStageScopes[static_cast<size_t>(stage)]);
+        TACHYON_PROFILE_SCOPE_REF(kStageScopes[static_cast<size_t>(stage)]);
 
         const std::vector<StageCallback>* callbacks = nullptr;
         switch (stage)

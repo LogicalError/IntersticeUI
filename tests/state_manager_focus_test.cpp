@@ -2,7 +2,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/state/gui_state_manager.h>
 
-namespace interstice
+namespace tachyon
 {
 
     namespace

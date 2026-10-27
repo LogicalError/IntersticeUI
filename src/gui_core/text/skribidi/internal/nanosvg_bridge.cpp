@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
 namespace
 {
@@ -516,4 +516,4 @@ skb_icon_handle_t RegisterNanoSVG(skb_icon_collection_t* collection,
 	return handle;
 }
 
-} // namespace interstice
+} // namespace tachyon

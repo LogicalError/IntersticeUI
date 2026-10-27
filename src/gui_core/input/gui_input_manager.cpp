@@ -14,7 +14,7 @@
 #include <optional>
 #include <algorithm>
 
-namespace interstice
+namespace tachyon
 {
     // ---------------------------------------------------------------------------
     // Label/control resolution helpers
@@ -195,7 +195,7 @@ namespace interstice
     // Recording - IPlatformInputHandler implementation
     // ---------------------------------------------------------------------------
 
-    void InputManager::OnKeyboard(interstice::ID /*windowId*/, KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
+    void InputManager::OnKeyboard(tachyon::ID /*windowId*/, KeyCode key, int /*repeat*/, KeyModifier modifiers, KeyAction action)
     {
         // KeyChar carries a Unicode codepoint in `key`, not a KeyCode.
         if (action == KeyAction::KeyChar)
@@ -218,7 +218,7 @@ namespace interstice
         m_recordedEvents.push_back({ type, std::move(state) });
     }
 
-    void InputManager::OnMouseMove(interstice::ID /*windowId*/, interstice::int2 screenPos, interstice::MouseButtons /*buttons*/, KeyModifier modifiers)
+    void InputManager::OnMouseMove(tachyon::ID /*windowId*/, tachyon::int2 screenPos, tachyon::MouseButtons /*buttons*/, KeyModifier modifiers)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -232,7 +232,7 @@ namespace interstice
         m_recordedEvents.push_back({ EventType::MouseMove, std::move(state) });
     }
 
-    void InputManager::OnMouseButton(interstice::ID /*windowId*/, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action)
+    void InputManager::OnMouseButton(tachyon::ID /*windowId*/, tachyon::int2 screenPos, tachyon::MouseButtons buttons, KeyModifier modifiers, MouseAction action)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -248,7 +248,7 @@ namespace interstice
         m_recordedEvents.push_back({ type, std::move(state) });
     }
 
-    void InputManager::OnMouseScroll(interstice::ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers)
+    void InputManager::OnMouseScroll(tachyon::ID windowId, tachyon::int2 screenPos, tachyon::float2 scrollOffset, KeyModifier modifiers)
     {
         InputState state;
         state.screenPos    = screenPos;
@@ -677,4 +677,4 @@ namespace interstice
         m_recordedEvents.clear();
     }
 
-} // namespace interstice
+} // namespace tachyon

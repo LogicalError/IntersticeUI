@@ -12,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class IDManager;
 
@@ -201,4 +201,4 @@ namespace interstice
     /// saved layout uses this to place panels added since the layout was saved.
     std::vector<ID> UnplacedPanels(const DockNode& root, const std::vector<ID>& allPanels);
 
-} // namespace interstice
+} // namespace tachyon

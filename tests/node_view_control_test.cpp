@@ -15,7 +15,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -26,8 +26,8 @@ namespace interstice
         protected:
             HeadlessGUIApp app;
             NodeView       view;
-            interstice::ID        nodeA{};
-            interstice::ID        nodeB{};
+            tachyon::ID        nodeA{};
+            tachyon::ID        nodeB{};
 
             void SetUp() override
             {
@@ -48,7 +48,7 @@ namespace interstice
                 b.properties.push_back(NodeProperty{ .input = PropertyEndpoint{} });
 
                 view = {};
-                view.transform = interstice::float3x2::Scale(1.0f); // identity
+                view.transform = tachyon::float3x2::Scale(1.0f); // identity
                 view.nodes = { std::move(a), std::move(b) };
             }
 
@@ -66,7 +66,7 @@ namespace interstice
             void Settle() { Frame(); Frame(); }
 
             // The canvas's inner rect (the node-view style is unique to it).
-            interstice::IntRect CanvasInner() const
+            tachyon::IntRect CanvasInner() const
             {
                 const auto style = app.theme.nodeViewStyleRef;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
@@ -74,7 +74,7 @@ namespace interstice
                     const uint32_t count = app.elementStorage.DepthSizeOf(d);
                     for (uint32_t i = 0; i < count; i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref))
@@ -85,20 +85,20 @@ namespace interstice
             }
 
             // A point on the canvas background, clear of the nodes and the overlays.
-            interstice::int2 CanvasPoint() const
+            tachyon::int2 CanvasPoint() const
             {
                 const auto inner = CanvasInner();
                 return { inner.x + inner.w * 3 / 4, inner.y + inner.h / 2 };
             }
 
             // The rects of the elements with `style`, in layout order.
-            std::vector<interstice::IntRect> RectsWithStyle(interstice::StyleRef style) const
+            std::vector<tachyon::IntRect> RectsWithStyle(tachyon::StyleRef style) const
             {
-                std::vector<interstice::IntRect> out;
+                std::vector<tachyon::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -107,12 +107,12 @@ namespace interstice
             }
 
             // The centre of the first socket inside `node`'s rect.
-            interstice::int2 SocketOf(interstice::ID node) const
+            tachyon::int2 SocketOf(tachyon::ID node) const
             {
                 const auto n = app.GetElementRect(node);
                 for (const auto& r : RectsWithStyle(app.theme.nodeSocketStyleRef))
                 {
-                    const interstice::int2 c{ r.x + r.w / 2, r.y + r.h / 2 };
+                    const tachyon::int2 c{ r.x + r.w / 2, r.y + r.h / 2 };
                     if (c.x >= n.x - r.w && c.x <= n.x + n.w + r.w && c.y >= n.y && c.y < n.y + n.h)
                         return c;
                 }
@@ -121,12 +121,12 @@ namespace interstice
 
             // A left drag the way a mouse makes one: press, moves and release on frames of
             // their own.
-            void Drag(interstice::int2 from, interstice::int2 to)
+            void Drag(tachyon::int2 from, tachyon::int2 to)
             {
                 app.InjectMouseMove(from);
                 app.InjectMouseDown(from);
                 Frame();
-                const interstice::int2 mid{ (from.x + to.x) / 2, (from.y + to.y) / 2 };
+                const tachyon::int2 mid{ (from.x + to.x) / 2, (from.y + to.y) / 2 };
                 app.InjectMouseMove(mid, MouseButtons::Left);
                 Frame();
                 app.InjectMouseMove(to, MouseButtons::Left);
@@ -136,7 +136,7 @@ namespace interstice
             }
 
             // A point on `node`'s header, clear of its sockets.
-            interstice::int2 HeaderOf(interstice::ID node) const
+            tachyon::int2 HeaderOf(tachyon::ID node) const
             {
                 const auto n = app.GetElementRect(node);
                 return { n.x + n.w / 2, n.y + app.theme.nodeGridSize };
@@ -149,12 +149,12 @@ namespace interstice
         {
             view.nodes[0].collapsed = true;
             Settle();
-            auto rectsWithStyle = [&](interstice::StyleRef style) {
-                std::vector<interstice::IntRect> out;
+            auto rectsWithStyle = [&](tachyon::StyleRef style) {
+                std::vector<tachyon::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -162,7 +162,7 @@ namespace interstice
                 return out;
             };
             const auto nodeRect = app.GetElementRect(nodeA);
-            interstice::IntRect header{}, socket{};
+            tachyon::IntRect header{}, socket{};
             for (const auto& r : rectsWithStyle(app.theme.nodeHeaderStyleRef))
                 if (r.x >= nodeRect.x && r.x < nodeRect.x + nodeRect.w && r.y >= nodeRect.y && r.y < nodeRect.y + nodeRect.h) header = r;
             for (const auto& r : rectsWithStyle(app.theme.nodeSocketStyleRef))
@@ -187,7 +187,7 @@ namespace interstice
             Settle();
             app.ClickAt(HeaderOf(nodeB));
             Frame();
-            EXPECT_EQ(view.selectedNodeIDs, std::unordered_set<interstice::ID>{ nodeB });
+            EXPECT_EQ(view.selectedNodeIDs, std::unordered_set<tachyon::ID>{ nodeB });
         }
 
         // A drag on a node's header moves it (on the grid) and reports one edit.
@@ -196,8 +196,8 @@ namespace interstice
             Settle();
             int edits = 0;
             view.onEdit = [&](const NodeViewEdit& edit) { edits++; EXPECT_EQ(edit.moves.size(), 1u); };
-            const interstice::int2 before = view.nodes[1].pos;
-            const interstice::int2 from = HeaderOf(nodeB);
+            const tachyon::int2 before = view.nodes[1].pos;
+            const tachyon::int2 from = HeaderOf(nodeB);
             Drag(from, { from.x + 5 * app.theme.nodeGridSize, from.y + 3 * app.theme.nodeGridSize });
             Settle();
             EXPECT_GT(view.nodes[1].pos.x, before.x);
@@ -210,7 +210,7 @@ namespace interstice
         TEST_F(NodeViewControlTest, DraggingFromAnOutputToAnInputConnects)
         {
             Settle();
-            const interstice::int2 out = SocketOf(nodeA), in = SocketOf(nodeB);
+            const tachyon::int2 out = SocketOf(nodeA), in = SocketOf(nodeB);
             ASSERT_GE(out.x, 0);
             ASSERT_GE(in.x, 0);
             Drag(out, in);
@@ -259,7 +259,7 @@ namespace interstice
         TEST_F(NodeViewControlTest, BackgroundDownActivatesMarquee)
         {
             Settle();
-            const interstice::int2 from = CanvasPoint();
+            const tachyon::int2 from = CanvasPoint();
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
@@ -275,8 +275,8 @@ namespace interstice
         TEST_F(NodeViewControlTest, RightDragPansTransform)
         {
             Settle();
-            const interstice::int2 from = CanvasPoint();
-            const interstice::int2 to{ from.x + 60, from.y + 25 };
+            const tachyon::int2 from = CanvasPoint();
+            const tachyon::int2 to{ from.x + 60, from.y + 25 };
 
             app.InjectMouseMove(from);
             app.InjectMouseDown(from, MouseButtons::Right);
@@ -294,7 +294,7 @@ namespace interstice
         TEST_F(NodeViewControlTest, ScrollZoomsTransform)
         {
             Settle();
-            const interstice::int2 p = CanvasPoint();
+            const tachyon::int2 p = CanvasPoint();
 
             app.InjectMouseMove(p);
             app.InjectMouseScroll(p, { 0, -1 });

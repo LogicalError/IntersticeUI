@@ -10,7 +10,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     // A row is its text line plus the cell's vertical padding and border, as

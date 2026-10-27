@@ -35,9 +35,9 @@
 #undef CreateWindow
 #endif
 
-static constexpr interstice::Diagnostics::LogCategory kLogSDL = interstice::Diagnostics::MakeLogCategory("sdl");
+static constexpr tachyon::Diagnostics::LogCategory kLogSDL = tachyon::Diagnostics::MakeLogCategory("sdl");
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -93,7 +93,7 @@ namespace interstice
                 m_routesSDLMemory = SDL_SetMemoryFunctions(&SDLMalloc, &SDLCalloc, &SDLRealloc, &SDLFree);
             }
             if (!m_routesSDLMemory)
-                INTERSTICE_LOG_WARNING(kLogSDL, "SDL is already in use, so its memory doesn't go through the allocation hooks");
+                TACHYON_LOG_WARNING(kLogSDL, "SDL is already in use, so its memory doesn't go through the allocation hooks");
         }
 
         // Text editors draw the IME composition themselves (OnTextComposition);
@@ -107,7 +107,7 @@ namespace interstice
         {
             if (!SDL_Init(SDL_INIT_VIDEO))
             {
-                INTERSTICE_LOG_ERROR(kLogSDL, "SDL_Init failed: {}", SDL_GetError());
+                TACHYON_LOG_ERROR(kLogSDL, "SDL_Init failed: {}", SDL_GetError());
                 m_sdlInitialized = false;
                 return;
             }
@@ -156,12 +156,12 @@ namespace interstice
                 s_sdlHooks = {};
             }
             else
-                INTERSTICE_LOG_WARNING(kLogSDL, "SDL still holds {} allocations after SDL_Quit and keeps using the allocation hooks", live);
+                TACHYON_LOG_WARNING(kLogSDL, "SDL still holds {} allocations after SDL_Quit and keeps using the allocation hooks", live);
         }
     }
 
 
-    OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle)
+    OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title, int2 size, tachyon::WindowFlags windowFlags, OSWindowHandle parentOSHandle)
     {
         return CreateWindow(title, IntRect { SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.x, size.y },
                             windowFlags, parentOSHandle);
@@ -170,14 +170,14 @@ namespace interstice
     static int32_t RoundToInt(float v) { return int32_t(std::lround(v)); }
 
     // A mouse position inside `window` (OS window coordinates) in screen pixels.
-    static interstice::int2 PixelPointOf(SDL_Window* window, float x, float y)
+    static tachyon::int2 PixelPointOf(SDL_Window* window, float x, float y)
     {
-        auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr);
+        auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), "TachyonBackend", nullptr);
         if (backend == nullptr)
         {
             int winX = 0, winY = 0;
             SDL_GetWindowPosition(window, &winX, &winY);
-            return interstice::int2{ int32_t(x) + winX, int32_t(y) + winY };
+            return tachyon::int2{ int32_t(x) + winX, int32_t(y) + winY };
         }
         return backend->WindowPointToPixels(window, x, y);
     }
@@ -560,8 +560,8 @@ namespace interstice
     // test, where the caption and the maximize button are. Elsewhere the window is
     // borderless and SDL's hit test drags and resizes it.
 #ifdef _WIN32
-    static constexpr const wchar_t* kPrevWndProcProp = L"IntersticePrevWndProc";
-    static constexpr const wchar_t* kSDLWindowProp   = L"IntersticeSDLWindow";
+    static constexpr const wchar_t* kPrevWndProcProp = L"TachyonPrevWndProc";
+    static constexpr const wchar_t* kSDLWindowProp   = L"TachyonSDLWindow";
 
     // The sizing frame's thickness; it stays outside the client area on the sides
     // and bottom, as under a native caption.
@@ -669,7 +669,7 @@ namespace interstice
                     }
                 }
                 auto* backend = static_cast<SDLWindowBackend*>(
-                    SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr));
+                    SDL_GetPointerProperty(SDL_GetWindowProperties(window), "TachyonBackend", nullptr));
                 const WindowHitArea area = backend != nullptr
                     ? backend->HitTestWindow(SDLWindowBackend::FromSDL(window), int2{ p.x, p.y })
                     : WindowHitArea::Client;
@@ -767,7 +767,7 @@ namespace interstice
             if (right)           return SDL_HITTEST_RESIZE_RIGHT;
         }
         auto* backend = static_cast<SDLWindowBackend*>(
-            SDL_GetPointerProperty(SDL_GetWindowProperties(window), "IntersticeBackend", nullptr));
+            SDL_GetPointerProperty(SDL_GetWindowProperties(window), "TachyonBackend", nullptr));
         if (backend == nullptr)
             return SDL_HITTEST_NORMAL;
         const int2 pos = backend->WindowPointToPixels(window, float(point->x), float(point->y));
@@ -777,13 +777,13 @@ namespace interstice
 
     OSWindowHandle SDLWindowBackend::CreateWindow(std::string_view title,
                                                   IntRect rect,
-                                                  interstice::WindowFlags windowFlags,
+                                                  tachyon::WindowFlags windowFlags,
                                                   OSWindowHandle parentOSHandle)
     {
         if (!m_sdlInitialized) return nullptr;
         
-        bool isTransparent = (windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None;
-        bool isModal = (windowFlags & interstice::WindowFlags::Modal) != interstice::WindowFlags::None;
+        bool isTransparent = (windowFlags & tachyon::WindowFlags::Transparent) != tachyon::WindowFlags::None;
+        bool isModal = (windowFlags & tachyon::WindowFlags::Modal) != tachyon::WindowFlags::None;
 
 
         const Uint64 api_flags = m_graphicsContext != nullptr && m_graphicsContext->GetAPI() == GraphicsAPI::Vulkan
@@ -806,21 +806,21 @@ namespace interstice
 #endif
 
         // Check individual flag bits (WindowFlags is a bitfield)
-        if ((windowFlags & interstice::WindowFlags::AllowHighDPI)      != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if ((windowFlags & interstice::WindowFlags::Borderless)        != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_BORDERLESS;
-        if ((windowFlags & interstice::WindowFlags::Resizable)         != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_RESIZABLE;
-        if ((windowFlags & interstice::WindowFlags::AlwaysOnTop)       != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
-        if ((windowFlags & interstice::WindowFlags::SkipTaskbar)       != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
-        if ((windowFlags & interstice::WindowFlags::Utility)           != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
-        if ((windowFlags & interstice::WindowFlags::NotFocusable)      != interstice::WindowFlags::None) sd_window_flags |= SDL_WINDOW_NOT_FOCUSABLE;
-        const bool customTitleBar = (windowFlags & interstice::WindowFlags::CustomTitleBar) != interstice::WindowFlags::None;
+        if ((windowFlags & tachyon::WindowFlags::AllowHighDPI)      != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        if ((windowFlags & tachyon::WindowFlags::Borderless)        != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_BORDERLESS;
+        if ((windowFlags & tachyon::WindowFlags::Resizable)         != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_RESIZABLE;
+        if ((windowFlags & tachyon::WindowFlags::AlwaysOnTop)       != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+        if ((windowFlags & tachyon::WindowFlags::SkipTaskbar)       != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
+        if ((windowFlags & tachyon::WindowFlags::Utility)           != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_UTILITY;
+        if ((windowFlags & tachyon::WindowFlags::NotFocusable)      != tachyon::WindowFlags::None) sd_window_flags |= SDL_WINDOW_NOT_FOCUSABLE;
+        const bool customTitleBar = (windowFlags & tachyon::WindowFlags::CustomTitleBar) != tachyon::WindowFlags::None;
 #ifndef _WIN32
         if (customTitleBar) sd_window_flags |= SDL_WINDOW_BORDERLESS;
 #endif
 		
         // Always create hidden, to avoid a native caption flash while Win32 styles are applied;
         // shown below unless requested hidden.
-        bool wasCreatedHidden = (windowFlags & interstice::WindowFlags::Hidden) != interstice::WindowFlags::None;
+        bool wasCreatedHidden = (windowFlags & tachyon::WindowFlags::Hidden) != tachyon::WindowFlags::None;
         sd_window_flags |= SDL_WINDOW_HIDDEN;
         
         SDL_Window* sdlWindow = SDL_CreateWindow(std::string(title).c_str(),
@@ -833,14 +833,14 @@ namespace interstice
 
         // Set window position after creation (SDL3 way)
         SDL_SetWindowPosition(sdlWindow, rect.x, rect.y);
-        SDL_SetPointerProperty(SDL_GetWindowProperties(sdlWindow), "IntersticeBackend", this);
+        SDL_SetPointerProperty(SDL_GetWindowProperties(sdlWindow), "TachyonBackend", this);
         
         SDL_PropertiesID props = SDL_GetWindowProperties(sdlWindow);
 
         // Track whether this SDL window is modal.
         SDL_SetBooleanProperty(props, "IsModal", isModal);
         SDL_SetBooleanProperty(props, "ConfirmClose",
-            (windowFlags & interstice::WindowFlags::ConfirmClose) != interstice::WindowFlags::None);
+            (windowFlags & tachyon::WindowFlags::ConfirmClose) != tachyon::WindowFlags::None);
 
 #ifdef _WIN32
         HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
@@ -852,7 +852,7 @@ namespace interstice
             // draw its frame on every borderless window, menus and tooltips included: shadow,
             // rounded corners, border. Stripped, only Shadow windows get them (below). Done while
             // still hidden.
-            if ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None)
+            if ((windowFlags & tachyon::WindowFlags::Borderless) != tachyon::WindowFlags::None)
             {
                 LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
                 LONG_PTR desiredStyle = (style & ~(WS_CAPTION | WS_BORDER | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)) | WS_POPUP;
@@ -879,8 +879,8 @@ namespace interstice
             // system shadow. Elsewhere that fails, and CS_DROPSHADOW (applied by
             // ShowSDLWindowWithShadow on every Show) draws a small one.
             const bool borderlessShadow =
-                ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None) &&
-                ((windowFlags & interstice::WindowFlags::Shadow) != interstice::WindowFlags::None) && !isTransparent;
+                ((windowFlags & tachyon::WindowFlags::Borderless) != tachyon::WindowFlags::None) &&
+                ((windowFlags & tachyon::WindowFlags::Shadow) != tachyon::WindowFlags::None) && !isTransparent;
             bool systemShadow = false;
             if (borderlessShadow)
             {
@@ -895,9 +895,9 @@ namespace interstice
         else
 #endif
         // A borderless window the user places (a dialog) is dragged by its GUI title bar.
-        if ((windowFlags & interstice::WindowFlags::Borderless) != interstice::WindowFlags::None
-            && (windowFlags & interstice::WindowFlags::Moveable) != interstice::WindowFlags::None
-            && (windowFlags & interstice::WindowFlags::PopupMenu) == interstice::WindowFlags::None)
+        if ((windowFlags & tachyon::WindowFlags::Borderless) != tachyon::WindowFlags::None
+            && (windowFlags & tachyon::WindowFlags::Moveable) != tachyon::WindowFlags::None
+            && (windowFlags & tachyon::WindowFlags::PopupMenu) == tachyon::WindowFlags::None)
             SDL_SetWindowHitTest(sdlWindow, CustomTitleBarHitTest, nullptr);
 
         // OS parenting makes child popups receive input and position relative to the parent.
@@ -924,7 +924,7 @@ namespace interstice
             ShowSDLWindowWithShadow(sdlWindow);
         }
         
-        static interstice::MouseButtons lastMouseButtons = interstice::MouseButtons::None;
+        static tachyon::MouseButtons lastMouseButtons = tachyon::MouseButtons::None;
 
         m_eventWatch = [](OSWindowHandle data, SDL_Event* event) -> bool
             {
@@ -938,7 +938,7 @@ namespace interstice
                         s_lastFocusableWindow = focused;
                 }
 
-                auto GetInputContext = [](OSWindowHandle windowHandle) -> interstice::IPlatformInputHandler*
+                auto GetInputContext = [](OSWindowHandle windowHandle) -> tachyon::IPlatformInputHandler*
                 {
                     SDL_Window* sdlWin = (SDL_Window*)windowHandle;
                     if (SDL_GetWindowFlags(sdlWin) & SDL_WINDOW_NOT_FOCUSABLE)
@@ -950,7 +950,7 @@ namespace interstice
                     }
                     return LocalGetInputHandler(windowHandle);
                 };
-                auto GetWindowID = [](OSWindowHandle windowHandle) -> interstice::ID
+                auto GetWindowID = [](OSWindowHandle windowHandle) -> tachyon::ID
                     {
                         SDL_Window* sdlWin = (SDL_Window*)windowHandle;
                         if (SDL_GetWindowFlags(sdlWin) & SDL_WINDOW_NOT_FOCUSABLE)
@@ -966,7 +966,7 @@ namespace interstice
                     };
 
                 if (auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(
-                        SDL_GetWindowProperties((SDL_Window*)data), "IntersticeBackend", nullptr))
+                        SDL_GetWindowProperties((SDL_Window*)data), "TachyonBackend", nullptr))
                 {
                     if (backend->ModalBlockerFor(event) != nullptr)
                         return false;
@@ -979,16 +979,16 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->key.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
                         
                         bool repeat = event->key.repeat;
                         SDL_Keymod modifiers = event->key.mod;
-                        interstice::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
+                        tachyon::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
 
-                        interstice::ID windowID = GetWindowID(data);
-                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), interstice::KeyAction::KeyDown);
+                        tachyon::ID windowID = GetWindowID(data);
+                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), tachyon::KeyAction::KeyDown);
                         break;
                     }
                     case SDL_EVENT_KEY_UP:
@@ -996,16 +996,16 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->key.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
                         bool repeat = event->key.repeat;
                         SDL_Keymod modifiers = event->key.mod;
-                        interstice::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
+                        tachyon::KeyCode keyCode = ToKeyCode(event->key.key, modifiers);
 
-                        interstice::ID windowID = GetWindowID(data);
-                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), interstice::KeyAction::KeyUp);
+                        tachyon::ID windowID = GetWindowID(data);
+                        inputHandler->OnKeyboard(windowID, keyCode, repeat ? 1 : 0, ToKeyModifier(modifiers), tachyon::KeyAction::KeyUp);
                         break;
                     }
                     case SDL_EVENT_TEXT_INPUT:
@@ -1013,17 +1013,17 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->text.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        interstice::ID windowID = GetWindowID(data);
+                        tachyon::ID windowID = GetWindowID(data);
                         // SDL delivers UTF-8; decode to Unicode codepoints so a multi-byte
                         // character arrives as a single KeyChar, not one bogus one per byte.
                         const char* text = event->text.text;
                         for (Uint32 codepoint; (codepoint = SDL_StepUTF8(&text, nullptr)) != 0; )
                         {
-                            inputHandler->OnKeyboard(windowID, (interstice::KeyCode)codepoint, 0, interstice::KeyModifier::None, interstice::KeyAction::KeyChar);
+                            inputHandler->OnKeyboard(windowID, (tachyon::KeyCode)codepoint, 0, tachyon::KeyModifier::None, tachyon::KeyAction::KeyChar);
                         }
                         break;
                     }
@@ -1032,7 +1032,7 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->edit.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
@@ -1046,15 +1046,15 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->motion.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->motion.x, event->motion.y);
+                        const tachyon::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->motion.x, event->motion.y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
-                        interstice::ID windowID = GetWindowID(data);
-                        inputHandler->OnMouseMove(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()));
+                        tachyon::ID windowID = GetWindowID(data);
+                        inputHandler->OnMouseMove(windowID, tachyon::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()));
                         break;
                     }
                     case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -1063,13 +1063,13 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->button.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        interstice::ID windowID = GetWindowID(data);
+                        tachyon::ID windowID = GetWindowID(data);
 
-                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->button.x, event->button.y);
+                        const tachyon::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->button.x, event->button.y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
                         Uint8 button = event->button.button;
@@ -1077,24 +1077,24 @@ namespace interstice
                         {
                             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                             {
-                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons |= interstice::MouseButtons::Left;
-                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons |= interstice::MouseButtons::Right;
-                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons |= interstice::MouseButtons::Middle;
-                                if (button == SDL_BUTTON_X1)     lastMouseButtons |= interstice::MouseButtons::X1;
-                                if (button == SDL_BUTTON_X2)     lastMouseButtons |= interstice::MouseButtons::X2;
+                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons |= tachyon::MouseButtons::Left;
+                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons |= tachyon::MouseButtons::Right;
+                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons |= tachyon::MouseButtons::Middle;
+                                if (button == SDL_BUTTON_X1)     lastMouseButtons |= tachyon::MouseButtons::X1;
+                                if (button == SDL_BUTTON_X2)     lastMouseButtons |= tachyon::MouseButtons::X2;
 
-                                inputHandler->OnMouseButton(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), interstice::MouseAction::MouseDown);
+                                inputHandler->OnMouseButton(windowID, tachyon::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), tachyon::MouseAction::MouseDown);
                                 break;
                             }
                             case SDL_EVENT_MOUSE_BUTTON_UP:
                             {
-                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons &= ~interstice::MouseButtons::Left;
-                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons &= ~interstice::MouseButtons::Right;
-                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons &= ~interstice::MouseButtons::Middle;
-                                if (button == SDL_BUTTON_X1)     lastMouseButtons &= ~interstice::MouseButtons::X1;
-                                if (button == SDL_BUTTON_X2)     lastMouseButtons &= ~interstice::MouseButtons::X2;
+                                if (button == SDL_BUTTON_LEFT)   lastMouseButtons &= ~tachyon::MouseButtons::Left;
+                                if (button == SDL_BUTTON_RIGHT)  lastMouseButtons &= ~tachyon::MouseButtons::Right;
+                                if (button == SDL_BUTTON_MIDDLE) lastMouseButtons &= ~tachyon::MouseButtons::Middle;
+                                if (button == SDL_BUTTON_X1)     lastMouseButtons &= ~tachyon::MouseButtons::X1;
+                                if (button == SDL_BUTTON_X2)     lastMouseButtons &= ~tachyon::MouseButtons::X2;
 
-                                inputHandler->OnMouseButton(windowID, interstice::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), interstice::MouseAction::MouseUp);
+                                inputHandler->OnMouseButton(windowID, tachyon::int2{ int32_t(x), int32_t(y) }, lastMouseButtons, ToKeyModifier(SDL_GetModState()), tachyon::MouseAction::MouseUp);
                                 break;
                             }
                         }
@@ -1105,17 +1105,17 @@ namespace interstice
                         if (SDL_GetWindowFromID(event->wheel.windowID) != (SDL_Window*)data)
                             break;
 
-                        interstice::IPlatformInputHandler* inputHandler = GetInputContext(data);
+                        tachyon::IPlatformInputHandler* inputHandler = GetInputContext(data);
                         if (inputHandler == nullptr)
                             break;
 
-                        const interstice::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->wheel.mouse_x, event->wheel.mouse_y);
+                        const tachyon::int2 pixelPos = PixelPointOf((SDL_Window*)data, event->wheel.mouse_x, event->wheel.mouse_y);
                         const float x = float(pixelPos.x);
                         const float y = float(pixelPos.y);
                         float mx = event->wheel.x;
                         float my = event->wheel.y;
-                        interstice::ID windowID = GetWindowID(data);
-                        inputHandler->OnMouseScroll(windowID, interstice::int2{ int32_t(x), int32_t(y) }, interstice::float2{ mx, my }, ToKeyModifier(SDL_GetModState()));
+                        tachyon::ID windowID = GetWindowID(data);
+                        inputHandler->OnMouseScroll(windowID, tachyon::int2{ int32_t(x), int32_t(y) }, tachyon::float2{ mx, my }, ToKeyModifier(SDL_GetModState()));
                         break;
                     }
                     case SDL_EVENT_WINDOW_EXPOSED:
@@ -1136,8 +1136,8 @@ namespace interstice
                         int x = 0, y = 0;
                         SDL_GetWindowPosition((SDL_Window*)data, &x, &y);
                         auto* backend = (SDLWindowBackend*)SDL_GetPointerProperty(
-                            SDL_GetWindowProperties((SDL_Window*)data), "IntersticeBackend", nullptr);
-                        windowContext->RenderWindowFrame(backend ? backend->m_graphicsContext : nullptr, interstice::IntRect{ x, y, w, h }, true);
+                            SDL_GetWindowProperties((SDL_Window*)data), "TachyonBackend", nullptr);
+                        windowContext->RenderWindowFrame(backend ? backend->m_graphicsContext : nullptr, tachyon::IntRect{ x, y, w, h }, true);
                         break;
                     }
                 }
@@ -1811,7 +1811,7 @@ namespace interstice
                     SDL_GetWindowSizeInPixels(window, &w, &h);
                     int x = 0, y = 0;
                     SDL_GetWindowPosition(window, &x, &y);
-                    windowContext->RenderWindowFrame(backend->m_graphicsContext, interstice::IntRect{ x, y, w, h }, true);
+                    windowContext->RenderWindowFrame(backend->m_graphicsContext, tachyon::IntRect{ x, y, w, h }, true);
                 }
                 break;
             }
@@ -1842,4 +1842,4 @@ namespace interstice
         InstallSDLVulkanSurfaceFactory(graphicsContext);
     }
 
-} // namespace interstice
+} // namespace tachyon

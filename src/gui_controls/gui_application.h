@@ -79,7 +79,7 @@
 #include <gui_controls/subsystems/gui_reorderable_subsystem.h>
 #include <gui_controls/subsystems/gui_ui_cache_subsystem.h>
 
-namespace interstice
+namespace tachyon
 {
     /// Checks the result of an element-storage call (e.g. elementStorage.Add): a failure is
     /// reported as API misuse and the caller carries on.
@@ -250,14 +250,14 @@ namespace interstice
         /// Adds a panel to `panels` (usually a DockingLayout's). onPanelGUI builds its content;
         /// onEnable / onDisable run when it becomes visible / hidden. panelType names its kind,
         /// which saved UI state matches panels by (else the title).
-        void CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
+        void CreatePanel(std::unordered_map<tachyon::ID, tachyon::Panel>& panels, ID id, std::string title, tachyon::IconID icon,
                          std::function<void()> onPanelGUI,
                          std::string panelType = {},
                          std::function<void()> onEnable = {},
                          std::function<void()> onDisable = {});
 
         /// As above, with a new static ID, which it returns.
-        interstice::ID CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, std::string title, interstice::IconID icon,
+        tachyon::ID CreatePanel(std::unordered_map<tachyon::ID, tachyon::Panel>& panels, std::string title, tachyon::IconID icon,
                             std::function<void()> onPanelGUI,
                             std::string panelType = {},
                             std::function<void()> onEnable = {},
@@ -281,10 +281,10 @@ namespace interstice
 
         /// Dock leaf whose tab bar contains screenPos, plus its owning layout (needed by
         /// TransferPanel for cross-layout drops). {nullptr, nullptr} on miss.
-        DockLeafResult FindDockLeafAtScreenPos(interstice::int2 screenPos);
+        DockLeafResult FindDockLeafAtScreenPos(tachyon::int2 screenPos);
 
         /// Hit-tests leaf content areas; falls back to tab bars with zone=Center.
-        DockDropResult FindDockDropTargetAtScreenPos(interstice::int2 screenPos);
+        DockDropResult FindDockDropTargetAtScreenPos(tachyon::int2 screenPos);
 
         /// Call from OnGUI after the main docking container. Empty windows are closed.
         void EmitFloatingDockWindows();
@@ -299,7 +299,7 @@ namespace interstice
         void CloseDockedPanel(DockingLayout& layout, DockNode& leaf, int tabIndex);
 
         /// Moves a panel from sourceNode/sourceLayout to targetLayout, fixing up selectedTab.
-        static void TransferPanel(interstice::ID panelID, interstice::DockNode* sourceNode,
+        static void TransferPanel(tachyon::ID panelID, tachyon::DockNode* sourceNode,
                                   DockingLayout* sourceLayout,
                                   DockingLayout* targetLayout);
 
@@ -331,7 +331,7 @@ namespace interstice
 
         /// The folder the resources load from: compiled shaders, default fonts and
         /// relative theme paths. Empty (the default) is the working directory; a
-        /// package user passes INTERSTICE_RESOURCE_DIR, which the package defines.
+        /// package user passes TACHYON_RESOURCE_DIR, which the package defines.
         /// Call before Initialize.
         void SetResourceRoot(std::string_view root) { m_resourceRoot = std::string(root); }
         const std::string& GetResourceRoot() const { return m_resourceRoot; }
@@ -415,29 +415,29 @@ namespace interstice
         // transient construction state (m_treeState, ...) and OnGUI stack locals are not.
         //
         /// A handler that flips `toggle` on click.
-        interstice::EventHandler MakeToggleHandler(bool& toggle);
+        tachyon::EventHandler MakeToggleHandler(bool& toggle);
         /// A handler that calls onClick on click.
-        interstice::EventHandler MakeButtonHandler(std::function<void()> onClick);
+        tachyon::EventHandler MakeButtonHandler(std::function<void()> onClick);
         /// A label's handler: a click focuses the control the label belongs to.
-        interstice::EventHandler MakeLabelHandler();
+        tachyon::EventHandler MakeLabelHandler();
 
         /// Adds an element, with its interaction state, to the current window; for custom elements.
-        interstice::ElementRef RegisterElement(interstice::Element&& element, LayoutOverride&& constraints);
+        tachyon::ElementRef RegisterElement(tachyon::Element&& element, LayoutOverride&& constraints);
         /// As above, with `text` registered as its text.
-        interstice::ElementRef RegisterElement(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints);
+        tachyon::ElementRef RegisterElement(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints);
 
 
         /// As RegisterElement, for a control: it joins the Tab order and needs a valid ID.
-        interstice::ElementRef RegisterControl(interstice::Element&& element, LayoutOverride&& constraints);
+        tachyon::ElementRef RegisterControl(tachyon::Element&& element, LayoutOverride&& constraints);
         /// As above, with `text` registered as its text.
-        interstice::ElementRef RegisterControl(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints);
+        tachyon::ElementRef RegisterControl(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints);
         /// As above; createTextID registers the text, given the element with its current state.
-        interstice::ElementRef RegisterControl(interstice::Element&& element, std::function<TextID(interstice::Element& element)> createTextID, LayoutOverride&& constraints);
+        tachyon::ElementRef RegisterControl(tachyon::Element&& element, std::function<TextID(tachyon::Element& element)> createTextID, LayoutOverride&& constraints);
 
         /// A menu row: an icon slot, the label and a trailing text (a shortcut or a submenu
         /// arrow). The row takes the input and the highlight. `reserveIcon` keeps the icon
         /// slot without an icon, so labels line up in a menu that mixes both.
-        interstice::ElementRef MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
+        tachyon::ElementRef MenuItemRow(ID id, tachyon::EventHandler handler, StyleRef rowStyle,
                                     bool reserveIcon, IconID icon, std::string_view text,
                                     std::string_view trailing, StyleRef trailingStyle,
                                     LayoutOverride&& constraints, bool destructive = false);
@@ -731,7 +731,7 @@ namespace interstice
         // typically to draw a ghost window; suppresses the in-place cross-axis offset.
         /// A container of BeginReorderableItem scopes the user reorders by dragging.
         /// onReorder(from, to) runs on drop; isWrapped lets items wrap onto more lines.
-        bool        BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::function<void(int, interstice::int2)> onDragOut = nullptr, std::function<void(int, interstice::int2)> dragVisualizer = nullptr);
+        bool        BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::function<void(int, tachyon::int2)> onDragOut = nullptr, std::function<void(int, tachyon::int2)> dragVisualizer = nullptr);
         /// As above, not wrapped.
         inline bool BeginReorderableGroup(ID id, ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {})
         { return BeginReorderableGroup(id, direction, false, std::move(onReorder), style, std::move(constraints)); }
@@ -788,7 +788,7 @@ namespace interstice
 
         /// A list item's index by ID, for end-of-frame handlers; -1 if unknown. Filled only for
         /// lists with drag and drop.
-        int FindListItemIndex(interstice::ID id) const;
+        int FindListItemIndex(tachyon::ID id) const;
 
         /// One item of a list view, drawn selected when it is the selected index. True when clicked.
         bool        ListItem(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {});
@@ -841,16 +841,16 @@ namespace interstice
         /// renameBuffer (optional) enables in-place rename: F2, Ctrl+Shift+Click or a slow
         /// re-click opens an editor. Enter commits; Escape or focus loss cancels.
         bool        GridViewItem(ID id, const GUIContent& content,
-                                 interstice::ElementState extraState = interstice::ElementState::None,
+                                 tachyon::ElementState extraState = tachyon::ElementState::None,
                                  std::string* renameBuffer = nullptr,
                                  StyleRef itemStyle = {},
                                  LayoutOverride&& constraints = {});
         /// As above, without rename.
         inline bool GridViewItem(ID id, const GUIContent& content, LayoutOverride&& constraints)
-            { return GridViewItem(id, content, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
+            { return GridViewItem(id, content, tachyon::ElementState::None, nullptr, {}, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool GridViewItem(const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
-            { return GridViewItem(idManager.AllocateDynamicID(site), content, interstice::ElementState::None, nullptr, {}, std::move(constraints)); }
+            { return GridViewItem(idManager.AllocateDynamicID(site), content, tachyon::ElementState::None, nullptr, {}, std::move(constraints)); }
 
         /// Whether an inline rename editor (a grid item's, a tree row's) is open; an app that
         /// sorts by name re-sorts once it closes.
@@ -991,8 +991,8 @@ namespace interstice
         bool BeginTabBar(ID id, int* selectedIndex,
                          std::function<void(int, int)> onReorder,
                          std::function<void(int)> onClose = nullptr,
-                         std::function<void(int, interstice::int2)> onDragOut = nullptr,
-                         std::function<void(int, interstice::int2)> dragVisualizer = nullptr,
+                         std::function<void(int, tachyon::int2)> onDragOut = nullptr,
+                         std::function<void(int, tachyon::int2)> dragVisualizer = nullptr,
                          StyleRef style = {},
                          LayoutOverride&& constraints = {});
         /// Closes BeginTabBar.
@@ -1059,8 +1059,8 @@ namespace interstice
         {
             if (guiStateManager.Construction().IsIndeterminate())
             {
-                RegisterControl(interstice::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                    [this](interstice::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
+                RegisterControl(tachyon::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                    [this](tachyon::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
                     std::move(constraints));
                 return false;
             }
@@ -1071,8 +1071,8 @@ namespace interstice
                 if (nodeRowFieldMinWidth > 0 && !constraints.HasFixedWidth())
                     constraints.FlexGrow(1).MinWidth(Pixels{ nodeRowFieldMinWidth });
                 bool modified = false;
-                RegisterControl(interstice::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                                [this, &modified, &value, textEditBehavior, config](interstice::Element& element) {
+                RegisterControl(tachyon::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                                [this, &modified, &value, textEditBehavior, config](tachyon::Element& element) {
                                     const TextID textID = textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config);
                                     if constexpr (std::is_floating_point_v<T>)
                                         if (std::isnan(value))
@@ -1087,7 +1087,7 @@ namespace interstice
                 bool modified = false;
                 // Width 0 + flex-grow: the group fills remaining space after the label.
                 constraints.Width(0);
-                RegisterElement(interstice::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
+                RegisterElement(tachyon::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
                 VERIFY(elementStorage.BeginChildren());
                 {
 					// Each component: a colored axis label (drag it to change the value) attached
@@ -1189,21 +1189,21 @@ namespace interstice
                 };
 
                 if (BeginReorderableGroup(groupID, ReorderDirection::Vertical, std::move(onReorder),
-                                          theme.collectionListStyleRef, interstice::LayoutOverride{}.FlexGrow(1)))
+                                          theme.collectionListStyleRef, tachyon::LayoutOverride{}.FlexGrow(1)))
                 {
                     for (int i = 0; i < (int)items.size(); i++)
                     {
                         BeginReorderableItem(idManager.AllocateDynamicID(site), theme.collectionRowStyleRef,
-                                             interstice::LayoutOverride{}.FlexGrow(1));
+                                             tachyon::LayoutOverride{}.FlexGrow(1));
                         {
                             EmitDragHandle();
                             Text(idManager.AllocateDynamicID("list_index"), std::to_string(i), theme.collectionIndexStyleRef);
                             if constexpr (std::is_arithmetic_v<T>)
-                                TypedField(items[i], interstice::LayoutOverride{}.FlexGrow(1));
+                                TypedField(items[i], tachyon::LayoutOverride{}.FlexGrow(1));
                             else
-                                Field(items[i], interstice::LayoutOverride{}.FlexGrow(1));
+                                Field(items[i], tachyon::LayoutOverride{}.FlexGrow(1));
                             Button(theme.tabCloseIcon, [&items, i]() { items.erase(items.begin() + i); },
-                                   theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
+                                   theme.collectionRemoveStyleRef, tachyon::LayoutOverride{}.NoGrow());
                         }
                         EndReorderableItem();
                     }
@@ -1229,11 +1229,11 @@ namespace interstice
                 CollectionHeader(TypeTag<V>());
                 for (int i = 0; i < (int)items.size(); i++)
                 {
-                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, interstice::LayoutOverride{}.NoShrink());
-                    Field(items[i].first,  interstice::LayoutOverride{}.FlexGrow(1));
-                    Field(items[i].second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
+                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, tachyon::LayoutOverride{}.NoShrink());
+                    Field(items[i].first,  tachyon::LayoutOverride{}.FlexGrow(1));
+                    Field(items[i].second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, tachyon::LayoutOverride{}.FlexGrow(1));
                     Button(theme.tabCloseIcon, [&items, i]() { items.erase(items.begin() + i); },
-                           theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
+                           theme.collectionRemoveStyleRef, tachyon::LayoutOverride{}.NoGrow());
                     EndHorizontal();
                 }
                 Button(idManager.AllocateDynamicID("dictionary_add"), "+  Add entry",
@@ -1260,17 +1260,17 @@ namespace interstice
                 bool        rename = false;
                 for (auto& pair : items)
                 {
-                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, interstice::LayoutOverride{}.NoShrink());
+                    BeginHorizontal(idManager.AllocateDynamicID("dictionary_row"), theme.collectionEntryStyleRef, tachyon::LayoutOverride{}.NoShrink());
                     std::string key = pair.first;
-                    if (Field(key, TextEditBehavior::None, interstice::LayoutOverride{}.FlexGrow(1)) && key != pair.first)
+                    if (Field(key, TextEditBehavior::None, tachyon::LayoutOverride{}.FlexGrow(1)) && key != pair.first)
                     {
                         renameFrom = pair.first;
                         renameTo   = key;
                         rename     = true;
                     }
-                    Field(pair.second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
+                    Field(pair.second, TextEditBehavior::ContinuousUpdate, theme.collectionValueStyleRef, tachyon::LayoutOverride{}.FlexGrow(1));
                     Button(theme.tabCloseIcon, [&items, k = pair.first]() { items.erase(k); },
-                           theme.collectionRemoveStyleRef, interstice::LayoutOverride{}.NoGrow());
+                           theme.collectionRemoveStyleRef, tachyon::LayoutOverride{}.NoGrow());
                     EndHorizontal();
                 }
                 if (rename && !items.contains(renameTo))
@@ -1295,19 +1295,19 @@ namespace interstice
         // ---- ColorField: swatch + color picker popup ----
         /// A color swatch that opens a color picker; true when the color changed. allowHDR lets
         /// the picker take brightness over 1.
-        bool        ColorField(ID id, interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
         /// As above, for an 8-bit color.
-        bool        ColorField(ID id, interstice::color4b& value, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, tachyon::color4b& value, LayoutOverride&& constraints = {});
         /// As above, with the call site as the ID.
-        inline bool ColorField(       interstice::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, std::move(constraints)); }
+        inline bool ColorField(       tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool ColorField(       interstice::color4b& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())                        { return ColorField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+        inline bool ColorField(       tachyon::color4b& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())                        { return ColorField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
 
         // ---- GradientField: gradient swatch + editor popup ----
         /// A gradient swatch that opens a gradient editor; true when the gradient changed.
-        bool        GradientField(ID id, interstice::Gradient& value, LayoutOverride&& constraints = {});
+        bool        GradientField(ID id, tachyon::Gradient& value, LayoutOverride&& constraints = {});
         /// As above, with the call site as the ID.
-        inline bool GradientField(       interstice::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+        inline bool GradientField(       tachyon::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
 
         // ---- SliderField: DragLabel + horizontal slider track + numeric textbox ----
         /// A label, a slider track and a number field for value in [minVal, maxVal]; true when
@@ -1412,7 +1412,7 @@ namespace interstice
 
             LayoutOverride constraints = LayoutOverride::FixedSize(size).Position(position.x, position.y);
 
-            ElementFlags elementFlags = interstice::ElementFlags::WindowNoCaption | interstice::ElementFlags::WindowIsTransparent;
+            ElementFlags elementFlags = tachyon::ElementFlags::WindowNoCaption | tachyon::ElementFlags::WindowIsTransparent;
             return BeginWindow(windowLayoutID, styleRef, std::move(constraints), elementFlags);
         }
 
@@ -1467,7 +1467,7 @@ namespace interstice
         void AddGhostIcon(IconID icon, std::source_location site = std::source_location::current())
         {
             auto dragGhostIconID = idManager.AllocateDynamicID(site);
-            interstice::Element ghostIcon
+            tachyon::Element ghostIcon
             {
                 .id       = dragGhostIconID,
                 .textID   = TextID::Invalid,
@@ -1476,7 +1476,7 @@ namespace interstice
             };
 
             auto ghostIconRes = elementStorage.Add(std::move(ghostIcon),
-                                                   interstice::LayoutOverride::FixedSize(28, 28));
+                                                   tachyon::LayoutOverride::FixedSize(28, 28));
             VERIFY(ghostIconRes.status);
             VERIFY(windowRegistry.Add(ghostIconRes.ref));
         }
@@ -1565,7 +1565,7 @@ namespace interstice
                 if (constraints.x.type == PositionType::Fixed &&
                     constraints.y.type == PositionType::Fixed)
                 {
-                    monitorIndex = windowManager->GetMonitorIndexAt(interstice::int2{ .x = constraints.x.near, .y = constraints.y.near });
+                    monitorIndex = windowManager->GetMonitorIndexAt(tachyon::int2{ .x = constraints.x.near, .y = constraints.y.near });
                 } else
                     monitorIndex = windowManager->GetPrimaryMonitorIndex();
             }
@@ -1573,7 +1573,7 @@ namespace interstice
             Element windowElement
             {
                 .id           = windowLayoutID,
-                .textID       = (title.size() == 0) ? TextID::Invalid : textSystem->RegisterText(windowLayoutID, title, styleRef, interstice::ElementState::None),
+                .textID       = (title.size() == 0) ? TextID::Invalid : textSystem->RegisterText(windowLayoutID, title, styleRef, tachyon::ElementState::None),
                 .styleRef     = styleRef,
                 .monitorIndex = (int16_t)monitorIndex,
                 .flags        = ElementFlags::IsWindow | flags
@@ -1781,7 +1781,7 @@ namespace interstice
             struct Page
             {
                 /// Stable across frames.
-                interstice::ID               id;
+                tachyon::ID               id;
                 /// Shown in the page tree.
                 std::string           name;
                 /// Builds the page's content while it is selected.
@@ -1791,7 +1791,7 @@ namespace interstice
             /// Added with AddPage.
             std::vector<Page> pages;
             /// The page shown; a click in the tree changes it.
-            interstice::ID           selectedID = interstice::ID::Invalid();
+            tachyon::ID           selectedID = tachyon::ID::Invalid();
             /// The page tree's width; its sizer changes it.
             CssPx             treeWidth  = 200;
 
@@ -1804,11 +1804,11 @@ namespace interstice
             } internal;
 
             /// `id` must be stable. The first page added is selected initially.
-            interstice::ID AddPage(interstice::ID id, std::string_view name, 
+            tachyon::ID AddPage(tachyon::ID id, std::string_view name, 
                             std::function<void()> render)
             {
                 pages.push_back({ id, std::string(name), std::move(render) });
-                if (selectedID == interstice::ID::Invalid()) selectedID = id;
+                if (selectedID == tachyon::ID::Invalid()) selectedID = id;
                 return id;
             }
         };
@@ -1873,7 +1873,7 @@ namespace interstice
         struct ColorSwatchLook SwatchLook() const;
 
         /// Panel id -> its dock content (cached scope) id, for InvalidatePanel.
-        std::unordered_map<interstice::ID, interstice::ID>       m_panelContentIDs;
+        std::unordered_map<tachyon::ID, tachyon::ID>       m_panelContentIDs;
 
         /// Save-stack for nested BeginToolbar/EndToolbar.
         std::vector<const ControlStyles*> controlStylesStack;
@@ -1893,7 +1893,7 @@ namespace interstice
 
         // ---- ListView ID->index map (shared by every list view; cleared once per frame) ----
         // Filled by ListItem when dragDrop is on; valid in end-of-frame handlers via FindListItemIndex().
-        std::unordered_map<interstice::ID, int> m_listItemIndexByID;
+        std::unordered_map<tachyon::ID, int> m_listItemIndexByID;
 
 
         /// Transient construction state (defs in gui_tree_grid_types.h), valid only between
@@ -1902,7 +1902,7 @@ namespace interstice
         GridViewState m_gridViewState;
 
         /// GridView rename lookup, shared by every grid view; cleared before construction.
-        std::unordered_map<interstice::ID, GridItemRenameInfo> m_gridItemRenameByID;
+        std::unordered_map<tachyon::ID, GridItemRenameInfo> m_gridItemRenameByID;
 
 
         /// Transient state of the VirtualTable being emitted (def in gui_table_types.h).
@@ -1940,7 +1940,7 @@ namespace interstice
         void SyncToolbarDockRects();
 
         /// Uses last frame's tab-bar rects, so it works during construction.
-        interstice::DockNode* FindDockLeafTabBarCachedAtScreenPos(interstice::int2 screenPos);
+        tachyon::DockNode* FindDockLeafTabBarCachedAtScreenPos(tachyon::int2 screenPos);
 
         std::vector<std::unique_ptr<FloatingDockWindow>> m_floatingDockWindows;
 
@@ -2010,7 +2010,7 @@ namespace interstice
         FrameClock  m_frameClock;   ///< animation time, vsync-paced
         bool        m_themeReloadPending { false };
 
-        interstice::ElementRef RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState = true);
+        tachyon::ElementRef RegisterElementInternal(tachyon::Element&& element, LayoutOverride&& constraints, bool updateState = true);
 
         /// Invalidates the scopes under the cursor and, on key input, the focused one.
         /// Call after hit-testing, before dispatch.
@@ -2055,13 +2055,13 @@ namespace interstice
         void DockFloatingWindow(FloatingDockWindow& fw);
 
         /// Popup content for ColorField / GradientField.
-        void EmitColorPicker(interstice::color4f& outColor, bool allowHDR);
-        void EmitGradientEditor(interstice::Gradient& outGradient);
+        void EmitColorPicker(tachyon::color4f& outColor, bool allowHDR);
+        void EmitGradientEditor(tachyon::Gradient& outGradient);
         /// Horizontal gradient bar with a triangle indicator.
-        void GradientSlider(interstice::ID id, float& value, float minVal, float maxVal,
+        void GradientSlider(tachyon::ID id, float& value, float minVal, float maxVal,
                             std::string_view label,
-                            interstice::VisualColorStyleIndex gradientStyle,
-                            interstice::VisualColorStyleIndex triangleStyle,
+                            tachyon::VisualColorStyleIndex gradientStyle,
+                            tachyon::VisualColorStyleIndex triangleStyle,
                             LayoutOverride&& constraints = {});
 
         /// Column-boundary sizers for [colStart, colEnd), anchored to each header cell's right edge.
@@ -2080,22 +2080,22 @@ namespace interstice
         void EmitTableSectionSeparator();
 
         /// Adds column c's reorder-drag X offset while a drag is live.
-        interstice::LayoutOverride ApplyColumnDragOffsetX(interstice::LayoutOverride lo,
+        tachyon::LayoutOverride ApplyColumnDragOffsetX(tachyon::LayoutOverride lo,
                                                    const TableEmit& emit, int c) const
         {
             if (emit.dragActive)
-                lo = std::move(lo).PositionX(interstice::PositionConstraintAxis::Relative(emit.columns[c].internal.dragOffsetX));
+                lo = std::move(lo).PositionX(tachyon::PositionConstraintAxis::Relative(emit.columns[c].internal.dragOffsetX));
             return lo;
         }
         /// Mirrors Y across the left/mid/right bodies and X to the mid header; absent sections have invalid IDs.
         void MirrorTableScroll(TableState* state);
         /// `gridCol` is section-local. `sectionMin/Max` are the inclusive global columns
         /// the reorder drag may move this header within.
-        void EmitTableHeaderCell(TableEmit& emit, interstice::ID tableID, int c, int16_t gridCol,
+        void EmitTableHeaderCell(TableEmit& emit, tachyon::ID tableID, int c, int16_t gridCol,
                                  bool isStretchTrack, int sectionMin, int sectionMax,
                                  int effectiveSortCol, IconID sortIcon);
         /// Header cells go into row 0 of the section's body grid, StickyY-pinned to the top.
-        void EmitTableHeaderSection(TableEmit& emit, interstice::ID tableID,
+        void EmitTableHeaderSection(TableEmit& emit, tachyon::ID tableID,
                                     int colStart, int colEnd, bool lastColIsStretch,
                                     int effectiveSortCol, IconID sortIcon);
         /// Stretch for Stretch columns and the middle section's last column; fitContent
@@ -2104,58 +2104,58 @@ namespace interstice
                                             bool isMiddle, bool fitContent = false) const;
         /// Follow with the row loop and CloseTableBodySection. `sampleViewport` records the
         /// viewport size for next frame (primary section only).
-        void OpenTableBodySection(TableEmit& emit, interstice::ID sectionID, interstice::StyleRef sectionStyle,
-                                  interstice::LayoutOverride&& layout, bool sampleViewport);
+        void OpenTableBodySection(TableEmit& emit, tachyon::ID sectionID, tachyon::StyleRef sectionStyle,
+                                  tachyon::LayoutOverride&& layout, bool sampleViewport);
         /// Emits sizers and the section's H scrollbar (the rightmost section also gets the
         /// shared V scrollbar). suppressHorzScrollbar is for fit-content sections.
         void CloseTableBodySection(TableEmit& emit,
-                                   interstice::ID sectionBodyID, bool emitVerticalScrollbar,
+                                   tachyon::ID sectionBodyID, bool emitVerticalScrollbar,
                                    bool suppressHorzScrollbar = false);
         /// Row loop for an open body section: spacers for off-screen rows, backdrop + cells for visible ones.
         void EmitVirtualBodyRows(TableEmit& emit,
                                  int colStart, int colEnd,
                                  int totalRowCount, int32_t actualRowHeight,
                                  int firstVisible, int lastVisible,
-                                 interstice::ID rowsRangeID,
+                                 tachyon::ID rowsRangeID,
                                  bool isLastSection);
 
         /// Emits the dragged column (cells, header, sizer) last so it paints on top.
         /// Only when emit.dragActive and draggedCol is in [colStart, colEnd).
-        void EmitDraggedColumnOnTop(TableEmit& emit, interstice::ID tableID,
+        void EmitDraggedColumnOnTop(TableEmit& emit, tachyon::ID tableID,
                                     int colStart, int colEnd,
                                     int firstVisible, int lastVisible,
-                                    interstice::ID rowsRangeID,
+                                    tachyon::ID rowsRangeID,
                                     bool lastColIsStretch,
                                     int effectiveSortCol, IconID sortIcon);
         /// Cell emitters for Cell() / TreeCell(), into the open body section.
         void EmitDirectCellText(const VirtualTableColumn& column, TableEmit& emit,
-                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
-                                interstice::TextID textID,
+                                tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
+                                tachyon::TextID textID,
                                 int colIdx, int colStart, int16_t gridRow);
         void EmitDirectCellCustom(const VirtualTableColumn& column, TableEmit& emit,
-                                  interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                  interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                  tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                  tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
                                   bool cellSelected,
                                   std::function<void()> emit_fn,
                                   int colIdx, int colStart, int16_t gridRow);
         void EmitDirectCellTree(const VirtualTableColumn& column, TableEmit& emit,
-                                interstice::ID cellID, interstice::ElementState cellState, interstice::ElementFlags cellFlags,
-                                interstice::StyleRef cellStyleRef, interstice::EventHandler cellHandler,
+                                tachyon::ID cellID, tachyon::ElementState cellState, tachyon::ElementFlags cellFlags,
+                                tachyon::StyleRef cellStyleRef, tachyon::EventHandler cellHandler,
                                 bool cellSelected,
-                                interstice::TextID textID,
+                                tachyon::TextID textID,
                                 int treeDepth, bool* treeIsOpen, IconID treeIcon,
                                 uint32_t treeAncestorMask, bool treeIsLastSibling,
                                 std::string* treeRenameBuffer, bool treeRenameActive,
-                                interstice::ID treeBodyID, bool reserveExpander,
+                                tachyon::ID treeBodyID, bool reserveExpander,
                                 int colIdx, int colStart, int16_t gridRow);
         /// One element spanning [colStart, colEnd) at gridRow.
-        void EmitDirectRowBackdrop(interstice::ID rowID, int16_t gridRow,
+        void EmitDirectRowBackdrop(tachyon::ID rowID, int16_t gridRow,
                                    int colStart, int colEnd,
-                                   interstice::ElementState backdropState,
-                                   interstice::ElementFlags backdropFlags,
-                                   interstice::StyleRef rowStyle,
-                                   interstice::EventHandler backdropHandler,
+                                   tachyon::ElementState backdropState,
+                                   tachyon::ElementFlags backdropFlags,
+                                   tachyon::StyleRef rowStyle,
+                                   tachyon::EventHandler backdropHandler,
                                    TableState* tableState,
                                    bool isLastSection);
         /// Invisible row of `height` pixels at gridRow.
@@ -2163,21 +2163,21 @@ namespace interstice
                                  int colStart, int colEnd, int32_t height);
         /// Row-mode backdrop MouseDown handler, shared by all rows (the row comes from the event id):
         /// selection, double-click toggle, rename start.
-        interstice::EventHandler BuildRowBackdropHandler(TableState* state,
-                                                  interstice::ID containerID);
+        tachyon::EventHandler BuildRowBackdropHandler(TableState* state,
+                                                  tachyon::ID containerID);
         /// Focus on click, scroll routing to the middle body, keyboard navigation.
-        interstice::EventHandler BuildTableContainerHandler(TableState* state,
-                                                     interstice::ID containerID);
+        tachyon::EventHandler BuildTableContainerHandler(TableState* state,
+                                                     tachyon::ID containerID);
 
         /// Tree/list item construction helpers (OnGUI only, not from handlers).
-        bool IsTreeItemSelected(interstice::ID id, int itemIndex) const;
-        interstice::TextID TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state);
-        void TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID);
-        interstice::EventHandler MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
-        bool TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
+        bool IsTreeItemSelected(tachyon::ID id, int itemIndex) const;
+        tachyon::TextID TreeItemRegisterText(tachyon::ID id, std::string_view text, IconID icon, StyleRef style, tachyon::ElementState state);
+        void TreeItemRowCustomDraw(const tachyon::ElementRef& rowRef, bool hasArrow, tachyon::ID rowID);
+        tachyon::EventHandler MakeTreeRowDragDropHandler(tachyon::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen = nullptr);
+        bool TreeItemRenameCheck(tachyon::ID bodyID, std::string* renameBuffer, StyleRef textStyle);
 
-        struct TreeClickState { interstice::ID lastClickID = interstice::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
+        struct TreeClickState { tachyon::ID lastClickID = tachyon::ID::Invalid(); int64_t lastClickTimeNanos = 0; };
 
     };
 
-} // namespace interstice
+} // namespace tachyon

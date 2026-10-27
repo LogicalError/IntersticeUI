@@ -14,7 +14,7 @@
 
 #include "mock_window_backend.h"
 
-namespace interstice
+namespace tachyon
 {
     using ::testing::Return;
     using ::testing::_;
@@ -1001,7 +1001,7 @@ namespace interstice
         EXPECT_EQ(result1, AddWindowResult::WindowUserClosed);
         manager->EndFrame();
 
-        interstice::WindowRegistry registry;
+        tachyon::WindowRegistry registry;
         registry.Clear();
 
         // Frame where we DON'T declare the window - this should clear the user-closed flag

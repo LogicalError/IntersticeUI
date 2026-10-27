@@ -4,13 +4,13 @@
 
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     struct LayoutStyle;
     struct VisualTextStyle;
 }
 
-namespace interstice::TableHelpers
+namespace tachyon::TableHelpers
 {
     /// Half-open [firstVisible, lastVisible) range of rows to emit.
     struct VirtualRowRange

@@ -7,7 +7,7 @@
 
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

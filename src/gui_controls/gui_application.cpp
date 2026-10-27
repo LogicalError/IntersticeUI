@@ -7,7 +7,7 @@
 #include <gui_core/style/gui_style_sheet.h>
 #include <gui_core/text/skribidi/gui_text_system_skribidi.h>
 #include <gui_core/windows/gui_window_sync.h>
-#if INTERSTICE_SDL
+#if TACHYON_SDL
 #include <gui_core/windows/sdl/gui_sdl_clipboard.h>
 #include <gui_core/windows/sdl/gui_window_backend_sdl.h>
 #endif
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -130,7 +130,7 @@ namespace interstice
             Diagnostics::ReportMisuse(kLogApp, message);
             return;
         }
-        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        TACHYON_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "AddWindowResult is not a success variant");
     }
 
@@ -151,7 +151,7 @@ namespace interstice
             Diagnostics::ReportMisuse(kLogApp, message);
             return;
         }
-        INTERSTICE_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
+        TACHYON_LOG_ERROR(kLogApp, "VERIFY failed: {}", message);
         assert(false && "RequestCloseResult is not Success");
     }
 
@@ -165,37 +165,37 @@ namespace interstice
         }
         if (!m_osWindowBackend)
         {
-#if INTERSTICE_SDL
+#if TACHYON_SDL
             SDLWindowBackend::Options sdlOptions;
             sdlOptions.hooks  = m_allocationHooks.IsSet() ? &m_allocationHooks : nullptr;
             m_osWindowBackend = std::make_unique<SDLWindowBackend>(sdlOptions);
 #else
-            INTERSTICE_LOG_ERROR(kLogApp, "no window backend: built without SDL, so call SetWindowBackend first");
+            TACHYON_LOG_ERROR(kLogApp, "no window backend: built without SDL, so call SetWindowBackend first");
             return Error{ ErrorCode::Unsupported, "no window backend: built without SDL, so call SetWindowBackend first" };
 #endif
         }
         if (!clipboard)
         {
-#if INTERSTICE_SDL
+#if TACHYON_SDL
             clipboard = std::make_unique<SDLClipboard>();
 #else
             clipboard = std::make_unique<LocalClipboard>();
 #endif
         }
 
-        textSystem       = new interstice::SkribidiTextSystem();
-        inputManager     = std::make_unique<interstice::InputManager>();
-        inputBroadcaster = interstice::InputHandlerBroadcaster({ inputManager.get(), textSystem });
+        textSystem       = new tachyon::SkribidiTextSystem();
+        inputManager     = std::make_unique<tachyon::InputManager>();
+        inputBroadcaster = tachyon::InputHandlerBroadcaster({ inputManager.get(), textSystem });
         if (!m_graphicsBackend)
             m_graphicsBackend = std::make_unique<vulkan::VulkanGraphicsContext>();
         graphicsContext  = m_graphicsBackend.get();
         graphicsContext->SetAllocationHooks(m_allocationHooks);
-        m_imageWindows   = new interstice::ImageWindowBackend(*m_osWindowBackend);
+        m_imageWindows   = new tachyon::ImageWindowBackend(*m_osWindowBackend);
         windowBackend    = m_imageWindows;
         windowBackend->SetGraphicsContext(graphicsContext);
         guiRenderer      = graphicsContext->guiRenderer;
-        layoutEngine     = std::make_unique<interstice::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
-        windowManager    = std::make_unique<interstice::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
+        layoutEngine     = std::make_unique<tachyon::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
+        windowManager    = std::make_unique<tachyon::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
 
         graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
         textSystem->SetFontDirectory(ResourcePath("fonts"));
@@ -204,20 +204,20 @@ namespace interstice
 
         if (Result<void> graphics = graphicsContext->Initialize(windowBackend); !graphics)
         {
-            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the graphics context: {}", graphics.GetError().message);
+            TACHYON_LOG_ERROR(kLogApp, "failed to initialize the graphics context: {}", graphics.GetError().message);
             return graphics;
         }
 
         textAtlasManager.reset(graphicsContext->CreateTextAtlasManager());
         if (!textAtlasManager || !textAtlasManager->Initialize(graphicsContext, graphicsContext->GetImageSet()))
         {
-            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
+            TACHYON_LOG_ERROR(kLogApp, "failed to initialize the text atlas manager");
             return Error{ ErrorCode::Failed, "failed to initialize the text atlas manager" };
         }
 
         if (!textSystem->Initialize(graphicsContext, &styleManager, textAtlasManager.get(), &guiStateManager, clipboard.get()))
         {
-            INTERSTICE_LOG_ERROR(kLogApp, "failed to initialize the text system");
+            TACHYON_LOG_ERROR(kLogApp, "failed to initialize the text system");
             return Error{ ErrorCode::Failed, "failed to initialize the text system" };
         }
         // No localization yet, so the OS language is the best guess for the UI's.
@@ -393,11 +393,11 @@ namespace interstice
             m_loadedFontScale = m_globalFontScale;
             return {};
         }
-        INTERSTICE_LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
+        TACHYON_LOG_ERROR(kLogApp, "could not load theme {}", m_themePath);
         return Error{ ErrorCode::ParseFailed, "could not load theme " + m_themePath };
     }
 
-    void GUIApplication::CreatePanel(std::unordered_map<interstice::ID, interstice::Panel>& panels, ID id, std::string title, interstice::IconID icon,
+    void GUIApplication::CreatePanel(std::unordered_map<tachyon::ID, tachyon::Panel>& panels, ID id, std::string title, tachyon::IconID icon,
                                      std::function<void()> onPanelGUI,
                                      std::string panelType,
                                      std::function<void()> onEnable,
@@ -529,7 +529,7 @@ namespace interstice
         if (!loaded && !m_loadedThemePath.empty() && m_loadedThemePath != m_themePath)
         {
             // A theme that is missing or broken: back to the one that last loaded, so the app keeps its look.
-            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; keeping {}", m_themePath, m_loadedThemePath);
+            TACHYON_LOG_ERROR(kLogApp, "theme reload failed for {}; keeping {}", m_themePath, m_loadedThemePath);
             m_themePath       = m_loadedThemePath;
             m_globalFontScale = m_loadedFontScale;
             styleManager.ClearAll();
@@ -538,7 +538,7 @@ namespace interstice
         if (loaded)
             OnStylesReloaded();
         else
-            INTERSTICE_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
+            TACHYON_LOG_ERROR(kLogApp, "theme reload failed for {}; styles stay cleared", m_themePath);
 
         // Captured draws reference the old styles and glyph atlas.
         if (m_uiCache) m_uiCache->InvalidateAll();
@@ -559,11 +559,11 @@ namespace interstice
 
     Result<void> GUIApplication::RecoverDevice()
     {
-        INTERSTICE_LOG_WARNING(kLogApp, "the GPU device was lost; making a new one");
+        TACHYON_LOG_WARNING(kLogApp, "the GPU device was lost; making a new one");
         windowManager->DestroyWindowContexts();
         if (Result<void> device = graphicsContext->RecreateDevice(windowBackend); !device)
         {
-            INTERSTICE_LOG_ERROR(kLogApp, "could not recover from the device loss: {}", device.GetError().message);
+            TACHYON_LOG_ERROR(kLogApp, "could not recover from the device loss: {}", device.GetError().message);
             return device;
         }
         if (!windowManager->RecreateWindowContexts())
@@ -579,11 +579,11 @@ namespace interstice
         if (applicationQuit)
             return false;
         m_frameStart = std::chrono::steady_clock::now();
-        INTERSTICE_PROFILE_FRAME_BEGIN("Frame");
+        TACHYON_PROFILE_FRAME_BEGIN("Frame");
 
         // Pump input right before the build, after the previous present.
         {
-            INTERSTICE_PROFILE_SCOPE("Input pump");
+            TACHYON_PROFILE_SCOPE("Input pump");
             windowManager->Update();
         }
         return true;
@@ -598,7 +598,7 @@ namespace interstice
         // Build: construction, layout, input dispatch and draw recording (CPU only).
         const auto buildStart = std::chrono::steady_clock::now();
         {
-            INTERSTICE_PROFILE_SCOPE("Build");
+            TACHYON_PROFILE_SCOPE("Build");
             graphicsContext->BeginFrame();
             OnFrame();
             graphicsContext->EndFrame();
@@ -608,13 +608,13 @@ namespace interstice
         // Uploads must run between build and render: the render consumes what this build requested
         // (windows created/resized by OnFrame, glyphs, styles, gradient pages).
         {
-            INTERSTICE_PROFILE_SCOPE("Resource upload");
+            TACHYON_PROFILE_SCOPE("Resource upload");
             windowManager->Update();
             textSystem->Update();
             graphicsContext->PrepareFrame(styleManager, gradientManager, static_cast<float>(m_frameClock.Seconds()));
         }
         {
-            INTERSTICE_PROFILE_SCOPE("Render");
+            TACHYON_PROFILE_SCOPE("Render");
             windowManager->ForEachAliveWindowContext
                 ([&](IWindowContext* context, IntRect rect)
                 {
@@ -629,7 +629,7 @@ namespace interstice
         windowManager->ForEachAliveWindowContext([](IWindowContext* context, IntRect) { context->PresentWindowFrame(); });
 
         // frameTime includes any vsync wait; frameBuildTime is just the CPU build.
-        INTERSTICE_PROFILE_FRAME_END();
+        TACHYON_PROFILE_FRAME_END();
         frameTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - m_frameStart).count();
 
         // In milliseconds; frozen while profiling is off.
@@ -732,7 +732,7 @@ namespace interstice
             if (!guiRenderer->BeginWindow(windowElement.id))
                 continue;
 
-            guiRenderer->SetTransform(interstice::float3x2::Identity());
+            guiRenderer->SetTransform(tachyon::float3x2::Identity());
 
             // Element state plus OS window state: Focused = OS-active window, Hover = window under the mouse.
             ElementState windowState = guiStateManager.GetCurrentState(windowElement.id);
@@ -770,7 +770,7 @@ namespace interstice
             bool     capturing     = false;
             uint32_t captureEndIdx = 0;
             size_t   captureAfterBase = 0;   // pending after-draws below this belong outside the capture
-            interstice::ID  captureScopeId = interstice::ID::Invalid();
+            tachyon::ID  captureScopeId = tachyon::ID::Invalid();
 
             // AddCustomDrawAfter callbacks wait here until the walk passes the end of their
             // owner's subtree, however it gets there: rendered, culled, or replayed from a
@@ -813,7 +813,7 @@ namespace interstice
 
             for (uint32_t i = 0; i < static_cast<uint32_t>(nodes.size()); )
             {
-                const interstice::WindowRegistry::RenderNode& node = nodes[i];
+                const tachyon::WindowRegistry::RenderNode& node = nodes[i];
                 if (capturing && i >= captureEndIdx)
                 {
                     fireAfterDraws(i, captureAfterBase); // the scope's own content, captured with it
@@ -839,7 +839,7 @@ namespace interstice
                 IntRect contentBoundsLayout = childElementRect.contentBounds - offset;
 
                 // Display::None skips this element but still traverses its children.
-                const bool displayNone = layoutStyle->display == interstice::Display::None;
+                const bool displayNone = layoutStyle->display == tachyon::Display::None;
 
 
                 if (!displayNone)
@@ -898,8 +898,8 @@ namespace interstice
                 };
 
                 // Children clip when either axis is non-visible (CSS: one paint box).
-                const bool    anyClip              = (layoutStyle->overflowX != interstice::Overflow::Visible)
-                                                  || (layoutStyle->overflowY != interstice::Overflow::Visible);
+                const bool    anyClip              = (layoutStyle->overflowX != tachyon::Overflow::Visible)
+                                                  || (layoutStyle->overflowY != tachyon::Overflow::Visible);
                 IntRect       childClipRectScreen  = anyClip
                                                      ? parentState.clipRectScreen.Intersection(transformRectToScreen(innerRectLayout))
                                                      : parentState.clipRectScreen;
@@ -998,7 +998,7 @@ namespace interstice
                     }
                     else if (childElement.iconID != IconID::Invalid)
                     {
-                        // -interstice-icon-offset-y: positive moves the icon up.
+                        // -tachyon-icon-offset-y: positive moves the icon up.
                         IntRect iconRectLayout = innerRectLayout;
                         if (childElementRect.layoutStyle)
                             iconRectLayout.y -= childElementRect.layoutStyle->iconOffsetY;
@@ -1025,8 +1025,8 @@ namespace interstice
                         if (draw->callback)
                         {
                             const bool customDrawAnyClip =
-                                (layoutStyle->overflowX != interstice::Overflow::Visible) ||
-                                (layoutStyle->overflowY != interstice::Overflow::Visible);
+                                (layoutStyle->overflowX != tachyon::Overflow::Visible) ||
+                                (layoutStyle->overflowY != tachyon::Overflow::Visible);
                             IntRect customDrawClipScreen = customDrawAnyClip
                                 ? borderClipRectScreen : parentClipRectScreen;
                             guiRenderer->SetTransform(customDrawRenderTransform);
@@ -1159,7 +1159,7 @@ namespace interstice
 
         // *** BEGIN FRAME ***
         {
-            INTERSTICE_PROFILE_SCOPE("BeginFrame");
+            TACHYON_PROFILE_SCOPE("BeginFrame");
 
             // On Windows, with a secondary top-level window open, the click that activates a
             // sibling never reaches SDL; synthesize it from the physical button state.
@@ -1167,8 +1167,8 @@ namespace interstice
             if (inputManager &&
                 (windowManager->HasAliveSecondaryWindows() || m_lastPhysicalButtons != MouseButtons::None))
             {
-                interstice::int2 mousePos = m_osWindowBackend->GetScreenMousePos();
-                interstice::MouseButtons physButtons = m_osWindowBackend->GetMouseButtons();
+                tachyon::int2 mousePos = m_osWindowBackend->GetScreenMousePos();
+                tachyon::MouseButtons physButtons = m_osWindowBackend->GetMouseButtons();
                 inputManager->SynthesizeMissingMouseEvents(mousePos, m_lastPhysicalButtons, physButtons);
                 m_lastPhysicalButtons = physButtons;
             } else
@@ -1176,19 +1176,19 @@ namespace interstice
 
             if (!idManager.BeginFrame())
             {
-                INTERSTICE_LOG_ERROR(kLogApp, "IDManager::BeginFrame failed");
+                TACHYON_LOG_ERROR(kLogApp, "IDManager::BeginFrame failed");
                 return;
             }
 
             if (!windowManager->BeginFrame())
             {
-                INTERSTICE_LOG_ERROR(kLogApp, "OSWindowManager::BeginFrame failed");
+                TACHYON_LOG_ERROR(kLogApp, "OSWindowManager::BeginFrame failed");
                 return;
             }
 
             if (!guiStateManager.BeginFrame())
             {
-                INTERSTICE_LOG_ERROR(kLogApp, "GUIStateManager::BeginFrame failed");
+                TACHYON_LOG_ERROR(kLogApp, "GUIStateManager::BeginFrame failed");
             }
 
             // Before construction: drives the active-flash window in GetCurrentState.
@@ -1233,12 +1233,12 @@ namespace interstice
 
 
         {
-            INTERSTICE_PROFILE_SCOPE("OnGUI");
+            TACHYON_PROFILE_SCOPE("OnGUI");
             OnGUI();
         }
 
         {
-            INTERSTICE_PROFILE_SCOPE("EndFrame");
+            TACHYON_PROFILE_SCOPE("EndFrame");
             m_frame.RunStage(FrameStage::PostConstruct, ctx);
             
             tooltipManager.EndFrame();
@@ -1251,8 +1251,8 @@ namespace interstice
                 visualContext.screenPos = windowManager->GetScreenMousePos();
                 visualContext.sourceID = guiStateManager.Drag().GetDraggedID();
                 visualContext.targetID = guiStateManager.Drag().GetDragOverID();
-                visualContext.isDropValid = guiStateManager.Drag().GetValidatedTargetID() != interstice::ID::Invalid();
-                visualContext.leftMouseDown = (windowManager->GetMouseButtons() & interstice::MouseButtons::Left) != interstice::MouseButtons::None;
+                visualContext.isDropValid = guiStateManager.Drag().GetValidatedTargetID() != tachyon::ID::Invalid();
+                visualContext.leftMouseDown = (windowManager->GetMouseButtons() & tachyon::MouseButtons::Left) != tachyon::MouseButtons::None;
                 visualContext.payloadType = guiStateManager.Drag().GetEventPayloadType();
                 visualContext.payloadValue = guiStateManager.Drag().GetEventPayloadValue();
                 visualContext.payload = &guiStateManager.Drag().GetPayload();
@@ -1302,7 +1302,7 @@ namespace interstice
             std::vector<ID> prevHoverProp   = guiStateManager.Interaction().GetPropagatedHoverIDs();
             std::vector<ID> prevFocusedProp = guiStateManager.Interaction().GetPropagatedFocusedIDs();
 
-            const interstice::int2 mousePosition = windowManager->GetScreenMousePos();
+            const tachyon::int2 mousePosition = windowManager->GetScreenMousePos();
             FrameInput frameInput
             {
                 .activeWindowID   = windowManager->GetActiveWindow(),
@@ -1321,9 +1321,9 @@ namespace interstice
                 { return textSystem->TryGetTextDragHoverTarget(window, pos, target); };
 
             const FrameHover frameHover   = guiStateManager.EndFrame(frameInput, idManager);
-            const interstice::ID overID        = frameHover.overID;
-            const interstice::ID hoverID       = frameHover.hoverID;
-            const interstice::ID hoverWindowID = frameHover.hoverWindowID;
+            const tachyon::ID overID        = frameHover.overID;
+            const tachyon::ID hoverID       = frameHover.hoverID;
+            const tachyon::ID hoverWindowID = frameHover.hoverWindowID;
 
             // Start transitions for state changes. Hover/Focused diff the leaf plus its
             // PropagatesDescendantState ancestors, so moving within such an ancestor doesn't retrigger it.
@@ -1463,7 +1463,7 @@ namespace interstice
         m_frame.RunStage(FrameStage::PreRender, ctx);
 
         {
-            INTERSTICE_PROFILE_SCOPE("OnRender");
+            TACHYON_PROFILE_SCOPE("OnRender");
             OnRender(elapsedTimeSecs);
         }
 

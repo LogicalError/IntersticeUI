@@ -3,7 +3,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <gui_core/windows/gui_window_flags.h>
 
-namespace interstice
+namespace tachyon
 {
     NullWindowBackend::NullWindowBackend(IntRect monitor)
         : m_monitor(monitor)

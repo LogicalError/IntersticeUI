@@ -9,7 +9,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_core/state/gui_scroll_management.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -22,10 +22,10 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::ID tableID{};
+            tachyon::ID tableID{};
 
             // 4 columns wider than the body so the H-scrollbar shows up.
-            std::vector<interstice::VirtualTableColumn> columns;
+            std::vector<tachyon::VirtualTableColumn> columns;
 
             void SetUp() override
             {
@@ -46,11 +46,11 @@ namespace interstice
 
             // Body container 400x300; columns total ~800 -> overflow X.
             // 200 rows x ~24 px -> overflow Y.
-            void Emit(interstice::TableState& state, int rowCount = 200,
+            void Emit(tachyon::TableState& state, int rowCount = 200,
                       int width = 400, int height = 300)
             {
                 app.BeginRootWindow();
-                std::span<interstice::VirtualTableColumn> span(columns.data(), columns.size());
+                std::span<tachyon::VirtualTableColumn> span(columns.data(), columns.size());
                 app.VirtualTable(tableID, state, span, rowCount, /*rowHeight*/0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(CssPx(width), CssPx(height)));
@@ -58,16 +58,16 @@ namespace interstice
             }
 
             // A panel-sized pane holding a mode bar and a 50k-row table, like the demo's Table panel.
-            interstice::ID paneID = interstice::ID::Invalid();
-            IntRect EmitInPane(interstice::TableState& state, StyleRef tableStyle, LayoutOverride&& tableLayout)
+            tachyon::ID paneID = tachyon::ID::Invalid();
+            IntRect EmitInPane(tachyon::TableState& state, StyleRef tableStyle, LayoutOverride&& tableLayout)
             {
-                if (paneID == interstice::ID::Invalid())
+                if (paneID == tachyon::ID::Invalid())
                     paneID = app.idManager.CreateStaticID();
                 app.Frame([&] {
                     app.BeginRootWindow();
                     app.BeginArea(paneID, app.theme.emptyVertStyleRef, LayoutOverride{}.Size(530, 400));
                     app.Button(app.idManager.AllocateDynamicID("mode"), "Row", [] {}, LayoutOverride{}.NoGrow().NoShrink());
-                    std::span<interstice::VirtualTableColumn> span(columns.data(), columns.size());
+                    std::span<tachyon::VirtualTableColumn> span(columns.data(), columns.size());
                     app.VirtualTable(tableID, state, span, 50000, 0, tableStyle, std::move(tableLayout));
                     app.EndArea();
                     app.EndRootWindow();
@@ -75,11 +75,11 @@ namespace interstice
                 return app.GetElementRect(tableID);
             }
 
-            int2 SectionScroll(interstice::TableState& state, int sectionIdx = 0)
+            int2 SectionScroll(tachyon::TableState& state, int sectionIdx = 0)
             {
                 auto& sm = app.guiStateManager.GetScrollManagement();
-                const interstice::ID id = state.SectionBodyID(sectionIdx);
-                if (id == interstice::ID::Invalid()) return int2{0,0};
+                const tachyon::ID id = state.SectionBodyID(sectionIdx);
+                if (id == tachyon::ID::Invalid()) return int2{0,0};
                 auto h = sm.GetScrollOffsetHandle(id);
                 if (!sm.IsScrollOffsetHandleValid(h)) return int2{0,0};
                 return sm.GetScrollOffset(h);
@@ -87,7 +87,7 @@ namespace interstice
 
             // Headless skips render, so pin internal.lastViewportH/W and the overflow flags
             // that its custom-draw would set.
-            void PinViewport(interstice::TableState& state,
+            void PinViewport(tachyon::TableState& state,
                              bool xOverflow = true, bool yOverflow = true)
             {
                 state.internal.lastViewportH = 298;
@@ -103,7 +103,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, WheelAtBottomDoesNotOscillate)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -141,14 +141,14 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ScrollbarJumpUpdatesRowWindowSameFrame)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
             ASSERT_GT(state.internal.actualRowHeight, 0);
 
             // Jump the section body to row 100, as a thumb drag does.
@@ -159,9 +159,9 @@ namespace interstice
 
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID rowAtTarget = state.RowIDForIndex(targetRow);
-            const interstice::ID rowAtTop    = state.RowIDForIndex(0);
-            ASSERT_NE(rowAtTarget, interstice::ID::Invalid());
+            const tachyon::ID rowAtTarget = state.RowIDForIndex(targetRow);
+            const tachyon::ID rowAtTop    = state.RowIDForIndex(0);
+            ASSERT_NE(rowAtTarget, tachyon::ID::Invalid());
 
             EXPECT_TRUE(app.HasElement(rowAtTarget))
                 << "row " << targetRow << " must be virtualized the same frame the "
@@ -177,7 +177,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, LastRowClearsHorizontalScrollbarAtMaxScroll)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -195,14 +195,14 @@ namespace interstice
             }
 
             // After scrolling to the bottom, the last dataset row is emitted.
-            const interstice::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
-            ASSERT_NE(lastRowID, interstice::ID::Invalid());
+            const tachyon::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
+            ASSERT_NE(lastRowID, tachyon::ID::Invalid());
             ASSERT_TRUE(app.HasElement(lastRowID));
 
             const auto lastRowRect = app.GetElementRect(lastRowID);
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
 
@@ -236,7 +236,7 @@ namespace interstice
             columns.push_back({ { .header = "Type", .initialWidth = 120, .minWidth = 40, .maxWidth = 200 },
                                 [this](int r) { app.Cell((r % 2) ? "File" : "Folder"); } });
 
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -270,7 +270,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, PlainAndTreeCellsRenderAtSameHeight)
         {
             // Plain table.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -290,7 +290,7 @@ namespace interstice
             columns.push_back({ { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 200 },
                                 [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); } });
 
-            interstice::TableState state2{};
+            tachyon::TableState state2{};
             auto pin2 = [&]{ PinViewport(state2); };
             pin2();
             app.Frame([&]{ Emit(state2); pin2(); });
@@ -308,7 +308,7 @@ namespace interstice
         // apply when a section overflows X.
         // ---------------------------------------------------------------
         // Section body scroll range (contentH - innerH); needs a laid-out frame.
-        static int32_t SectionScrollRange(GUITest::HeadlessGUIApp& app, interstice::ID sectionID)
+        static int32_t SectionScrollRange(GUITest::HeadlessGUIApp& app, tachyon::ID sectionID)
         {
             auto ref = app.elementStorage.FindElementRefByID(sectionID);
             if (!ref.IsValid()) return 0;
@@ -321,7 +321,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, VScrollbarOnlyEmittedWhenContentOverflowsY)
         {
             // No-Y-overflow: pin yOverflow=false. Bar must NOT exist.
-            interstice::TableState stateA{};
+            tachyon::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/true, /*yOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -330,7 +330,7 @@ namespace interstice
                 << "V-scrollbar must not be emitted when content fits vertically";
 
             // Y-overflow: pin yOverflow=true. Bar must exist.
-            interstice::TableState stateB{};
+            tachyon::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true, /*yOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -344,7 +344,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, HScrollbarOnlyEmittedWhenAnySectionOverflows)
         {
             // No-overflow: pin xOverflow=false. Bar must NOT exist.
-            interstice::TableState stateA{};
+            tachyon::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -353,7 +353,7 @@ namespace interstice
                 << "H-scrollbar must not be emitted when no section overflows X";
 
             // Overflow: pin xOverflow=true. Bar must exist.
-            interstice::TableState stateB{};
+            tachyon::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -367,7 +367,7 @@ namespace interstice
             // Same table with and without X overflow.
 
             // Scenario A: NO X-overflow - flag false, no pad expected.
-            interstice::TableState stateA{};
+            tachyon::TableState stateA{};
             auto pinA = [&]{ PinViewport(stateA, /*xOverflow*/false); };
             pinA();
             app.Frame([&]{ Emit(stateA); pinA(); });
@@ -376,7 +376,7 @@ namespace interstice
             ASSERT_GT(rangeNoOverflow, 0);
 
             // Scenario B: X-overflow - flag true, pad expected.
-            interstice::TableState stateB{};
+            tachyon::TableState stateB{};
             auto pinB = [&]{ PinViewport(stateB, /*xOverflow*/true); };
             pinB();
             app.Frame([&]{ Emit(stateB); pinB(); });
@@ -397,17 +397,17 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, HeadersEmittedAfterBodyRowsForCorrectPaintOrder)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
 
             ASSERT_GT(state.internal.totalRowCount, 0);
-            const interstice::ID firstRowID = state.RowIDForIndex(0);
+            const tachyon::ID firstRowID = state.RowIDForIndex(0);
             ASSERT_TRUE(app.HasElement(firstRowID));
             const auto rowRef = app.elementStorage.FindElementRefByID(firstRowID);
             ASSERT_TRUE(rowRef.IsValid());
@@ -416,9 +416,9 @@ namespace interstice
             ASSERT_TRUE(sectionRef.IsValid());
 
             ASSERT_FALSE(columns.empty());
-            ASSERT_NE(columns[0].internal.headerRef, interstice::ElementRef::Invalid())
+            ASSERT_NE(columns[0].internal.headerRef, tachyon::ElementRef::Invalid())
                 << "header ref must be captured in BeginTable for this check";
-            const interstice::ElementRef headerRef = columns[0].internal.headerRef;
+            const tachyon::ElementRef headerRef = columns[0].internal.headerRef;
 
             // For siblings, HashCode (depth high, index low) orders by emission.
             EXPECT_GT(headerRef.HashCode(), rowRef.HashCode())
@@ -434,7 +434,7 @@ namespace interstice
         {
             // Render a normal (non-virtual) cell so layout produces a
             // real row height, then compare against theme.tableRowHeight.
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -459,15 +459,15 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, ColumnReorderRespectsHorizontalScroll)
         {
             int reorderFrom = -1, reorderTo = -1;
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [&](int f, int t){ reorderFrom = f; reorderTo = t; };
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
@@ -488,7 +488,7 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             // Move toward col3 (no scroll yet), past the drag threshold.
-            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Scroll the section horizontally mid-drag.
@@ -499,7 +499,7 @@ namespace interstice
             // must stay col3.
             const auto col3RectS = app.elementStorage.GetElementRectUnsafe(col3Ref).rect;
             const int2 col3CenterS{ col3RectS.x + col3RectS.w / 2, col3RectS.y + col3RectS.h / 2 };
-            app.InjectMouseMove(col3CenterS, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col3CenterS, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Release.
@@ -519,21 +519,21 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, DraggedColumnShowsRowColorization)
         {
             // Helper: count immediate children of the section body.
-            auto countSectionChildren = [&](interstice::ID sectionID) -> int {
+            auto countSectionChildren = [&](tachyon::ID sectionID) -> int {
                 auto ref = app.elementStorage.FindElementRefByID(sectionID);
                 if (!ref.IsValid()) return 0;
                 return int(app.elementStorage.GetChildrenSpan(ref).size());
             };
 
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
 
             const int childCountBeforeDrag = countSectionChildren(sectionID);
             ASSERT_GT(childCountBeforeDrag, 0);
@@ -541,7 +541,7 @@ namespace interstice
             // Start a drag on col1, one event per Frame (one hit-test per frame).
             ASSERT_GE(int(columns.size()), 2);
             const auto col1Ref = columns[1].internal.headerRef;
-            ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
+            ASSERT_NE(col1Ref, tachyon::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2,
                                    col1Rect.y + col1Rect.h / 2 };
@@ -552,7 +552,7 @@ namespace interstice
 
             // Move past drag threshold (>4 px) to commit the drag.
             const int2 col1Off{ col1Center.x + 50, col1Center.y };
-            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
@@ -577,7 +577,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, DraggedColumnPaintsOnTopOfSizers)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
@@ -586,14 +586,14 @@ namespace interstice
 
             // Start a drag on column 1 and commit (>4 px).
             const auto col1Ref = columns[1].internal.headerRef;
-            ASSERT_NE(col1Ref, interstice::ElementRef::Invalid());
+            ASSERT_NE(col1Ref, tachyon::ElementRef::Invalid());
             const auto col1Rect = app.elementStorage.GetElementRectUnsafe(col1Ref).rect;
             const int2 col1Center{ col1Rect.x + col1Rect.w / 2, col1Rect.y + col1Rect.h / 2 };
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
             const int2 col1Off{ col1Center.x + 50, col1Center.y };
-            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
@@ -623,15 +623,15 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnDragAutoScrollsNearEdges)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int){};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
             auto& sm = app.guiStateManager.GetScrollManagement();
             auto handle = sm.GetOrCreateScrollOffsetHandle(sectionID);
 
@@ -645,7 +645,7 @@ namespace interstice
 
             // Commit drag (>4 px).
             const int2 col1Off{ col1Center.x + 10, col1Center.y };
-            app.InjectMouseMove(col1Off, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col1Off, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
 
             // Move into the 30-px right-edge zone of the body.
@@ -654,7 +654,7 @@ namespace interstice
             const int2 nearRight{ bodyInner.x + bodyInner.w - 5, col1Center.y };
 
             const int32_t scrollBefore = sm.GetScrollOffset(handle).x;
-            app.InjectMouseMove(nearRight, interstice::MouseButtons::Left);
+            app.InjectMouseMove(nearRight, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollAfterRight = sm.GetScrollOffset(handle).x;
             EXPECT_LT(scrollAfterRight, scrollBefore)
@@ -667,7 +667,7 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollSet = sm.GetScrollOffset(handle).x;
             const int2 nearLeft{ bodyInner.x + 5, col1Center.y };
-            app.InjectMouseMove(nearLeft, interstice::MouseButtons::Left);
+            app.InjectMouseMove(nearLeft, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             const int32_t scrollAfterLeft = sm.GetScrollOffset(handle).x;
             EXPECT_GT(scrollAfterLeft, scrollSet)
@@ -686,7 +686,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardHomeEndJumpToDatasetBoundsNotVisibleWindow)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -702,7 +702,7 @@ namespace interstice
 
             ASSERT_GT(state.internal.totalRowCount, 0)
                 << "VirtualTable must publish dataset row count";
-            ASSERT_NE(state.internal.rowsRangeID, interstice::ID::Invalid())
+            ASSERT_NE(state.internal.rowsRangeID, tachyon::ID::Invalid())
                 << "VirtualTable must publish the rows-range ID";
 
             // Scroll so row 0 is outside the virtualized window.
@@ -714,18 +714,18 @@ namespace interstice
             }
 
             // Home selects dataset row 0, not the first buffered row.
-            app.InjectKey(interstice::KeyCode::Home);
+            app.InjectKey(tachyon::KeyCode::Home);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_EQ(state.selectedRowID.GetMode(), interstice::IDMode::SubRange);
+            ASSERT_EQ(state.selectedRowID.GetMode(), tachyon::IDMode::SubRange);
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index), 0)
                 << "Home must select dataset row 0, not the topmost visible row";
 
             // Press End - selection must jump to row totalRowCount-1.
-            app.InjectKey(interstice::KeyCode::End);
+            app.InjectKey(tachyon::KeyCode::End);
             app.Frame([&]{ Emit(state); pin(); });
 
-            ASSERT_EQ(state.selectedRowID.GetMode(), interstice::IDMode::SubRange);
+            ASSERT_EQ(state.selectedRowID.GetMode(), tachyon::IDMode::SubRange);
             EXPECT_EQ(static_cast<int>(state.selectedRowID.value.subRangeParts.index),
                       state.internal.totalRowCount - 1)
                 << "End must select dataset row N-1, not the bottommost visible row";
@@ -735,7 +735,7 @@ namespace interstice
         // virtualized window.
         TEST_F(TableVirtualScrollTest, KeyboardUpStepsBeyondVirtualizedTopBuffer)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -761,7 +761,7 @@ namespace interstice
             const int startIdx = 50;
             state.selectedRowID = state.RowIDForIndex(startIdx);
 
-            app.InjectKey(interstice::KeyCode::Up);
+            app.InjectKey(tachyon::KeyCode::Up);
             app.Frame([&]{ Emit(state); pin(); });
 
             const int newIdx = static_cast<int>(state.selectedRowID.value.subRangeParts.index);
@@ -776,7 +776,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, SizersStayPresentWhenScrolling)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -785,7 +785,7 @@ namespace interstice
             // Sanity: every column-boundary sizer exists at the top.
             for (size_t c = 0; c + 1 < columns.size(); ++c)
             {
-                ASSERT_NE(columns[c].internal.sizerID, interstice::ID::Invalid()) << "col " << c;
+                ASSERT_NE(columns[c].internal.sizerID, tachyon::ID::Invalid()) << "col " << c;
                 EXPECT_TRUE(app.HasElement(columns[c].internal.sizerID))
                     << "sizer at boundary " << c << " missing at top of scroll";
             }
@@ -813,7 +813,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardEndFullyShowsLastRowAboveHScrollbar)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -827,7 +827,7 @@ namespace interstice
             app.InjectMouseUp(center);
             app.Frame([&]{ Emit(state); pin(); });
 
-            app.InjectKey(interstice::KeyCode::End);
+            app.InjectKey(tachyon::KeyCode::End);
             // Three frames: dispatch sets the scroll, it propagates, then the new range
             // is virtualized and the last row emitted.
             app.Frame([&]{ Emit(state); pin(); });
@@ -835,13 +835,13 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             // The last row must clear the 12-px H-scrollbar strip.
-            const interstice::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
+            const tachyon::ID lastRowID = state.RowIDForIndex(state.internal.totalRowCount - 1);
             ASSERT_TRUE(app.HasElement(lastRowID))
                 << "End must bring the last dataset row into view";
 
             const auto lastRect = app.GetElementRect(lastRowID);
-            const interstice::ID sectionID = state.SectionBodyID(0);
-            ASSERT_NE(sectionID, interstice::ID::Invalid());
+            const tachyon::ID sectionID = state.SectionBodyID(0);
+            ASSERT_NE(sectionID, tachyon::ID::Invalid());
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -861,7 +861,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardUpScrollsSelectedRowBelowStickyHeader)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -882,22 +882,22 @@ namespace interstice
                 app.InjectMouseScroll(center, int2{ 0, -1 });
                 app.Frame([&]{ Emit(state); pin(); });
             }
-            app.InjectKey(interstice::KeyCode::End);
+            app.InjectKey(tachyon::KeyCode::End);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
             // Press Up until the selection reaches the top; it must sit below the header.
             for (int i = 0; i < 50; ++i)
             {
-                app.InjectKey(interstice::KeyCode::Up);
+                app.InjectKey(tachyon::KeyCode::Up);
                 app.Frame([&]{ Emit(state); pin(); });
             }
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sel = state.selectedRowID;
+            const tachyon::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel)) << "selected row must be emitted after Up navigation";
             const auto selRect = app.GetElementRect(sel);
-            const interstice::ID sectionID = state.SectionBodyID(0);
+            const tachyon::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -916,7 +916,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardDownScrollsLastVisibleRowAboveHScrollbar)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -932,15 +932,15 @@ namespace interstice
             // Press Down until the selection reaches the bottom of the window.
             for (int i = 0; i < 60; ++i)
             {
-                app.InjectKey(interstice::KeyCode::Down);
+                app.InjectKey(tachyon::KeyCode::Down);
                 app.Frame([&]{ Emit(state); pin(); });
             }
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sel = state.selectedRowID;
+            const tachyon::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel));
             const auto selRect = app.GetElementRect(sel);
-            const interstice::ID sectionID = state.SectionBodyID(0);
+            const tachyon::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -958,7 +958,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardPageDownLandsAboveHScrollbar)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state); };
             pin();
             app.Frame([&]{ Emit(state); pin(); });
@@ -973,16 +973,16 @@ namespace interstice
             app.Frame([&]{ Emit(state); pin(); });
 
             // One PageDown from the top lands on the last fully visible row.
-            app.InjectKey(interstice::KeyCode::PageDown);
+            app.InjectKey(tachyon::KeyCode::PageDown);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sel = state.selectedRowID;
+            const tachyon::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel))
                 << "PageDown's target row must be in the emit window";
 
             const auto selRect = app.GetElementRect(sel);
-            const interstice::ID sectionID = state.SectionBodyID(0);
+            const tachyon::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -1001,7 +1001,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, KeyboardPageDownClearsHScrollbarWithoutPinningOverflowFlag)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // Pin only the viewport size; the overflow flag stays false as at dispatch.
             auto pin = [&]{
                 state.internal.lastViewportH = 298;
@@ -1024,14 +1024,14 @@ namespace interstice
                 << "this faithful to production input-dispatch timing";
 
             // PageDown from top.
-            app.InjectKey(interstice::KeyCode::PageDown);
+            app.InjectKey(tachyon::KeyCode::PageDown);
             app.Frame([&]{ Emit(state); pin(); });
             app.Frame([&]{ Emit(state); pin(); });
 
-            const interstice::ID sel = state.selectedRowID;
+            const tachyon::ID sel = state.selectedRowID;
             ASSERT_TRUE(app.HasElement(sel));
             const auto selRect = app.GetElementRect(sel);
-            const interstice::ID sectionID = state.SectionBodyID(0);
+            const tachyon::ID sectionID = state.SectionBodyID(0);
             auto sectionRef = app.elementStorage.FindElementRefByID(sectionID);
             ASSERT_TRUE(sectionRef.IsValid());
             const auto& sectionRect = app.elementStorage.GetElementRectUnsafe(sectionRef);
@@ -1056,7 +1056,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, SortIndicatorFollowsDraggedColumn)
         {
             int reorderFrom = -1, reorderTo = -1;
-            interstice::TableState state{};
+            tachyon::TableState state{};
             // The caller rotates its columns vector on reorder.
             state.onReorderColumns = [&](int f, int t){
                 reorderFrom = f; reorderTo = t;
@@ -1089,7 +1089,7 @@ namespace interstice
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
-            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.InjectMouseUp(col3Center);
             app.Frame([&]{ Emit(state); pin(); });
@@ -1109,7 +1109,7 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnWidthsFollowDraggedColumn)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [&](int f, int t){
                 if (f == t) return;
                 if (f < t) std::rotate(columns.begin() + f, columns.begin() + f + 1, columns.begin() + t + 1);
@@ -1136,7 +1136,7 @@ namespace interstice
             app.InjectMouseMove(col1Center);
             app.InjectMouseDown(col1Center);
             app.Frame([&]{ Emit(state); pin(); });
-            app.InjectMouseMove(col3Center, interstice::MouseButtons::Left);
+            app.InjectMouseMove(col3Center, tachyon::MouseButtons::Left);
             app.Frame([&]{ Emit(state); pin(); });
             app.InjectMouseUp(col3Center);
             app.Frame([&]{ Emit(state); pin(); });
@@ -1157,8 +1157,8 @@ namespace interstice
         // land in the multi-select set (that is what row highlighting reads).
         TEST_F(TableVirtualScrollTest, FollowTailSelectsTheBottomRowWhenSortedAndMultiSelect)
         {
-            interstice::TableState state{};
-            interstice::MultiSelectState multi{};
+            tachyon::TableState state{};
+            tachyon::MultiSelectState multi{};
             state.multiSelect = &multi;
             state.followTail  = true;
             state.sortColumn  = 0;
@@ -1167,7 +1167,7 @@ namespace interstice
             // Keys ascending by dataset index, sorted descending: the bottom
             // visual row holds dataset row 0.
             const int kRows = 50;
-            std::vector<interstice::VirtualTableColumn> cols;
+            std::vector<tachyon::VirtualTableColumn> cols;
             cols.push_back({
                 .column = { .header = "V", .initialWidth = 200, .minWidth = 60, .maxWidth = 400 },
                 .generateCell  = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); },
@@ -1176,7 +1176,7 @@ namespace interstice
             auto frame = [&] {
                 app.Frame([&] {
                     app.BeginRootWindow();
-                    std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
+                    std::span<tachyon::VirtualTableColumn> sp(cols.data(), cols.size());
                     app.VirtualTable(tableID, state, sp, kRows, 0, app.theme.tableStyleRef,
                                      LayoutOverride{}.Size(400, 300));
                     app.EndRootWindow();
@@ -1195,7 +1195,7 @@ namespace interstice
 
             ASSERT_TRUE(state.internal.rowOrder);
             ASSERT_EQ(state.VisualToDataset(kRows - 1), 0) << "test setup: bottom row is dataset 0";
-            const interstice::ID bottom = state.RowIDForIndex(0);
+            const tachyon::ID bottom = state.RowIDForIndex(0);
             EXPECT_EQ(state.selectedRowID, bottom);
             EXPECT_EQ(multi.selectedIDs.size(), 1u);
             EXPECT_EQ(multi.selectedIDs.count(bottom), 1u);
@@ -1208,8 +1208,8 @@ namespace interstice
         // (onto whatever data row then sits there) when rows are added again.
         TEST_F(TableVirtualScrollTest, SelectionPastTheEndIsDroppedWhenRowsShrink)
         {
-            interstice::TableState state{};
-            interstice::MultiSelectState multi{};
+            tachyon::TableState state{};
+            tachyon::MultiSelectState multi{};
             auto pin = [&]{ PinViewport(state); };
             app.Frame([&]{ Emit(state, 50); pin(); });
             state.selectedRowID = state.RowIDForIndex(40);
@@ -1217,16 +1217,16 @@ namespace interstice
             state.multiSelect   = &multi;
 
             app.Frame([&]{ Emit(state, 10); pin(); });
-            EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
+            EXPECT_EQ(state.selectedRowID, tachyon::ID::Invalid());
             EXPECT_EQ(multi.selectedIDs.size(), 1u) << "row 5 still exists; row 40 does not";
 
             app.Frame([&]{ Emit(state, 50); pin(); });
-            EXPECT_EQ(state.selectedRowID, interstice::ID::Invalid());
+            EXPECT_EQ(state.selectedRowID, tachyon::ID::Invalid());
         }
 
         // Begin a column drag on column `col` (press + move past the threshold).
-        static void BeginColumnDrag(HeadlessGUIApp& app, interstice::TableState& state,
-                                    std::vector<interstice::VirtualTableColumn>& columns, int col,
+        static void BeginColumnDrag(HeadlessGUIApp& app, tachyon::TableState& state,
+                                    std::vector<tachyon::VirtualTableColumn>& columns, int col,
                                     const std::function<void()>& emit)
         {
             const auto r = app.elementStorage.GetElementRectUnsafe(columns[size_t(col)].internal.headerRef).rect;
@@ -1234,14 +1234,14 @@ namespace interstice
             app.InjectMouseMove(c);
             app.InjectMouseDown(c);
             app.Frame(emit);
-            app.InjectMouseMove(int2{ c.x - 40, c.y }, interstice::MouseButtons::Left);
+            app.InjectMouseMove(int2{ c.x - 40, c.y }, tachyon::MouseButtons::Left);
             app.Frame(emit);
             (void)state;
         }
 
         TEST_F(TableVirtualScrollTest, ColumnDragIsCancelledWhenItsColumnDisappears)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int) {};
             auto pin  = [&]{ PinViewport(state); };
             auto emit = [&]{ Emit(state); pin(); };
@@ -1257,7 +1257,7 @@ namespace interstice
 
         TEST_F(TableVirtualScrollTest, ColumnDragIsCancelledAfterTheTableWasHidden)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
             state.onReorderColumns = [](int, int) {};
             auto pin  = [&]{ PinViewport(state); };
             auto emit = [&]{ Emit(state); pin(); };
@@ -1278,12 +1278,12 @@ namespace interstice
 
         TEST_F(TableVirtualScrollTest, SortAscendingBuildsPermutationAndKeepsSelection)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
 
             // Dataset whose index order isn't its sorted order.
             std::vector<int> data = { 30, 10, 50, 20, 40 };
 
-            std::vector<interstice::VirtualTableColumn> sortedColumns;
+            std::vector<tachyon::VirtualTableColumn> sortedColumns;
             sortedColumns.push_back({
                 .column = { .header = "V", .initialWidth = 200, .minWidth = 60, .maxWidth = 400 },
                 .generateCell  = [this, &data](int r) {
@@ -1294,7 +1294,7 @@ namespace interstice
 
             auto emitSorted = [&]{
                 app.BeginRootWindow();
-                std::span<interstice::VirtualTableColumn> sp(sortedColumns.data(), sortedColumns.size());
+                std::span<tachyon::VirtualTableColumn> sp(sortedColumns.data(), sortedColumns.size());
                 app.VirtualTable(tableID, state, sp, int(data.size()), 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 300));
@@ -1310,7 +1310,7 @@ namespace interstice
 
             // Select the data row whose value is 50 (dataset index 2).
             state.selectedRowID = state.RowIDForIndex(2);
-            ASSERT_NE(state.selectedRowID, interstice::ID::Invalid());
+            ASSERT_NE(state.selectedRowID, tachyon::ID::Invalid());
 
             // Frame 2: sort ascending. Visual order [1, 3, 0, 4, 2]: position 4 holds
             // dataset row 2 (value 50).
@@ -1350,9 +1350,9 @@ namespace interstice
         // ---------------------------------------------------------------
         TEST_F(TableVirtualScrollTest, ColumnWithoutSortLambdaDoesNotBuildPermutation)
         {
-            interstice::TableState state{};
+            tachyon::TableState state{};
 
-            std::vector<interstice::VirtualTableColumn> noLambdaCols;
+            std::vector<tachyon::VirtualTableColumn> noLambdaCols;
             noLambdaCols.push_back({
                 .column = { .header = "X", .initialWidth = 200, .minWidth = 60, .maxWidth = 400, .sortable = true },
                 .generateCell = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "%d", r); app.Cell(b); },
@@ -1363,7 +1363,7 @@ namespace interstice
             state.sortDescending = true;
             app.Frame([&]{
                 app.BeginRootWindow();
-                std::span<interstice::VirtualTableColumn> sp(noLambdaCols.data(), noLambdaCols.size());
+                std::span<tachyon::VirtualTableColumn> sp(noLambdaCols.data(), noLambdaCols.size());
                 app.VirtualTable(tableID, state, sp, 10, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 300));
@@ -1383,7 +1383,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, TreeCellPopulatesHasChildrenForBranches)
         {
             bool branchOpen = true;
-            std::vector<interstice::VirtualTableColumn> cols;
+            std::vector<tachyon::VirtualTableColumn> cols;
             cols.push_back({ { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 },
                              [&](int r) {
                                  if (r == 0)
@@ -1394,11 +1394,11 @@ namespace interstice
                                                   IconID::Invalid, 0, true, nullptr);
                              } });
 
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state, /*xOverflow*/false, /*yOverflow*/false); };
             auto emit = [&]{
                 app.BeginRootWindow();
-                std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
+                std::span<tachyon::VirtualTableColumn> sp(cols.data(), cols.size());
                 app.VirtualTable(tableID, state, sp, 2, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 200));
@@ -1408,8 +1408,8 @@ namespace interstice
             app.Frame([&]{ emit(); pin(); });
             app.Frame([&]{ emit(); pin(); });
 
-            const interstice::ID branchID = state.RowIDForIndex(0);
-            const interstice::ID leafID   = state.RowIDForIndex(1);
+            const tachyon::ID branchID = state.RowIDForIndex(0);
+            const tachyon::ID leafID   = state.RowIDForIndex(1);
             const auto* branchInfo = state.FindTreeRow(branchID);
             const auto* leafInfo   = state.FindTreeRow(leafID);
             ASSERT_NE(branchInfo, nullptr);
@@ -1421,7 +1421,7 @@ namespace interstice
         TEST_F(TableVirtualScrollTest, TreeCellIconDoubleClickTogglesBranch)
         {
             bool branchOpen = false;
-            std::vector<interstice::VirtualTableColumn> cols;
+            std::vector<tachyon::VirtualTableColumn> cols;
             cols.push_back({ { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600 },
                              [&](int r) {
                                  (void)r;
@@ -1430,11 +1430,11 @@ namespace interstice
                                               app.theme.sortArrowDownIcon, 0, true, nullptr);
                              } });
 
-            interstice::TableState state{};
+            tachyon::TableState state{};
             auto pin = [&]{ PinViewport(state, false, false); };
             auto emit = [&]{
                 app.BeginRootWindow();
-                std::span<interstice::VirtualTableColumn> sp(cols.data(), cols.size());
+                std::span<tachyon::VirtualTableColumn> sp(cols.data(), cols.size());
                 app.VirtualTable(tableID, state, sp, 1, 0,
                                  app.theme.tableStyleRef,
                                  LayoutOverride{}.Size(400, 200));
@@ -1445,7 +1445,7 @@ namespace interstice
             app.Frame([&]{ emit(); pin(); });
 
             // Icon x: depth-0 indent (0) + arrow (20) + ~8 px into the icon.
-            const interstice::ID rowID = state.RowIDForIndex(0);
+            const tachyon::ID rowID = state.RowIDForIndex(0);
             const auto rowRect = app.GetElementRect(rowID);
             const int2 iconCenter{ rowRect.x + 20 + 8, rowRect.y + rowRect.h / 2 };
 
@@ -1462,12 +1462,12 @@ namespace interstice
     
         // A resizable column's sizer takes the hover (it highlights like other dividers),
         // rather than the header cell under it.
-        std::vector<interstice::ID> SelectionBars(const HeadlessGUIApp& app)
+        std::vector<tachyon::ID> SelectionBars(const HeadlessGUIApp& app)
         {
-            std::vector<interstice::ID> bars;
+            std::vector<tachyon::ID> bars;
             const auto& storage = app.elementStorage;
             for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
-                for (const interstice::Element& e : it->GetChildren(storage))
+                for (const tachyon::Element& e : it->GetChildren(storage))
                     if (e.styleRef.visualBoxStyleIndex == app.theme.tableRowBarStyleRef.visualBoxStyleIndex
                         && e.styleRef.layoutStyleIndex == app.theme.tableRowBarStyleRef.layoutStyleIndex)
                         bars.push_back(e.id);
@@ -1477,14 +1477,14 @@ namespace interstice
         // With selectionBar on, a selected row has an accent bar on its left, over its cells.
         TEST_F(TableVirtualScrollTest, ASelectedRowHasAnAccentBar)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             state.selectionBar = true;
             app.Frame([&] { Emit(state); });
             state.selectedRowID = state.RowIDInRange(3);
-            ASSERT_NE(state.selectedRowID, interstice::ID::Invalid());
+            ASSERT_NE(state.selectedRowID, tachyon::ID::Invalid());
             app.Frame([&] { Emit(state); });
 
-            const std::vector<interstice::ID> bars = SelectionBars(app);
+            const std::vector<tachyon::ID> bars = SelectionBars(app);
             ASSERT_EQ(bars.size(), 1u) << "one bar, on the selected row";
 
             const IntRect bar = app.GetElementRect(bars[0]);
@@ -1497,7 +1497,7 @@ namespace interstice
 
         TEST_F(TableVirtualScrollTest, TablesHaveNoSelectionBarByDefault)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             app.Frame([&] { Emit(state); });
             state.selectedRowID = state.RowIDInRange(3);
             app.Frame([&] { Emit(state); });
@@ -1507,7 +1507,7 @@ namespace interstice
         // A table's own row style replaces the striped pair on every row.
         TEST_F(TableVirtualScrollTest, ARowStyleReplacesTheStripes)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             state.rowStyle = app.theme.tableRowBarStyleRef;   // any style will do
             app.Frame([&] { Emit(state); });
             for (int row : { 0, 1 })
@@ -1521,9 +1521,9 @@ namespace interstice
 
         TEST_F(TableVirtualScrollTest, AColumnSizerTakesTheHover)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             app.Frame([&] { Emit(state); });
-            const interstice::ID sizer = columns[0].internal.sizerID;
+            const tachyon::ID sizer = columns[0].internal.sizerID;
             ASSERT_TRUE(app.HasElement(sizer));
             // The sizer runs the table's full height; hover it in the header.
             const IntRect sizerRect = app.GetElementRect(sizer);
@@ -1536,10 +1536,10 @@ namespace interstice
         // A column sizer runs the table's full height, not a sliver at its top.
         TEST_F(TableVirtualScrollTest, AColumnSizerRunsTheTablesHeight)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             app.Frame([&] { Emit(state); });
             app.Frame([&] { Emit(state); });
-            const interstice::ID sizer = columns[0].internal.sizerID;
+            const tachyon::ID sizer = columns[0].internal.sizerID;
             ASSERT_TRUE(app.HasElement(sizer));
             const IntRect sizerRect  = app.GetElementRect(sizer);
             const IntRect headerRect = app.GetElementRect(app.elementStorage.GetElementUnsafe(columns[0].internal.headerRef).id);
@@ -1553,7 +1553,7 @@ namespace interstice
         // Filling its panel, the table stays inside it and scrolls.
         TEST_F(TableVirtualScrollTest, AManyRowTableFillingItsPanelStaysInsideIt)
         {
-            interstice::TableState state;
+            tachyon::TableState state;
             const IntRect table = EmitInPane(state, app.theme.tableFillStyleRef, LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
             const IntRect pane  = app.GetElementRect(paneID);
             EXPECT_GT(table.h, 100);
@@ -1561,4 +1561,4 @@ namespace interstice
             EXPECT_LE(table.y + table.h, pane.y + pane.h);
         }
 } // namespace
-} // namespace interstice
+} // namespace tachyon

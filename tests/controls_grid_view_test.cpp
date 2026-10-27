@@ -10,7 +10,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_controls/subsystems/gui_subsystem_state.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -29,7 +29,7 @@ namespace interstice
             void TearDown() override { app.Cleanup(); }
 
             std::vector<ID> EmitGrid(int n, int& selectedIndex,
-                                     interstice::MultiSelectState* multi = nullptr)
+                                     tachyon::MultiSelectState* multi = nullptr)
             {
                 std::vector<ID> ids;
                 ids.reserve(n);
@@ -208,7 +208,7 @@ namespace interstice
         TEST_F(ControlsGridViewTest, PlainClickWithMultiSelectClearsAndInsertsOne)
         {
             int sel = 0;
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             multi.selectedIDs = { ids[0], ids[1] };
@@ -224,7 +224,7 @@ namespace interstice
         TEST_F(ControlsGridViewTest, SingleCtrlClickInsertsItem)
         {
             int sel = 0;
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             app.ClickAt(app.CenterOf(ids[1]), MouseButtons::Left, KeyModifier::Control);
@@ -237,7 +237,7 @@ namespace interstice
         TEST_F(ControlsGridViewTest, CtrlClickAccumulatesAcrossClicks)
         {
             int sel = 0;
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             auto ids = EmitGrid(4, sel, &multi);
 
             app.ClickAt(app.CenterOf(ids[0]), MouseButtons::Left, KeyModifier::Control);
@@ -257,7 +257,7 @@ namespace interstice
         TEST_F(ControlsGridViewTest, ShiftClickExtendsRangeFromAnchor)
         {
             int sel = 0;
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             auto ids = EmitGrid(5, sel, &multi);
 
             // Anchor at item 1.
@@ -285,7 +285,7 @@ namespace interstice
         class GridViewRenameTest : public ControlsGridViewTest
         {
         protected:
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             std::vector<std::string> names = { "alpha", "beta", "gamma", "delta" };
             std::vector<ID> ids;
 
@@ -419,7 +419,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::GridViewVirtualState vstate{};
+            tachyon::GridViewVirtualState vstate{};
             int paneW = 600;
 
             void SetUp() override { ASSERT_TRUE(app.Initialize()); }
@@ -457,8 +457,8 @@ namespace interstice
                                       app.theme.flexFillColStyleRef,
                                       LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
                     app.VirtualGridView(app.idManager.AllocateDynamicID("grid"), vstate,
-                                        /*itemCount*/5, interstice::int2{ 80, 80 },
-                                        [&](int, interstice::ID itemID) {
+                                        /*itemCount*/5, tachyon::int2{ 80, 80 },
+                                        [&](int, tachyon::ID itemID) {
                                             const int w = std::max(80, int(vstate.cellStretchedW));
                                             app.GridViewItem(itemID, "file_with_a_long_name.txt", ElementState::None,
                                                              nullptr,
@@ -536,10 +536,10 @@ namespace interstice
         class VirtualGridRenameTest : public GridViewShrinkTest
         {
         protected:
-            interstice::ID gridID{};
-            interstice::MultiSelectState multi{};
+            tachyon::ID gridID{};
+            tachyon::MultiSelectState multi{};
             std::vector<std::string> names = { "alpha", "beta", "gamma", "delta" };
-            std::vector<interstice::ID> itemIDs = std::vector<interstice::ID>(4, interstice::ID::Invalid());
+            std::vector<tachyon::ID> itemIDs = std::vector<tachyon::ID>(4, tachyon::ID::Invalid());
             ItemDragDropConfig* dragDrop = nullptr;
 
             void SetUp() override
@@ -554,8 +554,8 @@ namespace interstice
                     app.BeginRootWindow();
                     app.BeginArea(app.idManager.AllocateDynamicID("gridPane"), app.theme.emptyVertStyleRef,
                                   LayoutOverride{}.Size(420, 220));
-                    app.VirtualGridView(gridID, vstate, int(names.size()), interstice::int2{ 100, 50 },
-                                        [&](int idx, interstice::ID itemID) {
+                    app.VirtualGridView(gridID, vstate, int(names.size()), tachyon::int2{ 100, 50 },
+                                        [&](int idx, tachyon::ID itemID) {
                                             itemIDs[size_t(idx)] = itemID;
                                             app.GridViewItem(itemID, names[size_t(idx)], ElementState::None,
                                                              &names[size_t(idx)], StyleRef{}, LayoutOverride{}.Size(100, 50));
@@ -586,8 +586,8 @@ namespace interstice
         {
             ItemDragDropConfig dnd;
             dnd.payloadType = 44;
-            dnd.getPayload  = [](interstice::ID) -> uintptr_t { return 0; };
-            dnd.onDrop      = [](uintptr_t, interstice::ID) {};
+            dnd.getPayload  = [](tachyon::ID) -> uintptr_t { return 0; };
+            dnd.onDrop      = [](uintptr_t, tachyon::ID) {};
             dragDrop = &dnd;
             GridFrame();
             GridFrame();
@@ -614,11 +614,11 @@ namespace interstice
         {
         protected:
             static constexpr int kItems = 120;
-            interstice::ID gridID{};
+            tachyon::ID gridID{};
             int selected = 0;
-            interstice::MultiSelectState multi{};
+            tachyon::MultiSelectState multi{};
             bool useMulti = false;
-            std::vector<interstice::ID> itemIDs = std::vector<interstice::ID>(kItems, interstice::ID::Invalid());
+            std::vector<tachyon::ID> itemIDs = std::vector<tachyon::ID>(kItems, tachyon::ID::Invalid());
 
             void SetUp() override
             {
@@ -635,8 +635,8 @@ namespace interstice
                     app.BeginArea(app.idManager.AllocateDynamicID("gridPane"),
                                   app.theme.emptyVertStyleRef,
                                   LayoutOverride{}.Size(420, 220));
-                    app.VirtualGridView(gridID, vstate, kItems, interstice::int2{ 100, 50 },
-                                        [&](int idx, interstice::ID itemID) {
+                    app.VirtualGridView(gridID, vstate, kItems, tachyon::int2{ 100, 50 },
+                                        [&](int idx, tachyon::ID itemID) {
                                             itemIDs[size_t(idx)] = itemID;
                                             app.GridViewItem(itemID, "item",
                                                              ElementState::None, nullptr,
@@ -661,7 +661,7 @@ namespace interstice
                 return n;
             }
 
-            void Press(interstice::KeyCode key)
+            void Press(tachyon::KeyCode key)
             {
                 app.guiStateManager.Interaction().SetFocusID(gridID);
                 app.InjectKey(key);
@@ -676,7 +676,7 @@ namespace interstice
             const int cols = ItemsInFirstRow();
             ASSERT_GT(cols, 0);
             selected = 0;
-            Press(interstice::KeyCode::Down);
+            Press(tachyon::KeyCode::Down);
             EXPECT_EQ(selected, cols) << "Down must land straight below, not diagonally";
         }
 
@@ -685,7 +685,7 @@ namespace interstice
             for (int i = 0; i < 3; ++i) GridFrame();
             selected = 0;
             for (int i = 0; i < 12; ++i)
-                Press(interstice::KeyCode::Down);
+                Press(tachyon::KeyCode::Down);
 
             ASSERT_GT(selected, 20);
             ASSERT_TRUE(app.HasElement(itemIDs[size_t(selected)])) << "selected item was virtualized away";
@@ -705,7 +705,7 @@ namespace interstice
 
             // Scroll far enough that item 0 is no longer emitted.
             auto& sm = app.guiStateManager.GetScrollManagement();
-            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(gridID), interstice::int2{ 0, -1200 });
+            sm.SetScrollOffset(sm.GetOrCreateScrollOffsetHandle(gridID), tachyon::int2{ 0, -1200 });
             GridFrame();
             GridFrame();
             ASSERT_FALSE(app.HasElement(itemIDs[0]));
@@ -731,4 +731,4 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon

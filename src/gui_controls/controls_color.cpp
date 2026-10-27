@@ -46,43 +46,43 @@ namespace
 
 
     // Create a horizontal linear gradient ColorStyle from two endpoint colors.
-    void SetGradientStyle2(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
-                           interstice::color4f c0, interstice::color4f c1)
+    void SetGradientStyle2(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx,
+                           tachyon::color4f c0, tachyon::color4f c1)
     {
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(c0, c1, interstice::ColorType::LinearGradient);
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(c0, c1, tachyon::ColorType::LinearGradient);
         // Rotate 90 degrees so gradient goes left->right instead of top->bottom
-        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0));
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        cs.SetTransformation(tachyon::float3(0, 1, 0), tachyon::float3(1, 0, 0));
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
     }
 
     // Create a horizontal multi-stop gradient for the hue slider.
-    void SetHueGradientStyleHorizontal(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx)
+    void SetHueGradientStyleHorizontal(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx)
     {
-        interstice::Gradient g;
-        g.type = interstice::GradientType::Linear;
+        tachyon::Gradient g;
+        g.type = tachyon::GradientType::Linear;
         constexpr float hues[] = { 0.0f, 1.0f/6, 2.0f/6, 3.0f/6, 4.0f/6, 5.0f/6, 1.0f };
         for (int i = 0; i < 7; i++)
         {
-            auto [r, gb, b] = interstice::ColorConvert::HSVtoRGB(hues[i], 1.0f, 1.0f);
-            g.AddStop(interstice::color4f{r, gb, b, 1.0f}, hues[i]);
+            auto [r, gb, b] = tachyon::ColorConvert::HSVtoRGB(hues[i], 1.0f, 1.0f);
+            g.AddStop(tachyon::color4f{r, gb, b, 1.0f}, hues[i]);
         }
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
-        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(g, tachyon::ColorType::LinearGradient);
+        cs.SetTransformation(tachyon::float3(0, 1, 0), tachyon::float3(1, 0, 0)); // horizontal
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
     }
 
     // Create a 4-corner InterpolatedBox color style.
-    void SetQuadColorStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
-                           interstice::color4f c0, interstice::color4f c1, interstice::color4f c2, interstice::color4f c3)
+    void SetQuadColorStyle(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx,
+                           tachyon::color4f c0, tachyon::color4f c1, tachyon::color4f c2, tachyon::color4f c3)
     {
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(c0, c1, c2, c3, interstice::ColorType::InterpolatedBox);
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(c0, c1, c2, c3, tachyon::ColorType::InterpolatedBox);
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -91,19 +91,19 @@ namespace
 
     // Create a horizontal multi-stop gradient by sampling a lambda at N points.
     template <typename Fn>
-    void SetSampledGradient(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx,
+    void SetSampledGradient(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx,
                             Fn&& sampleFn, int numStops = 8)
     {
-        interstice::Gradient g;
-        g.type = interstice::GradientType::Linear;
+        tachyon::Gradient g;
+        g.type = tachyon::GradientType::Linear;
         for (int i = 0; i < numStops; i++)
         {
             float t = float(i) / float(numStops - 1);
             g.AddStop(sampleFn(t), t);
         }
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(g, interstice::ColorType::LinearGradient);
-        cs.SetTransformation(interstice::float3(0, 1, 0), interstice::float3(1, 0, 0)); // horizontal
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(g, tachyon::ColorType::LinearGradient);
+        cs.SetTransformation(tachyon::float3(0, 1, 0), tachyon::float3(1, 0, 0)); // horizontal
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);
@@ -111,7 +111,7 @@ namespace
 }
 
 
-namespace interstice
+namespace tachyon
 {
 
     // ---------------------------------------------------------------------------
@@ -979,7 +979,7 @@ namespace interstice
         auto& opaqueStyle = m_colorPickerSub->ClaimSwatchStyle(opaqueID);
         SetColorStyle(styleManager, opaqueStyle, color4f{ value.r, value.g, value.b, 1.0f });
         const ElementRef swatchRef = RegisterControl(
-            interstice::Element
+            tachyon::Element
             {
                 .id = swatchID,
                 // Captures a copy: handlers run after this returns, and `value` may be a temporary.

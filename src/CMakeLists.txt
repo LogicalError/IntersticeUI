@@ -211,8 +211,8 @@ list(APPEND GUI_FILES
 )
 
 # Create GUI static library
-# The SDL window backend and clipboard (INTERSTICE_SDL).
-if(INTERSTICE_SDL)
+# The SDL window backend and clipboard (TACHYON_SDL).
+if(TACHYON_SDL)
   list(APPEND GUI_FILES
     gui_core/windows/sdl/gui_window_backend_sdl_vulkan.cpp
     gui_core/windows/sdl/gui_window_backend_sdl_vulkan.h
@@ -239,14 +239,14 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. FILES ${GUI_FILES})
 target_link_libraries(gui_core
   PUBLIC  vma Vulkan::Headers
   PRIVATE Vulkan::Vulkan vkbootstrap skribidi nanosvg)
-if(INTERSTICE_SDL)
+if(TACHYON_SDL)
   target_link_libraries(gui_core PRIVATE SDL3::SDL3)
   if(APPLE)   # the cursor size from the universal-access preferences
     target_link_libraries(gui_core PRIVATE "-framework CoreFoundation")
   endif()
 endif()
 # PUBLIC, so a host can tell whether the SDL backend is there.
-target_compile_definitions(gui_core PUBLIC INTERSTICE_SDL=$<BOOL:${INTERSTICE_SDL}>)
+target_compile_definitions(gui_core PUBLIC TACHYON_SDL=$<BOOL:${TACHYON_SDL}>)
 
 #target_precompile_headers(gui_core PUBLIC <optional> <string> <vector> <unordered_map> <memory> )
 
@@ -343,13 +343,13 @@ list(APPEND GUI_CONTROLS_FILES
 add_library(gui_controls STATIC ${GUI_CONTROLS_FILES})
 
 # The same names as the installed package, for a host that adds this project.
-add_library(IntersticeUI::gui_core ALIAS gui_core)
-add_library(IntersticeUI::gui_controls ALIAS gui_controls)
+add_library(TachyonUI::gui_core ALIAS gui_core)
+add_library(TachyonUI::gui_controls ALIAS gui_controls)
 
 # Where GUIApplication::SetResourceRoot finds the resources in this build; the
 # installed package defines it for its own folder.
 target_compile_definitions(gui_controls INTERFACE
-  $<BUILD_INTERFACE:INTERSTICE_RESOURCE_DIR="${INTERSTICE_BUILD_RESOURCE_DIR}">)
+  $<BUILD_INTERFACE:TACHYON_RESOURCE_DIR="${TACHYON_BUILD_RESOURCE_DIR}">)
 
 target_include_directories(gui_controls PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -359,15 +359,15 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. FILES ${GUI_CONTROLS_FILES})
 target_link_libraries(gui_controls PUBLIC gui_core)
 
 
-interstice_apply_compile_options(gui_core)
-option(INTERSTICE_VMA_IMPLEMENTATION "Compile VMA's implementation into gui_core; off when the host links its own VMA" ON)
-target_compile_definitions(gui_core PRIVATE INTERSTICE_VMA_IMPLEMENTATION=$<BOOL:${INTERSTICE_VMA_IMPLEMENTATION}>)
-interstice_apply_compile_options(gui_controls)
-interstice_precompile_headers(gui_core <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector>)
-interstice_precompile_headers(gui_controls <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector> <gui_controls/gui_application.h>)
+tachyon_apply_compile_options(gui_core)
+option(TACHYON_VMA_IMPLEMENTATION "Compile VMA's implementation into gui_core; off when the host links its own VMA" ON)
+target_compile_definitions(gui_core PRIVATE TACHYON_VMA_IMPLEMENTATION=$<BOOL:${TACHYON_VMA_IMPLEMENTATION}>)
+tachyon_apply_compile_options(gui_controls)
+tachyon_precompile_headers(gui_core <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector>)
+tachyon_precompile_headers(gui_controls <algorithm> <array> <cmath> <functional> <memory> <span> <string> <string_view> <unordered_map> <unordered_set> <vector> <gui_controls/gui_application.h>)
 set_target_properties(gui_core gui_controls PROPERTIES FOLDER "Core")
 
-if(INTERSTICE_BUILD_DEMO)
+if(TACHYON_BUILD_DEMO)
   # Demo executable - links against gui_controls (which transitively links gui_core)
   list(APPEND DEMO_FILES
     demo/main.cpp
@@ -401,10 +401,10 @@ if(INTERSTICE_BUILD_DEMO)
 
   target_link_libraries(demo PUBLIC gui_controls)
 
-  interstice_apply_compile_options(demo)
-  interstice_precompile_headers(demo <gui_controls/gui_application.h>)
+  tachyon_apply_compile_options(demo)
+  tachyon_precompile_headers(demo <gui_controls/gui_application.h>)
 
   set_target_properties(demo PROPERTIES FOLDER "Examples")
 
-  interstice_copy_runtime_dlls(demo)
+  tachyon_copy_runtime_dlls(demo)
 endif()

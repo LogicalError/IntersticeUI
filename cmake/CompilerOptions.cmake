@@ -2,7 +2,7 @@
 # Third-party targets keep whatever flags their own build systems select.
 #
 # MSVC Release-mode choices aim for debuggable/profileable builds:
-#   /GL + /LTCG   - whole-program optimisation, only with INTERSTICE_LTCG: it makes
+#   /GL + /LTCG   - whole-program optimisation, only with TACHYON_LTCG: it makes
 #                   every link redo code generation, and /GL objects in the
 #                   installed libraries force /LTCG and the exact compiler version
 #                   on consumers
@@ -12,18 +12,18 @@
 #   /DEBUG        - linker: keep emitting the PDB
 #   /OPT:REF,ICF  - linker: still strip unused and fold duplicate COMDATs despite /DEBUG
 
-option(INTERSTICE_LTCG "Whole-program optimisation (/GL + /LTCG) in Release" OFF)
-option(INTERSTICE_PRECOMPILED_HEADERS "Precompile the headers most sources include" ON)
+option(TACHYON_LTCG "Whole-program optimisation (/GL + /LTCG) in Release" OFF)
+option(TACHYON_PRECOMPILED_HEADERS "Precompile the headers most sources include" ON)
 
 # Precompiles headers most of the target's sources include. Turn the option off
 # to check that every file includes what it uses.
-function(interstice_precompile_headers target)
-  if(INTERSTICE_PRECOMPILED_HEADERS)
+function(tachyon_precompile_headers target)
+  if(TACHYON_PRECOMPILED_HEADERS)
     target_precompile_headers(${target} PRIVATE ${ARGN})
   endif()
 endfunction()
 
-function(interstice_apply_compile_options target)
+function(tachyon_apply_compile_options target)
   if(MSVC)
     target_compile_options(${target} PRIVATE
       /MP
@@ -53,7 +53,7 @@ function(interstice_apply_compile_options target)
       $<$<CONFIG:Debug>:/Ob0>
       $<$<CONFIG:Debug>:/RTC1>
 
-      $<$<AND:$<CONFIG:Release>,$<BOOL:${INTERSTICE_LTCG}>>:/GL>
+      $<$<AND:$<CONFIG:Release>,$<BOOL:${TACHYON_LTCG}>>:/GL>
       $<$<CONFIG:Release>:/Zi>
       $<$<CONFIG:Release>:/Zo>
       $<$<CONFIG:Release>:/d2Zi+>
@@ -73,7 +73,7 @@ function(interstice_apply_compile_options target)
       # binary (scroll keys mismatch -> tables reset). Clean links stay consistent.
       $<$<CONFIG:Debug>:/INCREMENTAL:NO>
 
-      $<$<AND:$<CONFIG:Release>,$<BOOL:${INTERSTICE_LTCG}>>:/LTCG>
+      $<$<AND:$<CONFIG:Release>,$<BOOL:${TACHYON_LTCG}>>:/LTCG>
       $<$<CONFIG:Release>:/DEBUG>
       $<$<CONFIG:Release>:/OPT:REF>
       $<$<CONFIG:Release>:/OPT:ICF>
@@ -98,7 +98,7 @@ endfunction()
 
 # Copies a program's runtime DLLs (SDL3) next to it so it can be launched. A
 # build without SDL has none, and copy_if_different fails on an empty list.
-function(interstice_copy_runtime_dlls target)
+function(tachyon_copy_runtime_dlls target)
   set(dlls "$<TARGET_RUNTIME_DLLS:${target}>")
   add_custom_command(TARGET ${target} POST_BUILD
     COMMAND "$<$<BOOL:${dlls}>:${CMAKE_COMMAND};-E;copy_if_different;${dlls};$<TARGET_FILE_DIR:${target}>>"

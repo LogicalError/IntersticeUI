@@ -4,7 +4,7 @@
 #include <span>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     struct int2;
     struct IntRect;
@@ -93,4 +93,4 @@ namespace interstice
                                      GridPlacement* outPlacement = nullptr);
     };
 
-} // namespace interstice
+} // namespace tachyon

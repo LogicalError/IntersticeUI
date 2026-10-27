@@ -7,7 +7,7 @@
 #include <charconv>
 #include <utility>
 
-namespace interstice
+namespace tachyon
 {
     // ---- Factory helpers ----------------------------------------------------
 
@@ -619,4 +619,4 @@ namespace interstice
         return result;
     }
 
-} // namespace interstice
+} // namespace tachyon

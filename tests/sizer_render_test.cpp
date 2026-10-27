@@ -3,7 +3,7 @@
 #include "headless_gui_app.h"
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
     

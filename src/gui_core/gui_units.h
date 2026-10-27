@@ -3,7 +3,7 @@
 #include <compare>
 #include <stdint.h>
 
-namespace interstice
+namespace tachyon
 {
     /// A size in CSS px. Sizes in the API are CSS px: the library scales them by the UI scale,
     /// as it does the stylesheet's. Positions, and sizes the library measured or computed,

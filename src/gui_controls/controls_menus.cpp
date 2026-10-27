@@ -10,7 +10,7 @@
 #include <string>
 #include <chrono>
 
-namespace interstice
+namespace tachyon
 {
 
     // ---------------------------------------------------------------------------
@@ -22,7 +22,7 @@ namespace interstice
     {
         const int32_t borderWidth = application.styleManager.Px(1);
         const int32_t buttonWidth = std::max(0, windowWidth - borderWidth * 2);
-        application.RegisterElement(interstice::Element{
+        application.RegisterElement(tachyon::Element{
             .id = id,
             .eventHandler = [&application, windowID = windowID](ElementEvent&& event) -> bool {
                 if (event.type == EventType::MouseDown && event.state.LeftPressed()) {
@@ -44,7 +44,7 @@ namespace interstice
     {
         const int32_t borderWidth = application.styleManager.Px(1);
         const int32_t buttonWidth = std::max(0, windowWidth - borderWidth * 2);
-        application.RegisterElement(interstice::Element{
+        application.RegisterElement(tachyon::Element{
                 .id = id,
                 .eventHandler = [&application, windowID = windowID](ElementEvent&& event) -> bool {
                     if (event.type == EventType::MouseDown && event.state.LeftPressed()) {
@@ -131,8 +131,8 @@ namespace interstice
         const IconID arrow = isMenuBar ? IconID::Invalid
                            : open      ? application.theme.dropdownArrowUpIcon : application.theme.dropdownArrowIcon;
         if (open) application.guiStateManager.Construction().PushSelected();
-        application.RegisterControl(interstice::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
-                            [&application, arrow, text](interstice::Element& element) {
+        application.RegisterControl(tachyon::Element{ .id = menuID, .eventHandler = std::move(handler), .styleRef = buttonStyle },
+                            [&application, arrow, text](tachyon::Element& element) {
                                 return application.textSystem->RegisterText(element.id, arrow, text, element.styleRef, element.state);
                             },
                             std::move(constraints));
@@ -148,9 +148,9 @@ namespace interstice
 		    [[maybe_unused]]
             auto result =
             application.elementStorage.AddPostLayout(triggerRef,
-                [&triggerRects, menuID](interstice::PostLayoutContext& ctx)
+                [&triggerRects, menuID](tachyon::PostLayoutContext& ctx)
                 {
-                    const interstice::IntRect r = ctx.ElementRect();
+                    const tachyon::IntRect r = ctx.ElementRect();
                     if (r.w > 0 && r.h > 0) triggerRects.insert_or_assign(menuID, r);
                 });
         }
@@ -258,21 +258,21 @@ namespace interstice
     }
 
 
-    interstice::ElementRef GUIApplication::MenuItemRow(ID id, interstice::EventHandler handler, StyleRef rowStyle,
+    tachyon::ElementRef GUIApplication::MenuItemRow(ID id, tachyon::EventHandler handler, StyleRef rowStyle,
                                                 bool reserveIcon, IconID icon, std::string_view text,
                                                 std::string_view trailing, StyleRef trailingStyle,
                                                 LayoutOverride&& constraints, bool destructive)
     {
-        const interstice::ElementState rowState = guiStateManager.GetCurrentState(id);
-        const bool selected = (rowState & interstice::ElementState::Selected) != interstice::ElementState::None;
+        const tachyon::ElementState rowState = guiStateManager.GetCurrentState(id);
+        const bool selected = (rowState & tachyon::ElementState::Selected) != tachyon::ElementState::None;
 
-        interstice::Element row{};
+        tachyon::Element row{};
         row.id           = id;
         row.eventHandler = std::move(handler);
         row.styleRef     = rowStyle;
         row.state        = rowState;
         // The row is the focusable control; its children are non-interactive.
-        interstice::ElementRef rowRef = RegisterControl(std::move(row), std::move(constraints));
+        tachyon::ElementRef rowRef = RegisterControl(std::move(row), std::move(constraints));
 
         VERIFY(elementStorage.BeginChildren());
 
@@ -281,41 +281,41 @@ namespace interstice
         // checkmark here; otherwise the item's own icon, if any.
         if (reserveIcon)
         {
-            interstice::Element iconEl{};
+            tachyon::Element iconEl{};
             iconEl.id       = idManager.AllocateDynamicID();
-            iconEl.flags    = interstice::ElementFlags::NoInput;
+            iconEl.flags    = tachyon::ElementFlags::NoInput;
             iconEl.styleRef = destructive ? theme.menuItemDestructiveIconStyleRef : theme.menuItemIconStyleRef;
             if (selected)
                 RegisterControl(std::move(iconEl),
-                    [this](interstice::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
-                    interstice::LayoutOverride{});
+                    [this](tachyon::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
+                    tachyon::LayoutOverride{});
             else
                 RegisterControl(std::move(iconEl),
-                    [this, icon](interstice::Element& e) { return textSystem->RegisterText(e.id, icon, std::string_view{}, e.styleRef, e.state); },
-                    interstice::LayoutOverride{});
+                    [this, icon](tachyon::Element& e) { return textSystem->RegisterText(e.id, icon, std::string_view{}, e.styleRef, e.state); },
+                    tachyon::LayoutOverride{});
         }
 
         // Label fills the row and pushes any trailing text to the right edge.
         {
-            interstice::Element labelEl{};
+            tachyon::Element labelEl{};
             labelEl.id       = idManager.AllocateDynamicID();
-            labelEl.flags    = interstice::ElementFlags::NoInput;
+            labelEl.flags    = tachyon::ElementFlags::NoInput;
             labelEl.styleRef = destructive ? theme.menuItemDestructiveLabelStyleRef : theme.menuItemLabelStyleRef;
             RegisterControl(std::move(labelEl),
-                [this, text](interstice::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
-                interstice::LayoutOverride{});
+                [this, text](tachyon::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
+                tachyon::LayoutOverride{});
         }
 
         // Trailing keyboard shortcut or submenu arrow, pinned right.
         if (!trailing.empty())
         {
-            interstice::Element trailEl{};
+            tachyon::Element trailEl{};
             trailEl.id       = idManager.AllocateDynamicID();
-            trailEl.flags    = interstice::ElementFlags::NoInput;
+            trailEl.flags    = tachyon::ElementFlags::NoInput;
             trailEl.styleRef = trailingStyle;
             RegisterControl(std::move(trailEl),
-                [this, trailing](interstice::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, trailing, e.styleRef, e.state); },
-                interstice::LayoutOverride{});
+                [this, trailing](tachyon::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, trailing, e.styleRef, e.state); },
+                tachyon::LayoutOverride{});
         }
 
         VERIFY(elementStorage.EndChildren());
@@ -439,15 +439,15 @@ namespace interstice
                 if (menuManager.currentDepth != -1)
                     return pos.MinWidth(Pixels{ kSubmenuFallbackMinWidth }).MaxHeight(Pixels{ workArea.h });
 
-                const interstice::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
+                const tachyon::IntRect* triggerRectPtr = m_menuRects->FindTriggerRect(menuID);
                 if (!triggerRectPtr)
                     return pos.MaxHeight(Pixels{ workArea.h }); // no button rect yet - safest is content-width
 
-                const interstice::IntRect& triggerRect = *triggerRectPtr;
+                const tachyon::IntRect& triggerRect = *triggerRectPtr;
                 bool sidePlacedLastFrame = false;
-                if (const interstice::IntRect* windowRectPtr = m_menuRects->FindWindowRect(menuID))
+                if (const tachyon::IntRect* windowRectPtr = m_menuRects->FindWindowRect(menuID))
                 {
-                    const interstice::IntRect& windowRect = *windowRectPtr;
+                    const tachyon::IntRect& windowRect = *windowRectPtr;
                     // Side-placed <=> the X ranges of the popup and the trigger button
                     // don't overlap. Below/above keeps them X-aligned.
                     const int32_t triggerLeft  = triggerRect.x;
@@ -476,9 +476,9 @@ namespace interstice
                     {
                         auto& windowRects = m_menuRects->WindowRects();
                         [[maybe_unused]] auto cdRes = elementStorage.AddPostLayout(windowElementRef,
-                            [&windowRects, menuID](interstice::PostLayoutContext& ctx)
+                            [&windowRects, menuID](tachyon::PostLayoutContext& ctx)
                             {
-                                const interstice::IntRect r = ctx.ElementRect();
+                                const tachyon::IntRect r = ctx.ElementRect();
                                 if (r.w > 0 && r.h > 0) windowRects.insert_or_assign(menuID, r);
                             });
                     }
@@ -531,7 +531,7 @@ namespace interstice
         auto& level = menuManager.levels[menuManager.currentDepth];
         ID fieldID = ID::Invalid();
         SearchField(idManager.AllocateDynamicID("menu_filter"), level.filter, theme.searchIcon,
-                    TextEditBehavior::ContinuousUpdate, interstice::LayoutOverride{}.NoShrink(), &fieldID);
+                    TextEditBehavior::ContinuousUpdate, tachyon::LayoutOverride{}.NoShrink(), &fieldID);
         // The filter takes the keyboard when the menu opens; holding the menu's active
         // slot keeps the first item from taking it.
         if (level.isOpen && level.activeItemID == ID::Invalid())
@@ -547,21 +547,21 @@ namespace interstice
     {
         if (menuManager.currentDepth >= 0 && menuManager.levels[menuManager.currentDepth].filtering)
             return;
-        Text(idManager.AllocateDynamicID("menu_header"), text, theme.menuHeaderStyleRef, interstice::LayoutOverride{}.NoGrow().NoShrink());
+        Text(idManager.AllocateDynamicID("menu_header"), text, theme.menuHeaderStyleRef, tachyon::LayoutOverride{}.NoGrow().NoShrink());
     }
 
     void GUIApplication::MenuSeparator()
     {
         if (menuManager.currentDepth >= 0 && menuManager.levels[menuManager.currentDepth].filtering)
             return;
-        const interstice::ID sepID = idManager.AllocateDynamicID();
-        interstice::Element sep{};
+        const tachyon::ID sepID = idManager.AllocateDynamicID();
+        tachyon::Element sep{};
         sep.id       = sepID;
         sep.styleRef = theme.menuSeparatorStyleRef;
-        sep.flags    = interstice::ElementFlags::NoInput;
+        sep.flags    = tachyon::ElementFlags::NoInput;
         sep.state    = guiStateManager.GetCurrentState(sepID);
         auto sRes = elementStorage.Add(std::move(sep),
-            interstice::LayoutOverride{}.NoGrow().NoShrink());
+            tachyon::LayoutOverride{}.NoGrow().NoShrink());
         VERIFY(sRes.status);
         VERIFY(windowRegistry.Add(sRes.ref));
     }
@@ -596,7 +596,7 @@ namespace interstice
 
         // Reserve the left column when this item has an icon or is checkable
         // (selected items show a checkmark there).
-        const bool selected = (guiStateManager.GetCurrentState(id) & interstice::ElementState::Selected) != interstice::ElementState::None;
+        const bool selected = (guiStateManager.GetCurrentState(id) & tachyon::ElementState::Selected) != tachyon::ElementState::None;
         if (icon != IconID::Invalid || selected)
             level.itemsHaveIcons = true;
 

@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace interstice::TreeUtils
+namespace tachyon::TreeUtils
 {
     /// A flat tree row: the caller sets depth and isOpen; RebuildTreeIndex derives the rest.
     template <typename Row>
@@ -68,7 +68,7 @@ namespace interstice::TreeUtils
     /// afterwards. Returns the moved row's new flat index, or -1 on rejection.
     template <TreeRowLike Row>
     int ReorderTreeRow(std::vector<Row>& rows, int srcDs, int dstDs,
-                       interstice::TreeDropPosition pos)
+                       tachyon::TreeDropPosition pos)
     {
         const int n = static_cast<int>(rows.size());
         if (srcDs < 0 || srcDs >= n) return -1;
@@ -86,23 +86,23 @@ namespace interstice::TreeUtils
         int insertAt        = dstDs;
         switch (pos)
         {
-            case interstice::TreeDropPosition::Before:
+            case tachyon::TreeDropPosition::Before:
                 insertAt        = dstDs;
                 targetBaseDepth = rows[dstDs].depth;
                 break;
-            case interstice::TreeDropPosition::Inside:
+            case tachyon::TreeDropPosition::Inside:
                 // First child: splice in right after the parent row.
                 insertAt        = dstDs + 1;
                 targetBaseDepth = rows[dstDs].depth + 1;
                 rows[dstDs].isOpen = true;
                 break;
-            case interstice::TreeDropPosition::InsideLast:
+            case tachyon::TreeDropPosition::InsideLast:
                 // Last child: splice in past the parent's whole subtree.
                 insertAt        = dstDs + 1 + rows[dstDs].skipCount;
                 targetBaseDepth = rows[dstDs].depth + 1;
                 rows[dstDs].isOpen = true;
                 break;
-            case interstice::TreeDropPosition::After:
+            case tachyon::TreeDropPosition::After:
                 insertAt        = dstDs + 1 + rows[dstDs].skipCount;
                 targetBaseDepth = rows[dstDs].depth;
                 break;

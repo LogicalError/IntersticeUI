@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <numeric>
 
-namespace interstice
+namespace tachyon
 {
     // Stage 1: Determine placement and effective grid dimensions
     void LayoutGrid::DeterminePlacement(std::span<const ElementRect> childRects,
@@ -575,7 +575,7 @@ namespace interstice
         if (childRects.empty())
             return 0;
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::HorizontalSizing");
+        //TACHYON_PROFILE_SCOPE("LayoutGrid::HorizontalSizing");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
 
         GridLayout layout {};
@@ -590,7 +590,7 @@ namespace interstice
         if (childRects.empty())
             return 0;
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::VerticalSizing");
+        //TACHYON_PROFILE_SCOPE("LayoutGrid::VerticalSizing");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
 
         GridLayout layout{};
@@ -605,7 +605,7 @@ namespace interstice
         if (childRects.empty())
             return;
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::HorizontalPositioning");
+        //TACHYON_PROFILE_SCOPE("LayoutGrid::HorizontalPositioning");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
         const IntRect& areaRect = parentRect.innerRect;
 
@@ -661,7 +661,7 @@ namespace interstice
             return {};
         }
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutGrid::VerticalPositioning");
+        //TACHYON_PROFILE_SCOPE("LayoutGrid::VerticalPositioning");
         const GridProperties& gridLayout = parentRect.layoutStyle->layoutData.grid;
         const IntRect& areaRect = parentRect.innerRect;
 
@@ -706,4 +706,4 @@ namespace interstice
         return contentRect;
     }
 
-} // namespace interstice
+} // namespace tachyon

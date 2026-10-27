@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
 	// Defined in gui_core/style/gui_style_ref.h.
     struct StyleRef;
@@ -75,14 +75,14 @@ namespace interstice
         const VisualColorStyle*      GetVisualColorStyle(VisualColorStyleIndex index) const noexcept;
         /// All state variants of a box style.
         const VisualBoxStyleStates*  GetVisualBoxStyles(VisualBoxStyleIndex index) const noexcept;
-        const VisualBoxStyle*        GetVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state) const noexcept;
+        const VisualBoxStyle*        GetVisualBoxStyle(VisualBoxStyleIndex index, tachyon::ElementState state) const noexcept;
         /// The variant for `state` plus Selection (selected text / ranges).
-        const VisualBoxStyle*        GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state = interstice::ElementState::None) const noexcept;
+        const VisualBoxStyle*        GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, tachyon::ElementState state = tachyon::ElementState::None) const noexcept;
         /// The variant for `state` plus Selection (selected text / ranges).
-        const VisualTextStyle*       GetSelectionVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state = interstice::ElementState::None) const noexcept;
+        const VisualTextStyle*       GetSelectionVisualTextStyle(VisualTextStyleIndex index, tachyon::ElementState state = tachyon::ElementState::None) const noexcept;
         /// All state variants of a text style.
         const VisualTextStyleStates* GetVisualTextStyles(VisualTextStyleIndex index) const noexcept;
-        const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state) const noexcept;
+        const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, tachyon::ElementState state) const noexcept;
         /// The shadows of a box style by its flat GPU index (ComputeGPUStyleIndex); nullptr if none.
         const VisualShadowStyle*     GetVisualShadowStyle(uint32_t gpuStyleIndex) const noexcept;
         ///@}
@@ -102,7 +102,7 @@ namespace interstice
         /// Horizontal padding plus border widths of a layout style, in pixels; 0 for an invalid index.
         inline int32_t GetBorderBoxWidth(LayoutStyleIndex layoutStyleIndex) const noexcept
         {
-            const interstice::LayoutStyle* ls = GetLayoutStyle(layoutStyleIndex);
+            const tachyon::LayoutStyle* ls = GetLayoutStyle(layoutStyleIndex);
             return ls == nullptr ? 0 : ls->GetBorderBoxWidth();
         }
 
@@ -122,10 +122,10 @@ namespace interstice
 
 
         /// The flat box style pool (kStateCount entries per style), for GPU upload.
-        std::span<const interstice::VisualBoxStyle> GetVisualBoxStylesSpan() noexcept { return m_visualBoxStyles; }
+        std::span<const tachyon::VisualBoxStyle> GetVisualBoxStylesSpan() noexcept { return m_visualBoxStyles; }
 
         /// The color style pool, for GPU upload.
-        std::span<const interstice::VisualColorStyle> GetVisualColorStylesSpan() noexcept { return m_visualColorStyles; }
+        std::span<const tachyon::VisualColorStyle> GetVisualColorStylesSpan() noexcept { return m_visualColorStyles; }
 
         /// Takes ownership of `incomingHandle`: released on a dedup hit, otherwise stored with the slot.
         VisualColorStyleIndex RegisterVisualColorStyle(const VisualColorStyle& s,

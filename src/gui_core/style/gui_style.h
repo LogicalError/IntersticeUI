@@ -16,7 +16,7 @@
 #include <gui_core/style/gui_style_gradient.h>
 #include <gui_core/graphics/gui_image.h>
 
-namespace interstice
+namespace tachyon
 {
     class GradientManager;
     struct GradientHandle;
@@ -45,7 +45,7 @@ namespace interstice
 
         VisualMask = Active | Hover | Focused | Selected | Selection | Disabled
     };
-    INTERSTICE_ENUM_OPERATORS(ElementState)
+    TACHYON_ENUM_OPERATORS(ElementState)
 
     // ------------------------------------------------------------------------
     // Box Model Types
@@ -234,7 +234,7 @@ namespace interstice
         Collapsed   ///< Not rendered, removed from layout
     };
 
-    /// Where an element's icon sits relative to its text (CSS: -interstice-icon-side).
+    /// Where an element's icon sits relative to its text (CSS: -tachyon-icon-side).
     enum class IconSide : uint8_t
     {
         None = 0,
@@ -287,7 +287,7 @@ namespace interstice
 		OutsideBottomLeft  = OutsideBottom | OutsideLeft,
         OutsideBottomRight = OutsideBottom | OutsideRight,
     };
-    INTERSTICE_ENUM_OPERATORS(AnchorPlacement);
+    TACHYON_ENUM_OPERATORS(AnchorPlacement);
 
     /// Anchor placement along one axis; the 4-bit value of one AnchorPlacement nibble.
     enum class AnchorPlacementAxis : uint8_t
@@ -358,7 +358,7 @@ namespace interstice
     // Grid Track Definition
     // ------------------------------------------------------------------------
 
-    /// Size of one grid column or row (CSS: -interstice-grid-column-track / -row-track).
+    /// Size of one grid column or row (CSS: -tachyon-grid-column-track / -row-track).
     struct GridTrack
     {
         /// How value is read.
@@ -634,7 +634,7 @@ namespace interstice
         ColorStyle backgroundColor {};  ///< CSS: background
         ColorStyle borderColors[4] {};  ///< [0]=top, [1]=right, [2]=bottom, [3]=left
         ColorStyle textColor {};        ///< CSS: color; when it has no stops, textStyle.color is used
-        ColorStyle iconColor {};        ///< -interstice-icon-color; none = the text color
+        ColorStyle iconColor {};        ///< -tachyon-icon-color; none = the text color
         BoxShadow  boxShadow[kMaxBoxShadows] {}; ///< CSS: box-shadow; the first is drawn on top
 
         /// Sets all four border colors to `c`.
@@ -690,7 +690,7 @@ namespace interstice
         Visibility      visibility   : 2 = Visibility::Visible; ///< CSS: visibility
         Overflow        overflowX    : 2 = Overflow::Auto;      ///< CSS: overflow-x
         Overflow        overflowY    : 2 = Overflow::Auto;      ///< CSS: overflow-y
-        IconSide        iconSide     : 3 = IconSide::Left;      ///< CSS: -interstice-icon-side
+        IconSide        iconSide     : 3 = IconSide::Left;      ///< CSS: -tachyon-icon-side
         AlignItems      alignSelf      : 3 = AlignItems::Auto; ///< CSS: align-self; Auto = the container's align-items
         BreakBehavior   breakBehavior  : 2 = BreakBehavior::Auto; ///< CSS: break-after
         bool            clampScroll    : 1 = true;  ///< clamp the scroll offset to the content; false = unbounded

@@ -5,7 +5,7 @@
 #include <gui_core/text/gui_text_converter.h>
 #include <gui_core/text/skribidi/internal/gui_skribidi_context.h>
 
-namespace interstice
+namespace tachyon
 {
     // =========================================================================
     // A numeric field shows the same string for a value with or without focus:

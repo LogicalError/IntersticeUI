@@ -17,7 +17,7 @@
 
 #include <functional>
 
-namespace interstice
+namespace tachyon
 {
     class IDManager;
 

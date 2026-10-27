@@ -15,7 +15,7 @@
 // table builds the visual-order permutation; the data is never reordered.
 //
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

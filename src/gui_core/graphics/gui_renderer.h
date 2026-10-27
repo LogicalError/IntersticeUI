@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     enum class VisualBoxStyleIndex : uint16_t;
     enum class VisualColorStyleIndex : uint16_t;
@@ -32,51 +32,51 @@ namespace interstice
         virtual void Reset() = 0;
 
 
-        virtual void SetTransform(interstice::float3x2 transformation) = 0;
+        virtual void SetTransform(tachyon::float3x2 transformation) = 0;
 
         /// Draws a styled box, blended from `fromStyleIndex` to `toStyleIndex` (flat GPU style
         /// indices) by `blendT` in [0, 1]. `colorStyleIndex` overrides the background (Invalid:
         /// none). `snappedPx` is the box in window pixels snapped relative to its parent
         /// (SnapToParent); empty snaps the transformed rect to the pixel grid.
-        virtual void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect,
+        virtual void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect,
                                uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT,
-                               interstice::VisualColorStyleIndex colorStyleIndex = {},
-                               interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid,
-                               interstice::IntRect snappedPx = {}) = 0;
+                               tachyon::VisualColorStyleIndex colorStyleIndex = {},
+                               tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid,
+                               tachyon::IntRect snappedPx = {}) = 0;
 
-        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
-                       interstice::ElementState state, interstice::VisualColorStyleIndex colorStyleIndex = {},
-                       interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
+        void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
+                       tachyon::ElementState state, tachyon::VisualColorStyleIndex colorStyleIndex = {},
+                       tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {});
 
-        void RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
-                       interstice::VisualColorStyleIndex colorStyleIndex = {},
-                       interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid, interstice::IntRect snappedPx = {});
+        void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
+                       tachyon::VisualColorStyleIndex colorStyleIndex = {},
+                       tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {});
 
-        virtual void RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const LineStyle& lineStyle) = 0;
-        void         RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::IntRect clipRect, const LineStyle& lineStyle) { RenderLine(p0, p0, p1, p1, clipRect, lineStyle); }
+        virtual void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const LineStyle& lineStyle) = 0;
+        void         RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::IntRect clipRect, const LineStyle& lineStyle) { RenderLine(p0, p0, p1, p1, clipRect, lineStyle); }
 
-        void RenderCircle(interstice::int2 center, float radius, interstice::IntRect clipRect, const LineStyle& lineStyle);
+        void RenderCircle(tachyon::int2 center, float radius, tachyon::IntRect clipRect, const LineStyle& lineStyle);
 
-        virtual void RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color) = 0;
-        virtual void RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
+        virtual void RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color) = 0;
+        virtual void RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) = 0;
 
         /// Draws a filled, optionally rounded and textured rect: a box without borders, style
         /// blending or element state.
-        virtual void RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
+        virtual void RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius = 0.0f, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) = 0;
         /// A box shadow: `rect` is the shadow's shape, which fades out over `blur` pixels
         /// on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
-        virtual void RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
+        virtual void RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
 
-        virtual void RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid) = 0;
+        virtual void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) = 0;
 
         /// Convex polygon, fan-triangulated from points[0]; needs at least 3 points.
-        void RenderFilledPolygon(std::span<const interstice::float2> points, interstice::IntRect clipRect,
+        void RenderFilledPolygon(std::span<const tachyon::float2> points, tachyon::IntRect clipRect,
                                  VisualColorStyleIndex colorIndex,
-                                 interstice::ImageIndex textureIndex = interstice::ImageIndex::Invalid);
+                                 tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid);
 
         /// Outlined polyline; `closed` adds a segment from the last point back to the first.
-        void RenderPolyline(std::span<const interstice::int2> points, bool closed,
-                            interstice::IntRect clipRect, const LineStyle& style);
+        void RenderPolyline(std::span<const tachyon::int2> points, bool closed,
+                            tachyon::IntRect clipRect, const LineStyle& style);
 
     public:
         virtual bool StartResizing(ID id) = 0;
@@ -94,7 +94,7 @@ namespace interstice
         /// Ends the capture of `scopeId` and draws it into the current window.
         virtual void EndScopeCapture(ID /*scopeId*/) {}
         /// Draws the capture of `scopeId` again, moved by `delta` pixels; false if there is none.
-        virtual bool ReplayScopeCapture(ID /*scopeId*/, interstice::int2 /*delta*/) { return false; }
+        virtual bool ReplayScopeCapture(ID /*scopeId*/, tachyon::int2 /*delta*/) { return false; }
         /// True when `scopeId` has a non-empty capture.
         virtual bool HasScopeCapture(ID /*scopeId*/) const { return false; }
         /// Drops the capture of `scopeId`.

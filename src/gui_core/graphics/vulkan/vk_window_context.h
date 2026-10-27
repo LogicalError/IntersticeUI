@@ -8,13 +8,13 @@
 #include <gui_core/graphics/vulkan/vk_types.h>
 #include <gui_core/graphics/vulkan/vk_device_context.h>
 
-namespace interstice
+namespace tachyon
 {
     class GraphicsContext;
 }
 
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
     class VulkanGraphicsContext;
 
@@ -70,16 +70,16 @@ namespace interstice::vulkan
         VkCommandBuffer commandBuffer = {};
     };
 
-    class VulkanWindowContext : public interstice::IWindowContext
+    class VulkanWindowContext : public tachyon::IWindowContext
     {
     public:
-        interstice::ID                  id { interstice::ID::Invalid()};
+        tachyon::ID                  id { tachyon::ID::Invalid()};
         VulkanDeviceContext*     deviceContext{ nullptr };
-        interstice::OSWindowHandle      osHandle { nullptr };
+        tachyon::OSWindowHandle      osHandle { nullptr };
         void*                    nativeHandle { nullptr };
-        interstice::OnGuiFunc           onGui{};
+        tachyon::OnGuiFunc           onGui{};
 
-        interstice::WindowFlags         windowFlags = interstice::WindowFlags::None;
+        tachyon::WindowFlags         windowFlags = tachyon::WindowFlags::None;
                                  
         SwapchainState           swapchain = {};
         WindowVulkanState        state = {};
@@ -91,7 +91,7 @@ namespace interstice::vulkan
                                  
         bool                     resize_requested{ false };
         bool                     freeze_rendering{ false };
-        interstice::int2                mouse_pos = { 0,0 };
+        tachyon::int2                mouse_pos = { 0,0 };
         int                      frameNumber{ 0 };
 
         /// When the last vkQueuePresentKHR returned. The frame-build time runs from here to
@@ -103,7 +103,7 @@ namespace interstice::vulkan
         /// Recorded and submitted, waiting for PresentWindowFrame.
         bool                     presentPending{ false };
         FrameData*               readbackPending{ nullptr };
-        interstice::int2         recordedPosition{};
+        tachyon::int2         recordedPosition{};
 
         /// Transparent window: each frame is read back for the Windows layered window.
         bool                     needsReadback{ false };
@@ -111,17 +111,17 @@ namespace interstice::vulkan
         VkImage                  targetImage{ VK_NULL_HANDLE }; ///< host image each frame is copied into
         VkExtent2D               targetExtent{};
         bool                     targetWritten{ false };       ///< targetImage holds a previous frame
-        interstice::vulkan::AllocatedBuffer  readbackBuffer = {};
+        tachyon::vulkan::AllocatedBuffer  readbackBuffer = {};
         std::vector<uint8_t>     cachedBitmap;
 
         FrameData& GetCurrentFrame();
         FrameData& GetLastFrame();
 
-		bool IsTransparent() const override { return (windowFlags & interstice::WindowFlags::Transparent) != interstice::WindowFlags::None; }
+		bool IsTransparent() const override { return (windowFlags & tachyon::WindowFlags::Transparent) != tachyon::WindowFlags::None; }
 
         void CreateSwapchain();
         void DestroySwapchain();
-        void ResizeSwapchain(interstice::int2 size);
+        void ResizeSwapchain(tachyon::int2 size);
         void FlushWindowContext();
 
         /// Creates a draw and depth image pair sized to windowExtent; each FRAME_OVERLAP slot
@@ -141,20 +141,20 @@ namespace interstice::vulkan
                               VkPipelineStageFlags2 dstStage, VkAccessFlags2 dstAccess);
         void UpdateLayeredWindowFromCache(int screenX, int screenY);
 
-        static VulkanWindowContext* Create(interstice::ID id, void* nativeHandle, interstice::OSWindowHandle osHandle, interstice::int2 size, interstice::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, interstice::OnGuiFunc onGUI);
+        static VulkanWindowContext* Create(tachyon::ID id, void* nativeHandle, tachyon::OSWindowHandle osHandle, tachyon::int2 size, tachyon::WindowFlags windowFlags, VulkanDeviceContext* deviceContext, tachyon::OnGuiFunc onGUI);
         void Destroy();
 
 
-        interstice::ID GetID() const override { return id; }
+        tachyon::ID GetID() const override { return id; }
 
-        void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) override;
-        void RecordWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect) override;
+        void RenderWindowFrame(tachyon::GraphicsContext* graphicsContext, tachyon::IntRect rect, bool resizing) override;
+        void RecordWindowFrame(tachyon::GraphicsContext* graphicsContext, tachyon::IntRect rect) override;
         void PresentWindowFrame() override;
-        void RecordFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing);
+        void RecordFrame(tachyon::GraphicsContext* graphicsContext, tachyon::IntRect rect, bool resizing);
         
-        void UpdateTransparentWindow(interstice::int2 screenPos) override;
+        void UpdateTransparentWindow(tachyon::int2 screenPos) override;
 
-        interstice::OSWindowHandle GetWindowHandle() const override { return osHandle; }
+        tachyon::OSWindowHandle GetWindowHandle() const override { return osHandle; }
     };
 
 }

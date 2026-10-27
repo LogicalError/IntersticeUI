@@ -6,28 +6,28 @@
 
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
     /// Snapshot of input state for a single recorded OS event.
     struct InputState
     {
-        interstice::int2 screenPos{0,0};
-        interstice::int2 prevScreenPos{0,0};
-        interstice::int2 screenDelta{0,0};
+        tachyon::int2 screenPos{0,0};
+        tachyon::int2 prevScreenPos{0,0};
+        tachyon::int2 screenDelta{0,0};
 
-        interstice::MouseButtons buttons = interstice::MouseButtons::None;
-        interstice::MouseButtons prevButtons = interstice::MouseButtons::None;
+        tachyon::MouseButtons buttons = tachyon::MouseButtons::None;
+        tachyon::MouseButtons prevButtons = tachyon::MouseButtons::None;
 
-        interstice::KeyModifier modifiers = interstice::KeyModifier::None;
+        tachyon::KeyModifier modifiers = tachyon::KeyModifier::None;
 
-        interstice::float2 scroll{}; ///< wheel notches (fractional on hi-res devices); label drags: pixels
+        tachyon::float2 scroll{}; ///< wheel notches (fractional on hi-res devices); label drags: pixels
 
-        interstice::KeyCode lastKey = interstice::KeyCode::None;
-        interstice::KeyAction lastKeyAction = interstice::KeyAction::KeyDown;
+        tachyon::KeyCode lastKey = tachyon::KeyCode::None;
+        tachyon::KeyAction lastKeyAction = tachyon::KeyAction::KeyDown;
 
         /// Drag-and-drop source and payload; set for drag events.
         ///@{
-        interstice::ID dragSourceID = interstice::ID::Invalid();
+        tachyon::ID dragSourceID = tachyon::ID::Invalid();
         uint32_t dragPayloadType = 0;
         uintptr_t dragPayloadValue = 0;
         ///@}
@@ -38,16 +38,16 @@ namespace interstice
         /// True when the event was already handled (e.g. Tab by tab navigation).
         bool consumed = false;
 
-        bool LeftDown() const { return (buttons & interstice::MouseButtons::Left) != interstice::MouseButtons::None; }
-        bool LeftPressed() const { return LeftDown() && ((prevButtons & interstice::MouseButtons::Left) == interstice::MouseButtons::None); }
-        bool LeftReleased() const { return !LeftDown() && ((prevButtons & interstice::MouseButtons::Left) != interstice::MouseButtons::None); }
+        bool LeftDown() const { return (buttons & tachyon::MouseButtons::Left) != tachyon::MouseButtons::None; }
+        bool LeftPressed() const { return LeftDown() && ((prevButtons & tachyon::MouseButtons::Left) == tachyon::MouseButtons::None); }
+        bool LeftReleased() const { return !LeftDown() && ((prevButtons & tachyon::MouseButtons::Left) != tachyon::MouseButtons::None); }
 
-        bool RightDown() const { return (buttons & interstice::MouseButtons::Right) != interstice::MouseButtons::None; }
-        bool RightPressed() const { return RightDown() && ((prevButtons & interstice::MouseButtons::Right) == interstice::MouseButtons::None); }
-        bool RightReleased() const { return !RightDown() && ((prevButtons & interstice::MouseButtons::Right) != interstice::MouseButtons::None); }
+        bool RightDown() const { return (buttons & tachyon::MouseButtons::Right) != tachyon::MouseButtons::None; }
+        bool RightPressed() const { return RightDown() && ((prevButtons & tachyon::MouseButtons::Right) == tachyon::MouseButtons::None); }
+        bool RightReleased() const { return !RightDown() && ((prevButtons & tachyon::MouseButtons::Right) != tachyon::MouseButtons::None); }
 
-        bool MiddleDown() const { return (buttons & interstice::MouseButtons::Middle) != interstice::MouseButtons::None; }
-        bool MiddlePressed() const { return MiddleDown() && ((prevButtons & interstice::MouseButtons::Middle) == interstice::MouseButtons::None); }
-        bool MiddleReleased() const { return !MiddleDown() && ((prevButtons & interstice::MouseButtons::Middle) != interstice::MouseButtons::None); }
+        bool MiddleDown() const { return (buttons & tachyon::MouseButtons::Middle) != tachyon::MouseButtons::None; }
+        bool MiddlePressed() const { return MiddleDown() && ((prevButtons & tachyon::MouseButtons::Middle) == tachyon::MouseButtons::None); }
+        bool MiddleReleased() const { return !MiddleDown() && ((prevButtons & tachyon::MouseButtons::Middle) != tachyon::MouseButtons::None); }
     };
 }

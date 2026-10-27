@@ -7,7 +7,7 @@
 #include <system_error>
 #include <version>
 
-namespace interstice
+namespace tachyon
 {
     /// std::from_chars for a decimal number, through a classic-locale stream. For standard
     /// libraries without floating-point from_chars. The number is scanned first, as

@@ -1,4 +1,4 @@
-// Unit tests for the hierarchical timing collector (interstice::Diagnostics), through the
+// Unit tests for the hierarchical timing collector (tachyon::Diagnostics), through the
 // public API (no GPU, no window):
 //   - nested scopes form a parent/child tree in depth-first order
 //   - siblings keep call order
@@ -22,11 +22,11 @@
 #include <string_view>
 #include <thread>
 
-namespace interstice::Diagnostics
+namespace tachyon::Diagnostics
 {
     namespace
     {
-        uint64_t H(std::string_view name) { return interstice::Hash::Calculate(name); }
+        uint64_t H(std::string_view name) { return tachyon::Hash::Calculate(name); }
 
         const ProfileSample* Find(std::span<const ProfileSample> samples, std::string_view name)
         {

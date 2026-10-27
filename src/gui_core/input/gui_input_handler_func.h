@@ -5,7 +5,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <functional>
 
-namespace interstice
+namespace tachyon
 {
     struct ElementRect;    // gui_core/elements/gui_element.h
     struct ElementRef;     // gui_core/elements/gui_element.h
@@ -15,7 +15,7 @@ namespace interstice
     /// An input event delivered to an element's EventHandler.
     struct ElementEvent
     {
-        interstice::ID             id;          ///< the targeted element
+        tachyon::ID             id;          ///< the targeted element
         EventType           type;
         const InputState&   state;       ///< the input snapshot of this event
         const ElementRect*  rect;        ///< the element's layout rects

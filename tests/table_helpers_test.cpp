@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using TableHelpers::VirtualRowRange;
 

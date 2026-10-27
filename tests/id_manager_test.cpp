@@ -2,7 +2,7 @@
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_id_manager.h>
 
-namespace interstice
+namespace tachyon
 {
 
     static void VERIFY([[maybe_unused]] bool result)
@@ -133,7 +133,7 @@ namespace interstice
         EXPECT_NE(id1, id2);
     }
 
-#ifdef INTERSTICE_SUPPORT_CPP20
+#ifdef TACHYON_SUPPORT_CPP20
     TEST_F(IDManagerTest, DynamicIDWithSourceLocation) {
         ID id = manager.AllocateDynamicID();
         EXPECT_EQ(id.GetMode(), IDMode::Dynamic);
@@ -270,10 +270,10 @@ namespace interstice
     }
 
     TEST_F(IDManagerTest, IsInParentStack) {
-        EXPECT_FALSE(manager.IsInParentStack(interstice::ID::Invalid()));
+        EXPECT_FALSE(manager.IsInParentStack(tachyon::ID::Invalid()));
 
         // Create a static ID and push it as parent
-        interstice::ID staticID = manager.CreateStaticID();
+        tachyon::ID staticID = manager.CreateStaticID();
         EXPECT_FALSE(manager.IsInParentStack(staticID));
 
         EXPECT_TRUE(manager.PushParent(staticID));
@@ -314,7 +314,7 @@ namespace interstice
     }
 
     TEST_F(IDManagerTest, FrameStateConstraints) {
-        interstice::IDManager manualManager;
+        tachyon::IDManager manualManager;
 
         // --- PHASE 1: OUTSIDE FRAME ---
         EXPECT_FALSE(manualManager.IsInsideFrame());

@@ -8,9 +8,9 @@
 #include <chrono>
 #include <cmath>
 
-static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
 
-namespace interstice
+namespace tachyon
 {
 
     void Application::RenderMiscPanel()
@@ -24,23 +24,23 @@ namespace interstice
 
         int2 size = { styleManager.Px(490), styleManager.Px(200) };
         {
-            interstice::ID id = idManager.AllocateDynamicID();
-            interstice::Element shapeBox{};
+            tachyon::ID id = idManager.AllocateDynamicID();
+            tachyon::Element shapeBox{};
             shapeBox.id = id;
             shapeBox.state = guiStateManager.GetCurrentState(shapeBox.id);
             shapeBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
 
-            auto addRes = elementStorage.Add(std::move(shapeBox), interstice::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
+            auto addRes = elementStorage.Add(std::move(shapeBox), tachyon::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
 
-            VERIFY(elementStorage.AddCustomDraw(addRes.ref, [elapsedMilliseconds, this](interstice::CustomDrawContext& ctx)
+            VERIFY(elementStorage.AddCustomDraw(addRes.ref, [elapsedMilliseconds, this](tachyon::CustomDrawContext& ctx)
             {
                 // Coords are inner-rect-local LAYOUT pixels.
                 const StyleManager& sm = styleManager;
-                const interstice::LineStyle lineStyle      = { .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = sm.Px(3.0f) };
-                const interstice::LineStyle innerLineStyle = { .colorStyleIndex = triangleFillStyle, .lineWidth = sm.Px(10.0f) };
-                const interstice::LineStyle outerLineStyle = { .colorStyleIndex = theme.lineDarkStyle, .lineWidth = innerLineStyle.lineWidth + sm.Px(3.0f) };
+                const tachyon::LineStyle lineStyle      = { .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = sm.Px(3.0f) };
+                const tachyon::LineStyle innerLineStyle = { .colorStyleIndex = triangleFillStyle, .lineWidth = sm.Px(10.0f) };
+                const tachyon::LineStyle outerLineStyle = { .colorStyleIndex = theme.lineDarkStyle, .lineWidth = innerLineStyle.lineWidth + sm.Px(3.0f) };
 
                 ctx.RenderLine({ sm.Px(24), sm.Px(120) }, { sm.Px(24), sm.Px(24) }, { sm.Px(180), sm.Px(24) }, { sm.Px(180), sm.Px(120) }, lineStyle);
                 ctx.RenderDot({ sm.Px(24.0f), sm.Px(120.0f) }, sm.Px(20.0f), { 1.0f, 0.2f, 0.2f, 1.0f });
@@ -52,29 +52,29 @@ namespace interstice
                 float c = std::cos(angle);
 
                 // Element-local triangle points.
-                interstice::float2 pa { sm.Px(260.f), sm.Px( 40.f) };
-                interstice::float2 pb { sm.Px(300.f), sm.Px(130.f) };
-                interstice::float2 pc { sm.Px(220.f), sm.Px(130.f) };
+                tachyon::float2 pa { sm.Px(260.f), sm.Px( 40.f) };
+                tachyon::float2 pb { sm.Px(300.f), sm.Px(130.f) };
+                tachyon::float2 pc { sm.Px(220.f), sm.Px(130.f) };
 
                 // Compute centroid and rotate around it
-                interstice::float2 center = (pa + pb + pc) * (1.0f / 3.0f);
+                tachyon::float2 center = (pa + pb + pc) * (1.0f / 3.0f);
 
-                auto rotatePoint = [&](const interstice::float2& p) -> interstice::float2
+                auto rotatePoint = [&](const tachyon::float2& p) -> tachyon::float2
                 {
-                    interstice::float2 v{ p.x - center.x, p.y - center.y };
-                    interstice::float2 rp{ v.x * c - v.y * s, v.x * s + v.y * c };
-                    interstice::float2 finalP{ rp.x + center.x, rp.y + center.y };
-                    return interstice::float2{ (finalP.x + 0.5f), (finalP.y + 0.5f) };
+                    tachyon::float2 v{ p.x - center.x, p.y - center.y };
+                    tachyon::float2 rp{ v.x * c - v.y * s, v.x * s + v.y * c };
+                    tachyon::float2 finalP{ rp.x + center.x, rp.y + center.y };
+                    return tachyon::float2{ (finalP.x + 0.5f), (finalP.y + 0.5f) };
                 };
 
                 ctx.RenderTriangle(rotatePoint(pa), rotatePoint(pb), rotatePoint(pc), triangleFillStyle);
 
                 // Second triangle + colorwheel, centered at (400, 90) element-local.
-                interstice::int2 c2{ sm.Px(400), sm.Px(90) };
+                tachyon::int2 c2{ sm.Px(400), sm.Px(90) };
                 ctx.RenderTriangle(
-                    interstice::float2{ sm.Px(-40.f), sm.Px( 30.f) } + c2,
-                    interstice::float2{          0.f, sm.Px(-50.f) } + c2,
-                    interstice::float2{ sm.Px( 40.f), sm.Px( 30.f) } + c2,
+                    tachyon::float2{ sm.Px(-40.f), sm.Px( 30.f) } + c2,
+                    tachyon::float2{          0.f, sm.Px(-50.f) } + c2,
+                    tachyon::float2{ sm.Px( 40.f), sm.Px( 30.f) } + c2,
                     triangleFillStyle2);
                 ctx.RenderCircle(c2, sm.Px(60.f), outerLineStyle);
                 ctx.RenderCircle(c2, sm.Px(60.f), innerLineStyle);
@@ -99,12 +99,12 @@ namespace interstice
                 else if (hi == 4) { r=t2; g=p; b=v; }
                 else              { r=v;  g=p; b=q; }
 
-                interstice::ColorStyle cs;
-                cs.type = interstice::ColorType::SolidColor;
+                tachyon::ColorStyle cs;
+                cs.type = tachyon::ColorType::SolidColor;
                 cs.gradient.stopCount = 1;
-                cs.gradient.stops[0].SetColor(interstice::color4b { (uint8_t)(r*255), (uint8_t)(g*255), (uint8_t)(b*255), 255 });
+                cs.gradient.stops[0].SetColor(tachyon::color4b { (uint8_t)(r*255), (uint8_t)(g*255), (uint8_t)(b*255), 255 });
 
-                if (animatedHueStyle == interstice::VisualColorStyleIndex::Invalid)
+                if (animatedHueStyle == tachyon::VisualColorStyleIndex::Invalid)
                     animatedHueStyle = styleManager.CreateColorStyle(cs);
                 else
                     styleManager.UpdateColorStyle(animatedHueStyle, cs);
@@ -113,115 +113,115 @@ namespace interstice
             // --- Demo 2: polygon and dashed border ---
 
             size = { styleManager.Px(490), styleManager.Px(220) };
-            interstice::ID demoId = idManager.AllocateDynamicID();
-            interstice::Element demoBox{};
+            tachyon::ID demoId = idManager.AllocateDynamicID();
+            tachyon::Element demoBox{};
             demoBox.id = demoId;
             demoBox.state = guiStateManager.GetCurrentState(demoId);
             demoBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
 
-            auto demoRes = elementStorage.Add(std::move(demoBox), interstice::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
+            auto demoRes = elementStorage.Add(std::move(demoBox), tachyon::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(demoRes.status);
             VERIFY(windowRegistry.Add(demoRes.ref));
 
-            VERIFY(elementStorage.AddCustomDraw(demoRes.ref, [this](interstice::CustomDrawContext& ctx)
+            VERIFY(elementStorage.AddCustomDraw(demoRes.ref, [this](tachyon::CustomDrawContext& ctx)
             {
                 // Coords are inner-rect-local LAYOUT pixels.
                 const StyleManager& sm = styleManager;
 
                 // Demo 1: line using animated on-demand color style
-                interstice::LineStyle animStyle { .colorStyleIndex = animatedHueStyle, .lineWidth = sm.Px(4.0f) };
+                tachyon::LineStyle animStyle { .colorStyleIndex = animatedHueStyle, .lineWidth = sm.Px(4.0f) };
                 ctx.RenderLine({ sm.Px(10), sm.Px(20) }, { sm.Px(150), sm.Px(20) }, animStyle);
 
                 // Demo 2a: filled hexagon
                 const float hexRadius = sm.Px(55.0f);
-                interstice::float2 hexCenter = { sm.Px(230.f), sm.Px(110.f) };
-                interstice::float2 hexPts[6];
+                tachyon::float2 hexCenter = { sm.Px(230.f), sm.Px(110.f) };
+                tachyon::float2 hexPts[6];
                 for (int i = 0; i < 6; i++) {
                     float a = i * (3.14159f / 3.0f);
-                    hexPts[i] = hexCenter + interstice::float2{ std::cos(a) * hexRadius, std::sin(a) * hexRadius };
+                    hexPts[i] = hexCenter + tachyon::float2{ std::cos(a) * hexRadius, std::sin(a) * hexRadius };
                 }
                 ctx.RenderFilledPolygon(hexPts, triangleFillStyle);
 
                 // Demo 2b: outlined pentagon
                 const float pentRadius = sm.Px(50.0f);
-                interstice::float2 pentCenterF = { sm.Px(80.f), sm.Px(120.f) };
-                interstice::int2 pentPts[5];
+                tachyon::float2 pentCenterF = { sm.Px(80.f), sm.Px(120.f) };
+                tachyon::int2 pentPts[5];
                 for (int i = 0; i < 5; i++) {
                     float a = i * (2.0f * 3.14159f / 5.0f) - 3.14159f / 2.0f;
-                    pentPts[i] = interstice::int2 { (int)(pentCenterF.x + std::cos(a) * pentRadius), (int)(pentCenterF.y + std::sin(a) * pentRadius) };
+                    pentPts[i] = tachyon::int2 { (int)(pentCenterF.x + std::cos(a) * pentRadius), (int)(pentCenterF.y + std::sin(a) * pentRadius) };
                 }
-                interstice::LineStyle pentStyle { .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = sm.Px(2.5f) };
+                tachyon::LineStyle pentStyle { .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = sm.Px(2.5f) };
                 ctx.RenderPolyline(pentPts, /*closed=*/true, pentStyle);
 
                 // Demo 3: dashed box
                 ctx.RenderBox(
-                    interstice::IntRect { .position = { sm.Px(340), sm.Px(60) }, .size = { sm.Px(130), sm.Px(80) } },
-                    theme.dashedStyleRef.visualBoxStyleIndex, interstice::ElementState::None);
+                    tachyon::IntRect { .position = { sm.Px(340), sm.Px(60) }, .size = { sm.Px(130), sm.Px(80) } },
+                    theme.dashedStyleRef.visualBoxStyleIndex, tachyon::ElementState::None);
             }));
         }
 
         // Standalone icon examples
         {
-            interstice::int2 iconSize = { styleManager.Px(48), styleManager.Px(48) };
+            tachyon::int2 iconSize = { styleManager.Px(48), styleManager.Px(48) };
 
             // Circle icon
-            interstice::Element circleIconElem {};
+            tachyon::Element circleIconElem {};
             circleIconElem.id = idManager.AllocateDynamicID();
             circleIconElem.iconID = demo.circleIcon;
             circleIconElem.state = guiStateManager.GetCurrentState(circleIconElem.id);
             circleIconElem.styleRef = theme.firstIconStyleRef;
 
-            auto circleRes = elementStorage.Add(std::move(circleIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
+            auto circleRes = elementStorage.Add(std::move(circleIconElem), tachyon::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(circleRes.status);
             VERIFY(windowRegistry.Add(circleRes.ref));
 
             // Heart icon
-            interstice::Element heartIconElem {};
+            tachyon::Element heartIconElem {};
             heartIconElem.id = idManager.AllocateDynamicID();
             heartIconElem.iconID = demo.heartIcon;
             heartIconElem.state = guiStateManager.GetCurrentState(heartIconElem.id);
             heartIconElem.styleRef = theme.regularControls.button;
 
-            auto heartRes = elementStorage.Add(std::move(heartIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
+            auto heartRes = elementStorage.Add(std::move(heartIconElem), tachyon::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(heartRes.status);
             VERIFY(windowRegistry.Add(heartRes.ref));
 
             // Star icon
-            interstice::Element starIconElem {};
+            tachyon::Element starIconElem {};
             starIconElem.id = idManager.AllocateDynamicID();
             starIconElem.iconID = demo.starIcon;
             starIconElem.state = guiStateManager.GetCurrentState(starIconElem.id);
             starIconElem.styleRef = theme.regularControls.button;
 
-            auto starRes = elementStorage.Add(std::move(starIconElem), interstice::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
+            auto starRes = elementStorage.Add(std::move(starIconElem), tachyon::LayoutOverride::FixedSize(Pixels{ iconSize.x }, Pixels{ iconSize.y }));
             VERIFY(starRes.status);
             VERIFY(windowRegistry.Add(starRes.ref));
         }
 
         // Icon + Text button example
         {
-            interstice::int2 buttonSize = { styleManager.Px(200), styleManager.Px(48) };
-            interstice::ID iconButtonId = idManager.AllocateDynamicID();
-            interstice::ElementState state = guiStateManager.GetCurrentState(iconButtonId);
+            tachyon::int2 buttonSize = { styleManager.Px(200), styleManager.Px(48) };
+            tachyon::ID iconButtonId = idManager.AllocateDynamicID();
+            tachyon::ElementState state = guiStateManager.GetCurrentState(iconButtonId);
 
             // Create button with icon and text using rich text
-            static interstice::ContentRun buttonContent[] =
+            static tachyon::ContentRun buttonContent[] =
             {
-                { .type = interstice::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 24.0f, .iconHeight = 24.0f },
-                { .type = interstice::ContentRun::Text, .text = " Like This!" }
+                { .type = tachyon::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 24.0f, .iconHeight = 24.0f },
+                { .type = tachyon::ContentRun::Text, .text = " Like This!" }
             };
 
-            interstice::Element iconButtonElem{};
+            tachyon::Element iconButtonElem{};
             iconButtonElem.id = iconButtonId;
             iconButtonElem.state = guiStateManager.GetCurrentState(iconButtonElem.id);
             iconButtonElem.styleRef = theme.regularControls.button;
             iconButtonElem.textID = textSystem->RegisterRichText(iconButtonId, buttonContent, theme.regularControls.button, state);
             iconButtonElem.eventHandler = MakeButtonHandler([]()
             {
-                INTERSTICE_LOG_INFO(kLogDemo, "Icon button clicked!");
+                TACHYON_LOG_INFO(kLogDemo, "Icon button clicked!");
             });
 
-            auto addRes = elementStorage.Add(std::move(iconButtonElem), interstice::LayoutOverride::FixedSize(Pixels{ buttonSize.x }, Pixels{ buttonSize.y }));
+            auto addRes = elementStorage.Add(std::move(iconButtonElem), tachyon::LayoutOverride::FixedSize(Pixels{ buttonSize.x }, Pixels{ buttonSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
             tabChainManager.RegisterTabTarget(iconButtonId);
@@ -229,62 +229,62 @@ namespace interstice
 
         // Rich text with multiple icons example
         {
-            interstice::int2 richTextSize = { styleManager.Px(300), styleManager.Px(60) };
-            interstice::ID richTextId = idManager.AllocateDynamicID();
-            interstice::ElementState state = guiStateManager.GetCurrentState(richTextId);
+            tachyon::int2 richTextSize = { styleManager.Px(300), styleManager.Px(60) };
+            tachyon::ID richTextId = idManager.AllocateDynamicID();
+            tachyon::ElementState state = guiStateManager.GetCurrentState(richTextId);
 
-            static interstice::ContentRun richContent[] =
+            static tachyon::ContentRun richContent[] =
             {
-                {.type = interstice::ContentRun::Text, .text = "Rate: " },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = interstice::ContentRun::Text, .text = " Favorite: " },
-                {.type = interstice::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 16.0f, .iconHeight = 16.0f }
+                {.type = tachyon::ContentRun::Text, .text = "Rate: " },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Text, .text = " Favorite: " },
+                {.type = tachyon::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 16.0f, .iconHeight = 16.0f }
             };
 
-            interstice::Element richTextElem{};
+            tachyon::Element richTextElem{};
             richTextElem.id = richTextId;
             richTextElem.state = guiStateManager.GetCurrentState(richTextElem.id);
             richTextElem.styleRef = theme.textStyleRef;
             richTextElem.textID = textSystem->RegisterRichText(richTextId, richContent, theme.textStyleRef, state);
 
-            auto addRes = elementStorage.Add(std::move(richTextElem), interstice::LayoutOverride::FixedSize(Pixels{ richTextSize.x }, Pixels{ richTextSize.y }));
+            auto addRes = elementStorage.Add(std::move(richTextElem), tachyon::LayoutOverride::FixedSize(Pixels{ richTextSize.x }, Pixels{ richTextSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
 
         // Rich text with clickable links
         {
-            interstice::int2 linkTextSize = { styleManager.Px(400), styleManager.Px(60) };
-            interstice::ID linkTextId = idManager.AllocateDynamicID();
-            interstice::ElementState state = guiStateManager.GetCurrentState(linkTextId);
+            tachyon::int2 linkTextSize = { styleManager.Px(400), styleManager.Px(60) };
+            tachyon::ID linkTextId = idManager.AllocateDynamicID();
+            tachyon::ElementState state = guiStateManager.GetCurrentState(linkTextId);
 
-            static interstice::ContentRun linkContent[] =
+            static tachyon::ContentRun linkContent[] =
             {
-                { .type = interstice::ContentRun::Text, .text = "Learn about " },
-                { .type = interstice::ContentRun::Text, .text = "our documentation",
+                { .type = tachyon::ContentRun::Text, .text = "Learn about " },
+                { .type = tachyon::ContentRun::Text, .text = "our documentation",
                   .contentId = 1, .isLink = true,
                   .linkStyle = { .color = { 64, 148, 255, 255 }, .hoverColor = { 128, 200, 255, 255 } } },
-                { .type = interstice::ContentRun::Text, .text = " or check " },
-                { .type = interstice::ContentRun::Text, .text = "the source",
+                { .type = tachyon::ContentRun::Text, .text = " or check " },
+                { .type = tachyon::ContentRun::Text, .text = "the source",
                   .contentId = 2, .isLink = true,
                   .linkStyle = { .color = { 64, 148, 255, 255 }, .hoverColor = { 128, 200, 255, 255 } } },
-                { .type = interstice::ContentRun::Text, .text = " for more info." },
+                { .type = tachyon::ContentRun::Text, .text = " for more info." },
             };
 
-            interstice::TextID linkTextID = textSystem->RegisterRichText(linkTextId, linkContent, theme.textStyleRef, state);
+            tachyon::TextID linkTextID = textSystem->RegisterRichText(linkTextId, linkContent, theme.textStyleRef, state);
 
-            interstice::Element linkElem{};
+            tachyon::Element linkElem{};
             linkElem.id = linkTextId;
             linkElem.state = guiStateManager.GetCurrentState(linkElem.id);
             linkElem.styleRef = theme.textStyleRef;
             linkElem.textID = linkTextID;
             linkElem.eventHandler = [this, linkTextID](ElementEvent&& event)->bool
             {
-                if (event.type != interstice::EventType::MouseMove && event.type != interstice::EventType::MouseDown)
+                if (event.type != tachyon::EventType::MouseMove && event.type != tachyon::EventType::MouseDown)
                     return false;
 
                 // event.rect->innerRect is in layout space - use LocalCursor so the
@@ -295,15 +295,15 @@ namespace interstice
                 intptr_t hitId =
                     textSystem->HitTestContent(linkTextID, pos.x, pos.y);
                 textSystem->SetHoveredContent(linkTextID, hitId);
-                if (hitId != 0 && event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+                if (hitId != 0 && event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
-                    INTERSTICE_LOG_INFO(kLogDemo, "Link clicked: {}", hitId == 1 ? "documentation" : "source");
+                    TACHYON_LOG_INFO(kLogDemo, "Link clicked: {}", hitId == 1 ? "documentation" : "source");
                     return true;
                 }
                 return false;
             };
 
-            auto addRes = elementStorage.Add(std::move(linkElem), interstice::LayoutOverride::FixedSize(Pixels{ linkTextSize.x }, Pixels{ linkTextSize.y }));
+            auto addRes = elementStorage.Add(std::move(linkElem), tachyon::LayoutOverride::FixedSize(Pixels{ linkTextSize.x }, Pixels{ linkTextSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
@@ -311,25 +311,25 @@ namespace interstice
         // Image element - drop an image straight into the flow. Two display
         // sizes, then a clickable one standing in for an image-selection field.
         {
-            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(96, 96));
-            Image(demoImageIndex, interstice::LayoutOverride::FixedSize(48, 48));
+            Image(demoImageIndex, tachyon::LayoutOverride::FixedSize(96, 96));
+            Image(demoImageIndex, tachyon::LayoutOverride::FixedSize(48, 48));
 
-            const interstice::ID fieldID = idManager.AllocateDynamicID("imageField");
-            interstice::Element field{};
+            const tachyon::ID fieldID = idManager.AllocateDynamicID("imageField");
+            tachyon::Element field{};
             field.id              = fieldID;
             field.styleRef        = theme.imageStyleRef;
             field.backgroundImage = demoImageIndex;
             field.state           = guiStateManager.GetCurrentState(fieldID);
-            field.eventHandler    = [](interstice::ElementEvent&& ev) -> bool
+            field.eventHandler    = [](tachyon::ElementEvent&& ev) -> bool
             {
-                if (ev.type == interstice::EventType::MouseDown && ev.state.LeftPressed())
+                if (ev.type == tachyon::EventType::MouseDown && ev.state.LeftPressed())
                 {
-                    INTERSTICE_LOG_INFO(kLogDemo, "Image field: open picker");
+                    TACHYON_LOG_INFO(kLogDemo, "Image field: open picker");
                     return true;
                 }
                 return false;
             };
-            auto fRes = elementStorage.Add(std::move(field), interstice::LayoutOverride::FixedSize(64, 64));
+            auto fRes = elementStorage.Add(std::move(field), tachyon::LayoutOverride::FixedSize(64, 64));
             VERIFY(fRes.status);
             VERIFY(windowRegistry.Add(fRes.ref));
             SetTooltip("Click to choose an image");
@@ -338,34 +338,34 @@ namespace interstice
         // --- Demo: per-run font override via textStyleOverride ---
         {
             // A family registered from code (one face) and a generic family.
-            static const interstice::FontID boldFontId = [this]
+            static const tachyon::FontID boldFontId = [this]
             {
                 const std::string_view boldFaces[] = { "fonts/Inter/Inter-Bold.ttf" };
                 return textSystem->RegisterFontFamily("Inter Bold", boldFaces);
             }();
 
-            static interstice::TextStyle boldStyle  { .fontSize = 16.0f, .fontId = interstice::FontID::Invalid };
-            static interstice::TextStyle monoStyle  { .fontSize = 14.0f, .family = interstice::FontFamily::Monospace };
+            static tachyon::TextStyle boldStyle  { .fontSize = 16.0f, .fontId = tachyon::FontID::Invalid };
+            static tachyon::TextStyle monoStyle  { .fontSize = 14.0f, .family = tachyon::FontFamily::Monospace };
             boldStyle.fontId   = boldFontId;
 
-            interstice::int2 mixedFontSize = { styleManager.Px(420), styleManager.Px(30) };
-            interstice::ID mixedFontId = idManager.AllocateDynamicID();
-            interstice::ElementState mixedState = guiStateManager.GetCurrentState(mixedFontId);
+            tachyon::int2 mixedFontSize = { styleManager.Px(420), styleManager.Px(30) };
+            tachyon::ID mixedFontId = idManager.AllocateDynamicID();
+            tachyon::ElementState mixedState = guiStateManager.GetCurrentState(mixedFontId);
 
-            static interstice::ContentRun mixedFontRuns[] =
+            static tachyon::ContentRun mixedFontRuns[] =
             {
-                { .type = interstice::ContentRun::Text, .text = "Normal " },
-                { .type = interstice::ContentRun::Text, .text = "Bold ",     .textStyleOverride = &boldStyle },
-                { .type = interstice::ContentRun::Text, .text = "Monospace", .textStyleOverride = &monoStyle },
+                { .type = tachyon::ContentRun::Text, .text = "Normal " },
+                { .type = tachyon::ContentRun::Text, .text = "Bold ",     .textStyleOverride = &boldStyle },
+                { .type = tachyon::ContentRun::Text, .text = "Monospace", .textStyleOverride = &monoStyle },
             };
 
-            interstice::Element mixedElem{};
+            tachyon::Element mixedElem{};
             mixedElem.id       = mixedFontId;
             mixedElem.state    = mixedState;
             mixedElem.styleRef = theme.textStyleRef;
             mixedElem.textID   = textSystem->RegisterRichText(mixedFontId, mixedFontRuns, theme.textStyleRef, mixedState);
 
-            auto addRes = elementStorage.Add(std::move(mixedElem), interstice::LayoutOverride::FixedSize(Pixels{ mixedFontSize.x }, Pixels{ mixedFontSize.y }));
+            auto addRes = elementStorage.Add(std::move(mixedElem), tachyon::LayoutOverride::FixedSize(Pixels{ mixedFontSize.x }, Pixels{ mixedFontSize.y }));
             VERIFY(addRes.status);
             VERIFY(windowRegistry.Add(addRes.ref));
         }
@@ -384,7 +384,7 @@ namespace interstice
                 u8"Thai:     สวัสดีชาวโลก",
                 u8"Mixed:    Inter, 中文, 한국어 and العربية on one line",
             };
-            BeginVertical(interstice::LayoutOverride::Auto().NoGrow());
+            BeginVertical(tachyon::LayoutOverride::Auto().NoGrow());
             for (const char8_t* sample : samples)
                 Text(reinterpret_cast<const char*>(sample));
             EndVertical();
@@ -404,20 +404,20 @@ namespace interstice
                 { u8"Edit",     u8"編集",        u8"编辑",        u8"編輯",        u8"編輯",        u8"편집" },
             };
             const int colWidth = styleManager.Px(96);
-            BeginVertical(interstice::LayoutOverride::Auto().NoGrow());
+            BeginVertical(tachyon::LayoutOverride::Auto().NoGrow());
             {
-                BeginHorizontal(interstice::LayoutOverride::Auto().NoGrow());
+                BeginHorizontal(tachyon::LayoutOverride::Auto().NoGrow());
                 for (const char* header : headers)
-                    Text(header, interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
+                    Text(header, tachyon::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                 EndHorizontal();
                 for (const auto& row : rows)
                 {
-                    BeginHorizontal(interstice::LayoutOverride::Auto().NoGrow());
-                    Text(reinterpret_cast<const char*>(row[0]), interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
+                    BeginHorizontal(tachyon::LayoutOverride::Auto().NoGrow());
+                    Text(reinterpret_cast<const char*>(row[0]), tachyon::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                     for (int c = 0; c < 5; ++c)
                     {
-                        const interstice::StyleRef style = styleManager.WithTextOverride(theme.staticTextStyleRef, { .language = interstice::LanguageTag(languages[c]) });
-                        Text(reinterpret_cast<const char*>(row[c + 1]), style, interstice::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
+                        const tachyon::StyleRef style = styleManager.WithTextOverride(theme.staticTextStyleRef, { .language = tachyon::LanguageTag(languages[c]) });
+                        Text(reinterpret_cast<const char*>(row[c + 1]), style, tachyon::LayoutOverride::Auto().MinWidth(Pixels{ colWidth }));
                     }
                     EndHorizontal();
                 }
@@ -425,14 +425,14 @@ namespace interstice
             EndVertical();
 
             // A text box with its own font; all other text keeps the CSS font.
-            static const interstice::FontID serifFont = [this]
+            static const tachyon::FontID serifFont = [this]
             {
                 const std::string_view faces[] = { "fonts/Noto-otf/NotoSerif-Regular.otf" };
                 return textSystem->RegisterFontFamily("Noto Serif", faces);
             }();
             static std::string serifText = "This text box uses Noto Serif";
             Field(serifText, styleManager.WithTextOverride(theme.controls->textbox, { .font = serifFont }),
-                  interstice::LayoutOverride::Auto().MinWidth(320).NoGrow());
+                  tachyon::LayoutOverride::Auto().MinWidth(320).NoGrow());
         }
 
         // --- Icon + Text Examples with iconTextGap and iconSide ---
@@ -448,10 +448,10 @@ namespace interstice
         }
 
         // --- Vertical-align demo matrix -----------------------------------------
-        // 4 icon sides x 3 vertical alignments (-interstice-vertical-text-align). The
+        // 4 icon sides x 3 vertical alignments (-tachyon-vertical-text-align). The
         // boxes share an 80px min-height so the alignment differences show.
         {
-            static const interstice::IconID kSideIcon[4] = {
+            static const tachyon::IconID kSideIcon[4] = {
                 demo.circleIcon, demo.starIcon, demo.circleIcon, demo.starIcon
             };
             static const char* kLabel[4][3] = {

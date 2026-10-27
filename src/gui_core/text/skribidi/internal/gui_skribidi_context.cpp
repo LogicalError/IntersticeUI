@@ -14,12 +14,12 @@
 #include <skribidi/skb_rich_layout.h>
 #include <skribidi/skb_icon_collection.h>
 
-static constexpr interstice::Diagnostics::LogCategory kLogText = interstice::Diagnostics::MakeLogCategory("text");
+static constexpr tachyon::Diagnostics::LogCategory kLogText = tachyon::Diagnostics::MakeLogCategory("text");
 
 #undef SKB_ATTRIBUTE_SET_FROM_STATIC_ARRAY
 #define SKB_ATTRIBUTE_SET_FROM_STATIC_ARRAY(array) skb_attribute_set_t { .attributes = (array), .attributes_count = SKB_COUNTOF(array) }
 
-namespace interstice
+namespace tachyon
 {
 	skb_rect2_t view_transform_rect(view_t* view, skb_rect2_t geom)
 	{
@@ -83,7 +83,7 @@ namespace interstice
 
 		if (!skribidi_load_fonts(font_collection, m_fontFallback))
 		{
-			INTERSTICE_LOG_ERROR(kLogText, "could not load the built-in fonts from {}", m_fontFallback.defaultDirectory);
+			TACHYON_LOG_ERROR(kLogText, "could not load the built-in fonts from {}", m_fontFallback.defaultDirectory);
 			Shutdown();
 			return false;
 		}
@@ -715,7 +715,7 @@ namespace interstice
 	{
 		if (texID == 0)
 		{
-			INTERSTICE_LOG_ERROR(kLogText, "draw_image_quad_sdf: text_id == 0");
+			TACHYON_LOG_ERROR(kLogText, "draw_image_quad_sdf: text_id == 0");
 			return;
 		}
 
@@ -922,4 +922,4 @@ namespace interstice
 		return intact;
 	}
 
-} // namespace interstice
+} // namespace tachyon

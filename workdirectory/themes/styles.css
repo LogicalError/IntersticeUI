@@ -1,5 +1,5 @@
 /* =============================================================================
-   Style rules for IntersticeUI. Reads CSS custom properties (--accent,
+   Style rules for TachyonUI. Reads CSS custom properties (--accent,
    --bg-content, etc.) that are defined by a palette file (dark.css or
    light.css). Always load a palette file BEFORE this file - var() lookups
    are resolved at parse time against whatever has been defined so far.
@@ -88,7 +88,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;   /* centred when its row stretches it */
+    -tachyon-vertical-text-align: middle;   /* centred when its row stretches it */
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -113,10 +113,10 @@
     text-overflow: ellipsis;
     text-align: start;
     vertical-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -136,7 +136,7 @@
     text-overflow: ellipsis;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -179,7 +179,7 @@
     text-wrap: nowrap;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size-sm);
     cursor: col-resize;
 }
@@ -195,7 +195,7 @@
     text-wrap: nowrap;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size-sm);
     cursor: col-resize;
 }
@@ -211,7 +211,7 @@
     text-wrap: nowrap;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size-sm);
     cursor: col-resize;
 }
@@ -227,7 +227,7 @@
     text-wrap: nowrap;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size-sm);
     cursor: col-resize;
 }
@@ -247,7 +247,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-family: monospace;
     font-size: 11.5px;
     line-height: 16px;
@@ -273,7 +273,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -296,7 +296,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: transparent;
@@ -326,7 +326,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size);
     flex-grow: 1;
     flex-shrink: 1;
@@ -394,7 +394,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size);
     flex-grow: 1;
     flex-shrink: 1;
@@ -404,7 +404,7 @@
 
 /* ---- buttonStyle ---------------------------------------------------------- */
 .button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
@@ -440,8 +440,8 @@
     padding: 3px 0px;
     overflow: hidden;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
@@ -463,8 +463,8 @@
     padding: 3px 0px;
     overflow: hidden;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
     flex-grow: 0;
     flex-shrink: 0;
     align-self: flex-end;
@@ -478,7 +478,7 @@
    stays clickable with a cursor + subtle hover. Used where a button shouldn't
    read as a button - e.g. the shortcut-rebind cell in the Shortcuts settings. */
 .flat-button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     border-width: 0px;
     border-color: transparent;
     background-color: transparent;
@@ -518,7 +518,7 @@
 }
 
 .first-button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -529,7 +529,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -544,7 +544,7 @@
 
 
 .mid-button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -555,7 +555,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -570,7 +570,7 @@
 
 
 .last-button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -581,7 +581,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -611,11 +611,11 @@
     overflow: auto;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: right;   /* the dropdown arrow */
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-color: var(--text-3);
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: right;   /* the dropdown arrow */
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-color: var(--text-3);
     text-wrap: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size);
@@ -768,8 +768,8 @@
     font-size: var(--font-size-sm);
     font-weight: 500;
     background-color: var(--bg-header);
-    -interstice-icon-side: right;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: right;
+    -tachyon-icon-text-gap: 4px;
 }
 .table-header:hover { background-color: var(--bg-active); cursor: pointer; }
 
@@ -788,8 +788,8 @@
     font-size: var(--font-size);
     font-weight: 500;
     background-color: var(--bg-panel);
-    -interstice-icon-side: right;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: right;
+    -tachyon-icon-text-gap: 4px;
     cursor: default;
 }
 .table-header-locked:hover { background-color: var(--bg-active); cursor: default; }
@@ -820,7 +820,7 @@
     padding: 3px 8px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: end;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -1009,7 +1009,7 @@
 }
 
 .tree-table-arrow-glyph {
-    -interstice-icon-size: 12px;
+    -tachyon-icon-size: 12px;
     margin: 0px;
     padding: 0px;
     border-width: 0px;
@@ -1022,7 +1022,7 @@
 }
 
 .tree-table-icon {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     margin: 0px;
     padding: 2px 4px 0px 0px;
     border-width: 0px;
@@ -1089,7 +1089,7 @@
 
 /* ---- toggleStyle ---------------------------------------------------------- */
 .toggle {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     border-width: var(--border);
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
@@ -1115,7 +1115,7 @@
 .toggle:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
 .first-toggle {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -1126,7 +1126,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -1140,7 +1140,7 @@
 .first-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 .mid-toggle {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -1151,7 +1151,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -1165,7 +1165,7 @@
 .mid-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 .last-toggle {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
     border-radius: var(--radius-md);
@@ -1176,7 +1176,7 @@
     padding: 0px 10px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -1290,8 +1290,8 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 4px;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: var(--bg-control);
@@ -1313,8 +1313,8 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    -interstice-icon-side: right;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: right;
+    -tachyon-icon-text-gap: 4px;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: var(--bg-control);
@@ -1336,8 +1336,8 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    -interstice-icon-side: top;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: top;
+    -tachyon-icon-text-gap: 4px;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: var(--bg-control);
@@ -1359,8 +1359,8 @@
     vertical-align: baseline;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    -interstice-icon-side: bottom;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: bottom;
+    -tachyon-icon-text-gap: 4px;
     color: var(--text-2);
     font-size: var(--font-size);
     background-color: var(--bg-control);
@@ -1413,7 +1413,7 @@
     text-wrap: wrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-clamp-scroll: false;
+    -tachyon-clamp-scroll: false;
 }
 
 /* ---- viewBackground: solid backdrop for the View panel's toolbar dock ----- */
@@ -1537,7 +1537,7 @@
     font-size: var(--font-size);
 }
 .node-view-overlay-button {
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     border-width: 0px;
     border-radius: var(--radius-md);
     border-color: transparent;
@@ -1680,7 +1680,7 @@
     text-wrap: nowrap;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-3);
     font-family: monospace;
     font-size: 10.5px;
@@ -1968,8 +1968,8 @@
     font-weight: 500;
     flex-grow: 0;
     flex-shrink: 0;
-    -interstice-icon-size: 14px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-icon-size: 14px;
+    -tachyon-icon-text-gap: 6px;
 }
 .title-bar-tab:hover  { background-color: var(--bg-header); color: var(--text-1); }
 .title-bar-tab:active { background-color: var(--title-bar-tab); color: var(--text-1); }
@@ -1982,10 +1982,10 @@
     background-color: transparent;
     border-color: transparent;
     color: var(--text-3);
-    -interstice-icon-color: var(--text-3);
-    -interstice-icon-size: 14px;
+    -tachyon-icon-color: var(--text-3);
+    -tachyon-icon-size: 14px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -1999,7 +1999,7 @@
     font-weight: 500;
     text-wrap: nowrap;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
 }
 .title-bar-text-button {
     height: 26px;
@@ -2013,10 +2013,10 @@
     font-size: var(--font-size);
     text-wrap: nowrap;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 14px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 14px;
+    -tachyon-icon-text-gap: 6px;
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
@@ -2117,19 +2117,19 @@
 /* Fixed icon column; reserved for every item in a menu that uses icons so the
    labels line up whether or not a given item supplies an icon. Width is the
    alignment-critical dimension (it sets the column); the extra height gives the
-   glyph vertical room so its bottom isn't clipped after centering. -interstice-icon-
+   glyph vertical room so its bottom isn't clipped after centering. -tachyon-icon-
    size renders the glyph to fit (0 would draw at natural size and clip).
    Centering uses the text-system alignment properties (text-align +
-   -interstice-vertical-text-align), not flex - the icon is drawn by the text system,
+   -tachyon-vertical-text-align), not flex - the icon is drawn by the text system,
    not laid out as a child. */
 .menu-item-icon {
     width: 16px;
     height: 18px;
-    -interstice-icon-size: 14px;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 0px;
+    -tachyon-icon-size: 14px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 0px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size);
     flex-grow: 0;
     flex-shrink: 0;
@@ -2138,9 +2138,9 @@
     padding: 0px;
     background-color: transparent;
     color: var(--text-2);
-    -interstice-icon-color: var(--text-2);
+    -tachyon-icon-color: var(--text-2);
 }
-.menu-item-icon::highlight(selected) { -interstice-icon-color: var(--accent); }   /* a checked item's tick */
+.menu-item-icon::highlight(selected) { -tachyon-icon-color: var(--accent); }   /* a checked item's tick */
 
 /* The label fills the row, pushing any trailing shortcut/arrow to the edge. */
 .menu-item-label {
@@ -2159,17 +2159,17 @@
 }
 
 .menu-item-label:disabled { color: var(--text-disabled); }
-.menu-item-icon:disabled  { color: var(--text-disabled); -interstice-icon-color: var(--text-disabled); }
+.menu-item-icon:disabled  { color: var(--text-disabled); -tachyon-icon-color: var(--text-disabled); }
 
 /* A destructive item (Delete, Discard): label and icon in the error color. */
 .menu-item-icon-destructive {
     width: 16px;
     height: 18px;
-    -interstice-icon-size: 14px;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 0px;
+    -tachyon-icon-size: 14px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 0px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size);
     flex-grow: 0;
     flex-shrink: 0;
@@ -2178,7 +2178,7 @@
     padding: 0px;
     background-color: transparent;
     color: var(--error);
-    -interstice-icon-color: var(--error);
+    -tachyon-icon-color: var(--error);
 }
 .menu-item-label-destructive {
     flex-grow: 1;
@@ -2195,7 +2195,7 @@
     background-color: transparent;
 }
 .menu-item-label-destructive:disabled { color: var(--text-disabled); }
-.menu-item-icon-destructive:disabled  { color: var(--text-disabled); -interstice-icon-color: var(--text-disabled); }
+.menu-item-icon-destructive:disabled  { color: var(--text-disabled); -tachyon-icon-color: var(--text-disabled); }
 
 /* Trailing keyboard shortcut: dimmed, pinned to the right edge. */
 .menu-item-shortcut {
@@ -2299,9 +2299,9 @@
     color: var(--text-2);
     margin: 0px;
     padding: 0px;
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -2316,9 +2316,9 @@
     color: var(--text-2);
     margin: 0px;
     padding: 0px;
-    -interstice-icon-size: 14px;
+    -tachyon-icon-size: 14px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -2431,7 +2431,7 @@
     border-width: 1px;
     border-radius: var(--radius-md);
     border-color: var(--accent);
-    -interstice-border-dash-size: 3px;
+    -tachyon-border-dash-size: 3px;
     background-color: var(--accent-soft);
 }
 .reorder-lifted {
@@ -2451,7 +2451,7 @@
     border-color: transparent;
     text-align: end;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-family: monospace;
@@ -2469,8 +2469,8 @@
     border-color: transparent;
     color: var(--text-3);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
@@ -2484,16 +2484,16 @@
     border-width: 1px;
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
-    -interstice-border-dash-size: 3px;
+    -tachyon-border-dash-size: 3px;
     background-color: transparent;
     color: var(--text-2);
     font-size: var(--font-size);
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
     text-wrap: nowrap;
     cursor: pointer;
 }
@@ -2505,16 +2505,16 @@
     border-width: 1px;
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
-    -interstice-border-dash-size: 3px;
+    -tachyon-border-dash-size: 3px;
     background-color: transparent;
     color: var(--text-2);
     font-size: var(--font-size);
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
     text-wrap: nowrap;
     cursor: pointer;
 }
@@ -2546,7 +2546,7 @@
     font-size: 11.5px;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     cursor: text;
@@ -2586,7 +2586,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -2599,7 +2599,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-family: monospace;
@@ -2636,7 +2636,7 @@
     font-size: 11.5px;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     cursor: text;
@@ -2858,8 +2858,8 @@
     flex-shrink: 0;
     align-self: stretch;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
 }
 .list-item-drag-knob-horz:hover  { background-color: var(--bg-active); cursor: ew-resize; }
 .list-item-drag-knob-horz:active { background-color: var(--accent-soft);        cursor: ew-resize; }
@@ -2877,8 +2877,8 @@
     flex-shrink: 0;
     align-self: stretch;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
 }
 .list-item-drag-knob-vert:hover  { background-color: var(--bg-active); cursor: ns-resize; }
 .list-item-drag-knob-vert:active { background-color: var(--accent-soft);        cursor: ns-resize; }
@@ -2963,10 +2963,10 @@
     text-wrap: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    -interstice-icon-side: top;
-    -interstice-icon-text-gap: 8px;
+    -tachyon-icon-side: top;
+    -tachyon-icon-text-gap: 8px;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;   /* icon and name centred in the cell */
+    -tachyon-vertical-text-align: middle;   /* icon and name centred in the cell */
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -2986,9 +2986,9 @@
     text-wrap: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-size: 16px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-size: 16px;
     vertical-align: middle;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3012,7 +3012,7 @@
     flex-wrap: nowrap;
     align-items: stretch;
     justify-content: center;   /* centred in the cell, as .grid-view-item */
-    gap: 8px; /* matches .grid-view-item's -interstice-icon-text-gap */
+    gap: 8px; /* matches .grid-view-item's -tachyon-icon-text-gap */
     overflow: hidden;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3029,7 +3029,7 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-start;
-    gap: 6px; /* matches .grid-view-list-item's -interstice-icon-text-gap */
+    gap: 6px; /* matches .grid-view-list-item's -tachyon-icon-text-gap */
     overflow: hidden;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3189,8 +3189,8 @@
     font-weight: 500;
     flex-grow: 0;
     flex-shrink: 0;
-    -interstice-icon-size: 14px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-icon-size: 14px;
+    -tachyon-icon-text-gap: 6px;
 }
 .tab:hover  { background-color: var(--bg-header); color: var(--text-1); }
 .tab:active { background-color: var(--bg-active); color: var(--text-1); }
@@ -3209,17 +3209,17 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 4px;
-    -interstice-icon-size: 15px;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-offset-y: -1px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 4px;
+    -tachyon-icon-size: 15px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-offset-y: -1px;
     flex-grow: 0;
     flex-shrink: 0;
 }
 .tab-content:hover  { color: var(--text-1); }
 .tab-content:active { color: var(--text-1); }
-.tab-content::highlight(selected) { color: var(--text-1); -interstice-icon-color: var(--accent); }
+.tab-content::highlight(selected) { color: var(--text-1); -tachyon-icon-color: var(--accent); }
 
 /* ---- tabCloseStyle: small close button in a tab --------------------------- */
 .tab-close {
@@ -3231,10 +3231,10 @@
     color: var(--text-3);
     font-size: var(--font-size-sm);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-text-gap: 4px;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-text-gap: 4px;
+    -tachyon-icon-size: 16px;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -3675,7 +3675,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-family: monospace;
     font-size: 11.5px;
     flex-grow: 1;
@@ -3727,7 +3727,7 @@
     font-size: 11.5px;
     text-align: end;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     cursor: text;
@@ -3854,7 +3854,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -3882,7 +3882,7 @@
     font-family: monospace;
     font-size: 11px;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     flex-grow: 0;
     flex-shrink: 0;
@@ -3920,7 +3920,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     font-weight: 500;
@@ -3951,7 +3951,7 @@
     font-size: 11.5px;
     text-align: end;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     flex-shrink: 0;
@@ -3980,7 +3980,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-2);
     font-size: var(--font-size);
     flex-shrink: 0;
@@ -4011,7 +4011,7 @@
     font-size: 11.5px;
     text-align: end;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     cursor: text;
@@ -4050,7 +4050,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     color: var(--text-3);
     font-size: 11px;
     font-weight: 500;
@@ -4092,13 +4092,13 @@
     border-width: 1px;
     border-radius: var(--radius-md);
     border-color: var(--line-strong);
-    -interstice-border-dash-size: 3px;
+    -tachyon-border-dash-size: 3px;
     background-color: transparent;
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     color: var(--text-2);
     flex-shrink: 0;
     cursor: pointer;
@@ -4125,7 +4125,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-1);
     font-size: 13px;
@@ -4138,7 +4138,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: var(--font-size);
@@ -4154,8 +4154,8 @@
     border-color: transparent;
     color: var(--text-2);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 14px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 14px;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -4179,7 +4179,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: var(--font-size);
@@ -4207,7 +4207,7 @@
     font-size: var(--font-size);
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     flex-grow: 0;
     flex-shrink: 0;
@@ -4230,7 +4230,7 @@
     font-weight: 600;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     flex-grow: 0;
     flex-shrink: 0;
@@ -4256,7 +4256,7 @@
     font-weight: 600;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     flex-grow: 0;
     flex-shrink: 0;
@@ -4291,8 +4291,8 @@
     border-color: transparent;
     color: var(--text-3);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 14px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 14px;
     cursor: pointer;
 }
 .message-box-close:hover { background-color: var(--bg-active); color: var(--text-1); }
@@ -4316,10 +4316,10 @@
     border-radius: 16px;
     background-color: var(--warn-soft);
     color: var(--warn);
-    -interstice-icon-color: var(--warn);
-    -interstice-icon-size: 16px;
+    -tachyon-icon-color: var(--warn);
+    -tachyon-icon-size: 16px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }
 .message-box-question {
@@ -4331,10 +4331,10 @@
     border-radius: 16px;
     background-color: var(--info-soft);
     color: var(--accent);
-    -interstice-icon-color: var(--accent);
-    -interstice-icon-size: 16px;
+    -tachyon-icon-color: var(--accent);
+    -tachyon-icon-size: 16px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }
 .message-box-error {
@@ -4346,10 +4346,10 @@
     border-radius: 16px;
     background-color: var(--error-circle);
     color: var(--error);
-    -interstice-icon-color: var(--error);
-    -interstice-icon-size: 16px;
+    -tachyon-icon-color: var(--error);
+    -tachyon-icon-size: 16px;
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }
 .message-box-text {
@@ -4427,7 +4427,7 @@
     color: var(--text-1);
     text-wrap: nowrap;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
 }
 .message-box-item-meta {
     margin: 0px;
@@ -4439,7 +4439,7 @@
     font-size: 11px;
     text-wrap: nowrap;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
 }
 .message-box-details-toggle {
     margin: 6px 0px 0px 0px;
@@ -4450,9 +4450,9 @@
     color: var(--text-2);
     font-size: var(--font-size);
     text-align: start;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 4px;
     text-wrap: nowrap;
     cursor: pointer;
 }
@@ -4499,7 +4499,7 @@
     background-color: var(--bg-input);
     color: var(--on-accent);
     text-align: center;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }
 .checkbox-box::highlight(selected) { background-color: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -4510,7 +4510,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-2);
     font-size: var(--font-size);
@@ -4566,7 +4566,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -4606,7 +4606,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--on-accent);
     font-size: 10.5px;
@@ -4655,7 +4655,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-1);
     font-size: var(--font-size);
@@ -4668,7 +4668,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -4681,7 +4681,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-2);
     font-size: var(--font-size);
@@ -4714,7 +4714,7 @@
     font-size: 11.5px;
     text-align: end;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     overflow: hidden;
     cursor: text;
@@ -4728,7 +4728,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11.5px;
@@ -4804,7 +4804,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: var(--font-size);
@@ -4829,7 +4829,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -4842,7 +4842,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-3);
     font-size: 11px;
@@ -4858,7 +4858,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-2);
     font-size: 11px;
@@ -4871,7 +4871,7 @@
     background-color: transparent;
     border-color: transparent;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     color: var(--text-2);
     font-size: 11px;
@@ -4894,10 +4894,10 @@
     color: var(--text-1);
     font-size: var(--font-size);
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
     text-wrap: nowrap;
     flex-grow: 0;
     flex-shrink: 0;
@@ -4916,8 +4916,8 @@
     background-color: transparent;
     color: var(--text-2);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -4933,8 +4933,8 @@
     background-color: var(--dialog-control);
     color: var(--text-1);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -4950,8 +4950,8 @@
     background-color: var(--dialog-control);
     color: var(--error);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -5090,7 +5090,7 @@
 
 /* ---- toolbar buttonStyle -------------------------------------------------- */
 .toolbar-button {
-    -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
+    -tachyon-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
     min-width: 24px;
     height: 24px;
     border-width: 0px;
@@ -5102,7 +5102,7 @@
     padding: 0px 5px;
     overflow: auto;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -5119,7 +5119,7 @@
 /* Same compact visuals as .toolbar-button; the ::highlight(selected) state    */
 /* paints the "on" appearance via the accent-blue fill.                        */
 .toolbar-toggle {
-    -interstice-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
+    -tachyon-icon-size: 14px; /* drawn at their natural size (24 for Lucide) otherwise */
     min-width: 24px;
     height: 24px;
     border-width: 0px;
@@ -5131,7 +5131,7 @@
     padding: 0px 5px;
     overflow: auto;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     text-overflow: ellipsis;
@@ -5162,7 +5162,7 @@
     text-wrap: nowrap;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     font-size: var(--font-size);
     flex-grow: 0;
 }
@@ -5179,10 +5179,10 @@
 /* show a current value that should read from the left edge.                   */
 .toolbar-menu-trigger {
     height: 24px;
-    -interstice-icon-side: right;   /* the dropdown arrow */
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-color: var(--text-3);
+    -tachyon-icon-side: right;   /* the dropdown arrow */
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-color: var(--text-3);
     border-width: 0px;
     border-radius: var(--radius-md);
     border-color: transparent;
@@ -5192,7 +5192,7 @@
     padding: 0px 7px;
     overflow: auto;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: start;
     text-wrap: nowrap;
     text-overflow: ellipsis;

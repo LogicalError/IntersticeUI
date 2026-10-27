@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_base_types.h>
 
-namespace interstice
+namespace tachyon
 {
     class OSWindowManager;
     class WindowRegistry;

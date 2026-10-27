@@ -3,7 +3,7 @@
 // Per-property CSS value parsing (Parser::ParseDeclValue) and application to a
 // Style (Parser::ApplyDecl). Adding a CSS property touches only this file.
 
-namespace interstice {
+namespace tachyon {
 
 // Parser::ParseDeclValue  (out-of-class definition)
 // ============================================================================
@@ -17,7 +17,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
 
     // --- Color properties ---------------------------------------------------
     if (ICEq(p,"background-color") || ICEq(p,"border-color") || ICEq(p,"color") ||
-        ICEq(p,"-interstice-icon-color") || ICEq(p,"border-top-color") || ICEq(p,"border-right-color") ||
+        ICEq(p,"-tachyon-icon-color") || ICEq(p,"border-top-color") || ICEq(p,"border-right-color") ||
         ICEq(p,"border-bottom-color") || ICEq(p,"border-left-color"))
         return ParseColorStyleValue(d);
 
@@ -50,12 +50,12 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     // --- Float scalars ------------------------------------------------------
     static const char* kFloatProps[] = {
         "font-size","letter-spacing","word-spacing",
-        "-interstice-icon-text-gap","-interstice-icon-size","-interstice-icon-offset-y","gap","flex-grow","flex-shrink",
+        "-tachyon-icon-text-gap","-tachyon-icon-size","-tachyon-icon-offset-y","gap","flex-grow","flex-shrink",
         "text-underline-thickness","text-underline-offset",
         "text-overline-thickness","text-overline-offset",
         "text-throughline-thickness","text-throughline-offset",
         "text-bottomline-thickness","text-bottomline-offset",
-        "-interstice-border-dash-size","-interstice-border-dash-offset",
+        "-tachyon-border-dash-size","-tachyon-border-dash-offset",
         nullptr
     };
     for (int i = 0; kFloatProps[i]; ++i)
@@ -132,7 +132,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     }
 
     // --- Grid track (auto | Npx | Nfr) --------------------------------------
-    if (ICEq(p,"-interstice-grid-column-track") || ICEq(p,"-interstice-grid-row-track"))
+    if (ICEq(p,"-tachyon-grid-column-track") || ICEq(p,"-tachyon-grid-row-track"))
         return ParseGridTrack(d.gridTrackVal);
 
     // --- line-height: normal | <number>px | <number>em | <number> -----------
@@ -214,10 +214,10 @@ bool Parser::ParseDeclValue(StyleDecl& d)
     if (ICEq(p,"font-family"))
         return ParseFontFamilyList(d);
 
-    // -interstice-language: <bcp47-tag> | "<bcp47-tag>" | none
-    if (ICEq(p,"-interstice-language"))
+    // -tachyon-language: <bcp47-tag> | "<bcp47-tag>" | none
+    if (ICEq(p,"-tachyon-language"))
     {
-        if (!m_lex.Check(TT::Ident) && !m_lex.Check(TT::StringLit)) { Error("Expected a language tag for '-interstice-language'"); return false; }
+        if (!m_lex.Check(TT::Ident) && !m_lex.Check(TT::StringLit)) { Error("Expected a language tag for '-tachyon-language'"); return false; }
         const std::string tag = m_lex.Consume().text;
         if (ICEq(tag, "none")) { d.languageVal = {}; return true; }
         d.languageVal = LanguageTag(tag);
@@ -256,7 +256,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         else if (ICEq(v,"avoid"))   { d.enumVal = 3; return true; }
         Error("Unknown break-after '"+v+"'"); return false;
     }
-    if (ICEq(p,"-interstice-clamp-scroll"))
+    if (ICEq(p,"-tachyon-clamp-scroll"))
     {
         if      (ICEq(v,"true")  || ICEq(v,"1")) { d.enumVal = 1; return true; }
         else if (ICEq(v,"false") || ICEq(v,"0")) { d.enumVal = 0; return true; }
@@ -372,19 +372,19 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         else if (ICEq(v,"bottom")) { d.enumVal=(int)TextAlign::Bottom; return true; }
         Error("Unknown text-align '"+v+"'"); return false;
     }
-    if (ICEq(p,"-interstice-vertical-trim"))
+    if (ICEq(p,"-tachyon-vertical-trim"))
     {
         if      (ICEq(v,"default")||ICEq(v,"normal")) { d.enumVal=(int)VerticalTrim::Default;        return true; }
         else if (ICEq(v,"cap-to-baseline"))           { d.enumVal=(int)VerticalTrim::CapToBaseline;  return true; }
-        Error("Unknown -interstice-vertical-trim '"+v+"'"); return false;
+        Error("Unknown -tachyon-vertical-trim '"+v+"'"); return false;
     }
-    if (ICEq(p,"-interstice-vertical-text-align"))
+    if (ICEq(p,"-tachyon-vertical-text-align"))
     {
         // Vertical position of the text (+ icon) block in its rect; `middle` = `center`.
         if      (ICEq(v,"start")||ICEq(v,"top"))             { d.enumVal=(int)TextAlign::Start;  return true; }
         else if (ICEq(v,"center")||ICEq(v,"middle"))         { d.enumVal=(int)TextAlign::Center; return true; }
         else if (ICEq(v,"end")||ICEq(v,"bottom"))            { d.enumVal=(int)TextAlign::End;    return true; }
-        Error("Unknown -interstice-vertical-text-align '"+v+"'"); return false;
+        Error("Unknown -tachyon-vertical-text-align '"+v+"'"); return false;
     }
     if (ICEq(p,"text-wrap"))
     {
@@ -407,7 +407,7 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         else if (ICEq(v,"rtl"))     { d.enumVal=(int)TextDirection::RightToLeft; return true; }
         Error("Unknown direction '"+v+"'"); return false;
     }
-    if (ICEq(p,"-interstice-text-baseline") || ICEq(p,"dominant-baseline") || ICEq(p,"vertical-align"))
+    if (ICEq(p,"-tachyon-text-baseline") || ICEq(p,"dominant-baseline") || ICEq(p,"vertical-align"))
     {
         if      (ICEq(v,"auto"))         { d.enumVal=(int)TextBaseline::Alphabetic;   return true; }
         else if (ICEq(v,"baseline")||ICEq(v,"alphabetic")) { d.enumVal=(int)TextBaseline::Alphabetic; return true; }
@@ -454,13 +454,13 @@ bool Parser::ParseDeclValue(StyleDecl& d)
         else if (ICEq(v,"ultra-expanded"))   { d.enumVal=(int)FontStretch::UltraExpanded;  return true; }
         Error("Unknown font-stretch '"+v+"'"); return false;
     }
-    if (ICEq(p,"-interstice-icon-side"))
+    if (ICEq(p,"-tachyon-icon-side"))
     {
         if      (ICEq(v,"left"))   { d.enumVal=(int)IconSide::Left;   return true; }
         else if (ICEq(v,"right"))  { d.enumVal=(int)IconSide::Right;  return true; }
         else if (ICEq(v,"top"))    { d.enumVal=(int)IconSide::Top;    return true; }
         else if (ICEq(v,"bottom")) { d.enumVal=(int)IconSide::Bottom; return true; }
-        Error("Unknown -interstice-icon-side '"+v+"'"); return false;
+        Error("Unknown -tachyon-icon-side '"+v+"'"); return false;
     }
     if (ICEq(p,"text-underline-style")   || ICEq(p,"text-overline-style") ||
         ICEq(p,"text-throughline-style") || ICEq(p,"text-bottomline-style"))
@@ -506,7 +506,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"border-right-color"))  { s.states[si].borderColors[1] = d.colorStyleVal; return; }
     if (ICEq(p,"border-bottom-color")) { s.states[si].borderColors[2] = d.colorStyleVal; return; }
     if (ICEq(p,"border-left-color"))   { s.states[si].borderColors[3] = d.colorStyleVal; return; }
-    if (ICEq(p,"-interstice-icon-color")) { s.states[si].iconColor = d.colorStyleVal; return; }
+    if (ICEq(p,"-tachyon-icon-color")) { s.states[si].iconColor = d.colorStyleVal; return; }
     if (ICEq(p,"box-shadow"))
     {
         for (int i = 0; i < kMaxBoxShadows; ++i)
@@ -526,7 +526,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"font-style"))      { s.states[si].textStyle.style         = (FontStyle)d.enumVal;  return; }
     if (ICEq(p,"font-family"))     { s.states[si].textStyle.family        = (FontFamily)d.enumVal;
                                      s.states[si].textStyle.fontId        = d.fontIdVal;           return; }
-    if (ICEq(p,"-interstice-language")){ s.states[si].textStyle.language      = d.languageVal;         return; }
+    if (ICEq(p,"-tachyon-language")){ s.states[si].textStyle.language      = d.languageVal;         return; }
     if (ICEq(p,"font-stretch"))    { s.states[si].textStyle.stretch       = (FontStretch)d.enumVal;return; }
     if (ICEq(p,"line-height"))     { s.states[si].textStyle.lineHeight    = d.fVal;
                                      s.states[si].textStyle.lineHeightType = (LineHeight)d.enumVal; return; }
@@ -582,8 +582,8 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"border-bottom-right-radius")) { s.borderRadius.bottomRight = d.uVal; return; }
     if (ICEq(p,"border-bottom-left-radius"))  { s.borderRadius.bottomLeft  = d.uVal; return; }
 
-    if (ICEq(p,"-interstice-border-dash-size"))   { s.borderDashSize   = d.fVal; return; }
-    if (ICEq(p,"-interstice-border-dash-offset")) { s.borderDashOffset = d.fVal; return; }
+    if (ICEq(p,"-tachyon-border-dash-size"))   { s.borderDashSize   = d.fVal; return; }
+    if (ICEq(p,"-tachyon-border-dash-offset")) { s.borderDashOffset = d.fVal; return; }
     if (ICEq(p,"border-style"))
     {
         if      (d.enumVal == 0) { s.borderDashSize = 0; s.borderDashOffset = 0; } // solid
@@ -600,7 +600,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
         else if (d.enumVal == 3) s.breakBehavior = BreakBehavior::Avoid;   // avoid
         return;
     }
-    if (ICEq(p,"-interstice-clamp-scroll"))   { s.clampScroll  = (bool)d.enumVal; return; }
+    if (ICEq(p,"-tachyon-clamp-scroll"))   { s.clampScroll  = (bool)d.enumVal; return; }
 
     if (ICEq(p,"display"))    { s.display    = (Display)d.enumVal;     return; }
     // `overflow` sets BOTH axes; `overflow-x` / `overflow-y` target one.
@@ -609,19 +609,19 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"overflow-y")) { s.overflowY  = (Overflow)d.enumVal;    return; }
     if (ICEq(p,"visibility")) { s.visibility = (Visibility)d.enumVal;  return; }
     if (ICEq(p,"cursor"))     { s.cursor     = (MouseCursor)d.enumVal; return; }
-    if (ICEq(p,"-interstice-icon-side"))  { s.iconSide   = (IconSide)d.enumVal;    return; }
+    if (ICEq(p,"-tachyon-icon-side"))  { s.iconSide   = (IconSide)d.enumVal;    return; }
 
-    if (ICEq(p,"-interstice-icon-text-gap"))
+    if (ICEq(p,"-tachyon-icon-text-gap"))
     {
         s.iconTextGap = (uint16_t)std::clamp((int)d.fVal, 0, 65535); return;
     }
 
-    if (ICEq(p,"-interstice-icon-size"))
+    if (ICEq(p,"-tachyon-icon-size"))
     {
         s.iconSize = (uint16_t)std::clamp((int)d.fVal, 0, 65535); return;
     }
 
-    if (ICEq(p,"-interstice-icon-offset-y"))
+    if (ICEq(p,"-tachyon-icon-offset-y"))
     {
         s.iconOffsetY = (int16_t)std::clamp((int)d.fVal, -32768, 32767); return;
     }
@@ -640,8 +640,8 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     }
 
     // Grid item properties
-    if (ICEq(p,"-interstice-grid-column-track")) { s.layoutData.grid.column.track = d.gridTrackVal; return; }
-    if (ICEq(p,"-interstice-grid-row-track"))    { s.layoutData.grid.row.track    = d.gridTrackVal; return; }
+    if (ICEq(p,"-tachyon-grid-column-track")) { s.layoutData.grid.column.track = d.gridTrackVal; return; }
+    if (ICEq(p,"-tachyon-grid-row-track"))    { s.layoutData.grid.row.track    = d.gridTrackVal; return; }
     if (ICEq(p,"grid-column-start")) { s.layoutData.grid.column.start = (int16_t)d.iVal; return; }
     if (ICEq(p,"grid-row-start"))    { s.layoutData.grid.row.start    = (int16_t)d.iVal; return; }
     if (ICEq(p,"grid-column"))
@@ -688,12 +688,12 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     }
 
     if (ICEq(p,"text-align"))                 { s.textLayoutStyle.horizontalAlignment = (TextAlign)d.enumVal;  return; }
-    if (ICEq(p,"-interstice-vertical-text-align")){ s.textLayoutStyle.verticalAlignment   = (TextAlign)d.enumVal;  return; }
-    if (ICEq(p,"-interstice-vertical-trim"))      { s.textLayoutStyle.verticalTrim        = (VerticalTrim)d.enumVal; return; }
+    if (ICEq(p,"-tachyon-vertical-text-align")){ s.textLayoutStyle.verticalAlignment   = (TextAlign)d.enumVal;  return; }
+    if (ICEq(p,"-tachyon-vertical-trim"))      { s.textLayoutStyle.verticalTrim        = (VerticalTrim)d.enumVal; return; }
     if (ICEq(p,"text-wrap"))               { s.textLayoutStyle.textWrapping        = (TextWrap)d.enumVal;      return; }
     if (ICEq(p,"text-overflow"))           { s.textLayoutStyle.textOverflow        = (TextOverflow)d.enumVal;  return; }
     if (ICEq(p,"direction"))               { s.textLayoutStyle.textDirection       = (TextDirection)d.enumVal; return; }
-    if (ICEq(p,"-interstice-text-baseline") || ICEq(p,"dominant-baseline") || ICEq(p,"vertical-align"))
+    if (ICEq(p,"-tachyon-text-baseline") || ICEq(p,"dominant-baseline") || ICEq(p,"vertical-align"))
                                            { s.textLayoutStyle.baseline            = (TextBaseline)d.enumVal;  return; }
 }
 }

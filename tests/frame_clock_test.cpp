@@ -12,7 +12,7 @@
 
 #include <cmath>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

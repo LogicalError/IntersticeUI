@@ -1,6 +1,6 @@
 ﻿#include <gui_core/graphics/vulkan/vk_initializers.h>
 
-VkCommandPoolCreateInfo interstice::vulkan::command_pool_create_info(uint32_t queueFamilyIndex,
+VkCommandPoolCreateInfo tachyon::vulkan::command_pool_create_info(uint32_t queueFamilyIndex,
     VkCommandPoolCreateFlags flags /*= 0*/)
 {
     VkCommandPoolCreateInfo info = {};
@@ -12,7 +12,7 @@ VkCommandPoolCreateInfo interstice::vulkan::command_pool_create_info(uint32_t qu
 }
 
 
-VkCommandBufferAllocateInfo interstice::vulkan::command_buffer_allocate_info(
+VkCommandBufferAllocateInfo tachyon::vulkan::command_buffer_allocate_info(
     VkCommandPool pool, uint32_t count /*= 1*/)
 {
     VkCommandBufferAllocateInfo info = {};
@@ -25,7 +25,7 @@ VkCommandBufferAllocateInfo interstice::vulkan::command_buffer_allocate_info(
     return info;
 }
 
-VkCommandBufferBeginInfo interstice::vulkan::command_buffer_begin_info(VkCommandBufferUsageFlags flags /*= 0*/)
+VkCommandBufferBeginInfo tachyon::vulkan::command_buffer_begin_info(VkCommandBufferUsageFlags flags /*= 0*/)
 {
     VkCommandBufferBeginInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -36,7 +36,7 @@ VkCommandBufferBeginInfo interstice::vulkan::command_buffer_begin_info(VkCommand
     return info;
 }
 
-VkFenceCreateInfo interstice::vulkan::fence_create_info(VkFenceCreateFlags flags /*= 0*/)
+VkFenceCreateInfo tachyon::vulkan::fence_create_info(VkFenceCreateFlags flags /*= 0*/)
 {
     VkFenceCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -47,7 +47,7 @@ VkFenceCreateInfo interstice::vulkan::fence_create_info(VkFenceCreateFlags flags
     return info;
 }
 
-VkSemaphoreCreateInfo interstice::vulkan::semaphore_create_info(VkSemaphoreCreateFlags flags /*= 0*/)
+VkSemaphoreCreateInfo tachyon::vulkan::semaphore_create_info(VkSemaphoreCreateFlags flags /*= 0*/)
 {
     VkSemaphoreCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -56,7 +56,7 @@ VkSemaphoreCreateInfo interstice::vulkan::semaphore_create_info(VkSemaphoreCreat
     return info;
 }
 
-VkSemaphoreSubmitInfo interstice::vulkan::semaphore_submit_info(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore)
+VkSemaphoreSubmitInfo tachyon::vulkan::semaphore_submit_info(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore)
 {
 	VkSemaphoreSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
@@ -69,7 +69,7 @@ VkSemaphoreSubmitInfo interstice::vulkan::semaphore_submit_info(VkPipelineStageF
 	return submitInfo;
 }
 
-VkCommandBufferSubmitInfo interstice::vulkan::command_buffer_submit_info(VkCommandBuffer cmd)
+VkCommandBufferSubmitInfo tachyon::vulkan::command_buffer_submit_info(VkCommandBuffer cmd)
 {
 	VkCommandBufferSubmitInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
@@ -80,7 +80,7 @@ VkCommandBufferSubmitInfo interstice::vulkan::command_buffer_submit_info(VkComma
 	return info;
 }
 
-VkSubmitInfo2 interstice::vulkan::submit_info(VkCommandBufferSubmitInfo* cmd, VkSemaphoreSubmitInfo* signalSemaphoreInfo,
+VkSubmitInfo2 tachyon::vulkan::submit_info(VkCommandBufferSubmitInfo* cmd, VkSemaphoreSubmitInfo* signalSemaphoreInfo,
     VkSemaphoreSubmitInfo* waitSemaphoreInfo)
 {
     VkSubmitInfo2 info = {};
@@ -99,7 +99,7 @@ VkSubmitInfo2 interstice::vulkan::submit_info(VkCommandBufferSubmitInfo* cmd, Vk
     return info;
 }
 
-VkPresentInfoKHR interstice::vulkan::present_info()
+VkPresentInfoKHR tachyon::vulkan::present_info()
 {
     VkPresentInfoKHR info = {};
     info.sType =  VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -114,7 +114,7 @@ VkPresentInfoKHR interstice::vulkan::present_info()
     return info;
 }
 
-VkRenderingAttachmentInfo interstice::vulkan::attachment_info(
+VkRenderingAttachmentInfo tachyon::vulkan::attachment_info(
     VkImageView view, VkClearValue* clear ,VkImageLayout layout /*= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL*/)
 {
     VkRenderingAttachmentInfo colorAttachment {};
@@ -132,7 +132,7 @@ VkRenderingAttachmentInfo interstice::vulkan::attachment_info(
     return colorAttachment;
 }
 
-VkRenderingAttachmentInfo interstice::vulkan::depth_attachment_info(
+VkRenderingAttachmentInfo tachyon::vulkan::depth_attachment_info(
     VkImageView view, VkImageLayout layout)
 {
     VkRenderingAttachmentInfo depthAttachment {};
@@ -148,7 +148,7 @@ VkRenderingAttachmentInfo interstice::vulkan::depth_attachment_info(
     return depthAttachment;
 }
 
-VkRenderingInfo interstice::vulkan::rendering_info(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment,
+VkRenderingInfo tachyon::vulkan::rendering_info(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment,
     VkRenderingAttachmentInfo* depthAttachment)
 {
     VkRenderingInfo renderInfo {};
@@ -165,7 +165,7 @@ VkRenderingInfo interstice::vulkan::rendering_info(VkExtent2D renderExtent, VkRe
     return renderInfo;
 }
 
-VkImageSubresourceRange interstice::vulkan::image_subresource_range(VkImageAspectFlags aspectMask)
+VkImageSubresourceRange tachyon::vulkan::image_subresource_range(VkImageAspectFlags aspectMask)
 {
     VkImageSubresourceRange subImage {};
     subImage.aspectMask = aspectMask;
@@ -177,7 +177,7 @@ VkImageSubresourceRange interstice::vulkan::image_subresource_range(VkImageAspec
     return subImage;
 }
 
-VkDescriptorSetLayoutBinding interstice::vulkan::descriptorset_layout_binding(VkDescriptorType type, VkShaderStageFlags stageFlags,
+VkDescriptorSetLayoutBinding tachyon::vulkan::descriptorset_layout_binding(VkDescriptorType type, VkShaderStageFlags stageFlags,
     uint32_t binding)
 {
     VkDescriptorSetLayoutBinding setbind = {};
@@ -190,7 +190,7 @@ VkDescriptorSetLayoutBinding interstice::vulkan::descriptorset_layout_binding(Vk
     return setbind;
 }
 
-VkDescriptorSetLayoutCreateInfo interstice::vulkan::descriptorset_layout_create_info(VkDescriptorSetLayoutBinding* bindings,
+VkDescriptorSetLayoutCreateInfo tachyon::vulkan::descriptorset_layout_create_info(VkDescriptorSetLayoutBinding* bindings,
     uint32_t bindingCount)
 {
     VkDescriptorSetLayoutCreateInfo info = {};
@@ -204,7 +204,7 @@ VkDescriptorSetLayoutCreateInfo interstice::vulkan::descriptorset_layout_create_
     return info;
 }
 
-VkWriteDescriptorSet interstice::vulkan::write_descriptor_image(VkDescriptorType type, VkDescriptorSet dstSet,
+VkWriteDescriptorSet tachyon::vulkan::write_descriptor_image(VkDescriptorType type, VkDescriptorSet dstSet,
     VkDescriptorImageInfo* imageInfo, uint32_t binding)
 {
     VkWriteDescriptorSet write = {};
@@ -220,7 +220,7 @@ VkWriteDescriptorSet interstice::vulkan::write_descriptor_image(VkDescriptorType
     return write;
 }
 
-VkWriteDescriptorSet interstice::vulkan::write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet,
+VkWriteDescriptorSet tachyon::vulkan::write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet,
     VkDescriptorBufferInfo* bufferInfo, uint32_t binding)
 {
     VkWriteDescriptorSet write = {};
@@ -236,7 +236,7 @@ VkWriteDescriptorSet interstice::vulkan::write_descriptor_buffer(VkDescriptorTyp
     return write;
 }
 
-VkDescriptorBufferInfo interstice::vulkan::buffer_info(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+VkDescriptorBufferInfo tachyon::vulkan::buffer_info(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
 {
     VkDescriptorBufferInfo binfo {};
     binfo.buffer = buffer;
@@ -245,7 +245,7 @@ VkDescriptorBufferInfo interstice::vulkan::buffer_info(VkBuffer buffer, VkDevice
     return binfo;
 }
 
-VkImageCreateInfo interstice::vulkan::image_create_info(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent)
+VkImageCreateInfo tachyon::vulkan::image_create_info(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent)
 {
     VkImageCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -267,7 +267,7 @@ VkImageCreateInfo interstice::vulkan::image_create_info(VkFormat format, VkImage
     return info;
 }
 
-VkImageViewCreateInfo interstice::vulkan::imageview_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
+VkImageViewCreateInfo tachyon::vulkan::imageview_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
 {
     VkImageViewCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -285,7 +285,7 @@ VkImageViewCreateInfo interstice::vulkan::imageview_create_info(VkFormat format,
     return info;
 }
 
-VkPipelineLayoutCreateInfo interstice::vulkan::pipeline_layout_create_info()
+VkPipelineLayoutCreateInfo tachyon::vulkan::pipeline_layout_create_info()
 {
     VkPipelineLayoutCreateInfo info {};
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -299,7 +299,7 @@ VkPipelineLayoutCreateInfo interstice::vulkan::pipeline_layout_create_info()
     return info;
 }
 
-VkPipelineShaderStageCreateInfo interstice::vulkan::pipeline_shader_stage_create_info(VkShaderStageFlagBits stage,
+VkPipelineShaderStageCreateInfo tachyon::vulkan::pipeline_shader_stage_create_info(VkShaderStageFlagBits stage,
     VkShaderModule shaderModule,
     const char * entry)
 {

@@ -33,7 +33,7 @@ jobs:
 
       - name: Build the reference
         run: |
-          export INTERSTICE_VERSION=$(grep -oP 'set\(INTERSTICE_VERSION \K[^)]+' CMakeLists.txt)
+          export TACHYON_VERSION=$(grep -oP 'set\(TACHYON_VERSION \K[^)]+' CMakeLists.txt)
           export DOXYGEN_OUTPUT="$RUNNER_TEMP/docs"
           doxygen docs/Doxyfile
 

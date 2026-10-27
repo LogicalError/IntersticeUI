@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-namespace interstice
+namespace tachyon
 {
     ID DragDropState::ResolveDropTarget(ID hoveredID) const
     {

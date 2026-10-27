@@ -15,13 +15,13 @@ namespace
 
     TEST_F(SkribidiHeadlessTest, AnAppIconIsNotTheThemesIconOfTheSameName)
     {
-        interstice::GUITheme theme;
+        tachyon::GUITheme theme;
         theme.InitializeDefaultStyles(styleManager, textSystem.get());
-        ASSERT_NE(theme.infoIcon, interstice::IconID::Invalid);
+        ASSERT_NE(theme.infoIcon, tachyon::IconID::Invalid);
 
-        const interstice::IconID info  = textSystem->RegisterIconFromSVG("info",  kBadge, std::strlen(kBadge));
-        const interstice::IconID error = textSystem->RegisterIconFromSVG("error", kBadge, std::strlen(kBadge));
-        EXPECT_NE(info, interstice::IconID::Invalid);
+        const tachyon::IconID info  = textSystem->RegisterIconFromSVG("info",  kBadge, std::strlen(kBadge));
+        const tachyon::IconID error = textSystem->RegisterIconFromSVG("error", kBadge, std::strlen(kBadge));
+        EXPECT_NE(info, tachyon::IconID::Invalid);
         EXPECT_NE(info, theme.infoIcon);
         EXPECT_NE(error, theme.errorIcon);
     }
@@ -29,8 +29,8 @@ namespace
     // The same icon registered again (a theme reload) is the same icon.
     TEST_F(SkribidiHeadlessTest, AnIconRegisteredAgainIsTheSameIcon)
     {
-        const interstice::IconID first  = textSystem->RegisterIconFromSVG("badge", kBadge, std::strlen(kBadge));
-        const interstice::IconID second = textSystem->RegisterIconFromSVG("badge", kBadge, std::strlen(kBadge));
+        const tachyon::IconID first  = textSystem->RegisterIconFromSVG("badge", kBadge, std::strlen(kBadge));
+        const tachyon::IconID second = textSystem->RegisterIconFromSVG("badge", kBadge, std::strlen(kBadge));
         EXPECT_EQ(first, second);
     }
 }
