@@ -92,6 +92,8 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_shaping_test.cpp
   font_set_test.cpp
   built_in_resources_test.cpp
+  tutorial_test.cpp
+  tutorial_snippets_test.cpp
   skribidi_editor_test.cpp
   table_scrollbar_test.cpp
   controls_table_frozen_test.cpp
@@ -116,6 +118,10 @@ list(APPEND GUI_CORE_TEST_FILES
 
 add_executable(gui_core_tests ${GUI_CORE_TEST_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_CORE_TEST_FILES})
+# The tutorial's app (docs/tutorial.md), whose panels tutorial_test.cpp drives.
+set(TACHYON_TUTORIAL_SOURCES "${PROJECT_SOURCE_DIR}/examples/tutorial/my_app.cpp" "${PROJECT_SOURCE_DIR}/examples/tutorial/my_app.h")
+target_sources(gui_core_tests PRIVATE ${TACHYON_TUTORIAL_SOURCES})
+source_group("Tutorial" FILES ${TACHYON_TUTORIAL_SOURCES})
 
 # gui_controls gives us the widget layer (GUIApplication, BeginTable, etc.)
 # that integration tests drive through the headless harness. It transitively
@@ -171,12 +177,15 @@ if(TACHYON_SDL)
     gpu/gpu_sdl_host_event_loop_test.cpp
     gpu/gpu_sdl_single_copy_test.cpp
     gpu/gpu_zero_setup_test.cpp
+    gpu/gpu_tutorial_test.cpp
     gpu/gpu_crash_trace.cpp
     main.cpp
   )
 
   add_executable(gui_gpu_tests ${GUI_GPU_TEST_FILES})
   source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_GPU_TEST_FILES})
+  target_sources(gui_gpu_tests PRIVATE ${TACHYON_TUTORIAL_SOURCES})
+  source_group("Tutorial" FILES ${TACHYON_TUTORIAL_SOURCES})
 
   # gui_controls pulls in gui_core; vma/Vulkan/SDL3 are linked PRIVATE by gui_core
   # (a static lib), so the harness must link them directly to reach the backend.

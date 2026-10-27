@@ -133,6 +133,18 @@ public:
     // Screen-space center of an element with the given ID. Useful for
     // "click the middle of this cell" style tests.
     tachyon::int2    CenterOf(tachyon::ID id) const;
+
+    // Finding controls that have call-site IDs, the way a user sees them: by the text they
+    // show, or by the label in front of them. Invalid when there is none.
+    //   app.ClickAt(app.CenterOf(app.FindByText("Add one")));
+    //   app.ClickAt(app.CenterOf(app.FindControlAfterLabel("Name")));
+    tachyon::ID      FindByText(std::string_view text) const;
+    // How many elements show `text`.
+    int              CountByText(std::string_view text) const;
+    // The element right after Label(`label`) under the same parent: the control it labels.
+    tachyon::ID      FindControlAfterLabel(std::string_view label) const;
+    // The text an element shows; empty when it shows none.
+    std::string_view TextOf(tachyon::ID id) const;
     tachyon::ID      RootWindowID() const { return m_rootWindowID; }
 
     // Mock backend & owned systems - exposed so tests can tune monitor

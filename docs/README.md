@@ -4,11 +4,12 @@ TachyonUI is an immediate-mode GUI library for C++20 on Vulkan, with windows and
 input through SDL3 by default. You describe the whole UI in code every frame; the
 library keeps the state, lays it out with flexbox and grid, and draws it.
 
-New here? Start with the [README](https://github.com/LogicalError/TachyonUI#readme)
-for the requirements, the build and a first program, then read the Overview.
+New here? Start with the [Tutorial](tutorial.md): step by step from an empty folder to an
+app with docked panels, buttons and fields. Then read the Overview.
 
 | Guide | Read it for |
 | --- | --- |
+| [Tutorial](tutorial.md) | Your first app, step by step: the project, panels, buttons, fields and docking. |
 | [Overview](overview.md) | The frame model, IDs, the Begin/End rules, return values, units, errors and saved state. |
 | [Controls](controls.md) | Every control and container, by family: what it takes, what it returns and how it's styled. |
 | [CSS and theming](css.md) | How themes load, the selectors and states, values, and every supported property. |
@@ -31,6 +32,7 @@ cmake --build build --target tachyon_docs
 The reference is written to `build/docs/html/index.html`.
 
 <!--! Page tree for the API reference.
+\subpage md_docs_2tutorial
 \subpage md_docs_2overview
 \subpage md_docs_2controls
 \subpage md_docs_2css

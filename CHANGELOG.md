@@ -17,3 +17,4 @@ First public preview. The API is not stable yet.
 - `GraphicsContext::SetShaderDirectory` is gone; `VulkanGraphicsContext::SetShaderDirectory` loads shaders from disk instead of the built-in ones. The package no longer installs `shaders_compiled/`.
 - `TACHYON_SDL_TARGET`: the SDL target the libraries link (`SDL3::SDL3-static`, or the host's `SDL3::SDL3`), for a host that calls SDL too.
 - `build.bat` / `build.sh` and `CMakePresets.json`; every example runs from any folder.
+- A step-by-step tutorial (`docs/tutorial.md`) whose code is the `examples/tutorial` app, kept in sync by tests.
