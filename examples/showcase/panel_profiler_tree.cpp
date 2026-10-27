@@ -240,11 +240,11 @@ namespace tachyon
         BeginHorizontal(idManager.AllocateDynamicID("profilerHeader"), profilerHeaderStyleRef,
                         LayoutOverride{}.NoGrow().NoShrink());
             const bool enabled = Diagnostics::IsProfilingEnabled();
-            Toggle(idManager.AllocateDynamicID("profilerRecord"), enabled, { demo.dotIcon, "Recording" },
+            Toggle(idManager.AllocateDynamicID("profilerRecord"), enabled, { showcase.dotIcon, "Recording" },
                    [](bool value) { Diagnostics::SetProfilingEnabled(value); },
                    profilerRecordStyleRef, LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Record frame timings");
-            Toggle(idManager.AllocateDynamicID("profilerPause"), profilerPaused, demo.pauseIcon,
+            Toggle(idManager.AllocateDynamicID("profilerPause"), profilerPaused, showcase.pauseIcon,
                    [](bool value) { profilerPaused = value; },
                    profilerPauseStyleRef, LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Hold the current frame");

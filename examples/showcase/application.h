@@ -44,7 +44,7 @@ namespace tachyon
         Default     = TexturedLit
     };
 
-    // The demo's saved UI state, in the working directory.
+    // The showcase's saved UI state, in the working directory.
     inline constexpr const char* kUIStateFile = "ui_state.json";
 
     class Application : public GUIApplication
@@ -71,14 +71,14 @@ namespace tachyon
         bool            enableAudio      = true;
 		ViewMode        viewMode         = ViewMode::Default;   // View mode toolbar buttons toggle these flags
         CommandMode     nodeViewMode = CommandMode::Default;   // the node view's shortcuts; copied into each NodeView's commandMode
-        // The transform tool the left toolbar picks (the demo's own, not a library mode).
+        // The transform tool the left toolbar picks (the showcase's own, not a library mode).
         enum class Tool { Select, Move, Rotate, Scale };
         Tool            tool = Tool::Select;
 
         std::vector<StyleRef> boxStyleRefs;
         StyleRef borderTestStyleRef;
 
-        // Classes from themes/demo.css, looked up after each theme load.
+        // Classes from themes/showcase.css, looked up after each theme load.
         StyleRef hierarchyVizCellStyleRef, hierarchyVizBgStyleRef, hierarchyVisibilityStyleRef;
         StyleRef logLevelIconStyleRef, logLevelWellStyleRef;
         StyleRef logLevelPillStyleRefs[3];   // indexed by LogLevel
@@ -103,10 +103,10 @@ namespace tachyon
         ImageIndex checkerboardIndex { ImageIndex::Invalid };
         ImageIndex demoImageIndex { ImageIndex::Invalid };   // sample image for the Image() element demo
 
-        // ---- Demo / test state ----
-        // State used by the demo panels for testing and prototyping GUI features.
+        // ---- Showcase state ----
+        // State used by the showcase panels for testing and prototyping GUI features.
         // This will be removed or moved to an examples/ directory once the framework matures.
-        struct DemoState
+        struct ShowcaseState
         {
             ID windowLayoutID1 { };
             ID windowLayoutID2 { };
@@ -188,7 +188,7 @@ namespace tachyon
 
             // Each NodeView is an independent graph with its own pan/zoom and drag state.
             NodeView nodeView;
-            // The node view's edits, for Undo / Redo (the demo's only undoable changes).
+            // The node view's edits, for Undo / Redo (the showcase's only undoable changes).
             bool exitRequested = false;   // Exit with node edits: asking
             ID   exitDialogID  = ID::Invalid();
 
@@ -430,21 +430,21 @@ namespace tachyon
             uint64_t                        settingsShortcutsFilterMask = 0;
             std::string                     settingsShortcutsFilterQuery;
         };
-        DemoState demo;
+        ShowcaseState showcase;
 
 
     public:
         Result<void> Initialize(const InitializeOptions& options = {}) override;
 
-        // Re-registers demo-owned styles after a theme reload.
+        // Re-registers showcase-owned styles after a theme reload.
         void OnStylesReloaded() override;
         void ApplyNodeCategories();
 
         void Cleanup() override;
 
-        bool InitializeDemoGUI();
-        bool InitializeDemoStyles();
-        bool InitializeDemoResources();
+        bool InitializeShowcaseGUI();
+        bool InitializeShowcaseStyles();
+        bool InitializeShowcaseResources();
 
         void OnGUI() override;
 

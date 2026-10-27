@@ -740,13 +740,13 @@ namespace tachyon
 {
     namespace
     {
-        // Mirrors the demo's multi-section table (panel_split_scroll.cpp):
+        // Mirrors the showcase's multi-section table (panel_split_scroll.cpp):
         // [# Type] fit-content | [Name Hex Multiple] scrollable | [Tag Status],
         // laid out in a 530x400 panel.
         class DemoSplitTableTest : public ::testing::Test
         {
         protected:
-            // The demo's configuration: whether Tag/Status are fit-content, and
+            // The showcase's configuration: whether Tag/Status are fit-content, and
             // whether the table fills its panel (console-panel pattern).
             static constexpr bool kTagStatusFitContent = true;
             static constexpr bool kTableFillsPanel     = true;

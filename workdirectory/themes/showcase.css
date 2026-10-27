@@ -1,4 +1,4 @@
-/* Styles used only by the demo application. An app adds its own style files
+/* Styles used only by the showcase application. An app adds its own style files
    after the library's (GUIApplication::SetStyleFiles) and looks classes up
    with GUITheme::GetStyle. */
 

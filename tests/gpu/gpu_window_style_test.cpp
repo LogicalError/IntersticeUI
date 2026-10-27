@@ -86,7 +86,7 @@ namespace
 }
 
 // The drag ghost of a real app: its OS window is shown, by the cursor, with what it draws.
-// The icon is a single-color one (the demo's file icons are), which takes the ghost icon's
+// The icon is a single-color one (the showcase's file icons are), which takes the ghost icon's
 // color; a transparent one hid it.
 TEST(GpuGhostWindow, ACursorGhostWindowIsShownWithItsIcon)
 {

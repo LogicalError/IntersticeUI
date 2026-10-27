@@ -25,7 +25,7 @@ body:
     id: steps
     attributes:
       label: Steps to reproduce
-      description: The steps, in the demo or an example if you can, or a small piece of code that shows it.
+      description: The steps, in the showcase or an example if you can, or a small piece of code that shows it.
       render: cpp
     validations:
       required: true

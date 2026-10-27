@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string_view>
 
-static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogShowcase = tachyon::Diagnostics::MakeLogCategory("showcase");
 
 //
 // This project is for testing and prototyping GUI features, so we can iterate on them quickly without worrying about organization / structure / etc. 
@@ -47,18 +47,18 @@ int main(int argc, char* argv[])
 				returnCode = EXIT_SUCCESS;
 			} else
 			{
-				TACHYON_LOG_ERROR(kLogDemo, "Application::Run failed: {}", runResult.GetError().message);
+				TACHYON_LOG_ERROR(kLogShowcase, "Application::Run failed: {}", runResult.GetError().message);
 				fflush(stderr);
             }
         } else
         {
-            TACHYON_LOG_ERROR(kLogDemo, "Application::Initialize failed");
+            TACHYON_LOG_ERROR(kLogShowcase, "Application::Initialize failed");
             fflush(stderr);
         }
     }
     catch (const std::exception& e)
     {
-        TACHYON_LOG_CRITICAL(kLogDemo, "Unhandled exception: {}", e.what());
+        TACHYON_LOG_CRITICAL(kLogShowcase, "Unhandled exception: {}", e.what());
         fflush(stderr);
         returnCode = EXIT_FAILURE;
     }

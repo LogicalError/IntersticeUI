@@ -10,7 +10,7 @@ namespace tachyon
 
     void Application::RenderNodeViewPanel()
     {
-        RenderNodeView(demo.nodeView);
+        RenderNodeView(showcase.nodeView);
     }
 
 }

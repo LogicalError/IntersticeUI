@@ -63,7 +63,7 @@ namespace tachyon
                 ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
 
                 // Body row inside the node - same nesting depth as the
-                // demo (BeginHorizontal -> BeginHorizontal -> Field).
+                // showcase (BeginHorizontal -> BeginHorizontal -> Field).
                 app.BeginHorizontal(LayoutOverride{}.Auto());
                 app.BeginHorizontal(LayoutOverride{}.FlexGrow(1));
                 app.Button(fieldID, "Field", [&clickCounter]() { clickCounter++; });

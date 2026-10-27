@@ -13,7 +13,7 @@ A theme is a palette file followed by one or more style files:
 | --- | --- |
 | `themes/dark.css`, `themes/light.css` | The palette: only `:root` custom properties (colors, shadows) |
 | `themes/styles.css` | The library's rules: shared dimensions in `:root`, `@font-face`, one class per control part |
-| `themes/demo.css` | The demo app's own classes (only the demo loads it) |
+| `themes/showcase.css` | The showcase app's own classes (only the showcase loads it) |
 
 The files are joined into one text in that order and parsed once. `var()` is resolved at
 parse time against the variables defined so far, so a palette must come before the files
@@ -38,7 +38,7 @@ const std::string_view styleFiles[] = { "styles.css", "my_app.css" };
 SetStyleFiles(styleFiles);
 ```
 
-Switching palettes or text size at runtime (from `examples/custom_theme.cpp`):
+Switching palettes or text size at runtime (from `examples/custom_theme/custom_theme.cpp`):
 
 ```cpp
 Button("Light", [this] { RequestReloadTheme("themes/light.css", GetGlobalFontScale()); });

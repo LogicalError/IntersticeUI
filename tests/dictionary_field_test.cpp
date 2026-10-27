@@ -207,7 +207,7 @@ namespace tachyon
         }
 
         // The full Inspector panel: many widgets before the dictionary, in the same
-        // label group + dock content as the demo.
+        // label group + dock content as the showcase.
         TEST_F(DictionaryFieldTest, FullInspectorPanel_NoZeroWidthControls)
         {
             std::string textBox1 = "hello";
@@ -274,7 +274,7 @@ namespace tachyon
             AssertControlsVisibleInArea(area, "FullInspectorPanel");
         }
 
-        // Reproduce the realistic demo scenario: the inspector panel is in a
+        // Reproduce the realistic showcase scenario: the inspector panel is in a
         // narrow dock leaf (~260 px wide), and the user has dragged the label-
         // group splitter so the right column has only ~50 px. With a wide
         // label, the dictionary row's intrinsic widths can equal or exceed
@@ -284,7 +284,7 @@ namespace tachyon
         // the area's right edge and get clipped invisible.
 
         // Headless test passes with 308px each for key and value. But in the
-        // real demo, ":" and "X" are measured with real glyph widths (not the
+        // real showcase, ":" and "X" are measured with real glyph widths (not the
         // stub's 0/0), and the row already fits at exactly 1px of slack. Any
         // slight change to intrinsic widths overflows the area; with
         // flex-shrink defaulting to 0, the column-flex KeepWithNext row does

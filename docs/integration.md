@@ -30,7 +30,7 @@ Options, set before `add_subdirectory`:
 
 | Option | Default | |
 | --- | --- | --- |
-| `TACHYON_BUILD_DEMO` | on when top-level | The demo application |
+| `TACHYON_BUILD_SHOWCASE` | on when top-level | The showcase application (`examples/showcase`) |
 | `TACHYON_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
 | `TACHYON_BUILD_TESTS` | on when top-level | The unit and GPU tests |
 | `TACHYON_INSTALL` | on when top-level | The install rules and the CMake package |
@@ -128,7 +128,7 @@ wherever it put the files.
 
 By default the GUI creates and owns its own `VkInstance` and `VkDevice`. A host that
 already owns a device hands its handles to the GUI so both render on the same device.
-`examples/host_device.cpp` is a complete program.
+`examples/host_device/host_device.cpp` is a complete program.
 
 ### Device requirements
 
@@ -243,7 +243,7 @@ Synchronization contract, all on the queue given to `SetExternalDevice`:
    Submission order on one queue makes both barriers effective across command buffers.
 
 After a resize the host makes sure no in-flight GUI frame still samples the old view;
-the simplest way is `vkDeviceWaitIdle`. `Host::Render` in `examples/host_device.cpp`
+the simplest way is `vkDeviceWaitIdle`. `Host::Render` in `examples/host_device/host_device.cpp`
 follows this contract, and `tests/gpu/gpu_external_device_test.cpp` checks it under
 synchronization validation.
 

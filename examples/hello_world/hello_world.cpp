@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    tachyon::ID     windowID = tachyon::ID::Invalid();
+    tachyon::ID windowID = tachyon::ID::Invalid();
     std::string name     = "world";
     std::string greeting;
 };

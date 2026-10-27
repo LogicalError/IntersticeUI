@@ -1,4 +1,4 @@
-// Icon names: the library's own icons don't take an app's names. The demo's colored "info"
+// Icon names: the library's own icons don't take an app's names. The showcase's colored "info"
 // and "error" badges came back as the theme's grey outlines, which held those names first.
 
 #include "skribidi_test_fixture.h"

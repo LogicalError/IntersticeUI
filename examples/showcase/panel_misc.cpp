@@ -8,7 +8,7 @@
 #include <chrono>
 #include <cmath>
 
-static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogShowcase = tachyon::Diagnostics::MakeLogCategory("showcase");
 
 namespace tachyon
 {
@@ -28,7 +28,7 @@ namespace tachyon
             tachyon::Element shapeBox{};
             shapeBox.id = id;
             shapeBox.state = guiStateManager.GetCurrentState(shapeBox.id);
-            shapeBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
+            shapeBox.styleRef = boxStyleRefs[showcase.testBoxStyleCount];
 
             auto addRes = elementStorage.Add(std::move(shapeBox), tachyon::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(addRes.status);
@@ -117,7 +117,7 @@ namespace tachyon
             tachyon::Element demoBox{};
             demoBox.id = demoId;
             demoBox.state = guiStateManager.GetCurrentState(demoId);
-            demoBox.styleRef = boxStyleRefs[demo.testBoxStyleCount];
+            demoBox.styleRef = boxStyleRefs[showcase.testBoxStyleCount];
 
             auto demoRes = elementStorage.Add(std::move(demoBox), tachyon::LayoutOverride::FixedSize(Pixels{ size.x }, Pixels{ size.y }));
             VERIFY(demoRes.status);
@@ -167,7 +167,7 @@ namespace tachyon
             // Circle icon
             tachyon::Element circleIconElem {};
             circleIconElem.id = idManager.AllocateDynamicID();
-            circleIconElem.iconID = demo.circleIcon;
+            circleIconElem.iconID = showcase.circleIcon;
             circleIconElem.state = guiStateManager.GetCurrentState(circleIconElem.id);
             circleIconElem.styleRef = theme.firstIconStyleRef;
 
@@ -178,7 +178,7 @@ namespace tachyon
             // Heart icon
             tachyon::Element heartIconElem {};
             heartIconElem.id = idManager.AllocateDynamicID();
-            heartIconElem.iconID = demo.heartIcon;
+            heartIconElem.iconID = showcase.heartIcon;
             heartIconElem.state = guiStateManager.GetCurrentState(heartIconElem.id);
             heartIconElem.styleRef = theme.regularControls.button;
 
@@ -189,7 +189,7 @@ namespace tachyon
             // Star icon
             tachyon::Element starIconElem {};
             starIconElem.id = idManager.AllocateDynamicID();
-            starIconElem.iconID = demo.starIcon;
+            starIconElem.iconID = showcase.starIcon;
             starIconElem.state = guiStateManager.GetCurrentState(starIconElem.id);
             starIconElem.styleRef = theme.regularControls.button;
 
@@ -207,7 +207,7 @@ namespace tachyon
             // Create button with icon and text using rich text
             static tachyon::ContentRun buttonContent[] =
             {
-                { .type = tachyon::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 24.0f, .iconHeight = 24.0f },
+                { .type = tachyon::ContentRun::Icon, .iconID = showcase.heartIcon, .iconWidth = 24.0f, .iconHeight = 24.0f },
                 { .type = tachyon::ContentRun::Text, .text = " Like This!" }
             };
 
@@ -218,7 +218,7 @@ namespace tachyon
             iconButtonElem.textID = textSystem->RegisterRichText(iconButtonId, buttonContent, theme.regularControls.button, state);
             iconButtonElem.eventHandler = MakeButtonHandler([]()
             {
-                TACHYON_LOG_INFO(kLogDemo, "Icon button clicked!");
+                TACHYON_LOG_INFO(kLogShowcase, "Icon button clicked!");
             });
 
             auto addRes = elementStorage.Add(std::move(iconButtonElem), tachyon::LayoutOverride::FixedSize(Pixels{ buttonSize.x }, Pixels{ buttonSize.y }));
@@ -236,13 +236,13 @@ namespace tachyon
             static tachyon::ContentRun richContent[] =
             {
                 {.type = tachyon::ContentRun::Text, .text = "Rate: " },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.starIcon, .iconWidth = 16.0f, .iconHeight = 16.0f },
                 {.type = tachyon::ContentRun::Text, .text = " Favorite: " },
-                {.type = tachyon::ContentRun::Icon, .iconID = demo.heartIcon, .iconWidth = 16.0f, .iconHeight = 16.0f }
+                {.type = tachyon::ContentRun::Icon, .iconID = showcase.heartIcon, .iconWidth = 16.0f, .iconHeight = 16.0f }
             };
 
             tachyon::Element richTextElem{};
@@ -297,7 +297,7 @@ namespace tachyon
                 textSystem->SetHoveredContent(linkTextID, hitId);
                 if (hitId != 0 && event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
-                    TACHYON_LOG_INFO(kLogDemo, "Link clicked: {}", hitId == 1 ? "documentation" : "source");
+                    TACHYON_LOG_INFO(kLogShowcase, "Link clicked: {}", hitId == 1 ? "documentation" : "source");
                     return true;
                 }
                 return false;
@@ -324,7 +324,7 @@ namespace tachyon
             {
                 if (ev.type == tachyon::EventType::MouseDown && ev.state.LeftPressed())
                 {
-                    TACHYON_LOG_INFO(kLogDemo, "Image field: open picker");
+                    TACHYON_LOG_INFO(kLogShowcase, "Image field: open picker");
                     return true;
                 }
                 return false;
@@ -438,13 +438,13 @@ namespace tachyon
         // --- Icon + Text Examples with iconTextGap and iconSide ---
 
         {
-            AddBox(idManager.AllocateDynamicID(), theme.iconLeftStyleRef, demo.circleIcon, "Left");
+            AddBox(idManager.AllocateDynamicID(), theme.iconLeftStyleRef, showcase.circleIcon, "Left");
 
-            AddBox(idManager.AllocateDynamicID(), theme.iconRightStyleRef, demo.starIcon, "Right");
+            AddBox(idManager.AllocateDynamicID(), theme.iconRightStyleRef, showcase.starIcon, "Right");
 
-            AddBox(idManager.AllocateDynamicID(), theme.iconTopStyleRef, demo.circleIcon, "Top");
+            AddBox(idManager.AllocateDynamicID(), theme.iconTopStyleRef, showcase.circleIcon, "Top");
 
-            AddBox(idManager.AllocateDynamicID(), theme.iconBottomStyleRef, demo.starIcon, "Bottom");
+            AddBox(idManager.AllocateDynamicID(), theme.iconBottomStyleRef, showcase.starIcon, "Bottom");
         }
 
         // --- Vertical-align demo matrix -----------------------------------------
@@ -452,7 +452,7 @@ namespace tachyon
         // boxes share an 80px min-height so the alignment differences show.
         {
             static const tachyon::IconID kSideIcon[4] = {
-                demo.circleIcon, demo.starIcon, demo.circleIcon, demo.starIcon
+                showcase.circleIcon, showcase.starIcon, showcase.circleIcon, showcase.starIcon
             };
             static const char* kLabel[4][3] = {
                 { "L / top",    "L / mid",    "L / bot"    },

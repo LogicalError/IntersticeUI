@@ -72,7 +72,7 @@ namespace tachyon
             }
         };
 
-        auto& tableStyle = demo.frozenTableState;
+        auto& tableStyle = showcase.frozenTableState;
         // Drag-to-reorder rotates the static columns; the table moves the
         // persisted widths itself.
         tableStyle.onReorderColumns = [colsPtr = &columns](int from, int to)

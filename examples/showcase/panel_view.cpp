@@ -4,7 +4,7 @@
 
 //
 // View panel: thin adapter over tachyon::RenderToolbarDock. ToolbarItem lists
-// live directly in toolbars.sides[] and are seeded in InitializeDemoGUI;
+// live directly in toolbars.sides[] and are seeded in InitializeShowcaseGUI;
 // the reorder / cross-side / tear-off callbacks mutate those side vectors.
 //
 

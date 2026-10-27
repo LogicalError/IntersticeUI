@@ -306,7 +306,7 @@ namespace tachyon
     TEST_F(RotateColumnsTest, MismatchedSizesLeavesSecondUntouched)
     {
         // If the widths vector is out of sync with columns, only the primary
-        // moves - matches the defensive guard in the demo's callback.
+        // moves - matches the defensive guard in the showcase's callback.
         std::vector<char>    cols{ 'A','B','C' };
         std::vector<int32_t> widths{ 10, 20 };  // shorter
         RotateColumns(cols, widths, 0, 2);

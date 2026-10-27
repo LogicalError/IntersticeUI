@@ -14,7 +14,7 @@ namespace tachyon
 
         // wide boxes
         int2 size = { styleManager.Px(100), styleManager.Px(50) };
-        for (int i = 0; i < demo.testBoxStyleCount; i++)
+        for (int i = 0; i < showcase.testBoxStyleCount; i++)
         {
             AddBox(size, boxStyleRefs[i]);
         }
@@ -24,7 +24,7 @@ namespace tachyon
 
         // high boxes
         size = { styleManager.Px(50), styleManager.Px(100) };
-        for (int i = 0; i < demo.testBoxStyleCount; i++)
+        for (int i = 0; i < showcase.testBoxStyleCount; i++)
         {
             AddBox(size, boxStyleRefs[i]);
         }

@@ -65,8 +65,8 @@ private:
     tachyon::ID            windowID = tachyon::ID::Invalid();
     tachyon::ID            dockID   = tachyon::ID::Invalid();
     tachyon::DockingLayout layout;
-    int                selected = 0;
-    float              scale    = 1.0f;
+    int                    selected = 0;
+    float                  scale    = 1.0f;
 };
 
 int main()
