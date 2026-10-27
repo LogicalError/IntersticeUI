@@ -25,6 +25,17 @@ namespace
 #endif
     }
 
+    // The bundled SDL is linked statically, so there is no SDL DLL to ship or load.
+    TEST(SDLSingleCopy, TheBundledSDLIsNoDLL)
+    {
+#if defined(_WIN32) && TACHYON_TEST_BUNDLED_SDL
+        EXPECT_EQ(GetModuleHandleA("SDL3.dll"), nullptr);
+        EXPECT_EQ(GetModuleHandleA("SDL3d.dll"), nullptr);
+#else
+        GTEST_SKIP() << "checks the bundled SDL on Windows";
+#endif
+    }
+
     // The SDL the backend starts is the one the host sees.
     TEST(SDLSingleCopy, TheHostSeesTheSDLTheBackendStarted)
     {

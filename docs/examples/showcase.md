@@ -8,14 +8,16 @@ Source: [examples/showcase](https://github.com/LogicalError/TachyonUI/tree/main/
 
 ## Running it
 
-Unlike the small examples, it loads its files relative to the working directory, so run
-it from `workdirectory/` (Visual Studio does that on F5):
+It runs from any folder, double-click included:
 
 ```text
-cd workdirectory
-..\bin\Debug\showcase.exe               rem Windows
-../bin/Debug/showcase                   # Linux and macOS
+bin\Debug\showcase.exe                  rem Windows
+bin/Debug/showcase                      # Linux and macOS
 ```
+
+Unlike the small examples it has files of its own, in `workdirectory/`: `showcase.css`, its
+icons and the optional Noto fallback fonts. It finds them with
+`SetResourceRoot(TACHYON_RESOURCE_DIR)`, the folder the build defines for them.
 
 Command-line options:
 
@@ -26,8 +28,8 @@ Command-line options:
 | `--panel <title>` | Brings that panel to the front of its tab group (repeatable). |
 | `--float <title>` | Starts with that panel in its own window (repeatable). |
 
-It saves its window and dock layout to `ui_state.json` in the working directory when
-it quits, and restores it on the next start.
+It saves its window and dock layout to `workdirectory/ui_state.json` when it quits, and
+restores it on the next start.
 
 ## Where to look
 

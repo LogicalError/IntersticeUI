@@ -72,13 +72,13 @@ Things to notice:
 
 ## The program
 
-`main` points the app at its resources, then runs it until the last window closes:
+`main` runs the app until the last window closes. It needs no resource files: the
+shaders, the default theme and the fonts are built into the library.
 
 ```cpp
 int main()
 {
     HelloApp app;
-    app.SetResourceRoot(TACHYON_RESOURCE_DIR);   // shaders, fonts and themes
     tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();   // until the last window closes

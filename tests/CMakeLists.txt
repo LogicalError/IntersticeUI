@@ -91,6 +91,7 @@ list(APPEND GUI_CORE_TEST_FILES
   controls_docking_test.cpp
   skribidi_shaping_test.cpp
   font_set_test.cpp
+  built_in_resources_test.cpp
   skribidi_editor_test.cpp
   table_scrollbar_test.cpp
   controls_table_frozen_test.cpp
@@ -169,6 +170,7 @@ if(TACHYON_SDL)
     gpu/gpu_application_init_test.cpp
     gpu/gpu_sdl_host_event_loop_test.cpp
     gpu/gpu_sdl_single_copy_test.cpp
+    gpu/gpu_zero_setup_test.cpp
     gpu/gpu_crash_trace.cpp
     main.cpp
   )
@@ -178,7 +180,9 @@ if(TACHYON_SDL)
 
   # gui_controls pulls in gui_core; vma/Vulkan/SDL3 are linked PRIVATE by gui_core
   # (a static lib), so the harness must link them directly to reach the backend.
-  target_link_libraries(gui_gpu_tests PRIVATE gui_controls vma Vulkan::Vulkan SDL3::SDL3 vkbootstrap GTest::gtest_main GTest::gmock)
+  target_link_libraries(gui_gpu_tests PRIVATE gui_controls vma Vulkan::Vulkan ${TACHYON_SDL_TARGET} vkbootstrap GTest::gtest_main GTest::gmock)
+  # The bundled SDL is a static library; a host's SDL (TACHYON_SYSTEM_SDL) may be a DLL.
+  target_compile_definitions(gui_gpu_tests PRIVATE TACHYON_TEST_BUNDLED_SDL=$<NOT:$<BOOL:${TACHYON_SYSTEM_SDL}>>)
 
   tachyon_apply_compile_options(gui_gpu_tests)
   tachyon_precompile_headers(gui_gpu_tests <gtest/gtest.h> <gui_controls/gui_application.h>)

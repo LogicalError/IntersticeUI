@@ -52,7 +52,6 @@ private:
 int main()
 {
     ThemeApp app;
-    app.SetResourceRoot(TACHYON_RESOURCE_DIR);
     tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();

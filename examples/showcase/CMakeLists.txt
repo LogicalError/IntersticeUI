@@ -1,5 +1,6 @@
-# The showcase: an editor-style app with most of the library in its panels. It loads its
-# files relative to the working directory, so it runs from workdirectory/.
+# The showcase: an editor-style app with most of the library in its panels. Its own files
+# (showcase.css, icons, the Noto fallback fonts) load from workdirectory/ through
+# SetResourceRoot(TACHYON_RESOURCE_DIR), so it runs from any folder.
 tachyon_add_example(showcase
   main.cpp
   application.h
@@ -25,5 +26,4 @@ tachyon_add_example(showcase
   "${PROJECT_SOURCE_DIR}/workdirectory/themes/styles.css"
   "${PROJECT_SOURCE_DIR}/workdirectory/themes/showcase.css")
 
-set_target_properties(showcase PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/workdirectory")
 tachyon_precompile_headers(showcase <gui_controls/gui_application.h>)

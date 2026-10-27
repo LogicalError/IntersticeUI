@@ -45,9 +45,9 @@ else()
 endif()
 
 # What the cache was built for; a cache built for other choices is rebuilt. vcpkg-msbuild:
-# built without vcpkg's Visual Studio integration.
+# built without vcpkg's Visual Studio integration. sdl-link: SDL is a static library.
 set(_tachyon_tp_signature
-  "sdl=${TACHYON_SDL};system-sdl=${TACHYON_SYSTEM_SDL};system-harfbuzz=${TACHYON_SYSTEM_HARFBUZZ};system-vma=${TACHYON_SYSTEM_VMA};vcpkg-msbuild=off")
+  "sdl=${TACHYON_SDL};system-sdl=${TACHYON_SYSTEM_SDL};system-harfbuzz=${TACHYON_SYSTEM_HARFBUZZ};system-vma=${TACHYON_SYSTEM_VMA};vcpkg-msbuild=off;sdl-link=static")
 
 function(_tachyon_build_third_party_config cfg)
   set(stamp "${TACHYON_TP_INSTALL}/.stamp-${cfg}")
@@ -138,8 +138,21 @@ set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO "RelWithDebInfo;Release")
 set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL     "MinSizeRel;Release")
 
 # A target the host already defined is used as it is.
-if(TACHYON_SDL AND NOT TARGET SDL3::SDL3)
+set(_tachyon_host_sdl FALSE)
+if(TACHYON_SDL AND TARGET SDL3::SDL3)
+  set(_tachyon_host_sdl TRUE)
+elseif(TACHYON_SDL)
   find_package(SDL3 CONFIG REQUIRED)
+endif()
+# The SDL the project links: the host's SDL3::SDL3, or the bundled static library by name,
+# since SDL3::SDL3 means the shared one wherever its files are present too. Cached, so a
+# host that calls SDL itself can link the same one.
+if(TACHYON_SDL)
+  if(TACHYON_SYSTEM_SDL OR _tachyon_host_sdl)
+    set(TACHYON_SDL_TARGET SDL3::SDL3 CACHE INTERNAL "The SDL target TachyonUI links")
+  else()
+    set(TACHYON_SDL_TARGET SDL3::SDL3-static CACHE INTERNAL "The SDL target TachyonUI links")
+  endif()
 endif()
 
 # skribidi's exported config references its dependencies as imported targets

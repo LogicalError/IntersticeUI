@@ -15,6 +15,9 @@ static constexpr tachyon::Diagnostics::LogCategory kLogShowcase = tachyon::Diagn
 int main(int argc, char* argv[])
 {
     tachyon::Application* application = new tachyon::Application();
+    // Its own style file, icons, fallback fonts and saved state live in workdirectory/,
+    // so it runs from any folder.
+    application->SetResourceRoot(TACHYON_RESOURCE_DIR);
 
     // --ui-scale <factor>: zoom the UI on top of the OS display scale (e.g. 1.5).
     // --theme <palette>: start with another palette, e.g. themes/light.css.
@@ -39,7 +42,7 @@ int main(int argc, char* argv[])
         if (application->Initialize())
         {
             const tachyon::Result<void> runResult = application->Run();
-            if (std::ofstream file(tachyon::kUIStateFile, std::ios::binary); file)
+            if (std::ofstream file(application->ResourceFile(tachyon::kUIStateFile), std::ios::binary); file)
                 file << application->SaveUIState();
             application->Cleanup();
             if (runResult)

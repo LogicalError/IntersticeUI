@@ -1,4 +1,5 @@
 #include <gui_core/diagnostics/gui_logging.h>
+#include <gui_core/gui_resources.h>
 #include <gui_core/text/skribidi/internal/gui_default_fonts_skribidi.h>
 
 #include <skribidi/skb_common.h>
@@ -10,6 +11,7 @@
 #include <skribidi/skb_rich_layout.h>
 #include <skribidi/skb_image_atlas.h>
 #include <cstdint>
+#include <filesystem>
 #include <initializer_list>
 #include <span>
 #include <string_view>
@@ -29,6 +31,15 @@ static std::string font_path(std::string_view directory, const char* filename)
 	if (!path.empty() && path.back() != '/' && path.back() != '\\')
 		path += '/';
 	return path + filename;
+}
+
+// A default font face: the file when it's on disk, else the library's built-in copy.
+static FontFaceSource default_face(const std::string& path)
+{
+	std::error_code ec;
+	if (std::filesystem::is_regular_file(path, ec))
+		return FontFaceSource{ .file = path };
+	return FontFaceSource{ .file = path, .data = FindBuiltInResource(path) };
 }
 
 // Maps ISO-15924 uint32_t tag -> list of font filenames (in the fallback directory).
@@ -206,8 +217,9 @@ static void add_base_fonts(skb_font_collection_t* font_collection, uint8_t famil
 	if (!fonts.defaultDirectory.empty())
 	{
 		const std::string path = font_path(fonts.defaultDirectory, "Inter/Inter-Regular.ttf");
-		add_font(font_collection, path, family);
-		add_font(font_collection, path, family, &k_synthetic_bold);
+		const FontFaceSource face = default_face(path);
+		add_face(font_collection, face, family);
+		add_face(font_collection, face, family, &k_synthetic_bold);
 	}
 	if (fonts.fallbackDirectory.empty())
 		return;
@@ -254,7 +266,7 @@ bool skribidi_load_fonts(skb_font_collection_t* font_collection, FontFallbackSta
 		{
 			std::vector<FontFaceSource> result;
 			for (const std::string& file : files)
-				result.push_back(FontFaceSource{ .file = file });
+				result.push_back(default_face(file));
 			return result;
 		};
 		const auto inter = paths({ "Inter/Inter-Regular.ttf", "Inter/Inter-Medium.ttf", "Inter/Inter-SemiBold.ttf", "Inter/Inter-Bold.ttf",

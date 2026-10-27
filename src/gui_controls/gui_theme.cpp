@@ -1,4 +1,5 @@
 #include <gui_core/gui_base_types.h>
+#include <gui_core/gui_resources.h>
 #include <gui_core/diagnostics/gui_logging.h>
 
 #include <gui_core/style/gui_style_ref.h>
@@ -168,8 +169,15 @@ namespace tachyon
             for (const FontFace& face : faces)
                 if (FontIDFromName(face.family) == id)
                     paths.push_back((baseDir / face.src).lexically_normal().string());
-            const std::vector<std::string_view> views(paths.begin(), paths.end());
-            if (textSystem.RegisterFontFamily(first.family, views) == FontID::Invalid)
+            // A font file that isn't on disk comes from the library's built-in copy.
+            std::vector<FontFaceSource> sources;
+            for (const std::string& path : paths)
+            {
+                std::error_code ec;
+                const bool onDisk = std::filesystem::is_regular_file(path, ec);
+                sources.push_back(FontFaceSource{ .file = path, .data = onDisk ? std::span<const std::byte>{} : FindBuiltInResource(path) });
+            }
+            if (textSystem.RegisterFontFamily(first.family, sources) == FontID::Invalid)
                 TACHYON_LOG_ERROR(kLogTheme, "could not load font family '{}'", first.family);
         }
     }
@@ -207,10 +215,11 @@ namespace tachyon
         // concatenate palette-then-styles before parsing so var() references
         // resolve at parse time.
         // -------------------------------------------------------------------------
-        std::ifstream paletteFile(themePath);
-        if (!paletteFile.good())
+        // Each file is read from disk, or else from the library's built-in copy.
+        Result<std::string> palette = ReadResource(themePath);
+        if (!palette)
         {
-            TACHYON_LOG_ERROR(kLogTheme, "theme file not found: {}", themePath);
+            TACHYON_LOG_ERROR(kLogTheme, "theme file: {}", palette.GetError().message);
             return false;
         }
 
@@ -221,26 +230,24 @@ namespace tachyon
         std::vector<Part> parts;
         std::ostringstream ss;
         int line = 1;
-        auto append = [&](std::string name, std::ifstream& file)
+        auto append = [&](std::string name, std::string_view text)
         {
-            std::ostringstream text;
-            text << file.rdbuf();
             parts.push_back({ std::move(name), line });
-            ss << text.view() << '\n';
-            line += int(std::count(text.view().begin(), text.view().end(), '\n')) + 1;
+            ss << text << '\n';
+            line += int(std::count(text.begin(), text.end(), '\n')) + 1;
         };
-        append(themePath, paletteFile);
+        append(themePath, *palette);
         for (const std::string& styleFile : styleFiles)
         {
             const std::filesystem::path path = std::filesystem::path(styleFile).is_absolute()
                 ? std::filesystem::path(styleFile) : themeDir / styleFile;
-            std::ifstream file(path);
-            if (!file.good())
+            Result<std::string> text = ReadResource(path.string());
+            if (!text)
             {
-                TACHYON_LOG_ERROR(kLogTheme, "theme styles file not found: {}", path.string());
+                TACHYON_LOG_ERROR(kLogTheme, "theme styles file: {}", text.GetError().message);
                 return false;
             }
-            append(path.string(), file);
+            append(path.string(), *text);
         }
         StyleSheet sheet = ParseStyleSheet(ss.view());
 

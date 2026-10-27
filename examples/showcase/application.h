@@ -3,6 +3,10 @@
 #include <gui_controls/gui_application.h>
 #include <gui_controls/controls_toolbar_dock.h>
 
+#include <filesystem>
+#include <string>
+#include <string_view>
+
 namespace tachyon
 {
     enum class CommandMode : uint32_t;
@@ -44,7 +48,7 @@ namespace tachyon
         Default     = TexturedLit
     };
 
-    // The showcase's saved UI state, in the working directory.
+    // The showcase's saved UI state, under the resource root (workdirectory/ in the source tree).
     inline constexpr const char* kUIStateFile = "ui_state.json";
 
     class Application : public GUIApplication
@@ -445,6 +449,12 @@ namespace tachyon
         bool InitializeShowcaseGUI();
         bool InitializeShowcaseStyles();
         bool InitializeShowcaseResources();
+
+        // One of the showcase's own files (icons, the saved UI state) under the resource root.
+        std::string ResourceFile(std::string_view relative) const
+        {
+            return (std::filesystem::path(GetResourceRoot()) / relative).string();
+        }
 
         void OnGUI() override;
 

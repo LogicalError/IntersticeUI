@@ -3,15 +3,16 @@
 The programs in [`examples/`](https://github.com/LogicalError/TachyonUI/tree/main/examples)
 are complete applications, one folder each. The small ones each show one part of the
 library; the showcase puts most of it together in an editor-style app. They build with
-the project. The small ones load the library's shaders, fonts and themes through
-`SetResourceRoot(TACHYON_RESOURCE_DIR)`, so they run from any folder:
+the project, and every one runs from any folder:
 
-```text
-cmake -S . -B build
-cmake --build build --config Debug
-bin\Debug\hello_world.exe           rem Windows
-./bin/Debug/hello_world             # Linux and macOS
-```
+| | Build | Run |
+| --- | --- | --- |
+| Windows | `build.bat` | `bin\Debug\hello_world.exe` |
+| Linux and macOS | `./build.sh` | `bin/Debug/hello_world` |
+
+The small examples need no files at all: the shaders, the default themes and the fonts are
+built into the library. They are what integrating TachyonUI into your own program looks
+like.
 
 `TACHYON_BUILD_EXAMPLES` and `TACHYON_BUILD_SHOWCASE` turn them off (they are on when
 TachyonUI is the top-level project).

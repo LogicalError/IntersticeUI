@@ -56,6 +56,11 @@ option(TACHYON_SYSTEM_VMA      "Use the host's VulkanMemoryAllocator instead of 
 # package carry only the built-in fonts.
 option(TACHYON_FALLBACK_FONTS "Ship the optional Noto fallback fonts with the resources" OFF)
 
+# The default themes and fonts are compiled into gui_core (about 3 MB), so an app needs no
+# resource files. Off: they load from the resource root only, so every app (the examples
+# included) must call SetResourceRoot with a folder that holds themes/ and fonts/.
+option(TACHYON_EMBED_RESOURCES "Compile the default themes and fonts into the library" ON)
+
 find_package(Vulkan REQUIRED)
 
 include(CompilerOptions)
@@ -72,7 +77,7 @@ if(PROJECT_IS_TOP_LEVEL AND TARGET showcase)
   set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT showcase)
 endif()
 
-# The libraries load the compiled shaders at runtime.
+# gui_core compiles the shaders in.
 add_dependencies(gui_core tachyon_shaders)
 if(NOT PROJECT_IS_TOP_LEVEL)
   add_dependencies(gui_core tachyon_resources)
@@ -120,17 +125,27 @@ if(TACHYON_INSTALL)
       workdirectory/themes
       workdirectory/fonts
       workdirectory/icons
-      "${TACHYON_BUILD_RESOURCE_DIR}/shaders_compiled"
     DESTINATION "${TACHYON_RESOURCE_INSTALL_DIR}"
     ${_tachyon_resource_excludes})
 
   if(TACHYON_INSTALL_THIRD_PARTY)
+    # Only the static SDL goes into the package, whatever else the third-party cache holds,
+    # so SDL3::SDL3 there means the static library.
+    set(_tachyon_shared_sdl_excludes "")
+    if(TACHYON_SDL AND NOT TACHYON_SYSTEM_SDL)
+      set(_tachyon_shared_sdl_excludes
+        PATTERN "SDL3sharedTargets*" EXCLUDE
+        PATTERN "SDL3.dll" EXCLUDE   PATTERN "SDL3d.dll" EXCLUDE   PATTERN "SDL3d.pdb" EXCLUDE
+        PATTERN "SDL3.lib" EXCLUDE   PATTERN "SDL3d.lib" EXCLUDE
+        PATTERN "libSDL3.so*" EXCLUDE PATTERN "libSDL3*.dylib" EXCLUDE)
+    endif()
     install(DIRECTORY "${TACHYON_TP_INSTALL}/"
       DESTINATION .
       PATTERN ".stamp-*" EXCLUDE
       PATTERN "gtest*" EXCLUDE
       PATTERN "gmock*" EXCLUDE
-      PATTERN "GTest" EXCLUDE)
+      PATTERN "GTest" EXCLUDE
+      ${_tachyon_shared_sdl_excludes})
   endif()
 
   install(EXPORT TachyonUITargets

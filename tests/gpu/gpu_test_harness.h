@@ -30,6 +30,19 @@
 
 namespace GpuTestHarness
 {
+    // A Vulkan device and display the GUI can use, checked with the graphics backend alone.
+    // A test of a whole app skips on this, so that a failure in the app's own setup (theme,
+    // fonts, shaders) fails the test instead of skipping it.
+    inline bool VulkanDeviceAvailable()
+    {
+        tachyon::vulkan::VulkanGraphicsContext graphics;
+        tachyon::SDLWindowBackend windows;
+        windows.SetGraphicsContext(&graphics);
+        const bool available = static_cast<bool>(graphics.Initialize(&windows));
+        graphics.Cleanup();
+        return available;
+    }
+
     // Thread-safe collector for validation-layer messages. The validation
     // layers may call the debug callback from worker threads, hence the mutex.
     struct ValidationSink

@@ -2,7 +2,13 @@
 // the Noto fallbacks are optional, and families can come from memory.
 
 #include "skribidi_test_fixture.h"
+#include "misuse_reports.h"
 
+#include <gui_controls/gui_theme.h>
+#include <gui_core/gui_resources.h>
+
+#include <filesystem>
+#include <string>
 #include <cstring>
 #include <fstream>
 #include <iterator>
@@ -78,12 +84,48 @@ namespace tachyon
             EXPECT_LT(medium, semiBold);
         }
 
+        // Without font files the built-in copies compiled into the library are used, for text
+        // and monospace alike.
+        TEST_F(FontSetTest, BuiltInFontsNeedNoFiles)
+        {
+            if (FindBuiltInResource("fonts/Inter/Inter-Regular.ttf").empty())
+                GTEST_SKIP() << "built without TACHYON_EMBED_RESOURCES";
+            ASSERT_TRUE(Init("no-such-folder/fonts", ""));
+            EXPECT_GT(Width("Hello", TextStyle()), 0);
+
+            Style mono{};
+            for (int i = 0; i < Style::kStateCount; ++i)
+            {
+                mono.states[i].textStyle.fontSize = 13.0f;
+                mono.states[i].textStyle.family   = FontFamily::Monospace;
+            }
+            EXPECT_GT(Width("Hello", styleManager.Register(mono)), 0);
+        }
+
+        // A theme's @font-face fonts come from the built-in copies when there are no font
+        // files, so the theme registers its families without errors.
+        TEST_F(FontSetTest, AThemesFontFacesNeedNoFiles)
+        {
+            if (FindBuiltInResource("fonts/Inter/Inter-Regular.ttf").empty())
+                GTEST_SKIP() << "built without TACHYON_EMBED_RESOURCES";
+            ASSERT_TRUE(Init("no-such-folder/fonts", ""));
+            GUITest::MisuseReports reports;
+            GUITheme theme;
+            const std::string styleFiles[] = { "styles.css" };
+            const std::string themePath = (std::filesystem::temp_directory_path() / "tachyon-no-such-resources" / "themes" / "dark.css").string();
+            ASSERT_TRUE(theme.LoadTheme(styleManager, textSystem.get(), themePath, styleFiles, 1.0f));
+            EXPECT_FALSE(reports.Contains("could not load font family")) << reports.All();
+            EXPECT_GT(Width("Hello", TextStyle(FontIDFromName("Inter"))), 0);
+        }
+
         TEST_F(FontSetTest, AMissingFallbackSetIsSkipped)
         {
             ASSERT_TRUE(Init("fonts", "fonts/no-such-folder"));
             EXPECT_GT(Width("Hello", TextStyle()), 0);
         }
 
+        // A font folder without the default fonts fails, unless it is a fonts/ folder whose
+        // files the library has built-in copies of.
         TEST_F(FontSetTest, MissingBuiltInFontsFailInitialization)
         {
             EXPECT_FALSE(Init("fonts/no-such-folder", ""));

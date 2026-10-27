@@ -35,7 +35,6 @@ private:
 int main()
 {
     MyApp app;
-    app.SetResourceRoot(TACHYON_RESOURCE_DIR);   // shaders, fonts and themes
     tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();   // until the last window closes
@@ -44,8 +43,10 @@ int main()
 }
 ```
 
-`SetResourceRoot`, `SetGraphicsBackend`, `SetWindowBackend`, `SetClipboard` and
-`SetStyleFiles` are called before `Initialize`. `Cleanup` releases everything
+The program needs no files next to it: the shaders, the default themes and the fonts are
+built into the library. `SetResourceRoot` (for your own themes and fonts),
+`SetGraphicsBackend`, `SetWindowBackend`, `SetClipboard` and `SetStyleFiles` are optional
+and called before `Initialize`. `Cleanup` releases everything
 `Initialize` made.
 
 

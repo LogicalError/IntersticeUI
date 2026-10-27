@@ -72,9 +72,6 @@ namespace tachyon
         /// The API it presents with; window backends make their windows for it.
         virtual GraphicsAPI GetAPI() const = 0;
 
-        /// Where the compiled shaders are (default "shaders_compiled", relative to the
-        /// working directory). Call before Initialize.
-        virtual void SetShaderDirectory(std::string_view directory) = 0;
         /// Host memory functions for the graphics API's allocations. Call before Initialize.
         virtual void SetAllocationHooks(const AllocationHooks& hooks) = 0;
         /// Brings the device up; GUIApplication::Initialize calls it once, before any window

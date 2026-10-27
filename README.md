@@ -41,10 +41,18 @@ CMake 3.22+ and MSVC 2022+, GCC 13 or Clang 17. [Full requirements ↓](#referen
 ```sh
 git clone --recursive https://github.com/LogicalError/TachyonUI.git
 cd TachyonUI
-cmake -S . -B build              # add -G "Ninja Multi-Config" on Linux/macOS
-cmake --build build --config Debug
-cd workdirectory && ../bin/Debug/showcase
 ```
+
+| | Build | Run (from any folder) |
+| --- | --- | --- |
+| Windows | `build.bat` | `bin\Debug\showcase.exe` |
+| Linux and macOS | `./build.sh` | `bin/Debug/showcase` |
+
+`build.bat Release` (or `./build.sh Release`) builds the Release configuration into `bin/Release`. Every program in `bin/`
+runs on its own: the examples, the showcase and the tests.
+
+The scripts use the CMake presets in `CMakePresets.json`, which Visual Studio, VS Code
+and CLion also pick up.
 
 ## Hello world
 
@@ -87,8 +95,9 @@ find_package(TachyonUI 0.1 CONFIG REQUIRED)       # after cmake --install
 target_link_libraries(my_app PRIVATE TachyonUI::gui_controls)
 ```
 
-Then `app.SetResourceRoot(TACHYON_RESOURCE_DIR)`. Packaging, subprojects and system libraries:
-[docs/integration.md](docs/integration.md).
+That's all: the shaders, the default themes and the fonts are built into the library, and
+SDL is linked in, so there are no files or DLLs to ship. Packaging, subprojects, your own
+themes and system libraries: [docs/integration.md](docs/integration.md).
 
 ## Inside an engine
 
@@ -131,19 +140,21 @@ The first configure builds the third-party libraries once into `build/third_part
 | `TACHYON_SDL` | on | The SDL window backend; off builds without SDL |
 | `TACHYON_SYSTEM_SDL`, `_HARFBUZZ`, `_VMA` | off | Use the host's copy of that library |
 | `TACHYON_FALLBACK_FONTS` | off | Copy and install the Noto fallback fonts |
+| `TACHYON_EMBED_RESOURCES` | on | Build the default themes and fonts into the library; off needs `SetResourceRoot` in every program |
 </details>
 
 <details>
-<summary><b>Runtime files to ship</b> — shaders, fonts, themes</summary>
+<summary><b>Optional runtime files</b> — your own themes, fonts, fallbacks</summary>
+
+Nothing is required: the shaders, `dark.css`, `light.css`, `styles.css` and the Inter and
+JetBrains Mono fonts are built in. With `SetResourceRoot(folder)`, files there replace the
+built-in ones of the same name and add your own:
 
 | Folder | Contents |
 | --- | --- |
-| `shaders_compiled/` | The compiled shaders (built from `workdirectory/shaders`) |
-| `fonts/Inter/`, `fonts/JetBrainsMono/` | The built-in fonts |
-| `fonts/Noto-otf/` | Optional fallback fonts, loaded with `InitializeOptions::fallbackFonts` |
-| `themes/` | `dark.css`, `light.css` (palettes) and `styles.css` (the rules) |
-
-`SetResourceRoot` sets where they load from. `SDL3.dll` must be next to the executable; the build copies it there.
+| `themes/` | Your own palettes and style files, or changed copies of the built-in ones |
+| `fonts/` | Fonts your style files name in `@font-face` |
+| `fonts/Noto-otf/` | Optional fallback fonts for other scripts, emoji and symbols, loaded with `InitializeOptions::fallbackFonts` |
 </details>
 
 <details>

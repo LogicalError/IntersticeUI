@@ -75,11 +75,11 @@ jobs:
       - id: shader-cache
         uses: actions/cache/restore@v6.1.0
         with:
-          path: workdirectory/shaders_compiled
+          path: build/shaders
           key: shaders-1.4.309.0-${{ hashFiles('workdirectory/shaders/**') }}
       - name: Mark restored shaders current
         if: steps.shader-cache.outputs.cache-hit == 'true'
-        run: Get-ChildItem workdirectory/shaders_compiled | ForEach-Object { $_.LastWriteTime = Get-Date }
+        run: Get-ChildItem build/shaders | ForEach-Object { $_.LastWriteTime = Get-Date }
 
       - name: Configure
         run: cmake -S . -B build -G "Visual Studio 18 2026" -A x64
@@ -94,7 +94,7 @@ jobs:
       - if: steps.shader-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6.1.0
         with:
-          path: workdirectory/shaders_compiled
+          path: build/shaders
           key: ${{ steps.shader-cache.outputs.cache-primary-key }}
       - name: Build Release
         run: cmake --build build --config Release --parallel
@@ -212,11 +212,11 @@ jobs:
       - id: shader-cache
         uses: actions/cache/restore@v6.1.0
         with:
-          path: workdirectory/shaders_compiled
+          path: build/shaders
           key: shaders-linux-${{ hashFiles('workdirectory/shaders/**') }}
       - name: Mark restored shaders current
         if: steps.shader-cache.outputs.cache-hit == 'true'
-        run: find workdirectory/shaders_compiled -type f -exec touch {} +
+        run: find build/shaders -type f -exec touch {} +
 
       - name: Configure
         run: cmake -S . -B build -G "Ninja Multi-Config"
@@ -231,7 +231,7 @@ jobs:
       - if: steps.shader-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6.1.0
         with:
-          path: workdirectory/shaders_compiled
+          path: build/shaders
           key: ${{ steps.shader-cache.outputs.cache-primary-key }}
       - name: Build Release
         run: cmake --build build --config Release --parallel

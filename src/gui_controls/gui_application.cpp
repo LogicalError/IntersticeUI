@@ -197,7 +197,6 @@ namespace tachyon
         layoutEngine     = std::make_unique<tachyon::LayoutEngine>(*textSystem, guiStateManager.GetScrollManagement());
         windowManager    = std::make_unique<tachyon::OSWindowManager>(graphicsContext, windowBackend, &inputBroadcaster, styleManager, gradientManager);
 
-        graphicsContext->SetShaderDirectory(ResourcePath("shaders_compiled"));
         textSystem->SetFontDirectory(ResourcePath("fonts"));
         if (!options.fallbackFonts.empty())
             textSystem->SetFallbackFontDirectory(ResourcePath(options.fallbackFonts));
