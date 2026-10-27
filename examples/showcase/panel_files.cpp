@@ -1,5 +1,5 @@
 #include "application.h"
-#include "../gui_controls/gui_tree_utils.h"
+#include <gui_controls/gui_tree_utils.h>
 
 #include <algorithm>
 #include <cctype>
@@ -221,7 +221,7 @@ namespace tachyon
             row.id     = idManager.CreateStaticID();
             row.name   = name;
             row.depth  = depth;
-            row.icon   = demo.folderClosedIcon;
+            row.icon   = showcase.folderClosedIcon;
             row.isOpen = isOpen;
             folderRows.push_back(std::move(row));
         };
@@ -240,70 +240,70 @@ namespace tachyon
 
         folderItems[0] = // Home (its sub-folders come from the tree)
         {
-            { "character.fbx", demo.fileModelIcon   },
-            { "photo.jpg",     demo.fileImageIcon   },
-            { "song.mp3",      demo.fileAudioIcon   },
-            { "video.mp4",     demo.fileVideoIcon   },
-            { "notes.txt",     demo.fileTextIcon    },
-            { "archive.zip",   demo.fileArchiveIcon },
+            { "character.fbx", showcase.fileModelIcon   },
+            { "photo.jpg",     showcase.fileImageIcon   },
+            { "song.mp3",      showcase.fileAudioIcon   },
+            { "video.mp4",     showcase.fileVideoIcon   },
+            { "notes.txt",     showcase.fileTextIcon    },
+            { "archive.zip",   showcase.fileArchiveIcon },
         };
 
         folderItems[1] = // Documents
         {
-            { "report.txt",        demo.fileTextIcon },
-            { "todo.txt",          demo.fileTextIcon },
-            { "meeting_notes.txt", demo.fileTextIcon },
+            { "report.txt",        showcase.fileTextIcon },
+            { "todo.txt",          showcase.fileTextIcon },
+            { "meeting_notes.txt", showcase.fileTextIcon },
         };
         for (int i = 0; i < 40; ++i)
         {
             char name[32];
             std::snprintf(name, sizeof(name), "document_%02d.txt", i);
-            folderItems[1].push_back({ name, demo.fileTextIcon });
+            folderItems[1].push_back({ name, showcase.fileTextIcon });
         }
 
         for (int i = 0; i < 200; ++i) // Images
         {
             char name[32];
             std::snprintf(name, sizeof(name), "photo_%03d%s", i, (i % 3) ? ".jpg" : ".png");
-            folderItems[2].push_back({ name, demo.fileImageIcon });
+            folderItems[2].push_back({ name, showcase.fileImageIcon });
         }
 
         for (int i = 0; i < 60; ++i) // Music
         {
             char name[32];
             std::snprintf(name, sizeof(name), "track_%02d.mp3", i);
-            folderItems[3].push_back({ name, demo.fileAudioIcon });
+            folderItems[3].push_back({ name, showcase.fileAudioIcon });
         }
 
         folderItems[4] = // Projects
         {
-            { "readme.txt", demo.fileTextIcon },
+            { "readme.txt", showcase.fileTextIcon },
         };
 
         folderItems[5] = // TachyonUI
         {
-            { "application.cpp",  demo.fileTextIcon },
-            { "application.h",    demo.fileTextIcon },
-            { "panel_files.cpp",  demo.fileTextIcon },
-            { "styles.css",       demo.fileTextIcon },
-            { "CMakeLists.txt",   demo.fileTextIcon },
+            { "application.cpp",  showcase.fileTextIcon },
+            { "application.h",    showcase.fileTextIcon },
+            { "panel_files.cpp",  showcase.fileTextIcon },
+            { "styles.css",       showcase.fileTextIcon },
+            { "CMakeLists.txt",   showcase.fileTextIcon },
         };
 
         folderItems[6] = // Vulkan
         {
-            { "vk_renderer.cpp", demo.fileTextIcon },
-            { "vk_renderer.h",   demo.fileTextIcon },
-            { "vk_rhi.cpp",      demo.fileTextIcon },
-            { "shader.vert",     demo.fileTextIcon },
-            { "shader.frag",     demo.fileTextIcon },
+            { "vk_renderer.cpp", showcase.fileTextIcon },
+            { "vk_renderer.h",   showcase.fileTextIcon },
+            { "vk_rhi.cpp",      showcase.fileTextIcon },
+            { "shader.vert",     showcase.fileTextIcon },
+            { "shader.frag",     showcase.fileTextIcon },
         };
 
         // Downloads: thousands of generated files to exercise grid virtualization.
         {
             auto& dl = folderItems[7];
-            dl.push_back({ "installer.zip", demo.fileArchiveIcon });
+            dl.push_back({ "installer.zip", showcase.fileArchiveIcon });
             const char*  exts[]  = { ".fbx", ".jpg", ".png", ".mp3", ".mp4", ".txt", ".zip" };
-            const IconID icons[] = { demo.fileModelIcon, demo.fileImageIcon, demo.fileImageIcon, demo.fileAudioIcon, demo.fileVideoIcon, demo.fileTextIcon, demo.fileArchiveIcon };
+            const IconID icons[] = { showcase.fileModelIcon, showcase.fileImageIcon, showcase.fileImageIcon, showcase.fileAudioIcon, showcase.fileVideoIcon, showcase.fileTextIcon, showcase.fileArchiveIcon };
             dl.reserve(dl.size() + 4000);
             for (int i = 0; i < 4000; ++i)
             {
@@ -324,7 +324,7 @@ namespace tachyon
             {
                 const int flat = FolderPayloadIndex(visual.payloadValue);
                 if (flat < 0 || flat >= static_cast<int>(folderRows.size())) return;
-                icon = demo.folderClosedIcon;
+                icon = showcase.folderClosedIcon;
             }
             else
             {
@@ -334,7 +334,7 @@ namespace tachyon
                 icon = items[i].icon;
             }
             if (icon == IconID::Invalid) return;
-            if (BeginCursorGhostWindow(demo.dragGhostWindowID, visual.screenPos))
+            if (BeginCursorGhostWindow(showcase.dragGhostWindowID, visual.screenPos))
             {
                 AddGhostIcon(icon);
             }
@@ -500,8 +500,8 @@ namespace tachyon
             // rename pointer is refreshed every frame because drops move rows.
             for (auto& row : folderRows)
             {
-                row.icon = (row.HasChildren() && row.isOpen) ? demo.folderOpenIcon
-                                                             : demo.folderClosedIcon;
+                row.icon = (row.HasChildren() && row.isOpen) ? showcase.folderOpenIcon
+                                                             : showcase.folderClosedIcon;
                 row.renameBuffer = &row.name;
             }
             if (guiStateManager.Drag().IsDragging()
@@ -510,7 +510,7 @@ namespace tachyon
                 for (size_t vi = 0; vi < folderVisibleIdx.size(); ++vi)
                     if (folderTreeState.RowIDForIndex(static_cast<int>(vi)) == TreeDropTargetRow())
                     {
-                        folderRows[folderVisibleIdx[vi]].icon = demo.folderOpenIcon;
+                        folderRows[folderVisibleIdx[vi]].icon = showcase.folderOpenIcon;
                         break;
                     }
             }
@@ -587,14 +587,14 @@ namespace tachyon
                        },
                        tachyon::LayoutOverride{}.FlexGrow(1));
 
-            if (SearchField(idManager.AllocateDynamicID("filesSearch"), filesSearch, demo.findIcon,
+            if (SearchField(idManager.AllocateDynamicID("filesSearch"), filesSearch, showcase.findIcon,
                             TextEditBehavior::ContinuousUpdate,
                             tachyon::LayoutOverride{}.Width(150).NoGrow()))
                 gridFilterDirty = true;
-            Toggle(idManager.AllocateDynamicID("filesGridMode"), !filesListMode, demo.layoutGridIcon,
+            Toggle(idManager.AllocateDynamicID("filesGridMode"), !filesListMode, showcase.layoutGridIcon,
                    [](bool) { filesListMode = false; }, iconToggleStyleRef);
             SetTooltip("Grid");
-            Toggle(idManager.AllocateDynamicID("filesListMode"), filesListMode, demo.listIcon,
+            Toggle(idManager.AllocateDynamicID("filesListMode"), filesListMode, showcase.listIcon,
                    [](bool) { filesListMode = true; }, iconToggleStyleRef);
             SetTooltip("List");
         }
@@ -607,8 +607,8 @@ namespace tachyon
 
         // Grid items: 34 px icons, a file's tinted by its kind (folders keep their color).
         auto itemStyleFor = [this](IconID icon) -> StyleRef {
-            const char* color = (icon == demo.fileModelIcon) ? "--text-link"
-                              : (icon == demo.fileImageIcon) ? "--ok"
+            const char* color = (icon == showcase.fileModelIcon) ? "--text-link"
+                              : (icon == showcase.fileImageIcon) ? "--ok"
                               :                                "--text-2";
             Style def = styleManager.ToPixels(theme.gridViewItemBaseStyle);
             def.iconSize = static_cast<uint16_t>(styleManager.Px(34));
@@ -642,7 +642,7 @@ namespace tachyon
                                 icon = guiStateManager.Drag().IsDropTargetFor(itemID, kGridPayload)
                                         && CanDropIntoFolder(guiStateManager.Drag().GetPayloadValue(),
                                                              entry.folderFlat)
-                                     ? demo.folderOpenIcon : demo.folderClosedIcon;
+                                     ? showcase.folderOpenIcon : showcase.folderClosedIcon;
                             }
                             else
                             {
@@ -669,7 +669,7 @@ namespace tachyon
                                                  Pixels{ cellH }));
                         },
                         nullptr,                   // selectedIndex (multi-select used instead)
-                        &demo.gridViewMultiSelect,
+                        &showcase.gridViewMultiSelect,
                         &gridDnD,
                         {}, {},                    // default scroll / row styles
                         LayoutOverride{}.FlexGrow(1));

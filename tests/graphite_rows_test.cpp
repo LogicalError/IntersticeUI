@@ -29,7 +29,7 @@ namespace
     protected:
         void SetUp() override
         {
-            const std::string_view files[] = { "styles.css", "demo.css" };
+            const std::string_view files[] = { "styles.css", "showcase.css" };
             app.SetStyleFiles(files);
             ASSERT_TRUE(app.Initialize());
         }

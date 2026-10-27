@@ -1,5 +1,5 @@
-﻿#include "application.h"
-#include "../gui_controls/gui_tree_utils.h"
+#include "application.h"
+#include <gui_controls/gui_tree_utils.h>
 
 #include <span>
 #include <unordered_map>
@@ -110,22 +110,22 @@ namespace tachyon
             r.renameBuffer = &renameBuffer;
             treeRows.push_back(std::move(r));
         };
-        add("Scene",     0, demo.folderOpenIcon, true);
-        add("Meshes",    1, demo.object2Icon, true);
-        add("Cube",      2, demo.objectIcon,   false);
-        add("Meshes",    2, demo.object2Icon, true);
-        add("Cube",      3, demo.objectIcon,   false);
-        add("Sphere",    3, demo.objectIcon,   false);
-        add("Plane",     3, demo.objectIcon,   false);
-        add("Sphere",    2, demo.objectIcon,   false);
-        add("Plane",     2, demo.objectIcon,   false);
-        add("Camera",    1, demo.objectIcon,  false);
-        add("Light",     1, demo.objectIcon,  false);
-        add("Materials", 0, demo.folderOpenIcon, false);
-        add("Default",   1, demo.objectIcon, false);
-        add("Metal",     1, demo.objectIcon, false);
-        add("Glass",     1, demo.objectIcon, false);
-        add("Settings",  0, demo.folderOpenIcon, false);
+        add("Scene",     0, showcase.folderOpenIcon, true);
+        add("Meshes",    1, showcase.object2Icon, true);
+        add("Cube",      2, showcase.objectIcon,   false);
+        add("Meshes",    2, showcase.object2Icon, true);
+        add("Cube",      3, showcase.objectIcon,   false);
+        add("Sphere",    3, showcase.objectIcon,   false);
+        add("Plane",     3, showcase.objectIcon,   false);
+        add("Sphere",    2, showcase.objectIcon,   false);
+        add("Plane",     2, showcase.objectIcon,   false);
+        add("Camera",    1, showcase.objectIcon,  false);
+        add("Light",     1, showcase.objectIcon,  false);
+        add("Materials", 0, showcase.folderOpenIcon, false);
+        add("Default",   1, showcase.objectIcon, false);
+        add("Metal",     1, showcase.objectIcon, false);
+        add("Glass",     1, showcase.objectIcon, false);
+        add("Settings",  0, showcase.folderOpenIcon, false);
         RebuildTreeViewIndex(treeRows);
         RebuildHierarchyIdToFlat();
         hiddenLeaves.clear();
@@ -149,8 +149,8 @@ namespace tachyon
             const int flatIdx = treeVisibleIdx[visIdx];
             if (flatIdx < 0 || flatIdx >= int(treeRows.size())) return;
             const IconID icon = treeRows[flatIdx].icon != IconID::Invalid
-                ? treeRows[flatIdx].icon : demo.circleIcon;
-            if (BeginCursorGhostWindow(demo.dragGhostWindowID, visual.screenPos))
+                ? treeRows[flatIdx].icon : showcase.circleIcon;
+            if (BeginCursorGhostWindow(showcase.dragGhostWindowID, visual.screenPos))
             {
                 AddGhostIcon(icon);
             }
@@ -203,7 +203,7 @@ namespace tachyon
         // ---- Search box (top of panel) -----------------------------------
         BeginHorizontal(idManager.AllocateDynamicID("hierarchySearchRow"),
                         theme.searchRowStyleRef, tachyon::LayoutOverride::Auto().NoShrink());
-        if (SearchField(hierarchySearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
+        if (SearchField(hierarchySearch, showcase.findIcon, TextEditBehavior::ContinuousUpdate,
                         tachyon::LayoutOverride{}.FlexGrow(1)))
             filterDirty = true;
         EndHorizontal();
@@ -253,8 +253,8 @@ namespace tachyon
             for (TreeViewRow& r : rows)
             {
                 if (r.HasChildren()) anyExpandable = true;
-                if (r.icon == demo.folderOpenIcon || r.icon == demo.folderClosedIcon)
-                    r.icon = (r.HasChildren() && r.isOpen) ? demo.folderOpenIcon : demo.folderClosedIcon;
+                if (r.icon == showcase.folderOpenIcon || r.icon == showcase.folderClosedIcon)
+                    r.icon = (r.HasChildren() && r.isOpen) ? showcase.folderOpenIcon : showcase.folderClosedIcon;
             }
 
             VirtualTableColumn cols[2];
@@ -294,9 +294,9 @@ namespace tachyon
                     tachyon::IconID icon = tachyon::IconID::Invalid;
                     switch (agg)
                     {
-                        case VizAgg::On:    icon = hovered ? demo.visibilityOnIcon : tachyon::IconID::Invalid; break;
-                        case VizAgg::Off:   icon = demo.visibilityOffIcon;   break;
-                        case VizAgg::Mixed: icon = demo.visibilityMixedIcon; break;
+                        case VizAgg::On:    icon = hovered ? showcase.visibilityOnIcon : tachyon::IconID::Invalid; break;
+                        case VizAgg::Off:   icon = showcase.visibilityOffIcon;   break;
+                        case VizAgg::Mixed: icon = showcase.visibilityMixedIcon; break;
                     }
                     tachyon::Element el{};
                     el.id       = vizID;

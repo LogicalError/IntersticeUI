@@ -1,5 +1,5 @@
-// GUIApplication::Initialize on a real device: a fresh app works without the
-// setup steps the demo used to do by hand (#40).
+// GUIApplication::Initialize on a real device: a fresh app works without setup
+// steps of its own.
 
 #include <gtest/gtest.h>
 

@@ -22,7 +22,7 @@ namespace tachyon
 
     namespace
     {
-        // SettingsPanelState is protected on GUIApplication (the demo reaches
+        // SettingsPanelState is protected on GUIApplication (the showcase reaches
         // it via inheritance); expose it the same way for the fixture.
         class SettingsHostApp : public HeadlessGUIApp
         {
@@ -112,7 +112,7 @@ namespace tachyon
                 wide[1].column = { .header = "B", .initialWidth = 250, .minWidth = 200, .maxWidth = 400 };
                 wide[1].generateCell = [this](int r){ (void)r; app.Cell("bbbb"); };
                 // Keep them alive for the frame; static so the sizer pointers
-                // (if any) stay valid like the demo's persistent columns.
+                // (if any) stay valid like the showcase's persistent columns.
                 static std::vector<tachyon::VirtualTableColumn> held;
                 held = std::move(wide);
 
@@ -170,7 +170,7 @@ namespace tachyon
         }
 
         // Full settings-panel path: the REAL RenderSettingsPanel hosting a
-        // page shaped like the demo's Shortcuts page (title, search row,
+        // page shaped like the showcase's Shortcuts page (title, search row,
         // category-tree split, flex-grow table). Mirrors panel_settings.cpp.
         TEST_F(TableScrollbarTest, ShortcutsShapedSettingsPageEmitsVerticalScrollbar)
         {

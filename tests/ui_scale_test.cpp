@@ -47,11 +47,11 @@ namespace tachyon
         EXPECT_EQ(zoomed.theme.scrollbarThickness, 24);
     }
 
-    // The demo log's cells centre their text in rows the level icon makes taller.
+    // The showcase log's cells centre their text in rows the level icon makes taller.
     TEST(ThemeTest, LogCellsCentreTheirText)
     {
         HeadlessGUIApp app;
-        const std::string_view files[] = { "styles.css", "demo.css" };
+        const std::string_view files[] = { "styles.css", "showcase.css" };
         app.SetStyleFiles(files);
         ASSERT_TRUE(app.Initialize());
         const VisualTextStyle* text = app.styleManager.GetVisualTextStyle(

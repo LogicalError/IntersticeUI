@@ -76,7 +76,7 @@ The first configure builds the third-party libraries once into
 
 | Option | Default | |
 | --- | --- | --- |
-| `TACHYON_BUILD_DEMO` | on when top-level | The demo application |
+| `TACHYON_BUILD_SHOWCASE` | on when top-level | The showcase application (`examples/showcase`) |
 | `TACHYON_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
 | `TACHYON_BUILD_TESTS` | on when top-level | The unit and GPU tests |
 | `TACHYON_INSTALL` | on when top-level | The install rules and the CMake package |
@@ -86,14 +86,15 @@ The first configure builds the third-party libraries once into
 
 As a subproject (`add_subdirectory`), only the libraries are built by default.
 
-## Run the demo, examples and tests
+## Run the showcase, examples and tests
 
-`demo` is a testbed that shows most of the library; it is not part of it. It
+`showcase` (in `examples/showcase`) is a testbed that shows most of the library; it is
+not part of it. It
 loads its files relative to the working directory:
 
 ```text
 cd workdirectory
-..\bin\Debug\demo.exe               rem --ui-scale 1.5 zooms the UI
+..\bin\Debug\showcase.exe           rem --ui-scale 1.5 zooms the UI
 ```
 
 `examples/` has small programs that each show one thing and run from any folder:
@@ -224,7 +225,7 @@ they load relative to the working directory. In the source tree they are in
 
 An application adds its own styles with `SetStyleFiles`, which loads more CSS
 files after `styles.css`, and finds their classes with `theme.GetStyle("name")`.
-`examples/custom_theme.cpp` shows both. `RequestReloadTheme` switches palettes
+`examples/custom_theme/custom_theme.cpp` shows both. `RequestReloadTheme` switches palettes
 or the font scale at runtime.
 
 ## Use as a package
@@ -269,7 +270,7 @@ is a minimal host.
 ## Vulkan backend
 
 When a host application also renders with Vulkan, it can share its device and
-images with the GUI. `examples/host_device.cpp` does both.
+images with the GUI. `examples/host_device/host_device.cpp` does both.
 
 ### Sharing the host's device
 

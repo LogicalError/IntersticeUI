@@ -18,50 +18,50 @@
 #include <sstream>
 #include <string>
 
-static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogShowcase = tachyon::Diagnostics::MakeLogCategory("showcase");
 
 namespace tachyon
 {
 
     Result<void> Application::Initialize(const InitializeOptions& options)
     {
-        const std::string_view styleFiles[] = { "styles.css", "demo.css" };
+        const std::string_view styleFiles[] = { "styles.css", "showcase.css" };
         SetStyleFiles(styleFiles);
-        // The demo shows text in many scripts, so it loads the optional Noto fallbacks.
+        // The showcase shows text in many scripts, so it loads the optional Noto fallbacks.
         InitializeOptions withFallbacks = options;
         withFallbacks.fallbackFonts = "fonts/Noto-otf";
         if (Result<void> result = GUIApplication::Initialize(withFallbacks); !result)
             return result;
 
         // Application-specific resources and styles
-        if (!InitializeDemoResources() ||
-            !InitializeDemoStyles() ||
-            !InitializeDemoGUI())
+        if (!InitializeShowcaseResources() ||
+            !InitializeShowcaseStyles() ||
+            !InitializeShowcaseGUI())
             return Error{ ErrorCode::Failed, "initialization failed" };
 
         SetDrawCacheEnabled(true);
 
-        // The saved UI state (the demo stores it next to its themes): the main window, the
+        // The saved UI state (the showcase stores it next to its themes): the main window, the
         // toolbars and the dock, which is applied again once the dock exists.
-        PersistWindow("main", demo.windowLayoutID2);
+        PersistWindow("main", showcase.windowLayoutID2);
         PersistToolbars("toolbars", toolbars.sides);
-        PersistDocking("dock", demo.dockingLayout);
+        PersistDocking("dock", showcase.dockingLayout);
         if (std::ifstream file(kUIStateFile, std::ios::binary); file)
         {
-            demo.savedUIState.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-            if (Result<void> restored = RestoreUIState(demo.savedUIState); !restored)
-                TACHYON_LOG_WARNING(kLogDemo, "{} not restored: {}", kUIStateFile, restored.GetError().message);
+            showcase.savedUIState.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+            if (Result<void> restored = RestoreUIState(showcase.savedUIState); !restored)
+                TACHYON_LOG_WARNING(kLogShowcase, "{} not restored: {}", kUIStateFile, restored.GetError().message);
         }
         return {};
     }
 
     void Application::OnStylesReloaded()
     {
-        // A theme reload wipes styleManager, so every demo StyleRef is stale and
+        // A theme reload wipes styleManager, so every showcase StyleRef is stale and
         // gets re-registered. Icons and textures survive the reload.
         boxStyleRefs.clear();
         animatedHueStyle = tachyon::VisualColorStyleIndex::Invalid;
-        InitializeDemoStyles();
+        InitializeShowcaseStyles();
         ApplyNodeCategories();
     }
 
@@ -73,29 +73,29 @@ namespace tachyon
         static const Category categories[] = {
             { "Generator", "--node-generator" }, { "Operator", "--accent" },
             { "Output",    "--node-output" },    { "Input",    "--node-input" } };
-        for (size_t i = 0; i < demo.nodeView.nodes.size() && i < std::size(categories); ++i)
+        for (size_t i = 0; i < showcase.nodeView.nodes.size() && i < std::size(categories); ++i)
         {
-            demo.nodeView.nodes[i].category      = categories[i].name;
-            demo.nodeView.nodes[i].categoryColor = theme.GetColor(categories[i].color);
+            showcase.nodeView.nodes[i].category      = categories[i].name;
+            showcase.nodeView.nodes[i].categoryColor = theme.GetColor(categories[i].color);
         }
     }
 
     void Application::Cleanup()
     {
-        idManager.ReleaseStaticID(demo.windowLayoutID1);
-        idManager.ReleaseStaticID(demo.windowLayoutID2);
-        idManager.ReleaseStaticID(demo.dragGhostWindowID);
+        idManager.ReleaseStaticID(showcase.windowLayoutID1);
+        idManager.ReleaseStaticID(showcase.windowLayoutID2);
+        idManager.ReleaseStaticID(showcase.dragGhostWindowID);
 
-        idManager.ReleaseStaticID(demo.smallMenuID);
-        idManager.ReleaseStaticID(demo.cameraMenuID);
-        idManager.ReleaseStaticID(demo.bigMenuID);
+        idManager.ReleaseStaticID(showcase.smallMenuID);
+        idManager.ReleaseStaticID(showcase.cameraMenuID);
+        idManager.ReleaseStaticID(showcase.bigMenuID);
 
-        idManager.ReleaseStaticID(demo.reorderTabsID);
-        idManager.ReleaseStaticID(demo.reorderListID);
-        idManager.ReleaseStaticID(demo.reorderWrappedHorzID);
-        idManager.ReleaseStaticID(demo.reorderWrappedVertID);
-        idManager.ReleaseStaticID(demo.reorderStringListID);
-        idManager.ReleaseStaticID(demo.reorderFloatListID);
+        idManager.ReleaseStaticID(showcase.reorderTabsID);
+        idManager.ReleaseStaticID(showcase.reorderListID);
+        idManager.ReleaseStaticID(showcase.reorderWrappedHorzID);
+        idManager.ReleaseStaticID(showcase.reorderWrappedVertID);
+        idManager.ReleaseStaticID(showcase.reorderStringListID);
+        idManager.ReleaseStaticID(showcase.reorderFloatListID);
 
         for (int i = 0; i < kToolbarSideCount; ++i)
         {
@@ -108,23 +108,23 @@ namespace tachyon
         GUIApplication::Cleanup();
     }
 
-    bool Application::InitializeDemoGUI()
+    bool Application::InitializeShowcaseGUI()
     {
-        demo.windowLayoutID1 = idManager.CreateStaticID();
-        demo.windowLayoutID2 = idManager.CreateStaticID();
-        demo.exitDialogID    = idManager.CreateStaticID();
-        demo.dragGhostWindowID = idManager.CreateStaticID();
+        showcase.windowLayoutID1 = idManager.CreateStaticID();
+        showcase.windowLayoutID2 = idManager.CreateStaticID();
+        showcase.exitDialogID    = idManager.CreateStaticID();
+        showcase.dragGhostWindowID = idManager.CreateStaticID();
 
-        demo.smallMenuID = idManager.CreateStaticID();
-        demo.bigMenuID = idManager.CreateStaticID();
+        showcase.smallMenuID = idManager.CreateStaticID();
+        showcase.bigMenuID = idManager.CreateStaticID();
 
-        demo.reorderTabsID = idManager.CreateStaticID();
-        demo.reorderListID = idManager.CreateStaticID();
-        demo.reorderWrappedHorzID = idManager.CreateStaticID();
-        demo.reorderWrappedVertID = idManager.CreateStaticID();
-        demo.reorderStringListID = idManager.CreateStaticID();
-        demo.cameraMenuID = idManager.CreateStaticID();
-        demo.reorderFloatListID = idManager.CreateStaticID();
+        showcase.reorderTabsID = idManager.CreateStaticID();
+        showcase.reorderListID = idManager.CreateStaticID();
+        showcase.reorderWrappedHorzID = idManager.CreateStaticID();
+        showcase.reorderWrappedVertID = idManager.CreateStaticID();
+        showcase.reorderStringListID = idManager.CreateStaticID();
+        showcase.cameraMenuID = idManager.CreateStaticID();
+        showcase.reorderFloatListID = idManager.CreateStaticID();
 
         InitializeToolbarDockState(toolbars.dockState, *this);
 
@@ -136,12 +136,12 @@ namespace tachyon
                 .renderBody = [this]()
                 {
                     // Icon, callback and tooltip (with shortcut) come from the command.
-                    CommandButton(demo.cmdNew);
-                    CommandButton(demo.cmdOpen);
-                    CommandButton(demo.cmdSave);
-                    CommandButton(demo.cmdSaveAs);
-                    CommandButton(demo.cmdUndo);
-                    CommandButton(demo.cmdRedo);
+                    CommandButton(showcase.cmdNew);
+                    CommandButton(showcase.cmdOpen);
+                    CommandButton(showcase.cmdSave);
+                    CommandButton(showcase.cmdSaveAs);
+                    CommandButton(showcase.cmdUndo);
+                    CommandButton(showcase.cmdRedo);
                 }
             });
         toolbars.sides[(int)ToolbarSide::Top].push_back(ToolbarItem
@@ -151,15 +151,15 @@ namespace tachyon
                 {
 					auto viewModeNoLit = (int)viewMode & ~(int)ViewMode::Lit;
 					auto viewModeLit = (int)viewMode & (int)ViewMode::Lit;
-                    Toggle(viewModeNoLit == (int)ViewMode::Wireframe, demo.viewWireframe, [this](bool value) { if (value) viewMode = ViewMode::Wireframe; });
+                    Toggle(viewModeNoLit == (int)ViewMode::Wireframe, showcase.viewWireframe, [this](bool value) { if (value) viewMode = ViewMode::Wireframe; });
 					SetTooltip("Toggle wireframe view mode");
-                    Toggle(viewModeNoLit == (int)ViewMode::Solid,     demo.viewSolid,     [this, viewModeLit](bool value) { if (value) viewMode = (ViewMode)((int)ViewMode::Solid | viewModeLit); });
+                    Toggle(viewModeNoLit == (int)ViewMode::Solid,     showcase.viewSolid,     [this, viewModeLit](bool value) { if (value) viewMode = (ViewMode)((int)ViewMode::Solid | viewModeLit); });
 					SetTooltip("Toggle solid view mode");
-                    Toggle(viewModeNoLit == (int)ViewMode::Textured,  demo.viewTextured,  [this, viewModeLit](bool value) { if (value) viewMode = (ViewMode)((int)ViewMode::Textured | viewModeLit); });
+                    Toggle(viewModeNoLit == (int)ViewMode::Textured,  showcase.viewTextured,  [this, viewModeLit](bool value) { if (value) viewMode = (ViewMode)((int)ViewMode::Textured | viewModeLit); });
 					SetTooltip("Toggle textured view mode");
 
                     bool isLit = viewModeLit == (int)ViewMode::Lit;
-                    Button(isLit ? demo.lightOnIcon : demo.lightOffIcon,  [this, isLit, viewModeNoLit]()
+                    Button(isLit ? showcase.lightOnIcon : showcase.lightOffIcon,  [this, isLit, viewModeNoLit]()
                     { 
                         if (!isLit) 
                         {
@@ -174,7 +174,7 @@ namespace tachyon
                     });
 					SetTooltip(isLit ? "Lighting on" : "Lighting off");
 
-                    Button(enableAudio ? demo.audioOnIcon : demo.audioOffIcon, [this]()
+                    Button(enableAudio ? showcase.audioOnIcon : showcase.audioOffIcon, [this]()
                         {
 							enableAudio = !enableAudio;
                         });
@@ -187,11 +187,11 @@ namespace tachyon
                 .renderBody = [this]()
                 {
                     static const char* const kCameraViews[] = { "Perspective", "Orthographic", "Top", "Front", "Side" };
-                    if (BeginMenu(demo.cameraMenuID, kCameraViews[demo.cameraView]))
+                    if (BeginMenu(showcase.cameraMenuID, kCameraViews[showcase.cameraView]))
                     {
                         MenuFilter();
                         for (int i = 0; i < int(std::size(kCameraViews)); ++i)
-                            MenuItem(kCameraViews[i], [this, i]() { demo.cameraView = i; });
+                            MenuItem(kCameraViews[i], [this, i]() { showcase.cameraView = i; });
                     }
                     EndMenu();
                     SetTooltip("Camera view");
@@ -202,13 +202,13 @@ namespace tachyon
                 .id = idManager.CreateStaticID(), .debugName = "Tools",
                 .renderBody = [this]()
                 {
-                    Toggle(tool == Tool::Select, demo.toolSelectIcon, [this](bool value) { if (value) tool = Tool::Select; });
+                    Toggle(tool == Tool::Select, showcase.toolSelectIcon, [this](bool value) { if (value) tool = Tool::Select; });
 					SetTooltip("Select mode");
-                    Toggle(tool == Tool::Move,   demo.toolMoveIcon,   [this](bool value) { if (value) tool = Tool::Move;   });
+                    Toggle(tool == Tool::Move,   showcase.toolMoveIcon,   [this](bool value) { if (value) tool = Tool::Move;   });
 					SetTooltip("Move mode");
-                    Toggle(tool == Tool::Rotate, demo.toolRotateIcon, [this](bool value) { if (value) tool = Tool::Rotate; });
+                    Toggle(tool == Tool::Rotate, showcase.toolRotateIcon, [this](bool value) { if (value) tool = Tool::Rotate; });
 					SetTooltip("Rotate mode");
-                    Toggle(tool == Tool::Scale,  demo.toolScaleIcon,  [this](bool value) { if (value) tool = Tool::Scale;  });
+                    Toggle(tool == Tool::Scale,  showcase.toolScaleIcon,  [this](bool value) { if (value) tool = Tool::Scale;  });
 					SetTooltip("Scale mode");
                 }
             });
@@ -217,7 +217,7 @@ namespace tachyon
                 .id = idManager.CreateStaticID(), .debugName = "Status",
                 .renderBody = [this]()
                 {
-                    Button(showGrid ? demo.gridOnIcon : demo.gridOffIcon, [this]() { showGrid = !showGrid; });
+                    Button(showGrid ? showcase.gridOnIcon : showcase.gridOffIcon, [this]() { showGrid = !showGrid; });
 					SetTooltip(showGrid ? "Grid on" : "Grid off");
                 }
             });
@@ -277,8 +277,8 @@ namespace tachyon
             }
         };
 
-        demo.textBox1 = "Editable text...";
-        demo.textBox2 = "Multiline\nEditable\ntext2...";
+        showcase.textBox1 = "Editable text...";
+        showcase.textBox2 = "Multiline\nEditable\ntext2...";
 
         nodeViewMode = commandManager.RegisterMode("NodeView");
         commandManager.RegisterCommand(
@@ -287,8 +287,8 @@ namespace tachyon
             tachyon::KeyModifier::None,
             [this]()
             {
-                TACHYON_LOG_INFO(kLogDemo, "Reset view");
-                demo.nodeView.transform = tachyon::float3x2::Identity();
+                TACHYON_LOG_INFO(kLogShowcase, "Reset view");
+                showcase.nodeView.transform = tachyon::float3x2::Identity();
             },
             "Reset view"
         );
@@ -298,10 +298,10 @@ namespace tachyon
 
         // Example: Ctrl+D fires in every edit mode (Default fallback)
         commandManager.RegisterCommand(
-            demo.duplicateIcon,
+            showcase.duplicateIcon,
             tachyon::KeyCode::KeyD,
             tachyon::KeyModifier::Control,
-            []() { TACHYON_LOG_INFO(kLogDemo, "Command: Duplicate"); },
+            []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Duplicate"); },
             "Duplicate"
         );
 
@@ -310,60 +310,60 @@ namespace tachyon
         // Callbacks just print for now. A command may have no shortcut key (still
         // listed in the panel, where the user can bind one).
         auto& cmds = commandManager;
-        demo.cmdNew    = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.newIcon,      tachyon::KeyCode::KeyN, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: New"); },     "New");
-        demo.cmdOpen   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.openFileIcon, tachyon::KeyCode::KeyO, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
-        demo.cmdSave   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.saveIcon,     tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
-        demo.cmdSaveAs = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.saveAsIcon,   tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control | tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
-        demo.cmdExit   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.closeIcon,    tachyon::KeyCode::F4,   tachyon::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
+        showcase.cmdNew    = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.newIcon,      tachyon::KeyCode::KeyN, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogShowcase, "Command: New"); },     "New");
+        showcase.cmdOpen   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.openFileIcon, tachyon::KeyCode::KeyO, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Open"); },    "Open...");
+        showcase.cmdSave   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.saveIcon,     tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Save"); },    "Save");
+        showcase.cmdSaveAs = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.saveAsIcon,   tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control | tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Save As"); }, "Save As...");
+        showcase.cmdExit   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.closeIcon,    tachyon::KeyCode::F4,   tachyon::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.undoIcon,  tachyon::KeyCode::KeyZ, tachyon::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.redoIcon,  tachyon::KeyCode::KeyY, tachyon::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
-        demo.cmdCut    = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.cutIcon,   tachyon::KeyCode::KeyX, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
-        demo.cmdCopy   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.copyIcon,  tachyon::KeyCode::KeyC, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
-        demo.cmdPaste  = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.pasteIcon, tachyon::KeyCode::KeyV, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
+        showcase.cmdUndo   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.undoIcon,  tachyon::KeyCode::KeyZ, tachyon::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
+        showcase.cmdRedo   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.redoIcon,  tachyon::KeyCode::KeyY, tachyon::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
+        showcase.cmdCut    = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.cutIcon,   tachyon::KeyCode::KeyX, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Cut"); },   "Cut");
+        showcase.cmdCopy   = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.copyIcon,  tachyon::KeyCode::KeyC, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Copy"); },  "Copy");
+        showcase.cmdPaste  = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.pasteIcon, tachyon::KeyCode::KeyV, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Paste"); }, "Paste");
 
         // Commands shown on a menu but with NO shortcut key (the user can assign
         // one in the Shortcuts panel).
-        demo.cmdFullscreen = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.fullscreenIcon, tachyon::KeyCode::F11, tachyon::KeyModifier::None,
+        showcase.cmdFullscreen = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.fullscreenIcon, tachyon::KeyCode::F11, tachyon::KeyModifier::None,
                                                   [this]() { ToggleFullscreen(WindowMode::Fullscreen); }, "Fullscreen");
-        demo.cmdDocumentation = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
-        demo.cmdAbout         = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogDemo, "Command: About TachyonUI"); }, "About TachyonUI");
-        demo.cmdSearchCommands = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.findIcon, tachyon::KeyCode::KeyK, tachyon::KeyModifier::Control,
-                                                       [this]() { FocusCommandSearch(demo.commandSearch); }, "Search Commands");
-        demo.commandSearch.shortcut = cmds.GetCommand(demo.cmdSearchCommands)->displayString;
+        showcase.cmdDocumentation = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: Documentation"); },     "Documentation");
+        showcase.cmdAbout         = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: About TachyonUI"); }, "About TachyonUI");
+        showcase.cmdSearchCommands = cmds.RegisterCommand(tachyon::CommandMode::Default, showcase.findIcon, tachyon::KeyCode::KeyK, tachyon::KeyModifier::Control,
+                                                       [this]() { FocusCommandSearch(showcase.commandSearch); }, "Search Commands");
+        showcase.commandSearch.shortcut = cmds.GetCommand(showcase.cmdSearchCommands)->displayString;
 
         // --- Further commands so the Shortcuts panel has realistic content.
         // These are panel/keyboard only (not referenced by the menu or toolbar).
 
         // Default (global).
-        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.selectAllIcon, tachyon::KeyCode::KeyA,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
-        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.deleteIcon, tachyon::KeyCode::Delete, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
-        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.findIcon, tachyon::KeyCode::KeyF,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
-        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.playIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
-        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.stopIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, showcase.selectAllIcon, tachyon::KeyCode::KeyA,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Select All"); }, "Select All");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, showcase.deleteIcon, tachyon::KeyCode::Delete, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Delete Selection"); }, "Delete Selection");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, showcase.findIcon, tachyon::KeyCode::KeyF,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Find"); }, "Find");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, showcase.playIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Play"); }, "Play");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, showcase.stopIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Stop"); }, "Stop");
         // Held shortcut: onBegin fires on press, onEnd on release.
         commandManager.RegisterHeldCommand(tachyon::CommandMode::Default, tachyon::KeyCode::Space, tachyon::KeyModifier::None,
-            []() { TACHYON_LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
-            []() { TACHYON_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
+            []() { TACHYON_LOG_INFO(kLogShowcase, "Hold begin: Pan View"); },
+            []() { TACHYON_LOG_INFO(kLogShowcase, "Hold end: Pan View"); },
             "Pan View (hold)");
 
         // NodeView - graph navigation
-        commandManager.RegisterCommand(nodeViewMode, demo.frameSelectedIcon, tachyon::KeyCode::KeyF,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
-        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyA,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
-        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::Space, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
-        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyG,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
+        commandManager.RegisterCommand(nodeViewMode, showcase.frameSelectedIcon, tachyon::KeyCode::KeyF,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Frame Selected"); }, "Frame Selected");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyA,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Frame All"); }, "Frame All");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::Space, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Search Nodes"); }, "Search Nodes");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyG,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Group Selection"); }, "Group Selection");
 
         // Sculpt - brush operations.
-        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::LeftBracket,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
-        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::RightBracket, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
-        commandManager.RegisterCommand(sculptMode, demo.brushIcon,  tachyon::KeyCode::KeyB,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
-        commandManager.RegisterCommand(sculptMode, demo.eraserIcon, tachyon::KeyCode::KeyE,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Erase Tool"); }, "Erase Tool");
-        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::KeyM,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::LeftBracket,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::RightBracket, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
+        commandManager.RegisterCommand(sculptMode, showcase.brushIcon,  tachyon::KeyCode::KeyB,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Brush Tool"); }, "Brush Tool");
+        commandManager.RegisterCommand(sculptMode, showcase.eraserIcon, tachyon::KeyCode::KeyE,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Erase Tool"); }, "Erase Tool");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::KeyM,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogShowcase, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
 
-        // Seed the demo node-view. Each renderBody fills the row's middle slot;
+        // Seed the showcase's node view. Each renderBody fills the row's middle slot;
         // sockets come from input/output presence.
         {
-            demo.nodeView.commandMode = nodeViewMode;
+            showcase.nodeView.commandMode = nodeViewMode;
 
             // Socket colours double as the connection type: canConnect below only
             // allows wires between same-coloured sockets.
@@ -379,19 +379,19 @@ namespace tachyon
             src.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { NodeText(demo.nodeName); },   // output => right-aligned
+                .renderBody  = [this]() { NodeText(showcase.nodeName); },   // output => right-aligned
                 .socketColor = kTeal
             });
             src.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { Label("Seed"); Field(demo.nodeSeed); },
+                .renderBody  = [this]() { Label("Seed"); Field(showcase.nodeSeed); },
                 .socketColor = kAmber
             });
             src.properties.push_back(NodeProperty
             {
                 .output      = true,
-                .renderBody  = [this]() { Label("Enabled"); Switch(demo.nodeEnabled); },
+                .renderBody  = [this]() { Label("Enabled"); Switch(showcase.nodeEnabled); },
                 .socketColor = kPurple
             });
 
@@ -407,7 +407,7 @@ namespace tachyon
             mix.properties.push_back(NodeProperty
             {
                 .input       = PropertyEndpoint{},
-                .renderBody  = [this]() { Label("Gain"); Field(demo.nodeGain); },
+                .renderBody  = [this]() { Label("Gain"); Field(showcase.nodeGain); },
                 .socketColor = kAmber
             });
             mix.properties.push_back(NodeProperty
@@ -436,7 +436,7 @@ namespace tachyon
             out.properties.push_back(NodeProperty
             {
                 .input       = PropertyEndpoint{},
-                .renderBody  = [this]() { Label("Tint"); Field(demo.nodeGain); },
+                .renderBody  = [this]() { Label("Tint"); Field(showcase.nodeGain); },
                 .socketColor = kPurple   // accepts Source.Enabled
             });
             out.properties.push_back(NodeProperty
@@ -467,20 +467,20 @@ namespace tachyon
                 });
             }
 
-            demo.nodeView.nodes.push_back(std::move(src));
-            demo.nodeView.nodes.push_back(std::move(mix));
-            demo.nodeView.nodes.push_back(std::move(out));
-            demo.nodeView.nodes.push_back(std::move(tex));
+            showcase.nodeView.nodes.push_back(std::move(src));
+            showcase.nodeView.nodes.push_back(std::move(mix));
+            showcase.nodeView.nodes.push_back(std::move(out));
+            showcase.nodeView.nodes.push_back(std::move(tex));
 
             // Stable IDs keep per-node state keyed when view.ordering reshuffles.
-            for (auto& node : demo.nodeView.nodes)
+            for (auto& node : showcase.nodeView.nodes)
                 node.stableID = idManager.CreateStaticID();
             ApplyNodeCategories();
-            demo.nodeView.breadcrumb = { "Graphs", "Terrain material" };
+            showcase.nodeView.breadcrumb = { "Graphs", "Terrain material" };
 
             // Connection rule (delegate): only sockets of the same colour may
             // connect. Endpoints are bounds-checked before this is called.
-            demo.nodeView.canConnect =
+            showcase.nodeView.canConnect =
                 [](const NodeView& v, PropertyEndpoint o, PropertyEndpoint i)
                 {
                     return v.nodes[o.nodeIdx].properties[o.propIdx].socketColor
@@ -489,22 +489,22 @@ namespace tachyon
 
             // The view reports each edit once it is made; it goes on the app's undo history,
             // with the text edits.
-            demo.nodeView.onEdit = [this](const NodeViewEdit& edit)
+            showcase.nodeView.onEdit = [this](const NodeViewEdit& edit)
             {
                 commandManager.History().Push({ .description = "Edit node graph",
-                    .undo = [this, edit] { ApplyNodeViewEdit(demo.nodeView, edit, /*undo*/ true); },
-                    .redo = [this, edit] { ApplyNodeViewEdit(demo.nodeView, edit, /*undo*/ false); } });
+                    .undo = [this, edit] { ApplyNodeViewEdit(showcase.nodeView, edit, /*undo*/ true); },
+                    .redo = [this, edit] { ApplyNodeViewEdit(showcase.nodeView, edit, /*undo*/ false); } });
                 commandManager.History().EndMerge();
             };
 
             // One initial connection: Source.Name (0,0) output -> Mix.Strength (1,0) input
-            demo.nodeView.nodes[1].properties[0].input = PropertyEndpoint{ 0, 0 };
+            showcase.nodeView.nodes[1].properties[0].input = PropertyEndpoint{ 0, 0 };
         }
 
         return true;
     }
 
-    bool Application::InitializeDemoStyles()
+    bool Application::InitializeShowcaseStyles()
     {
         hierarchyVizCellStyleRef    = theme.GetStyle("hierarchy-viz-cell");
         hierarchyVizBgStyleRef      = theme.GetStyle("hierarchy-viz-bg");
@@ -559,7 +559,7 @@ namespace tachyon
         }
 
         // -------------------------------------------------------------------------
-        // Demo-specific styles below
+        // Showcase-specific styles below
         // -------------------------------------------------------------------------
 
         BoxEdges   noBorder = { 0, 0, 0, 0 };
@@ -773,7 +773,7 @@ namespace tachyon
             boxStyleRefs.push_back(styleManager.Register(newStyle));
         }
 
-        demo.testBoxStyleCount = int(boxStyleRefs.size()) - 1;
+        showcase.testBoxStyleCount = int(boxStyleRefs.size()) - 1;
 
         auto lastStyle = boxStyle;
         lastStyle.borderWidths = noBorder;
@@ -804,7 +804,7 @@ namespace tachyon
         return true;
     }
 
-    bool Application::InitializeDemoResources()
+    bool Application::InitializeShowcaseResources()
     {
         {
             //checkerboard image
@@ -822,7 +822,7 @@ namespace tachyon
                 tachyon::Image* checkerboardImage = graphicsContext->CreateImage(pixels.data(), uint2{ 16, 16 }, tachyon::ImageFormat::R8G8B8A8, tachyon::Sampler::LinearRepeat, true);
                 if (checkerboardImage == nullptr)
                 {
-                    TACHYON_LOG_ERROR(kLogDemo, "Failed to create checkerboard image");
+                    TACHYON_LOG_ERROR(kLogShowcase, "Failed to create checkerboard image");
                     return false;
                 }
                 checkerboardIndex = graphicsContext->RegisterImage(checkerboardImage);
@@ -845,7 +845,7 @@ namespace tachyon
                     tachyon::Sampler::LinearClampToEdge, true);
                 if (gradient == nullptr)
                 {
-                    TACHYON_LOG_ERROR(kLogDemo, "Failed to create demo image");
+                    TACHYON_LOG_ERROR(kLogShowcase, "Failed to create demo image");
                     return false;
                 }
                 demoImageIndex = graphicsContext->RegisterImage(gradient);
@@ -856,142 +856,142 @@ namespace tachyon
             {
                 // Simple circle icon (using path with arc)
                 const char* circleSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M 12 2 A 10 10 0 1 1 12 22 A 10 10 0 1 1 12 2 Z" fill="#4A90E2"/></svg>)";
-                demo.circleIcon = textSystem->RegisterIconFromSVG("circle", circleSvg, strlen(circleSvg));
+                showcase.circleIcon = textSystem->RegisterIconFromSVG("circle", circleSvg, strlen(circleSvg));
 
                 // Heart icon - simplified triangular approximation
                 const char* heartSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21 L6 12 L6 8 L9 5 L12 7 L15 5 L18 8 L18 12 Z" fill="#E74C3C"/></svg>)";
-                demo.heartIcon = textSystem->RegisterIconFromSVG("heart", heartSvg, strlen(heartSvg));
+                showcase.heartIcon = textSystem->RegisterIconFromSVG("heart", heartSvg, strlen(heartSvg));
 
                 // Star icon - simple 5-point star using only lines
                 const char* starSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L14.5 9 L22 9.5 L16.5 14 L18 22 L12 17.5 L6 22 L7.5 14 L2 9.5 L9.5 9 Z" fill="#F39C12"/></svg>)";
-                demo.starIcon = textSystem->RegisterIconFromSVG("star", starSvg, strlen(starSvg));
+                showcase.starIcon = textSystem->RegisterIconFromSVG("star", starSvg, strlen(starSvg));
 
                 // Console log-level icons - coloured badge with a white glyph.
                 const char* infoSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#4A90E2"/><circle cx="12" cy="7.5" r="1.6" fill="#ffffff"/><rect x="10.4" y="10.5" width="3.2" height="7.5" rx="1.6" fill="#ffffff"/></svg>)";
-                demo.infoIcon = textSystem->RegisterIconFromSVG("info", infoSvg, strlen(infoSvg));
+                showcase.infoIcon = textSystem->RegisterIconFromSVG("info", infoSvg, strlen(infoSvg));
 
                 const char* warningSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5 L22.5 21 L1.5 21 Z" fill="#F5A623"/><rect x="10.7" y="8.5" width="2.6" height="6.5" rx="1.3" fill="#ffffff"/><circle cx="12" cy="18" r="1.4" fill="#ffffff"/></svg>)";
-                demo.warningIcon = textSystem->RegisterIconFromSVG("warning", warningSvg, strlen(warningSvg));
+                showcase.warningIcon = textSystem->RegisterIconFromSVG("warning", warningSvg, strlen(warningSvg));
 
                 const char* errorSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#E5484D"/><path d="M9.2 7.8 L12 10.6 L14.8 7.8 L16.2 9.2 L13.4 12 L16.2 14.8 L14.8 16.2 L12 13.4 L9.2 16.2 L7.8 14.8 L10.6 12 L7.8 9.2 Z" fill="#ffffff"/></svg>)";
-                demo.errorIcon = textSystem->RegisterIconFromSVG("error", errorSvg, strlen(errorSvg));
+                showcase.errorIcon = textSystem->RegisterIconFromSVG("error", errorSvg, strlen(errorSvg));
 
                 // Monochrome glyphs that take the text (or icon) color: the log's level
                 // dots, the profiler's pause and the files view's list mode.
                 const char* dotSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#ffffff"/></svg>)";
-                demo.dotIcon = textSystem->RegisterIconFromSVG("dot", dotSvg, strlen(dotSvg));
+                showcase.dotIcon = textSystem->RegisterIconFromSVG("dot", dotSvg, strlen(dotSvg));
 
                 const char* pauseSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="4" width="4" height="16" rx="1" fill="#ffffff"/><rect x="14" y="4" width="4" height="16" rx="1" fill="#ffffff"/></svg>)";
-                demo.pauseIcon = textSystem->RegisterIconFromSVG("pause", pauseSvg, strlen(pauseSvg));
+                showcase.pauseIcon = textSystem->RegisterIconFromSVG("pause", pauseSvg, strlen(pauseSvg));
 
                 const char* listSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>)";
-                demo.listIcon = textSystem->RegisterIconFromSVG("list", listSvg, strlen(listSvg));
+                showcase.listIcon = textSystem->RegisterIconFromSVG("list", listSvg, strlen(listSvg));
 
                 const char* moreSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2" fill="#ffffff"/><circle cx="12" cy="12" r="2" fill="#ffffff"/><circle cx="19" cy="12" r="2" fill="#ffffff"/></svg>)";
-                demo.moreIcon = textSystem->RegisterIconFromSVG("more", moreSvg, strlen(moreSvg));
+                showcase.moreIcon = textSystem->RegisterIconFromSVG("more", moreSvg, strlen(moreSvg));
 
                 const char* chevronRightSvg = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>)";
-                demo.chevronRightIcon = textSystem->RegisterIconFromSVG("chevron-right", chevronRightSvg, strlen(chevronRightSvg));
+                showcase.chevronRightIcon = textSystem->RegisterIconFromSVG("chevron-right", chevronRightSvg, strlen(chevronRightSvg));
 
                 // Folder icons for GridView demo - closed and open variants
-                demo.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
-                demo.folderOpenIcon      = textSystem->RegisterIconFromSVGFile("icons/folder_open.svg"); 
+                showcase.folderClosedIcon    = textSystem->RegisterIconFromSVGFile("icons/folder_closed.svg");
+                showcase.folderOpenIcon      = textSystem->RegisterIconFromSVGFile("icons/folder_open.svg"); 
                                          
-                demo.audioOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-2.svg");
-                demo.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-x.svg");
+                showcase.audioOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-2.svg");
+                showcase.audioOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/volume-x.svg");
                                          
-                demo.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-3x3.svg");
-                demo.layoutGridIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
-                demo.boxIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
-                demo.chevronDownIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
-                demo.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-2x2-x.svg");
+                showcase.gridOnIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-3x3.svg");
+                showcase.layoutGridIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
+                showcase.boxIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
+                showcase.chevronDownIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
+                showcase.gridOffIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/grid-2x2-x.svg");
                                          
-                demo.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb.svg");
-                demo.lightOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb-off.svg");
+                showcase.lightOnIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb.svg");
+                showcase.lightOffIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/lightbulb-off.svg");
                                          
-                demo.toolSelectIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/square-dashed.svg");
-                demo.toolMoveIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/move.svg");
-                demo.toolScaleIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize-2.svg");
-                demo.toolRotateIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/rotate-cw.svg");
+                showcase.toolSelectIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/square-dashed.svg");
+                showcase.toolMoveIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/move.svg");
+                showcase.toolScaleIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize-2.svg");
+                showcase.toolRotateIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/rotate-cw.svg");
                                          
-                demo.viewWireframe       = textSystem->RegisterIconFromSVGFile("icons/lucide/globe.svg");
-                demo.viewSolid           = textSystem->RegisterIconFromSVGFile("icons/lucide/circle.svg");
-                demo.viewTextured        = textSystem->RegisterIconFromSVGFile("icons/lucide/view-textured.svg");
+                showcase.viewWireframe       = textSystem->RegisterIconFromSVGFile("icons/lucide/globe.svg");
+                showcase.viewSolid           = textSystem->RegisterIconFromSVGFile("icons/lucide/circle.svg");
+                showcase.viewTextured        = textSystem->RegisterIconFromSVGFile("icons/lucide/view-textured.svg");
 
-                demo.panelFilesIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/folder.svg");
-				demo.panelGameIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/gamepad-2.svg");
-                demo.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/list-tree.svg");
-				demo.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/info.svg");
-				demo.panelLogIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/terminal.svg");
-				demo.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/workflow.svg");
-				demo.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/activity.svg");
-				demo.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sliders-horizontal.svg");
-				demo.panelViewportIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/monitor.svg");
-                demo.panelMiscIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
+                showcase.panelFilesIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/folder.svg");
+				showcase.panelGameIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/gamepad-2.svg");
+                showcase.panelHierarchyIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/list-tree.svg");
+				showcase.panelInspectorIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/info.svg");
+				showcase.panelLogIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/terminal.svg");
+				showcase.panelNodeViewIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/workflow.svg");
+				showcase.panelProfilerIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/activity.svg");
+				showcase.panelSettingsIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sliders-horizontal.svg");
+				showcase.panelViewportIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/monitor.svg");
+                showcase.panelMiscIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/layout-grid.svg");
                 
-				demo.objectIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
-				demo.object2Icon         = textSystem->RegisterIconFromSVGFile("icons/lucide/shapes.svg");
+				showcase.objectIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/box.svg");
+				showcase.object2Icon         = textSystem->RegisterIconFromSVGFile("icons/lucide/shapes.svg");
                                          
-				demo.fileImageIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-image.svg");
-				demo.fileAudioIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-audio.svg");
-                demo.fileVideoIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-video.svg");
-				demo.fileModelIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-box.svg");
-                demo.fileTextIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/file-text.svg");
-				demo.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/file-archive.svg");
+				showcase.fileImageIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-image.svg");
+				showcase.fileAudioIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-audio.svg");
+                showcase.fileVideoIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-video.svg");
+				showcase.fileModelIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/file-box.svg");
+                showcase.fileTextIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/file-text.svg");
+				showcase.fileArchiveIcon     = textSystem->RegisterIconFromSVGFile("icons/lucide/file-archive.svg");
                                          
                                          
-                demo.openFileIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/folder-open.svg");
-                demo.saveIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/save.svg");
-                demo.saveAsIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/save-all.svg");
-                demo.closeIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/x.svg");
-                demo.addIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/plus.svg");
-                demo.removeIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/minus.svg");
-                demo.undoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/undo-2.svg");
-                demo.redoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/redo-2.svg");
-                demo.cutIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/scissors.svg");
-                demo.copyIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/copy.svg");
-                demo.pasteIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/clipboard-paste.svg");
-                demo.blockIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/ban.svg");
-                demo.syncIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/refresh-cw.svg");
-                demo.downloadIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/download.svg");
-                demo.uploadIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/upload.svg");
-                demo.publishIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/send.svg");
-                demo.openInWindowIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/external-link.svg");
+                showcase.openFileIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/folder-open.svg");
+                showcase.saveIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/save.svg");
+                showcase.saveAsIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/save-all.svg");
+                showcase.closeIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/x.svg");
+                showcase.addIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/plus.svg");
+                showcase.removeIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/minus.svg");
+                showcase.undoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/undo-2.svg");
+                showcase.redoIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/redo-2.svg");
+                showcase.cutIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/scissors.svg");
+                showcase.copyIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/copy.svg");
+                showcase.pasteIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/clipboard-paste.svg");
+                showcase.blockIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/ban.svg");
+                showcase.syncIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/refresh-cw.svg");
+                showcase.downloadIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/download.svg");
+                showcase.uploadIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/upload.svg");
+                showcase.publishIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/send.svg");
+                showcase.openInWindowIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/external-link.svg");
                                          
-                demo.duplicateIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/copy-plus.svg");
-                demo.newIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/file-plus.svg");
-                demo.selectAllIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/text-select.svg");
-                demo.deleteIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/trash-2.svg");
-                demo.zoomInIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-in.svg");
-                demo.zoomOutIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-out.svg");
-                demo.findIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/search.svg");
-                demo.playIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/play.svg");
-                demo.stopIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/square.svg");
-                demo.recenterIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/locate-fixed.svg");
-                demo.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/scan.svg");
-                demo.brushIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/brush.svg");
-                demo.eraserIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/eraser.svg");
-                demo.draggableIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/grip-vertical.svg");
+                showcase.duplicateIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/copy-plus.svg");
+                showcase.newIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/file-plus.svg");
+                showcase.selectAllIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/text-select.svg");
+                showcase.deleteIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/trash-2.svg");
+                showcase.zoomInIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-in.svg");
+                showcase.zoomOutIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/zoom-out.svg");
+                showcase.findIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/search.svg");
+                showcase.playIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/play.svg");
+                showcase.stopIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/square.svg");
+                showcase.recenterIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/locate-fixed.svg");
+                showcase.frameSelectedIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/scan.svg");
+                showcase.brushIcon           = textSystem->RegisterIconFromSVGFile("icons/lucide/brush.svg");
+                showcase.eraserIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/eraser.svg");
+                showcase.draggableIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/grip-vertical.svg");
                 
-				demo.darkModeIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/moon.svg");
-                demo.lightModeIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/sun.svg");
-                demo.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sun-moon.svg");
-                demo.fullscreenIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize.svg");
-                demo.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/minimize.svg");
-                demo.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/scan-eye.svg");
-                demo.dropperIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/pipette.svg");
-                demo.editIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/pencil.svg");
-                demo.tagIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/tag.svg");
-                demo.targetIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/target.svg");
-                demo.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/lock.svg");
-                demo.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-dashed.svg");
-                demo.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-off.svg");
-                demo.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/eye.svg");
+				showcase.darkModeIcon        = textSystem->RegisterIconFromSVGFile("icons/lucide/moon.svg");
+                showcase.lightModeIcon       = textSystem->RegisterIconFromSVGFile("icons/lucide/sun.svg");
+                showcase.lightModeAutoIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/sun-moon.svg");
+                showcase.fullscreenIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/maximize.svg");
+                showcase.fullscreenExitIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/minimize.svg");
+                showcase.viewSelectedIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/scan-eye.svg");
+                showcase.dropperIcon         = textSystem->RegisterIconFromSVGFile("icons/lucide/pipette.svg");
+                showcase.editIcon            = textSystem->RegisterIconFromSVGFile("icons/lucide/pencil.svg");
+                showcase.tagIcon             = textSystem->RegisterIconFromSVGFile("icons/lucide/tag.svg");
+                showcase.targetIcon          = textSystem->RegisterIconFromSVGFile("icons/lucide/target.svg");
+                showcase.visibilityLockIcon  = textSystem->RegisterIconFromSVGFile("icons/lucide/lock.svg");
+                showcase.visibilityMixedIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-dashed.svg");
+                showcase.visibilityOffIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/eye-off.svg");
+                showcase.visibilityOnIcon    = textSystem->RegisterIconFromSVGFile("icons/lucide/eye.svg");
 
-                demo.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
-                demo.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/chevrons-down-up.svg");
+                showcase.dropdownArrowIcon   = textSystem->RegisterIconFromSVGFile("icons/lucide/chevron-down.svg");
+                showcase.iconCollapseAllIcon = textSystem->RegisterIconFromSVGFile("icons/lucide/chevrons-down-up.svg");
 
-				demo.keyCommandIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/command.svg");
+				showcase.keyCommandIcon      = textSystem->RegisterIconFromSVGFile("icons/lucide/command.svg");
 
                 // Must run after icon registration; the pages capture IconIDs.
                 InitSettingsPages();
@@ -1015,12 +1015,12 @@ namespace tachyon
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
             // Icon, label, shortcut and callback come from the command.
-            MenuItem(demo.cmdNew);
-            MenuItem(demo.cmdOpen);
-            MenuItem(demo.cmdSave);
-            MenuItem(demo.cmdSaveAs);
+            MenuItem(showcase.cmdNew);
+            MenuItem(showcase.cmdOpen);
+            MenuItem(showcase.cmdSave);
+            MenuItem(showcase.cmdSaveAs);
             MenuSeparator();
-            MenuItem(demo.cmdExit);
+            MenuItem(showcase.cmdExit);
         }
         EndMenu();
 
@@ -1031,15 +1031,15 @@ namespace tachyon
             // The app's undo history; disabled with nothing to undo or redo.
             const auto& history = commandManager.History();
             if (!history.CanUndo()) BeginDisabled();
-            MenuItem(demo.cmdUndo);
+            MenuItem(showcase.cmdUndo);
             if (!history.CanUndo()) EndDisabled();
             if (!history.CanRedo()) BeginDisabled();
-            MenuItem(demo.cmdRedo);
+            MenuItem(showcase.cmdRedo);
             if (!history.CanRedo()) EndDisabled();
             MenuSeparator();
-            MenuItem(demo.cmdCut);
-            MenuItem(demo.cmdCopy);
-            MenuItem(demo.cmdPaste);
+            MenuItem(showcase.cmdCut);
+            MenuItem(showcase.cmdCopy);
+            MenuItem(showcase.cmdPaste);
             MenuSeparator();
             DestructiveMenuItem({ theme.deleteIcon, "Delete" }, [] {});
         }
@@ -1050,7 +1050,7 @@ namespace tachyon
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
             // Theme submenu - mirrors the Appearance settings page; both mutate
-            // demo.settingsThemeIndex so the two stay in sync.
+            // showcase.settingsThemeIndex so the two stay in sync.
             static const char* const themeNames[] = { "Dark", "Light" };
             static const char* const themePaths[] = { "themes/dark.css", "themes/light.css" };
             if (BeginMenu(idManager.AllocateDynamicID("menuViewTheme"), "Theme"))
@@ -1058,11 +1058,11 @@ namespace tachyon
                 for (int i = 0; i < 2; i++)
                 {
                     int idx = i;
-                    bool isCurrent = (idx == demo.settingsThemeIndex);
+                    bool isCurrent = (idx == showcase.settingsThemeIndex);
                     if (isCurrent) BeginSelected();
                     MenuItem(themeNames[i], [this, idx]() {
-                        demo.settingsThemeIndex = idx;
-                        RequestReloadTheme(themePaths[idx], demo.settingsFontScalePct / 100.0f);
+                        showcase.settingsThemeIndex = idx;
+                        RequestReloadTheme(themePaths[idx], showcase.settingsFontScalePct / 100.0f);
                     });
                     if (isCurrent) EndSelected();
                 }
@@ -1073,26 +1073,26 @@ namespace tachyon
 
             // Zoom = font scale, clamped to [100, 300]% in steps of 10 to match the
             // Appearance page. RequestReloadTheme no-ops when the scale is unchanged.
-            MenuItem({ demo.zoomInIcon, "Zoom In" }, [this]() {
-                demo.settingsFontScalePct = std::clamp(demo.settingsFontScalePct + 10.0f, 100.0f, 300.0f);
-                RequestReloadTheme(GetThemePath(), demo.settingsFontScalePct / 100.0f);
+            MenuItem({ showcase.zoomInIcon, "Zoom In" }, [this]() {
+                showcase.settingsFontScalePct = std::clamp(showcase.settingsFontScalePct + 10.0f, 100.0f, 300.0f);
+                RequestReloadTheme(GetThemePath(), showcase.settingsFontScalePct / 100.0f);
             });
-            MenuItem({ demo.zoomOutIcon, "Zoom Out" }, [this]() {
-                demo.settingsFontScalePct = std::clamp(demo.settingsFontScalePct - 10.0f, 100.0f, 300.0f);
-                RequestReloadTheme(GetThemePath(), demo.settingsFontScalePct / 100.0f);
+            MenuItem({ showcase.zoomOutIcon, "Zoom Out" }, [this]() {
+                showcase.settingsFontScalePct = std::clamp(showcase.settingsFontScalePct - 10.0f, 100.0f, 300.0f);
+                RequestReloadTheme(GetThemePath(), showcase.settingsFontScalePct / 100.0f);
             });
-            MenuItem({ demo.recenterIcon, "Reset Zoom" }, [this]() {
-                demo.settingsFontScalePct = 100.0f;
+            MenuItem({ showcase.recenterIcon, "Reset Zoom" }, [this]() {
+                showcase.settingsFontScalePct = 100.0f;
                 RequestReloadTheme(GetThemePath(), 1.0f);
             });
 
             MenuSeparator();
-            const WindowMode mode = windowManager->GetWindowMode(demo.windowLayoutID2);
+            const WindowMode mode = windowManager->GetWindowMode(showcase.windowLayoutID2);
             if (mode == WindowMode::Fullscreen || mode == WindowMode::ExclusiveFullscreen)
-                MenuItem({ demo.fullscreenExitIcon, "Exit Fullscreen" }, "F11", [this]() { ToggleFullscreen(WindowMode::Fullscreen); });
+                MenuItem({ showcase.fullscreenExitIcon, "Exit Fullscreen" }, "F11", [this]() { ToggleFullscreen(WindowMode::Fullscreen); });
             else
             {
-                MenuItem(demo.cmdFullscreen);
+                MenuItem(showcase.cmdFullscreen);
                 MenuItem("Exclusive Fullscreen", [this]() { ToggleFullscreen(WindowMode::ExclusiveFullscreen); });
             }
         }
@@ -1102,15 +1102,15 @@ namespace tachyon
         if (BeginMenu(idManager.AllocateDynamicID("menuHelp"), "Help",
                       theme.menuBarTriggerStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef))
         {
-            MenuItem(demo.cmdDocumentation);
-            MenuItem(demo.cmdAbout);
+            MenuItem(showcase.cmdDocumentation);
+            MenuItem(showcase.cmdAbout);
         }
         EndMenu();
 
         // The command search, centred in the space after the menus.
         BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
         EndHorizontal();
-        CommandSearch(demo.commandSearch);
+        CommandSearch(showcase.commandSearch);
         BeginHorizontal(LayoutOverride::Auto().FlexGrow(1));
         EndHorizontal();
         StatusText("Test");
@@ -1122,26 +1122,26 @@ namespace tachyon
     // Quitting loses the edits on the undo history: ask first when there are any.
     void Application::ToggleFullscreen(WindowMode fullscreen)
     {
-        const ID window = demo.windowLayoutID2;
+        const ID window = showcase.windowLayoutID2;
         const WindowMode mode = windowManager->GetWindowMode(window);
         if (mode == WindowMode::Fullscreen || mode == WindowMode::ExclusiveFullscreen)
         {
-            windowManager->SetWindowMode(window, demo.modeBeforeFullscreen);
+            windowManager->SetWindowMode(window, showcase.modeBeforeFullscreen);
             return;
         }
-        demo.modeBeforeFullscreen = mode == WindowMode::Maximized ? WindowMode::Maximized : WindowMode::Normal;
+        showcase.modeBeforeFullscreen = mode == WindowMode::Maximized ? WindowMode::Maximized : WindowMode::Normal;
         windowManager->SetWindowMode(window, fullscreen);
     }
 
     void Application::RequestExit()
     {
         if (!commandManager.History().CanUndo()) applicationQuit = true;
-        else                       demo.exitRequested = true;
+        else                       showcase.exitRequested = true;
     }
 
     void Application::AskBeforeExit()
     {
-        if (!demo.exitRequested) return;
+        if (!showcase.exitRequested) return;
         static constexpr MessageButton kButtons[] = {
             { .label = "Cancel" },
             { .label = "Quit", .kind = MessageButtonKind::Danger },
@@ -1149,11 +1149,11 @@ namespace tachyon
         const size_t edits = commandManager.History().UndoCount();
         const std::string message = std::format("There {} {} unsaved edit{}. Quitting discards {}.",
                                                 edits == 1 ? "is" : "are", edits, edits == 1 ? "" : "s", edits == 1 ? "it" : "them");
-        const int choice = MessageDialog(demo.exitDialogID, MessageDialogDesc{
+        const int choice = MessageDialog(showcase.exitDialogID, MessageDialogDesc{
             .icon = MessageIcon::Quit, .title = "Quit Test?", .message = message, .buttons = kButtons,
             .defaultButton = 0, .cancelButton = 0 });   // Cancel: quitting destroys work
         if (choice == 1) applicationQuit = true;
-        if (choice >= 0) demo.exitRequested = false;
+        if (choice >= 0) showcase.exitRequested = false;
     }
 
     // Status bar: state on the left, frame time on the right.
@@ -1182,11 +1182,11 @@ namespace tachyon
             // Closed by the user; reset mainWindowClosed to reopen.
             if (!mainWindowClosed)
             {
-                if (BeginWindow(demo.windowLayoutID2, "Test", theme.mainWindowStyleRef, std::move(sizeConstraints.Centered()),
+                if (BeginWindow(showcase.windowLayoutID2, "Test", theme.mainWindowStyleRef, std::move(sizeConstraints.Centered()),
                                 ElementFlags::WindowUserControlled | ElementFlags::WindowIsCentered | ElementFlags::WindowCustomTitleBar
                                 | ElementFlags::WindowConfirmClose))
                 {
-                    if (CloseRequested(demo.windowLayoutID2))
+                    if (CloseRequested(showcase.windowLayoutID2))
                         RequestExit();
                     AskBeforeExit();
 
@@ -1194,32 +1194,32 @@ namespace tachyon
 
                     // ---- DockingContainer demo ----
                     {
-                        if (!demo.dockInitialized)
+                        if (!showcase.dockInitialized)
                         {
-                            auto hierarchyPanelID   = CreatePanel(demo.dockingLayout.panels, "Hierarchy",   demo.panelHierarchyIcon, [this]() { RenderHierarchyPanel(); }, {}, [this]() { EnableHierarchyPanel(); }, [this]() { DisableHierarchyPanel(); });
-                            auto inspectorPanelID   = CreatePanel(demo.dockingLayout.panels, "Inspector",   demo.panelInspectorIcon, [this]() { RenderInspectorPanel(); }, {}, [this]() { EnableInspectorPanel(); }, [this]() { DisableInspectorPanel(); });
-                            auto consolePanelID     = CreatePanel(demo.dockingLayout.panels, "Log",         demo.panelLogIcon,       [this]() { RenderLogPanel(); },       {}, [this]() { EnableLogPanel(); },       [this]() { DisableLogPanel(); });
-                            auto filesPanelID       = CreatePanel(demo.dockingLayout.panels, "Files",       demo.panelFilesIcon,     [this]() { RenderFilesPanel(); }, {}, [this]() { EnableFilesPanel(); }, [this]() { DisableFilesPanel(); });
-                            auto nodeViewPanelID    = CreatePanel(demo.dockingLayout.panels, "NodeView",    demo.panelNodeViewIcon,  [this]() { RenderNodeViewPanel(); });
-                            auto viewportPanelID    = CreatePanel(demo.dockingLayout.panels, "Viewport",    demo.panelViewportIcon,  [this]() { RenderViewportPanel(); });
-                            auto profilerPanelID    = CreatePanel(demo.dockingLayout.panels, "Profiler",    demo.panelProfilerIcon,  [this]() { RenderProfilerTreePanel(); }, {}, [this]() { EnableProfilerTreePanel(); });
+                            auto hierarchyPanelID   = CreatePanel(showcase.dockingLayout.panels, "Hierarchy",   showcase.panelHierarchyIcon, [this]() { RenderHierarchyPanel(); }, {}, [this]() { EnableHierarchyPanel(); }, [this]() { DisableHierarchyPanel(); });
+                            auto inspectorPanelID   = CreatePanel(showcase.dockingLayout.panels, "Inspector",   showcase.panelInspectorIcon, [this]() { RenderInspectorPanel(); }, {}, [this]() { EnableInspectorPanel(); }, [this]() { DisableInspectorPanel(); });
+                            auto consolePanelID     = CreatePanel(showcase.dockingLayout.panels, "Log",         showcase.panelLogIcon,       [this]() { RenderLogPanel(); },       {}, [this]() { EnableLogPanel(); },       [this]() { DisableLogPanel(); });
+                            auto filesPanelID       = CreatePanel(showcase.dockingLayout.panels, "Files",       showcase.panelFilesIcon,     [this]() { RenderFilesPanel(); }, {}, [this]() { EnableFilesPanel(); }, [this]() { DisableFilesPanel(); });
+                            auto nodeViewPanelID    = CreatePanel(showcase.dockingLayout.panels, "NodeView",    showcase.panelNodeViewIcon,  [this]() { RenderNodeViewPanel(); });
+                            auto viewportPanelID    = CreatePanel(showcase.dockingLayout.panels, "Viewport",    showcase.panelViewportIcon,  [this]() { RenderViewportPanel(); });
+                            auto profilerPanelID    = CreatePanel(showcase.dockingLayout.panels, "Profiler",    showcase.panelProfilerIcon,  [this]() { RenderProfilerTreePanel(); }, {}, [this]() { EnableProfilerTreePanel(); });
                             // Panels are cached by default; the profiler opts out while profiling is on.
-                            demo.dockingLayout.panels[profilerPanelID].cacheSignature =
+                            showcase.dockingLayout.panels[profilerPanelID].cacheSignature =
                                 []() -> std::optional<uint64_t> { return Diagnostics::IsProfilingEnabled() ? std::nullopt : std::optional<uint64_t>(0); };
 
-                            auto treeTablePanelID   = CreatePanel(demo.dockingLayout.panels, "TreeTable",   demo.panelMiscIcon, [this]() { RenderTreeTablePanel(); });
-                            auto tablePanelID       = CreatePanel(demo.dockingLayout.panels, "Table",       demo.panelMiscIcon, [this]() { RenderTablePanel(); });
-                            auto splitScrollPanelID = CreatePanel(demo.dockingLayout.panels, "FrozenTable", demo.panelMiscIcon, [this]() { RenderSplitScrollPanel(); });
-                            auto reorderablePanelID = CreatePanel(demo.dockingLayout.panels, "Reorderable", demo.panelMiscIcon, [this]() { RenderReorderablePanel(); });
-                            auto boxTestPanelID     = CreatePanel(demo.dockingLayout.panels, "BoxTest",     demo.panelMiscIcon, [this]() { RenderBoxTestPanel(); });
-                            auto miscPanelID        = CreatePanel(demo.dockingLayout.panels, "Misc",        demo.panelMiscIcon, [this]() { RenderMiscPanel(); });
+                            auto treeTablePanelID   = CreatePanel(showcase.dockingLayout.panels, "TreeTable",   showcase.panelMiscIcon, [this]() { RenderTreeTablePanel(); });
+                            auto tablePanelID       = CreatePanel(showcase.dockingLayout.panels, "Table",       showcase.panelMiscIcon, [this]() { RenderTablePanel(); });
+                            auto splitScrollPanelID = CreatePanel(showcase.dockingLayout.panels, "FrozenTable", showcase.panelMiscIcon, [this]() { RenderSplitScrollPanel(); });
+                            auto reorderablePanelID = CreatePanel(showcase.dockingLayout.panels, "Reorderable", showcase.panelMiscIcon, [this]() { RenderReorderablePanel(); });
+                            auto boxTestPanelID     = CreatePanel(showcase.dockingLayout.panels, "BoxTest",     showcase.panelMiscIcon, [this]() { RenderBoxTestPanel(); });
+                            auto miscPanelID        = CreatePanel(showcase.dockingLayout.panels, "Misc",        showcase.panelMiscIcon, [this]() { RenderMiscPanel(); });
                             // Misc animates during construction (rotating triangle, cycling hue), so it
                             // must rebuild every frame - opt out of caching.
-                            demo.dockingLayout.panels[miscPanelID].cacheSignature =
+                            showcase.dockingLayout.panels[miscPanelID].cacheSignature =
                                 []() -> std::optional<uint64_t> { return std::nullopt; };
 
                             // Pages are registered once in InitSettingsPages.
-                            auto settingsPanelID    = CreatePanel(demo.dockingLayout.panels, "Settings", demo.panelSettingsIcon, [this]() { RenderSettingsPanel(demo.settings); });
+                            auto settingsPanelID    = CreatePanel(showcase.dockingLayout.panels, "Settings", showcase.panelSettingsIcon, [this]() { RenderSettingsPanel(showcase.settings); });
                         
                             // bottom
                             auto&& filesLeaf         = MakeLeaf({ filesPanelID });
@@ -1237,7 +1237,7 @@ namespace tachyon
                             //  - top Hsplit:    left pinned       -> (center+right) absorbs horizontal resize
                             //  - inner Hsplit:  right pinned      -> center absorbs horizontal resize
                             //  - bottom Hsplit: left (files) pinned
-                            demo.dockingLayout.root =
+                            showcase.dockingLayout.root =
                                 MakeSplit(DockSplitMode::BottomPinned, 280,
                                     MakeSplit(DockSplitMode::LeftPinned, 320,
                                         // left panel group
@@ -1257,17 +1257,17 @@ namespace tachyon
                                     120, // minFirst
                                     160  // minSecond
                                 );
-                            demo.dockInitialized = true;
-                            if (!demo.savedUIState.empty())
-                                (void)RestoreUIState(demo.savedUIState);   // now with the dock's panels
+                            showcase.dockInitialized = true;
+                            if (!showcase.savedUIState.empty())
+                                (void)RestoreUIState(showcase.savedUIState);   // now with the dock's panels
 
                             // --panel: bring that panel to the front of its tab group.
                             auto selectStartPanel = [this](auto& self, DockNode* node) -> void {
                                 if (!node) return;
                                 for (size_t t = 0; t < node->panelIds.size(); ++t)
                                 {
-                                    const auto it = demo.dockingLayout.panels.find(node->panelIds[t]);
-                                    if (it != demo.dockingLayout.panels.end()
+                                    const auto it = showcase.dockingLayout.panels.find(node->panelIds[t]);
+                                    if (it != showcase.dockingLayout.panels.end()
                                         && std::find(m_startPanels.begin(), m_startPanels.end(), it->second.title) != m_startPanels.end())
                                         node->selectedTab = int(t);
                                 }
@@ -1275,22 +1275,22 @@ namespace tachyon
                                 self(self, node->second.get());
                             };
                             if (!m_startPanels.empty())
-                                selectStartPanel(selectStartPanel, demo.dockingLayout.root.get());
+                                selectStartPanel(selectStartPanel, showcase.dockingLayout.root.get());
 
                             // --float: those panels start in their own windows.
                             int2 floatAt{ styleManager.Px(200), styleManager.Px(200) };
                             for (const std::string& title : m_floatPanels)
-                                for (const auto& [id, panel] : demo.dockingLayout.panels)
+                                for (const auto& [id, panel] : showcase.dockingLayout.panels)
                                     if (panel.title == title)
                                     {
-                                        (void)FloatPanel(demo.dockingLayout, id, floatAt);
+                                        (void)FloatPanel(showcase.dockingLayout, id, floatAt);
                                         floatAt += int2{ styleManager.Px(40), styleManager.Px(40) };
                                         break;
                                     }
                         }
 
-                        demo.dockContainerID = idManager.AllocateDynamicID("dockDemo");
-                        BeginDockingContainer(demo.dockContainerID, &demo.dockingLayout,
+                        showcase.dockContainerID = idManager.AllocateDynamicID("dockDemo");
+                        BeginDockingContainer(showcase.dockContainerID, &showcase.dockingLayout,
                             theme.dockContainerMainStyleRef, LayoutOverride::Auto());
                         EndDockingContainer();
                     }

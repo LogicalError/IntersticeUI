@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogShowcase = tachyon::Diagnostics::MakeLogCategory("showcase");
 
 //
 // This file is for testing and prototyping various GUI features related to inspector-like panels, such as field layouts, context menus, etc.
@@ -48,23 +48,23 @@ namespace tachyon
         add("Button", [this]() {
             Label("Button");
             BeginHorizontal(idManager.AllocateDynamicID("buttonRow"), inspectorPairHalfStyleRef, LayoutOverride{}.FlexGrow(1));
-            Button("Click me", [this]() { demo.buttonClickCount++; }, LayoutOverride{}.NoGrow().NoShrink());
+            Button("Click me", [this]() { showcase.buttonClickCount++; }, LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Click to increment the counter");
             if (BeginContextMenu())
             {
-                MenuItem("Reset counter", [this]() { demo.buttonClickCount = 0; });
+                MenuItem("Reset counter", [this]() { showcase.buttonClickCount = 0; });
             }
             EndContextMenu();
-            Text(idManager.AllocateDynamicID("buttonClicks"), "Clicks: " + std::to_string(demo.buttonClickCount),
+            Text(idManager.AllocateDynamicID("buttonClicks"), "Clicks: " + std::to_string(showcase.buttonClickCount),
                  inspectorCaptionStyleRef);
             EndHorizontal();
         });
 
         add("Toggle", [this]() {
             Label("Toggle");
-            if (Switch(demo.toggleValue, demo.toggleValue ? "On" : "Off"))
+            if (Switch(showcase.toggleValue, showcase.toggleValue ? "On" : "Off"))
             {
-                TACHYON_LOG_INFO(kLogDemo, "toggle");
+                TACHYON_LOG_INFO(kLogShowcase, "toggle");
             }
             SetTooltip("Switch on or off");
         });
@@ -77,9 +77,9 @@ namespace tachyon
                 const char* labels[] = { "Left", "Center", "Right" };
                 for (int i = 0; i < 3; ++i)
                 {
-                    if (demo.alignment == i) guiStateManager.Construction().PushSelected();
-                    Button(labels[i], [this, i]() { demo.alignment = i; });
-                    if (demo.alignment == i) guiStateManager.Construction().PopSelected();
+                    if (showcase.alignment == i) guiStateManager.Construction().PushSelected();
+                    Button(labels[i], [this, i]() { showcase.alignment = i; });
+                    if (showcase.alignment == i) guiStateManager.Construction().PopSelected();
                 }
             }
             EndButtonGroup();
@@ -90,98 +90,98 @@ namespace tachyon
             Label("Style");
             BeginToggleGroup(LayoutOverride{}.NoGrow());
             {
-                Toggle(demo.bold,      "B");
-                Toggle(demo.italic,    "I");
-                Toggle(demo.underline, "U");
+                Toggle(showcase.bold,      "B");
+                Toggle(showcase.italic,    "I");
+                Toggle(showcase.underline, "U");
             }
             EndToggleGroup();
         });
 
         add("Text box", [this]() {
             Label("Text box");
-            Field(demo.textBox1, TextEditBehavior::None);
+            Field(showcase.textBox1, TextEditBehavior::None);
             SetTooltip("Single-line text field");
             if (BeginContextMenu())
             {
-                MenuItem("Cut",        "Ctrl+X", []() { TACHYON_LOG_INFO(kLogDemo, "Cut"); });
-                MenuItem("Copy",       "Ctrl+C", []() { TACHYON_LOG_INFO(kLogDemo, "Copy"); });
-                MenuItem("Paste",      "Ctrl+V", []() { TACHYON_LOG_INFO(kLogDemo, "Paste"); });
-                MenuItem("Select All", "Ctrl+A", []() { TACHYON_LOG_INFO(kLogDemo, "Select All"); });
+                MenuItem("Cut",        "Ctrl+X", []() { TACHYON_LOG_INFO(kLogShowcase, "Cut"); });
+                MenuItem("Copy",       "Ctrl+C", []() { TACHYON_LOG_INFO(kLogShowcase, "Copy"); });
+                MenuItem("Paste",      "Ctrl+V", []() { TACHYON_LOG_INFO(kLogShowcase, "Paste"); });
+                MenuItem("Select All", "Ctrl+A", []() { TACHYON_LOG_INFO(kLogShowcase, "Select All"); });
             }
             EndContextMenu();
         });
 
         add("Text box 2", [this]() {
             Label("Text box 2");
-            Field(demo.textBox2, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
+            Field(showcase.textBox2, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
         });
 
         add("Indeterminate", [this]() {
             BeginIndeterminate();
             DragLabel("Indeterminate");
-            Field(demo.floatValue);
+            Field(showcase.floatValue);
             EndIndeterminate();
         });
 
         // ---- Numbers --------------------------------------------------------
         section = Numbers;
         // One per row: drag the label to scrub the value, or type into the field.
-        add("Float",  [this]() { DragLabel("Float"); TypedField(demo.floatValue); });
-        add("Double", [this]() { DragLabel("Double"); TypedField(demo.doubleValue); });
-        add("Int64",  [this]() { DragLabel("Int64"); TypedField(demo.int64Value); });
-        add("Int32",  [this]() { DragLabel("Int32"); TypedField(demo.int32Value); });
-        add("Int16",  [this]() { DragLabel("Int16"); TypedField(demo.int16Value); });
-        add("Int8",   [this]() { DragLabel("Int8"); TypedField(demo.int8Value); });
-        add("UInt64", [this]() { DragLabel("UInt64"); TypedField(demo.uint64Value); });
-        add("UInt32", [this]() { DragLabel("UInt32"); TypedField(demo.uint32Value); });
-        add("UInt16", [this]() { DragLabel("UInt16"); TypedField(demo.uint16Value); });
-        add("UInt8",  [this]() { DragLabel("UInt8"); TypedField(demo.uint8Value); });
+        add("Float",  [this]() { DragLabel("Float"); TypedField(showcase.floatValue); });
+        add("Double", [this]() { DragLabel("Double"); TypedField(showcase.doubleValue); });
+        add("Int64",  [this]() { DragLabel("Int64"); TypedField(showcase.int64Value); });
+        add("Int32",  [this]() { DragLabel("Int32"); TypedField(showcase.int32Value); });
+        add("Int16",  [this]() { DragLabel("Int16"); TypedField(showcase.int16Value); });
+        add("Int8",   [this]() { DragLabel("Int8"); TypedField(showcase.int8Value); });
+        add("UInt64", [this]() { DragLabel("UInt64"); TypedField(showcase.uint64Value); });
+        add("UInt32", [this]() { DragLabel("UInt32"); TypedField(showcase.uint32Value); });
+        add("UInt16", [this]() { DragLabel("UInt16"); TypedField(showcase.uint16Value); });
+        add("UInt8",  [this]() { DragLabel("UInt8"); TypedField(showcase.uint8Value); });
 
         add("Float [0.25, 1]", [this]() {
             DragLabel("Float [0.25, 1]");
-            Field(demo.clampedFloat, NumericFieldConfig<float>{.minVal = 0.25f, .maxVal = 1.0f });
+            Field(showcase.clampedFloat, NumericFieldConfig<float>{.minVal = 0.25f, .maxVal = 1.0f });
         });
         add("UInt8 [50, 100]", [this]() {
             DragLabel("UInt8 [50, 100]");
-            Field(demo.clampedUInt8, NumericFieldConfig<uint8_t>{.minVal = 50, .maxVal = 100 });
+            Field(showcase.clampedUInt8, NumericFieldConfig<uint8_t>{.minVal = 50, .maxVal = 100 });
         });
 
         add("Volume", [this]() {
             DragLabel("Volume");
-            SliderField(demo.sliderFieldValue, 0.0f, 100.0f, "Volume");
+            SliderField(showcase.sliderFieldValue, 0.0f, 100.0f, "Volume");
         });
 
         // NaN and the infinities, side by side.
         add("Special NaN Inf", [this]() {
             Label("Special");
             BeginHorizontal(idManager.AllocateDynamicID("specialRow"), inspectorPairHalfStyleRef, LayoutOverride{}.FlexGrow(1));
-            Field(demo.nanFloat,    LayoutOverride{}.FlexGrow(1));
-            Field(demo.posInfFloat, LayoutOverride{}.FlexGrow(1));
-            Field(demo.negInfFloat, LayoutOverride{}.FlexGrow(1));
+            Field(showcase.nanFloat,    LayoutOverride{}.FlexGrow(1));
+            Field(showcase.posInfFloat, LayoutOverride{}.FlexGrow(1));
+            Field(showcase.negInfFloat, LayoutOverride{}.FlexGrow(1));
             EndHorizontal();
         });
 
         // ---- Color & vectors ------------------------------------------------
         section = ColorAndVectors;
-        add("Color",    [this]() { DragLabel("Color");    ColorField(demo.demoColor);       });
-        add("Gradient", [this]() { DragLabel("Gradient"); GradientField(demo.demoGradient); });
-        add("Int2", [this]() { DragLabel("Int2"); Field(demo.int2Value); });
-        add("Int3", [this]() { DragLabel("Int3"); Field(demo.int3Value); });
-        add("Int4", [this]() { DragLabel("Int4"); Field(demo.int4Value); });
+        add("Color",    [this]() { DragLabel("Color");    ColorField(showcase.demoColor);       });
+        add("Gradient", [this]() { DragLabel("Gradient"); GradientField(showcase.demoGradient); });
+        add("Int2", [this]() { DragLabel("Int2"); Field(showcase.int2Value); });
+        add("Int3", [this]() { DragLabel("Int3"); Field(showcase.int3Value); });
+        add("Int4", [this]() { DragLabel("Int4"); Field(showcase.int4Value); });
 
         // ---- Lists ----------------------------------------------------------
         section = Lists;
         add("String list", [this]() {
-            Label("String list", std::to_string(demo.stringList.size()) + " items");
-            Field(demo.reorderStringListID, demo.stringList, tachyon::LayoutOverride{}.FlexGrow(1));
+            Label("String list", std::to_string(showcase.stringList.size()) + " items");
+            Field(showcase.reorderStringListID, showcase.stringList, tachyon::LayoutOverride{}.FlexGrow(1));
         });
         add("Float list", [this]() {
-            Label("Float list", std::to_string(demo.floatList.size()) + " items");
-            Field(demo.reorderFloatListID, demo.floatList, tachyon::LayoutOverride{}.FlexGrow(1));
+            Label("Float list", std::to_string(showcase.floatList.size()) + " items");
+            Field(showcase.reorderFloatListID, showcase.floatList, tachyon::LayoutOverride{}.FlexGrow(1));
         });
         add("Dictionary", [this]() {
-            Label("Dictionary", std::to_string(demo.dictionary.size()) + " entries");
-            Field(demo.dictionary, tachyon::LayoutOverride{}.FlexGrow(1));
+            Label("Dictionary", std::to_string(showcase.dictionary.size()) + " entries");
+            Field(showcase.dictionary, tachyon::LayoutOverride{}.FlexGrow(1));
         });
 
         // ---- Menus ----------------------------------------------------------
@@ -189,7 +189,7 @@ namespace tachyon
         section = Menus;
         add("Small menu", [this]() {
             Label("Small menu");
-            if (BeginMenu(demo.smallMenuID, "Open",
+            if (BeginMenu(showcase.smallMenuID, "Open",
                           tachyon::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 ID item1ID = idManager.AllocateDynamicID();
@@ -202,18 +202,18 @@ namespace tachyon
                 ID subItem3ID = idManager.AllocateDynamicID();
                 ID subItem4ID = idManager.AllocateDynamicID();
 
-                MenuItem(item1ID, "Item 1", []() { TACHYON_LOG_INFO(kLogDemo, "Item 1 selected"); });
-                MenuItem(item2ID, "Item 2", []() { TACHYON_LOG_INFO(kLogDemo, "Item 2 selected"); });
+                MenuItem(item1ID, "Item 1", []() { TACHYON_LOG_INFO(kLogShowcase, "Item 1 selected"); });
+                MenuItem(item2ID, "Item 2", []() { TACHYON_LOG_INFO(kLogShowcase, "Item 2 selected"); });
                 if (BeginMenu(more1ID, "More 1..."))
                 {
-                    MenuItem(subItem1ID, "Sub 1", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 1"); });
-                    MenuItem(subItem2ID, "Sub 2", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 2"); });
+                    MenuItem(subItem1ID, "Sub 1", []() { TACHYON_LOG_INFO(kLogShowcase, "Sub 1"); });
+                    MenuItem(subItem2ID, "Sub 2", []() { TACHYON_LOG_INFO(kLogShowcase, "Sub 2"); });
                 }
                 EndMenu();
                 if (BeginMenu(more2ID, "More 2..."))
                 {
-                    MenuItem(subItem3ID, "Sub 3", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 3"); });
-                    MenuItem(subItem4ID, "Sub 4", []() { TACHYON_LOG_INFO(kLogDemo, "Sub 4"); });
+                    MenuItem(subItem3ID, "Sub 3", []() { TACHYON_LOG_INFO(kLogShowcase, "Sub 3"); });
+                    MenuItem(subItem4ID, "Sub 4", []() { TACHYON_LOG_INFO(kLogShowcase, "Sub 4"); });
                 }
                 EndMenu();
             }
@@ -223,7 +223,7 @@ namespace tachyon
         // Scroll test: menu with 100 items
         add("Big menu", [this]() {
             Label("Big menu");
-            if (BeginMenu(demo.bigMenuID, "Open",
+            if (BeginMenu(showcase.bigMenuID, "Open",
                           tachyon::LayoutOverride{}.NoGrow().NoShrink()))
             {
                 for (int i = 0; i < 100; i++)
@@ -231,7 +231,7 @@ namespace tachyon
                     char label[32];
                     snprintf(label, sizeof(label), "Item %d", i + 1);
                     int idx = i;
-                    MenuItem(label, [idx]() { TACHYON_LOG_INFO(kLogDemo, "Selected item {}", idx + 1); });
+                    MenuItem(label, [idx]() { TACHYON_LOG_INFO(kLogShowcase, "Selected item {}", idx + 1); });
                 }
             }
             EndMenu();
@@ -256,7 +256,7 @@ namespace tachyon
         {
             tachyon::Element icon{};
             icon.id       = idManager.AllocateDynamicID("inspectorObjectIcon");
-            icon.iconID   = demo.boxIcon;
+            icon.iconID   = showcase.boxIcon;
             icon.flags    = tachyon::ElementFlags::NoInput;
             icon.state    = guiStateManager.GetCurrentState(icon.id);
             icon.styleRef = inspectorObjectIconStyleRef;
@@ -268,14 +268,14 @@ namespace tachyon
             Text(idManager.AllocateDynamicID("inspectorObjectPath"), "Mesh · Scene / Meshes / Meshes", inspectorObjectPathStyleRef);
             EndVertical();
 
-            Button(idManager.AllocateDynamicID("inspectorObjectMore"), { demo.moreIcon, {}, "Object options" }, []() {}, iconToggleStyleRef);
+            Button(idManager.AllocateDynamicID("inspectorObjectMore"), { showcase.moreIcon, {}, "Object options" }, []() {}, iconToggleStyleRef);
         }
         EndHorizontal();
 
         // Search box: filters the rows by label.
         BeginHorizontal(idManager.AllocateDynamicID("inspectorSearchRow"),
                         inspectorSearchRowStyleRef, tachyon::LayoutOverride::Auto().NoShrink());
-        if (SearchField(inspectorSearch, demo.findIcon, TextEditBehavior::ContinuousUpdate,
+        if (SearchField(inspectorSearch, showcase.findIcon, TextEditBehavior::ContinuousUpdate,
                         tachyon::LayoutOverride{}.FlexGrow(1)))
             inspectorFilterDirty = true;
         EndHorizontal();
@@ -301,7 +301,7 @@ namespace tachyon
 
             const bool open = inspectorSectionOpen[s];
             Button(idManager.AllocateDynamicID("inspectorSection"),
-                   { open ? demo.chevronDownIcon : demo.chevronRightIcon, kSectionTitles[s] },
+                   { open ? showcase.chevronDownIcon : showcase.chevronRightIcon, kSectionTitles[s] },
                    [s]() { inspectorSectionOpen[s] = !inspectorSectionOpen[s]; },
                    firstSection ? inspectorSectionFirstStyleRef : inspectorSectionStyleRef,
                    LayoutOverride{}.NoGrow().NoShrink());

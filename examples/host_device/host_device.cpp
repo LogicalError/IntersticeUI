@@ -250,11 +250,11 @@ public:
     }
 
 private:
-    Host&                                 host;
-    tachyon::vulkan::VulkanGraphicsContext*  vk        = nullptr;   // owned by the app
-    tachyon::ImageIndex                       hostImage = tachyon::ImageIndex::Invalid;
-    tachyon::ID                               windowID  = tachyon::ID::Invalid();
-    std::chrono::steady_clock::time_point start     = std::chrono::steady_clock::now();
+    Host&                                   host;
+    tachyon::vulkan::VulkanGraphicsContext* vk        = nullptr;   // owned by the app
+    tachyon::ImageIndex                     hostImage = tachyon::ImageIndex::Invalid;
+    tachyon::ID                             windowID  = tachyon::ID::Invalid();
+    std::chrono::steady_clock::time_point   start     = std::chrono::steady_clock::now();
 };
 
 int main()

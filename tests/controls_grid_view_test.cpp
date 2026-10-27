@@ -59,7 +59,7 @@ namespace tachyon
             }
         };
 
-        // Dragging an item (as in the demo's files panel) starts a drag, and its visualizer
+        // Dragging an item (as in the showcase's files panel) starts a drag, and its visualizer
         // shows a ghost window with the item's icon by the cursor.
         TEST_F(ControlsGridViewTest, DraggingAnItemShowsItsGhost)
         {

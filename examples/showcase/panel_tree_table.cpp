@@ -1,5 +1,5 @@
 #include "application.h"
-#include "../gui_controls/gui_tree_utils.h"
+#include <gui_controls/gui_tree_utils.h>
 
 #include <algorithm>
 #include <array>
@@ -26,7 +26,7 @@ namespace tachyon
 
     namespace {
 
-    using Row = Application::DemoState::TreeTableRow;
+    using Row = Application::ShowcaseState::TreeTableRow;
 
     // Stable payload tag so the row drop targets reject foreign drags.
     constexpr uint32_t kTreeTableRowPayloadType = 0x54725452u; // 'TrTR'
@@ -36,11 +36,11 @@ namespace tachyon
     void Application::RenderTreeTablePanel()
     {
         // ---- One-shot dataset build ----------------------------------------
-        if (demo.treeTableRows.empty())
+        if (showcase.treeTableRows.empty())
         {
             auto add = [&](const char* name, int depth, bool hasChildren, bool isOpen,
                            const char* size, const char* type, IconID icon) {
-                DemoState::TreeTableRow r;
+                ShowcaseState::TreeTableRow r;
                 r.id          = idManager.CreateStaticID();
                 r.name        = name;
                 r.size        = size;
@@ -49,79 +49,79 @@ namespace tachyon
                 r.hasChildren = hasChildren;
                 r.isOpen      = isOpen;
                 r.icon        = icon;
-                demo.treeTableRows.push_back(std::move(r));
+                showcase.treeTableRows.push_back(std::move(r));
             };
 
-            add("Assets",           0, true,  true,  "",        "Folder",   demo.folderClosedIcon);
-            add("Meshes",           1, true,  true,  "",        "Folder",   demo.folderClosedIcon);
-            add("Characters",       2, true,  false, "",        "Folder",   demo.folderClosedIcon);
-            add("Hero.fbx",         3, false, false, "1.2 MB",  "Mesh",     demo.starIcon);
-            add("Enemy.fbx",        3, false, false, "800 KB",  "Mesh",     demo.starIcon);
-            add("Props",            2, true,  true,  "",        "Folder",   demo.folderClosedIcon);
-            add("Crate.fbx",        3, false, false, "120 KB",  "Mesh",     demo.starIcon);
-            add("Barrel.fbx",       3, false, false, "140 KB",  "Mesh",     demo.starIcon);
-            add("Sign.fbx",         3, false, false,  "48 KB",  "Mesh",     demo.starIcon);
-            add("Textures",         1, true,  true,  "",        "Folder",   demo.folderClosedIcon);
-            add("Albedo",           2, true,  false, "",        "Folder",   demo.folderClosedIcon);
-            add("wood.png",         3, false, false, "512 KB",  "Image",    demo.heartIcon);
-            add("metal.png",        3, false, false, "480 KB",  "Image",    demo.heartIcon);
-            add("Normal",           2, true,  false, "",        "Folder",   demo.folderClosedIcon);
-            add("wood_n.png",       3, false, false, "700 KB",  "Image",    demo.heartIcon);
-            add("metal_n.png",      3, false, false, "680 KB",  "Image",    demo.heartIcon);
-            add("Materials",        1, true,  false, "",        "Folder",   demo.folderClosedIcon);
-            add("Default.mat",      2, false, false,   "4 KB",  "Material", demo.circleIcon);
-            add("Metal.mat",        2, false, false,   "4 KB",  "Material", demo.circleIcon);
-            add("Glass.mat",        2, false, false,   "4 KB",  "Material", demo.circleIcon);
-            add("Scenes",           0, true,  true,  "",        "Folder",   demo.folderClosedIcon);
-            add("MainLevel.scene",  1, false, false, "256 KB",  "Scene",    demo.circleIcon);
-            add("Boss.scene",       1, false, false, "190 KB",  "Scene",    demo.circleIcon);
-            add("Docs",             0, true,  false, "",        "Folder",   demo.folderClosedIcon);
-            add("README.md",        1, false, false,   "8 KB",  "Text",     demo.heartIcon);
-            add("CHANGELOG.md",     1, false, false,   "3 KB",  "Text",     demo.heartIcon);
+            add("Assets",           0, true,  true,  "",        "Folder",   showcase.folderClosedIcon);
+            add("Meshes",           1, true,  true,  "",        "Folder",   showcase.folderClosedIcon);
+            add("Characters",       2, true,  false, "",        "Folder",   showcase.folderClosedIcon);
+            add("Hero.fbx",         3, false, false, "1.2 MB",  "Mesh",     showcase.starIcon);
+            add("Enemy.fbx",        3, false, false, "800 KB",  "Mesh",     showcase.starIcon);
+            add("Props",            2, true,  true,  "",        "Folder",   showcase.folderClosedIcon);
+            add("Crate.fbx",        3, false, false, "120 KB",  "Mesh",     showcase.starIcon);
+            add("Barrel.fbx",       3, false, false, "140 KB",  "Mesh",     showcase.starIcon);
+            add("Sign.fbx",         3, false, false,  "48 KB",  "Mesh",     showcase.starIcon);
+            add("Textures",         1, true,  true,  "",        "Folder",   showcase.folderClosedIcon);
+            add("Albedo",           2, true,  false, "",        "Folder",   showcase.folderClosedIcon);
+            add("wood.png",         3, false, false, "512 KB",  "Image",    showcase.heartIcon);
+            add("metal.png",        3, false, false, "480 KB",  "Image",    showcase.heartIcon);
+            add("Normal",           2, true,  false, "",        "Folder",   showcase.folderClosedIcon);
+            add("wood_n.png",       3, false, false, "700 KB",  "Image",    showcase.heartIcon);
+            add("metal_n.png",      3, false, false, "680 KB",  "Image",    showcase.heartIcon);
+            add("Materials",        1, true,  false, "",        "Folder",   showcase.folderClosedIcon);
+            add("Default.mat",      2, false, false,   "4 KB",  "Material", showcase.circleIcon);
+            add("Metal.mat",        2, false, false,   "4 KB",  "Material", showcase.circleIcon);
+            add("Glass.mat",        2, false, false,   "4 KB",  "Material", showcase.circleIcon);
+            add("Scenes",           0, true,  true,  "",        "Folder",   showcase.folderClosedIcon);
+            add("MainLevel.scene",  1, false, false, "256 KB",  "Scene",    showcase.circleIcon);
+            add("Boss.scene",       1, false, false, "190 KB",  "Scene",    showcase.circleIcon);
+            add("Docs",             0, true,  false, "",        "Folder",   showcase.folderClosedIcon);
+            add("README.md",        1, false, false,   "8 KB",  "Text",     showcase.heartIcon);
+            add("CHANGELOG.md",     1, false, false,   "3 KB",  "Text",     showcase.heartIcon);
 
-            TreeUtils::RebuildTreeIndex(demo.treeTableRows);
+            TreeUtils::RebuildTreeIndex(showcase.treeTableRows);
 
-            demo.treeTableState.multiSelect = &demo.treeTableMultiSelect;
+            showcase.treeTableState.multiSelect = &showcase.treeTableMultiSelect;
 
             // Row drag-and-drop. The payload is the flat row index; a rowID's
             // sub-range index is the visible index, so translate it through
             // treeTableVisibleIdx (closed branches would skew it otherwise).
-            demo.treeTableDragDrop.payloadType = kTreeTableRowPayloadType;
-            demo.treeTableDragDrop.getPayload  = [this](tachyon::ID rowID) -> uintptr_t {
+            showcase.treeTableDragDrop.payloadType = kTreeTableRowPayloadType;
+            showcase.treeTableDragDrop.getPayload  = [this](tachyon::ID rowID) -> uintptr_t {
                 if (rowID.GetMode() != tachyon::IDMode::SubRange) return UINTPTR_MAX;
                 const int visIdx = static_cast<int>(rowID.value.subRangeParts.index);
-                const auto& v = demo.treeTableVisibleIdx;
+                const auto& v = showcase.treeTableVisibleIdx;
                 if (visIdx < 0 || visIdx >= int(v.size())) return UINTPTR_MAX;
                 return static_cast<uintptr_t>(v[visIdx]);
             };
-            demo.treeTableDragDrop.onReorder = [this](uintptr_t srcPayload, tachyon::ID targetID,
+            showcase.treeTableDragDrop.onReorder = [this](uintptr_t srcPayload, tachyon::ID targetID,
                                                      TreeDropPosition pos) {
                 if (targetID.GetMode() != tachyon::IDMode::SubRange) return;
                 if (srcPayload == UINTPTR_MAX) return;
                 const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
-                const auto& v = demo.treeTableVisibleIdx;
+                const auto& v = showcase.treeTableVisibleIdx;
                 if (targetVis < 0 || targetVis >= int(v.size())) return;
                 const int srcDs = static_cast<int>(srcPayload);
                 const int dstDs = v[targetVis];
-                auto& rows = demo.treeTableRows;
+                auto& rows = showcase.treeTableRows;
                 const int newFlatIdx = TreeUtils::ReorderTreeRow(rows, srcDs, dstDs, pos);
                 if (newFlatIdx < 0) return;
                 TreeUtils::RebuildTreeIndex(rows);
                 // Deferred: the matching sub-range rowID needs the
                 // row IDs VirtualTable allocates next frame.
-                demo.treeTablePendingSelectFlatIdx       = newFlatIdx;
-                demo.treeTableState.selectedRowID        = tachyon::ID::Invalid();
-                demo.treeTableMultiSelect.selectedIDs.clear();
-                demo.treeTableMultiSelect.lastClickedID  = tachyon::ID::Invalid();
+                showcase.treeTablePendingSelectFlatIdx       = newFlatIdx;
+                showcase.treeTableState.selectedRowID        = tachyon::ID::Invalid();
+                showcase.treeTableMultiSelect.selectedIDs.clear();
+                showcase.treeTableMultiSelect.lastClickedID  = tachyon::ID::Invalid();
             };
-            demo.treeTableState.rowDragDrop = &demo.treeTableDragDrop;
+            showcase.treeTableState.rowDragDrop = &showcase.treeTableDragDrop;
         }
 
         // ---- Per-frame visibility walk -------------------------------------
-        auto& visibleIdx = demo.treeTableVisibleIdx;
+        auto& visibleIdx = showcase.treeTableVisibleIdx;
         visibleIdx.clear();
         {
-            const auto& rows = demo.treeTableRows;
+            const auto& rows = showcase.treeTableRows;
             for (size_t i = 0; i < rows.size(); )
             {
                 visibleIdx.push_back(int(i));
@@ -142,9 +142,9 @@ namespace tachyon
             {
                 { .header = "Name", .initialWidth = 240, .minWidth = 80, .maxWidth = 600, .locked = true },
                 [this](int rowIdx) {
-                    auto& v = demo.treeTableVisibleIdx;
+                    auto& v = showcase.treeTableVisibleIdx;
                     if (rowIdx < 0 || rowIdx >= int(v.size())) return;
-                    auto& r = demo.treeTableRows[v[rowIdx]];
+                    auto& r = showcase.treeTableRows[v[rowIdx]];
                     // Arrow follows actual descendants, not `hasChildren`.
                     const bool branch = (r.skipCount > 0);
                     TreeCell(r.name, r.depth,
@@ -158,17 +158,17 @@ namespace tachyon
             {
                 { .header = "Size", .initialWidth = 100, .minWidth = 40, .maxWidth = 200 },
                 [this](int rowIdx) {
-                    auto& v = demo.treeTableVisibleIdx;
+                    auto& v = showcase.treeTableVisibleIdx;
                     if (rowIdx < 0 || rowIdx >= int(v.size())) return;
-                    Cell(demo.treeTableRows[v[rowIdx]].size);
+                    Cell(showcase.treeTableRows[v[rowIdx]].size);
                 }
             },
             {
                 { .header = "Type", .initialWidth = 120, .minWidth = 40, .maxWidth = 200 },
                 [this](int rowIdx) {
-                    auto& v = demo.treeTableVisibleIdx;
+                    auto& v = showcase.treeTableVisibleIdx;
                     if (rowIdx < 0 || rowIdx >= int(v.size())) return;
-                    Cell(demo.treeTableRows[v[rowIdx]].type);
+                    Cell(showcase.treeTableRows[v[rowIdx]].type);
                 }
             }
         };
@@ -178,37 +178,37 @@ namespace tachyon
         // Left/Right arrow navigation.
         BeginHorizontal(LayoutOverride{}.NoGrow().NoShrink());
             Text(idManager.AllocateDynamicID(), "Selection mode:", theme.staticTextStyleRef);
-            Button("Row",  [this]() { demo.treeTableState.selectionMode = TableSelectionMode::Row;  });
-            Button("Cell", [this]() { demo.treeTableState.selectionMode = TableSelectionMode::Cell; });
+            Button("Row",  [this]() { showcase.treeTableState.selectionMode = TableSelectionMode::Row;  });
+            Button("Cell", [this]() { showcase.treeTableState.selectionMode = TableSelectionMode::Cell; });
             const char* modeLabel =
-                (demo.treeTableState.selectionMode == TableSelectionMode::Cell) ? "(Cell)" : "(Row)";
+                (showcase.treeTableState.selectionMode == TableSelectionMode::Cell) ? "(Cell)" : "(Row)";
             Text(idManager.AllocateDynamicID(), modeLabel, theme.staticTextStyleRef);
         EndHorizontal();
 
         std::span<VirtualTableColumn> columnSpan(columns.data(), columns.size());
         VirtualTable(idManager.AllocateDynamicID("treeTable"),
-                     demo.treeTableState, columnSpan,
+                     showcase.treeTableState, columnSpan,
                      int(visibleIdx.size()), 0, theme.tableStyleRef,
                      LayoutOverride{}.Width(520).Height(400).BreakBefore());
 
         // Apply a pending post-drop selection now that VirtualTable has set
         // this frame's row IDs.
-        if (demo.treeTablePendingSelectFlatIdx >= 0
-            && demo.treeTableState.RowIDInRange(0) != tachyon::ID::Invalid())
+        if (showcase.treeTablePendingSelectFlatIdx >= 0
+            && showcase.treeTableState.RowIDInRange(0) != tachyon::ID::Invalid())
         {
-            const int targetFlat = demo.treeTablePendingSelectFlatIdx;
+            const int targetFlat = showcase.treeTablePendingSelectFlatIdx;
             int newVisIdx = -1;
             for (size_t i = 0; i < visibleIdx.size(); ++i)
                 if (visibleIdx[i] == targetFlat) { newVisIdx = int(i); break; }
             if (newVisIdx >= 0)
             {
-                const tachyon::ID newRowID = demo.treeTableState.RowIDForIndex(newVisIdx);
-                demo.treeTableState.selectedRowID = newRowID;
-                demo.treeTableMultiSelect.selectedIDs.clear();
-                demo.treeTableMultiSelect.selectedIDs.insert(newRowID);
-                demo.treeTableMultiSelect.lastClickedID = newRowID;
+                const tachyon::ID newRowID = showcase.treeTableState.RowIDForIndex(newVisIdx);
+                showcase.treeTableState.selectedRowID = newRowID;
+                showcase.treeTableMultiSelect.selectedIDs.clear();
+                showcase.treeTableMultiSelect.selectedIDs.insert(newRowID);
+                showcase.treeTableMultiSelect.lastClickedID = newRowID;
             }
-            demo.treeTablePendingSelectFlatIdx = -1;
+            showcase.treeTablePendingSelectFlatIdx = -1;
         }
     }
 }

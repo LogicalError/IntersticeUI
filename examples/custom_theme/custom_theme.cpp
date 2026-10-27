@@ -12,7 +12,7 @@ public:
     tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
         // The library's rules first, then the app's (relative paths are next to the palette).
-        const std::string_view styleFiles[] = { "styles.css", TACHYON_EXAMPLES_DIR "/custom_theme.css" };
+        const std::string_view styleFiles[] = { "styles.css", TACHYON_EXAMPLE_DIR "/custom_theme.css" };
         SetStyleFiles(styleFiles);
         if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;

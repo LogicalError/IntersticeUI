@@ -38,9 +38,9 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakeTargets")
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 # On by default only when this is the top-level project.
-option(TACHYON_BUILD_DEMO  "Build the demo application" ${PROJECT_IS_TOP_LEVEL})
-option(TACHYON_BUILD_TESTS "Build the tests"            ${PROJECT_IS_TOP_LEVEL})
-option(TACHYON_BUILD_EXAMPLES "Build the examples"      ${PROJECT_IS_TOP_LEVEL})
+option(TACHYON_BUILD_SHOWCASE "Build the showcase application" ${PROJECT_IS_TOP_LEVEL})
+option(TACHYON_BUILD_TESTS    "Build the tests"                ${PROJECT_IS_TOP_LEVEL})
+option(TACHYON_BUILD_EXAMPLES "Build the small examples"       ${PROJECT_IS_TOP_LEVEL})
 # Off: no SDL at all; the host passes its own window backend (SetWindowBackend).
 option(TACHYON_SDL "Build the SDL window backend and clipboard" ON)
 
@@ -64,12 +64,12 @@ include(ThirdPartyCache)
 include(Shaders)
 
 add_subdirectory(src)
-# Visual Studio runs the demo on F5, not ALL_BUILD.
-if(PROJECT_IS_TOP_LEVEL AND TARGET demo)
-  set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT demo)
-endif()
-if(TACHYON_BUILD_EXAMPLES)
+if(TACHYON_BUILD_EXAMPLES OR TACHYON_BUILD_SHOWCASE)
   add_subdirectory(examples)
+endif()
+# Visual Studio runs the showcase on F5, not ALL_BUILD.
+if(PROJECT_IS_TOP_LEVEL AND TARGET showcase)
+  set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT showcase)
 endif()
 
 # The libraries load the compiled shaders at runtime.
@@ -112,7 +112,7 @@ if(TACHYON_INSTALL)
 
   install(FILES LICENSE THIRD_PARTY_NOTICES.txt DESTINATION share/TachyonUI)
 
-  set(_tachyon_resource_excludes PATTERN demo.css EXCLUDE)
+  set(_tachyon_resource_excludes PATTERN showcase.css EXCLUDE)
   if(NOT TACHYON_FALLBACK_FONTS)
     list(APPEND _tachyon_resource_excludes PATTERN Noto-otf EXCLUDE)
   endif()

@@ -88,7 +88,7 @@ namespace tachyon
         // Drag-to-reorder: rotate the column list (the table moves the
         // persisted widths itself). `columns` is function-local-static, so
         // the captured pointer stays valid.
-        auto& ts = demo.tablePanelVirtualTableState;
+        auto& ts = showcase.tablePanelVirtualTableState;
         ts.selectionBar = true;
         ts.onReorderColumns = [colsPtr = &columns](int from, int to)
         {
@@ -110,15 +110,15 @@ namespace tachyon
         // Left/Right arrow navigation.
         BeginHorizontal(LayoutOverride{}.NoGrow().NoShrink());
             Text(idManager.AllocateDynamicID(), "Selection mode:", theme.staticTextStyleRef);
-            Toggle(demo.tablePanelVirtualTableState.selectionMode == TableSelectionMode::Row, "Row", [this](bool) { demo.tablePanelVirtualTableState.selectionMode = TableSelectionMode::Row; });
-            Toggle(demo.tablePanelVirtualTableState.selectionMode == TableSelectionMode::Cell, "Cell", [this](bool) { demo.tablePanelVirtualTableState.selectionMode = TableSelectionMode::Cell; });
+            Toggle(showcase.tablePanelVirtualTableState.selectionMode == TableSelectionMode::Row, "Row", [this](bool) { showcase.tablePanelVirtualTableState.selectionMode = TableSelectionMode::Row; });
+            Toggle(showcase.tablePanelVirtualTableState.selectionMode == TableSelectionMode::Cell, "Cell", [this](bool) { showcase.tablePanelVirtualTableState.selectionMode = TableSelectionMode::Cell; });
         EndHorizontal();
 
         // Fills the panel and scrolls: sized to its 50k rows it would be past the
         // 16-bit layout range and not show at all.
-        demo.tablePanelVirtualTableState.cellStyle = dataTableCellStyleRef;
+        showcase.tablePanelVirtualTableState.cellStyle = dataTableCellStyleRef;
         VirtualTable(idManager.AllocateDynamicID("tablePanelVirtual"),
-                     demo.tablePanelVirtualTableState,
+                     showcase.tablePanelVirtualTableState,
                      columnSpan, kTotalRows, 0, theme.tableFillStyleRef,
                      LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
     }

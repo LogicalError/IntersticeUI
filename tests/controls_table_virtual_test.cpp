@@ -57,7 +57,7 @@ namespace tachyon
                 app.EndRootWindow();
             }
 
-            // A panel-sized pane holding a mode bar and a 50k-row table, like the demo's Table panel.
+            // A panel-sized pane holding a mode bar and a 50k-row table, like the showcase's Table panel.
             tachyon::ID paneID = tachyon::ID::Invalid();
             IntRect EmitInPane(tachyon::TableState& state, StyleRef tableStyle, LayoutOverride&& tableLayout)
             {
@@ -1549,7 +1549,7 @@ namespace tachyon
         }
 
         // 50k rows sized to their content would be over a million pixels tall, past the
-        // 16-bit layout range, and not show at all (the demo's Table panel did that).
+        // 16-bit layout range, and not show at all.
         // Filling its panel, the table stays inside it and scrolls.
         TEST_F(TableVirtualScrollTest, AManyRowTableFillingItsPanelStaysInsideIt)
         {

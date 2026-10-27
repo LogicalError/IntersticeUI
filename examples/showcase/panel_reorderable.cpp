@@ -16,7 +16,7 @@ namespace tachyon
             Label("Reorderable Tabs");
 
             static std::vector<std::string> reorderTabs = {"Home", "Settings", "Profile", "Help"};
-            if (BeginReorderableGroup(demo.reorderTabsID, ReorderDirection::Horizontal,
+            if (BeginReorderableGroup(showcase.reorderTabsID, ReorderDirection::Horizontal,
                 [](int from, int to) {
                     auto item = std::move(reorderTabs[from]);
                     reorderTabs.erase(reorderTabs.begin() + from);
@@ -38,7 +38,7 @@ namespace tachyon
             Label("Reorderable List");
 
             static std::vector<std::string> reorderItems = {"First", "Second", "Third", "Fourth", "Fifth"};
-            if (BeginReorderableGroup(demo.reorderListID, ReorderDirection::Vertical,
+            if (BeginReorderableGroup(showcase.reorderListID, ReorderDirection::Vertical,
                 [](int from, int to) {
                     auto item = std::move(reorderItems[from]);
                     reorderItems.erase(reorderItems.begin() + from);
@@ -63,7 +63,7 @@ namespace tachyon
                 "Alpha", "Beta", "Gamma", "Delta", "Epsilon",
                 "Zeta", "Eta", "Theta", "Iota", "Kappa"
             };
-            if (BeginReorderableGroup(demo.reorderWrappedHorzID, ReorderDirection::Horizontal, true,
+            if (BeginReorderableGroup(showcase.reorderWrappedHorzID, ReorderDirection::Horizontal, true,
                 [](int from, int to) {
                     auto item = std::move(wrappedHorzItems[from]);
                     wrappedHorzItems.erase(wrappedHorzItems.begin() + from);
@@ -88,7 +88,7 @@ namespace tachyon
                 "One", "Two", "Three", "Four", "Five",
                 "Six", "Seven", "Eight", "Nine", "Ten"
             };
-            if (BeginReorderableGroup(demo.reorderWrappedVertID, ReorderDirection::Vertical, true,
+            if (BeginReorderableGroup(showcase.reorderWrappedVertID, ReorderDirection::Vertical, true,
                 [](int from, int to) {
                     auto item = std::move(wrappedVertItems[from]);
                     wrappedVertItems.erase(wrappedVertItems.begin() + from);

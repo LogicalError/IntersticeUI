@@ -90,20 +90,20 @@ public:
     }
 
 private:
-    tachyon::ID     windowID = tachyon::ID::Invalid();
-    tachyon::ID     menuID   = tachyon::ID::Invalid();
-    int         clicks   = 0;
-    bool        enabled  = true;
-    bool        bold = false, italic = false, underline = false;
-    std::string text     = "Edit me";
-    std::string notes    = "Line one\nLine two";
-    float       floatValue = 1.5f;
-    int         intValue   = 5;
-    tachyon::float3 position { 1.0f, 2.0f, 3.0f };
-    float       volume   = 75.0f;
-    tachyon::color4f color   { 0.2f, 0.6f, 1.0f, 1.0f };
-    std::string choice   = "(none)";
-    int         selectedTab = 0;
+    tachyon::ID      windowID = tachyon::ID::Invalid();
+    tachyon::ID      menuID   = tachyon::ID::Invalid();
+    int              clicks   = 0;
+    bool             enabled  = true;
+    bool             bold = false, italic = false, underline = false;
+    std::string      text     = "Edit me";
+    std::string      notes    = "Line one\nLine two";
+    float            floatValue = 1.5f;
+    int              intValue   = 5;
+    tachyon::float3  position { 1.0f, 2.0f, 3.0f };
+    float            volume   = 75.0f;
+    tachyon::color4f color    { 0.2f, 0.6f, 1.0f, 1.0f };
+    std::string      choice   = "(none)";
+    int              selectedTab = 0;
 };
 
 int main()

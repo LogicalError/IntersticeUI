@@ -641,16 +641,16 @@ namespace tachyon
         EXPECT_EQ(s.GetStyle("a")->states[Style::kHover].textStyle.color, RGB(0, 0, 255));
     }
 
-    // The shipped theme (palette + shared styles + the demo's, concatenated as LoadTheme
+    // The shipped theme (palette + shared styles + the showcase's, concatenated as LoadTheme
     // does) parses cleanly and every @font-face file it names exists. Runs from workdirectory.
     TEST(StyleSheet, ShippedThemeParsesAndItsFontFilesExist)
     {
         for (const char* palette : { "themes/dark.css", "themes/light.css" })
         {
-            std::ifstream paletteFile(palette), stylesFile("themes/styles.css"), demoFile("themes/demo.css");
-            ASSERT_TRUE(paletteFile.good() && stylesFile.good() && demoFile.good()) << palette;
+            std::ifstream paletteFile(palette), stylesFile("themes/styles.css"), showcaseFile("themes/showcase.css");
+            ASSERT_TRUE(paletteFile.good() && stylesFile.good() && showcaseFile.good()) << palette;
             std::ostringstream ss;
-            ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << demoFile.rdbuf();
+            ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << showcaseFile.rdbuf();
 
             const StyleSheet s = ParseStyleSheet(ss.view());
             for (const ParseError& e : s.errors)
@@ -740,14 +740,14 @@ namespace tachyon
         EXPECT_EQ(textbox->textLayoutStyle.verticalAlignment, TextAlign::Center);
     }
 
-    // The demo log's level toggles centre their icon + count in the button, with no
+    // The showcase log's level toggles centre their icon + count in the button, with no
     // nudge (the icons are symmetric).
     TEST(StyleSheet, ShippedLogLevelTogglesCentreTheirContent)
     {
-        std::ifstream paletteFile("themes/dark.css"), stylesFile("themes/styles.css"), demoFile("themes/demo.css");
-        ASSERT_TRUE(paletteFile.good() && stylesFile.good() && demoFile.good());
+        std::ifstream paletteFile("themes/dark.css"), stylesFile("themes/styles.css"), showcaseFile("themes/showcase.css");
+        ASSERT_TRUE(paletteFile.good() && stylesFile.good() && showcaseFile.good());
         std::ostringstream ss;
-        ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << demoFile.rdbuf();
+        ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << showcaseFile.rdbuf();
         const StyleSheet s = ParseStyleSheet(ss.view());
 
         for (const char* name : { "log-level-error", "log-level-warning", "log-level-info", "icon-label" })
@@ -780,10 +780,10 @@ namespace tachyon
     // toolbar is taller than the text, without padding nudges.
     TEST(StyleSheet, ShippedLogAndToolbarTextIsCentredVertically)
     {
-        std::ifstream paletteFile("themes/dark.css"), stylesFile("themes/styles.css"), demoFile("themes/demo.css");
-        ASSERT_TRUE(paletteFile.good() && stylesFile.good() && demoFile.good());
+        std::ifstream paletteFile("themes/dark.css"), stylesFile("themes/styles.css"), showcaseFile("themes/showcase.css");
+        ASSERT_TRUE(paletteFile.good() && stylesFile.good() && showcaseFile.good());
         std::ostringstream ss;
-        ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << demoFile.rdbuf();
+        ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf() << '\n' << showcaseFile.rdbuf();
         const StyleSheet s = ParseStyleSheet(ss.view());
 
         for (const char* name : { "log-cell", "toolbar-button", "toolbar-toggle", "toolbar-menu-trigger" })

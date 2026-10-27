@@ -1,0 +1,1 @@
+tachyon_add_example(hello_world hello_world.cpp)

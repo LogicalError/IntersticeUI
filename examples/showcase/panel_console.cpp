@@ -22,7 +22,7 @@ namespace tachyon
     {
         enum class LogLevel { Info, Warning, Error };
 
-        constexpr Diagnostics::LogCategory kLogDemo = Diagnostics::MakeLogCategory("demo");
+        constexpr Diagnostics::LogCategory kLogShowcase = Diagnostics::MakeLogCategory("showcase");
 
         struct ConsoleLogEntry
         {
@@ -223,9 +223,9 @@ namespace tachyon
         logColumns[1].generateCell = [this](int rowIdx) {
             if (rowIdx < 0 || rowIdx >= int(logVisible.size())) return;
             const LogLevel level = logEntries[logVisible[rowIdx]].level;
-            const IconID   icon  = (level == LogLevel::Error)   ? demo.errorIcon
-                                 : (level == LogLevel::Warning) ? demo.warningIcon
-                                 :                                demo.infoIcon;
+            const IconID   icon  = (level == LogLevel::Error)   ? showcase.errorIcon
+                                 : (level == LogLevel::Warning) ? showcase.warningIcon
+                                 :                                showcase.infoIcon;
             Cell([this, icon]() {
                 const tachyon::ID iconID = idManager.AllocateDynamicID();
                 tachyon::Element iconElem{};
@@ -317,7 +317,7 @@ namespace tachyon
                 tachyon::LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Clear the log");
 
-            if (SearchField(logSearch, demo.findIcon,
+            if (SearchField(logSearch, showcase.findIcon,
                             TextEditBehavior::ContinuousUpdate,
                             tachyon::LayoutOverride{}.FlexGrow(1)))
                             logFilterDirty = true;
@@ -336,7 +336,7 @@ namespace tachyon
                 for (int lvl = levelCount; lvl >= 0; --lvl) // error, warning, info - most severe first
                 {
                     Toggle(idManager.AllocateDynamicID("logLevelToggle"),
-                        logShowLevel[lvl], { demo.dotIcon, logCountText[lvl] },
+                        logShowLevel[lvl], { showcase.dotIcon, logCountText[lvl] },
                         [lvl](bool on) { logShowLevel[lvl] = on; logFilterDirty = true; },
                         logLevelPillStyleRefs[lvl],
                         tachyon::LayoutOverride{}.NoGrow().NoShrink());
@@ -347,7 +347,7 @@ namespace tachyon
 
             // Collapse-duplicates toggle: fold identical lines into one + count.
             Toggle(idManager.AllocateDynamicID("logCollapse"),
-                   logCollapse, demo.iconCollapseAllIcon,
+                   logCollapse, showcase.iconCollapseAllIcon,
                    [](bool on) { logCollapse = on; logFilterDirty = true; },
                    iconToggleStyleRef,
                    tachyon::LayoutOverride{}.NoGrow().NoShrink());
@@ -439,7 +439,7 @@ namespace tachyon
                     [](intptr_t contentId)
                     {
                         for (const auto& lk : logDetailLinks)
-                            if (lk.id == contentId) { TACHYON_LOG_INFO(kLogDemo, "open {}:{}", lk.file, lk.line); break; }
+                            if (lk.id == contentId) { TACHYON_LOG_INFO(kLogShowcase, "open {}:{}", lk.file, lk.line); break; }
                     },
                     logDetailTextStyleRef, tachyon::LayoutOverride::Auto().FlexGrow(1));
             }
