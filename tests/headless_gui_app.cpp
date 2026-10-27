@@ -411,4 +411,48 @@ tachyon::int2 HeadlessGUIApp::CenterOf(tachyon::ID id) const
     return tachyon::int2{ r.x + r.w / 2, r.y + r.h / 2 };
 }
 
+tachyon::ID HeadlessGUIApp::FindByText(std::string_view text) const
+{
+    const auto& storage = elementStorage;
+    for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+        for (const tachyon::Element& e : it->GetChildren(storage))
+            if (e.textID != tachyon::TextID::Invalid && ownedTextSystem.GetText(e.textID) == text)
+                return e.id;
+    return tachyon::ID::Invalid();
+}
+
+int HeadlessGUIApp::CountByText(std::string_view text) const
+{
+    const auto& storage = elementStorage;
+    int count = 0;
+    for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+        for (const tachyon::Element& e : it->GetChildren(storage))
+            if (e.textID != tachyon::TextID::Invalid && ownedTextSystem.GetText(e.textID) == text)
+                ++count;
+    return count;
+}
+
+tachyon::ID HeadlessGUIApp::FindControlAfterLabel(std::string_view label) const
+{
+    const auto& storage = elementStorage;
+    for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+    {
+        const auto children = it->GetChildren(storage);
+        for (size_t i = 0; i + 1 < children.size(); ++i)
+            if (children[i].textID != tachyon::TextID::Invalid && ownedTextSystem.GetText(children[i].textID) == label)
+                return children[i + 1].id;
+    }
+    return tachyon::ID::Invalid();
+}
+
+std::string_view HeadlessGUIApp::TextOf(tachyon::ID id) const
+{
+    const auto& storage = elementStorage;
+    for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+        for (const tachyon::Element& e : it->GetChildren(storage))
+            if (e.id == id)
+                return e.textID != tachyon::TextID::Invalid ? ownedTextSystem.GetText(e.textID) : std::string_view{};
+    return {};
+}
+
 } // namespace GUITest

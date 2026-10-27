@@ -86,8 +86,12 @@ Each one is a folder in [`examples/`](examples); [docs/examples.md](docs/example
 | `custom_theme` | Your own CSS, dark/light palettes, font scaling |
 | `host_device` | Running on your Vulkan device and showing an image it renders |
 | `showcase` | An editor-style app with most of the library in its panels (the screenshot above) |
+| `tutorial` | The [tutorial](docs/tutorial.md)'s app: two docked panels, with buttons and fields |
 
 ## Use it in your project
+
+New to TachyonUI? The [tutorial](docs/tutorial.md) goes step by step from an empty folder
+to an app with docked panels, buttons and fields.
 
 ```cmake
 find_package(TachyonUI 0.1 CONFIG REQUIRED)       # after cmake --install

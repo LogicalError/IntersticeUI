@@ -20,6 +20,7 @@ if(TACHYON_BUILD_EXAMPLES)
   add_subdirectory(controls)
   add_subdirectory(docking)
   add_subdirectory(custom_theme)
+  add_subdirectory(tutorial)
   # The host side creates its own Vulkan device; SDL names the surface extensions.
   if(TACHYON_SDL)
     add_subdirectory(host_device)

@@ -27,6 +27,7 @@ This guide walks through each one:
 | [Custom theme](examples/custom-theme.md) | Your own CSS classes next to the library's, and switching palettes and font size at runtime. |
 | [Host device](examples/host-device.md) | Running on a Vulkan device the application already owns, and showing an image it renders. |
 | [Showcase](examples/showcase.md) | An editor-style app with most of the library in its panels: docking, tables, trees, a file browser, a node graph, settings. |
+| [Tutorial](tutorial.md) (`examples/tutorial`) | The tutorial's app, built up step by step: two docked panels, one with buttons and one with fields. |
 
 The API reference shows each program's full source under **Examples**, and links the
 functions they use back to them.
