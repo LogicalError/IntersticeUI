@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace interstice
+namespace tachyon
 {
     void FrameClock::Tick(int64_t nowNanos, float refreshHz)
     {

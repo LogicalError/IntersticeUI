@@ -9,7 +9,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
     using ::testing::Return;
 

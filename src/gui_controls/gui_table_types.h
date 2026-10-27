@@ -24,7 +24,7 @@
 // Table widget data model: column descriptors, the user-owned persistent
 // TableState, drag/drop state and the per-emit TableEmit.
 
-namespace interstice
+namespace tachyon
 {
     // ---- Table widget: row x column data grid ----
     //
@@ -95,13 +95,13 @@ namespace interstice
         {
             /// Widest cell content seen (text + tree prefix), for double-click-to-fit.
             int32_t                maxContentWidth = 0;
-            interstice::ID         bodyID          = interstice::ID::Invalid();
+            tachyon::ID         bodyID          = tachyon::ID::Invalid();
             /// Shared by the header and body copies of the boundary after this column, so their
             /// hover state syncs. Unused for the last column.
-            interstice::ID         sizerID         = interstice::ID::Invalid();
+            tachyon::ID         sizerID         = tachyon::ID::Invalid();
             /// Ranged, so it doesn't change when the dragged column is emitted last.
-            interstice::ID         headerCellID    = interstice::ID::Invalid();
-            interstice::ElementRef headerRef       = interstice::ElementRef::Invalid();
+            tachyon::ID         headerCellID    = tachyon::ID::Invalid();
+            tachyon::ElementRef headerRef       = tachyon::ElementRef::Invalid();
             /// Applied to every element of this column during a reorder drag.
             int16_t                dragOffsetX     = 0;
             /// Resolved once per frame.
@@ -122,8 +122,8 @@ namespace interstice
     /// MouseUp applies the selection unless a drag promoted in between. Internal.
     struct PendingRowClick
     {
-        interstice::ID          rowID        = interstice::ID::Invalid();
-        interstice::KeyModifier mods         = interstice::KeyModifier::None;
+        tachyon::ID          rowID        = tachyon::ID::Invalid();
+        tachyon::KeyModifier mods         = tachyon::KeyModifier::None;
         bool             dragPromoted = false;
     };
 
@@ -140,12 +140,12 @@ namespace interstice
             std::string  renameSeed;                     ///< original label, seeds rename Start()
             bool         hasChildren = false;            ///< drives drag-drop zone shape (thirds vs halves)
         };
-        using TreeRowMap = std::unordered_map<interstice::ID, TreeRowInfo>;  ///< row ID -> tree info
+        using TreeRowMap = std::unordered_map<tachyon::ID, TreeRowInfo>;  ///< row ID -> tree info
 
         /// Cell-mode click dispatch: cell-element ID -> (rowID, columnIdx).
         /// Populated only when selectionMode == Cell.
-        struct CellLookupEntry { interstice::ID rowID; int columnIdx; };
-        using CellLookupMap = std::unordered_map<interstice::ID, CellLookupEntry>;
+        struct CellLookupEntry { tachyon::ID rowID; int columnIdx; };
+        using CellLookupMap = std::unordered_map<tachyon::ID, CellLookupEntry>;
 
         /// Moves column `fromCol` to `toCol` in the caller's column array.
         using ReorderColumnsFn = std::function<void(int fromCol, int toCol)>;
@@ -188,7 +188,7 @@ namespace interstice
         /// When set with a non-zero payloadType, rows become drag sources and drop targets.
         ItemDragDropConfig*   rowDragDrop      = nullptr;
         /// The selected (cursor) row; keyboard navigation moves it.
-        interstice::ID               selectedRowID    = interstice::ID::Invalid();
+        tachyon::ID               selectedRowID    = tachyon::ID::Invalid();
         /// Stick to the bottom: start at (and select) the last row, and follow new rows while
         /// at the bottom. Scrolling up detaches; scrolling back down re-attaches.
         bool                  followTail       = false;
@@ -210,19 +210,19 @@ namespace interstice
 
         LazyReorderFn                  onReorderColumns;           ///< headers become drag-to-reorder when set
         /// Replaces the default double-click branch toggle (the chevron still toggles).
-        std::function<void(interstice::ID rowID)> onRowDoubleClick;
+        std::function<void(tachyon::ID rowID)> onRowDoubleClick;
 
         /// Written by the table each frame; not part of the API.
         struct Internal
         {
-            interstice::ID bodyID          = interstice::ID::Invalid();   ///< canonical scroll-Y
-            interstice::ID horzScrollbarID = interstice::ID::Invalid();
-            interstice::ID vertScrollbarID = interstice::ID::Invalid();
+            tachyon::ID bodyID          = tachyon::ID::Invalid();   ///< canonical scroll-Y
+            tachyon::ID horzScrollbarID = tachyon::ID::Invalid();
+            tachyon::ID vertScrollbarID = tachyon::ID::Invalid();
             int32_t        lastViewportH   = 0;               ///< sampled by render-time draw
             int32_t        lastViewportW   = 0;
             /// Written by VirtualTable each frame, so keyboard navigation can address and
             /// scroll to rows outside the virtualized window.
-            interstice::ID rowsRangeID     = interstice::ID::Invalid();
+            tachyon::ID rowsRangeID     = tachyon::ID::Invalid();
             int            totalRowCount   = 0;
             int32_t        actualRowHeight = 0;
             /// Set at render time when any section overflows; next frame emits a scrollbar only
@@ -258,29 +258,29 @@ namespace interstice
             bool                              rowOrderDirty    = false;
 
             /// Section 0's body ID; sections 1 and up live in extraSectionBodyIDs.
-            interstice::ID                                                     firstSectionBodyID = interstice::ID::Invalid();
-            std::unique_ptr<std::array<interstice::ID, kMaxTableSections - 1>> extraSectionBodyIDs;
+            tachyon::ID                                                     firstSectionBodyID = tachyon::ID::Invalid();
+            std::unique_ptr<std::array<tachyon::ID, kMaxTableSections - 1>> extraSectionBodyIDs;
             int8_t                                                             sectionCount = 0;
             /// Header cell refs of the current frame, by column. Column-reorder handlers read these
             /// when they run, after the caller's column array may be gone.
-            std::vector<interstice::ElementRef>                                headerRefs;
+            std::vector<tachyon::ElementRef>                                headerRefs;
         } internal;
 
         // ---- Accessors ----------------------------------------------
         /// Body element ID of section `i` (its scroll container); Invalid when out of range.
-        interstice::ID SectionBodyID(int i) const noexcept
+        tachyon::ID SectionBodyID(int i) const noexcept
         {
             if (i == 0) return internal.firstSectionBodyID;
-            if (i < 1 || i >= kMaxTableSections || !internal.extraSectionBodyIDs) return interstice::ID::Invalid();
+            if (i < 1 || i >= kMaxTableSections || !internal.extraSectionBodyIDs) return tachyon::ID::Invalid();
             return (*internal.extraSectionBodyIDs)[size_t(i - 1)];
         }
         /// Used by the table.
-        void SetSectionBodyID(int i, interstice::ID id)
+        void SetSectionBodyID(int i, tachyon::ID id)
         {
             assert(i >= 0 && i < kMaxTableSections);
             if (i == 0) { internal.firstSectionBodyID = id; return; }
             if (!internal.extraSectionBodyIDs)
-                internal.extraSectionBodyIDs = std::make_unique<std::array<interstice::ID, kMaxTableSections - 1>>();
+                internal.extraSectionBodyIDs = std::make_unique<std::array<tachyon::ID, kMaxTableSections - 1>>();
             (*internal.extraSectionBodyIDs)[size_t(i - 1)] = id;
         }
 
@@ -299,18 +299,18 @@ namespace interstice
 
         /// A row's sub-range ID, usable outside a frame (unlike IDManager::GetSubID).
         /// Invalid when out of range.
-        interstice::ID RowIDForIndex(int rowIdx) const noexcept
+        tachyon::ID RowIDForIndex(int rowIdx) const noexcept
         {
-            if (rowIdx >= internal.totalRowCount) return interstice::ID::Invalid();
+            if (rowIdx >= internal.totalRowCount) return tachyon::ID::Invalid();
             return RowIDInRange(rowIdx);
         }
 
         /// As RowIDForIndex, without the bound on last frame's row count.
-        interstice::ID RowIDInRange(int rowIdx) const noexcept
+        tachyon::ID RowIDInRange(int rowIdx) const noexcept
         {
-            if (internal.rowsRangeID == interstice::ID::Invalid() || rowIdx < 0) return interstice::ID::Invalid();
-            interstice::ID id{};
-            id.value.subRangeParts.mode = interstice::IDMode::SubRange;
+            if (internal.rowsRangeID == tachyon::ID::Invalid() || rowIdx < 0) return tachyon::ID::Invalid();
+            tachyon::ID id{};
+            id.value.subRangeParts.mode = tachyon::IDMode::SubRange;
             id.value.subRangeParts.index = static_cast<uint64_t>(rowIdx);
             id.value.subRangeParts.parentHashValue = internal.rowsRangeID.value.rangedParts.hashValue;
             return id;
@@ -346,14 +346,14 @@ namespace interstice
         }
 
         /// Tree metadata of row `id` from TreeCell(); nullptr when not found.
-        const TreeRowInfo* FindTreeRow(interstice::ID id) const noexcept
+        const TreeRowInfo* FindTreeRow(tachyon::ID id) const noexcept
         {
             if (!internal.treeRowInfo) return nullptr;
             auto it = internal.treeRowInfo->find(id);
             return (it == internal.treeRowInfo->end()) ? nullptr : &it->second;
         }
         /// Cell-mode: the row and column of a cell element; nullptr when not found.
-        const CellLookupEntry* FindCell(interstice::ID id) const noexcept
+        const CellLookupEntry* FindCell(tachyon::ID id) const noexcept
         {
             if (!internal.cellLookup) return nullptr;
             auto it = internal.cellLookup->find(id);
@@ -368,18 +368,18 @@ namespace interstice
     /// Column-reorder drag in progress; internal, owned by the application.
     struct ColumnDragState {
         bool                      active    = false; ///< committed past click threshold
-        interstice::ID                   tableID   = interstice::ID::Invalid();
+        tachyon::ID                   tableID   = tachyon::ID::Invalid();
         int                       fromCol   = -1;
         int                       toCol     = -1;
-        interstice::int2                 startPos{};
-        interstice::int2                 offset{};
+        tachyon::int2                 startPos{};
+        tachyon::int2                 offset{};
         /// Header rects at drag start (screen space), for edge-crossing.
-        std::vector<interstice::IntRect> headerRects;
+        std::vector<tachyon::IntRect> headerRects;
         /// Inclusive target range, bounded by locked columns.
         int                       minTarget = 0;
         int                       maxTarget = 0;
         /// Body of the section being dragged in; drags never leave their section.
-        interstice::ID                   sectionBodyID = interstice::ID::Invalid();
+        tachyon::ID                   sectionBodyID = tachyon::ID::Invalid();
         /// Scroll-X at drag start, to correct the cursor for mid-drag scrolling.
         int32_t                   startScrollX  = 0;
     };
@@ -388,7 +388,7 @@ namespace interstice
     // Drives the drop indicator line; targetDepth indents it so After and Inside differ visibly.
     /// Tree reorder drop target under the cursor; internal, owned by the application.
     struct TreeDropState {
-        interstice::ID           targetRowID  = interstice::ID::Invalid();
+        tachyon::ID           targetRowID  = tachyon::ID::Invalid();
         TreeDropPosition  position     = TreeDropPosition::None;
         int               targetDepth  = 0;
     };
@@ -421,20 +421,20 @@ namespace interstice
         /// Body text cell style; invalid falls back to theme.tableCellStyleRef.
         StyleRef cellStyleRef        = {};
 
-        interstice::EventHandler            sharedRowHandler;
-        interstice::EventHandler            sharedCellHandler;
+        tachyon::EventHandler            sharedRowHandler;
+        tachyon::EventHandler            sharedCellHandler;
 
         // Current position, read by Cell()/TreeCell()
         int               currentCol     = 0;
-        interstice::ID           currentRowID   = interstice::ID::Invalid();
-        interstice::EventHandler currentRowHandler;
+        tachyon::ID           currentRowID   = tachyon::ID::Invalid();
+        tachyon::EventHandler currentRowHandler;
         int               directGridRow  = 0;
         int               directColStart = 0;
 
         /// Recording mode (BeginTable/Cell flow): cells are stored in columnCells[column][row]
         /// and replayed by EndTable. An empty slot means the row skipped that column.
         bool                isRecording = false;
-        interstice::ID             containerID = interstice::ID::Invalid();
+        tachyon::ID             containerID = tachyon::ID::Invalid();
         StyleRef            style       = {};
         LayoutOverride      constraints = {};
         int                 rowCount    = 0;

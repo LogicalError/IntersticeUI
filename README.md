@@ -1,7 +1,7 @@
-# IntersticeUI
+# TachyonUI
 
-[![CI](https://github.com/LogicalError/IntersticeUI/actions/workflows/ci.yml/badge.svg)](https://github.com/LogicalError/IntersticeUI/actions/workflows/ci.yml)
-[![Docs](https://github.com/LogicalError/IntersticeUI/actions/workflows/docs.yml/badge.svg)](https://logicalerror.github.io/IntersticeUI/)
+[![CI](https://github.com/LogicalError/TachyonUI/actions/workflows/ci.yml/badge.svg)](https://github.com/LogicalError/TachyonUI/actions/workflows/ci.yml)
+[![Docs](https://github.com/LogicalError/TachyonUI/actions/workflows/docs.yml/badge.svg)](https://logicalerror.github.io/TachyonUI/)
 
 A C++20 GUI library for tools and editors. Build the UI each frame in code; the
 library keeps the state, lays it out with flexbox and grid, and draws it.
@@ -17,7 +17,7 @@ library keeps the state, lays it out with flexbox and grid, and draws it.
 The UI draws through a graphics backend and gets windows and input from a window
 backend, so it isn't tied to one graphics API or platform. The current backends
 are Vulkan and SDL3. A host passes its own with `SetGraphicsBackend`,
-`SetWindowBackend` and `SetClipboard`; the CMake option `INTERSTICE_SDL=OFF`
+`SetWindowBackend` and `SetClipboard`; the CMake option `TACHYON_SDL=OFF`
 builds without SDL, and then the host must pass a window backend.
 
 The library is two static libraries:
@@ -29,7 +29,7 @@ The library is two static libraries:
 
 The guides in [docs](docs/README.md) explain the frame model and IDs, every control,
 the CSS the themes use, and integrating the library into an engine. The
-[API reference](https://logicalerror.github.io/IntersticeUI/) has them together with the headers' `///` comments.
+[API reference](https://logicalerror.github.io/TachyonUI/) has them together with the headers' `///` comments.
 
 ## Requirements
 
@@ -46,15 +46,15 @@ the CSS the themes use, and integrating the library into an engine. The
   clone without it only has pointer files, so the fonts fail to load
 - Network access on the first configure
 - At runtime, a GPU driver with Vulkan 1.3, `VK_KHR_swapchain` and the features
-  listed by `interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()` (dynamic
+  listed by `tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements()` (dynamic
   rendering, synchronization2, descriptor indexing, buffer device address, 8- and
   16-bit storage, among others)
 
 ## Build
 
 ```text
-git clone --recursive https://github.com/LogicalError/IntersticeUI.git
-cd IntersticeUI
+git clone --recursive https://github.com/LogicalError/TachyonUI.git
+cd TachyonUI
 cmake -S . -B build -G "Visual Studio 18 2026" -A x64   # or "Visual Studio 17 2022"
 cmake --build build --config Debug
 ```
@@ -76,13 +76,13 @@ The first configure builds the third-party libraries once into
 
 | Option | Default | |
 | --- | --- | --- |
-| `INTERSTICE_BUILD_DEMO` | on when top-level | The demo application |
-| `INTERSTICE_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
-| `INTERSTICE_BUILD_TESTS` | on when top-level | The unit and GPU tests |
-| `INTERSTICE_INSTALL` | on when top-level | The install rules and the CMake package |
-| `INTERSTICE_INSTALL_THIRD_PARTY` | on | Bundle the third-party libraries into the install |
-| `INTERSTICE_SDL` | on | The SDL window backend; off builds without SDL |
-| `INTERSTICE_SYSTEM_SDL`, `_HARFBUZZ`, `_VMA` | off | Use the host's copy of that library |
+| `TACHYON_BUILD_DEMO` | on when top-level | The demo application |
+| `TACHYON_BUILD_EXAMPLES` | on when top-level | The programs in `examples/` |
+| `TACHYON_BUILD_TESTS` | on when top-level | The unit and GPU tests |
+| `TACHYON_INSTALL` | on when top-level | The install rules and the CMake package |
+| `TACHYON_INSTALL_THIRD_PARTY` | on | Bundle the third-party libraries into the install |
+| `TACHYON_SDL` | on | The SDL window backend; off builds without SDL |
+| `TACHYON_SYSTEM_SDL`, `_HARFBUZZ`, `_VMA` | off | Use the host's copy of that library |
 
 As a subproject (`add_subdirectory`), only the libraries are built by default.
 
@@ -121,12 +121,12 @@ ctest --test-dir build -C Debug     rem both, one process per test
 
 #include <string>
 
-class HelloApp : public interstice::GUIApplication
+class HelloApp : public tachyon::GUIApplication
 {
 public:
-    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
+    tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+        if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;
         windowID = idManager.CreateStaticID();   // windows need stable IDs
         return {};
@@ -135,9 +135,9 @@ public:
     // Called every frame: describe the whole UI; the library keeps the state.
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "Hello", interstice::LayoutOverride{}.Size(360, 160)))
+        if (BeginWindow(windowID, "Hello", tachyon::LayoutOverride{}.Size(360, 160)))
         {
-            BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
+            BeginVertical(tachyon::LayoutOverride{}.FlexGrow(1));
             BeginLabelGroup();
             Label("Name");
             Field(name);
@@ -150,7 +150,7 @@ public:
     }
 
 private:
-    interstice::ID     windowID = interstice::ID::Invalid();
+    tachyon::ID     windowID = tachyon::ID::Invalid();
     std::string name     = "world";
     std::string greeting;
 };
@@ -159,7 +159,7 @@ int main()
 {
     HelloApp app;
     app.SetResourceRoot("path/to/resources");   // see below
-    interstice::Result<void> result = app.Initialize();
+    tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();   // until the last window closes
     app.Cleanup();
@@ -187,7 +187,7 @@ is already in device pixels (a measured one), and positions and rects are pixels
 
 ```cpp
 LayoutOverride{}.Width(200)                  // 300 pixels at 150%
-LayoutOverride{}.Width(interstice::Pixels{ measured.w })
+LayoutOverride{}.Width(tachyon::Pixels{ measured.w })
 ```
 
 Calls that can fail return a `Result<T>` with the reason (`Initialize`, `Run`, `ReadWindowPixels`,
@@ -218,7 +218,7 @@ An application ships these files, in this layout:
 
 `GUIApplication::SetResourceRoot` sets the folder they are loaded from; without it
 they load relative to the working directory. In the source tree they are in
-`workdirectory/`; an installed package has them in `share/IntersticeUI/resources`.
+`workdirectory/`; an installed package has them in `share/TachyonUI/resources`.
 `icons/` holds the demo's SVG icons, which an app may use but doesn't need.
 `SDL3.dll` must be next to the executable; the build copies it there.
 
@@ -239,16 +239,16 @@ cmake --install build --config Release --prefix <prefix>
 ```
 
 Debug and Release install side by side into the same prefix. A consumer then
-needs no IntersticeUI source or build tree:
+needs no TachyonUI source or build tree:
 
 ```cmake
-find_package(IntersticeUI 0.1 CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE IntersticeUI::gui_controls)
+find_package(TachyonUI 0.1 CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE TachyonUI::gui_controls)
 ```
 
-The package defines `INTERSTICE_RESOURCE_DIR` for code that links it, so
-`app.SetResourceRoot(INTERSTICE_RESOURCE_DIR)` loads the installed runtime files;
-CMake code can use `IntersticeUI_RESOURCE_DIR`. `tests/package_consumer` is a
+The package defines `TACHYON_RESOURCE_DIR` for code that links it, so
+`app.SetResourceRoot(TACHYON_RESOURCE_DIR)` loads the installed runtime files;
+CMake code can use `TachyonUI_RESOURCE_DIR`. `tests/package_consumer` is a
 minimal consumer that checks this against an installed prefix.
 
 The consumer must use the same toolchain as the package. Only the Debug and
@@ -257,11 +257,11 @@ Release configurations are installed; other configurations need
 
 ## Use as a subproject
 
-`add_subdirectory(<IntersticeUI>)` works too, with the same target names and
-`INTERSTICE_RESOURCE_DIR`. Nothing is written to the IntersticeUI source tree:
+`add_subdirectory(<TachyonUI>)` works too, with the same target names and
+`TACHYON_RESOURCE_DIR`. Nothing is written to the TachyonUI source tree:
 the compiled shaders and copies of the fonts and themes go into the build tree.
-The Noto fallback fonts are copied (and installed) only with `INTERSTICE_FALLBACK_FONTS`.
-`INTERSTICE_SYSTEM_SDL`, `INTERSTICE_SYSTEM_HARFBUZZ` and `INTERSTICE_SYSTEM_VMA`
+The Noto fallback fonts are copied (and installed) only with `TACHYON_FALLBACK_FONTS`.
+`TACHYON_SYSTEM_SDL`, `TACHYON_SYSTEM_HARFBUZZ` and `TACHYON_SYSTEM_VMA`
 use the host's copy of that library instead of the bundled one, either a target
 the host already defined or one `find_package` finds. `tests/subproject_consumer`
 is a minimal host.
@@ -279,8 +279,8 @@ as its editor, can hand its handles to the GUI so both render on the same
 device:
 
 ```cpp
-auto backend = std::make_unique<interstice::vulkan::VulkanGraphicsContext>();
-interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
+auto backend = std::make_unique<tachyon::vulkan::VulkanGraphicsContext>();
+tachyon::vulkan::VulkanDeviceContext::ExternalDevice external;
 external.instance            = hostInstance;
 external.physicalDevice      = hostPhysicalDevice;
 external.device              = hostDevice;
@@ -291,7 +291,7 @@ backend->SetExternalDevice(external);
 
 auto* vk = backend.get();   // for RegisterExternalImage below
 app.SetGraphicsBackend(std::move(backend));
-if (interstice::Result<void> result = app.Initialize(); !result)
+if (tachyon::Result<void> result = app.Initialize(); !result)
     std::fprintf(stderr, "%s\n", result.GetError().message.c_str());   // e.g. a missing device feature
 ```
 
@@ -301,11 +301,11 @@ a new device and a new app.
 
 `SetGraphicsBackend` hands the app the graphics backend to use; without it,
 `Initialize` creates a `VulkanGraphicsContext`. Another backend implements
-`interstice::GraphicsContext`; `NullGraphicsContext` draws nothing and needs no GPU.
+`tachyon::GraphicsContext`; `NullGraphicsContext` draws nothing and needs no GPU.
 
 Requirements on the host device:
 
-- `interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()` lists the API version,
+- `tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements()` lists the API version,
   features, and device extensions the GUI needs. Enable all of them when
   creating the device. `CheckPhysicalDeviceSupport` reports what a physical
   device lacks. The GUI checks this when it adopts the device, and fails
@@ -332,10 +332,10 @@ A host can render into an image it owns and show it in the UI, for example a
 3D viewport:
 
 ```cpp
-interstice::ImageIndex index = vk->RegisterExternalImage(view, sampler);   // once
+tachyon::ImageIndex index = vk->RegisterExternalImage(view, sampler);   // once
 vk->UpdateExternalImage(index, newView, sampler);                   // after a resize
 
-Image(index, interstice::uint2{ width, height });   // in OnGUI
+Image(index, tachyon::uint2{ width, height });   // in OnGUI
 ```
 
 `Image` uses `theme.imageStyleRef`. A custom element or style shows the image only
@@ -366,8 +366,8 @@ Use it to put the UI inside an engine viewport, composite it into the host's
 frame, or render it without anything appearing on screen, as the GPU tests do.
 
 ```cpp
-if (BeginWindow(windowID, "Panel", theme.windowStyleRef, interstice::LayoutOverride{}.Size(400, 300),
-                interstice::ElementFlags::WindowRenderToImage))
+if (BeginWindow(windowID, "Panel", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(400, 300),
+                tachyon::ElementFlags::WindowRenderToImage))
 {
     // controls as usual
 }
@@ -377,7 +377,7 @@ EndWindow();
 vk->SetWindowImageTarget(windowID, hostImage, VkExtent2D{ 400, 300 });
 
 // Or read the last frame back (BGRA8):
-if (interstice::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
+if (tachyon::Result<void> read = app.ReadWindowPixels(windowID, pixels); !read)
     std::fprintf(stderr, "%s\n", read.GetError().message.c_str());
 ```
 
@@ -425,12 +425,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting problems and sending change
 
 ## Support
 
-If IntersticeUI is useful to you, you can support its development through
+If TachyonUI is useful to you, you can support its development through
 [GitHub Sponsors](https://github.com/sponsors/LogicalError) or
 [Patreon](https://www.patreon.com/c/logicalerror).
 
 ## License
 
-IntersticeUI is licensed under the MIT license; see [LICENSE](LICENSE). The
+TachyonUI is licensed under the MIT license; see [LICENSE](LICENSE). The
 bundled third-party code, fonts and icons keep their own licenses, listed in
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).

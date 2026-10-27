@@ -122,8 +122,8 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_CORE_TEST_FILES})
 target_link_libraries(gui_core_tests PRIVATE gui_controls GTest::gtest_main GTest::gmock)
 
 # Match gui_core/gui_controls so /GL objects don't force a linker restart.
-interstice_apply_compile_options(gui_core_tests)
-interstice_precompile_headers(gui_core_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
+tachyon_apply_compile_options(gui_core_tests)
+tachyon_precompile_headers(gui_core_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
 
 # gmock's templated actions trip a benign C4702 (unreachable code). With /GL
 # the test exe is code-generated at LINK time (/LTCG), so that warning is
@@ -141,7 +141,7 @@ include(GoogleTest)
 # ctest lists the tests when it runs them, not at build time, so building never
 # launches the executables (slow on a cold CI runner). It runs in the build folder
 # (discovery leaves a JSON file behind); main.cpp switches to workdirectory itself.
-interstice_copy_runtime_dlls(gui_core_tests)
+tachyon_copy_runtime_dlls(gui_core_tests)
 gtest_discover_tests(gui_core_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
 set_target_properties(gui_core_tests PROPERTIES
@@ -156,7 +156,7 @@ set_target_properties(gui_core_tests PROPERTIES
 # leaks) become test failures. Individual tests SKIP themselves when no suitable
 # device/display is present, so the target is safe to build everywhere.
 # They drive real windows through SDL.
-if(INTERSTICE_SDL)
+if(TACHYON_SDL)
   list(APPEND GUI_GPU_TEST_FILES
     gpu/gpu_test_harness.h
     gpu/gpu_descriptor_test.cpp
@@ -179,15 +179,15 @@ if(INTERSTICE_SDL)
   # (a static lib), so the harness must link them directly to reach the backend.
   target_link_libraries(gui_gpu_tests PRIVATE gui_controls vma Vulkan::Vulkan SDL3::SDL3 vkbootstrap GTest::gtest_main GTest::gmock)
 
-  interstice_apply_compile_options(gui_gpu_tests)
-  interstice_precompile_headers(gui_gpu_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
+  tachyon_apply_compile_options(gui_gpu_tests)
+  tachyon_precompile_headers(gui_gpu_tests <gtest/gtest.h> <gui_controls/gui_application.h>)
 
   # Same gmock C4702-at-LTCG situation as gui_core_tests above.
   if(MSVC)
     target_compile_options(gui_gpu_tests PRIVATE /wd4702)
   endif()
 
-  interstice_copy_runtime_dlls(gui_gpu_tests)
+  tachyon_copy_runtime_dlls(gui_gpu_tests)
   gtest_discover_tests(gui_gpu_tests DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
   set_target_properties(gui_gpu_tests PROPERTIES

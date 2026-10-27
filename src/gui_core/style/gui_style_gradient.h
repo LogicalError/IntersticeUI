@@ -6,7 +6,7 @@
 #include <cmath>
 #include <array>
 
-namespace interstice
+namespace tachyon
 {
     // ------------------------------------------------------------------------
     // Color and Gradient Types
@@ -267,4 +267,4 @@ namespace interstice
         }
     };
 
-}//namespace interstice
+}//namespace tachyon

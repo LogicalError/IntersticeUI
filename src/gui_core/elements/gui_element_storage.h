@@ -20,7 +20,7 @@
 
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     class GUIRenderer;
     class ElementStorage;
@@ -497,4 +497,4 @@ namespace interstice
     inline BottomUpDepthScanIterator& BottomUpDepthScanIterator::operator++() { if (!Validate()) cursor.SetDone(); else storage.AdvanceBottomUpDepthScan(cursor); return *this; }
     inline BottomUpDepthScanIterator BottomUpDepthScanIterator::operator++(int) { BottomUpDepthScanIterator tmp = *this; if (!Validate()) cursor.SetDone(); else storage.AdvanceBottomUpDepthScan(cursor); return tmp; }
 
-} // namespace interstice
+} // namespace tachyon

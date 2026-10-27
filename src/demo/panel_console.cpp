@@ -11,12 +11,12 @@
 #include <vector>
 
 //
-// Console panel: the application log (interstice::Diagnostics) as a virtual table of
+// Console panel: the application log (tachyon::Diagnostics) as a virtual table of
 // time / level icon / message, plus a detail pane for the selected record.
 // "Collapse duplicates" folds identical lines anywhere in the log into one row.
 //
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -37,8 +37,8 @@ namespace interstice
         // the panel); logLastSequence is the newest record already pulled.
         std::vector<ConsoleLogEntry>            logEntries;
         uint64_t                                logLastSequence = 0;
-        std::vector<interstice::VirtualTableColumn> logColumns;
-        interstice::TableState              logTableState;
+        std::vector<tachyon::VirtualTableColumn> logColumns;
+        tachyon::TableState              logTableState;
         std::string                             logSearch;
 
         // One entry per visible row, rebuilt only when the filter changes:
@@ -54,9 +54,9 @@ namespace interstice
         struct DetailLink { intptr_t id; std::string file; int line; };
         int                          logDetailSel    = -1;  // entry index the runs were built for
         int                          logDetailHeight = 132; // pane height (CSS px); driven by the sizer
-        std::vector<interstice::ContentRun> logDetailRuns;
+        std::vector<tachyon::ContentRun> logDetailRuns;
         std::vector<DetailLink>      logDetailLinks;
-        interstice::ID                      logDetailTextID = interstice::ID::Invalid(); // stable id for the selectable detail text
+        tachyon::ID                      logDetailTextID = tachyon::ID::Invalid(); // stable id for the selectable detail text
 
         // Level-filter toggles and per-level totals over the whole log
         // (recomputed only when the log changes).
@@ -131,7 +131,7 @@ namespace interstice
         // The row id encodes the visible-row index, which maps through logVisible.
         int SelectedLogEntry()
         {
-            if (logTableState.selectedRowID.GetMode() != interstice::IDMode::SubRange) return -1;
+            if (logTableState.selectedRowID.GetMode() != tachyon::IDMode::SubRange) return -1;
             const int visIdx = int(logTableState.selectedRowID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= int(logVisible.size())) return -1;
             return logVisible[visIdx];
@@ -168,10 +168,10 @@ namespace interstice
                     if (i > p && path.find('.') != std::string_view::npos)
                     {
                         if (p > segStart)
-                            logDetailRuns.push_back({ .type = interstice::ContentRun::Text,
+                            logDetailRuns.push_back({ .type = tachyon::ContentRun::Text,
                                                       .text = std::string_view(d + segStart, p - segStart) });
                         const intptr_t id = nextLinkId++;
-                        logDetailRuns.push_back({ .type = interstice::ContentRun::Text,
+                        logDetailRuns.push_back({ .type = tachyon::ContentRun::Text,
                                                   .text = std::string_view(d + p, e - p),
                                                   .contentId = id, .isLink = true });
                         logDetailLinks.push_back({ id, std::string(path), std::atoi(d + i + 1) });
@@ -183,7 +183,7 @@ namespace interstice
                 ++i;
             }
             if (segStart < text.size())
-                logDetailRuns.push_back({ .type = interstice::ContentRun::Text,
+                logDetailRuns.push_back({ .type = tachyon::ContentRun::Text,
                                           .text = std::string_view(d + segStart, text.size() - segStart) });
         }
     }
@@ -191,7 +191,7 @@ namespace interstice
     void Application::EnableLogPanel()
     {
         // Static id so the detail text's focus and selection survive across frames.
-        if (logDetailTextID == interstice::ID::Invalid())
+        if (logDetailTextID == tachyon::ID::Invalid())
             logDetailTextID = idManager.CreateStaticID();
 
         logEntries.clear();
@@ -202,7 +202,7 @@ namespace interstice
         // state re-runs the initial scroll-to-bottom on reopen.
         logTableState.followTail          = true;
         logTableState.RestartFollowTail();
-        logTableState.selectedRowID       = interstice::ID::Invalid();
+        logTableState.selectedRowID       = tachyon::ID::Invalid();
         logDetailSel                      = -1;
         logFilterDirty = true;
 
@@ -227,15 +227,15 @@ namespace interstice
                                  : (level == LogLevel::Warning) ? demo.warningIcon
                                  :                                demo.infoIcon;
             Cell([this, icon]() {
-                const interstice::ID iconID = idManager.AllocateDynamicID();
-                interstice::Element iconElem{};
+                const tachyon::ID iconID = idManager.AllocateDynamicID();
+                tachyon::Element iconElem{};
                 iconElem.id       = iconID;
                 iconElem.iconID   = icon;
-                iconElem.flags    = interstice::ElementFlags::NoInput;
+                iconElem.flags    = tachyon::ElementFlags::NoInput;
                 iconElem.state    = guiStateManager.GetCurrentState(iconID);
                 iconElem.styleRef = logLevelIconStyleRef;
                 auto res = elementStorage.Add(std::move(iconElem),
-                                              interstice::LayoutOverride{});
+                                              tachyon::LayoutOverride{});
                 VERIFY(res.status);
                 VERIFY(windowRegistry.Add(res.ref));
             });
@@ -251,28 +251,28 @@ namespace interstice
                         count = logRepeat[rowIdx]]() {
                 // Message text fills the cell so the bubble lands at the right edge.
                 {
-                    const interstice::ID id = idManager.AllocateDynamicID();
-                    interstice::Element el{};
+                    const tachyon::ID id = idManager.AllocateDynamicID();
+                    tachyon::Element el{};
                     el.id       = id;
-                    el.flags    = interstice::ElementFlags::NoInput;
+                    el.flags    = tachyon::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
                     el.styleRef = logMessageStyleRef;
                     el.textID   = textSystem->RegisterText(id, msg, el.styleRef, el.state);
-                    auto res = elementStorage.Add(std::move(el), interstice::LayoutOverride::Auto().FlexGrow(1));
+                    auto res = elementStorage.Add(std::move(el), tachyon::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(res.status);
                     VERIFY(windowRegistry.Add(res.ref));
                 }
                 if (count > 1)
                 {
-                    const interstice::ID id = idManager.AllocateDynamicID();
+                    const tachyon::ID id = idManager.AllocateDynamicID();
                     const std::string countText = std::to_string(count);
-                    interstice::Element el{};
+                    tachyon::Element el{};
                     el.id       = id;
-                    el.flags    = interstice::ElementFlags::NoInput;
+                    el.flags    = tachyon::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
                     el.styleRef = logCountBadgeStyleRef;
                     el.textID   = textSystem->RegisterText(id, countText, el.styleRef, el.state);
-                    auto res = elementStorage.Add(std::move(el), interstice::LayoutOverride::Auto());
+                    auto res = elementStorage.Add(std::move(el), tachyon::LayoutOverride::Auto());
                     VERIFY(res.status);
                     VERIFY(windowRegistry.Add(res.ref));
                 }
@@ -301,7 +301,7 @@ namespace interstice
 
         // Top row: clear button | search box | level toggles | collapse toggle.
         BeginHorizontal(idManager.AllocateDynamicID("logSearchRow"),
-                        theme.searchRowStyleRef, interstice::LayoutOverride::Auto().NoShrink());
+                        theme.searchRowStyleRef, tachyon::LayoutOverride::Auto().NoShrink());
         {
             Button(idManager.AllocateDynamicID("logClear"), "Clear",
                 []() {
@@ -314,12 +314,12 @@ namespace interstice
                     logDetailLinks.clear();
                     logDetailSel   = -1;
                 },
-                interstice::LayoutOverride{}.NoGrow().NoShrink());
+                tachyon::LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Clear the log");
 
             if (SearchField(logSearch, demo.findIcon,
                             TextEditBehavior::ContinuousUpdate,
-                            interstice::LayoutOverride{}.FlexGrow(1)))
+                            tachyon::LayoutOverride{}.FlexGrow(1)))
                             logFilterDirty = true;
 
             // Level toggles: a colored dot and the level's count, pressed while the
@@ -327,7 +327,7 @@ namespace interstice
             // refilter picks the change up next frame.
             BeginHorizontal(idManager.AllocateDynamicID("logLevelToggles"),
                 logLevelWellStyleRef,
-                interstice::LayoutOverride{}.NoGrow().NoShrink());
+                tachyon::LayoutOverride{}.NoGrow().NoShrink());
             {
                 const char*  levelTip[3] = { "Show or hide info messages",
                                              "Show or hide warnings",
@@ -339,7 +339,7 @@ namespace interstice
                         logShowLevel[lvl], { demo.dotIcon, logCountText[lvl] },
                         [lvl](bool on) { logShowLevel[lvl] = on; logFilterDirty = true; },
                         logLevelPillStyleRefs[lvl],
-                        interstice::LayoutOverride{}.NoGrow().NoShrink());
+                        tachyon::LayoutOverride{}.NoGrow().NoShrink());
                     SetTooltip(levelTip[lvl]);
                 }
             }
@@ -350,7 +350,7 @@ namespace interstice
                    logCollapse, demo.iconCollapseAllIcon,
                    [](bool on) { logCollapse = on; logFilterDirty = true; },
                    iconToggleStyleRef,
-                   interstice::LayoutOverride{}.NoGrow().NoShrink());
+                   tachyon::LayoutOverride{}.NoGrow().NoShrink());
             SetTooltip("Collapse duplicate lines");
         }
         EndHorizontal();
@@ -407,14 +407,14 @@ namespace interstice
 
         // The detail pane sits after the sizer, so the drag delta is inverted.
         {
-            const interstice::ID sizerID = idManager.AllocateDynamicID("logDetailSizer");
-            interstice::Element sizer{};
+            const tachyon::ID sizerID = idManager.AllocateDynamicID("logDetailSizer");
+            tachyon::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerVertStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = interstice::MakeVerticalSizerHandler(
+            sizer.eventHandler = tachyon::MakeVerticalSizerHandler(
                 guiStateManager, logDetailHeight, 48, 480, nullptr, nullptr, /*invert*/ true, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedHeight(4));
+            auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedHeight(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -423,7 +423,7 @@ namespace interstice
         // file:line links. Height is driven by the sizer above.
         BeginVertical(idManager.AllocateDynamicID("logDetailPane"),
                       logDetailPaneStyleRef,
-                      interstice::LayoutOverride::Auto().FixedHeight(CssPx(logDetailHeight)).NoGrow().NoShrink());
+                      tachyon::LayoutOverride::Auto().FixedHeight(CssPx(logDetailHeight)).NoGrow().NoShrink());
         {
             const int sel = SelectedLogEntry();
             if (sel != logDetailSel) RebuildLogDetail(sel);
@@ -435,13 +435,13 @@ namespace interstice
                 // file:line links. Clicking a link prints "Open file:line" (a stand-in for a
                 // real editor jump). Uses a stable id so selection/focus survive across frames.
                 SelectableText(logDetailTextID,
-                    std::span<interstice::ContentRun>(logDetailRuns.data(), logDetailRuns.size()),
+                    std::span<tachyon::ContentRun>(logDetailRuns.data(), logDetailRuns.size()),
                     [](intptr_t contentId)
                     {
                         for (const auto& lk : logDetailLinks)
-                            if (lk.id == contentId) { INTERSTICE_LOG_INFO(kLogDemo, "open {}:{}", lk.file, lk.line); break; }
+                            if (lk.id == contentId) { TACHYON_LOG_INFO(kLogDemo, "open {}:{}", lk.file, lk.line); break; }
                     },
-                    logDetailTextStyleRef, interstice::LayoutOverride::Auto().FlexGrow(1));
+                    logDetailTextStyleRef, tachyon::LayoutOverride::Auto().FlexGrow(1));
             }
         }
         EndVertical();

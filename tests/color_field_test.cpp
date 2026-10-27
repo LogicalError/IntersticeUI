@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -19,7 +19,7 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::color4f   color{ 0.2f, 0.4f, 0.8f, 1.0f };
+            tachyon::color4f   color{ 0.2f, 0.4f, 0.8f, 1.0f };
 
             void SetUp() override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
@@ -28,19 +28,19 @@ namespace interstice
             {
                 app.BeginRootWindow();
                 app.ColorField(color, /*allowHDR*/false,
-                               interstice::LayoutOverride{}.Size(120, 24));
+                               tachyon::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
             // First element rect carrying `style` (unique to the swatch / picker).
-            interstice::IntRect FirstRectWithStyle(interstice::StyleRef style) const
+            tachyon::IntRect FirstRectWithStyle(tachyon::StyleRef style) const
             {
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                 {
                     const uint32_t count = app.elementStorage.DepthSizeOf(d);
                     for (uint32_t i = 0; i < count; i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref))
@@ -50,18 +50,18 @@ namespace interstice
                 return {};
             }
 
-            bool HasStyle(interstice::StyleRef style) const
+            bool HasStyle(tachyon::StyleRef style) const
             {
                 return FirstRectWithStyle(style).w > 0 || FirstRectWithStyle(style).h > 0;
             }
 
             bool PickerOpen() const  { return HasStyle(app.theme.colorPickerStyleRef); }
-            interstice::IntRect Swatch() const { return FirstRectWithStyle(app.theme.colorSwatchStyleRef); }
+            tachyon::IntRect Swatch() const { return FirstRectWithStyle(app.theme.colorSwatchStyleRef); }
 
             void ClickSwatch()
             {
                 const auto s = Swatch();
-                const interstice::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
+                const tachyon::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
                 app.InjectMouseMove(c);
                 app.InjectMouseDown(c);
                 app.InjectMouseUp(c);
@@ -122,7 +122,7 @@ namespace interstice
 
         TEST_F(ColorFieldTest, BoundValueSurvivesOpenClose)
         {
-            const interstice::color4f original = color;
+            const tachyon::color4f original = color;
             app.Frame([&] { EmitField(); });
             ClickSwatch();
             app.Frame([&] { EmitField(); });
@@ -143,10 +143,10 @@ namespace interstice
         // edits hue/saturation/value with the over-range part as brightness.
         TEST_F(ColorFieldTest, OpeningPickerKeepsHdrColor)
         {
-            color = interstice::color4f{ 2.0f, 1.0f, 0.5f, 1.0f };
+            color = tachyon::color4f{ 2.0f, 1.0f, 0.5f, 1.0f };
             auto emitHdr = [&] {
                 app.BeginRootWindow();
-                app.ColorField(color, /*allowHDR*/true, interstice::LayoutOverride{}.Size(120, 24));
+                app.ColorField(color, /*allowHDR*/true, tachyon::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             };
             app.Frame(emitHdr);
@@ -166,34 +166,34 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::Gradient  a, b;
+            tachyon::Gradient  a, b;
 
             void SetUp() override
             {
                 ASSERT_TRUE(app.Initialize());
-                a.AddStop(interstice::color4f{ 1, 0, 0, 1 }, 0.0f);
-                a.AddStop(interstice::color4f{ 0, 0, 1, 1 }, 1.0f);
-                b.AddStop(interstice::color4f{ 0, 1, 0, 1 }, 0.0f);
-                b.AddStop(interstice::color4f{ 1, 1, 0, 1 }, 1.0f);
+                a.AddStop(tachyon::color4f{ 1, 0, 0, 1 }, 0.0f);
+                a.AddStop(tachyon::color4f{ 0, 0, 1, 1 }, 1.0f);
+                b.AddStop(tachyon::color4f{ 0, 1, 0, 1 }, 0.0f);
+                b.AddStop(tachyon::color4f{ 1, 1, 0, 1 }, 1.0f);
             }
             void TearDown() override { app.Cleanup(); }
 
             void EmitFields()
             {
                 app.BeginRootWindow();
-                app.GradientField(a, interstice::LayoutOverride{}.Size(120, 24));
-                app.GradientField(b, interstice::LayoutOverride{}.Size(120, 24));
+                app.GradientField(a, tachyon::LayoutOverride{}.Size(120, 24));
+                app.GradientField(b, tachyon::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
             // Swatch rects in emission order.
-            std::vector<interstice::IntRect> Swatches() const
+            std::vector<tachyon::IntRect> Swatches() const
             {
-                std::vector<interstice::IntRect> out;
+                std::vector<tachyon::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != app.theme.gradientSwatchStyleRef) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -206,12 +206,12 @@ namespace interstice
         // other one's gradient must not be overwritten by the open editor's working copy.
         TEST_F(GradientFieldTest, OpeningOneFieldsEditorLeavesTheOtherFieldAlone)
         {
-            const interstice::Gradient aBefore = a, bBefore = b;
+            const tachyon::Gradient aBefore = a, bBefore = b;
             app.Frame([&] { EmitFields(); });
             const auto swatches = Swatches();
             ASSERT_EQ(swatches.size(), 2u);
 
-            const interstice::int2 c{ swatches[0].x + swatches[0].w / 2, swatches[0].y + swatches[0].h / 2 };
+            const tachyon::int2 c{ swatches[0].x + swatches[0].w / 2, swatches[0].y + swatches[0].h / 2 };
             app.InjectMouseMove(c);
             app.InjectMouseDown(c);
             app.InjectMouseUp(c);
@@ -227,9 +227,9 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::color4f   a{ 1.0f, 0.0f, 0.0f, 1.0f };
-            interstice::color4f   b{ 0.0f, 0.0f, 1.0f, 1.0f };
-            interstice::color4b   bytes{ 200, 40, 10, 255 };
+            tachyon::color4f   a{ 1.0f, 0.0f, 0.0f, 1.0f };
+            tachyon::color4f   b{ 0.0f, 0.0f, 1.0f, 1.0f };
+            tachyon::color4b   bytes{ 200, 40, 10, 255 };
 
             void SetUp() override { ASSERT_TRUE(app.Initialize()); }
             void TearDown() override { app.Cleanup(); }
@@ -237,19 +237,19 @@ namespace interstice
             void EmitFields()
             {
                 app.BeginRootWindow();
-                app.ColorField(a, /*allowHDR*/false, interstice::LayoutOverride{}.Size(120, 24));
-                app.ColorField(b, /*allowHDR*/false, interstice::LayoutOverride{}.Size(120, 24));
-                app.ColorField(bytes, interstice::LayoutOverride{}.Size(120, 24));
+                app.ColorField(a, /*allowHDR*/false, tachyon::LayoutOverride{}.Size(120, 24));
+                app.ColorField(b, /*allowHDR*/false, tachyon::LayoutOverride{}.Size(120, 24));
+                app.ColorField(bytes, tachyon::LayoutOverride{}.Size(120, 24));
                 app.EndRootWindow();
             }
 
-            std::vector<interstice::IntRect> RectsWithStyle(interstice::StyleRef style) const
+            std::vector<tachyon::IntRect> RectsWithStyle(tachyon::StyleRef style) const
             {
-                std::vector<interstice::IntRect> out;
+                std::vector<tachyon::IntRect> out;
                 for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels(); d++)
                     for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
                     {
-                        interstice::ElementRef ref{ d, i };
+                        tachyon::ElementRef ref{ d, i };
                         if (!app.elementStorage.IsValidRef(ref)) continue;
                         if (app.elementStorage.GetElementUnsafe(ref).styleRef != style) continue;
                         if (const auto* rp = app.elementStorage.GetElementRectPtr(ref)) out.push_back(rp->rect);
@@ -262,7 +262,7 @@ namespace interstice
                 const auto swatches = RectsWithStyle(app.theme.colorSwatchStyleRef);
                 ASSERT_EQ(swatches.size(), 3u);
                 const auto& s = swatches[index];
-                const interstice::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
+                const tachyon::int2 c{ s.x + s.w / 2, s.y + s.h / 2 };
                 app.InjectMouseMove(c);
                 app.InjectMouseDown(c);
                 app.InjectMouseUp(c);
@@ -273,7 +273,7 @@ namespace interstice
         // Only the clicked field owns the picker; the others keep their colors.
         TEST_F(TwoColorFieldsTest, OpeningOnePickerLeavesTheOtherFieldsAlone)
         {
-            const interstice::color4f aBefore = a, bBefore = b;
+            const tachyon::color4f aBefore = a, bBefore = b;
             app.Frame([&] { EmitFields(); });
             ClickSwatch(0);
 
@@ -286,7 +286,7 @@ namespace interstice
         // picker must start from the bound color, not from a dead stack slot.
         TEST_F(TwoColorFieldsTest, ByteColorPickerStartsFromTheBoundColor)
         {
-            const interstice::color4b before = bytes;
+            const tachyon::color4b before = bytes;
             app.Frame([&] { EmitFields(); });
             ClickSwatch(2);
 

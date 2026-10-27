@@ -2,7 +2,7 @@
 
 #include <gui_core/text/gui_clipboard.h>
 
-namespace interstice
+namespace tachyon
 {
     /// The system clipboard, through SDL.
     class SDLClipboard : public IClipboard

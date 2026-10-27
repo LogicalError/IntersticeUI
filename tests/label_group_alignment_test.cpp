@@ -10,7 +10,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     TEST(LabelGroupAlignment, LabelAndDragLabelRowsLineUp)

@@ -47,7 +47,7 @@ struct Host
         instance = builtInstance.value();
 
         // Enable everything the GUI needs on the device.
-        auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();
+        auto requirements = tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements();
         auto selected = vkb::PhysicalDeviceSelector{ instance }
             .set_minimum_version(1, 3)
             .set_required_features(requirements.features)
@@ -67,9 +67,9 @@ struct Host
         return true;
     }
 
-    interstice::vulkan::VulkanDeviceContext::ExternalDevice Describe()
+    tachyon::vulkan::VulkanDeviceContext::ExternalDevice Describe()
     {
-        interstice::vulkan::VulkanDeviceContext::ExternalDevice external;
+        tachyon::vulkan::VulkanDeviceContext::ExternalDevice external;
         external.instance            = instance.instance;
         external.physicalDevice      = physicalDevice.physical_device;
         external.device              = device.device;
@@ -206,13 +206,13 @@ struct Host
     }
 };
 
-class HostedApp : public interstice::GUIApplication
+class HostedApp : public tachyon::GUIApplication
 {
 public:
     explicit HostedApp(Host& host) : host(host)
     {
         // The GUI renders on the host's device; without one it creates its own and the example quits.
-        auto backend = std::make_unique<interstice::vulkan::VulkanGraphicsContext>();
+        auto backend = std::make_unique<tachyon::vulkan::VulkanGraphicsContext>();
         if (this->host.CreateDevice())
             backend->SetExternalDevice(this->host.Describe());
         else
@@ -221,12 +221,12 @@ public:
         SetGraphicsBackend(std::move(backend));
     }
 
-    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
+    tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+        if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;
         if (host.device.device == VK_NULL_HANDLE || !host.CreateImage())
-            return interstice::Error{ interstice::ErrorCode::Failed, "the host device or its image could not be created" };
+            return tachyon::Error{ tachyon::ErrorCode::Failed, "the host device or its image could not be created" };
         // The GUI samples the host's view and sampler; the host keeps owning them.
         hostImage = vk->RegisterExternalImage(host.view, host.sampler);
         windowID  = idManager.CreateStaticID();
@@ -239,11 +239,11 @@ public:
         const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
         host.Render(0.5f + 0.5f * std::sin(t), 0.5f + 0.5f * std::sin(t + 2.1f), 0.5f + 0.5f * std::sin(t + 4.2f));
 
-        if (BeginWindow(windowID, "Host device", interstice::LayoutOverride{}.Size(320, 340)))
+        if (BeginWindow(windowID, "Host device", tachyon::LayoutOverride{}.Size(320, 340)))
         {
-            BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
+            BeginVertical(tachyon::LayoutOverride{}.FlexGrow(1));
             Text("Rendered by the host:");
-            Image(hostImage, interstice::uint2{ Host::kImageSize.width, Host::kImageSize.height });
+            Image(hostImage, tachyon::uint2{ Host::kImageSize.width, Host::kImageSize.height });
             EndVertical();
         }
         EndWindow();
@@ -251,9 +251,9 @@ public:
 
 private:
     Host&                                 host;
-    interstice::vulkan::VulkanGraphicsContext*  vk        = nullptr;   // owned by the app
-    interstice::ImageIndex                       hostImage = interstice::ImageIndex::Invalid;
-    interstice::ID                               windowID  = interstice::ID::Invalid();
+    tachyon::vulkan::VulkanGraphicsContext*  vk        = nullptr;   // owned by the app
+    tachyon::ImageIndex                       hostImage = tachyon::ImageIndex::Invalid;
+    tachyon::ID                               windowID  = tachyon::ID::Invalid();
     std::chrono::steady_clock::time_point start     = std::chrono::steady_clock::now();
 };
 
@@ -265,8 +265,8 @@ int main()
     Host host;
     {
         HostedApp app(host);
-        app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-        interstice::Result<void> result = app.Initialize();
+        app.SetResourceRoot(TACHYON_RESOURCE_DIR);
+        tachyon::Result<void> result = app.Initialize();
         if (result)
             result = app.Run();
         app.Cleanup();   // the GUI destroys only what it created; the device stays

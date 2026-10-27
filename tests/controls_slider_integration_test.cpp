@@ -10,7 +10,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_core/input/gui_input_enums.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -135,4 +135,4 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon

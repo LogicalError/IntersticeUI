@@ -4,7 +4,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
 
     // The canvas point that view position `p` (pixels from the canvas centre) shows.
     float2 CanvasAt(const NodeView& view, float2 p) { return view.transform.Inverse().TransformPoint(p); }

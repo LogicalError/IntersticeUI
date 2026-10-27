@@ -11,7 +11,7 @@
 #include <gui_core/state/gui_scroll_management.h>
 #include <gui_core/state/gui_tab_chain_manager.h>
 
-namespace interstice
+namespace tachyon
 {
 
     // ============================================================================
@@ -41,7 +41,7 @@ namespace interstice
 
     TEST_F(InputManagerTest, RecordsMouseMoveEvent)
     {
-        manager.OnMouseMove(ID::Invalid(), interstice::int2{ 10, 20 }, MouseButtons::None, KeyModifier::None);
+        manager.OnMouseMove(ID::Invalid(), tachyon::int2{ 10, 20 }, MouseButtons::None, KeyModifier::None);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 1u);
@@ -53,7 +53,7 @@ namespace interstice
 
     TEST_F(InputManagerTest, RecordsMouseDownEvent)
     {
-        manager.OnMouseButton(ID::Invalid(), interstice::int2{ 5, 8 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
+        manager.OnMouseButton(ID::Invalid(), tachyon::int2{ 5, 8 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 1u);
@@ -64,8 +64,8 @@ namespace interstice
     TEST_F(InputManagerTest, RecordsMouseUpEvent)
     {
         // Press first so prevButtons has Left set
-        manager.OnMouseButton(ID::Invalid(), interstice::int2{ 5, 8 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
-        manager.OnMouseButton(ID::Invalid(), interstice::int2{ 5, 8 }, MouseButtons::None, KeyModifier::None, MouseAction::MouseUp);
+        manager.OnMouseButton(ID::Invalid(), tachyon::int2{ 5, 8 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
+        manager.OnMouseButton(ID::Invalid(), tachyon::int2{ 5, 8 }, MouseButtons::None, KeyModifier::None, MouseAction::MouseUp);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 2u);
@@ -75,7 +75,7 @@ namespace interstice
 
     TEST_F(InputManagerTest, RecordsScrollEvent)
     {
-        manager.OnMouseScroll(ID::Invalid(), interstice::int2{ 0, 0 }, interstice::float2{ 2, -2 }, KeyModifier::None);
+        manager.OnMouseScroll(ID::Invalid(), tachyon::int2{ 0, 0 }, tachyon::float2{ 2, -2 }, KeyModifier::None);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 1u);
@@ -87,7 +87,7 @@ namespace interstice
     // Precision touchpads and hi-res wheels report sub-notch deltas.
     TEST_F(InputManagerTest, KeepsFractionalScrollDelta)
     {
-        manager.OnMouseScroll(ID::Invalid(), interstice::int2{ 0, 0 }, interstice::float2{ 0.25f, -0.5f }, KeyModifier::None);
+        manager.OnMouseScroll(ID::Invalid(), tachyon::int2{ 0, 0 }, tachyon::float2{ 0.25f, -0.5f }, KeyModifier::None);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 1u);
@@ -144,8 +144,8 @@ namespace interstice
 
     TEST_F(InputManagerTest, PerEventMouseDelta)
     {
-        manager.OnMouseMove(ID::Invalid(), interstice::int2{ 10, 10 }, MouseButtons::None, KeyModifier::None);
-        manager.OnMouseMove(ID::Invalid(), interstice::int2{ 15, 12 }, MouseButtons::None, KeyModifier::None);
+        manager.OnMouseMove(ID::Invalid(), tachyon::int2{ 10, 10 }, MouseButtons::None, KeyModifier::None);
+        manager.OnMouseMove(ID::Invalid(), tachyon::int2{ 15, 12 }, MouseButtons::None, KeyModifier::None);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 2u);
@@ -161,8 +161,8 @@ namespace interstice
 
     TEST_F(InputManagerTest, ButtonStateTrackedPerEvent)
     {
-        manager.OnMouseButton(ID::Invalid(), interstice::int2{ 0, 0 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
-        manager.OnMouseButton(ID::Invalid(), interstice::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None, MouseAction::MouseUp);
+        manager.OnMouseButton(ID::Invalid(), tachyon::int2{ 0, 0 }, MouseButtons::Left, KeyModifier::None, MouseAction::MouseDown);
+        manager.OnMouseButton(ID::Invalid(), tachyon::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None, MouseAction::MouseUp);
 
         const auto& events = manager.GetRecordedEvents();
         ASSERT_EQ(events.size(), 2u);
@@ -182,7 +182,7 @@ namespace interstice
 
     TEST_F(InputManagerTest, ConsumeKeyMarksLastKeyboardEvent)
     {
-        manager.OnMouseMove(ID::Invalid(), interstice::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None);
+        manager.OnMouseMove(ID::Invalid(), tachyon::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None);
         manager.OnKeyboard(ID::Invalid(), KeyCode::Tab, 0, KeyModifier::None, KeyAction::KeyDown);
 
         manager.ConsumeKey();
@@ -195,7 +195,7 @@ namespace interstice
 
     TEST_F(InputManagerTest, ConsumeKeyDoesNotMarkMouseEvents)
     {
-        manager.OnMouseMove(ID::Invalid(), interstice::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None);
+        manager.OnMouseMove(ID::Invalid(), tachyon::int2{ 0, 0 }, MouseButtons::None, KeyModifier::None);
 
         manager.ConsumeKey(); // no keyboard event - should be a no-op
 

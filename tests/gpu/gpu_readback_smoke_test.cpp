@@ -25,46 +25,46 @@ namespace
     class GpuReadbackTest : public GpuTest
     {
     protected:
-        static constexpr interstice::int2 kSize{ 320, 240 };
+        static constexpr tachyon::int2 kSize{ 320, 240 };
 
-        interstice::VisualColorStyleIndex solidColor{};
-        interstice::VisualColorStyleIndex gradientColor{};
+        tachyon::VisualColorStyleIndex solidColor{};
+        tachyon::VisualColorStyleIndex gradientColor{};
 
         std::vector<uint8_t> framePixels = std::vector<uint8_t>(size_t(kSize.x) * kSize.y * 4);
 
-        interstice::vulkan::VulkanWindowContext* CreateReadbackWindow() { return CreateImageWindowContext(kSize); }
+        tachyon::vulkan::VulkanWindowContext* CreateReadbackWindow() { return CreateImageWindowContext(kSize); }
 
         void RegisterColorStyles()
         {
             solidColor = styleManager.RegisterColorStyle(
-                interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
+                tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 }));
             gradientColor = styleManager.RegisterColorStyle(
-                interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 },
-                                        interstice::color4b{ 0, 255, 0, 255 },
-                                        interstice::color4b{ 0, 0, 255, 255 },
-                                        interstice::color4b{ 255, 0, 255, 255 },
-                                        interstice::ColorType::InterpolatedBox));
+                tachyon::ColorStyle::Create(tachyon::color4b{ 255, 0, 0, 255 },
+                                        tachyon::color4b{ 0, 255, 0, 255 },
+                                        tachyon::color4b{ 0, 0, 255, 255 },
+                                        tachyon::color4b{ 255, 0, 255, 255 },
+                                        tachyon::ColorType::InterpolatedBox));
         }
 
         // Render one frame whose primitives are emitted by `emit`, then leave
         // the result in framePixels.
         template <typename EmitFn>
-        void RenderFrame(interstice::vulkan::VulkanWindowContext* ctx, EmitFn&& emit)
+        void RenderFrame(tachyon::vulkan::VulkanWindowContext* ctx, EmitFn&& emit)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+            tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
                 emit(r);
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, kSize.x, kSize.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, kSize.x, kSize.y }, false);
             ASSERT_TRUE(ctx->ReadPixels(framePixels));
         }
 
         // Raw 32-bit pixel of the last read frame (BGRA8, tightly packed).
-        uint32_t PixelAt(const interstice::vulkan::VulkanWindowContext*, int x, int y) const
+        uint32_t PixelAt(const tachyon::vulkan::VulkanWindowContext*, int x, int y) const
         {
             const size_t off = (size_t(y) * kSize.x + size_t(x)) * 4;
             uint32_t v = 0;
@@ -72,7 +72,7 @@ namespace
             return v;
         }
 
-        static constexpr interstice::IntRect kFullClip{ 0, 0, kSize.x, kSize.y };
+        static constexpr tachyon::IntRect kFullClip{ 0, 0, kSize.x, kSize.y };
     };
 
     TEST_F(GpuReadbackTest, QuadFillChangesCoveredPixels)
@@ -83,8 +83,8 @@ namespace
         RegisterColorStyles();
 
         // Solid quad over the left half; the right half stays background.
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderQuad(tachyon::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor);
         });
 
         const uint32_t inside  = PixelAt(ctx, kSize.x / 4,     kSize.y / 2);
@@ -100,11 +100,11 @@ namespace
         auto* ctx = CreateReadbackWindow();
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
-        const interstice::VisualColorStyleIndex color = styleManager.RegisterColorStyle(
-            interstice::ColorStyle::Create(interstice::color4b{ 128, 64, 32, 255 }));
+        const tachyon::VisualColorStyleIndex color = styleManager.RegisterColorStyle(
+            tachyon::ColorStyle::Create(tachyon::color4b{ 128, 64, 32, 255 }));
 
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, color);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderQuad(tachyon::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, color);
         });
 
         const uint32_t px = PixelAt(ctx, kSize.x / 2, kSize.y / 2);   // BGRA8
@@ -125,8 +125,8 @@ namespace
         RegisterColorStyles();
 
         constexpr int kD = 24, cx = 100, cy = 100;
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderQuad(interstice::IntRect{ cx - kD / 2, cy - kD / 2, kD, kD }, kFullClip, solidColor, float(kD) / 2.0f);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderQuad(tachyon::IntRect{ cx - kD / 2, cy - kD / 2, kD, kD }, kFullClip, solidColor, float(kD) / 2.0f);
         });
 
         const uint32_t empty = PixelAt(ctx, 10, 10);
@@ -155,8 +155,8 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderDot(interstice::float2{ 16, 16 }, kFullClip, 8.0f, interstice::color4f{ 1, 1, 1, 1 });
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderDot(tachyon::float2{ 16, 16 }, kFullClip, 8.0f, tachyon::color4f{ 1, 1, 1, 1 });
         });
 
         const uint32_t atDot     = PixelAt(ctx, 16, 16);
@@ -174,8 +174,8 @@ namespace
 
         // Full-frame 4-corner interpolated quad: left third and right third
         // sample different ends of the gradient.
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, gradientColor);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderQuad(tachyon::IntRect{ 0, 0, kSize.x, kSize.y }, kFullClip, gradientColor);
         });
 
         const uint32_t left  = PixelAt(ctx, kSize.x / 6,     kSize.y / 2);
@@ -191,16 +191,16 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         RegisterColorStyles();
 
-        interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+        tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
         r->ClearScopeCaptures();
-        const interstice::ID scope = interstice::ID::Invalid(); // any key for the capture map
+        const tachyon::ID scope = tachyon::ID::Invalid(); // any key for the capture map
 
         // Frame 1: capture a quad at the left edge (x = 0..40); EndScopeCapture
         // also draws it into the window this frame.
-        RenderFrame(ctx, [&](interstice::GUIRenderer* rr) {
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* rr) {
             rr->BeginScopeCapture(scope);
-            rr->SetTransform(interstice::float3x2::Identity());
-            rr->RenderQuad(interstice::IntRect{ 0, 0, 40, kSize.y }, kFullClip, solidColor);
+            rr->SetTransform(tachyon::float3x2::Identity());
+            rr->RenderQuad(tachyon::IntRect{ 0, 0, 40, kSize.y }, kFullClip, solidColor);
             rr->EndScopeCapture(scope);
         });
         const uint32_t bg = PixelAt(ctx, kSize.x - 20, kSize.y / 2);
@@ -208,8 +208,8 @@ namespace
 
         // Frame 2: replay the cached quad translated right by 200px. It must now
         // cover x ~200..240 and have left the original left edge as background.
-        RenderFrame(ctx, [&](interstice::GUIRenderer* rr) {
-            EXPECT_TRUE(rr->ReplayScopeCapture(scope, interstice::int2{ 200, 0 }));
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* rr) {
+            EXPECT_TRUE(rr->ReplayScopeCapture(scope, tachyon::int2{ 200, 0 }));
         });
         EXPECT_NE(PixelAt(ctx, 220, kSize.y / 2), bg) << "replayed quad appears at the translated position";
         EXPECT_EQ(PixelAt(ctx, 20,  kSize.y / 2), bg) << "the original position is background again";
@@ -224,9 +224,9 @@ namespace
 
         // Thick horizontal line at y=40; a pixel on the path differs from one
         // well below it.
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderLine(interstice::int2{ 16, 40 }, interstice::int2{ kSize.x - 16, 40 }, kFullClip,
-                          interstice::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 4.0f });
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderLine(tachyon::int2{ 16, 40 }, tachyon::int2{ kSize.x - 16, 40 }, kFullClip,
+                          tachyon::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 4.0f });
         });
 
         const uint32_t onLine  = PixelAt(ctx, kSize.x / 2, 40);
@@ -240,7 +240,7 @@ namespace
     class GpuTextAtlasTest : public GpuReadbackTest
     {
     protected:
-        interstice::vulkan::VulkanTextAtlasManager atlas;
+        tachyon::vulkan::VulkanTextAtlasManager atlas;
 
         void SetUp() override
         {
@@ -249,7 +249,7 @@ namespace
             ASSERT_TRUE(atlas.Initialize(graphicsContext, graphicsContext->GetImageSet()));
         }
 
-        static std::vector<uint8_t> Filled(interstice::uint2 size, uint8_t value)
+        static std::vector<uint8_t> Filled(tachyon::uint2 size, uint8_t value)
         {
             return std::vector<uint8_t>(size_t(size.x) * size.y * 4, value);
         }
@@ -259,12 +259,12 @@ namespace
     // read level 0, so atlas pages carry no mip chain.
     TEST_F(GpuTextAtlasTest, PagesHaveNoMipChain)
     {
-        const interstice::uint2 size{ 1024, 1024 };
+        const tachyon::uint2 size{ 1024, 1024 };
         const auto pixels = Filled(size, 255);
-        const interstice::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
-        ASSERT_NE(page, interstice::TextureIndex::Invalid);
+        const tachyon::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
+        ASSERT_NE(page, tachyon::TextureIndex::Invalid);
 
-        auto* image = static_cast<interstice::vulkan::VulkanImage*>(atlas.fontTextures[uint32_t(page) - 1].image);
+        auto* image = static_cast<tachyon::vulkan::VulkanImage*>(atlas.fontTextures[uint32_t(page) - 1].image);
         VmaAllocationInfo info{};
         vmaGetAllocationInfo(vk->deviceContext.allocator, image->allocation, &info);
         EXPECT_LT(info.size, VkDeviceSize(size.x) * size.y * 4 * 6 / 5)
@@ -275,10 +275,10 @@ namespace
     // next frame. Holding the queue lock proves it doesn't submit on its own.
     TEST_F(GpuTextAtlasTest, UpdatesDoNotWaitForTheGpu)
     {
-        const interstice::uint2 size{ 256, 256 };
+        const tachyon::uint2 size{ 256, 256 };
         const auto pixels = Filled(size, 255);
-        const interstice::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
-        ASSERT_NE(page, interstice::TextureIndex::Invalid);
+        const tachyon::TextureIndex page = atlas.CreateTexture(pixels.data(), size, 4);
+        ASSERT_NE(page, tachyon::TextureIndex::Invalid);
 
         std::atomic<bool> updated = false;
         std::thread updater;
@@ -300,23 +300,23 @@ namespace
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
-        const interstice::uint2 size{ 64, 64 };
+        const tachyon::uint2 size{ 64, 64 };
         const auto black = Filled(size, 0);
         const auto white = Filled(size, 255);
-        const interstice::TextureIndex page = atlas.CreateTexture(black.data(), size, 4);
+        const tachyon::TextureIndex page = atlas.CreateTexture(black.data(), size, 4);
         atlas.UpdateTexture(page, white.data(), size);
-        const interstice::ImageIndex imageIndex = atlas.GetImageIndex(page);
+        const tachyon::ImageIndex imageIndex = atlas.GetImageIndex(page);
         atlas.SyncTextureIndices();
-        const interstice::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
-            interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 },
-                                    interstice::ColorType::StretchedTexture));
+        const tachyon::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
+            tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 }, tachyon::color4b{ 255, 255, 255, 255 },
+                                    tachyon::ColorType::StretchedTexture));
         sink.Clear();
 
         for (int frame = 0; frame < 2; ++frame)
         {
             graphicsContext->BeginFrame();
-            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-                r->RenderQuad(interstice::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
+            RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+                r->RenderQuad(tachyon::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
             });
         }
 
@@ -330,16 +330,16 @@ namespace
     // upload (and its mipmaps) is recorded into the next frame.
     TEST_F(GpuReadbackTest, ImageUploadsDoNotWaitForTheGpu)
     {
-        const interstice::uint2 size{ 256, 256 };
+        const tachyon::uint2 size{ 256, 256 };
         std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4, 255);
 
-        std::atomic<interstice::Image*> image = nullptr;
+        std::atomic<tachyon::Image*> image = nullptr;
         std::thread creator;
         {
             auto queueLock = vk->deviceContext.LockQueue();
             creator = std::thread([&] {
-                image = graphicsContext->CreateImage(pixels.data(), size, interstice::ImageFormat::R8G8B8A8,
-                                                     interstice::Sampler::LinearRepeat, true);
+                image = graphicsContext->CreateImage(pixels.data(), size, tachyon::ImageFormat::R8G8B8A8,
+                                                     tachyon::Sampler::LinearRepeat, true);
             });
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
             EXPECT_NE(image.load(), nullptr) << "creating the image waited on the queue";
@@ -357,29 +357,29 @@ namespace
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
-        const interstice::uint2 size{ 64, 64 };
+        const tachyon::uint2 size{ 64, 64 };
         std::vector<uint8_t> pixels(size_t(size.x) * size.y * 4, 255);
-        interstice::Image* image = graphicsContext->CreateImage(pixels.data(), size, interstice::ImageFormat::R8G8B8A8,
-                                                         interstice::Sampler::LinearRepeat, true);
+        tachyon::Image* image = graphicsContext->CreateImage(pixels.data(), size, tachyon::ImageFormat::R8G8B8A8,
+                                                         tachyon::Sampler::LinearRepeat, true);
         ASSERT_NE(image, nullptr);
-        const interstice::ImageIndex imageIndex = graphicsContext->RegisterImage(image);
-        const interstice::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
-            interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }, interstice::color4b{ 255, 255, 255, 255 },
-                                    interstice::ColorType::StretchedTexture));
+        const tachyon::ImageIndex imageIndex = graphicsContext->RegisterImage(image);
+        const tachyon::VisualColorStyleIndex textured = styleManager.RegisterColorStyle(
+            tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 }, tachyon::color4b{ 255, 255, 255, 255 },
+                                    tachyon::ColorType::StretchedTexture));
         sink.Clear();
 
         for (int frame = 0; frame < 2; ++frame)
         {
             graphicsContext->BeginFrame();
-            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-                r->RenderQuad(interstice::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
+            RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+                r->RenderQuad(tachyon::IntRect{ 40, 40, 80, 80 }, kFullClip, textured, 0.0f, imageIndex);
             });
         }
 
         EXPECT_NE(PixelAt(ctx, 80, 80), PixelAt(ctx, 200, 200)) << "the image's pixels never reached the screen";
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
         graphicsContext->UnregisterImage(imageIndex);
-        vk->deviceContext.DestroyImageAtEnd(image, interstice::DeviceScope::Frame);
+        vk->deviceContext.DestroyImageAtEnd(image, tachyon::DeviceScope::Frame);
     }
 
     // ---- Borders under a fractional scale (HiDPI, node-view zoom) ----
@@ -392,18 +392,18 @@ namespace
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
-        interstice::Style style{};
-        style.borderWidths = interstice::BoxEdges(1);
-        style.borderRadius = interstice::BoxCorners(6);
-        for (int i = 0; i < interstice::Style::kStateCount; ++i)
+        tachyon::Style style{};
+        style.borderWidths = tachyon::BoxEdges(1);
+        style.borderRadius = tachyon::BoxCorners(6);
+        for (int i = 0; i < tachyon::Style::kStateCount; ++i)
         {
-            style.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 239, 106, 106, 46 });
-            style.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 42, 47, 57, 255 }));
+            style.states[i].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 239, 106, 106, 46 });
+            style.states[i].SetBorderColor(tachyon::ColorStyle::Create(tachyon::color4b{ 42, 47, 57, 255 }));
         }
-        const interstice::VisualBoxStyleIndex box = styleManager.Register(style).visualBoxStyleIndex;
+        const tachyon::VisualBoxStyleIndex box = styleManager.Register(style).visualBoxStyleIndex;
         constexpr int kX = 20, kY = 20, kW = 80, kH = 40;
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderBox(interstice::IntRect{ kX, kY, kW, kH }, kFullClip, box);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderBox(tachyon::IntRect{ kX, kY, kW, kH }, kFullClip, box);
         });
 
         // Redness: red over the other channels (BGRA8).
@@ -426,8 +426,8 @@ namespace
         RegisterColorStyles();
 
         constexpr int kX = 100, kY = 60, kW = 120, kH = 120, kBlur = 16;
-        RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-            r->RenderShadow(interstice::IntRect{ kX, kY, kW, kH }, kFullClip, solidColor, 6.0f, kBlur);
+        RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+            r->RenderShadow(tachyon::IntRect{ kX, kY, kW, kH }, kFullClip, solidColor, 6.0f, kBlur);
         });
 
         auto level = [&](int x) { return int((PixelAt(ctx, x, kY + kH / 2) >> 8) & 0xFF); }; // green
@@ -454,22 +454,22 @@ namespace
 
         // Shaped like a node: rounded box with a 1-unit border, and a header just
         // inside it with a rounded top and a bottom separator.
-        interstice::Style nodeStyle{};
-        nodeStyle.borderWidths = interstice::BoxEdges(1);
-        nodeStyle.borderRadius = interstice::BoxCorners(6);
-        interstice::Style headerStyle{};
-        headerStyle.borderWidths = interstice::BoxEdges(0);
+        tachyon::Style nodeStyle{};
+        nodeStyle.borderWidths = tachyon::BoxEdges(1);
+        nodeStyle.borderRadius = tachyon::BoxCorners(6);
+        tachyon::Style headerStyle{};
+        headerStyle.borderWidths = tachyon::BoxEdges(0);
         headerStyle.borderWidths.bottom = 1;
-        headerStyle.borderRadius = interstice::BoxCorners(5, 5, 0, 0);
-        for (int i = 0; i < interstice::Style::kStateCount; ++i)
+        headerStyle.borderRadius = tachyon::BoxCorners(5, 5, 0, 0);
+        for (int i = 0; i < tachyon::Style::kStateCount; ++i)
         {
-            nodeStyle.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 0, 0, 0, 255 });
-            nodeStyle.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
-            headerStyle.states[i].backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 });
-            headerStyle.states[i].SetBorderColor(interstice::ColorStyle::Create(interstice::color4b{ 0, 0, 255, 255 }));
+            nodeStyle.states[i].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 0, 255 });
+            nodeStyle.states[i].SetBorderColor(tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 }));
+            headerStyle.states[i].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 255, 0, 0, 255 });
+            headerStyle.states[i].SetBorderColor(tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 255, 255 }));
         }
-        const interstice::VisualBoxStyleIndex node   = styleManager.Register(nodeStyle).visualBoxStyleIndex;
-        const interstice::VisualBoxStyleIndex header = styleManager.Register(headerStyle).visualBoxStyleIndex;
+        const tachyon::VisualBoxStyleIndex node   = styleManager.Register(nodeStyle).visualBoxStyleIndex;
+        const tachyon::VisualBoxStyleIndex header = styleManager.Register(headerStyle).visualBoxStyleIndex;
 
         // Pan offsets in fractions of a unit put the edges at every sub-pixel phase.
         constexpr int kCases = 6;
@@ -479,17 +479,17 @@ namespace
         {
             const float pan = float(c) / float(kCases);
             // Snapped the way the render pass does: the node absolutely, the header to the node.
-            auto toPx = [&](interstice::IntRect r) {
-                return interstice::float4{ (r.x + pan) * kScale, (r.y + pan) * kScale,
+            auto toPx = [&](tachyon::IntRect r) {
+                return tachyon::float4{ (r.x + pan) * kScale, (r.y + pan) * kScale,
                                     (r.x + r.w + pan) * kScale, (r.y + r.h + pan) * kScale };
             };
-            const interstice::IntRect nodeRect{ kX, kY, kW, kH }, headerRect{ kX + 1, kY + 1, kW - 2, 14 };
-            const interstice::IntRect nodeSnapped   = interstice::SnapAbsolute(toPx(nodeRect));
-            const interstice::IntRect headerSnapped = interstice::SnapToParent(toPx(nodeRect), nodeSnapped, toPx(headerRect));
-            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-                r->SetTransform(interstice::float3x2::Scale(kScale) * interstice::float3x2::Translate(pan, pan));
-                r->RenderBox(nodeRect,   kFullClip, node,   interstice::VisualColorStyleIndex{}, interstice::ImageIndex::Invalid, nodeSnapped);
-                r->RenderBox(headerRect, kFullClip, header, interstice::VisualColorStyleIndex{}, interstice::ImageIndex::Invalid, headerSnapped);
+            const tachyon::IntRect nodeRect{ kX, kY, kW, kH }, headerRect{ kX + 1, kY + 1, kW - 2, 14 };
+            const tachyon::IntRect nodeSnapped   = tachyon::SnapAbsolute(toPx(nodeRect));
+            const tachyon::IntRect headerSnapped = tachyon::SnapToParent(toPx(nodeRect), nodeSnapped, toPx(headerRect));
+            RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+                r->SetTransform(tachyon::float3x2::Scale(kScale) * tachyon::float3x2::Translate(pan, pan));
+                r->RenderBox(nodeRect,   kFullClip, node,   tachyon::VisualColorStyleIndex{}, tachyon::ImageIndex::Invalid, nodeSnapped);
+                r->RenderBox(headerRect, kFullClip, header, tachyon::VisualColorStyleIndex{}, tachyon::ImageIndex::Invalid, headerSnapped);
             });
 
             auto isBorder = [](uint32_t p) { return ((p >> 16) & 0xFF) > 150 && ((p >> 8) & 0xFF) > 150; };
@@ -530,7 +530,7 @@ namespace
             EXPECT_TRUE(reachedHeader) << "scale " << kScale << " pan " << pan << column;
             EXPECT_FALSE(sawGap) << "background between the top border and the header, scale " << kScale << " pan " << pan << column;
             // A 1-unit border is the same whole number of pixels everywhere.
-            const int expected = std::max(1, interstice::SnapPx(kScale));
+            const int expected = std::max(1, tachyon::SnapPx(kScale));
             EXPECT_EQ(topBorderRows, expected) << "top border, scale " << kScale << " pan " << pan << column;
             EXPECT_EQ(sideBorderCols, expected) << "side border, scale " << kScale << " pan " << pan;
         }
@@ -542,11 +542,11 @@ namespace
     TEST_F(GpuReadbackTest, ImageTargetReceivesTheWindowsFrames)
     {
         auto& dc = vk->deviceContext;
-        interstice::ID id{};
-        id.value.dynamicParts.mode      = interstice::IDMode::Static;
+        tachyon::ID id{};
+        id.value.dynamicParts.mode      = tachyon::IDMode::Static;
         id.value.dynamicParts.hashValue = 9300;
-        auto* ctx = static_cast<interstice::vulkan::VulkanWindowContext*>(graphicsContext->CreateWindowContext(
-            nullptr, nullptr, id, kSize, interstice::WindowFlags::RenderToImage, [] {}));
+        auto* ctx = static_cast<tachyon::vulkan::VulkanWindowContext*>(graphicsContext->CreateWindowContext(
+            nullptr, nullptr, id, kSize, tachyon::WindowFlags::RenderToImage, [] {}));
         if (ctx == nullptr)
             GTEST_SKIP() << "no Vulkan device available";
 
@@ -569,15 +569,15 @@ namespace
         RegisterColorStyles();
         sink.Clear();
         for (int i = 0; i < 3; ++i)
-            RenderFrame(ctx, [&](interstice::GUIRenderer* r) {
-                r->RenderQuad(interstice::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor, 0.0f);
+            RenderFrame(ctx, [&](tachyon::GUIRenderer* r) {
+                r->RenderQuad(tachyon::IntRect{ 0, 0, kSize.x / 2, kSize.y }, kFullClip, solidColor, 0.0f);
             });
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
         // Read the target back as a host would: after the GUI's frame, out of
         // SHADER_READ_ONLY and back into it.
         const size_t bytes = size_t(kSize.x) * kSize.y * 4;
-        interstice::vulkan::Buffer readback = dc.CreateBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
+        tachyon::vulkan::Buffer readback = dc.CreateBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
         VkCommandBuffer cmd = dc.immCommandBuffer;
         ASSERT_EQ(vkResetFences(dc.device, 1, &dc.immFence), VK_SUCCESS);
         ASSERT_EQ(vkResetCommandBuffer(cmd, 0), VK_SUCCESS);
@@ -624,14 +624,14 @@ namespace
             auto lock = dc.LockQueue();
             ASSERT_EQ(vkQueueSubmit2(dc.graphicsQueue, 1, &submit, dc.immFence), VK_SUCCESS);
         }
-        interstice::vulkan::WaitForFence(dc.device, dc.immFence);
+        tachyon::vulkan::WaitForFence(dc.device, dc.immFence);
         EXPECT_FALSE(sink.HasErrors()) << sink.Dump();
 
         vmaInvalidateAllocation(dc.allocator, readback.allocation, 0, VK_WHOLE_SIZE);
         void* mapped = nullptr;
         vmaMapMemory(dc.allocator, readback.allocation, &mapped);
         const auto* rgba = static_cast<const uint8_t*>(mapped);
-        for (const interstice::int2 p : { interstice::int2{ kSize.x / 4, kSize.y / 2 }, interstice::int2{ kSize.x * 3 / 4, kSize.y / 2 } })
+        for (const tachyon::int2 p : { tachyon::int2{ kSize.x / 4, kSize.y / 2 }, tachyon::int2{ kSize.x * 3 / 4, kSize.y / 2 } })
         {
             const size_t off = (size_t(p.y) * kSize.x + size_t(p.x)) * 4;
             EXPECT_EQ(rgba[off + 0], framePixels[off + 2]) << "red at " << p.x;

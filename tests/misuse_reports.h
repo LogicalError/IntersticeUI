@@ -16,10 +16,10 @@ namespace GUITest
     public:
         MisuseReports()
         {
-            interstice::Diagnostics::ResetMisuseReports();
-            interstice::Diagnostics::AddLogSink(&Sink, this);
+            tachyon::Diagnostics::ResetMisuseReports();
+            tachyon::Diagnostics::AddLogSink(&Sink, this);
         }
-        ~MisuseReports() { interstice::Diagnostics::RemoveLogSink(&Sink, this); }
+        ~MisuseReports() { tachyon::Diagnostics::RemoveLogSink(&Sink, this); }
         MisuseReports(const MisuseReports&) = delete;
         MisuseReports& operator=(const MisuseReports&) = delete;
 
@@ -38,15 +38,15 @@ namespace GUITest
                 all += message + "\n";
             return all;
         }
-        void Clear() { m_messages.clear(); interstice::Diagnostics::ResetMisuseReports(); }
+        void Clear() { m_messages.clear(); tachyon::Diagnostics::ResetMisuseReports(); }
 
     private:
-        static void Sink(const interstice::Diagnostics::LogRecord& record, void* context)
+        static void Sink(const tachyon::Diagnostics::LogRecord& record, void* context)
         {
-            if (record.severity < interstice::Diagnostics::LogSeverity::Error)
+            if (record.severity < tachyon::Diagnostics::LogSeverity::Error)
                 return;
             char text[512];
-            const size_t length = interstice::Diagnostics::FormatLogMessage(record, text);
+            const size_t length = tachyon::Diagnostics::FormatLogMessage(record, text);
             static_cast<MisuseReports*>(context)->m_messages.emplace_back(text, length);
         }
 

@@ -13,24 +13,24 @@
 namespace
 {
     // A render-to-image window with a button.
-    class NullBackendApp : public interstice::GUIApplicationInternals
+    class NullBackendApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID windowID = interstice::ID::Invalid();
-        interstice::ID buttonID = interstice::ID::Invalid();
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID buttonID = tachyon::ID::Invalid();
         int     clicks = 0;
         int     frame  = 0;
         int     frames = 3;
-        interstice::int2 buttonCenter{ 0, 0 };   // after last frame's layout
+        tachyon::int2 buttonCenter{ 0, 0 };   // after last frame's layout
         std::function<void(int)> script;
 
         void OnGUI() override
         {
             if (script) script(frame);
-            if (BeginWindow(windowID, "Null", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Null", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
             {
-                BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
+                BeginVertical(tachyon::LayoutOverride{}.FlexGrow(1));
                 Button(buttonID, "Click", [this] { ++clicks; });
                 EndVertical();
             }
@@ -41,17 +41,17 @@ namespace
 
         bool Start()
         {
-            SetGraphicsBackend(std::make_unique<interstice::NullGraphicsContext>());
-            SetWindowBackend(std::make_unique<interstice::NullWindowBackend>());
+            SetGraphicsBackend(std::make_unique<tachyon::NullGraphicsContext>());
+            SetWindowBackend(std::make_unique<tachyon::NullWindowBackend>());
             if (!Initialize())
                 return false;
             windowID = idManager.CreateStaticID();
             buttonID = idManager.CreateStaticID();
-            m_frame.OnPostLayout([this](interstice::FrameContext&)
+            m_frame.OnPostLayout([this](tachyon::FrameContext&)
             {
-                const interstice::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
+                const tachyon::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
                 if (!ref.IsValid()) return;
-                const interstice::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
+                const tachyon::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
                 buttonCenter = { r.x + r.w / 2, r.y + r.h / 2 };
             });
             return true;
@@ -62,7 +62,7 @@ namespace
     {
         NullBackendApp app;
         ASSERT_TRUE(app.Start());
-        EXPECT_EQ(app.graphicsContext->GetAPI(), interstice::GraphicsAPI::None);
+        EXPECT_EQ(app.graphicsContext->GetAPI(), tachyon::GraphicsAPI::None);
         EXPECT_TRUE(app.Run());
         EXPECT_EQ(app.frame, app.frames);
         EXPECT_NE(app.windowManager->GetWindowHandle(app.windowID), nullptr) << "the window exists";
@@ -78,12 +78,12 @@ namespace
         app.frames = 7;
         app.script = [&](int frame)
         {
-            const interstice::int2 center = app.buttonCenter;
+            const tachyon::int2 center = app.buttonCenter;
             switch (frame)
             {
                 case 2: app.InjectMouseMove(app.windowID, center); break;
-                case 3: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, true); break;
-                case 4: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, false); break;
+                case 3: app.InjectMouseButton(app.windowID, center, tachyon::MouseButtons::Left, true); break;
+                case 4: app.InjectMouseButton(app.windowID, center, tachyon::MouseButtons::Left, false); break;
                 case 5: app.InjectMouseLeave(app.windowID); break;
                 default: break;
             }
@@ -97,8 +97,8 @@ namespace
     TEST(NullBackends, UsesTheHostsWindowBackendAndClipboard)
     {
         NullBackendApp app;
-        auto clipboard = std::make_unique<interstice::LocalClipboard>();
-        interstice::IClipboard* hostClipboard = clipboard.get();
+        auto clipboard = std::make_unique<tachyon::LocalClipboard>();
+        tachyon::IClipboard* hostClipboard = clipboard.get();
         app.SetClipboard(std::move(clipboard));
         ASSERT_TRUE(app.Start());
         EXPECT_EQ(app.clipboard.get(), hostClipboard);
@@ -107,10 +107,10 @@ namespace
         EXPECT_EQ(app.clipboard->Get(), "pasted");
 
         // A window that isn't render-to-image is one of the backend's windows.
-        const interstice::OSWindowHandle window = app.windowBackend->CreateWindow("os", interstice::int2{ 300, 200 },
-                                                                                  interstice::WindowFlags::None, nullptr);
+        const tachyon::OSWindowHandle window = app.windowBackend->CreateWindow("os", tachyon::int2{ 300, 200 },
+                                                                                  tachyon::WindowFlags::None, nullptr);
         ASSERT_NE(window, nullptr);
-        EXPECT_EQ(app.windowBackend->GetWindowSize(window), (interstice::int2{ 300, 200 }));
+        EXPECT_EQ(app.windowBackend->GetWindowSize(window), (tachyon::int2{ 300, 200 }));
         EXPECT_TRUE(app.windowBackend->DestroyWindow(window));
         app.Cleanup();
         EXPECT_EQ(app.clipboard, nullptr) << "Cleanup releases the clipboard";

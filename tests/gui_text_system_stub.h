@@ -14,7 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace interstice
+namespace tachyon
 {
     /// Stub implementation of ITextSystem for testing without platform dependencies
     class StubTextSystem : public ITextSystem
@@ -72,7 +72,7 @@ namespace interstice
 
         // -------------------- Text Registration --------------------
 
-        TextID RegisterText(ID elementId, IconID /*iconId*/, std::string_view text, interstice::StyleRef styleIndex, interstice::ElementState state) override
+        TextID RegisterText(ID elementId, IconID /*iconId*/, std::string_view text, tachyon::StyleRef styleIndex, tachyon::ElementState state) override
         {
             uint64_t key = Hash::Combine(Hash::Calculate(elementId), Hash::Calculate(text), Hash::Calculate(styleIndex));
             
@@ -97,7 +97,7 @@ namespace interstice
             return textId;
         }
 
-        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified,
+        TextID RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, tachyon::StyleRef styleIndex, tachyon::ElementState state, bool& wasModified,
                                     const ITextValidator* /*validator*/ = nullptr) override
         {
             m_editableElementIds.insert(elementId);
@@ -339,17 +339,17 @@ namespace interstice
         {
         }
 
-        bool IsHoveringSelectedText(ID /*textEditorId*/, ID /*windowId*/, interstice::int2 /*screenSpace*/) const override
+        bool IsHoveringSelectedText(ID /*textEditorId*/, ID /*windowId*/, tachyon::int2 /*screenSpace*/) const override
         {
             return false;
         }
 
-        bool TryGetTextDragCursor(ID /*windowId*/, interstice::int2 /*screenSpace*/, MouseCursor& /*outCursor*/) const override
+        bool TryGetTextDragCursor(ID /*windowId*/, tachyon::int2 /*screenSpace*/, MouseCursor& /*outCursor*/) const override
         {
             return false;
         }
 
-        bool TryGetTextDragHoverTarget(ID /*windowId*/, interstice::int2 /*screenSpace*/, ID& /*outTargetId*/) const override
+        bool TryGetTextDragHoverTarget(ID /*windowId*/, tachyon::int2 /*screenSpace*/, ID& /*outTargetId*/) const override
         {
             return false;
         }
@@ -408,7 +408,7 @@ namespace interstice
         }
 
 
-        TextMeasurement MeasureTextInternal(std::string_view text, const interstice::StyleRef /*styleIndex*/,
+        TextMeasurement MeasureTextInternal(std::string_view text, const tachyon::StyleRef /*styleIndex*/,
                                             int32_t maxWidth = INT32_MAX) const
         {
             int32_t charWidth = m_defaultCharWidth;
@@ -439,8 +439,8 @@ namespace interstice
         {
             ID elementId;
             std::string text;
-            interstice::StyleRef styleIndex;
-            interstice::ElementState state;
+            tachyon::StyleRef styleIndex;
+            tachyon::ElementState state;
             TextMeasurement baseMeasurement;
 
             uint64_t GetHashCode() const
@@ -448,7 +448,7 @@ namespace interstice
                 return GetHashCode(elementId, text, styleIndex, state);
             }
 
-            static uint64_t GetHashCode(ID elementId, std::string_view text, StyleRef styleIndex, interstice::ElementState state)
+            static uint64_t GetHashCode(ID elementId, std::string_view text, StyleRef styleIndex, tachyon::ElementState state)
             {
                 return Hash::Combine(Hash::Calculate(elementId), Hash::Calculate(text),
                                      Hash::Calculate(styleIndex), Hash::Calculate(state));
@@ -479,4 +479,4 @@ namespace interstice
         int32_t  m_defaultIconSize;
     };
 
-} // namespace interstice
+} // namespace tachyon

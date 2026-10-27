@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <type_traits>
 
-namespace interstice
+namespace tachyon
 {
     /// Drag speed and range of a numeric Field, specialized per value type. Typed and
     /// dragged values are clamped to [minVal, maxVal].

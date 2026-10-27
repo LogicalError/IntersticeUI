@@ -8,7 +8,7 @@
 #include <span>
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     class Image;
     class GraphicsContext;
@@ -144,7 +144,7 @@ namespace interstice
 
         /// The GPU image of a page, created or re-uploaded as needed; nullptr when
         /// `pageIndex` is out of range.
-        interstice::Image* GetGradientImage(GraphicsContext* graphicsContext, uint32_t pageIndex = 0);
+        tachyon::Image* GetGradientImage(GraphicsContext* graphicsContext, uint32_t pageIndex = 0);
 
     private:
         struct Slot

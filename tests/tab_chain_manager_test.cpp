@@ -3,7 +3,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_core/gui_id_manager.h>
 
-using namespace interstice;
+using namespace tachyon;
 using namespace testing;
 
 class TabChainManagerTest : public ::testing::Test

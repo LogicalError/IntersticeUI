@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <assert.h>
 
-namespace interstice
+namespace tachyon
 {
 
     MenuManager::Level& MenuManager::GetOrCreateNextLevel(IDManager& idManager)
@@ -146,7 +146,7 @@ namespace interstice
                 if (!ref.IsValid()) continue;
                 const auto& rect = elementStorage.GetElementRectUnsafe(ref);
                 auto scrollHandle = scrollManagement.GetScrollOffsetHandle(level.windowID);
-                int2 offset = (scrollHandle != interstice::ScrollOffsetHandle::Invalid)
+                int2 offset = (scrollHandle != tachyon::ScrollOffsetHandle::Invalid)
                     ? scrollManagement.GetScrollOffset(scrollHandle) : int2{ 0,0 };
                 level.canScrollUp = (offset.y < 0);
                 level.canScrollDown = (rect.contentBounds.h > rect.innerRect.h) &&
@@ -523,4 +523,4 @@ namespace interstice
         return MakeMenuHandler(idManager, guiStateManager, elementStorage, menuManager, depth, true, nullptr);
     }
 
-} // namespace interstice
+} // namespace tachyon

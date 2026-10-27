@@ -10,7 +10,7 @@
 // NodeView owns nodes, pan/zoom, z-order and drag state. Nothing is global.
 //
 
-namespace interstice
+namespace tachyon
 {
 
     namespace
@@ -29,7 +29,7 @@ namespace interstice
         }
 
         // Pack a colour to an 8-bit-per-channel key, for the wire-colour cache.
-        uint32_t PackColor(const interstice::color4f& c)
+        uint32_t PackColor(const tachyon::color4f& c)
         {
             auto q = [](float f) -> uint32_t
             {
@@ -137,14 +137,14 @@ namespace interstice
 
         // ---- Canvas: pan/zoom + focus capture. Everything below renders as
         //      children of this element under the view's content transform.
-        interstice::Element canvas
+        tachyon::Element canvas
         {
             .id = canvasID,
             .eventHandler = [this, &view, canvasID, wireMenuID](ElementEvent&& event)->bool
             {
                 switch (event.type)
                 {
-                    case interstice::EventType::MouseDown:
+                    case tachyon::EventType::MouseDown:
                     {
                         // A middle click removes the wire under the mouse.
                         if (event.state.MiddlePressed() && view.hoveredWire)
@@ -173,12 +173,12 @@ namespace interstice
                         }
                         return true;
                     }
-                    case interstice::EventType::MouseMove:
+                    case tachyon::EventType::MouseMove:
                     {
                         if (event.state.RightDown())
                         {
                             this->guiStateManager.Interaction().SetFocusID(canvasID);
-                            interstice::float3x2 translate = interstice::float3x2::Translate(event.state.screenDelta);
+                            tachyon::float3x2 translate = tachyon::float3x2::Translate(event.state.screenDelta);
                             view.transform = translate * view.transform;
                             return true;
                         }
@@ -225,7 +225,7 @@ namespace interstice
                         }
                         return false;
                     }
-                    case interstice::EventType::MouseUp:
+                    case tachyon::EventType::MouseUp:
                     {
                         // A right click (not a pan) on a wire offers to delete it.
                         if (event.state.RightReleased() && view.hoveredWire)
@@ -252,7 +252,7 @@ namespace interstice
                         }
                         return false;
                     }
-                    case interstice::EventType::MouseScroll:
+                    case tachyon::EventType::MouseScroll:
                     {
                         if (event.state.scroll.y == 0) return false;
                         this->guiStateManager.Interaction().SetFocusID(canvasID);
@@ -264,9 +264,9 @@ namespace interstice
                                      - int2{ innerSize.x / 2, innerSize.y / 2 });
                         return true;
                     }
-                    case interstice::EventType::KeyDown:
+                    case tachyon::EventType::KeyDown:
                     {
-                        if (event.state.lastKey != interstice::KeyCode::Home || view.nodes.empty())
+                        if (event.state.lastKey != tachyon::KeyCode::Home || view.nodes.empty())
                             return false;
 
                         // Home = frame all nodes.
@@ -284,8 +284,8 @@ namespace interstice
 
         auto canvasRes = elementStorage.Add(std::move(canvas), LayoutOverride{}.Auto());
         VERIFY(canvasRes.status);
-        const interstice::float3x2 effective =
-            interstice::float3x2::Translate(interstice::float2{ (float)(view.lastInnerSize.x / 2),
+        const tachyon::float3x2 effective =
+            tachyon::float3x2::Translate(tachyon::float2{ (float)(view.lastInnerSize.x / 2),
                                                   (float)(view.lastInnerSize.y / 2) })
             * view.transform;
         elementStorage.SetContentTransform(canvasRes.ref, effective);
@@ -316,7 +316,7 @@ namespace interstice
                 const uint32_t ckey = PackColor(cprop.socketColor);
                 if (view.wireColorStyles.find(ckey) == view.wireColorStyles.end())
                     view.wireColorStyles[ckey] =
-                        styleManager.RegisterColorStyle(interstice::ColorStyle::Create(cprop.socketColor));
+                        styleManager.RegisterColorStyle(tachyon::ColorStyle::Create(cprop.socketColor));
             }
 
         // Socket box size, from the .node-socket CSS width; dot and border insets derive from it.
@@ -467,7 +467,7 @@ namespace interstice
             //  - INPUT, mid-drag: while the drag hovers it and the connection is allowed
             //    (IsDropTargetFor is live; GetDropTargetID is only set on release).
             //  - INPUT, at rest: on hover when it has a connection to drag out.
-            const interstice::color4f dotColor = view.nodes[n].properties[propIdx].socketColor;
+            const tachyon::color4f dotColor = view.nodes[n].properties[propIdx].socketColor;
             const bool hovered = (guiStateManager.GetCurrentState(sockID) & ElementState::Hover) != ElementState::None;
             bool highlight;
             if (isOutput)
@@ -493,15 +493,15 @@ namespace interstice
             VERIFY(elementStorage.AddCustomDraw(res.ref,
                 [dotColor, highlight, connected, kSocketSize, nodeColor = theme.GetColor("--bg-raised"),
                  inset = styleManager.Px(2.0f), ring = styleManager.Px(2.0f), halo = styleManager.Px(6.0f),
-                 grow = styleManager.Px(1.0f)](interstice::CustomDrawContext& ctx)
+                 grow = styleManager.Px(1.0f)](tachyon::CustomDrawContext& ctx)
                 {
                     const auto inner = ctx.ElementInnerRect();
                     // Socket centre. Rows are two grid cells tall and the socket is
                     // centred in the row, so this lands on the mid-row grid line.
-                    const interstice::float2 center{ inner.w * 0.5f, inner.h * 0.5f };
+                    const tachyon::float2 center{ inner.w * 0.5f, inner.h * 0.5f };
                     const float pin = (highlight ? grow : 0.0f) + (float)kSocketSize - inset;
                     if (highlight)   // soft white halo behind the pin
-                        ctx.RenderDot(center, pin + halo, interstice::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
+                        ctx.RenderDot(center, pin + halo, tachyon::color4f{ 1.0f, 1.0f, 1.0f, 0.5f });
                     else
                         ctx.RenderDot(center, pin + 2.0f * ring, nodeColor);
                     ctx.RenderDot(center, pin, dotColor);
@@ -521,7 +521,7 @@ namespace interstice
         int32_t socketInsetR = kSocketSize / 2;
         // .node bottom chrome; the last row gives it back so the bottom lands on the grid.
         int32_t nodeBottomChromeV = 0;
-        if (const interstice::LayoutStyle* nodeLS = styleManager.GetLayoutStyle(theme.nodeStyleRef.layoutStyleIndex))
+        if (const tachyon::LayoutStyle* nodeLS = styleManager.GetLayoutStyle(theme.nodeStyleRef.layoutStyleIndex))
         {
             nodeTopChromeV    = nodeLS->borderWidths.top + nodeLS->padding.top;
             nodeBottomChromeV = nodeLS->borderWidths.bottom + nodeLS->padding.bottom;
@@ -587,8 +587,8 @@ namespace interstice
                                 if (!event.state.LeftDown()) return false;
                                 if (!(view.wireDrag.active && view.wireDrag.wireKey == wireKey &&
                                       view.wireDrag.role == role)) return false;
-                                const interstice::float2 d = view.transform.Inverse().TransformVector(
-                                    interstice::float2{ (float)(event.state.screenPos.x - view.wireDrag.startScreen.x),
+                                const tachyon::float2 d = view.transform.Inverse().TransformVector(
+                                    tachyon::float2{ (float)(event.state.screenPos.x - view.wireDrag.startScreen.x),
                                                  (float)(event.state.screenPos.y - view.wireDrag.startScreen.y) });
                                 const int32_t newVal = view.wireDrag.startValue +
                                     (vertical ? (int32_t)d.x : (int32_t)d.y);
@@ -787,7 +787,7 @@ namespace interstice
 
             // Cache the node's laid-out size for marquee hit-testing.
             VERIFY(elementStorage.AddPostLayout(outerRes.ref,
-                [&view, n](interstice::PostLayoutContext& ctx)
+                [&view, n](tachyon::PostLayoutContext& ctx)
                 {
                     view.nodes[n].lastSize = ctx.ElementRect().size;
                 }));
@@ -818,7 +818,7 @@ namespace interstice
             VERIFY(elementStorage.BeginChildren());
             {
                 auto addHeaderPart = [&](const char* name, StyleRef style, std::string_view text,
-                                         interstice::VisualColorStyleIndex color)
+                                         tachyon::VisualColorStyleIndex color)
                 {
                     const ID partID = idManager.AllocateDynamicID(name);
                     Element part{ .id = partID, .styleRef = style, .flags = ElementFlags::NoInput, .state = outerState };
@@ -830,9 +830,9 @@ namespace interstice
                     VERIFY(windowRegistry.Add(res.ref));
                 };
                 // Alpha 0 keeps the CSS default (the accent).
-                const interstice::VisualColorStyleIndex categoryColor = node.categoryColor.a > 0.0f
-                    ? styleManager.RegisterColorStyle(interstice::ColorStyle::Create(node.categoryColor))
-                    : interstice::VisualColorStyleIndex{};
+                const tachyon::VisualColorStyleIndex categoryColor = node.categoryColor.a > 0.0f
+                    ? styleManager.RegisterColorStyle(tachyon::ColorStyle::Create(node.categoryColor))
+                    : tachyon::VisualColorStyleIndex{};
                 addHeaderPart("node-category", theme.nodeCategoryStyleRef, {}, categoryColor);
                 addHeaderPart("node-title", theme.nodeTitleStyleRef, node.title, {});
                 if (!node.category.empty())
@@ -963,7 +963,7 @@ namespace interstice
         }
 
         VERIFY(elementStorage.AddPostLayout(canvasRes.ref,
-            [&view](interstice::PostLayoutContext& ctx)
+            [&view](tachyon::PostLayoutContext& ctx)
             {
                 view.lastInnerSize = ctx.ElementInnerRect().size;
             }));
@@ -976,32 +976,32 @@ namespace interstice
         VERIFY(elementStorage.AddCustomDraw(canvasRes.ref,
             [this, &view, socketRefs = std::move(socketRefs), nodeRefs = std::move(nodeRefs),
              canvasHovered = guiStateManager.Interaction().GetHoveredID() == canvasID,
-             handleHoveredWire, mouseScreen = windowManager->GetScreenMousePos()](interstice::CustomDrawContext& ctx)
+             handleHoveredWire, mouseScreen = windowManager->GetScreenMousePos()](tachyon::CustomDrawContext& ctx)
             {
                 // Nodes are positioned relative to the canvas BORDER box, but this draw's
                 // origin is the CONTENT box; offset the grid by the difference.
-                const interstice::int2 gridOrigin = ctx.ElementRect().position - ctx.ElementInnerRect().position;
+                const tachyon::int2 gridOrigin = ctx.ElementRect().position - ctx.ElementInnerRect().position;
 
                 // theme.nodeGridSize is the single pitch for node snap, wire snap and this
                 // grid. No subdivisions; density halves per zoom-out octave.
                 // Clamp to the content box: take the (window-local, pan/zoom-correct) ClipRect,
                 // deflate by the canvas chrome, and map into the current space.
-                const interstice::IntRect bbox = ctx.ElementRect();
-                const interstice::IntRect ibox = ctx.ElementInnerRect();
-                const interstice::IntRect clipWL = ctx.ClipRect();
-                const interstice::IntRect contentWL{
+                const tachyon::IntRect bbox = ctx.ElementRect();
+                const tachyon::IntRect ibox = ctx.ElementInnerRect();
+                const tachyon::IntRect clipWL = ctx.ClipRect();
+                const tachyon::IntRect contentWL{
                     clipWL.x + (ibox.Min(0) - bbox.Min(0)),
                     clipWL.y + (ibox.Min(1) - bbox.Min(1)),
                     clipWL.w - (ibox.Min(0) - bbox.Min(0)) - (bbox.Max(0) - ibox.Max(0)),
                     clipWL.h - (ibox.Min(1) - bbox.Min(1)) - (bbox.Max(1) - ibox.Max(1)) };
-                const interstice::float3x2 wlToCur = ctx.CurrentTransform().Inverse();
-                auto toCur = [&](interstice::int2 wl) {
-                    const interstice::float2 p = wlToCur.TransformPoint({ (float)wl.x, (float)wl.y });
-                    return interstice::int2{ (int)p.x, (int)p.y };
+                const tachyon::float3x2 wlToCur = ctx.CurrentTransform().Inverse();
+                auto toCur = [&](tachyon::int2 wl) {
+                    const tachyon::float2 p = wlToCur.TransformPoint({ (float)wl.x, (float)wl.y });
+                    return tachyon::int2{ (int)p.x, (int)p.y };
                 };
-                const interstice::int2 cc0 = toCur(contentWL.position);
-                const interstice::int2 cc1 = toCur({ contentWL.x + contentWL.w, contentWL.y + contentWL.h });
-                const interstice::IntRect content{
+                const tachyon::int2 cc0 = toCur(contentWL.position);
+                const tachyon::int2 cc1 = toCur({ contentWL.x + contentWL.w, contentWL.y + contentWL.h });
+                const tachyon::IntRect content{
                     std::min(cc0.x, cc1.x), std::min(cc0.y, cc1.y),
                     std::max(cc0.x, cc1.x) - std::min(cc0.x, cc1.x),
                     std::max(cc0.y, cc1.y) - std::min(cc0.y, cc1.y) };
@@ -1010,7 +1010,7 @@ namespace interstice
                                  styleManager.Px(2.0f), gridOrigin, content);
 
                 // Socket rects are laid out even for culled nodes. Local space = CANVAS_LAY.
-                auto socketCenter = [&](const ElementRef& ref) -> interstice::int2
+                auto socketCenter = [&](const ElementRef& ref) -> tachyon::int2
                 {
                     // Socket centre in CANVAS_LAY. Rows are two grid cells tall, so
                     // this sits on a grid line - wires run the lattice to the dot.
@@ -1019,7 +1019,7 @@ namespace interstice
 
                 // Node body rect, in the same CANVAS_LAY space as socketCenter,
                 // so the router can keep wires clear of the source/target bodies.
-                auto nodeRect = [&](int idx) -> interstice::IntRect
+                auto nodeRect = [&](int idx) -> tachyon::IntRect
                 {
                     return ctx.GetElementRect(nodeRefs[idx]);
                 };
@@ -1038,7 +1038,7 @@ namespace interstice
 
                 // Routed first, then hit-tested, then drawn, so the hovered wire draws highlighted.
                 std::vector<DrawnWire> drawn;
-                std::vector<interstice::VisualColorStyleIndex> drawnColors;
+                std::vector<tachyon::VisualColorStyleIndex> drawnColors;
 
                 const int nodeCount = (int)view.nodes.size();
                 for (int n = 0; n < nodeCount; ++n)
@@ -1084,9 +1084,9 @@ namespace interstice
                                                           nodeRect(src.nodeIdx), nodeRect(n),
                                                           theme.nodeGridSize, gridOrigin, ov);
                         // Wire takes its source socket's colour (style cached above).
-                        const interstice::color4f srcColor =
+                        const tachyon::color4f srcColor =
                             view.nodes[src.nodeIdx].properties[src.propIdx].socketColor;
-                        interstice::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
+                        tachyon::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
                         if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
                             wireColorIdx = cit->second;
                         drawn.push_back(DrawnWire{ .wireKey = wireKey, .points = route.points });
@@ -1119,7 +1119,7 @@ namespace interstice
                 for (size_t w = 0; w < drawn.size(); ++w)
                 {
                     const bool hovered = view.hoveredWire == drawn[w].wireKey;
-                    const interstice::LineStyle wireStyle{ .colorStyleIndex = drawnColors[w],
+                    const tachyon::LineStyle wireStyle{ .colorStyleIndex = drawnColors[w],
                                                            .lineWidth = styleManager.Px(hovered ? 4.f : 2.f) };
                     ctx.RenderPolyline(drawn[w].points, /*closed=*/false, wireStyle, 0.5f * float(theme.nodeGridSize));
                 }
@@ -1138,13 +1138,13 @@ namespace interstice
                             const int32_t grid = theme.nodeGridSize;
                             // currentScreen is a screen-space input; ScreenToCurrent brings it
                             // into CANVAS_LAY, snapped to the grid like a socket.
-                            interstice::int2 cursorLay = ctx.ScreenToCurrent(view.pendingConnection.currentScreen);
+                            tachyon::int2 cursorLay = ctx.ScreenToCurrent(view.pendingConnection.currentScreen);
                             if (grid > 0)
                                 cursorLay = { GridLineNearest(cursorLay.x, gridOrigin.x, grid),
                                               GridLineNearest(cursorLay.y, gridOrigin.y, grid) };
 
-                            std::optional<interstice::int2> inPt;
-                            interstice::IntRect tgtRect {};
+                            std::optional<tachyon::int2> inPt;
+                            tachyon::IntRect tgtRect {};
                             if (tgt.valid() && tgt.nodeIdx < (int)socketRefs.size())
                             {
                                 const auto& tgtRefs = socketRefs[tgt.nodeIdx];
@@ -1162,12 +1162,12 @@ namespace interstice
                             const auto route = BuildPendingWireRoute(socketCenter(srcRefs[srcOutIdx]), nodeRect(src.nodeIdx),
                                                                      cursorLay, inPt, tgtRect, grid, gridOrigin, lane);
 
-                            const interstice::color4f srcColor =
+                            const tachyon::color4f srcColor =
                                 view.nodes[src.nodeIdx].properties[src.propIdx].socketColor;
-                            interstice::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
+                            tachyon::VisualColorStyleIndex wireColorIdx = theme.lineYellowStyle;
                             if (auto cit = view.wireColorStyles.find(PackColor(srcColor)); cit != view.wireColorStyles.end())
                                 wireColorIdx = cit->second;
-                            const interstice::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f),
+                            const tachyon::LineStyle wireStyle{ .colorStyleIndex = wireColorIdx, .lineWidth = styleManager.Px(2.f),
                                                                    .dashSize = styleManager.Px(4.f) };
                             ctx.RenderPolyline(route.points, /*closed=*/false, wireStyle, 0.5f * float(grid));
                         }
@@ -1179,7 +1179,7 @@ namespace interstice
 
         // Marquee rectangle - drawn after the nodes so it sits on top of them.
         VERIFY(elementStorage.AddCustomDrawAfter(canvasRes.ref,
-            [this, &view](interstice::CustomDrawContext& ctx)
+            [this, &view](tachyon::CustomDrawContext& ctx)
             {
                 if (!view.marqueeActive || !view.marqueePastThreshold) return;
 
@@ -1195,7 +1195,7 @@ namespace interstice
                 const IntRect marqueeRectLay{ x0, y0, x1 - x0, y1 - y0 };
 
                 ctx.RenderQuad(marqueeRectLay, theme.marqueeFillColorStyle, 0.0f);
-                const interstice::LineStyle border{ .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = styleManager.Px(1.f) };
+                const tachyon::LineStyle border{ .colorStyleIndex = theme.lineWhiteStyle, .lineWidth = styleManager.Px(1.f) };
                 ctx.RenderLine({ x0, y0 }, { x1, y0 }, border);
                 ctx.RenderLine({ x1, y0 }, { x1, y1 }, border);
                 ctx.RenderLine({ x1, y1 }, { x0, y1 }, border);

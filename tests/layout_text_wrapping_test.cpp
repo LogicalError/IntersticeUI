@@ -18,7 +18,7 @@
 #include "gui_text_system_stub.h"
 #include "mock_window_backend.h"
 
-namespace interstice
+namespace tachyon
 {
     using namespace testing;
     using ::testing::NiceMock;

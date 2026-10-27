@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
 	namespace
 	{

@@ -9,7 +9,7 @@
 #include <cmath>
 #include <unordered_set>
 
-namespace interstice
+namespace tachyon
 {
 
     // ---------------------------------------------------------------------------
@@ -78,22 +78,22 @@ namespace interstice
 
         // Emit a phantom tab element matching the dragged panel's appearance.
         // Returns the element ref for position offset / render-on-top.
-        interstice::ElementRef EmitPhantomTab(GUIApplication& app, const DockTabDragInfo& dragInfo)
+        tachyon::ElementRef EmitPhantomTab(GUIApplication& app, const DockTabDragInfo& dragInfo)
         {
-            interstice::ID phantomID = app.idManager.AllocateDynamicID("dock_phantom_tab");
+            tachyon::ID phantomID = app.idManager.AllocateDynamicID("dock_phantom_tab");
             // Selected state, to match the dragged tab (always its bar's selected tab).
             auto phantomState = app.guiStateManager.GetCurrentState(phantomID)
-                              | interstice::ElementState::Selected;
-            interstice::Element phantom {};
+                              | tachyon::ElementState::Selected;
+            tachyon::Element phantom {};
             phantom.id       = phantomID;
             phantom.styleRef = app.theme.tabStyleRef;
             phantom.state    = phantomState;
             if (dragInfo.icon != IconID::Invalid)
             {
-                interstice::ContentRun runs[] = {
-                    { .type = interstice::ContentRun::Icon, .iconID = dragInfo.icon,
+                tachyon::ContentRun runs[] = {
+                    { .type = tachyon::ContentRun::Icon, .iconID = dragInfo.icon,
                       .iconWidth = 16.0f, .iconHeight = 16.0f },
-                    { .type = interstice::ContentRun::Text, .text = dragInfo.title }
+                    { .type = tachyon::ContentRun::Text, .text = dragInfo.title }
                 };
                 phantom.textID = app.textSystem->RegisterRichText(
                     phantomID, runs, app.theme.tabStyleRef, phantomState);
@@ -118,7 +118,7 @@ namespace interstice
         // Flow-X is estimated from the cursor's row, not the previous row's right edge.
         int16_t ComputePhantomOffsetX(const DockNode* node, int phantomIdx, int phantomWidth,
                                        const ReorderableDragState& drag,
-                                       interstice::int2 mousePos)
+                                       tachyon::int2 mousePos)
         {
             const auto& rects = node->cachedTabRects;
 
@@ -143,40 +143,40 @@ namespace interstice
             return static_cast<int16_t>(mousePos.x - grabOffset - estimatedX);
         }
 
-        void EmitDockNode(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node);
+        void EmitDockNode(GUIApplication& app, tachyon::DockingLayout* layout, DockNode* node);
 
         // Ghost panel at the cursor previewing the floating window a drop would create:
         // a dock-leaf box with the dragged tab and an empty content area.
-        void EmitGhostTab(GUIApplication& app, const interstice::Panel& panel, interstice::int2 mousePos)
+        void EmitGhostTab(GUIApplication& app, const tachyon::Panel& panel, tachyon::int2 mousePos)
         {
             // Smaller than the real 400x300 spawn so it doesn't swamp the cursor.
-            const interstice::int2 kGhostSize { app.styleManager.Px(220), app.styleManager.Px(150) };
+            const tachyon::int2 kGhostSize { app.styleManager.Px(220), app.styleManager.Px(150) };
             if (app.BeginCursorGhostWindow(GUIApplicationInternals::TabDragGhostWindowID(app), mousePos, kGhostSize,
                                            app.theme.dockLeafStyleRef))
             {
                 // Tab bar across the top, holding the single dragged tab.
-                interstice::ID barID = app.idManager.AllocateDynamicID("dock_ghost_bar");
-                interstice::Element bar{};
+                tachyon::ID barID = app.idManager.AllocateDynamicID("dock_ghost_bar");
+                tachyon::Element bar{};
                 bar.id       = barID;
                 bar.styleRef = app.theme.tabBarStyleRef;
                 bar.state    = app.guiStateManager.GetCurrentState(barID);
                 app.RegisterElement(std::move(bar), {});
                 VERIFY(app.elementStorage.BeginChildren());
                 {
-                    interstice::ID ghostTabID = app.idManager.AllocateDynamicID("dock_tab_ghost");
+                    tachyon::ID ghostTabID = app.idManager.AllocateDynamicID("dock_tab_ghost");
                     // Selected, to match the dragged tab.
-                    interstice::ElementState state = app.guiStateManager.GetCurrentState(ghostTabID)
-                                            | interstice::ElementState::Selected;
-                    interstice::Element ghostTab{};
+                    tachyon::ElementState state = app.guiStateManager.GetCurrentState(ghostTabID)
+                                            | tachyon::ElementState::Selected;
+                    tachyon::Element ghostTab{};
                     ghostTab.id       = ghostTabID;
                     ghostTab.styleRef = app.theme.tabStyleRef;
                     ghostTab.state    = state;
-                    if (panel.icon != interstice::IconID::Invalid)
+                    if (panel.icon != tachyon::IconID::Invalid)
                     {
-                        interstice::ContentRun runs[] = {
-                            { .type = interstice::ContentRun::Icon, .iconID = panel.icon,
+                        tachyon::ContentRun runs[] = {
+                            { .type = tachyon::ContentRun::Icon, .iconID = panel.icon,
                               .iconWidth = 16.0f, .iconHeight = 16.0f },
-                            { .type = interstice::ContentRun::Text, .text = panel.title }
+                            { .type = tachyon::ContentRun::Text, .text = panel.title }
                         };
                         ghostTab.textID = app.textSystem->RegisterRichText(
                             ghostTabID, runs, app.theme.tabStyleRef, state);
@@ -193,12 +193,12 @@ namespace interstice
                 VERIFY(app.elementStorage.EndChildren());
 
                 // Empty content area filling the rest of the panel.
-                interstice::ID contentID = app.idManager.AllocateDynamicID("dock_ghost_content");
-                interstice::Element content{};
+                tachyon::ID contentID = app.idManager.AllocateDynamicID("dock_ghost_content");
+                tachyon::Element content{};
                 content.id       = contentID;
                 content.styleRef = app.theme.dockContentStyleRef;
                 content.state    = app.guiStateManager.GetCurrentState(contentID);
-                app.RegisterElement(std::move(content), interstice::LayoutOverride{}.FlexGrow(1));
+                app.RegisterElement(std::move(content), tachyon::LayoutOverride{}.FlexGrow(1));
             }
             app.EndGhostWindow();
         }
@@ -228,16 +228,16 @@ namespace interstice
         void BeginDockTitleBar(GUIApplication& app, ID barID)
         {
             app.BeginTitleBar(barID, app.theme.titleBarStyleRef);
-            interstice::Element grip{};
+            tachyon::Element grip{};
             grip.id       = app.idManager.AllocateDynamicID("dock_grip");
             grip.iconID   = app.theme.dragHandleIcon;
             grip.flags    = ElementFlags::NoInput;
             grip.styleRef = app.theme.titleBarGripStyleRef;
-            app.RegisterElement(std::move(grip), interstice::LayoutOverride{});
+            app.RegisterElement(std::move(grip), tachyon::LayoutOverride{});
         }
 
         // Its end: Dock, then the window buttons (EndTitleBar adds those).
-        void EndDockTitleBar(GUIApplication& app, const interstice::DockingLayout* layout)
+        void EndDockTitleBar(GUIApplication& app, const tachyon::DockingLayout* layout)
         {
             if (layout->onDock)
             {
@@ -248,16 +248,16 @@ namespace interstice
             app.EndTitleBar();
         }
 
-        void EmitDockLeaf(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
+        void EmitDockLeaf(GUIApplication& app, tachyon::DockingLayout* layout, DockNode* node)
         {
             // A torn-off window's only leaf: its tabs go in the title bar, the panel inset under it.
             const bool inTitleBar = layout->tabsInTitleBar && node == layout->root.get();
 
-            interstice::Element leafElem{};
+            tachyon::Element leafElem{};
             leafElem.id       = node->nodeID;
             leafElem.styleRef = inTitleBar ? app.theme.dockWindowLeafStyleRef : app.theme.dockLeafStyleRef;
             leafElem.state    = app.guiStateManager.GetCurrentState(node->nodeID);
-            const interstice::ElementRef leafRef = app.RegisterElement(std::move(leafElem), {});
+            const tachyon::ElementRef leafRef = app.RegisterElement(std::move(leafElem), {});
             VERIFY(app.elementStorage.BeginChildren());
             if (inTitleBar)
             {
@@ -288,7 +288,7 @@ namespace interstice
                     && drag.draggedIndex >= 0 && drag.draggedIndex < (int)node->panelIds.size())
                 {
                     auto& info = GUIApplicationInternals::DockTabDrag(app).Info();
-                    interstice::ID pid = node->panelIds[drag.draggedIndex];
+                    tachyon::ID pid = node->panelIds[drag.draggedIndex];
                     auto panelIt = layout->panels.find(pid);
                     if (panelIt != layout->panels.end())
                     {
@@ -303,7 +303,7 @@ namespace interstice
 
             // ----- onDragOut: full priority chain -----
             // Fires end-of-frame when a tab is released outside the bar bounds.
-            auto onDragOut = [&app, layout, node](int tabIndex, interstice::int2 mousePos)
+            auto onDragOut = [&app, layout, node](int tabIndex, tachyon::int2 mousePos)
             {
                 GUIApplicationInternals::DockTabDrag(app).DropZoneAnim().hasTarget = false;
                 app.windowManager->RequestCloseAllowReopen(GUIApplicationInternals::TabDragGhostWindowID(app));
@@ -312,7 +312,7 @@ namespace interstice
 
                 node->selectedTab = node->selectedTabBeforeDrag;
 
-                interstice::ID panelID = node->panelIds[tabIndex];
+                tachyon::ID panelID = node->panelIds[tabIndex];
 
                 // 1. Tab-bar drop - insert as tab at the hovered position.
                 //    TransferPanel moves the Panel object too when crossing layouts.
@@ -326,7 +326,7 @@ namespace interstice
                     tabResult.leaf->selectedTab = insertIdx;
                     // Raise the destination, or the OS may focus an unrelated window
                     // when an emptied source window is destroyed.
-                    if (tabResult.layout->hostWindowID != interstice::ID::Invalid())
+                    if (tabResult.layout->hostWindowID != tachyon::ID::Invalid())
                         app.windowManager->BringToFront(tabResult.layout->hostWindowID);
                     return;
                 }
@@ -343,7 +343,7 @@ namespace interstice
                     {
                         GUIApplication::TransferPanel(panelID, node, layout, dropResult.layout);
                         SplitLeafAtZone(*ownerPtr, panelID, dropResult.target.zone);
-                        if (dropResult.layout->hostWindowID != interstice::ID::Invalid())
+                        if (dropResult.layout->hostWindowID != tachyon::ID::Invalid())
                             app.windowManager->BringToFront(dropResult.layout->hostWindowID);
                     }
                     return;
@@ -356,10 +356,10 @@ namespace interstice
             // ----- dragVisualizer: drop-zone overlay OR ghost tab -----
             // Animated overlay over an edge drop zone, otherwise a ghost panel at the
             // cursor. Both share the ghost window ID; only one renders per frame.
-            auto dragVisualizer = [&app, layout, node](int tabIndex, interstice::int2 mousePos)
+            auto dragVisualizer = [&app, layout, node](int tabIndex, tachyon::int2 mousePos)
             {
                 if (tabIndex < 0 || tabIndex >= (int)node->panelIds.size()) return;
-                interstice::ID panelID = node->panelIds[tabIndex];
+                tachyon::ID panelID = node->panelIds[tabIndex];
                 auto panelIt = layout->panels.find(panelID);
                 if (panelIt == layout->panels.end()) return;
 
@@ -423,13 +423,13 @@ namespace interstice
                 // insertion point so the real tabs shift apart, like within-bar reorder.
                 auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
                 const auto& dragInfo = GUIApplicationInternals::DockTabDrag(app).Info();
-                interstice::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
+                tachyon::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
                 bool emitPhantom = false;
                 int phantomIdx = 0;
-                interstice::ElementRef phantomRef {};
+                tachyon::ElementRef phantomRef {};
 
                 if (drag.isDragging && drag.groupID != node->tabBarID
-                    && dragInfo.panelID != interstice::ID::Invalid()
+                    && dragInfo.panelID != tachyon::ID::Invalid()
                     && !node->cachedTabRects.empty()
                     && node->cachedTabBarRect.w > 0 && node->cachedTabBarRect.h > 0
                     && TabBarDropHitRect(node).Contains(mousePos))
@@ -472,18 +472,18 @@ namespace interstice
                 (void)app.idManager.PushParent(node->nodeID);
                 EndDockTitleBar(app, layout);
                 (void)app.idManager.PopParent();
-                app.BeginArea(app.theme.dockWindowPanelStyleRef, interstice::LayoutOverride{}.FlexGrow(1));
+                app.BeginArea(app.theme.dockWindowPanelStyleRef, tachyon::LayoutOverride{}.FlexGrow(1));
             }
 
             // ----- Content area -----
-            node->lastContentID      = interstice::ID::Invalid();
-            node->lastContentPanelID = interstice::ID::Invalid();
+            node->lastContentID      = tachyon::ID::Invalid();
+            node->lastContentPanelID = tachyon::ID::Invalid();
             const int count = static_cast<int>(node->panelIds.size());
             if (count > 0 && node->selectedTab >= 0 && node->selectedTab < count)
             {
-                const interstice::ID selectedPanelID = node->panelIds[node->selectedTab];
+                const tachyon::ID selectedPanelID = node->panelIds[node->selectedTab];
                 (void)app.idManager.PushParent(selectedPanelID);
-                interstice::ID contentID = app.idManager.AllocateDynamicID("dock_content");
+                tachyon::ID contentID = app.idManager.AllocateDynamicID("dock_content");
                 (void)app.idManager.PopParent();
                 node->lastContentID      = contentID;
                 node->lastContentPanelID = selectedPanelID;
@@ -537,12 +537,12 @@ namespace interstice
             VERIFY(app.elementStorage.EndChildren());
         }
 
-        void EmitDockSplit(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
+        void EmitDockSplit(GUIApplication& app, tachyon::DockingLayout* layout, DockNode* node)
         {
             const bool horizontal = IsHorizontalSplit(node->mode);
             const bool pinSecond  = PinsSecondChild(node->mode);
 
-            interstice::Element container{};
+            tachyon::Element container{};
             container.id       = node->nodeID;
             container.styleRef = horizontal ? app.theme.dockSplitHorzStyleRef : app.theme.dockSplitVertStyleRef;
             container.state    = app.guiStateManager.GetCurrentState(node->nodeID);
@@ -565,8 +565,8 @@ namespace interstice
             }
 
             {
-                interstice::ID sizerID = app.idManager.AllocateDynamicID("dock_sizer");
-                interstice::Element sizer{};
+                tachyon::ID sizerID = app.idManager.AllocateDynamicID("dock_sizer");
+                tachyon::Element sizer{};
                 sizer.id       = sizerID;
                 sizer.styleRef = horizontal ? app.theme.dockSizerHorzStyleRef : app.theme.dockSizerVertStyleRef;
                 sizer.state    = app.guiStateManager.GetCurrentState(sizerID);
@@ -615,7 +615,7 @@ namespace interstice
             VERIFY(app.elementStorage.EndChildren());
         }
 
-        void EmitDockNode(GUIApplication& app, interstice::DockingLayout* layout, DockNode* node)
+        void EmitDockNode(GUIApplication& app, tachyon::DockingLayout* layout, DockNode* node)
         {
             if (!node) return;
             if (node->isLeaf) EmitDockLeaf(app, layout, node);
@@ -681,8 +681,8 @@ namespace interstice
     {
         // Mark visible panels first so we can do the disable pass with a
         // single tree walk instead of one walk per panel.
-        std::unordered_set<interstice::ID> visible;
-        ForEachVisiblePanelID(layout.root.get(), [&](interstice::ID pid) { visible.insert(pid); });
+        std::unordered_set<tachyon::ID> visible;
+        ForEachVisiblePanelID(layout.root.get(), [&](tachyon::ID pid) { visible.insert(pid); });
 
         // Disable panels that are enabled but no longer visible.
         for (auto& [id, panel] : layout.panels)
@@ -695,7 +695,7 @@ namespace interstice
         }
 
         // Enable panels that are visible but not yet enabled.
-        for (interstice::ID pid : visible)
+        for (tachyon::ID pid : visible)
         {
             auto it = layout.panels.find(pid);
             if (it == layout.panels.end()) continue;
@@ -724,7 +724,7 @@ namespace interstice
             layout->hostWindowID = activeWindowID;
         }
 
-        interstice::Element container{};
+        tachyon::Element container{};
         container.id       = id;
         container.styleRef = style;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -755,7 +755,7 @@ namespace interstice
     // Panel transfer helper
     // ---------------------------------------------------------------------------
 
-    void GUIApplication::TransferPanel(interstice::ID panelID, DockNode* sourceNode,
+    void GUIApplication::TransferPanel(tachyon::ID panelID, DockNode* sourceNode,
                                     DockingLayout* sourceLayout,
                                     DockingLayout* targetLayout)
     {
@@ -793,7 +793,7 @@ namespace interstice
     // Hit-testing
     // ---------------------------------------------------------------------------
 
-    interstice::DockLeafResult GUIApplication::FindDockLeafAtScreenPos(int2 screenPos)
+    tachyon::DockLeafResult GUIApplication::FindDockLeafAtScreenPos(int2 screenPos)
     {
         DockLeafResult found {};
         auto walk = [this, screenPos, &found](auto& self, DockNode* node, DockingLayout* layout) -> void
@@ -844,7 +844,7 @@ namespace interstice
         return found;
     }
 
-    interstice::DockDropResult GUIApplication::FindDockDropTargetAtScreenPos(int2 screenPos)
+    tachyon::DockDropResult GUIApplication::FindDockDropTargetAtScreenPos(int2 screenPos)
     {
         // Uses last frame's cachedContentRect; called during construction, before layout.
         DockDropResult result {};
@@ -883,7 +883,7 @@ namespace interstice
     void GUIApplication::CloseDockedPanel(DockingLayout& layout, DockNode& leaf, int tabIndex)
     {
         if (!leaf.isLeaf || tabIndex < 0 || tabIndex >= int(leaf.panelIds.size())) return;
-        const interstice::ID panelID = leaf.panelIds[size_t(tabIndex)];
+        const tachyon::ID panelID = leaf.panelIds[size_t(tabIndex)];
         CloseLeafTab(leaf, tabIndex);
 
         // Closing is permanent: the panel and its state are destroyed (a new
@@ -1035,7 +1035,7 @@ namespace interstice
                 // with the window's name over it.
                 fw.layout.tabsInTitleBar = fw.layout.root && fw.layout.root->isLeaf;
                 fw.layout.onDock = fw.home ? std::function<void()>([&fw] { fw.dockRequested = true; }) : std::function<void()>{};
-                interstice::ID containerID = idManager.AllocateDynamicID("floating_dock_container");
+                tachyon::ID containerID = idManager.AllocateDynamicID("floating_dock_container");
                 if (fw.layout.tabsInTitleBar)
                     BeginDockingContainer(containerID, &fw.layout);
                 else

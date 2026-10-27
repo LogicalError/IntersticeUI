@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout,
+void tachyon::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout,
                                           VkPipelineStageFlags2 afterStage)
 {
     VkImageMemoryBarrier2 imageBarrier {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
@@ -87,7 +87,7 @@ void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, Vk
     imageBarrier.newLayout = newLayout;
 
     VkImageAspectFlags aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-    imageBarrier.subresourceRange = interstice::vulkan::image_subresource_range(aspectMask);
+    imageBarrier.subresourceRange = tachyon::vulkan::image_subresource_range(aspectMask);
     imageBarrier.image = image;
 
     VkDependencyInfo depInfo {};
@@ -100,7 +100,7 @@ void interstice::vulkan::transition_image(VkCommandBuffer cmd, VkImage image, Vk
     vkCmdPipelineBarrier2(cmd, &depInfo);
 }
 
-void interstice::vulkan::copy_image_to_image(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize)
+void tachyon::vulkan::copy_image_to_image(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize)
 {
 	VkImageBlit2 blitRegion{ .sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2, .pNext = nullptr };
 
@@ -134,7 +134,7 @@ void interstice::vulkan::copy_image_to_image(VkCommandBuffer cmd, VkImage source
 	vkCmdBlitImage2(cmd, &blitInfo);
 }
 
-void interstice::vulkan::generate_mipmaps(VkCommandBuffer cmd, VkImage image, VkExtent2D imageSize)
+void tachyon::vulkan::generate_mipmaps(VkCommandBuffer cmd, VkImage image, VkExtent2D imageSize)
 {
     int mipLevels = int(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) + 1;
     for (int mip = 0; mip < mipLevels; mip++) {
@@ -154,7 +154,7 @@ void interstice::vulkan::generate_mipmaps(VkCommandBuffer cmd, VkImage image, Vk
         imageBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
         VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageBarrier.subresourceRange = interstice::vulkan::image_subresource_range(aspectMask);
+        imageBarrier.subresourceRange = tachyon::vulkan::image_subresource_range(aspectMask);
         imageBarrier.subresourceRange.levelCount = 1;
         imageBarrier.subresourceRange.baseMipLevel = mip;
         imageBarrier.image = image;

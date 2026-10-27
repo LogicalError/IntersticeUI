@@ -10,7 +10,7 @@
 #include <gui_core/state/gui_state_manager.h>
 #include <gui_controls/gui_tooltip_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -275,4 +275,4 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon

@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <type_traits>
 
-namespace interstice
+namespace tachyon
 {
     class ElementStorage;
     class ITextSystem;
@@ -29,10 +29,10 @@ namespace interstice
     inline bool IsActivationKey(const ElementEvent& event)
     {
         if (event.type != EventType::KeyDown) return false;
-        return event.state.lastKey == interstice::KeyCode::Return ||
-               event.state.lastKey == interstice::KeyCode::Return2 ||
-               event.state.lastKey == interstice::KeyCode::KeyPadEnter ||
-               event.state.lastKey == interstice::KeyCode::Space;
+        return event.state.lastKey == tachyon::KeyCode::Return ||
+               event.state.lastKey == tachyon::KeyCode::Return2 ||
+               event.state.lastKey == tachyon::KeyCode::KeyPadEnter ||
+               event.state.lastKey == tachyon::KeyCode::Space;
     }
     
     
@@ -51,7 +51,7 @@ namespace interstice
 		ID previousFocusID = ID::Invalid();
         ID previousTextFocusID = ID::Invalid();
         ID draggingID = ID::Invalid();
-        interstice::int2 dragStartLocal{0,0};
+        tachyon::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenX = 0;
         int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
@@ -73,7 +73,7 @@ namespace interstice
         ID previousFocusID = ID::Invalid();
         ID previousTextFocusID = ID::Invalid();
         ID draggingID = ID::Invalid();
-        interstice::int2 dragStartLocal{0,0};
+        tachyon::int2 dragStartLocal{0,0};
         int startSize = 0;
         int startScreenY = 0;
         int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
@@ -91,7 +91,7 @@ namespace interstice
     struct SliderState
     {
         ID draggingID = ID::Invalid();
-        interstice::int2 dragStartLocal{ 0,0 }; ///< mouse screen pos at MouseDown (click-vs-drag origin)
+        tachyon::int2 dragStartLocal{ 0,0 }; ///< mouse screen pos at MouseDown (click-vs-drag origin)
         float startValue = 0.0f;
         bool cancelDrag = false;
         bool movedPastThreshold = false;
@@ -119,7 +119,7 @@ namespace interstice
     {
         ID             activeID;
         DragScalarMode mode = DragScalarMode::Idle;
-        interstice::int2      dragStartPos{ 0, 0 };
+        tachyon::int2      dragStartPos{ 0, 0 };
     };
 
     /// Turns mouse drags on a label into LabelDrag* events sent to the next sibling element.

@@ -6,7 +6,7 @@
 #include <functional>
 
 
-namespace interstice
+namespace tachyon
 {
     using OnGuiFunc = std::function<void()>;
 
@@ -468,4 +468,4 @@ namespace interstice
     /// widely-included headers.
     int64_t SteadyClockNowNanos();
 
-}// namespace interstice
+}// namespace tachyon

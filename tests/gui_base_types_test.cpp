@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-namespace interstice
+namespace tachyon
 {
 
     TEST(IntRectTest, InflateDeflateBeyondEvenSizeClampsAtCenter)

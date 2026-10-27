@@ -8,7 +8,7 @@
 
 #include <array>
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
     class VulkanDeviceContext;
     struct DeletionQueue;
@@ -20,16 +20,16 @@ namespace interstice::vulkan
     {
         bool Create(VulkanDeviceContext& deviceContext);
 
-        std::array<interstice::RHI::GpuPipeline, interstice::kPrimitiveKindCount> pipelines{};
+        std::array<tachyon::RHI::GpuPipeline, tachyon::kPrimitiveKindCount> pipelines{};
     };
 
-    class VulkanRenderDevice final : public interstice::RHI::RenderDevice
+    class VulkanRenderDevice final : public tachyon::RHI::RenderDevice
     {
     public:
         explicit VulkanRenderDevice(VulkanDeviceContext& deviceContext)
             : dc(deviceContext) {}
 
-        interstice::RHI::GpuPipeline CreatePrimitivePipeline(const interstice::PrimitiveSpec& spec) override;
+        tachyon::RHI::GpuPipeline CreatePrimitivePipeline(const tachyon::PrimitiveSpec& spec) override;
 
         /// All GUI pipelines share one layout (identical push range + image
         /// set). Created lazily by the first CreatePrimitivePipeline call.
@@ -40,7 +40,7 @@ namespace interstice::vulkan
         VulkanDeviceContext& dc;
     };
 
-    class VulkanRenderCommandList final : public interstice::RHI::RenderCommandList
+    class VulkanRenderCommandList final : public tachyon::RHI::RenderCommandList
     {
     public:
         VulkanRenderCommandList(VulkanDeviceContext& deviceContext,
@@ -50,11 +50,11 @@ namespace interstice::vulkan
             : dc(deviceContext), cmd(commandBuffer)
             , imageSet(imageDescriptorSet), frame(frameData) {}
 
-        void DrawPrimitives(const interstice::RHI::GpuPipeline& pipeline,
-                            const interstice::GPUDrawPushConstants& pushConstants,
+        void DrawPrimitives(const tachyon::RHI::GpuPipeline& pipeline,
+                            const tachyon::GPUDrawPushConstants& pushConstants,
                             uint32_t primitiveCount, uint32_t firstPrimitive) override;
-        void UploadTransientBuffers(std::span<const interstice::RHI::UploadRequest> requests,
-                                    std::span<interstice::DeviceAddress> addresses) override;
+        void UploadTransientBuffers(std::span<const tachyon::RHI::UploadRequest> requests,
+                                    std::span<tachyon::DeviceAddress> addresses) override;
 
     private:
         VulkanDeviceContext& dc;

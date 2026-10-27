@@ -9,7 +9,7 @@
 #include <gui_core/gui_id_manager.h>
 #include <gui_core/state/gui_state_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 

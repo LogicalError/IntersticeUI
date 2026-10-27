@@ -9,7 +9,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
 
     const std::vector<DrawnWire> kWires{
         { .wireKey = WireKey(1, 0), .points = { { 0, 0 },  { 100, 0 }, { 100, 100 } } },

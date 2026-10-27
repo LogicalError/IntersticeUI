@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace interstice
+namespace tachyon
 {
     // Forward declarations
     class GraphicsContext;

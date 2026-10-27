@@ -8,7 +8,7 @@
 #include <variant>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// A JSON value (RFC 8259): null, bool, number, string, array or object. Objects keep
     /// their members in order, so what is written reads back the same.

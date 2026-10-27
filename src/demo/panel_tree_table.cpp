@@ -21,7 +21,7 @@
 // `isOpen` needs no rebuild.
 //
 
-namespace interstice
+namespace tachyon
 {
 
     namespace {
@@ -87,16 +87,16 @@ namespace interstice
             // sub-range index is the visible index, so translate it through
             // treeTableVisibleIdx (closed branches would skew it otherwise).
             demo.treeTableDragDrop.payloadType = kTreeTableRowPayloadType;
-            demo.treeTableDragDrop.getPayload  = [this](interstice::ID rowID) -> uintptr_t {
-                if (rowID.GetMode() != interstice::IDMode::SubRange) return UINTPTR_MAX;
+            demo.treeTableDragDrop.getPayload  = [this](tachyon::ID rowID) -> uintptr_t {
+                if (rowID.GetMode() != tachyon::IDMode::SubRange) return UINTPTR_MAX;
                 const int visIdx = static_cast<int>(rowID.value.subRangeParts.index);
                 const auto& v = demo.treeTableVisibleIdx;
                 if (visIdx < 0 || visIdx >= int(v.size())) return UINTPTR_MAX;
                 return static_cast<uintptr_t>(v[visIdx]);
             };
-            demo.treeTableDragDrop.onReorder = [this](uintptr_t srcPayload, interstice::ID targetID,
+            demo.treeTableDragDrop.onReorder = [this](uintptr_t srcPayload, tachyon::ID targetID,
                                                      TreeDropPosition pos) {
-                if (targetID.GetMode() != interstice::IDMode::SubRange) return;
+                if (targetID.GetMode() != tachyon::IDMode::SubRange) return;
                 if (srcPayload == UINTPTR_MAX) return;
                 const int targetVis = static_cast<int>(targetID.value.subRangeParts.index);
                 const auto& v = demo.treeTableVisibleIdx;
@@ -110,9 +110,9 @@ namespace interstice
                 // Deferred: the matching sub-range rowID needs the
                 // row IDs VirtualTable allocates next frame.
                 demo.treeTablePendingSelectFlatIdx       = newFlatIdx;
-                demo.treeTableState.selectedRowID        = interstice::ID::Invalid();
+                demo.treeTableState.selectedRowID        = tachyon::ID::Invalid();
                 demo.treeTableMultiSelect.selectedIDs.clear();
-                demo.treeTableMultiSelect.lastClickedID  = interstice::ID::Invalid();
+                demo.treeTableMultiSelect.lastClickedID  = tachyon::ID::Invalid();
             };
             demo.treeTableState.rowDragDrop = &demo.treeTableDragDrop;
         }
@@ -194,7 +194,7 @@ namespace interstice
         // Apply a pending post-drop selection now that VirtualTable has set
         // this frame's row IDs.
         if (demo.treeTablePendingSelectFlatIdx >= 0
-            && demo.treeTableState.RowIDInRange(0) != interstice::ID::Invalid())
+            && demo.treeTableState.RowIDInRange(0) != tachyon::ID::Invalid())
         {
             const int targetFlat = demo.treeTablePendingSelectFlatIdx;
             int newVisIdx = -1;
@@ -202,7 +202,7 @@ namespace interstice
                 if (visibleIdx[i] == targetFlat) { newVisIdx = int(i); break; }
             if (newVisIdx >= 0)
             {
-                const interstice::ID newRowID = demo.treeTableState.RowIDForIndex(newVisIdx);
+                const tachyon::ID newRowID = demo.treeTableState.RowIDForIndex(newVisIdx);
                 demo.treeTableState.selectedRowID = newRowID;
                 demo.treeTableMultiSelect.selectedIDs.clear();
                 demo.treeTableMultiSelect.selectedIDs.insert(newRowID);

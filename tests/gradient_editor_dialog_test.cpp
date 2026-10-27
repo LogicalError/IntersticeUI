@@ -10,7 +10,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     class GradientEditorDialog : public ::testing::Test

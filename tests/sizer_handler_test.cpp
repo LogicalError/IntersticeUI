@@ -15,7 +15,7 @@
 
 #include <thread>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

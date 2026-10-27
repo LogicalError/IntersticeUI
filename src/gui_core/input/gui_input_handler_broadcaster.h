@@ -7,7 +7,7 @@
 #include <initializer_list>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// Sends every platform input event to all handlers (e.g. InputManager + ITextSystem);
     /// none can block the others.
@@ -19,31 +19,31 @@ namespace interstice
         explicit InputHandlerBroadcaster(std::initializer_list<IPlatformInputHandler*> handlers)
             : m_handlers(handlers) {}
 
-        void OnKeyboard(interstice::ID id, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override
+        void OnKeyboard(tachyon::ID id, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnKeyboard(id, key, repeat, modifiers, action);
         }
 
-        void OnMouseMove(interstice::ID id, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override
+        void OnMouseMove(tachyon::ID id, tachyon::int2 screenPos, tachyon::MouseButtons buttons, KeyModifier modifiers) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseMove(id, screenPos, buttons, modifiers);
         }
 
-        void OnMouseButton(interstice::ID id, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, interstice::MouseAction action) override
+        void OnMouseButton(tachyon::ID id, tachyon::int2 screenPos, tachyon::MouseButtons buttons, KeyModifier modifiers, tachyon::MouseAction action) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseButton(id, screenPos, buttons, modifiers, action);
         }
 
-        void OnMouseScroll(interstice::ID id, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) override
+        void OnMouseScroll(tachyon::ID id, tachyon::int2 screenPos, tachyon::float2 scrollOffset, KeyModifier modifiers) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnMouseScroll(id, screenPos, scrollOffset, modifiers);
         }
 
-        void OnTextComposition(interstice::ID id, std::string_view text, int32_t cursor) override
+        void OnTextComposition(tachyon::ID id, std::string_view text, int32_t cursor) override
         {
             for (IPlatformInputHandler* h : m_handlers)
                 if (h) h->OnTextComposition(id, text, cursor);
@@ -52,4 +52,4 @@ namespace interstice
     private:
         std::vector<IPlatformInputHandler*> m_handlers;
     };
-} // namespace interstice
+} // namespace tachyon

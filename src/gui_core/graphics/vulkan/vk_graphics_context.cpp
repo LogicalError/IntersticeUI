@@ -32,8 +32,8 @@
 #include <gui_core/windows/gui_window_backend.h>
 #include <gui_core/windows/gui_window_flags.h>
 
-// A host that links its own VMA builds with INTERSTICE_VMA_IMPLEMENTATION off.
-#if INTERSTICE_VMA_IMPLEMENTATION
+// A host that links its own VMA builds with TACHYON_VMA_IMPLEMENTATION off.
+#if TACHYON_VMA_IMPLEMENTATION
 #define VMA_IMPLEMENTATION
 #endif
 #define VMA_DEBUG_LOG_FORMAT
@@ -51,11 +51,11 @@
 #include <fstream>
 #include <assert.h>
 
-static constexpr interstice::Diagnostics::LogCategory kLogVulkan = interstice::Diagnostics::MakeLogCategory("vulkan");
+static constexpr tachyon::Diagnostics::LogCategory kLogVulkan = tachyon::Diagnostics::MakeLogCategory("vulkan");
 
 
 
-using namespace interstice::vulkan;
+using namespace tachyon::vulkan;
 
 static size_t BytesPerPixel(VkFormat format)
 {
@@ -76,19 +76,19 @@ static size_t BytesPerPixel(VkFormat format)
         case VK_FORMAT_B8G8R8A8_SRGB:
             return 4;
         default:
-            INTERSTICE_LOG_WARNING(kLogVulkan, "Unknown format used in CreateImage, assuming 4 bytes per pixel");
+            TACHYON_LOG_WARNING(kLogVulkan, "Unknown format used in CreateImage, assuming 4 bytes per pixel");
             return 4;
     }
 }
 
 
-void interstice::vulkan::VulkanGraphicsContext::RePrepareFrame()
+void tachyon::vulkan::VulkanGraphicsContext::RePrepareFrame()
 {
     if (m_lastStyleManager != nullptr && m_lastGradientManager != nullptr)
         PrepareFrame(*m_lastStyleManager, *m_lastGradientManager, m_lastElapsedTimeSecs);
 }
 
-void interstice::vulkan::VulkanGraphicsContext::PrepareFrame(interstice::StyleManager& styleManager, interstice::GradientManager& gradientManager, float elapsedTimeSecs)
+void tachyon::vulkan::VulkanGraphicsContext::PrepareFrame(tachyon::StyleManager& styleManager, tachyon::GradientManager& gradientManager, float elapsedTimeSecs)
 {
     m_lastStyleManager    = &styleManager;
     m_lastGradientManager = &gradientManager;
@@ -102,13 +102,13 @@ void interstice::vulkan::VulkanGraphicsContext::PrepareFrame(interstice::StyleMa
         const uint32_t pageCount = gradientManager.PageCount();
         for (uint32_t p = 0; p < pageCount; ++p)
         {
-            interstice::Image* img = gradientManager.GetGradientImage(this, p);
+            tachyon::Image* img = gradientManager.GetGradientImage(this, p);
             if (p < pageIdx.size())
             {
                 vulkanImageSet->SetImage(pageIdx[p], (VulkanImage*)img);
             } else
             {
-                interstice::ImageIndex newIdx = vulkanImageSet->Add(img);
+                tachyon::ImageIndex newIdx = vulkanImageSet->Add(img);
                 pageIdx.push_back(newIdx);
                 // 0-based shader slot = ((int)newIdx) - 1
                 gradientManager.SetPagePhysicalImageIndex(p, int32_t(uint32_t(newIdx)) - 1);
@@ -130,25 +130,25 @@ void interstice::vulkan::VulkanGraphicsContext::PrepareFrame(interstice::StyleMa
     };
 }
 
-bool interstice::vulkan::VulkanGraphicsContext::RenderWindowFrame(VkCommandBuffer cmd, FrameData& currentFrame, interstice::ID windowID, interstice::uint2 extent)
+bool tachyon::vulkan::VulkanGraphicsContext::RenderWindowFrame(VkCommandBuffer cmd, FrameData& currentFrame, tachyon::ID windowID, tachyon::uint2 extent)
 {
     {
-        interstice::float4x4 scale =
-            interstice::float4x4
+        tachyon::float4x4 scale =
+            tachyon::float4x4
             (
-                interstice::float4{ 2.0f / float(extent.x), 0, 0, 0 },
-                interstice::float4{ 0, 2.0f / float(extent.y), 0, 0 },
-                interstice::float4{ 0, 0, 1, 0 },
-                interstice::float4{ 0, 0, 0, 1 }
+                tachyon::float4{ 2.0f / float(extent.x), 0, 0, 0 },
+                tachyon::float4{ 0, 2.0f / float(extent.y), 0, 0 },
+                tachyon::float4{ 0, 0, 1, 0 },
+                tachyon::float4{ 0, 0, 0, 1 }
             );
 
-        interstice::float4x4 recenter =
-            interstice::float4x4
+        tachyon::float4x4 recenter =
+            tachyon::float4x4
             (
-                interstice::float4{ 1,  0, 0, 0 },
-                interstice::float4{ 0,  1, 0, 0 },
-                interstice::float4{ 0,  0, 1, 0 },
-                interstice::float4{ -1, -1, 0, 1 }
+                tachyon::float4{ 1,  0, 0, 0 },
+                tachyon::float4{ 0,  1, 0, 0 },
+                tachyon::float4{ 0,  0, 1, 0 },
+                tachyon::float4{ -1, -1, 0, 1 }
             );
 
         pushConstants.worldMatrix = scale * recenter;
@@ -184,25 +184,25 @@ bool interstice::vulkan::VulkanGraphicsContext::RenderWindowFrame(VkCommandBuffe
             writer.update_set(deviceContext.device, descriptorImageSet);
         }
         VulkanRenderCommandList cmdList(deviceContext, cmd, descriptorImageSet, currentFrame);
-        static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->Render(
+        static_cast<tachyon::PrimitiveRenderer*>(guiRenderer)->Render(
             windowID, cmdList, deviceContext.renderContext.pipelines, pushConstants);
     }
     return true;
 }
 
-interstice::ImageSet* VulkanGraphicsContext::GetImageSet() const { return vulkanImageSet; }
-interstice::ImageIndex VulkanGraphicsContext::RegisterImage(interstice::Image* image) { return vulkanImageSet->Add(image); }
-void VulkanGraphicsContext::UnregisterImage(interstice::ImageIndex index) { vulkanImageSet->Remove(index); }
+tachyon::ImageSet* VulkanGraphicsContext::GetImageSet() const { return vulkanImageSet; }
+tachyon::ImageIndex VulkanGraphicsContext::RegisterImage(tachyon::Image* image) { return vulkanImageSet->Add(image); }
+void VulkanGraphicsContext::UnregisterImage(tachyon::ImageIndex index) { vulkanImageSet->Remove(index); }
 
-interstice::ImageIndex VulkanGraphicsContext::RegisterExternalImage(VkImageView view, VkSampler sampler)
+tachyon::ImageIndex VulkanGraphicsContext::RegisterExternalImage(VkImageView view, VkSampler sampler)
 {
-    const interstice::ImageIndex index = vulkanImageSet->ReserveIndex();
+    const tachyon::ImageIndex index = vulkanImageSet->ReserveIndex();
     vulkanImageSet->SetDescriptor(index, VkDescriptorImageInfo{
         .sampler = sampler, .imageView = view, .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
     return index;
 }
 
-void VulkanGraphicsContext::UpdateExternalImage(interstice::ImageIndex index, VkImageView view, VkSampler sampler)
+void VulkanGraphicsContext::UpdateExternalImage(tachyon::ImageIndex index, VkImageView view, VkSampler sampler)
 {
     vulkanImageSet->SetDescriptor(index, VkDescriptorImageInfo{
         .sampler = sampler, .imageView = view, .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
@@ -210,10 +210,10 @@ void VulkanGraphicsContext::UpdateExternalImage(interstice::ImageIndex index, Vk
 
 VulkanGraphicsContext::VulkanGraphicsContext()
 {
-    guiRenderer = new interstice::PrimitiveRenderer();
+    guiRenderer = new tachyon::PrimitiveRenderer();
 }
 
-interstice::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(interstice::StyleManager& styleManager, interstice::GradientManager& gradientManager)
+tachyon::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(tachyon::StyleManager& styleManager, tachyon::GradientManager& gradientManager)
 {
     // Styles store LOGICAL gradient pages (stable); the shader samples PHYSICAL
     // bindless slots (assigned as pages join the imageSet), resolved here before
@@ -226,14 +226,14 @@ interstice::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(inters
 
     if (colorStylesMesh != nullptr)
     {
-        DestroyVisualColorStylesAtEnd(colorStylesMesh, interstice::DeviceScope::Frame);
+        DestroyVisualColorStylesAtEnd(colorStylesMesh, tachyon::DeviceScope::Frame);
         colorStylesMesh = nullptr;
     }
 
-    std::span<const interstice::VisualColorStyle> src = styleManager.GetVisualColorStylesSpan();
+    std::span<const tachyon::VisualColorStyle> src = styleManager.GetVisualColorStylesSpan();
 
     // Resolve into a copy; the stored styles keep the logical page.
-    std::vector<interstice::VisualColorStyle> resolved(src.begin(), src.end());
+    std::vector<tachyon::VisualColorStyle> resolved(src.begin(), src.end());
     for (auto& vcs : resolved)
     {
         int32_t physical = gradientManager.GetPagePhysicalImageIndex(vcs.gradientPage);
@@ -243,19 +243,19 @@ interstice::Buffer* VulkanGraphicsContext::PrepareVisualColorStylesBuffer(inters
     }
 
     colorStylesMesh = UploadVisualColorStyles(
-        std::span<const interstice::VisualColorStyle>(resolved.data(), resolved.size()));
+        std::span<const tachyon::VisualColorStyle>(resolved.data(), resolved.size()));
     styleManager.ResetVisualColorStylesModified();
     gradientManager.ClearPageTableChanged();
     return colorStylesMesh;
 }
 
-interstice::Buffer* VulkanGraphicsContext::PrepareVisualBoxStylesBuffer(interstice::StyleManager& styleManager)
+tachyon::Buffer* VulkanGraphicsContext::PrepareVisualBoxStylesBuffer(tachyon::StyleManager& styleManager)
 {
     if (styleManager.AreVisualBoxStylesModified() || visualBoxStylesMesh == nullptr)
     {
         if (visualBoxStylesMesh != nullptr)
         {
-            DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, interstice::DeviceScope::Frame);
+            DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, tachyon::DeviceScope::Frame);
         }
         visualBoxStylesMesh = UploadVisualBoxStyles(styleManager.GetVisualBoxStylesSpan());
         styleManager.ResetVisualBoxStylesModified();
@@ -263,10 +263,10 @@ interstice::Buffer* VulkanGraphicsContext::PrepareVisualBoxStylesBuffer(intersti
     return visualBoxStylesMesh;
 }
 
-interstice::IWindowContext* VulkanGraphicsContext::CreateWindowContext(void* nativeHandle, interstice::OSWindowHandle osHandle, 
-    interstice::ID id, interstice::int2 size, interstice::WindowFlags windowFlags, interstice::OnGuiFunc onGui)
+tachyon::IWindowContext* VulkanGraphicsContext::CreateWindowContext(void* nativeHandle, tachyon::OSWindowHandle osHandle, 
+    tachyon::ID id, tachyon::int2 size, tachyon::WindowFlags windowFlags, tachyon::OnGuiFunc onGui)
 {
-    auto* context = interstice::vulkan::VulkanWindowContext::Create(id, nativeHandle, osHandle, size, windowFlags, &deviceContext, std::move(onGui));
+    auto* context = tachyon::vulkan::VulkanWindowContext::Create(id, nativeHandle, osHandle, size, windowFlags, &deviceContext, std::move(onGui));
     if (context != nullptr)
     {
         m_windowContexts[id] = context;
@@ -276,7 +276,7 @@ interstice::IWindowContext* VulkanGraphicsContext::CreateWindowContext(void* nat
     return context;
 }
 
-void VulkanGraphicsContext::SetWindowImageTarget(interstice::ID window, VkImage image, VkExtent2D extent)
+void VulkanGraphicsContext::SetWindowImageTarget(tachyon::ID window, VkImage image, VkExtent2D extent)
 {
     if (image == VK_NULL_HANDLE)
         m_imageTargets.erase(window);
@@ -286,51 +286,51 @@ void VulkanGraphicsContext::SetWindowImageTarget(interstice::ID window, VkImage 
         it->second->SetImageTarget(image, extent);
 }
 
-void VulkanGraphicsContext::DestroyWindowContext(interstice::IWindowContext* context)
+void VulkanGraphicsContext::DestroyWindowContext(tachyon::IWindowContext* context)
 {
     if (context == nullptr)
         return;
 
-    auto* vulkanContext = static_cast<interstice::vulkan::VulkanWindowContext*>(context);
+    auto* vulkanContext = static_cast<tachyon::vulkan::VulkanWindowContext*>(context);
 
     // The GPU upload arena belongs to the window context. Drop the CPU-side
     // primitive target too so monotonic window IDs cannot accumulate.
     if (guiRenderer != nullptr)
-        static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->ReleaseTarget(vulkanContext->GetID());
+        static_cast<tachyon::PrimitiveRenderer*>(guiRenderer)->ReleaseTarget(vulkanContext->GetID());
 
     m_windowContexts.erase(vulkanContext->GetID());
     vulkanContext->Destroy();
     delete vulkanContext;
 }
 
-interstice::Result<void> VulkanGraphicsContext::Initialize(interstice::IWindowBackend* windowBackend)
+tachyon::Result<void> VulkanGraphicsContext::Initialize(tachyon::IWindowBackend* windowBackend)
 {
     // A hidden window whose surface picks a GPU that can present to the GUI's windows.
-    interstice::OSWindowHandle bootstrapWindow = windowBackend->CreateWindow(
-        "Vulkan bootstrap", interstice::int2{ 64, 64 }, interstice::WindowFlags::Hidden, nullptr);
+    tachyon::OSWindowHandle bootstrapWindow = windowBackend->CreateWindow(
+        "Vulkan bootstrap", tachyon::int2{ 64, 64 }, tachyon::WindowFlags::Hidden, nullptr);
     if (bootstrapWindow == nullptr)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to create bootstrap window for Vulkan initialization");
-        return interstice::Error{ interstice::ErrorCode::Failed, "could not create the bootstrap window for Vulkan" };
+        TACHYON_LOG_ERROR(kLogVulkan, "Failed to create bootstrap window for Vulkan initialization");
+        return tachyon::Error{ tachyon::ErrorCode::Failed, "could not create the bootstrap window for Vulkan" };
     }
 
     VkSurfaceKHR bootstrapSurface = deviceContext.CreateSurface(bootstrapWindow);
     if (!deviceContext.Initialize())
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to initialize device context");
+        TACHYON_LOG_ERROR(kLogVulkan, "Failed to initialize device context");
         windowBackend->DestroyWindow(bootstrapWindow);
         return deviceContext.initError.message.empty()
-            ? interstice::Error{ interstice::ErrorCode::Failed, "could not initialize the Vulkan device" }
+            ? tachyon::Error{ tachyon::ErrorCode::Failed, "could not initialize the Vulkan device" }
             : deviceContext.initError;
     }
 
     if (vulkanImageSet == nullptr)   // RecreateDevice keeps the indices the app holds
-        vulkanImageSet = new interstice::vulkan::VulkanImageSet();
+        vulkanImageSet = new tachyon::vulkan::VulkanImageSet();
 
     if (bootstrapSurface != VK_NULL_HANDLE)
     {
         auto* dc = &deviceContext;
-        deviceContext.GetDeletionQueue(interstice::DeviceScope::Application).
+        deviceContext.GetDeletionQueue(tachyon::DeviceScope::Application).
             push_function([dc, bootstrapSurface]()
             {
                 vkDestroySurfaceKHR(dc->instance, bootstrapSurface, dc->AllocationCallbacks());
@@ -341,32 +341,32 @@ interstice::Result<void> VulkanGraphicsContext::Initialize(interstice::IWindowBa
     return {};
 }
 
-interstice::Result<void> VulkanGraphicsContext::RecreateDevice(interstice::IWindowBackend* windowBackend)
+tachyon::Result<void> VulkanGraphicsContext::RecreateDevice(tachyon::IWindowBackend* windowBackend)
 {
     if (deviceContext.UsesExternalDevice())
-        return interstice::Error{ interstice::ErrorCode::DeviceLost,
+        return tachyon::Error{ tachyon::ErrorCode::DeviceLost,
                                   "the host's Vulkan device was lost; the host makes a new one and the GUI again" };
 
     // Everything made on the lost device goes; the image objects, their indices and the
     // renderer stay. Destroying is allowed on a lost device.
     deviceContext.WaitIdle();
-    static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
+    static_cast<tachyon::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
     if (colorStylesMesh != nullptr)
     {
-        deviceContext.DestroyVisualColorStylesAtEnd(colorStylesMesh, interstice::DeviceScope::Application);
+        deviceContext.DestroyVisualColorStylesAtEnd(colorStylesMesh, tachyon::DeviceScope::Application);
         colorStylesMesh = nullptr;
     }
     if (visualBoxStylesMesh != nullptr)
     {
-        deviceContext.DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, interstice::DeviceScope::Application);
+        deviceContext.DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, tachyon::DeviceScope::Application);
         visualBoxStylesMesh = nullptr;
     }
     deviceContext.ReleaseLiveImages();
     deviceContext.Destroy();
     deviceContext.initialized = false;
-    interstice::vulkan::SetDeviceLost(false);
+    tachyon::vulkan::SetDeviceLost(false);
 
-    if (interstice::Result<void> result = Initialize(windowBackend); !result)
+    if (tachyon::Result<void> result = Initialize(windowBackend); !result)
         return result;
     deviceContext.RebuildLiveImages();
     vulkanImageSet->RefreshDescriptors();
@@ -377,13 +377,13 @@ void VulkanGraphicsContext::Cleanup()
 {
     if (colorStylesMesh != nullptr)
     {
-        deviceContext.DestroyVisualColorStylesAtEnd(colorStylesMesh, interstice::DeviceScope::Application);
+        deviceContext.DestroyVisualColorStylesAtEnd(colorStylesMesh, tachyon::DeviceScope::Application);
         colorStylesMesh = nullptr;
     }
 
     if (visualBoxStylesMesh != nullptr)
     {
-        deviceContext.DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, interstice::DeviceScope::Application);
+        deviceContext.DestroyVisualBoxStylesAtEnd(visualBoxStylesMesh, tachyon::DeviceScope::Application);
         visualBoxStylesMesh = nullptr;
     }
 
@@ -391,7 +391,7 @@ void VulkanGraphicsContext::Cleanup()
     if (deviceContext.initialized)
     {
         deviceContext.WaitIdle();
-        static_cast<interstice::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
+        static_cast<tachyon::PrimitiveRenderer*>(guiRenderer)->ReleaseAllTargets();
 
         // mainDeletionQueue captures atlas font textures by pointer - they must
         // outlive Flush/Destroy.
@@ -406,62 +406,62 @@ void VulkanGraphicsContext::Cleanup()
     guiRenderer = nullptr;
 }
 
-interstice::Image* VulkanGraphicsContext::CreateImage(interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped)
+tachyon::Image* VulkanGraphicsContext::CreateImage(tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped)
 {
     return deviceContext.CreateImage(size, format, sampler, mipmapped);
 }
 
-interstice::Image* VulkanGraphicsContext::CreateImage(void* data, interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped)
+tachyon::Image* VulkanGraphicsContext::CreateImage(void* data, tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped)
 {
     return deviceContext.CreateImage(data, size, format, sampler, mipmapped);
 }
 
-void VulkanGraphicsContext::DestroyImage(interstice::Image* img)
+void VulkanGraphicsContext::DestroyImage(tachyon::Image* img)
 {
     deviceContext.DestroyImage(img);
 }
 
-void VulkanGraphicsContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
+void VulkanGraphicsContext::DestroyImageAtEnd(tachyon::Image* img, tachyon::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyImageAtEnd(img, scope, loc);
 }
 
-interstice::Buffer* VulkanGraphicsContext::UploadVisualColorStyles(std::span<const interstice::VisualColorStyle> colorStyles)
+tachyon::Buffer* VulkanGraphicsContext::UploadVisualColorStyles(std::span<const tachyon::VisualColorStyle> colorStyles)
 {
     return deviceContext.UploadVisualColorStyles(colorStyles);
 }
 
-void VulkanGraphicsContext::DestroyVisualColorStyles(interstice::Buffer* buffer)
+void VulkanGraphicsContext::DestroyVisualColorStyles(tachyon::Buffer* buffer)
 {
     deviceContext.DestroyVisualColorStyles(buffer);
 }
 
-void VulkanGraphicsContext::DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
+void VulkanGraphicsContext::DestroyVisualColorStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyVisualColorStylesAtEnd(buffer, scope, loc);
 }
 
-interstice::Buffer* VulkanGraphicsContext::UploadVisualBoxStyles(std::span<const interstice::VisualBoxStyle> visualBoxStyles)
+tachyon::Buffer* VulkanGraphicsContext::UploadVisualBoxStyles(std::span<const tachyon::VisualBoxStyle> visualBoxStyles)
 {
     return deviceContext.UploadVisualBoxStyles(visualBoxStyles);
 }
 
-void VulkanGraphicsContext::DestroyVisualBoxStyles(interstice::Buffer* buffer)
+void VulkanGraphicsContext::DestroyVisualBoxStyles(tachyon::Buffer* buffer)
 {
     deviceContext.DestroyVisualBoxStyles(buffer);
 }
 
-void VulkanGraphicsContext::DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
+void VulkanGraphicsContext::DestroyVisualBoxStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope, [[maybe_unused]] const std::source_location& loc)
 {
     deviceContext.DestroyVisualBoxStylesAtEnd(buffer, scope, loc);
 }
 
-interstice::TextAtlasManager* VulkanGraphicsContext::CreateTextAtlasManager()
+tachyon::TextAtlasManager* VulkanGraphicsContext::CreateTextAtlasManager()
 {
-    return new interstice::vulkan::VulkanTextAtlasManager();
+    return new tachyon::vulkan::VulkanTextAtlasManager();
 }
 
-void interstice::vulkan::VulkanImageSet::Clear()
+void tachyon::vulkan::VulkanImageSet::Clear()
 {
     textures.clear();
     owners.clear();
@@ -472,14 +472,14 @@ void VulkanImageSet::RefreshDescriptors()
 {
     for (size_t i = 0; i < owners.size(); ++i)
         if (owners[i] != nullptr)
-            SetImage(interstice::ImageIndex(i + 1), owners[i]);
+            SetImage(tachyon::ImageIndex(i + 1), owners[i]);
 }
 
-interstice::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& descriptor)
+tachyon::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& descriptor)
 {
     if (!m_freeIndices.empty())
     {
-        const interstice::ImageIndex index = m_freeIndices.back();
+        const tachyon::ImageIndex index = m_freeIndices.back();
         m_freeIndices.pop_back();
         textures[uint32_t(index) - 1] = descriptor;
         owners[uint32_t(index) - 1]   = nullptr;
@@ -487,43 +487,43 @@ interstice::ImageIndex VulkanImageSet::Allocate(const VkDescriptorImageInfo& des
     }
     if (textures.size() >= kCapacity)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "texture set is full ({} images)", kCapacity);
-        return interstice::ImageIndex::Invalid;
+        TACHYON_LOG_ERROR(kLogVulkan, "texture set is full ({} images)", kCapacity);
+        return tachyon::ImageIndex::Invalid;
     }
     textures.push_back(descriptor);
     owners.push_back(nullptr);
-    return interstice::ImageIndex(textures.size());
+    return tachyon::ImageIndex(textures.size());
 }
 
-bool VulkanImageSet::IsInRange(interstice::ImageIndex index) const
+bool VulkanImageSet::IsInRange(tachyon::ImageIndex index) const
 {
-    if (index != interstice::ImageIndex::Invalid && uint32_t(index) <= textures.size())
+    if (index != tachyon::ImageIndex::Invalid && uint32_t(index) <= textures.size())
         return true;
-    INTERSTICE_LOG_ERROR(kLogVulkan, "Invalid image index {}", uint32_t(index));
+    TACHYON_LOG_ERROR(kLogVulkan, "Invalid image index {}", uint32_t(index));
     return false;
 }
 
-interstice::ImageIndex interstice::vulkan::VulkanImageSet::Add(interstice::Image* image)
+tachyon::ImageIndex tachyon::vulkan::VulkanImageSet::Add(tachyon::Image* image)
 {
     VulkanImage* vulkanImage = static_cast<VulkanImage*>(image);
-    const interstice::ImageIndex index = Allocate(VkDescriptorImageInfo
+    const tachyon::ImageIndex index = Allocate(VkDescriptorImageInfo
         {
             .sampler     = vulkanImage->imageSampler,
             .imageView   = vulkanImage->imageView,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         });
-    if (index != interstice::ImageIndex::Invalid)
+    if (index != tachyon::ImageIndex::Invalid)
         owners[uint32_t(index) - 1] = vulkanImage;
     return index;
 }
 
 // An empty slot (no image view) is skipped when the frame's descriptors are written.
-interstice::ImageIndex VulkanImageSet::ReserveIndex()
+tachyon::ImageIndex VulkanImageSet::ReserveIndex()
 {
     return Allocate(VkDescriptorImageInfo{});
 }
 
-void VulkanImageSet::Remove(interstice::ImageIndex index)
+void VulkanImageSet::Remove(tachyon::ImageIndex index)
 {
     if (!IsInRange(index) || textures[uint32_t(index) - 1].imageView == VK_NULL_HANDLE)
         return;
@@ -532,7 +532,7 @@ void VulkanImageSet::Remove(interstice::ImageIndex index)
     m_freeIndices.push_back(index);
 }
 
-bool VulkanImageSet::SetImage(interstice::ImageIndex index, VulkanImage* image)
+bool VulkanImageSet::SetImage(tachyon::ImageIndex index, VulkanImage* image)
 {
     if (!SetDescriptor(index, VkDescriptorImageInfo
         {
@@ -545,7 +545,7 @@ bool VulkanImageSet::SetImage(interstice::ImageIndex index, VulkanImage* image)
     return true;
 }
 
-bool VulkanImageSet::SetDescriptor(interstice::ImageIndex index, const VkDescriptorImageInfo& descriptor)
+bool VulkanImageSet::SetDescriptor(tachyon::ImageIndex index, const VkDescriptorImageInfo& descriptor)
 {
     if (!IsInRange(index))
         return false;
@@ -562,7 +562,7 @@ void VulkanGraphicsContext::BeginFrame()
     guiRenderer->Reset();
 }
 
-VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::OSWindowHandle windowHandle)
+VkSurfaceKHR tachyon::vulkan::VulkanDeviceContext::CreateSurface(tachyon::OSWindowHandle windowHandle)
 {
     if (!m_surfaceFactory || windowHandle == nullptr)
         return VK_NULL_HANDLE;
@@ -590,8 +590,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     auto system_info_ret = vkb::SystemInfo::get_system_info();
     if (!system_info_ret)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to get system info");
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to get system info") };
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to get system info");
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to get system info") };
         return VK_NULL_HANDLE;
     }
 
@@ -637,8 +637,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     auto inst_ret = instance_builder.build();
     if (!inst_ret)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the Vulkan instance: {}", inst_ret.error().message());
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the Vulkan instance: {}", inst_ret.error().message()) };
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to create the Vulkan instance: {}", inst_ret.error().message());
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to create the Vulkan instance: {}", inst_ret.error().message()) };
         return VK_NULL_HANDLE;
     }
     vkb::Instance vkb_inst = inst_ret.value();
@@ -662,15 +662,15 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     if (deviceCount > 0) {
         physicalDevices.resize(deviceCount);
         vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
-        INTERSTICE_LOG_INFO(kLogVulkan, "Detected Vulkan GPUs:");
+        TACHYON_LOG_INFO(kLogVulkan, "Detected Vulkan GPUs:");
         for (const auto& pd : physicalDevices) {
             VkPhysicalDeviceProperties props;
             vkGetPhysicalDeviceProperties(pd, &props);
-            INTERSTICE_LOG_INFO(kLogVulkan, "  - {}", props.deviceName);
+            TACHYON_LOG_INFO(kLogVulkan, "  - {}", props.deviceName);
         }
     } else {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "No Vulkan GPUs detected!");
-        initError = interstice::Error{ interstice::ErrorCode::NotFound, std::format("No Vulkan GPUs detected!") };
+        TACHYON_LOG_ERROR(kLogVulkan, "No Vulkan GPUs detected!");
+        initError = tachyon::Error{ tachyon::ErrorCode::NotFound, std::format("No Vulkan GPUs detected!") };
     }
 
     const DeviceRequirements requirements = GetDeviceRequirements();
@@ -683,8 +683,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     VkSurfaceKHR surface = m_surfaceFactory(instance, AllocationCallbacks(), windowHandle);
     if (surface == VK_NULL_HANDLE)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create surface");
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create surface") };
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to create surface");
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to create surface") };
         return fail(VK_NULL_HANDLE);
     }
 
@@ -699,8 +699,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
         .set_surface(surface)
         .select();
     if (!physicalDeviceOpt) {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message());
-        initError = interstice::Error{ interstice::ErrorCode::NotFound, std::format("No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message()) };
+        TACHYON_LOG_ERROR(kLogVulkan, "No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message());
+        initError = tachyon::Error{ tachyon::ErrorCode::NotFound, std::format("No suitable Vulkan GPU found: {}", physicalDeviceOpt.error().message()) };
         return fail(surface);
     }
     vkb::PhysicalDevice physicalDevice = physicalDeviceOpt.value();
@@ -711,8 +711,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     auto deviceRet = deviceBuilder.build();
     if (!deviceRet)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the Vulkan device: {}", deviceRet.error().message());
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the Vulkan device: {}", deviceRet.error().message()) };
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to create the Vulkan device: {}", deviceRet.error().message());
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to create the Vulkan device: {}", deviceRet.error().message()) };
         return fail(surface);
     }
     vkb::Device vkbDevice = deviceRet.value();
@@ -720,8 +720,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     auto queueIndexRet = vkbDevice.get_queue_index(vkb::QueueType::graphics);
     if (!queueRet || !queueIndexRet)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "the Vulkan device has no graphics queue");
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("the Vulkan device has no graphics queue") };
+        TACHYON_LOG_ERROR(kLogVulkan, "the Vulkan device has no graphics queue");
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("the Vulkan device has no graphics queue") };
         vkb::destroy_device(vkbDevice);
         return fail(surface);
     }
@@ -739,8 +739,8 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     allocatorInfo.pAllocationCallbacks = AllocationCallbacks();
     if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the GUI allocator");
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the GUI allocator") };
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to create the GUI allocator");
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to create the GUI allocator") };
         vkb::destroy_device(vkbDevice);
         device = VK_NULL_HANDLE;
         return fail(surface);
@@ -759,22 +759,22 @@ VkSurfaceKHR interstice::vulkan::VulkanDeviceContext::CreateSurface(interstice::
     return surface;
 }
 
-bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
+bool tachyon::vulkan::VulkanDeviceContext::AdoptExternalDevice()
 {
     const ExternalDevice& external = *m_externalDevice;
     if (external.instance == VK_NULL_HANDLE || external.physicalDevice == VK_NULL_HANDLE
         || external.device == VK_NULL_HANDLE || external.graphicsQueue == VK_NULL_HANDLE)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "External Vulkan device is incomplete (instance, physical device, device and queue are required)");
-        initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("External Vulkan device is incomplete (instance, physical device, device and queue are required)") };
+        TACHYON_LOG_ERROR(kLogVulkan, "External Vulkan device is incomplete (instance, physical device, device and queue are required)");
+        initError = tachyon::Error{ tachyon::ErrorCode::Unsupported, std::format("External Vulkan device is incomplete (instance, physical device, device and queue are required)") };
         return false;
     }
 
     std::string problems;
     if (!CheckPhysicalDeviceSupport(external.physicalDevice, &problems))
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "External Vulkan device cannot run the GUI:\n{}", problems);
-        initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("External Vulkan device cannot run the GUI:\n{}", problems) };
+        TACHYON_LOG_ERROR(kLogVulkan, "External Vulkan device cannot run the GUI:\n{}", problems);
+        initError = tachyon::Error{ tachyon::ErrorCode::Unsupported, std::format("External Vulkan device cannot run the GUI:\n{}", problems) };
         return false;
     }
 
@@ -793,8 +793,8 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
         // VMA has no query for its creation flags; this file compiles the implementation.
         if (!external.allocator->m_UseKhrBufferDeviceAddress)
         {
-            INTERSTICE_LOG_ERROR(kLogVulkan, "The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT");
-            initError = interstice::Error{ interstice::ErrorCode::Unsupported, std::format("The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT") };
+            TACHYON_LOG_ERROR(kLogVulkan, "The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT");
+            initError = tachyon::Error{ tachyon::ErrorCode::Unsupported, std::format("The host allocator must be created with VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT") };
             return false;
         }
         allocator       = external.allocator;
@@ -810,8 +810,8 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
         allocatorInfo.pAllocationCallbacks = AllocationCallbacks();
         if (vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS)
         {
-            INTERSTICE_LOG_ERROR(kLogVulkan, "Failed to create the GUI allocator on the external device");
-            initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("Failed to create the GUI allocator on the external device") };
+            TACHYON_LOG_ERROR(kLogVulkan, "Failed to create the GUI allocator on the external device");
+            initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("Failed to create the GUI allocator on the external device") };
             return false;
         }
         m_ownsAllocator = true;
@@ -819,19 +819,19 @@ bool interstice::vulkan::VulkanDeviceContext::AdoptExternalDevice()
     return true;
 }
 
-void interstice::vulkan::VulkanDeviceContext::SetAllocationHooks(const interstice::AllocationHooks& hooks)
+void tachyon::vulkan::VulkanDeviceContext::SetAllocationHooks(const tachyon::AllocationHooks& hooks)
 {
     m_hooks = hooks;
     m_allocationCallbacks = {};
     m_allocationCallbacks.pUserData = &m_hooks;
     m_allocationCallbacks.pfnAllocation = [](void* user, size_t size, size_t alignment, VkSystemAllocationScope) -> void*
     {
-        const auto& h = *static_cast<const interstice::AllocationHooks*>(user);
+        const auto& h = *static_cast<const tachyon::AllocationHooks*>(user);
         return h.allocate(size, alignment, h.user);
     };
     m_allocationCallbacks.pfnReallocation = [](void* user, void* original, size_t size, size_t alignment, VkSystemAllocationScope) -> void*
     {
-        const auto& h = *static_cast<const interstice::AllocationHooks*>(user);
+        const auto& h = *static_cast<const tachyon::AllocationHooks*>(user);
         if (size == 0)   // Vulkan's realloc to 0 frees
         {
             h.free(original, h.user);
@@ -841,12 +841,12 @@ void interstice::vulkan::VulkanDeviceContext::SetAllocationHooks(const interstic
     };
     m_allocationCallbacks.pfnFree = [](void* user, void* memory)
     {
-        const auto& h = *static_cast<const interstice::AllocationHooks*>(user);
+        const auto& h = *static_cast<const tachyon::AllocationHooks*>(user);
         h.free(memory, h.user);
     };
 }
 
-interstice::vulkan::VulkanDeviceContext::DeviceRequirements interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements()
+tachyon::vulkan::VulkanDeviceContext::DeviceRequirements tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements()
 {
     DeviceRequirements requirements;
     requirements.apiVersion = VK_API_VERSION_1_3;
@@ -878,7 +878,7 @@ interstice::vulkan::VulkanDeviceContext::DeviceRequirements interstice::vulkan::
     return requirements;
 }
 
-bool interstice::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(VkPhysicalDevice physicalDevice, std::string* problems)
+bool tachyon::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(VkPhysicalDevice physicalDevice, std::string* problems)
 {
     bool supported = true;
     const auto missing = [&](const std::string& what)
@@ -900,23 +900,23 @@ bool interstice::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(VkPhysi
     VkPhysicalDeviceFeatures2 have{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &havefeatures11 };
     vkGetPhysicalDeviceFeatures2(physicalDevice, &have);
 
-#define INTERSTICE_REQUIRE_FEATURE(group, name) \
+#define TACHYON_REQUIRE_FEATURE(group, name) \
     if (required.group.name && !have##group.name) missing(#group "." #name)
-    INTERSTICE_REQUIRE_FEATURE(features13, dynamicRendering);
-    INTERSTICE_REQUIRE_FEATURE(features13, synchronization2);
-    INTERSTICE_REQUIRE_FEATURE(features13, robustImageAccess);
-    INTERSTICE_REQUIRE_FEATURE(features12, bufferDeviceAddress);
-    INTERSTICE_REQUIRE_FEATURE(features12, descriptorIndexing);
-    INTERSTICE_REQUIRE_FEATURE(features12, descriptorBindingPartiallyBound);
-    INTERSTICE_REQUIRE_FEATURE(features12, descriptorBindingVariableDescriptorCount);
-    INTERSTICE_REQUIRE_FEATURE(features12, runtimeDescriptorArray);
-    INTERSTICE_REQUIRE_FEATURE(features12, storageBuffer8BitAccess);
-    INTERSTICE_REQUIRE_FEATURE(features12, uniformAndStorageBuffer8BitAccess);
-    INTERSTICE_REQUIRE_FEATURE(features12, shaderSampledImageArrayNonUniformIndexing);
-    INTERSTICE_REQUIRE_FEATURE(features12, shaderInt8);
-    INTERSTICE_REQUIRE_FEATURE(features12, shaderFloat16);
-    INTERSTICE_REQUIRE_FEATURE(features11, storageBuffer16BitAccess);
-#undef INTERSTICE_REQUIRE_FEATURE
+    TACHYON_REQUIRE_FEATURE(features13, dynamicRendering);
+    TACHYON_REQUIRE_FEATURE(features13, synchronization2);
+    TACHYON_REQUIRE_FEATURE(features13, robustImageAccess);
+    TACHYON_REQUIRE_FEATURE(features12, bufferDeviceAddress);
+    TACHYON_REQUIRE_FEATURE(features12, descriptorIndexing);
+    TACHYON_REQUIRE_FEATURE(features12, descriptorBindingPartiallyBound);
+    TACHYON_REQUIRE_FEATURE(features12, descriptorBindingVariableDescriptorCount);
+    TACHYON_REQUIRE_FEATURE(features12, runtimeDescriptorArray);
+    TACHYON_REQUIRE_FEATURE(features12, storageBuffer8BitAccess);
+    TACHYON_REQUIRE_FEATURE(features12, uniformAndStorageBuffer8BitAccess);
+    TACHYON_REQUIRE_FEATURE(features12, shaderSampledImageArrayNonUniformIndexing);
+    TACHYON_REQUIRE_FEATURE(features12, shaderInt8);
+    TACHYON_REQUIRE_FEATURE(features12, shaderFloat16);
+    TACHYON_REQUIRE_FEATURE(features11, storageBuffer16BitAccess);
+#undef TACHYON_REQUIRE_FEATURE
     if (required.features.shaderInt16 && !have.features.shaderInt16) missing("features.shaderInt16");
     if (required.features.robustBufferAccess && !have.features.robustBufferAccess) missing("features.robustBufferAccess");
 
@@ -933,32 +933,32 @@ bool interstice::vulkan::VulkanDeviceContext::CheckPhysicalDeviceSupport(VkPhysi
     return supported;
 }
 
-bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
+bool tachyon::vulkan::VulkanDeviceContext::InitializeSharedResources()
 {
     auto failed = [this](const char* what)
     {
-        INTERSTICE_LOG_ERROR(kLogVulkan, "failed to create the {}", what);
-        initError = interstice::Error{ interstice::ErrorCode::Failed, std::format("failed to create the {}", what) };
-        GetDeletionQueue(interstice::DeviceScope::Application).flush();
+        TACHYON_LOG_ERROR(kLogVulkan, "failed to create the {}", what);
+        initError = tachyon::Error{ tachyon::ErrorCode::Failed, std::format("failed to create the {}", what) };
+        GetDeletionQueue(tachyon::DeviceScope::Application).flush();
         return false;
     };
 
     // Command pool + buffer for immediate submits; individual buffers can be reset.
-    commandPoolInfo = interstice::vulkan::command_pool_create_info(graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    commandPoolInfo = tachyon::vulkan::command_pool_create_info(graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     if (vkCreateCommandPool(device, &commandPoolInfo, AllocationCallbacks(), &immCommandPool) != VK_SUCCESS)
         return failed("immediate command pool");
-    GetDeletionQueue(interstice::DeviceScope::Application)
+    GetDeletionQueue(tachyon::DeviceScope::Application)
         .push_function([=, this]() { vkDestroyCommandPool(device, immCommandPool, AllocationCallbacks()); });
 
-    VkCommandBufferAllocateInfo cmdAllocInfo = interstice::vulkan::command_buffer_allocate_info(immCommandPool, 1);
+    VkCommandBufferAllocateInfo cmdAllocInfo = tachyon::vulkan::command_buffer_allocate_info(immCommandPool, 1);
     if (vkAllocateCommandBuffers(device, &cmdAllocInfo, &immCommandBuffer) != VK_SUCCESS)
         return failed("immediate command buffer");
 
     // Starts signalled so the first wait on it returns at once.
-    fenceCreateInfo = interstice::vulkan::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
+    fenceCreateInfo = tachyon::vulkan::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
     if (vkCreateFence(device, &fenceCreateInfo, AllocationCallbacks(), &immFence) != VK_SUCCESS)
         return failed("immediate fence");
-    GetDeletionQueue(interstice::DeviceScope::Application)
+    GetDeletionQueue(tachyon::DeviceScope::Application)
         .push_function([=, this]() { vkDestroyFence(device, immFence, AllocationCallbacks()); });
 
     {
@@ -980,7 +980,7 @@ bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
         if (singleImageDescriptorLayout == VK_NULL_HANDLE)
             return failed("texture descriptor set layout");
     }
-    GetDeletionQueue(interstice::DeviceScope::Application)
+    GetDeletionQueue(tachyon::DeviceScope::Application)
         .push_function([&]() { vkDestroyDescriptorSetLayout(device, singleImageDescriptorLayout, AllocationCallbacks()); });
 
     // Samplers
@@ -1015,13 +1015,13 @@ bool interstice::vulkan::VulkanDeviceContext::InitializeSharedResources()
     {
         if (vkCreateSampler(device, info, AllocationCallbacks(), sampler) != VK_SUCCESS)
             return failed("default samplers");
-        GetDeletionQueue(interstice::DeviceScope::Application)
+        GetDeletionQueue(tachyon::DeviceScope::Application)
             .push_function([this, sampler]() { vkDestroySampler(device, *sampler, AllocationCallbacks()); });
     }
     return true;
 }
 
-void interstice::vulkan::VulkanDeviceContext::Flush()
+void tachyon::vulkan::VulkanDeviceContext::Flush()
 {
     WaitIdle();
     WaitForFence(device, immFence);
@@ -1029,12 +1029,12 @@ void interstice::vulkan::VulkanDeviceContext::Flush()
     for (auto& q : frameDeletionQueues) q.flush();
 }
 
-void interstice::vulkan::VulkanDeviceContext::Destroy()
+void tachyon::vulkan::VulkanDeviceContext::Destroy()
 {
     WaitIdle();
     WaitForFence(device, immFence);
     for (auto& q : frameDeletionQueues) q.flush();
-    GetDeletionQueue(interstice::DeviceScope::Application).flush();
+    GetDeletionQueue(tachyon::DeviceScope::Application).flush();
     for (const PendingUpload& upload : m_pendingUploads) // never recorded: no frame ran
         DestroyBuffer(upload.staging);
     m_pendingUploads.clear();
@@ -1044,7 +1044,7 @@ void interstice::vulkan::VulkanDeviceContext::Destroy()
     vmaCalculateStatistics(allocator, &totalStats);
     if (totalStats.total.statistics.allocationCount > 0)
     {
-        INTERSTICE_LOG_WARNING(kLogVulkan, "{} GPU allocations still alive at shutdown; VMA stats follow on stdout",
+        TACHYON_LOG_WARNING(kLogVulkan, "{} GPU allocations still alive at shutdown; VMA stats follow on stdout",
                     totalStats.total.statistics.allocationCount);
         // The JSON runs to kilobytes, more than a log record holds.
         char* stats = nullptr;
@@ -1064,7 +1064,7 @@ void interstice::vulkan::VulkanDeviceContext::Destroy()
     }
 }
 
-interstice::vulkan::Buffer interstice::vulkan::VulkanDeviceContext::CreateBuffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const
+tachyon::vulkan::Buffer tachyon::vulkan::VulkanDeviceContext::CreateBuffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const
 {
     VkBufferCreateInfo bufferInfo =
     {
@@ -1079,23 +1079,23 @@ interstice::vulkan::Buffer interstice::vulkan::VulkanDeviceContext::CreateBuffer
         .usage = memoryUsage
     };
 
-    interstice::vulkan::Buffer newBuffer {};
-    INTERSTICE_VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &vmaallocInfo, &newBuffer.buffer, &newBuffer.allocation, &newBuffer.info));
+    tachyon::vulkan::Buffer newBuffer {};
+    TACHYON_VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &vmaallocInfo, &newBuffer.buffer, &newBuffer.allocation, &newBuffer.info));
     vmaSetAllocationName(allocator, newBuffer.allocation, "CreateBuffer");
     return newBuffer;
 }
 
-interstice::vulkan::Buffer interstice::vulkan::VulkanDeviceContext::CreateMappedStorageBuffer(const void* data, size_t size, VkDeviceAddress& outAddress) const
+tachyon::vulkan::Buffer tachyon::vulkan::VulkanDeviceContext::CreateMappedStorageBuffer(const void* data, size_t size, VkDeviceAddress& outAddress) const
 {
     if (size == 0)
     {
         outAddress = 0;
-        return interstice::vulkan::Buffer {};
+        return tachyon::vulkan::Buffer {};
     }
 
     // Host-visible, persistently mapped (CreateBuffer sets MAPPED_BIT) and read by
     // device address, so a plain memcpy uploads it: no staging copy, no GPU wait.
-    interstice::vulkan::Buffer buf = CreateBuffer(size,
+    tachyon::vulkan::Buffer buf = CreateBuffer(size,
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
         VMA_MEMORY_USAGE_CPU_TO_GPU);
 
@@ -1108,56 +1108,56 @@ interstice::vulkan::Buffer interstice::vulkan::VulkanDeviceContext::CreateMapped
     return buf;
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyBuffer(const Buffer& buffer) const
+void tachyon::vulkan::VulkanDeviceContext::DestroyBuffer(const Buffer& buffer) const
 {
     if (buffer.buffer == nullptr)
         return;
     vmaDestroyBuffer(allocator, buffer.buffer, buffer.allocation);
 }
 
-static VkFormat ToVulkanImageFormat(interstice::ImageFormat format)
+static VkFormat ToVulkanImageFormat(tachyon::ImageFormat format)
 {
     switch (format)
     {
     default:                                return VkFormat::VK_FORMAT_UNDEFINED;
 
-    case interstice::ImageFormat::R8:              return VkFormat::VK_FORMAT_R8_UNORM;
-    case interstice::ImageFormat::R8_SRGB:         return VkFormat::VK_FORMAT_R8_SRGB;
-    case interstice::ImageFormat::R8G8:            return VkFormat::VK_FORMAT_R8G8_UNORM;
-    case interstice::ImageFormat::R8G8_SRGB:       return VkFormat::VK_FORMAT_R8G8_SRGB;
-    case interstice::ImageFormat::R8G8B8:          return VkFormat::VK_FORMAT_R8G8B8_UNORM;
-    case interstice::ImageFormat::R8G8B8_SRGB:     return VkFormat::VK_FORMAT_R8G8B8_SRGB;
-    case interstice::ImageFormat::R8G8B8A8:        return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
-    case interstice::ImageFormat::R8G8B8A8_SRGB:   return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+    case tachyon::ImageFormat::R8:              return VkFormat::VK_FORMAT_R8_UNORM;
+    case tachyon::ImageFormat::R8_SRGB:         return VkFormat::VK_FORMAT_R8_SRGB;
+    case tachyon::ImageFormat::R8G8:            return VkFormat::VK_FORMAT_R8G8_UNORM;
+    case tachyon::ImageFormat::R8G8_SRGB:       return VkFormat::VK_FORMAT_R8G8_SRGB;
+    case tachyon::ImageFormat::R8G8B8:          return VkFormat::VK_FORMAT_R8G8B8_UNORM;
+    case tachyon::ImageFormat::R8G8B8_SRGB:     return VkFormat::VK_FORMAT_R8G8B8_SRGB;
+    case tachyon::ImageFormat::R8G8B8A8:        return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+    case tachyon::ImageFormat::R8G8B8A8_SRGB:   return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
     }
 }
 
-static VkSampler ToVulkanSampler(interstice::Sampler sampler, const interstice::vulkan::VulkanDeviceContext* context)
+static VkSampler ToVulkanSampler(tachyon::Sampler sampler, const tachyon::vulkan::VulkanDeviceContext* context)
 {
     switch (sampler)
     {
     default:                                return VkSampler {};
-    case interstice::Sampler::NearestRepeat:       return context->defaultSamplerNearest;
-    case interstice::Sampler::LinearRepeat:        return context->defaultSamplerLinear;
-    case interstice::Sampler::LinearClampToEdge:   return context->defaultSamplerLinearClampToEdge;
+    case tachyon::Sampler::NearestRepeat:       return context->defaultSamplerNearest;
+    case tachyon::Sampler::LinearRepeat:        return context->defaultSamplerLinear;
+    case tachyon::Sampler::LinearClampToEdge:   return context->defaultSamplerLinearClampToEdge;
     }
 }
 
-interstice::Buffer* interstice::vulkan::VulkanDeviceContext::UploadVisualBoxStyles(::std::span<const interstice::VisualBoxStyle> visualBoxStyles) const
+tachyon::Buffer* tachyon::vulkan::VulkanDeviceContext::UploadVisualBoxStyles(::std::span<const tachyon::VisualBoxStyle> visualBoxStyles) const
 {
     VulkanBuffer* buffer = new VulkanBuffer();
     buffer->visualBoxStyleBuffers = UploadMesh(visualBoxStyles);
     return buffer;
 }
 
-interstice::Buffer* interstice::vulkan::VulkanDeviceContext::UploadVisualColorStyles(::std::span<const interstice::VisualColorStyle> colorStyles) const
+tachyon::Buffer* tachyon::vulkan::VulkanDeviceContext::UploadVisualColorStyles(::std::span<const tachyon::VisualColorStyle> colorStyles) const
 {
     VulkanBuffer* buffer = new VulkanBuffer();
     buffer->visualColorStyleBuffers = UploadMesh(colorStyles);
     return buffer;
 }
 
-interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped) const
+tachyon::Image* tachyon::vulkan::VulkanDeviceContext::CreateImage(tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped) const
 {
     VulkanImage* image = new VulkanImage();
     VkFormat vulkan_format = ToVulkanImageFormat(format);
@@ -1168,7 +1168,7 @@ interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(intersti
     return image;
 }
 
-interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(const void* data, interstice::uint2 size, interstice::ImageFormat format, interstice::Sampler sampler, bool mipmapped)
+tachyon::Image* tachyon::vulkan::VulkanDeviceContext::CreateImage(const void* data, tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped)
 {
     const VkFormat   vulkanFormat = ToVulkanImageFormat(format);
     const VkExtent3D extent { size.x, size.y, 1 };
@@ -1191,35 +1191,35 @@ interstice::Image* interstice::vulkan::VulkanDeviceContext::CreateImage(const vo
     return image;
 }
 
-void interstice::vulkan::VulkanDeviceContext::RecordPendingUploads(VkCommandBuffer cmd)
+void tachyon::vulkan::VulkanDeviceContext::RecordPendingUploads(VkCommandBuffer cmd)
 {
     for (const PendingUpload& upload : m_pendingUploads)
     {
-        interstice::vulkan::transition_image(cmd, upload.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        tachyon::vulkan::transition_image(cmd, upload.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         VkBufferImageCopy region {};
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.layerCount = 1;
         region.imageExtent                 = upload.extent;
         vkCmdCopyBufferToImage(cmd, upload.staging.buffer, upload.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         if (upload.mipmapped) // leaves every level in SHADER_READ_ONLY_OPTIMAL
-            interstice::vulkan::generate_mipmaps(cmd, upload.image, VkExtent2D{ upload.extent.width, upload.extent.height });
+            tachyon::vulkan::generate_mipmaps(cmd, upload.image, VkExtent2D{ upload.extent.width, upload.extent.height });
         else
-            interstice::vulkan::transition_image(cmd, upload.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            tachyon::vulkan::transition_image(cmd, upload.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         const Buffer staging = upload.staging;
-        GetDeletionQueue(interstice::DeviceScope::Frame).push_function([this, staging]() { DestroyBuffer(staging); });
+        GetDeletionQueue(tachyon::DeviceScope::Frame).push_function([this, staging]() { DestroyBuffer(staging); });
     }
     m_pendingUploads.clear();
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyImage(interstice::Image* img)
+void tachyon::vulkan::VulkanDeviceContext::DestroyImage(tachyon::Image* img)
 {
     VulkanImage* vulkanImage = (VulkanImage*)img;
     m_liveImages.erase(vulkanImage);
     DestroyImage(*vulkanImage);
 }
 
-void interstice::vulkan::VulkanDeviceContext::ReleaseLiveImages()
+void tachyon::vulkan::VulkanDeviceContext::ReleaseLiveImages()
 {
     for (VulkanImage* image : m_liveImages)
     {
@@ -1230,7 +1230,7 @@ void interstice::vulkan::VulkanDeviceContext::ReleaseLiveImages()
     }
 }
 
-void interstice::vulkan::VulkanDeviceContext::RebuildLiveImages()
+void tachyon::vulkan::VulkanDeviceContext::RebuildLiveImages()
 {
     for (VulkanImage* image : m_liveImages)
     {
@@ -1246,57 +1246,57 @@ void interstice::vulkan::VulkanDeviceContext::RebuildLiveImages()
     }
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyImageAtEnd(interstice::Image* img, interstice::DeviceScope scope,
+void tachyon::vulkan::VulkanDeviceContext::DestroyImageAtEnd(tachyon::Image* img, tachyon::DeviceScope scope,
                                                     [[maybe_unused]] const std::source_location& loc)
 {
     m_liveImages.erase((VulkanImage*)img);
     VulkanImage vulkanImage = *(VulkanImage*)img;
     auto func = [this, vulkanImage, img]()
         {
-            //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
+            //TACHYON_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyImage(vulkanImage);
             delete img;
         };
     GetDeletionQueue(scope).push_function(func);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyVisualColorStyles(interstice::Buffer* buffer)
+void tachyon::vulkan::VulkanDeviceContext::DestroyVisualColorStyles(tachyon::Buffer* buffer)
 {
     VulkanBuffer* vulkanBuffer = (VulkanBuffer*)buffer;
     DestroyMesh(vulkanBuffer->visualColorStyleBuffers);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyVisualColorStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
+void tachyon::vulkan::VulkanDeviceContext::DestroyVisualColorStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope,
                                                      [[maybe_unused]] const std::source_location& loc)
 {
     auto func = [this, buffer]()
         {
-            //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
+            //TACHYON_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyVisualColorStyles(buffer);
             delete buffer;
         };
     GetDeletionQueue(scope).push_function(func);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyVisualBoxStyles(interstice::Buffer* buffer)
+void tachyon::vulkan::VulkanDeviceContext::DestroyVisualBoxStyles(tachyon::Buffer* buffer)
 {
     VulkanBuffer* vulkanBuffer = (VulkanBuffer*)buffer;
     DestroyMesh(vulkanBuffer->visualBoxStyleBuffers);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyVisualBoxStylesAtEnd(interstice::Buffer* buffer, interstice::DeviceScope scope,
+void tachyon::vulkan::VulkanDeviceContext::DestroyVisualBoxStylesAtEnd(tachyon::Buffer* buffer, tachyon::DeviceScope scope,
                                                      [[maybe_unused]] const std::source_location& loc)
 {
     auto func = [this, buffer]()
         {
-            //INTERSTICE_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
+            //TACHYON_LOG_ERROR(kLogVulkan, "{}({}): {}", loc.file_name(), loc.line(), loc.function_name());
             DestroyVisualBoxStyles(buffer);
             delete buffer;
         };
     GetDeletionQueue(scope).push_function(func);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyImage(const VulkanImage& img)
+void tachyon::vulkan::VulkanDeviceContext::DestroyImage(const VulkanImage& img)
 {
     // An upload still queued for this image has nothing left to fill.
     std::erase_if(m_pendingUploads, [&](const PendingUpload& upload)
@@ -1309,13 +1309,13 @@ void interstice::vulkan::VulkanDeviceContext::DestroyImage(const VulkanImage& im
     vmaDestroyImage(allocator, img.image, img.allocation);
 }
 
-interstice::vulkan::VulkanImage interstice::vulkan::VulkanDeviceContext::CreateImage(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, VkSampler sampler, bool mipmapped) const
+tachyon::vulkan::VulkanImage tachyon::vulkan::VulkanDeviceContext::CreateImage(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, VkSampler sampler, bool mipmapped) const
 {
     uint32_t mipLevels = !mipmapped ? 1 : static_cast<uint32_t>(std::floor(std::log2(std::max(size.width, size.height)))) + 1;
 
     VkImageAspectFlags aspectFlag = (format == VK_FORMAT_D32_SFLOAT) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 
-    VkImageCreateInfo img_info = interstice::vulkan::image_create_info(format, usage, size);
+    VkImageCreateInfo img_info = tachyon::vulkan::image_create_info(format, usage, size);
     img_info.mipLevels = mipLevels;
 
     VmaAllocationCreateInfo allocinfo =
@@ -1326,7 +1326,7 @@ interstice::vulkan::VulkanImage interstice::vulkan::VulkanDeviceContext::CreateI
 
     VulkanImage newImage { .imageExtent = size, .imageFormat = format, .imageSampler = sampler };
 
-    INTERSTICE_VK_CHECK(vmaCreateImage(allocator, &img_info, &allocinfo, &newImage.image, &newImage.allocation, nullptr));
+    TACHYON_VK_CHECK(vmaCreateImage(allocator, &img_info, &allocinfo, &newImage.image, &newImage.allocation, nullptr));
 
     static int imageCount = 0;
     static const char* imageNameList[20] =
@@ -1356,46 +1356,46 @@ interstice::vulkan::VulkanImage interstice::vulkan::VulkanDeviceContext::CreateI
     vmaSetAllocationName(allocator, newImage.allocation, imageNameList[imageCount]);
     imageCount = (imageCount + 1) % 20;
 
-    VkImageViewCreateInfo view_info = interstice::vulkan::imageview_create_info(format, newImage.image, aspectFlag);
+    VkImageViewCreateInfo view_info = tachyon::vulkan::imageview_create_info(format, newImage.image, aspectFlag);
     view_info.subresourceRange.levelCount = img_info.mipLevels;
 
-    INTERSTICE_VK_CHECK(vkCreateImageView(device, &view_info, AllocationCallbacks(), &newImage.imageView));
+    TACHYON_VK_CHECK(vkCreateImageView(device, &view_info, AllocationCallbacks(), &newImage.imageView));
     return newImage;
 }
 
-interstice::vulkan::VisualColorStyleBuffers interstice::vulkan::VulkanDeviceContext::UploadMesh(std::span<const interstice::VisualColorStyle> visualColorStyles) const
+tachyon::vulkan::VisualColorStyleBuffers tachyon::vulkan::VulkanDeviceContext::UploadMesh(std::span<const tachyon::VisualColorStyle> visualColorStyles) const
 {
-    const size_t styleBufferSize = visualColorStyles.size() * sizeof(interstice::VisualColorStyle);
+    const size_t styleBufferSize = visualColorStyles.size() * sizeof(tachyon::VisualColorStyle);
 
-    interstice::vulkan::VisualColorStyleBuffers styles{};
+    tachyon::vulkan::VisualColorStyleBuffers styles{};
 
     styles.colorStyleBuffer = CreateMappedStorageBuffer(visualColorStyles.data(), styleBufferSize, styles.colorStyleBufferAddress);
 
     return styles;
 }
 
-interstice::vulkan::VisualBoxStyleBuffers interstice::vulkan::VulkanDeviceContext::UploadMesh(std::span<const interstice::VisualBoxStyle> visualBoxStyles) const
+tachyon::vulkan::VisualBoxStyleBuffers tachyon::vulkan::VulkanDeviceContext::UploadMesh(std::span<const tachyon::VisualBoxStyle> visualBoxStyles) const
 {
-    const size_t styleBufferSize = visualBoxStyles.size() * sizeof(interstice::VisualBoxStyle);
+    const size_t styleBufferSize = visualBoxStyles.size() * sizeof(tachyon::VisualBoxStyle);
 
-    interstice::vulkan::VisualBoxStyleBuffers styles {};
+    tachyon::vulkan::VisualBoxStyleBuffers styles {};
 
     styles.boxStyleBuffer = CreateMappedStorageBuffer(visualBoxStyles.data(), styleBufferSize, styles.styleBufferAddress);
 
     return styles;
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyMesh(const interstice::vulkan::VisualBoxStyleBuffers& mesh) const
+void tachyon::vulkan::VulkanDeviceContext::DestroyMesh(const tachyon::vulkan::VisualBoxStyleBuffers& mesh) const
 {
     DestroyBuffer(mesh.boxStyleBuffer);
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyMesh(const interstice::vulkan::VisualColorStyleBuffers& mesh) const
+void tachyon::vulkan::VulkanDeviceContext::DestroyMesh(const tachyon::vulkan::VisualColorStyleBuffers& mesh) const
 {
     DestroyBuffer(mesh.colorStyleBuffer);
 }
 
-VkShaderModule interstice::vulkan::VulkanDeviceContext::CreateShader(std::span<uint32_t> spirvBuffer) const
+VkShaderModule tachyon::vulkan::VulkanDeviceContext::CreateShader(std::span<uint32_t> spirvBuffer) const
 {
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -1413,7 +1413,7 @@ VkShaderModule interstice::vulkan::VulkanDeviceContext::CreateShader(std::span<u
     return shaderModule;
 }
 
-void interstice::vulkan::VulkanDeviceContext::DestroyShader(const VkShaderModule& shader) const
+void tachyon::vulkan::VulkanDeviceContext::DestroyShader(const VkShaderModule& shader) const
 {
     vkDestroyShaderModule(device, shader, AllocationCallbacks());
 }

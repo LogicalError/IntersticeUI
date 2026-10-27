@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class ElementStorage;
     class GUIStateManager;
@@ -165,4 +165,4 @@ namespace interstice
                                            MenuManager& menuManager,
                                            int depth);
 
-} // namespace interstice
+} // namespace tachyon

@@ -5,7 +5,7 @@
 #include <gui_core/gui_units.h>
 #include <gui_core/style/gui_style.h>
 
-namespace interstice
+namespace tachyon
 {
     // ------------------------------------------------------------------------
     // Layout constraints - optional per-element size/position overrides
@@ -211,27 +211,27 @@ namespace interstice
         void ApplyVertical(IntRect& rect, const IntRect& targetRect)   const { y.Apply(rect, 1, targetRect); }
 
         // --- Builders (work on both lvalues and temporaries) ---
-        #define INTERSTICE_LO_BUILDER(name, body) \
+        #define TACHYON_LO_BUILDER(name, body) \
             LayoutOverride&  name &  { body return *this; } \
             LayoutOverride&& name && { body return std::move(*this); }
 
         /// Size, min and max size, in CSS px (scaled by the UI scale) or Pixels (as they are).
         ///@{
-        INTERSTICE_LO_BUILDER(Size(CssPx w, CssPx h),          width.SetValue(w); height.SetValue(h);)
-        INTERSTICE_LO_BUILDER(Size(Pixels w, Pixels h),        width.SetValue(w); height.SetValue(h);)
-        INTERSTICE_LO_BUILDER(Size(int2 pixels),               width.SetValue(Pixels{ pixels.x }); height.SetValue(Pixels{ pixels.y });)
-        INTERSTICE_LO_BUILDER(Width(CssPx w),                  width.SetValue(w);)
-        INTERSTICE_LO_BUILDER(Width(Pixels w),                 width.SetValue(w);)
-        INTERSTICE_LO_BUILDER(Height(CssPx h),                 height.SetValue(h);)
-        INTERSTICE_LO_BUILDER(Height(Pixels h),                height.SetValue(h);)
-        INTERSTICE_LO_BUILDER(MinWidth(CssPx w),               width.SetMin(w);)
-        INTERSTICE_LO_BUILDER(MinWidth(Pixels w),              width.SetMin(w);)
-        INTERSTICE_LO_BUILDER(MinHeight(CssPx h),              height.SetMin(h);)
-        INTERSTICE_LO_BUILDER(MinHeight(Pixels h),             height.SetMin(h);)
-        INTERSTICE_LO_BUILDER(MaxWidth(CssPx w),               width.SetMax(w);)
-        INTERSTICE_LO_BUILDER(MaxWidth(Pixels w),              width.SetMax(w);)
-        INTERSTICE_LO_BUILDER(MaxHeight(CssPx h),              height.SetMax(h);)
-        INTERSTICE_LO_BUILDER(MaxHeight(Pixels h),             height.SetMax(h);)
+        TACHYON_LO_BUILDER(Size(CssPx w, CssPx h),          width.SetValue(w); height.SetValue(h);)
+        TACHYON_LO_BUILDER(Size(Pixels w, Pixels h),        width.SetValue(w); height.SetValue(h);)
+        TACHYON_LO_BUILDER(Size(int2 pixels),               width.SetValue(Pixels{ pixels.x }); height.SetValue(Pixels{ pixels.y });)
+        TACHYON_LO_BUILDER(Width(CssPx w),                  width.SetValue(w);)
+        TACHYON_LO_BUILDER(Width(Pixels w),                 width.SetValue(w);)
+        TACHYON_LO_BUILDER(Height(CssPx h),                 height.SetValue(h);)
+        TACHYON_LO_BUILDER(Height(Pixels h),                height.SetValue(h);)
+        TACHYON_LO_BUILDER(MinWidth(CssPx w),               width.SetMin(w);)
+        TACHYON_LO_BUILDER(MinWidth(Pixels w),              width.SetMin(w);)
+        TACHYON_LO_BUILDER(MinHeight(CssPx h),              height.SetMin(h);)
+        TACHYON_LO_BUILDER(MinHeight(Pixels h),             height.SetMin(h);)
+        TACHYON_LO_BUILDER(MaxWidth(CssPx w),               width.SetMax(w);)
+        TACHYON_LO_BUILDER(MaxWidth(Pixels w),              width.SetMax(w);)
+        TACHYON_LO_BUILDER(MaxHeight(CssPx h),              height.SetMax(h);)
+        TACHYON_LO_BUILDER(MaxHeight(Pixels h),             height.SetMax(h);)
         ///@}
 
         /// CSS px to pixels; ElementStorage::Add does it with the style manager's Px.
@@ -240,53 +240,53 @@ namespace interstice
         /// Position builders, in pixels (near = left/top, far = right/bottom).
         /// Position() is out of flow in overlay space (PositionType::Fixed): it ignores the parent's scroll.
         ///@{
-        INTERSTICE_LO_BUILDER(Position(int2 p),                                     x = PositionConstraintAxis::Fixed(int16_t(p.x)); y = PositionConstraintAxis::Fixed(int16_t(p.y));)
-        INTERSTICE_LO_BUILDER(Position(int32_t px, int32_t py),                     x = PositionConstraintAxis::Fixed(int16_t(px)); y = PositionConstraintAxis::Fixed(int16_t(py));)
-        INTERSTICE_LO_BUILDER(Position(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Fixed(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Fixed(int16_t(t), int16_t(b));)
-        INTERSTICE_LO_BUILDER(Position(const EdgeInset& i),                         x = PositionConstraintAxis::Fixed(i.left, i.right); y = PositionConstraintAxis::Fixed(i.top, i.bottom);)
+        TACHYON_LO_BUILDER(Position(int2 p),                                     x = PositionConstraintAxis::Fixed(int16_t(p.x)); y = PositionConstraintAxis::Fixed(int16_t(p.y));)
+        TACHYON_LO_BUILDER(Position(int32_t px, int32_t py),                     x = PositionConstraintAxis::Fixed(int16_t(px)); y = PositionConstraintAxis::Fixed(int16_t(py));)
+        TACHYON_LO_BUILDER(Position(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Fixed(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Fixed(int16_t(t), int16_t(b));)
+        TACHYON_LO_BUILDER(Position(const EdgeInset& i),                         x = PositionConstraintAxis::Fixed(i.left, i.right); y = PositionConstraintAxis::Fixed(i.top, i.bottom);)
         ///@}
 
         /// Centered in the parent on both axes.
-        INTERSTICE_LO_BUILDER(Centered(),                                           x = PositionConstraintAxis::Centered(); y = PositionConstraintAxis::Centered();)
+        TACHYON_LO_BUILDER(Centered(),                                           x = PositionConstraintAxis::Centered(); y = PositionConstraintAxis::Centered();)
 
         /// In flow, shifted by the given offsets from the laid-out position.
         ///@{
-        INTERSTICE_LO_BUILDER(Relative(),                                           x = PositionConstraintAxis::Relative(); y = PositionConstraintAxis::Relative();)
-        INTERSTICE_LO_BUILDER(Relative(const EdgeInset& i),                         x = PositionConstraintAxis::Relative(i.left, i.right); y = PositionConstraintAxis::Relative(i.top, i.bottom);)
-        INTERSTICE_LO_BUILDER(Relative(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Relative(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Relative(int16_t(t), int16_t(b));)
-        INTERSTICE_LO_BUILDER(Relative(int32_t px, int32_t py),                     x = PositionConstraintAxis::Relative(int16_t(px)); y = PositionConstraintAxis::Relative(int16_t(py));)
-        INTERSTICE_LO_BUILDER(Relative(const int2& p),                              x = PositionConstraintAxis::Relative(int16_t(p.x)); y = PositionConstraintAxis::Relative(int16_t(p.y));)
+        TACHYON_LO_BUILDER(Relative(),                                           x = PositionConstraintAxis::Relative(); y = PositionConstraintAxis::Relative();)
+        TACHYON_LO_BUILDER(Relative(const EdgeInset& i),                         x = PositionConstraintAxis::Relative(i.left, i.right); y = PositionConstraintAxis::Relative(i.top, i.bottom);)
+        TACHYON_LO_BUILDER(Relative(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Relative(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Relative(int16_t(t), int16_t(b));)
+        TACHYON_LO_BUILDER(Relative(int32_t px, int32_t py),                     x = PositionConstraintAxis::Relative(int16_t(px)); y = PositionConstraintAxis::Relative(int16_t(py));)
+        TACHYON_LO_BUILDER(Relative(const int2& p),                              x = PositionConstraintAxis::Relative(int16_t(p.x)); y = PositionConstraintAxis::Relative(int16_t(p.y));)
         ///@}
 
         /// Out of flow, inset from the parent's edges; scrolls with the parent's content.
         ///@{
-        INTERSTICE_LO_BUILDER(Absolute(const EdgeInset& i),                         x = PositionConstraintAxis::Absolute(i.left, i.right); y = PositionConstraintAxis::Absolute(i.top, i.bottom);)
-        INTERSTICE_LO_BUILDER(Absolute(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Absolute(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Absolute(int16_t(t), int16_t(b));)
-        INTERSTICE_LO_BUILDER(Absolute(int32_t px, int32_t py),                     x = PositionConstraintAxis::Absolute(int16_t(px)); y = PositionConstraintAxis::Absolute(int16_t(py));)
-        INTERSTICE_LO_BUILDER(Absolute(const int2& p),                              x = PositionConstraintAxis::Absolute(int16_t(p.x)); y = PositionConstraintAxis::Absolute(int16_t(p.y));)
+        TACHYON_LO_BUILDER(Absolute(const EdgeInset& i),                         x = PositionConstraintAxis::Absolute(i.left, i.right); y = PositionConstraintAxis::Absolute(i.top, i.bottom);)
+        TACHYON_LO_BUILDER(Absolute(int32_t t, int32_t r, int32_t b, int32_t l), x = PositionConstraintAxis::Absolute(int16_t(l), int16_t(r)); y = PositionConstraintAxis::Absolute(int16_t(t), int16_t(b));)
+        TACHYON_LO_BUILDER(Absolute(int32_t px, int32_t py),                     x = PositionConstraintAxis::Absolute(int16_t(px)); y = PositionConstraintAxis::Absolute(int16_t(py));)
+        TACHYON_LO_BUILDER(Absolute(const int2& p),                              x = PositionConstraintAxis::Absolute(int16_t(p.x)); y = PositionConstraintAxis::Absolute(int16_t(p.y));)
         ///@}
 
         /// Placed next to / inside the `target` element per the placement, plus an offset in pixels.
         /// `af` flips the placement when it would leave the work area.
         ///@{
-        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, const int2& off = {}, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(off.x), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(off.y), af);)
-        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, int32_t ox, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(oy), af);)
-        INTERSTICE_LO_BUILDER(Anchored(ID target, AnchorPlacementAxis px, int32_t ox, AnchorPlacementAxis py, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, px, int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, py, int16_t(oy), af);)
+        TACHYON_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, const int2& off = {}, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(off.x), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(off.y), af);)
+        TACHYON_LO_BUILDER(Anchored(ID target, AnchorPlacement pl, int32_t ox, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, GetHorizontalAxis(pl), int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, GetVerticalAxis(pl), int16_t(oy), af);)
+        TACHYON_LO_BUILDER(Anchored(ID target, AnchorPlacementAxis px, int32_t ox, AnchorPlacementAxis py, int32_t oy, AutoFlipMode af = AutoFlipMode::None), x = PositionConstraintAxis::Anchored(target, px, int16_t(ox), af); y = PositionConstraintAxis::Anchored(target, py, int16_t(oy), af);)
         ///@}
 
         /// Sets one axis's constraint, or only its PositionType.
         ///@{
-        INTERSTICE_LO_BUILDER(PositionX(PositionConstraintAxis ax), x = ax;)
-        INTERSTICE_LO_BUILDER(PositionY(PositionConstraintAxis ay), y = ay;)
-        INTERSTICE_LO_BUILDER(WithTypeX(PositionType t), x.type = t;)
-        INTERSTICE_LO_BUILDER(WithTypeY(PositionType t), y.type = t;)
+        TACHYON_LO_BUILDER(PositionX(PositionConstraintAxis ax), x = ax;)
+        TACHYON_LO_BUILDER(PositionY(PositionConstraintAxis ay), y = ay;)
+        TACHYON_LO_BUILDER(WithTypeX(PositionType t), x.type = t;)
+        TACHYON_LO_BUILDER(WithTypeY(PositionType t), y.type = t;)
         ///@}
 
         /// See PositionConstraintAxis::Sticky.
         ///@{
-        INTERSTICE_LO_BUILDER(StickyX(int16_t threshold = 0), x = PositionConstraintAxis::Sticky(threshold);)
-        INTERSTICE_LO_BUILDER(StickyY(int16_t threshold = 0), y = PositionConstraintAxis::Sticky(threshold);)
-        INTERSTICE_LO_BUILDER(Sticky(int16_t thresholdX = 0, int16_t thresholdY = 0),
+        TACHYON_LO_BUILDER(StickyX(int16_t threshold = 0), x = PositionConstraintAxis::Sticky(threshold);)
+        TACHYON_LO_BUILDER(StickyY(int16_t threshold = 0), y = PositionConstraintAxis::Sticky(threshold);)
+        TACHYON_LO_BUILDER(Sticky(int16_t thresholdX = 0, int16_t thresholdY = 0),
                    x = PositionConstraintAxis::Sticky(thresholdX);
                    y = PositionConstraintAxis::Sticky(thresholdY);)
         ///@}
@@ -294,43 +294,43 @@ namespace interstice
         /// Forces a line break after / before this element, or keeps it on the same line as the
         /// next one.
         ///@{
-        INTERSTICE_LO_BUILDER(BreakAfter(bool v = true),   breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Always + 1 : (uint8_t)BreakBehavior::Auto + 1;)
-        INTERSTICE_LO_BUILDER(BreakBefore(bool v = true),  breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Before + 1 : (uint8_t)BreakBehavior::Auto + 1;)
-        INTERSTICE_LO_BUILDER(KeepWithNext(bool v = true), breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Avoid  + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        TACHYON_LO_BUILDER(BreakAfter(bool v = true),   breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Always + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        TACHYON_LO_BUILDER(BreakBefore(bool v = true),  breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Before + 1 : (uint8_t)BreakBehavior::Auto + 1;)
+        TACHYON_LO_BUILDER(KeepWithNext(bool v = true), breakBehaviorOverride = v ? (uint8_t)BreakBehavior::Avoid  + 1 : (uint8_t)BreakBehavior::Auto + 1;)
         ///@}
 
         /// Overrides the style's flex-grow / flex-shrink.
         ///@{
-        INTERSTICE_LO_BUILDER(FlexGrow(int16_t v),   flex.grow = v;)
-        INTERSTICE_LO_BUILDER(FlexShrink(int16_t v), flex.shrink = v;)
+        TACHYON_LO_BUILDER(FlexGrow(int16_t v),   flex.grow = v;)
+        TACHYON_LO_BUILDER(FlexShrink(int16_t v), flex.shrink = v;)
         ///@}
         /// Shorthands for FlexGrow(0) / FlexShrink(0).
         ///@{
-        INTERSTICE_LO_BUILDER(NoGrow(),              flex.grow = 0;)
-        INTERSTICE_LO_BUILDER(NoShrink(),            flex.shrink = 0;)
+        TACHYON_LO_BUILDER(NoGrow(),              flex.grow = 0;)
+        TACHYON_LO_BUILDER(NoShrink(),            flex.shrink = 0;)
         ///@}
 
         /// Overrides the style's icon side / icon-text gap (pixels).
         ///@{
-        INTERSTICE_LO_BUILDER(SetIconSide(IconSide s),       iconSideOverride = s;)
-        INTERSTICE_LO_BUILDER(IconTextGap(int16_t gap),      iconTextGapOverride = gap;)
+        TACHYON_LO_BUILDER(SetIconSide(IconSide s),       iconSideOverride = s;)
+        TACHYON_LO_BUILDER(IconTextGap(int16_t gap),      iconTextGapOverride = gap;)
         ///@}
 
         /// Overrides the style's scroll clamping (false = unclamped / infinite scroll).
-        INTERSTICE_LO_BUILDER(ClampScroll(bool v = true),    clampScroll = v ? TriState::True : TriState::False;)
+        TACHYON_LO_BUILDER(ClampScroll(bool v = true),    clampScroll = v ? TriState::True : TriState::False;)
 
         /// Overrides the style's column / row track size.
         ///@{
-        INTERSTICE_LO_BUILDER(ColumnTrack(GridTrack t),                    grid.column.track = t;)
-        INTERSTICE_LO_BUILDER(RowTrack(GridTrack t),                       grid.row.track = t;)
+        TACHYON_LO_BUILDER(ColumnTrack(GridTrack t),                    grid.column.track = t;)
+        TACHYON_LO_BUILDER(RowTrack(GridTrack t),                       grid.row.track = t;)
         ///@}
         /// Explicit grid placement: start cell and span.
         ///@{
-        INTERSTICE_LO_BUILDER(GridColumn(int16_t start, int16_t span = 1), grid.column.start = start; grid.column.span = span;)
-        INTERSTICE_LO_BUILDER(GridRow(int16_t start, int16_t span = 1),    grid.row.start = start;    grid.row.span = span;)
+        TACHYON_LO_BUILDER(GridColumn(int16_t start, int16_t span = 1), grid.column.start = start; grid.column.span = span;)
+        TACHYON_LO_BUILDER(GridRow(int16_t start, int16_t span = 1),    grid.row.start = start;    grid.row.span = span;)
         ///@}
 
-        #undef INTERSTICE_LO_BUILDER
+        #undef TACHYON_LO_BUILDER
 
         // --- Resolvers (apply override or fall back to style) ---
 
@@ -369,4 +369,4 @@ namespace interstice
         }
     };
 
-} // namespace interstice
+} // namespace tachyon

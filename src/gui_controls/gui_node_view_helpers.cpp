@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

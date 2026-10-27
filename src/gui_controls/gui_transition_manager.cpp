@@ -3,7 +3,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_ref.h>
 
-namespace interstice
+namespace tachyon
 {
     uint32_t ComputeGPUStyleIndex(VisualBoxStyleIndex base, ElementState state)
     {
@@ -76,4 +76,4 @@ namespace interstice
         }
     }
 
-} // namespace interstice
+} // namespace tachyon

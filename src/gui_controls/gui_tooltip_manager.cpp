@@ -1,6 +1,6 @@
 #include <gui_controls/gui_tooltip_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     void TooltipManager::BeginFrame(ID currentHoveredID, ID currentFocusedID, float elapsedTimeSecs,
                                     bool hasMouseMove, bool hasMousePress, bool hasKeyboard, bool hasScroll, bool menuIsOpen)
@@ -99,4 +99,4 @@ namespace interstice
         }
     }
 
-} // namespace interstice
+} // namespace tachyon

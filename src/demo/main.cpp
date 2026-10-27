@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string_view>
 
-static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
 
 //
 // This project is for testing and prototyping GUI features, so we can iterate on them quickly without worrying about organization / structure / etc. 
@@ -14,7 +14,7 @@ static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Dia
 
 int main(int argc, char* argv[])
 {
-    interstice::Application* application = new interstice::Application();
+    tachyon::Application* application = new tachyon::Application();
 
     // --ui-scale <factor>: zoom the UI on top of the OS display scale (e.g. 1.5).
     // --theme <palette>: start with another palette, e.g. themes/light.css.
@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     {
         if (application->Initialize())
         {
-            const interstice::Result<void> runResult = application->Run();
-            if (std::ofstream file(interstice::kUIStateFile, std::ios::binary); file)
+            const tachyon::Result<void> runResult = application->Run();
+            if (std::ofstream file(tachyon::kUIStateFile, std::ios::binary); file)
                 file << application->SaveUIState();
             application->Cleanup();
             if (runResult)
@@ -47,18 +47,18 @@ int main(int argc, char* argv[])
 				returnCode = EXIT_SUCCESS;
 			} else
 			{
-				INTERSTICE_LOG_ERROR(kLogDemo, "Application::Run failed: {}", runResult.GetError().message);
+				TACHYON_LOG_ERROR(kLogDemo, "Application::Run failed: {}", runResult.GetError().message);
 				fflush(stderr);
             }
         } else
         {
-            INTERSTICE_LOG_ERROR(kLogDemo, "Application::Initialize failed");
+            TACHYON_LOG_ERROR(kLogDemo, "Application::Initialize failed");
             fflush(stderr);
         }
     }
     catch (const std::exception& e)
     {
-        INTERSTICE_LOG_CRITICAL(kLogDemo, "Unhandled exception: {}", e.what());
+        TACHYON_LOG_CRITICAL(kLogDemo, "Unhandled exception: {}", e.what());
         fflush(stderr);
         returnCode = EXIT_FAILURE;
     }

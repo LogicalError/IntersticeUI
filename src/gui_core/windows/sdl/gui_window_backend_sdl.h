@@ -13,7 +13,7 @@ struct SDL_Window;
 struct SDL_Cursor;
 union SDL_Event;
 
-namespace interstice
+namespace tachyon
 {
     class GraphicsContext;
 
@@ -48,8 +48,8 @@ namespace interstice
         void SetGraphicsContext(GraphicsContext* graphicsContext) override;
 
         // IWindowBackend
-        OSWindowHandle CreateWindow(std::string_view title, int2 size, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
-        OSWindowHandle CreateWindow(std::string_view title, IntRect rect, interstice::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
+        OSWindowHandle CreateWindow(std::string_view title, int2 size, tachyon::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
+        OSWindowHandle CreateWindow(std::string_view title, IntRect rect, tachyon::WindowFlags windowFlags, OSWindowHandle parentOSHandle) override;
 
 
         void AttachInputHandlerToWindow(OSWindowHandle window, IPlatformInputHandler* inputHandler) override;
@@ -150,4 +150,4 @@ namespace interstice
     private:
     };
 
-} // namespace interstice
+} // namespace tachyon

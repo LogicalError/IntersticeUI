@@ -15,7 +15,7 @@
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char*);
 #endif
 
-namespace interstice::Diagnostics
+namespace tachyon::Diagnostics
 {
     namespace
     {

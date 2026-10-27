@@ -20,7 +20,7 @@
 
 namespace
 {
-    class EmptyApp : public interstice::GUIApplicationInternals
+    class EmptyApp : public tachyon::GUIApplicationInternals
     {
     public:
         void OnGUI() override {}
@@ -68,7 +68,7 @@ namespace
     TEST(GpuApplicationInit, OptionsTurnTheDefaultsOff)
     {
         EmptyApp app;
-        interstice::GUIApplication::InitializeOptions options;
+        tachyon::GUIApplication::InitializeOptions options;
         options.loadStyles             = false;
         options.commandShortcuts       = false;
         options.repaintWhileResizing   = false;
@@ -107,14 +107,14 @@ namespace
         app.Cleanup();
     }
 
-    class OneWindowApp : public interstice::GUIApplicationInternals
+    class OneWindowApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID windowID = interstice::ID::Invalid();
+        tachyon::ID windowID = tachyon::ID::Invalid();
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Allocations", interstice::LayoutOverride{}.Size(200, 100)))
+            if (BeginWindow(windowID, "Allocations", tachyon::LayoutOverride{}.Size(200, 100)))
             {
                 Label("Counting allocations");
             }
@@ -126,7 +126,7 @@ namespace
     // VMA, SDL) is freed again by Cleanup.
     TEST(GpuApplicationInit, AllocationHooksSeeEverythingFreedByCleanup)
     {
-        interstice::TrackingAllocator tracker;
+        tachyon::TrackingAllocator tracker;
         // SDL's Windows hotplug thread can leave allocations behind across SDL_Quit;
         // then SDL rightly stays on its own allocator. Only a fresh SDL is routed.
         const bool sdlRoutable = SDL_WasInit(0) == 0 && SDL_GetNumAllocations() == 0;
@@ -159,24 +159,24 @@ namespace
 
     // A render-to-image window with a button. Run() drives real frames (OnFrame
     // only builds); `script` runs at the start of each frame's OnGUI.
-    class ImageWindowApp : public interstice::GUIApplicationInternals
+    class ImageWindowApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID windowID = interstice::ID::Invalid();
-        interstice::ID buttonID = interstice::ID::Invalid();
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID buttonID = tachyon::ID::Invalid();
         int     clicks   = 0;
         int     frame    = 0;
         int     frames   = 3;
-        interstice::int2 buttonCenter{ 0, 0 };   // after last frame's layout
+        tachyon::int2 buttonCenter{ 0, 0 };   // after last frame's layout
         std::function<void(int)> script;
 
         void OnGUI() override
         {
             if (script) script(frame);
-            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
             {
-                BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
+                BeginVertical(tachyon::LayoutOverride{}.FlexGrow(1));
                 Button(buttonID, "Click", [this] { ++clicks; });
                 EndVertical();
             }
@@ -191,11 +191,11 @@ namespace
                 return false;
             windowID = idManager.CreateStaticID();
             buttonID = idManager.CreateStaticID();
-            m_frame.OnPostLayout([this](interstice::FrameContext&)
+            m_frame.OnPostLayout([this](tachyon::FrameContext&)
             {
-                const interstice::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
+                const tachyon::ElementRef ref = elementStorage.FindElementRefByID(buttonID);
                 if (!ref.IsValid()) return;
-                const interstice::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
+                const tachyon::IntRect r = elementStorage.GetElementRectPtr(ref)->rect;
                 buttonCenter = { r.x + r.w / 2, r.y + r.h / 2 };
             });
             return true;
@@ -212,11 +212,11 @@ namespace
             GTEST_SKIP() << "no Vulkan device available";
         }
         EXPECT_TRUE(app.Run());
-        const interstice::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
+        const tachyon::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.windowID);
         ASSERT_NE(handle, nullptr) << "the window exists";
         EXPECT_EQ(app.windowBackend->GetNativeHandle(handle), nullptr) << "no OS window behind it";
 
-        const interstice::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
+        const tachyon::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
         ASSERT_GT(rect.w, 0);
         std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
         ASSERT_TRUE(app.ReadWindowPixels(app.windowID, pixels));
@@ -244,7 +244,7 @@ namespace
             ASSERT_TRUE(app.RecordFrame());
             if (hostFrames == 2)
             {
-                const interstice::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
+                const tachyon::IntRect rect = app.windowManager->GetWindowRect(app.windowID);
                 pixels.resize(size_t(rect.w) * rect.h * 4);
                 drawnBeforePresent = rect.w > 0 && app.ReadWindowPixels(app.windowID, pixels)
                                   && pixels[(size_t(rect.h / 2) * rect.w + size_t(rect.w / 2)) * 4 + 3] == 255;
@@ -262,18 +262,18 @@ namespace
     }
 
     // A render-to-image window showing a red image of the app's.
-    class DeviceLossApp : public interstice::GUIApplicationInternals
+    class DeviceLossApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID         windowID = interstice::ID::Invalid();
-        interstice::Image*     image    = nullptr;
-        interstice::ImageIndex red      = interstice::ImageIndex::Invalid;
+        tachyon::ID         windowID = tachyon::ID::Invalid();
+        tachyon::Image*     image    = nullptr;
+        tachyon::ImageIndex red      = tachyon::ImageIndex::Invalid;
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
-                Image(red, interstice::LayoutOverride{}.Size(interstice::Pixels{ 1000 }, interstice::Pixels{ 1000 }));
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
+                Image(red, tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 1000 }, tachyon::Pixels{ 1000 }));
             EndWindow();
         }
 
@@ -284,16 +284,16 @@ namespace
             windowID = idManager.CreateStaticID();
             std::vector<uint8_t> pixels(4 * 4 * 4);
             for (size_t i = 0; i < pixels.size(); i += 4) { pixels[i] = 255; pixels[i + 3] = 255; }   // RGBA red
-            image = graphicsContext->CreateImage(pixels.data(), interstice::uint2{ 4, 4 }, interstice::ImageFormat::R8G8B8A8,
-                                                 interstice::Sampler::LinearClampToEdge);
+            image = graphicsContext->CreateImage(pixels.data(), tachyon::uint2{ 4, 4 }, tachyon::ImageFormat::R8G8B8A8,
+                                                 tachyon::Sampler::LinearClampToEdge);
             red = graphicsContext->RegisterImage(image);
-            return image != nullptr && red != interstice::ImageIndex::Invalid;
+            return image != nullptr && red != tachyon::ImageIndex::Invalid;
         }
 
         // The window's center pixel is red (BGRA8).
         bool CenterIsRed()
         {
-            const interstice::IntRect rect = windowManager->GetWindowRect(windowID);
+            const tachyon::IntRect rect = windowManager->GetWindowRect(windowID);
             if (rect.w <= 0) return false;
             std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
             if (!ReadWindowPixels(windowID, pixels)) return false;
@@ -325,14 +325,14 @@ namespace
         ASSERT_TRUE(app.Frames(3));
         ASSERT_TRUE(app.CenterIsRed()) << "the image draws before the loss";
 
-        auto* vulkan = static_cast<interstice::vulkan::VulkanGraphicsContext*>(app.graphicsContext);
+        auto* vulkan = static_cast<tachyon::vulkan::VulkanGraphicsContext*>(app.graphicsContext);
         vulkan->SimulateDeviceLoss();
         EXPECT_TRUE(app.graphicsContext->DeviceLost());
         ASSERT_TRUE(app.Frames(3)) << "the frames go on";
         EXPECT_FALSE(app.graphicsContext->DeviceLost());
         EXPECT_TRUE(app.CenterIsRed()) << "the image draws from its index on the new device";
 
-        app.graphicsContext->DestroyImageAtEnd(app.image, interstice::DeviceScope::Application);
+        app.graphicsContext->DestroyImageAtEnd(app.image, tachyon::DeviceScope::Application);
         app.Cleanup();
     }
 
@@ -348,12 +348,12 @@ namespace
         app.frames = 7;
         app.script = [&](int frame)
         {
-            const interstice::int2 center = app.buttonCenter;
+            const tachyon::int2 center = app.buttonCenter;
             switch (frame)
             {
                 case 2: app.InjectMouseMove(app.windowID, center); break;
-                case 3: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, true); break;
-                case 4: app.InjectMouseButton(app.windowID, center, interstice::MouseButtons::Left, false); break;
+                case 3: app.InjectMouseButton(app.windowID, center, tachyon::MouseButtons::Left, true); break;
+                case 4: app.InjectMouseButton(app.windowID, center, tachyon::MouseButtons::Left, false); break;
                 case 5: app.InjectMouseLeave(app.windowID); break;
                 default: break;
             }
@@ -365,12 +365,12 @@ namespace
 
     // An element whose subtree ends in a cached area: its after-draw fires on every
     // rendered frame, also when the area is replayed from the cache instead of walked.
-    class AfterDrawOverCacheApp : public interstice::GUIApplicationInternals
+    class AfterDrawOverCacheApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID windowID = interstice::ID::Invalid();
-        interstice::ID outerID  = interstice::ID::Invalid();
-        interstice::ID cachedID = interstice::ID::Invalid();
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID outerID  = tachyon::ID::Invalid();
+        tachyon::ID cachedID = tachyon::ID::Invalid();
         int frame = 0, frames = 20;
         int afterDrawsThisFrame = 0;
         int replayFrames = 0, replayFramesWithAfterDraw = 0;
@@ -379,13 +379,13 @@ namespace
         {
             // Give the cache time to settle and capture (it waits for transitions).
             std::this_thread::sleep_for(std::chrono::milliseconds(25));
-            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
             {
-                BeginArea(outerID, interstice::LayoutOverride{}.FlexGrow(1));
+                BeginArea(outerID, tachyon::LayoutOverride{}.FlexGrow(1));
                 (void)elementStorage.AddCustomDrawAfter(elementStorage.FindElementRefByID(outerID),
-                    [this](interstice::CustomDrawContext&) { ++afterDrawsThisFrame; });
-                if (BeginCached(cachedID, 0, interstice::LayoutOverride{}.FlexGrow(1)))
+                    [this](tachyon::CustomDrawContext&) { ++afterDrawsThisFrame; });
+                if (BeginCached(cachedID, 0, tachyon::LayoutOverride{}.FlexGrow(1)))
                 {
                     Text("cached content");
                 }
@@ -404,8 +404,8 @@ namespace
             windowID = idManager.CreateStaticID();
             outerID  = idManager.CreateStaticID();
             cachedID = idManager.CreateStaticID();
-            m_frame.OnPreRender([this](interstice::FrameContext&) { afterDrawsThisFrame = 0; });
-            m_frame.OnPostRender([this](interstice::FrameContext&)
+            m_frame.OnPreRender([this](tachyon::FrameContext&) { afterDrawsThisFrame = 0; });
+            m_frame.OnPostRender([this](tachyon::FrameContext&)
             {
                 if (m_uiCache->FrameDrawReplays() == 0) return;
                 ++replayFrames;
@@ -431,25 +431,25 @@ namespace
 
     // The same when the subtree ends in content clipped away (scrolled out of a panel): the
     // culled part is skipped as a whole, and the after-draw used to hang on its last node.
-    class AfterDrawOverCulledApp : public interstice::GUIApplicationInternals
+    class AfterDrawOverCulledApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID windowID = interstice::ID::Invalid();
-        interstice::ID outerID  = interstice::ID::Invalid();
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID outerID  = tachyon::ID::Invalid();
         int frame = 0, frames = 6;
         int afterDrawsThisFrame = 0;
         int renderedFrames = 0, renderedFramesWithAfterDraw = 0;
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
             {
                 // A clipping area too small for its rows: the last ones (a row with a child
                 // at the very end) are culled.
-                BeginArea(outerID, interstice::LayoutOverride{}.Size(200, 60));
+                BeginArea(outerID, tachyon::LayoutOverride{}.Size(200, 60));
                 (void)elementStorage.AddCustomDrawAfter(elementStorage.FindElementRefByID(outerID),
-                    [this](interstice::CustomDrawContext&) { ++afterDrawsThisFrame; });
+                    [this](tachyon::CustomDrawContext&) { ++afterDrawsThisFrame; });
                 for (int i = 0; i < 20; ++i)
                     Text("row");
                 BeginHorizontal();
@@ -468,8 +468,8 @@ namespace
                 return false;
             windowID = idManager.CreateStaticID();
             outerID  = idManager.CreateStaticID();
-            m_frame.OnPreRender([this](interstice::FrameContext&) { afterDrawsThisFrame = 0; });
-            m_frame.OnPostRender([this](interstice::FrameContext&)
+            m_frame.OnPreRender([this](tachyon::FrameContext&) { afterDrawsThisFrame = 0; });
+            m_frame.OnPostRender([this](tachyon::FrameContext&)
             {
                 ++renderedFrames;
                 if (afterDrawsThisFrame > 0) ++renderedFramesWithAfterDraw;
@@ -492,11 +492,11 @@ namespace
         app.Cleanup();
     }
 
-    class FloatingToolbarApp : public interstice::GUIApplicationInternals
+    class FloatingToolbarApp : public tachyon::GUIApplicationInternals
     {
     public:
-        std::vector<interstice::FloatingToolbarItem> floating;
-        interstice::FloatingToolbarOptions           options;
+        std::vector<tachyon::FloatingToolbarItem> floating;
+        tachyon::FloatingToolbarOptions           options;
         bool                                  closeWindow = false;
 
         void OnGUI() override
@@ -518,19 +518,19 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device or window system available";
         }
-        const interstice::ID windowID = app.idManager.CreateStaticID();
-        const interstice::ID buttonID = app.idManager.CreateStaticID();
-        interstice::FloatingToolbarItem fw;
+        const tachyon::ID windowID = app.idManager.CreateStaticID();
+        const tachyon::ID buttonID = app.idManager.CreateStaticID();
+        tachyon::FloatingToolbarItem fw;
         fw.windowID        = windowID;
         fw.spawnPosition   = { 200, 200 };
-        fw.homeSide        = interstice::ToolbarSide::Left;
+        fw.homeSide        = tachyon::ToolbarSide::Left;
         fw.item.id         = buttonID;
         fw.item.renderBody = [&] { app.Button(buttonID, "X", [] {}); };
         app.floating.push_back(std::move(fw));
 
         int             dockBacks  = 0;
-        interstice::ToolbarSide dockedSide = interstice::ToolbarSide::Top;
-        app.options.onDockBack = [&](interstice::ID id, interstice::ToolbarSide side)
+        tachyon::ToolbarSide dockedSide = tachyon::ToolbarSide::Top;
+        app.options.onDockBack = [&](tachyon::ID id, tachyon::ToolbarSide side)
         {
             ++dockBacks;
             dockedSide = side;
@@ -545,7 +545,7 @@ namespace
         app.OnFrame();
 
         EXPECT_EQ(dockBacks, 1);
-        EXPECT_EQ(dockedSide, interstice::ToolbarSide::Left);
+        EXPECT_EQ(dockedSide, tachyon::ToolbarSide::Left);
         EXPECT_TRUE(app.floating.empty());
         app.idManager.ReleaseStaticID(buttonID);
         app.Cleanup();
@@ -553,37 +553,37 @@ namespace
 
     // Two boxes in a render-to-image window: one with a green box-shadow spread around
     // it, one with a red focus ring.
-    class BoxShadowApp : public interstice::GUIApplicationInternals
+    class BoxShadowApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID     windowID = interstice::ID::Invalid();
-        interstice::ID     shadowedID = interstice::ID::Invalid();
-        interstice::ID     ringedID = interstice::ID::Invalid();
-        interstice::ID     outlinedID = interstice::ID::Invalid();
-        interstice::IntRect shadowedRect{}, ringedRect{}, outlinedRect{};
+        tachyon::ID     windowID = tachyon::ID::Invalid();
+        tachyon::ID     shadowedID = tachyon::ID::Invalid();
+        tachyon::ID     ringedID = tachyon::ID::Invalid();
+        tachyon::ID     outlinedID = tachyon::ID::Invalid();
+        tachyon::IntRect shadowedRect{}, ringedRect{}, outlinedRect{};
 
         void OnGUI() override
         {
-            interstice::Style shadowed{}, ringed{};
-            for (interstice::StyleState& state : shadowed.states)
+            tachyon::Style shadowed{}, ringed{};
+            for (tachyon::StyleState& state : shadowed.states)
             {
-                state.backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 });
-                state.boxShadow[0]    = interstice::BoxShadow{ .spread = 6, .color = { 0, 255, 0, 255 } };
+                state.backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 });
+                state.boxShadow[0]    = tachyon::BoxShadow{ .spread = 6, .color = { 0, 255, 0, 255 } };
             }
-            for (interstice::StyleState& state : ringed.states)
-                state.backgroundColor = interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 });
-            ringed.focusRing = interstice::BoxShadow{ .spread = 6, .color = { 255, 0, 0, 255 } };
-            interstice::Style outlined = ringed;
-            outlined.focusRing = interstice::BoxShadow{ .spread = 2, .color = { 0, 0, 255, 255 }, .inset = true };
+            for (tachyon::StyleState& state : ringed.states)
+                state.backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 });
+            ringed.focusRing = tachyon::BoxShadow{ .spread = 6, .color = { 255, 0, 0, 255 } };
+            tachyon::Style outlined = ringed;
+            outlined.focusRing = tachyon::BoxShadow{ .spread = 2, .color = { 0, 0, 255, 255 }, .inset = true };
 
-            if (BeginWindow(windowID, "Image", theme.windowStyleRef, interstice::LayoutOverride{}.Size(240, 120),
-                            interstice::ElementFlags::WindowRenderToImage))
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
             {
-                BeginArea(shadowedID, styleManager.Register(shadowed), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(40, 40));
+                BeginArea(shadowedID, styleManager.Register(shadowed), tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 40 }, tachyon::Pixels{ 40 }).Position(40, 40));
                 EndArea();
-                BeginArea(ringedID, styleManager.Register(ringed), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(140, 40));
+                BeginArea(ringedID, styleManager.Register(ringed), tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 40 }, tachyon::Pixels{ 40 }).Position(140, 40));
                 EndArea();
-                BeginArea(outlinedID, styleManager.Register(outlined), interstice::LayoutOverride{}.Size(interstice::Pixels{ 40 }, interstice::Pixels{ 40 }).Position(140, 70));
+                BeginArea(outlinedID, styleManager.Register(outlined), tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 40 }, tachyon::Pixels{ 40 }).Position(140, 70));
                 EndArea();
             }
             EndWindow();
@@ -598,11 +598,11 @@ namespace
             shadowedID = idManager.CreateStaticID();
             ringedID   = idManager.CreateStaticID();
             outlinedID = idManager.CreateStaticID();
-            m_frame.OnPostLayout([this](interstice::FrameContext&)
+            m_frame.OnPostLayout([this](tachyon::FrameContext&)
             {
-                auto rectOf = [this](interstice::ID id) {
-                    const interstice::ElementRef ref = elementStorage.FindElementRefByID(id);
-                    return ref.IsValid() ? elementStorage.GetElementRectPtr(ref)->rect : interstice::IntRect{};
+                auto rectOf = [this](tachyon::ID id) {
+                    const tachyon::ElementRef ref = elementStorage.FindElementRefByID(id);
+                    return ref.IsValid() ? elementStorage.GetElementRectPtr(ref)->rect : tachyon::IntRect{};
                 };
                 shadowedRect = rectOf(shadowedID);
                 ringedRect   = rectOf(ringedID);
@@ -622,9 +622,9 @@ namespace
         }
 
         // BGRA8 pixel of the window's image.
-        uint32_t PixelAt(interstice::int2 p)
+        uint32_t PixelAt(tachyon::int2 p)
         {
-            const interstice::IntRect rect = windowManager->GetWindowRect(windowID);
+            const tachyon::IntRect rect = windowManager->GetWindowRect(windowID);
             std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
             if (rect.w <= 0 || !ReadWindowPixels(windowID, pixels)) return 0;
             const size_t i = (size_t(p.y) * rect.w + size_t(p.x)) * 4;
@@ -644,7 +644,7 @@ namespace
         }
         ASSERT_TRUE(app.Frames(3));
         ASSERT_GT(app.shadowedRect.w, 0);
-        const interstice::IntRect s = app.shadowedRect, r = app.ringedRect;
+        const tachyon::IntRect s = app.shadowedRect, r = app.ringedRect;
         EXPECT_EQ(app.PixelAt({ s.x - 3, s.y + s.h / 2 }), 0x00FF00u) << "the shadow, spread 6 around the box";
         EXPECT_NE(app.PixelAt({ s.x - 9, s.y + s.h / 2 }), 0x00FF00u) << "past the spread";
 
@@ -660,7 +660,7 @@ namespace
         EXPECT_EQ(app.PixelAt({ r.x - 3, r.y + r.h / 2 }), 0xFF0000u) << "the ring, with focus from the keyboard";
 
         // An inset ring outlines the inside of the box and leaves the outside alone.
-        const interstice::IntRect o = app.outlinedRect;
+        const tachyon::IntRect o = app.outlinedRect;
         const uint32_t outside = app.PixelAt({ o.x - 3, o.y + o.h / 2 });
         const uint32_t fill    = app.PixelAt({ o.x + o.w / 2, o.y + o.h / 2 });
         app.guiStateManager.Interaction().SetFocusID(app.outlinedID);

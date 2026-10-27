@@ -9,7 +9,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
 
     // Node 0: one output. Node 1: two inputs, the first wired to node 0's output.
     NodeView MakeView()

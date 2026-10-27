@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_id.h>
 
-namespace interstice
+namespace tachyon
 {
     class GUIStateManager;
     
@@ -121,4 +121,4 @@ namespace interstice
         ID GetDefaultFocus() const { return m_defaultFocusID != ID::Invalid() ? m_defaultFocusID : m_firstTabTarget; }
     };
 
-} // namespace interstice
+} // namespace tachyon

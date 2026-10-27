@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in IntersticeUI doesn't work as it should
+description: Something in TachyonUI doesn't work as it should
 labels: [bug]
 body:
   - type: markdown
@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for reporting a problem! The steps, or a small `OnGUI` snippet, that make it happen help us fix it much faster.
 
-        Check the known issues under [Status](https://github.com/LogicalError/IntersticeUI#status) in the README first.
+        Check the known issues under [Status](https://github.com/LogicalError/TachyonUI#status) in the README first.
   - type: textarea
     id: what
     attributes:
@@ -38,7 +38,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: IntersticeUI version
+      label: TachyonUI version
       description: The release, or the commit you built.
     validations:
       required: true

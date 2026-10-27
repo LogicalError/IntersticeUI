@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace interstice
+namespace tachyon
 {
     StyleManager::StyleManager(GradientManager& gradientManager) noexcept
         : m_gradientManager(gradientManager)
@@ -541,7 +541,7 @@ namespace interstice
         return (VisualBoxStyleStates*)&m_visualBoxStyles[idx * Style::kStateCount];
     }
 
-    const VisualBoxStyle* StyleManager::GetVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state) const noexcept
+    const VisualBoxStyle* StyleManager::GetVisualBoxStyle(VisualBoxStyleIndex index, tachyon::ElementState state) const noexcept
     {
         if (index == VisualBoxStyleIndex::Invalid) return nullptr;
         size_t idx = static_cast<size_t>(index) - 1;
@@ -551,12 +551,12 @@ namespace interstice
         return &m_visualBoxStyles[(idx * Style::kStateCount) + (int)state];
     }
 
-    const VisualBoxStyle* StyleManager::GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, interstice::ElementState state) const noexcept
+    const VisualBoxStyle* StyleManager::GetSelectionVisualBoxStyle(VisualBoxStyleIndex index, tachyon::ElementState state) const noexcept
     {
         return GetVisualBoxStyle(index, state | ElementState::Selection);
     }
 
-    const VisualTextStyle* StyleManager::GetSelectionVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state) const noexcept
+    const VisualTextStyle* StyleManager::GetSelectionVisualTextStyle(VisualTextStyleIndex index, tachyon::ElementState state) const noexcept
     {
         return GetVisualTextStyle(index, state | ElementState::Selection);
     }
@@ -569,7 +569,7 @@ namespace interstice
         return (VisualTextStyleStates*)& m_visualTextStyles[idx * Style::kStateCount];
     }
 
-    const VisualTextStyle* StyleManager::GetVisualTextStyle(VisualTextStyleIndex index, interstice::ElementState state) const noexcept
+    const VisualTextStyle* StyleManager::GetVisualTextStyle(VisualTextStyleIndex index, tachyon::ElementState state) const noexcept
     {
         if (index == VisualTextStyleIndex::Invalid) return nullptr;
         size_t idx = static_cast<size_t>(index) - 1;

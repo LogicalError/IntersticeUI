@@ -7,7 +7,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
 
     // Node 0 has one output; node 1 has a row without an input, then two inputs.
     NodeView MakeView()

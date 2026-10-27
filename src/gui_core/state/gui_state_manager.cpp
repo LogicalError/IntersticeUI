@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <gui_core/diagnostics/gui_logging.h>
 
-namespace interstice
+namespace tachyon
 {
     ElementState GUIStateManager::GetCurrentState(ID id) const
     {

@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
 
 
@@ -31,7 +31,7 @@ namespace interstice
             }
 
             auto textID = idManager.AllocateDynamicID();
-            RegisterElement(interstice::Element{ .id = textID, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
+            RegisterElement(tachyon::Element{ .id = textID, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
         }
         EndWindow();
     }
@@ -54,7 +54,7 @@ namespace interstice
                 elementStorage.GetElementUnsafe(winRef).flags |= ElementFlags::NoInput;
 
             auto contentID = idManager.AllocateDynamicID();
-            RegisterElement(interstice::Element{ .id = contentID, .iconID = icon, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
+            RegisterElement(tachyon::Element{ .id = contentID, .iconID = icon, .styleRef = theme.tooltipTextStyleRef }, text, LayoutOverride{});
         }
         EndWindow();
     }
@@ -124,7 +124,7 @@ namespace interstice
             bool hasRightClick = false;
             for (const auto& e : inputManager->GetRecordedEvents())
             {
-                if (e.type == interstice::EventType::MouseDown && e.state.RightPressed())
+                if (e.type == tachyon::EventType::MouseDown && e.state.RightPressed())
                 {
                     hasRightClick = true;
                     break;

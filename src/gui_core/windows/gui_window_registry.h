@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     /// Outcome of a WindowRegistry call.
     enum class RegistryResult
@@ -325,4 +325,4 @@ namespace interstice
 
     };
 
-} // namespace interstice
+} // namespace tachyon

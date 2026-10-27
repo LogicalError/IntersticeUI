@@ -6,7 +6,7 @@
 #include <gui_core/elements/gui_element.h>
 #include <gui_core/style/gui_style_ref.h>
 
-namespace interstice
+namespace tachyon
 {
     class ElementStorage;
     class StyleManager;
@@ -23,13 +23,13 @@ namespace interstice
         /// One open group: the four position styles and the items registered so far.
         struct ItemState
         {
-            interstice::StyleRef firstStyleRef{};
-            interstice::StyleRef midStyleRef{};
-            interstice::StyleRef lastStyleRef{};
-            interstice::StyleRef soloStyleRef{};
+            tachyon::StyleRef firstStyleRef{};
+            tachyon::StyleRef midStyleRef{};
+            tachyon::StyleRef lastStyleRef{};
+            tachyon::StyleRef soloStyleRef{};
             int32_t       itemCount = 0;
-            interstice::ElementRef firstRef = interstice::ElementRef::Invalid();
-            interstice::ElementRef lastRef  = interstice::ElementRef::Invalid();
+            tachyon::ElementRef firstRef = tachyon::ElementRef::Invalid();
+            tachyon::ElementRef lastRef  = tachyon::ElementRef::Invalid();
         };
 
         ButtonGroupSubsystem(FramePipeline& frame, ElementStorage& elementStorage, StyleManager& styleManager);
@@ -52,7 +52,7 @@ namespace interstice
 
         /// Style for the next item, restyling the previous last item as mid. The caller then
         /// stores the registered ref in state.firstRef (first item) and state.lastRef.
-        interstice::StyleRef NextItemStyleRef(ItemState& state);
+        tachyon::StyleRef NextItemStyleRef(ItemState& state);
 
         /// True iff every Begin*Group was matched by End*Group.
         bool IsBalanced() const { return m_buttonStack.empty() && m_toggleStack.empty(); }

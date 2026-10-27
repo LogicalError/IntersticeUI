@@ -7,7 +7,7 @@
 #include <span>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
 	struct int2;
 	class ElementStorage;
@@ -297,4 +297,4 @@ namespace interstice
         }
 
     };
-} // namespace interstice
+} // namespace tachyon

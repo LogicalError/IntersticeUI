@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace interstice
+namespace tachyon
 {
     /// The clipboard text editors copy to and paste from; GUIApplication::SetClipboard sets
     /// one (default: SDL's, or LocalClipboard without SDL).

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace interstice
+namespace tachyon
 {
     class GraphicsContext;
 

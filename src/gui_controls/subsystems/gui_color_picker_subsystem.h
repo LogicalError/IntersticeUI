@@ -9,7 +9,7 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_color_conversions.h>
 
-namespace interstice
+namespace tachyon
 {
     class FramePipeline;
     struct FrameContext;
@@ -20,15 +20,15 @@ namespace interstice
     /// drag state while the popup is rebuilt each frame.
     struct ColorPickerState
     {
-        interstice::ID triggerID = interstice::ID::Invalid(); ///< swatch that opened the picker
-        interstice::ID windowID  = interstice::ID::Invalid(); ///< popup window ID
+        tachyon::ID triggerID = tachyon::ID::Invalid(); ///< swatch that opened the picker
+        tachyon::ID windowID  = tachyon::ID::Invalid(); ///< popup window ID
         float h = 0, s = 0, v = 0, a = 1;       ///< working HSV+A copy
-        interstice::color4f originalColor {};           ///< color when picker was opened
+        tachyon::color4f originalColor {};           ///< color when picker was opened
         bool  allowHDR      = false;                 ///< the opening field accepts HDR colors
         float hdrBrightness = 1.0f;                  ///< HDR multiplier; > 1 brightens past 1
         std::string hexText;                     ///< hex input field text
 
-        interstice::ColorSpace activeSpace = interstice::ColorSpace::HSV;
+        tachyon::ColorSpace activeSpace = tachyon::ColorSpace::HSV;
 
         /// Components of the active space (H/S/V, R/G/B, L/a/b, ...). Members, since
         /// GradientSlider handlers keep pointers to them until dispatch.
@@ -47,30 +47,30 @@ namespace interstice
         /// OK keeps the color (and adds it to the recent ones), Cancel and the close button
         /// restore the one the picker opened with. Handled by the ColorField on its next frame.
         enum class CloseRequest { None, Ok, Cancel } closeRequest = CloseRequest::None;
-        std::vector<interstice::color4f> recent;   ///< newest first
+        std::vector<tachyon::color4f> recent;   ///< newest first
 
-        interstice::VisualColorStyleIndex svQuadColor   = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex hueStrip      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex alphaStrip    = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex svQuadColor   = tachyon::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex hueStrip      = tachyon::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex alphaStrip    = tachyon::VisualColorStyleIndex::Invalid;
         /// The pure hue, shown in the hue handle.
-        interstice::VisualColorStyleIndex hueColor      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex whiteColor    = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex hueColor      = tachyon::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex whiteColor    = tachyon::VisualColorStyleIndex::Invalid;
         /// Outline around the cursors and handles.
-        interstice::VisualColorStyleIndex outlineColor  = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex outlineColor  = tachyon::VisualColorStyleIndex::Invalid;
         /// The new color, with its alpha.
-        interstice::VisualColorStyleIndex newColor      = interstice::VisualColorStyleIndex::Invalid;
-        interstice::VisualColorStyleIndex originalStyle = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex newColor      = tachyon::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex originalStyle = tachyon::VisualColorStyleIndex::Invalid;
         /// The new color without its alpha, for the preview's top half.
-        interstice::VisualColorStyleIndex newOpaque      = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex newOpaque      = tachyon::VisualColorStyleIndex::Invalid;
         /// The original color without its alpha, for the preview's top half.
-        interstice::VisualColorStyleIndex originalOpaque = interstice::VisualColorStyleIndex::Invalid;
+        tachyon::VisualColorStyleIndex originalOpaque = tachyon::VisualColorStyleIndex::Invalid;
 
         enum class DragTarget { None, Square, Hue, Alpha } drag = DragTarget::None;
 
         static constexpr int kNumGradientSliders = 4;
-        interstice::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};
+        tachyon::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};
 
-        struct PaletteSwatch { interstice::color4f color {}; };
+        struct PaletteSwatch { tachyon::color4f color {}; };
         std::vector<PaletteSwatch> palette = {
             {{ 0.8f, 0.8f, 0.8f, 1.0f }},
             {{ 0.0f, 0.8f, 0.8f, 1.0f }},
@@ -93,11 +93,11 @@ namespace interstice
 
         /// The color style slot of swatch `swatchID`, kept alive this frame. Invalid for a new
         /// swatch: the caller creates the style and stores it there, reused from then on.
-        interstice::VisualColorStyleIndex& ClaimSwatchStyle(interstice::ID swatchID);
+        tachyon::VisualColorStyleIndex& ClaimSwatchStyle(tachyon::ID swatchID);
 
         /// Carries `swatchID`'s style over without rebuilding it: a cache-hit scope
         /// doesn't re-claim its swatches, but its blitted primitives still use them.
-        void KeepSwatchAlive(interstice::ID swatchID);
+        void KeepSwatchAlive(tachyon::ID swatchID);
 
         /// Drops every held style index without destroying it; call after a theme reload
         /// (StyleManager::ClearAll), which already freed them.
@@ -105,6 +105,6 @@ namespace interstice
 
     private:
         ColorPickerState m_state{};
-        std::unordered_map<interstice::ID, interstice::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
+        std::unordered_map<tachyon::ID, tachyon::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
     };
 }

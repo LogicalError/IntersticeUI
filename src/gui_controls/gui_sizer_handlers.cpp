@@ -11,7 +11,7 @@
 
 // Sizer + slider drag-track event handlers.
 
-namespace interstice
+namespace tachyon
 {
     EventHandler MakeHorizontalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
                                             std::function<void(int)> onChanged, std::function<int()> onAutoSize,
@@ -100,7 +100,7 @@ namespace interstice
                     break;
 
                 case EventType::KeyDown:
-                    if (event.state.lastKey == interstice::KeyCode::Escape)
+                    if (event.state.lastKey == tachyon::KeyCode::Escape)
                     {
                         if (auto* state = store.Get<HorizontalSizerState>(event.id); state && state->draggingID == event.id)
                         {
@@ -212,7 +212,7 @@ namespace interstice
                     break;
 
                 case EventType::KeyDown:
-                    if (event.state.lastKey == interstice::KeyCode::Escape)
+                    if (event.state.lastKey == tachyon::KeyCode::Escape)
                     {
                         if (auto* state = store.Get<VerticalSizerState>(event.id); state && state->draggingID == event.id)
                         {
@@ -376,7 +376,7 @@ namespace interstice
                         float oldValue = *value;
                         float newValue = oldValue;
 
-                        if (event.state.lastKey == interstice::KeyCode::Escape)
+                        if (event.state.lastKey == tachyon::KeyCode::Escape)
                         {
                             if (auto* state = store.Get<SliderState>(event.id);
                                 state && state->draggingID == event.id)
@@ -390,12 +390,12 @@ namespace interstice
 
                         switch (event.state.lastKey)
                         {
-                            case interstice::KeyCode::Left:     newValue = std::clamp(oldValue - smallStep, minVal, maxVal); break;
-                            case interstice::KeyCode::Right:    newValue = std::clamp(oldValue + smallStep, minVal, maxVal); break;
-                            case interstice::KeyCode::Home:     newValue = minVal; break;
-                            case interstice::KeyCode::End:      newValue = maxVal; break;
-                            case interstice::KeyCode::PageUp:   newValue = std::clamp(oldValue + bigStep, minVal, maxVal); break;
-                            case interstice::KeyCode::PageDown: newValue = std::clamp(oldValue - bigStep, minVal, maxVal); break;
+                            case tachyon::KeyCode::Left:     newValue = std::clamp(oldValue - smallStep, minVal, maxVal); break;
+                            case tachyon::KeyCode::Right:    newValue = std::clamp(oldValue + smallStep, minVal, maxVal); break;
+                            case tachyon::KeyCode::Home:     newValue = minVal; break;
+                            case tachyon::KeyCode::End:      newValue = maxVal; break;
+                            case tachyon::KeyCode::PageUp:   newValue = std::clamp(oldValue + bigStep, minVal, maxVal); break;
+                            case tachyon::KeyCode::PageDown: newValue = std::clamp(oldValue - bigStep, minVal, maxVal); break;
                             default: return false;
                         }
 

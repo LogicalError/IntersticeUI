@@ -9,7 +9,7 @@
 #include <gui_core/gui_id_manager.h>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
 
     class WindowRegistryTest : public ::testing::Test

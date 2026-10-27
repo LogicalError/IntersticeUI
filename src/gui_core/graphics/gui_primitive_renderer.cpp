@@ -4,14 +4,14 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace interstice
+namespace tachyon
 {
 
 // Snapped edges are 16-bit: an edge past the range (a sizer stretched to kStretchHeight)
 // saturates, it doesn't wrap around to the other side.
 static int16_t SaturateInt16(int32_t v) { return int16_t(std::clamp<int32_t>(v, INT16_MIN, INT16_MAX)); }
 
-void PrimitiveRenderer::Render(interstice::ID id, RHI::RenderCommandList& cmdList,
+void PrimitiveRenderer::Render(tachyon::ID id, RHI::RenderCommandList& cmdList,
                                const PipelineSet& pipelines, GPUDrawPushConstants& push_constants)
 {
     auto& target = GetTarget(id);
@@ -64,12 +64,12 @@ void PrimitiveRenderTarget::Reset()
 }
 
 
-void PrimitiveRenderTarget::SetTransform(interstice::float3x2 transform)
+void PrimitiveRenderTarget::SetTransform(tachyon::float3x2 transform)
 {
     currentTransform = transform;
 }
 
-void PrimitiveRenderTarget::RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex, interstice::IntRect snappedPx)
+void PrimitiveRenderTarget::RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex, tachyon::IntRect snappedPx)
 {
     Append(PrimitiveKind::Box, Box
                     {
@@ -90,7 +90,7 @@ void PrimitiveRenderTarget::RenderBox(interstice::IntRect rect, interstice::IntR
                     });
 }
 
-void PrimitiveRenderTarget::RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex)
+void PrimitiveRenderTarget::RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex)
 {
     Append(PrimitiveKind::Triangle, Triangle
                     {
@@ -109,7 +109,7 @@ void PrimitiveRenderTarget::RenderTriangle(interstice::float2 p0, interstice::fl
 }
 
 
-void PrimitiveRenderTarget::RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, interstice::ImageIndex textureIndex)
+void PrimitiveRenderTarget::RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, tachyon::ImageIndex textureIndex)
 {
     Append(PrimitiveKind::Quad, Quad
                     {
@@ -126,7 +126,7 @@ void PrimitiveRenderTarget::RenderQuad(interstice::IntRect rect, interstice::Int
                     });
 }
 
-void PrimitiveRenderTarget::RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
+void PrimitiveRenderTarget::RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
 {
     blur = std::clamp(blur, 0, 4096);
     Append(PrimitiveKind::Quad, Quad
@@ -144,7 +144,7 @@ void PrimitiveRenderTarget::RenderShadow(interstice::IntRect rect, interstice::I
                     });
 }
 
-void PrimitiveRenderTarget::RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex)
+void PrimitiveRenderTarget::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex)
 {
     Append(PrimitiveKind::Glyph, Glyph
                     {
@@ -167,8 +167,8 @@ void PrimitiveRenderTarget::RenderGlyph(interstice::float2 pos, interstice::floa
                      });
 }
 
-void PrimitiveRenderTarget::RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3,
-                                       interstice::IntRect clipRect, const interstice::LineStyle& lineStyle)
+void PrimitiveRenderTarget::RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3,
+                                       tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle)
 {
     Append(PrimitiveKind::Line, Line
                     {
@@ -191,7 +191,7 @@ void PrimitiveRenderTarget::RenderLine(interstice::int2 p0, interstice::int2 p1,
                     });
 }
 
-void PrimitiveRenderTarget::RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color)
+void PrimitiveRenderTarget::RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color)
 {
     Append(PrimitiveKind::Dot, Dot
                     {
@@ -235,9 +235,9 @@ void PrimitiveRenderTarget::StartRenderPass(PrimitiveKind kind)
     currentKind = int(kind);
 }
 
-void PrimitiveRenderTarget::AppendCaptured(const PrimitiveRenderTarget& src, interstice::int2 delta)
+void PrimitiveRenderTarget::AppendCaptured(const PrimitiveRenderTarget& src, tachyon::int2 delta)
 {
-    INTERSTICE_PROFILE_SCOPE("AppendCaptured");
+    TACHYON_PROFILE_SCOPE("AppendCaptured");
     // Every primitive kind starts with the same header, so the translate is
     // kind-agnostic: transform0 @0 (z @8), transform1 @16 (z @24), then the
     // screen-space clip rect clipMin @32 / clipMax @40 (two int2s).
@@ -305,13 +305,13 @@ void PrimitiveRenderer::Reset()
     currentTarget = nullptr;
 }
 
-void PrimitiveRenderer::SetTransform(interstice::float3x2 transform)
+void PrimitiveRenderer::SetTransform(tachyon::float3x2 transform)
 {
     assert(currentTarget != nullptr);
     currentTarget->SetTransform(transform);
 }
 
-void PrimitiveRenderer::ReleaseTarget(interstice::ID id)
+void PrimitiveRenderer::ReleaseTarget(tachyon::ID id)
 {
     auto it = idTargets.find(id);
     if (it == idTargets.end())
@@ -330,7 +330,7 @@ void PrimitiveRenderer::ReleaseAllTargets()
 }
 
 // Make it possible to render windows without caption/border/transparency etc.
-bool PrimitiveRenderer::BeginWindow(interstice::ID id)
+bool PrimitiveRenderer::BeginWindow(tachyon::ID id)
 {
     assert(currentTarget == nullptr);
     auto& target = GetTarget(id);
@@ -349,7 +349,7 @@ void PrimitiveRenderer::EndWindow()
     currentTarget = nullptr;
 }
 
-void PrimitiveRenderer::BeginScopeCapture(interstice::ID scopeId)
+void PrimitiveRenderer::BeginScopeCapture(tachyon::ID scopeId)
 {
     assert(currentTarget != nullptr);
     assert(m_captureSaved == nullptr && "nested scope capture is not supported");
@@ -359,7 +359,7 @@ void PrimitiveRenderer::BeginScopeCapture(interstice::ID scopeId)
     currentTarget = &cap;        // redirect emit calls into the capture buffer
 }
 
-void PrimitiveRenderer::EndScopeCapture(interstice::ID scopeId)
+void PrimitiveRenderer::EndScopeCapture(tachyon::ID scopeId)
 {
     assert(m_captureSaved != nullptr);
     PrimitiveRenderTarget& cap = scopeCaptures[scopeId];
@@ -367,10 +367,10 @@ void PrimitiveRenderer::EndScopeCapture(interstice::ID scopeId)
     currentTarget  = m_captureSaved;
     m_captureSaved = nullptr;
     // Emit the just-captured subtree into the window this frame (no translation).
-    currentTarget->AppendCaptured(cap, interstice::int2{ 0, 0 });
+    currentTarget->AppendCaptured(cap, tachyon::int2{ 0, 0 });
 }
 
-bool PrimitiveRenderer::ReplayScopeCapture(interstice::ID scopeId, interstice::int2 delta)
+bool PrimitiveRenderer::ReplayScopeCapture(tachyon::ID scopeId, tachyon::int2 delta)
 {
     assert(currentTarget != nullptr);
     auto it = scopeCaptures.find(scopeId);
@@ -380,13 +380,13 @@ bool PrimitiveRenderer::ReplayScopeCapture(interstice::ID scopeId, interstice::i
     return true;
 }
 
-bool PrimitiveRenderer::HasScopeCapture(interstice::ID scopeId) const
+bool PrimitiveRenderer::HasScopeCapture(tachyon::ID scopeId) const
 {
     auto it = scopeCaptures.find(scopeId);
     return it != scopeCaptures.end() && !it->second.renderPasses.empty();
 }
 
-void PrimitiveRenderer::InvalidateScopeCapture(interstice::ID scopeId)
+void PrimitiveRenderer::InvalidateScopeCapture(tachyon::ID scopeId)
 {
     scopeCaptures.erase(scopeId);
 }
@@ -396,43 +396,43 @@ void PrimitiveRenderer::ClearScopeCaptures()
     scopeCaptures.clear();
 }
 
-void PrimitiveRenderer::RenderBox(interstice::IntRect rect, interstice::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex, interstice::IntRect snappedPx)
+void PrimitiveRenderer::RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex, tachyon::IntRect snappedPx)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderBox(rect, clipRect, fromStyleIndex, toStyleIndex, blendT, colorStyleIndex, textureIndex, snappedPx);
 }
 
-void PrimitiveRenderer::RenderGlyph(interstice::float2 pos, interstice::float2 size, interstice::float2 uvMin, interstice::float2 uvMax, float scale, int bpp, int mode, interstice::VisualColorStyleIndex textColorIndex, interstice::IntRect clipRect, interstice::ImageIndex textureIndex)
+void PrimitiveRenderer::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderGlyph(pos, size, uvMin, uvMax, scale, bpp, mode, textColorIndex, clipRect, textureIndex);
 }
 
-void PrimitiveRenderer::RenderLine(interstice::int2 p0, interstice::int2 p1, interstice::int2 p2, interstice::int2 p3, interstice::IntRect clipRect, const interstice::LineStyle& lineStyle)
+void PrimitiveRenderer::RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderLine(p0, p1, p2, p3, clipRect, lineStyle);
 }
 
-void PrimitiveRenderer::RenderDot(interstice::float2 pos, interstice::IntRect clipRect, float size, interstice::color4f color)
+void PrimitiveRenderer::RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderDot(pos, clipRect, size, color);
 }
 
-void PrimitiveRenderer::RenderTriangle(interstice::float2 p0, interstice::float2 p1, interstice::float2 p2, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, interstice::ImageIndex textureIndex)
+void PrimitiveRenderer::RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderTriangle(p0, p1, p2, clipRect, colorStyleIndex, textureIndex);
 }
 
-void PrimitiveRenderer::RenderQuad(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, interstice::ImageIndex textureIndex)
+void PrimitiveRenderer::RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, tachyon::ImageIndex textureIndex)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderQuad(rect, clipRect, colorStyleIndex, cornerRadius, textureIndex);
 }
 
-void PrimitiveRenderer::RenderShadow(interstice::IntRect rect, interstice::IntRect clipRect, interstice::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
+void PrimitiveRenderer::RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderShadow(rect, clipRect, colorStyleIndex, cornerRadius, blur);

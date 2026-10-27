@@ -15,11 +15,11 @@ using namespace GpuTestHarness;
 // (shadow, rounded corners, border) on every borderless window, menus and tooltips too.
 TEST_F(GpuTest, BorderlessWindowsGetNoSystemFrame)
 {
-    using WF = interstice::WindowFlags;
+    using WF = tachyon::WindowFlags;
     for (const WF flags : { WF::Borderless, WF::Borderless | WF::Resizable, WF::Borderless | WF::PopupMenu })
     {
-        const interstice::OSWindowHandle window =
-            windowBackend->CreateWindow("style-test", interstice::IntRect{ -3000, -3000, 200, 100 }, flags | WF::Hidden, nullptr);
+        const tachyon::OSWindowHandle window =
+            windowBackend->CreateWindow("style-test", tachyon::IntRect{ -3000, -3000, 200, 100 }, flags | WF::Hidden, nullptr);
         ASSERT_NE(window, nullptr);
         const HWND hwnd = static_cast<HWND>(windowBackend->GetNativeHandle(window));
         ASSERT_NE(hwnd, nullptr);
@@ -40,16 +40,16 @@ TEST_F(GpuTest, BorderlessWindowsGetNoSystemFrame)
 // UpdateLayeredWindow. Off-screen, so nothing shows.
 TEST_F(GpuTest, ATransparentWindowReadsBackWhatItRenders)
 {
-    using WF = interstice::WindowFlags;
+    using WF = tachyon::WindowFlags;
     const WF flags = WF::Borderless | WF::Utility | WF::SkipTaskbar | WF::AlwaysOnTop | WF::Transparent | WF::AllowHighDPI;
-    const interstice::int2 size{ 64, 64 };
-    const interstice::OSWindowHandle window =
-        windowBackend->CreateWindow("ghost-test", interstice::IntRect{ -3000, -3000, size.x, size.y }, flags, nullptr);
+    const tachyon::int2 size{ 64, 64 };
+    const tachyon::OSWindowHandle window =
+        windowBackend->CreateWindow("ghost-test", tachyon::IntRect{ -3000, -3000, size.x, size.y }, flags, nullptr);
     ASSERT_NE(window, nullptr);
-    interstice::ID id{};
-    id.value.dynamicParts.mode      = interstice::IDMode::Static;
+    tachyon::ID id{};
+    id.value.dynamicParts.mode      = tachyon::IDMode::Static;
     id.value.dynamicParts.hashValue = 777;
-    auto* ctx = interstice::vulkan::VulkanWindowContext::Create(id, windowBackend->GetNativeHandle(window), window, size,
+    auto* ctx = tachyon::vulkan::VulkanWindowContext::Create(id, windowBackend->GetNativeHandle(window), window, size,
                                                                 flags, &vk->deviceContext, [] {});
     ASSERT_NE(ctx, nullptr);
     EXPECT_TRUE(ctx->needsReadback);
@@ -71,11 +71,11 @@ TEST_F(GpuTest, ATransparentWindowReadsBackWhatItRenders)
 namespace
 {
     // An app whose only window is a cursor ghost, as a drag shows one; off-screen.
-    class GhostApp : public interstice::GUIApplicationInternals
+    class GhostApp : public tachyon::GUIApplicationInternals
     {
     public:
-        interstice::ID   ghostID = interstice::ID::Invalid();
-        interstice::int2 cursor{ -3000, -3000 };
+        tachyon::ID   ghostID = tachyon::ID::Invalid();
+        tachyon::int2 cursor{ -3000, -3000 };
         void OnGUI() override
         {
             if (BeginCursorGhostWindow(ghostID, cursor))
@@ -103,7 +103,7 @@ TEST(GpuGhostWindow, ACursorGhostWindowIsShownWithItsIcon)
         app.PresentFrame();
     }
 
-    const interstice::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.ghostID);
+    const tachyon::OSWindowHandle handle = app.windowManager->GetWindowHandle(app.ghostID);
     ASSERT_NE(handle, nullptr) << "the ghost has an OS window";
     const HWND hwnd = static_cast<HWND>(app.windowBackend->GetNativeHandle(handle));
     ASSERT_NE(hwnd, nullptr);
@@ -116,7 +116,7 @@ TEST(GpuGhostWindow, ACursorGhostWindowIsShownWithItsIcon)
     EXPECT_LT(r.left, -2900);
     EXPECT_GT(r.right - r.left, 0);
 
-    auto* ctx = static_cast<interstice::vulkan::VulkanWindowContext*>(app.windowManager->GetWindowContext(app.ghostID));
+    auto* ctx = static_cast<tachyon::vulkan::VulkanWindowContext*>(app.windowManager->GetWindowContext(app.ghostID));
     ASSERT_NE(ctx, nullptr);
     size_t opaque = 0;
     for (size_t i = 3; i < ctx->cachedBitmap.size(); i += 4)

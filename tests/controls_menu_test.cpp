@@ -14,7 +14,7 @@
 #include <gui_core/elements/gui_element_storage.h>
 #include <gui_controls/gui_menu_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -657,4 +657,4 @@ namespace interstice
         }
 
     } // namespace
-} // namespace interstice
+} // namespace tachyon

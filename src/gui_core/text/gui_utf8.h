@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace interstice
+namespace tachyon
 {
     inline constexpr uint32_t kInvalidCodepoint = 0xFFFFFFFFu;
 

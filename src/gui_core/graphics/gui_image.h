@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace interstice
+namespace tachyon
 {
     /// Pixel formats for GraphicsContext::CreateImage, 8 bits per channel. The _SRGB
     /// formats decode sRGB to linear when sampled.

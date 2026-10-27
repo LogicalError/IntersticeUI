@@ -5,7 +5,7 @@
 #include <chrono>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
 
 
@@ -13,7 +13,7 @@ namespace interstice
     // Tree/List shared helpers
     // ---------------------------------------------------------------------------
 
-    bool GUIApplication::IsTreeItemSelected(interstice::ID id, int itemIndex) const
+    bool GUIApplication::IsTreeItemSelected(tachyon::ID id, int itemIndex) const
     {
         if (m_treeState.multiSelect)
             return m_treeState.multiSelect->selectedIDs.count(id) > 0;
@@ -25,13 +25,13 @@ namespace interstice
     }
 
 
-    interstice::TextID GUIApplication::TreeItemRegisterText(interstice::ID id, std::string_view text, IconID icon, StyleRef style, interstice::ElementState state)
+    tachyon::TextID GUIApplication::TreeItemRegisterText(tachyon::ID id, std::string_view text, IconID icon, StyleRef style, tachyon::ElementState state)
     {
         if (icon != IconID::Invalid)
         {
-            interstice::ContentRun runs[] = {
-                { .type = interstice::ContentRun::Icon, .iconID = icon, .iconWidth = 16.0f, .iconHeight = 16.0f },
-                { .type = interstice::ContentRun::Text, .text = text }
+            tachyon::ContentRun runs[] = {
+                { .type = tachyon::ContentRun::Icon, .iconID = icon, .iconWidth = 16.0f, .iconHeight = 16.0f },
+                { .type = tachyon::ContentRun::Text, .text = text }
             };
             return textSystem->RegisterRichText(id, runs, style, state);
         }
@@ -47,13 +47,13 @@ namespace interstice
     // which primes the drag alongside selection (Chain stops at its `return true`).
     //
     // Zones: branches use thirds (Before/Inside/After), leaves halves (Before/After).
-    interstice::EventHandler GUIApplication::MakeTreeRowDragDropHandler(interstice::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen)
+    tachyon::EventHandler GUIApplication::MakeTreeRowDragDropHandler(tachyon::ID rowID, bool rowHasChildren, ItemDragDropConfig* dd, bool* isOpen)
     {
-        return [this, rowID, rowHasChildren, dd, isOpen](interstice::ElementEvent&& event) -> bool
+        return [this, rowID, rowHasChildren, dd, isOpen](tachyon::ElementEvent&& event) -> bool
         {
             if (!dd || dd->payloadType == 0) return false;
 
-            auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
+            auto computeZone = [&](const tachyon::IntRect& rect) -> TreeDropPosition
             {
                 if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
                 // rect is layout-space - convert cursor through any ancestor
@@ -83,14 +83,14 @@ namespace interstice
 
             switch (event.type)
             {
-                case interstice::EventType::MouseMove:
+                case tachyon::EventType::MouseMove:
                 {
-                    if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
+                    if ((event.state.buttons & tachyon::MouseButtons::Left) == tachyon::MouseButtons::None) break;
                     guiStateManager.Drag().UpdateFromInput(event.state);
                     return guiStateManager.Drag().GetDraggedID() == rowID;
                 }
-                case interstice::EventType::DragEnter:
-                case interstice::EventType::DragOver:
+                case tachyon::EventType::DragEnter:
+                case tachyon::EventType::DragOver:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (!event.rect) return true;
@@ -105,13 +105,13 @@ namespace interstice
                     m_treeDropState.position     = computeZone(event.rect->rect);
                     return true;
                 }
-                case interstice::EventType::DragOut:
+                case tachyon::EventType::DragOut:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (m_treeDropState.targetRowID == rowID) m_treeDropState = {};
                     return true;
                 }
-                case interstice::EventType::Drop:
+                case tachyon::EventType::Drop:
                 {
                     if (event.state.dragPayloadType != dd->payloadType) return false;
                     if (event.state.dragSourceID == rowID) { m_treeDropState = {}; return true; }
@@ -136,7 +136,7 @@ namespace interstice
 
     // One AddCustomDraw for both the guide line and the drop indicator, so both get the
     // row's overflow:visible clip (AddCustomDrawAfter's tighter clip cuts off edge lines).
-    void GUIApplication::TreeItemRowCustomDraw(const interstice::ElementRef& rowRef, bool hasArrow, interstice::ID rowID)
+    void GUIApplication::TreeItemRowCustomDraw(const tachyon::ElementRef& rowRef, bool hasArrow, tachyon::ID rowID)
     {
         bool drawGuideLine = (m_treeState.depth > 0);
 
@@ -146,7 +146,7 @@ namespace interstice
             [this, hasArrow, rowID, drawGuideLine,
              lineColor      = theme.treeGuideLineStyle,
              indicatorColor = theme.treeDropIndicatorStyle]
-            (interstice::CustomDrawContext& ctx)
+            (tachyon::CustomDrawContext& ctx)
             {
                 // Span the outer rect so lines are continuous between rows. Coords are
                 // inner-rect-local, so the outer top is outer.y - inner.y.
@@ -162,9 +162,9 @@ namespace interstice
                 {
                     // The tree indent sits halfway into the PARENT's left padding, which isn't
                     // derivable from this element's own rect - look up the parent.
-                    interstice::ElementRef parentRef       = ctx.GetParentRef(ctx.Ref());
-                    interstice::IntRect    parentRect      = ctx.GetElementRect(parentRef);
-                    interstice::IntRect    parentInnerRect = ctx.GetInnerRect(parentRef);
+                    tachyon::ElementRef parentRef       = ctx.GetParentRef(ctx.Ref());
+                    tachyon::IntRect    parentRect      = ctx.GetElementRect(parentRef);
+                    tachyon::IntRect    parentInnerRect = ctx.GetInnerRect(parentRef);
                     if (parentRect.w > 0)
                     {
                         int32_t leftPadding = parentInnerRect.x - parentRect.x;
@@ -172,12 +172,12 @@ namespace interstice
                         int32_t centerY = topY + h / 2;
 
                         // Last sibling: vertical line stops at center. Otherwise extends to bottom.
-                        interstice::ElementRef nextSibling = ctx.GetNextSiblingRef(ctx.Ref());
+                        tachyon::ElementRef nextSibling = ctx.GetNextSiblingRef(ctx.Ref());
                         int32_t bottom = nextSibling.IsValid() ? topY + h : centerY;
 
                         int32_t tickRight = left + (hasArrow ? 0 : styleManager.Px(10));
 
-                        interstice::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = styleManager.Px(1.f) };
+                        tachyon::LineStyle style { .colorStyleIndex = lineColor, .lineWidth = styleManager.Px(1.f) };
                         ctx.RenderLine({ lineX, topY },    { lineX,     bottom  }, style);
                         ctx.RenderLine({ lineX, centerY }, { tickRight, centerY }, style);
                     }
@@ -192,7 +192,7 @@ namespace interstice
                     const int32_t kIndent = styleManager.Px(16);  // one visual indent level
                     const int32_t thick   = styleManager.Px(3);
                     const int32_t half    = thick / 2;         // insets that keep the line inside the row
-                    interstice::LineStyle indStyle { .colorStyleIndex = indicatorColor, .lineWidth = float(thick) };
+                    tachyon::LineStyle indStyle { .colorStyleIndex = indicatorColor, .lineWidth = float(thick) };
 
                     // InsideLast -> rectangle around the row (drop as last child).
                     if (m_treeDropState.position == TreeDropPosition::InsideLast)
@@ -233,19 +233,19 @@ namespace interstice
             });
     }
 
-    bool GUIApplication::TreeItemRenameCheck(interstice::ID bodyID, std::string* renameBuffer, StyleRef textStyle)
+    bool GUIApplication::TreeItemRenameCheck(tachyon::ID bodyID, std::string* renameBuffer, StyleRef textStyle)
     {
         bool modified = false;
         guiStateManager.Interaction().SetFocusID(bodyID);
         guiStateManager.TextEditorFocus().Set(bodyID);
 
         // Escape cancels the rename; everything else goes to the text box handler.
-        interstice::EventHandler textHandler = MakeTextBoxHandler(guiStateManager);
-        interstice::EventHandler editHandler =
-            [this, inner = std::move(textHandler)](interstice::ElementEvent&& event) -> bool
+        tachyon::EventHandler textHandler = MakeTextBoxHandler(guiStateManager);
+        tachyon::EventHandler editHandler =
+            [this, inner = std::move(textHandler)](tachyon::ElementEvent&& event) -> bool
             {
-                if (event.type == interstice::EventType::KeyDown &&
-                    event.state.lastKey == interstice::KeyCode::Escape)
+                if (event.type == tachyon::EventType::KeyDown &&
+                    event.state.lastKey == tachyon::KeyCode::Escape)
                 {
                     (*m_renameSub).Cancel();
                     return true;
@@ -253,11 +253,11 @@ namespace interstice
                 return inner ? inner(std::move(event)) : false;
             };
 
-        RegisterControl(interstice::Element{ .id = bodyID, .eventHandler = std::move(editHandler), .styleRef = textStyle },
-            [this, &modified, renameBuffer](interstice::Element& element)
+        RegisterControl(tachyon::Element{ .id = bodyID, .eventHandler = std::move(editHandler), .styleRef = textStyle },
+            [this, &modified, renameBuffer](tachyon::Element& element)
             {
-                return textSystem->RegisterEditableText(element.id, *renameBuffer, interstice::TextEditBehavior::None, element.styleRef, element.state, modified);
-            }, interstice::LayoutOverride::Auto());
+                return textSystem->RegisterEditableText(element.id, *renameBuffer, tachyon::TextEditBehavior::None, element.styleRef, element.state, modified);
+            }, tachyon::LayoutOverride::Auto());
 
         // Skip commit check on first frame - SwitchTextEditor(..., Invalid) from a
         // previous deactivation leaves a stale pending_text_committed.
@@ -283,7 +283,7 @@ namespace interstice
         m_treeState.totalItemCount = itemCount;
         m_treeState.dragDrop       = dragDrop;
 
-        interstice::Element container{};
+        tachyon::Element container{};
         container.id       = id;
         container.styleRef = style;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -291,20 +291,20 @@ namespace interstice
         {
             switch (event.type)
             {
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                     if (!event.state.LeftPressed()) break;
                     guiStateManager.Interaction().SetFocusID(event.id);
                     guiStateManager.TextEditorFocus().Clear();
                     return true;
-                case interstice::EventType::KeyDown:
+                case tachyon::EventType::KeyDown:
                 {
                     if ((guiStateManager.GetCurrentState(event.id) & ElementState::Focused) == ElementState::None)
                         break;
                     if (!selectedIndex) break;
                     switch (event.state.lastKey)
                     {
-                        case interstice::KeyCode::Up:   *selectedIndex = std::max(0, *selectedIndex - 1); return true;
-                        case interstice::KeyCode::Down: *selectedIndex = std::min(itemCount - 1, *selectedIndex + 1); return true;
+                        case tachyon::KeyCode::Up:   *selectedIndex = std::max(0, *selectedIndex - 1); return true;
+                        case tachyon::KeyCode::Down: *selectedIndex = std::min(itemCount - 1, *selectedIndex + 1); return true;
                         default: break;
                     }
                     break;
@@ -340,7 +340,7 @@ namespace interstice
         bool selected = IsTreeItemSelected(id, itemIndex);
 
         // Capture user-owned pointers; m_treeState is gone by the time handlers run.
-        interstice::ID containerID    = m_treeState.containerID;
+        tachyon::ID containerID    = m_treeState.containerID;
         int* selectedIndex     = m_treeState.selectedIndex;
         ItemDragDropConfig* dd = m_treeState.dragDrop;
         const bool dragEnabled = (dd && dd->payloadType != 0);
@@ -359,14 +359,14 @@ namespace interstice
         {
             if (style == StyleRef{}) style = theme.listItemStyleRef;
 
-            interstice::Element item{};
+            tachyon::Element item{};
             item.id       = id;
             item.state    = guiStateManager.GetCurrentState(id);
             item.styleRef = style;
             item.textID   = TreeItemRegisterText(id, text, icon, style, item.state);
             item.eventHandler = [this, containerID, id, itemIndex, selectedIndex](ElementEvent&& event) -> bool
             {
-                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
                     if (selectedIndex) *selectedIndex = itemIndex;
                     auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -399,7 +399,7 @@ namespace interstice
         // ---------------------------------------------------------------------
 
         // 1) Outer row container.
-        interstice::Element row{};
+        tachyon::Element row{};
         row.id       = id;
         row.state    = guiStateManager.GetCurrentState(id);
         row.styleRef = theme.listItemRowStyleRef;
@@ -407,7 +407,7 @@ namespace interstice
         // MouseDown on the row itself (margin area) also just selects.
         row.eventHandler = [this, containerID, id, itemIndex, selectedIndex](ElementEvent&& event) -> bool
         {
-            if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+            if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
             {
                 if (selectedIndex) *selectedIndex = itemIndex;
                 auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -419,7 +419,7 @@ namespace interstice
             }
             return false;
         };
-        row.eventHandler = interstice::Chain(std::move(row.eventHandler),
+        row.eventHandler = tachyon::Chain(std::move(row.eventHandler),
             MakeTreeRowDragDropHandler(id, /*rowHasChildren=*/false, dd));
 
         auto rowRes = elementStorage.Add(std::move(row), std::move(constraints));
@@ -434,8 +434,8 @@ namespace interstice
         // 2) Drag knob child (leftmost). It captures the mouse on MouseDown, so the drag
         //    must be advanced from its own MouseMove.
         {
-            interstice::ID knobID = idManager.AllocateDynamicID("list_drag_knob");
-            interstice::Element knob{};
+            tachyon::ID knobID = idManager.AllocateDynamicID("list_drag_knob");
+            tachyon::Element knob{};
             knob.id       = knobID;
             knob.state    = guiStateManager.GetCurrentState(knobID);
             knob.styleRef = theme.listItemDragKnobVertStyleRef;
@@ -443,7 +443,7 @@ namespace interstice
             {
                 switch (event.type)
                 {
-                    case interstice::EventType::MouseDown:
+                    case tachyon::EventType::MouseDown:
                     {
                         if (!event.state.LeftPressed()) break;
                         // Selection follows the click so the correct item is highlighted.
@@ -458,13 +458,13 @@ namespace interstice
                                                   dd->visualizer);
                         return true;
                     }
-                    case interstice::EventType::MouseMove:
+                    case tachyon::EventType::MouseMove:
                     {
-                        if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
+                        if ((event.state.buttons & tachyon::MouseButtons::Left) == tachyon::MouseButtons::None) break;
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         return guiStateManager.Drag().GetDraggedID() == rowID;
                     }
-                    case interstice::EventType::MouseUp:
+                    case tachyon::EventType::MouseUp:
                     {
                         if (!event.state.LeftReleased()) break;
                         // Focus the row's first control, if any; otherwise leave focus alone.
@@ -488,7 +488,7 @@ namespace interstice
                 return false;
             };
 
-            // Grip icon, sized by the knob style's -interstice-icon-size.
+            // Grip icon, sized by the knob style's -tachyon-icon-size.
             knob.textID  = textSystem->RegisterText(knobID, theme.dragHandleIcon, "", knob.styleRef, knob.state);
             auto knobRes = elementStorage.Add(std::move(knob), LayoutOverride{});
             VERIFY(knobRes.status);
@@ -497,15 +497,15 @@ namespace interstice
 
         // 3) Body child (text + icon, flex-grows to fill the remaining width).
         {
-            interstice::ID bodyID = idManager.AllocateDynamicID("list_item_body");
-            interstice::Element body{};
+            tachyon::ID bodyID = idManager.AllocateDynamicID("list_item_body");
+            tachyon::Element body{};
             body.id       = bodyID;
             body.state    = guiStateManager.GetCurrentState(bodyID);
             body.styleRef = theme.listItemBodyStyleRef;
             body.textID   = TreeItemRegisterText(bodyID, text, icon, theme.listItemBodyStyleRef, body.state);
             body.eventHandler = [this, rowID = id, itemIndex, selectedIndex, containerID](ElementEvent&& event) -> bool
             {
-                if (event.type == interstice::EventType::MouseDown && event.state.LeftPressed())
+                if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
                     if (selectedIndex) *selectedIndex = itemIndex;
                     auto& scrollManagement = guiStateManager.GetScrollManagement(); 
@@ -529,7 +529,7 @@ namespace interstice
         return guiStateManager.Interaction().HasBeenClicked(id);
     }
 
-    int GUIApplication::FindListItemIndex(interstice::ID id) const
+    int GUIApplication::FindListItemIndex(tachyon::ID id) const
     {
         auto it = m_listItemIndexByID.find(id);
         return (it != m_listItemIndexByID.end()) ? it->second : -1;
@@ -587,32 +587,32 @@ namespace interstice
             return -1;
         };
 
-        auto remap = [&](interstice::ID id, bool toAncestor) -> interstice::ID
+        auto remap = [&](tachyon::ID id, bool toAncestor) -> tachyon::ID
         {
-            if (id.GetMode() != interstice::IDMode::SubRange ||
+            if (id.GetMode() != tachyon::IDMode::SubRange ||
                 id.value.subRangeParts.parentHashValue != state.internal.rowsRangeID.value.rangedParts.hashValue)
                 return id;
             const size_t prevVis = size_t(id.value.subRangeParts.index);
-            if (prevVis >= prevVisible.size()) return interstice::ID::Invalid();
+            if (prevVis >= prevVisible.size()) return tachyon::ID::Invalid();
             const int flat = prevVisible[prevVis];
-            if (flat < 0 || flat >= int(rows.size())) return interstice::ID::Invalid();
+            if (flat < 0 || flat >= int(rows.size())) return tachyon::ID::Invalid();
             const int vis = toAncestor ? visibleOrAncestor(flat) : flatToVisible[size_t(flat)];
-            return vis >= 0 ? state.RowIDInRange(vis) : interstice::ID::Invalid();
+            return vis >= 0 ? state.RowIDInRange(vis) : tachyon::ID::Invalid();
         };
 
         state.selectedRowID = remap(state.selectedRowID, true);
         if (state.multiSelect)
         {
-            std::unordered_set<interstice::ID> remapped;
-            for (interstice::ID sel : state.multiSelect->selectedIDs)
-                if (interstice::ID moved = remap(sel, false); moved != interstice::ID::Invalid())
+            std::unordered_set<tachyon::ID> remapped;
+            for (tachyon::ID sel : state.multiSelect->selectedIDs)
+                if (tachyon::ID moved = remap(sel, false); moved != tachyon::ID::Invalid())
                     remapped.insert(moved);
             state.multiSelect->selectedIDs = std::move(remapped);
             state.multiSelect->lastClickedID = remap(state.multiSelect->lastClickedID, true);
         }
     }
 
-    void GUIApplication::VirtualTreeView(interstice::ID id,
+    void GUIApplication::VirtualTreeView(tachyon::ID id,
                                          std::vector<TreeViewRow>& rows,
                                          std::vector<int>& visibleIdx,
                                          TableState& state,
@@ -622,7 +622,7 @@ namespace interstice
     {
         // Rebuild the visible-row list each frame from the expand/collapse state.
         WalkTreeViewVisibility(rows, visibleIdx);
-        if (state.internal.rowsRangeID != interstice::ID::Invalid() && visibleIdx != state.internal.treeVisibleIdx)
+        if (state.internal.rowsRangeID != tachyon::ID::Invalid() && visibleIdx != state.internal.treeVisibleIdx)
             RemapTreeSelection(rows, visibleIdx, state);
         state.internal.treeVisibleIdx = visibleIdx;
 

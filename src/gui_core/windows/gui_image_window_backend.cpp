@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     struct ImageWindowBackend::ImageWindow
     {

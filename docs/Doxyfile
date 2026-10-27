@@ -1,8 +1,8 @@
 # The API reference. Doxygen runs it from the repository root, with DOXYGEN_OUTPUT the output
-# directory and INTERSTICE_VERSION the version: the interstice_docs target sets both, and so
+# directory and TACHYON_VERSION the version: the tachyon_docs target sets both, and so
 # does the Docs workflow that publishes it.
-PROJECT_NAME           = IntersticeUI
-PROJECT_NUMBER         = $(INTERSTICE_VERSION)
+PROJECT_NAME           = TachyonUI
+PROJECT_NUMBER         = $(TACHYON_VERSION)
 OUTPUT_DIRECTORY       = $(DOXYGEN_OUTPUT)
 INPUT                  = src/gui_core src/gui_controls docs
 RECURSIVE              = YES
@@ -19,7 +19,7 @@ MARKDOWN_ID_STYLE      = GITHUB
 # Expands the LayoutOverride builder macro so its builders show up as functions
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
-EXPAND_AS_DEFINED      = INTERSTICE_LO_BUILDER
+EXPAND_AS_DEFINED      = TACHYON_LO_BUILDER
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 WARN_IF_UNDOCUMENTED   = NO

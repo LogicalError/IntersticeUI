@@ -14,7 +14,7 @@ struct skb_layout_t;
 struct skb_text_position_t;
 struct skb_editor_t;
 
-namespace interstice
+namespace tachyon
 {
     /// Implementation detail, private to the skribidi backend.
     class SkribidiContext;
@@ -62,9 +62,9 @@ namespace interstice
         std::string Cut() override;
         void Paste(std::string_view text) override;
 
-        bool IsHoveringSelectedText(ID textEditorId, ID windowId, interstice::int2 screenSpace) const override;
-        bool TryGetTextDragCursor(ID windowId, interstice::int2 screenSpace, MouseCursor& outCursor) const override;
-        bool TryGetTextDragHoverTarget(ID windowId, interstice::int2 screenSpace, ID& outTargetId) const override;
+        bool IsHoveringSelectedText(ID textEditorId, ID windowId, tachyon::int2 screenSpace) const override;
+        bool TryGetTextDragCursor(ID windowId, tachyon::int2 screenSpace, MouseCursor& outCursor) const override;
+        bool TryGetTextDragHoverTarget(ID windowId, tachyon::int2 screenSpace, ID& outTargetId) const override;
 
         // -------------------- Cache Management --------------------
 
@@ -141,7 +141,7 @@ namespace interstice
 
         void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint) override;
 
-        static void ScreenToTextEditorLocalPoint(interstice::int2 screenSpace, const IntRect& textEditorInnerRect, interstice::float2& outLocal,
+        static void ScreenToTextEditorLocalPoint(tachyon::int2 screenSpace, const IntRect& textEditorInnerRect, tachyon::float2& outLocal,
                                                  const float3x2& screenToLayout = float3x2::Identity());
 
     private:
@@ -151,8 +151,8 @@ namespace interstice
         bool RebuildFontCollection(FontID fontId);
         void EvictUnusedTexts();
 
-        bool TryGetCaretPositionInternal(ID windowId, interstice::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition);
-        void DropDraggedText(ID windowId, interstice::int2 screenPos, ID targetTextEditorId);
+        bool TryGetCaretPositionInternal(ID windowId, tachyon::int2 screenPos, ID targetTextEditorId, skb_editor_t*& outTargetEditor, skb_text_position_t& outPosition);
+        void DropDraggedText(ID windowId, tachyon::int2 screenPos, ID targetTextEditorId);
         void SelectFromDropPoint(skb_editor_t* editor, skb_text_position_t dropPoint);
         void EndTextDragging();
 
@@ -162,12 +162,12 @@ namespace interstice
 
         bool ApplyTextEditUpdate(ID elementId, std::string& currentText, bool& wasModified);
         void ClearComposition();
-        bool TryGetActiveTextEditorLocalPoint(ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
+        bool TryGetActiveTextEditorLocalPoint(ID windowId, tachyon::int2 screenSpace, tachyon::float2& outLocal) const;
         /// True if (`localX`, `localY`) in the active editor falls within a link run. Lets
         /// read-only editors skip caret placement on a link press.
         bool IsActiveEditorPosOnLink(float localX, float localY) const;
-        bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, interstice::int2 screenSpace, interstice::float2& outLocal) const;
-        ID FindTextEditorAtScreenPoint(ID windowId, interstice::int2 screenSpace) const;
+        bool TryGetTextEditorLocalPoint(ID textEditorId, ID windowId, tachyon::int2 screenSpace, tachyon::float2& outLocal) const;
+        ID FindTextEditorAtScreenPoint(ID windowId, tachyon::int2 screenSpace) const;
         /// The validator a text editor registered with (null: any text).
         const ITextValidator* TextEditorValidator(ID elementId) const;
         bool CanDropDraggedTextInto(ID targetTextEditorId) const;
@@ -177,7 +177,7 @@ namespace interstice
         TextMeasurement UpdateWrapMeasurementWhenNecessary(RegisteredText* entry, const TextWrapContext& wrapContext) const;
         TextMeasurement MeasureTextInternal(RegisteredText* entry, const skb_layout_t* layout) const;
 
-        void UpdateRegisteredTextStyleState(RegisteredText* entry, interstice::StyleRef styleIndex, interstice::ElementState state);
+        void UpdateRegisteredTextStyleState(RegisteredText* entry, tachyon::StyleRef styleIndex, tachyon::ElementState state);
 
         std::unordered_map<uint64_t, TextID> m_elementIdToTextIdMap;
         std::unordered_map<uint64_t, TextID> m_textKeyToIdMap;
@@ -212,4 +212,4 @@ namespace interstice
         std::string      m_fallbackFontDirectory;
     };
 
-} // namespace interstice
+} // namespace tachyon

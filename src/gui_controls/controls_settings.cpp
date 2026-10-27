@@ -1,6 +1,6 @@
 #include <gui_controls/gui_application.h>
 
-namespace interstice
+namespace tachyon
 {
 
     // Settings panel: page tree | sizer | selected page's render callback.
@@ -12,7 +12,7 @@ namespace interstice
         // overflowing page scrolls inside its own viewport. Must hold down the whole chain.
         BeginHorizontal(idManager.AllocateDynamicID(),
                         theme.flexFillRowStyleRef,
-                        interstice::LayoutOverride::Auto().FlexGrow(1));
+                        tachyon::LayoutOverride::Auto().FlexGrow(1));
 
         // Left: flat page tree. Selection lives on internal.tableState as sub-range row IDs and is
         // translated to/from state.selectedID. Consume a click into selectedID before
@@ -27,13 +27,13 @@ namespace interstice
                 r.id    = state.pages[i].id;
                 r.name  = state.pages[i].name;
                 r.depth = 0;
-                r.icon  = interstice::IconID::Invalid;
+                r.icon  = tachyon::IconID::Invalid;
                 state.internal.rows.push_back(std::move(r));
             }
             RebuildTreeViewIndex(state.internal.rows);
 
             // 1. Consume any pending click; for a flat list the sub-range index is the page index.
-            if (state.internal.tableState.selectedRowID.GetMode() == interstice::IDMode::SubRange)
+            if (state.internal.tableState.selectedRowID.GetMode() == tachyon::IDMode::SubRange)
             {
                 const int idx =
                     static_cast<int>(state.internal.tableState.selectedRowID.value.subRangeParts.index);
@@ -46,42 +46,42 @@ namespace interstice
             for (size_t i = 0; i < state.pages.size(); ++i)
                 if (state.pages[i].id == state.selectedID) { selFlat = int(i); break; }
             if (selFlat >= 0
-                && state.internal.tableState.internal.rowsRangeID != interstice::ID::Invalid())
+                && state.internal.tableState.internal.rowsRangeID != tachyon::ID::Invalid())
             {
-                const interstice::ID expected = idManager.GetSubID(
+                const tachyon::ID expected = idManager.GetSubID(
                     state.internal.tableState.internal.rowsRangeID,
                     static_cast<uint32_t>(selFlat));
                 if (state.internal.tableState.selectedRowID != expected)
                     state.internal.tableState.selectedRowID = expected;
             }
 
-            const interstice::ID treeID = idManager.AllocateDynamicID();
+            const tachyon::ID treeID = idManager.AllocateDynamicID();
             VirtualTreeView(treeID, state.internal.rows, state.internal.visibleIdx,
                             state.internal.tableState, theme.settingsPageSelectionRef,
-                            interstice::LayoutOverride::Auto().FixedWidth(state.treeWidth).NoGrow());
+                            tachyon::LayoutOverride::Auto().FixedWidth(state.treeWidth).NoGrow());
         }
 
         // Middle: draggable sizer, styled like the dock splitter.
         {
-            interstice::ID sizerID = idManager.AllocateDynamicID();
-            interstice::Element sizer{};
+            tachyon::ID sizerID = idManager.AllocateDynamicID();
+            tachyon::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
+            sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
                 guiStateManager, state.treeWidth.value, 120, 500, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
+            auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
 
         // Right: page content (dock-content layout plus left padding off the sizer).
-        interstice::ID contentID = idManager.AllocateDynamicID();
-        interstice::Element content{};
+        tachyon::ID contentID = idManager.AllocateDynamicID();
+        tachyon::Element content{};
         content.id       = contentID;
         content.styleRef = theme.settingsPageStyleRef;
         content.state    = guiStateManager.GetCurrentState(contentID);
-        auto cRes = elementStorage.Add(std::move(content), interstice::LayoutOverride::Auto().FlexGrow(1));
+        auto cRes = elementStorage.Add(std::move(content), tachyon::LayoutOverride::Auto().FlexGrow(1));
         VERIFY(cRes.status);
         VERIFY(windowRegistry.Add(cRes.ref));
         VERIFY(elementStorage.BeginChildren());

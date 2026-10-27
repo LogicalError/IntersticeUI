@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -105,15 +105,15 @@ namespace interstice
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const interstice::ID groupID = app.idManager.CreateStaticID();
+        const tachyon::ID groupID = app.idManager.CreateStaticID();
         sub.BeginGroup(groupID, /*defaultW*/ 150, /*minW*/ 50, /*maxW*/ 400);
         auto* state = sub.GetActiveGroup();
         ASSERT_NE(state, nullptr);
 
         // Seed transient fields (would normally be set during construction).
         state->anyLabelHovered = true;
-        state->labelTextIDs.push_back(interstice::TextID{});
-        state->labelTextIDs.push_back(interstice::TextID{});
+        state->labelTextIDs.push_back(tachyon::TextID{});
+        state->labelTextIDs.push_back(tachyon::TextID{});
         // And a persistent field - must survive the reset.
         state->edgeHovered = true;
         sub.EndGroup();
@@ -142,7 +142,7 @@ namespace interstice
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const interstice::ID groupID = app.idManager.CreateStaticID();
+        const tachyon::ID groupID = app.idManager.CreateStaticID();
 
         auto setup = [&](bool anyHovered, bool dragging, bool edgeHovered) {
             sub.BeginGroup(groupID, 120, 40, 500);
@@ -187,7 +187,7 @@ namespace interstice
         FramePipeline pipeline;
         LabelGroupSubsystem sub(pipeline, app.elementStorage, app.guiStateManager, app.theme);
 
-        const interstice::ID groupID = app.idManager.CreateStaticID();
+        const tachyon::ID groupID = app.idManager.CreateStaticID();
 
         sub.BeginGroup(groupID, /*defaultW*/ 60, /*minW*/ 30, /*maxW*/ 120, /*resizable*/ false);
         auto* state = sub.GetActiveGroup();
@@ -208,7 +208,7 @@ namespace interstice
         sub.EndGroup();
 
         // Resizable groups: accumulator is ignored.
-        const interstice::ID resizableID = app.idManager.CreateStaticID();
+        const tachyon::ID resizableID = app.idManager.CreateStaticID();
         sub.BeginGroup(resizableID, 120, 40, 500, /*resizable*/ true);
         sub.GetActiveGroup()->maxLabelWidthThisFrame = 999;
         sub.EndGroup();
@@ -247,8 +247,8 @@ namespace interstice
 
         EXPECT_TRUE(sub.IsBalanced());
 
-        const interstice::ID a = app.idManager.CreateStaticID();
-        const interstice::ID b = app.idManager.CreateStaticID();
+        const tachyon::ID a = app.idManager.CreateStaticID();
+        const tachyon::ID b = app.idManager.CreateStaticID();
         sub.BeginGroup(a, 120, 40, 500);
         EXPECT_FALSE(sub.IsBalanced());
         sub.BeginGroup(b, 120, 40, 500);  // nested
@@ -280,10 +280,10 @@ namespace interstice
 
         ButtonGroupSubsystem::ItemState s{};
         // Distinct sentinel layoutStyleIndex per role so we can compare.
-        s.firstStyleRef.layoutStyleIndex = static_cast<interstice::LayoutStyleIndex>(101);
-        s.midStyleRef.layoutStyleIndex   = static_cast<interstice::LayoutStyleIndex>(202);
-        s.lastStyleRef.layoutStyleIndex  = static_cast<interstice::LayoutStyleIndex>(303);
-        s.soloStyleRef.layoutStyleIndex  = static_cast<interstice::LayoutStyleIndex>(404);
+        s.firstStyleRef.layoutStyleIndex = static_cast<tachyon::LayoutStyleIndex>(101);
+        s.midStyleRef.layoutStyleIndex   = static_cast<tachyon::LayoutStyleIndex>(202);
+        s.lastStyleRef.layoutStyleIndex  = static_cast<tachyon::LayoutStyleIndex>(303);
+        s.soloStyleRef.layoutStyleIndex  = static_cast<tachyon::LayoutStyleIndex>(404);
 
         EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.firstStyleRef.layoutStyleIndex);
         EXPECT_EQ(s.itemCount, 1);
@@ -369,7 +369,7 @@ namespace interstice
     TEST(RenameSubsystemTest, DefaultStateIsInactive)
     {
         RenameSubsystem r;
-        EXPECT_EQ(r.targetID, interstice::ID::Invalid());
+        EXPECT_EQ(r.targetID, tachyon::ID::Invalid());
         EXPECT_FALSE(r.isActive);
         EXPECT_FALSE(r.firstFrame);
         EXPECT_EQ(r.editBuffer, nullptr);
@@ -379,8 +379,8 @@ namespace interstice
     {
         RenameSubsystem r;
         std::string buf = "old text";
-        interstice::ID id{};
-        id.value.dynamicParts.mode      = interstice::IDMode::Static;
+        tachyon::ID id{};
+        id.value.dynamicParts.mode      = tachyon::IDMode::Static;
         id.value.dynamicParts.hashValue = 0xC0FFEE;
 
         r.Start(id, &buf, "new seed");
@@ -396,8 +396,8 @@ namespace interstice
     {
         RenameSubsystem r;
         std::string buf;
-        interstice::ID id{};
-        id.value.dynamicParts.mode      = interstice::IDMode::Static;
+        tachyon::ID id{};
+        id.value.dynamicParts.mode      = tachyon::IDMode::Static;
         id.value.dynamicParts.hashValue = 0xC0FFEE;
 
         r.Start(id, &buf, "edited value");
@@ -405,7 +405,7 @@ namespace interstice
         ASSERT_EQ(buf, "edited value");
 
         r.Cancel();
-        EXPECT_EQ(r.targetID,   interstice::ID::Invalid());
+        EXPECT_EQ(r.targetID,   tachyon::ID::Invalid());
         EXPECT_FALSE(r.isActive);
         EXPECT_FALSE(r.firstFrame);
         EXPECT_EQ(r.editBuffer, nullptr);

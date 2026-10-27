@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace interstice
+namespace tachyon
 {
     /// Memory functions a host gives the library, for the allocations that can be routed:
     /// Vulkan objects, VMA, vk-bootstrap and SDL. They must be thread-safe (drivers call

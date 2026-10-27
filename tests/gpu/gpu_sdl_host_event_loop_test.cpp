@@ -49,7 +49,7 @@ namespace
     TEST_F(SDLHostEventLoop, KeepsTheHostsEventFilter)
     {
         {
-            interstice::SDLWindowBackend backend;
+            tachyon::SDLWindowBackend backend;
             SDL_EventFilter filter = nullptr;
             void* userdata = nullptr;
             ASSERT_TRUE(SDL_GetEventFilter(&filter, &userdata));
@@ -64,9 +64,9 @@ namespace
 
     TEST_F(SDLHostEventLoop, LeavesTheQueueToAHostThatPumpsEvents)
     {
-        interstice::SDLWindowBackend::Options options;
+        tachyon::SDLWindowBackend::Options options;
         options.pumpEvents = false;
-        interstice::SDLWindowBackend backend(options);
+        tachyon::SDLWindowBackend backend(options);
 
         PushHostEvent();
         backend.PollEvents(nullptr);
@@ -75,7 +75,7 @@ namespace
 
     TEST_F(SDLHostEventLoop, EmptiesTheQueueWhenItRunsTheEventLoop)
     {
-        interstice::SDLWindowBackend backend;
+        tachyon::SDLWindowBackend backend;
 
         PushHostEvent();
         backend.PollEvents(nullptr);

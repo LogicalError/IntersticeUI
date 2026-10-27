@@ -1,6 +1,6 @@
-# IntersticeUI overview
+# TachyonUI overview
 
-IntersticeUI is an immediate-mode GUI library: the application describes its whole UI
+TachyonUI is an immediate-mode GUI library: the application describes its whole UI
 in code every frame, and the library keeps the state (focus, scroll positions, open
 menus, window rects), lays the UI out with flexbox and grid, handles input and draws it.
 
@@ -10,22 +10,22 @@ This guide explains the ideas the rest of the API builds on. The other guides:
 - [css.md](css.md): styles and themes
 - [integration.md](integration.md): hosting the library in an existing application
 
-Everything is in the namespace `interstice`. The examples below are written inside a
-class derived from `GUIApplication`, as in the [README](https://github.com/LogicalError/IntersticeUI#readme).
+Everything is in the namespace `tachyon`. The examples below are written inside a
+class derived from `GUIApplication`, as in the [README](https://github.com/LogicalError/TachyonUI#readme).
 
 ## The application
 
-An application derives from `interstice::GUIApplication` and implements `OnGUI`:
+An application derives from `tachyon::GUIApplication` and implements `OnGUI`:
 
 ```cpp
 #include <gui_controls/gui_application.h>
 
-class MyApp : public interstice::GUIApplication
+class MyApp : public tachyon::GUIApplication
 {
 public:
-    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
+    tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+        if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;
         windowID = idManager.CreateStaticID();
         return {};
@@ -33,7 +33,7 @@ public:
 
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "My app", interstice::LayoutOverride{}.Size(360, 160)))
+        if (BeginWindow(windowID, "My app", tachyon::LayoutOverride{}.Size(360, 160)))
         {
             Text("Hello");
             Button("Quit", [this] { applicationQuit = true; });
@@ -42,14 +42,14 @@ public:
     }
 
 private:
-    interstice::ID windowID = interstice::ID::Invalid();
+    tachyon::ID windowID = tachyon::ID::Invalid();
 };
 
 int main()
 {
     MyApp app;
-    app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);   // shaders, fonts and themes
-    interstice::Result<void> result = app.Initialize();
+    app.SetResourceRoot(TACHYON_RESOURCE_DIR);   // shaders, fonts and themes
+    tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();   // until the last window closes
     app.Cleanup();
@@ -113,7 +113,7 @@ three itself; see [integration.md](integration.md).
 
 ## IDs
 
-Every element has an `interstice::ID`. The library keys its retained state by it:
+Every element has an `tachyon::ID`. The library keys its retained state by it:
 which element is hovered or focused, the text being edited, scroll offsets, window
 rects. An element that gets a different ID next frame loses that state.
 
@@ -141,9 +141,9 @@ To make a call-site ID yourself, for a control that only takes an explicit ID, c
 `idManager.AllocateDynamicID()`. It has three forms:
 
 ```cpp
-interstice::ID a = idManager.AllocateDynamicID();             // this call site
-interstice::ID b = idManager.AllocateDynamicID("tabs");       // a string hint
-interstice::ID c = idManager.AllocateDynamicID(__FILE__, __LINE__);
+tachyon::ID a = idManager.AllocateDynamicID();             // this call site
+tachyon::ID b = idManager.AllocateDynamicID("tabs");       // a string hint
+tachyon::ID c = idManager.AllocateDynamicID(__FILE__, __LINE__);
 ```
 
 ```cpp
@@ -178,7 +178,7 @@ ID of item `index`:
 
 ```cpp
 const uint32_t count = uint32_t(std::max<size_t>(1, files.size()));   // the size must be at least 1
-const interstice::ID rows = idManager.AllocateRangedID(count, "files");
+const tachyon::ID rows = idManager.AllocateRangedID(count, "files");
 for (size_t i = 0; i < files.size(); ++i)
     Button(idManager.GetSubID(rows, uint32_t(i)), files[i], [this, i] { Open(i); });
 ```
@@ -274,7 +274,7 @@ same arguments as the `Begin*` and converts to the `Begin*`'s result:
 if (auto menu = Menu(menuID, "File"))
     MenuItem("Quit", [this] { applicationQuit = true; });
 
-auto window = Window(windowID, "Controls", interstice::LayoutOverride{}.Size(480, 560));
+auto window = Window(windowID, "Controls", tachyon::LayoutOverride{}.Size(480, 560));
 if (!window)
     return;   // the scope ends the window, open or not
 ```
@@ -348,8 +348,8 @@ way it scales the sizes in the stylesheet. Positions, rects, and sizes the libra
 measured or computed are whole device pixels.
 
 ```cpp
-interstice::LayoutOverride{}.Width(200)                            // 200 CSS px: 300 pixels at 150%
-interstice::LayoutOverride{}.Width(interstice::Pixels{ measured })  // already pixels, used as is
+tachyon::LayoutOverride{}.Width(200)                            // 200 CSS px: 300 pixels at 150%
+tachyon::LayoutOverride{}.Width(tachyon::Pixels{ measured })  // already pixels, used as is
 ```
 
 A plain `int` converts to `CssPx`; `Pixels` must be written out. `int2` and `IntRect`
@@ -366,7 +366,7 @@ Calls that can fail return a `Result<T>`: the value, or an `Error` with an
 is success or an error.
 
 ```cpp
-if (interstice::Result<void> result = app.Initialize(); !result)
+if (tachyon::Result<void> result = app.Initialize(); !result)
     std::fprintf(stderr, "%s\n", result.GetError().message.c_str());
 ```
 
@@ -395,7 +395,7 @@ PersistValue("zoom", zoom);                  // an app setting (bool, int, float
 ```cpp
 std::string json = app.SaveUIState();                        // e.g. after Run()
 
-if (interstice::Result<void> restored = RestoreUIState(json); !restored)
+if (tachyon::Result<void> restored = RestoreUIState(json); !restored)
     std::fprintf(stderr, "UI state not restored: %s\n", restored.GetError().message.c_str());
 ```
 

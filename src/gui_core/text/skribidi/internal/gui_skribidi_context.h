@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     // An editor's whole text, as UTF-8.
     inline std::string EditorText(const skb_editor_t* editor)

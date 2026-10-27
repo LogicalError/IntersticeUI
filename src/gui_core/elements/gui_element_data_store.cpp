@@ -1,6 +1,6 @@
 #include <gui_core/elements/gui_element_data_store.h>
 
-namespace interstice
+namespace tachyon
 {
     void ElementDataStore::Touch(ID id)
     {

@@ -2,12 +2,12 @@
 # isn't checked out, warns when one isn't at the commit this repo records.
 # Never updates them itself; that changes the checkout and needs the network.
 
-file(STRINGS "${PROJECT_SOURCE_DIR}/.gitmodules" _interstice_submodule_lines REGEX "^[ \t]*path[ \t]*=")
-foreach(_line IN LISTS _interstice_submodule_lines)
+file(STRINGS "${PROJECT_SOURCE_DIR}/.gitmodules" _tachyon_submodule_lines REGEX "^[ \t]*path[ \t]*=")
+foreach(_line IN LISTS _tachyon_submodule_lines)
   string(REGEX REPLACE "^[ \t]*path[ \t]*=[ \t]*" "" _path "${_line}")
   string(STRIP "${_path}" _path)
   # googletest is only needed for the tests.
-  if(_path MATCHES "googletest$" AND NOT INTERSTICE_BUILD_TESTS)
+  if(_path MATCHES "googletest$" AND NOT TACHYON_BUILD_TESTS)
     continue()
   endif()
   file(GLOB _contents "${PROJECT_SOURCE_DIR}/${_path}/*")

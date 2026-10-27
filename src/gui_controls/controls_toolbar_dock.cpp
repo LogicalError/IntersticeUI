@@ -7,7 +7,7 @@
 #include <cmath>
 #include <utility>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -522,4 +522,4 @@ namespace interstice
         app.EndVertical();
     }
 
-} // namespace interstice
+} // namespace tachyon

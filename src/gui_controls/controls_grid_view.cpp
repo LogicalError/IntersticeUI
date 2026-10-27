@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace interstice
+namespace tachyon
 {
 
 
@@ -29,7 +29,7 @@ namespace interstice
         // Capture pointers for the container keyboard handler
         int* selIdx = selectedIndex;
 
-        interstice::Element container{};
+        tachyon::Element container{};
         container.id       = id;
         container.styleRef = style;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -37,16 +37,16 @@ namespace interstice
         {
             switch (event.type)
             {
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                     if (!event.state.LeftPressed()) break;
                     guiStateManager.Interaction().SetFocusID(event.id);
                     guiStateManager.TextEditorFocus().Clear();
                     return true;
 
-                case interstice::EventType::KeyDown:
+                case tachyon::EventType::KeyDown:
                 {
                     // F2 - rename the last-clicked item (multi-select grids).
-                    if (event.state.lastKey == interstice::KeyCode::F2 && multiSelect)
+                    if (event.state.lastKey == tachyon::KeyCode::F2 && multiSelect)
                     {
                         auto it = m_gridItemRenameByID.find(multiSelect->lastClickedID);
                         if (it != m_gridItemRenameByID.end() && it->second.renameBuf)
@@ -85,10 +85,10 @@ namespace interstice
 
                     switch (event.state.lastKey)
                     {
-                        case interstice::KeyCode::Right: next = std::min(cur + 1, total - 1); break;
-                        case interstice::KeyCode::Left:  next = std::max(cur - 1, 0); break;
-                        case interstice::KeyCode::Down:  next = std::min(cur + cols, total - 1); break;
-                        case interstice::KeyCode::Up:    next = std::max(cur - cols, 0); break;
+                        case tachyon::KeyCode::Right: next = std::min(cur + 1, total - 1); break;
+                        case tachyon::KeyCode::Left:  next = std::max(cur - 1, 0); break;
+                        case tachyon::KeyCode::Down:  next = std::min(cur + cols, total - 1); break;
+                        case tachyon::KeyCode::Up:    next = std::max(cur - cols, 0); break;
                         default: return false;
                     }
 
@@ -118,7 +118,7 @@ namespace interstice
     }
 
     bool GUIApplication::GridViewItem(ID id, const GUIContent& content,
-                                   interstice::ElementState extraState, std::string* renameBuffer,
+                                   tachyon::ElementState extraState, std::string* renameBuffer,
                                    StyleRef itemStyle, LayoutOverride&& constraints)
     {
         const IconID           icon = content.icon;
@@ -127,10 +127,10 @@ namespace interstice
         int itemIndex = m_gridViewState.nextItemIndex++;
         int* selectedIndex        = m_gridViewState.selectedIndex;
         MultiSelectState* multi   = m_gridViewState.multiSelect;
-        interstice::ID containerID       = m_gridViewState.containerID;
+        tachyon::ID containerID       = m_gridViewState.containerID;
         ItemDragDropConfig* dd    = m_gridViewState.dragDrop;
         DoubleClickTracker* clickTracker = m_gridViewState.clickTracker;
-        interstice::ID* pendingRename    = m_gridViewState.pendingRenameClick;
+        tachyon::ID* pendingRename    = m_gridViewState.pendingRenameClick;
 
         bool selected = false;
         if (multi)
@@ -165,13 +165,13 @@ namespace interstice
                 multi->orderedItemIDs.push_back(id);
 
             const VisualTextStyle* vts =
-                styleManager.GetVisualTextStyle(style.visualTextStyleIndex, interstice::ElementState::None);
+                styleManager.GetVisualTextStyle(style.visualTextStyleIndex, tachyon::ElementState::None);
             const bool iconBeside = vts && (vts->iconSide == IconSide::Left
                                          || vts->iconSide == IconSide::Right);
             const int32_t iconSize = (vts && vts->iconSize > 0) ? vts->iconSize : styleManager.Px(16);
 
-            interstice::ID boxID = idManager.AllocateDynamicID();
-            interstice::Element box{};
+            tachyon::ID boxID = idManager.AllocateDynamicID();
+            tachyon::Element box{};
             box.id       = boxID;
             box.styleRef = iconBeside ? theme.gridViewRenameListItemStyleRef
                                       : theme.gridViewRenameItemStyleRef;
@@ -183,11 +183,11 @@ namespace interstice
 
             if (icon != IconID::Invalid)
             {
-                interstice::ID iconElemID = idManager.AllocateDynamicID();
-                interstice::Element icn{};
+                tachyon::ID iconElemID = idManager.AllocateDynamicID();
+                tachyon::Element icn{};
                 icn.id       = iconElemID;
                 icn.iconID   = icon;
-                icn.flags    = interstice::ElementFlags::NoInput;
+                icn.flags    = tachyon::ElementFlags::NoInput;
                 icn.styleRef = theme.gridViewRenameIconStyleRef;
                 icn.state    = guiStateManager.GetCurrentState(iconElemID);
                 auto icnRes = elementStorage.Add(std::move(icn),
@@ -206,13 +206,13 @@ namespace interstice
 
         if (selected) guiStateManager.Construction().PushSelected();
 
-        interstice::Element item{};
+        tachyon::Element item{};
         item.id       = id;
         item.state    = guiStateManager.GetCurrentState(id) | extraState;
         // The item a drag would drop into stands out: shown as pressed (:active).
         if (dd && dd->payloadType != 0 && guiStateManager.Drag().IsDropTargetFor(id, dd->payloadType)
             && (!dd->canDrop || dd->canDrop(guiStateManager.Drag().GetPayloadValue(), id)))
-            item.state |= interstice::ElementState::Active;
+            item.state |= tachyon::ElementState::Active;
         item.styleRef = style;
         item.iconID   = icon;
         item.textID   = textSystem->RegisterText(id, icon, text, style, item.state);
@@ -224,12 +224,12 @@ namespace interstice
         {
             switch (event.type)
             {
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                 {
                     if (!event.state.LeftPressed()) break;
 
-                    bool ctrl  = (event.state.modifiers & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
-                    bool shift = (event.state.modifiers & interstice::KeyModifier::Shift) != interstice::KeyModifier::None;
+                    bool ctrl  = (event.state.modifiers & tachyon::KeyModifier::Control) != tachyon::KeyModifier::None;
+                    bool shift = (event.state.modifiers & tachyon::KeyModifier::Shift) != tachyon::KeyModifier::None;
 
                     // Ctrl+Shift+Click - start rename (same as table rows).
                     if (canRename && ctrl && shift)
@@ -252,15 +252,15 @@ namespace interstice
                                           && clickInfo.sameAsPrevious
                                           && clickInfo.elapsedMs >= 500.0f
                                           && clickInfo.elapsedMs < 3000.0f)
-                                       ? id : interstice::ID::Invalid();
+                                       ? id : tachyon::ID::Invalid();
                     }
 
                     if (multi)
                     {
-                        if (shift && multi->lastClickedID != interstice::ID::Invalid())
+                        if (shift && multi->lastClickedID != tachyon::ID::Invalid())
                         {
-                            const interstice::ID anchor = multi->lastClickedID;
-                            const bool sameRange = anchor.GetMode() == interstice::IDMode::SubRange && id.GetMode() == interstice::IDMode::SubRange &&
+                            const tachyon::ID anchor = multi->lastClickedID;
+                            const bool sameRange = anchor.GetMode() == tachyon::IDMode::SubRange && id.GetMode() == tachyon::IDMode::SubRange &&
                                 anchor.value.subRangeParts.parentHashValue == id.value.subRangeParts.parentHashValue;
                             const auto& ordered = multi->orderedItemIDs;
                             auto itAnchor  = std::find(ordered.begin(), ordered.end(), anchor);
@@ -276,7 +276,7 @@ namespace interstice
                                 const uint64_t b  = id.value.subRangeParts.index;
                                 for (uint64_t i = std::min(a, b); i <= std::max(a, b); ++i)
                                 {
-                                    interstice::ID item = id;
+                                    tachyon::ID item = id;
                                     item.value.subRangeParts.index = i;
                                     multi->selectedIDs.insert(item);
                                 }
@@ -326,24 +326,24 @@ namespace interstice
                     return true;
                 }
 
-                case interstice::EventType::MouseMove:
+                case tachyon::EventType::MouseMove:
                 {
                     if (!dd || dd->payloadType == 0) break;
-                    if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
+                    if ((event.state.buttons & tachyon::MouseButtons::Left) == tachyon::MouseButtons::None) break;
                     guiStateManager.Drag().UpdateFromInput(event.state);
                     // A press that became a drag doesn't rename on release, even dropped back on
                     // the item: the drop ends the drag before the item sees its MouseUp.
                     if (pendingRename && *pendingRename == id && guiStateManager.Drag().IsDragging())
-                        *pendingRename = interstice::ID::Invalid();
+                        *pendingRename = tachyon::ID::Invalid();
                     return guiStateManager.Drag().GetDraggedID() == id;
                 }
 
-                case interstice::EventType::MouseUp:
+                case tachyon::EventType::MouseUp:
                 {
                     if (!event.state.LeftReleased()) break;
                     if (pendingRename && *pendingRename == id)
                     {
-                        *pendingRename = interstice::ID::Invalid();
+                        *pendingRename = tachyon::ID::Invalid();
                         // A promoted drag supersedes the armed rename.
                         if (!guiStateManager.Drag().IsDragging())
                         {
@@ -371,9 +371,9 @@ namespace interstice
         if (dd && dd->payloadType != 0)
         {
             auto capturedID = id;
-            item.eventHandler = interstice::Chain(std::move(item.eventHandler),
-                interstice::MakeDropTargetHandler(dd->payloadType,
-                    [dd, capturedID](uintptr_t payloadValue, interstice::ID /*sourceID*/) {
+            item.eventHandler = tachyon::Chain(std::move(item.eventHandler),
+                tachyon::MakeDropTargetHandler(dd->payloadType,
+                    [dd, capturedID](uintptr_t payloadValue, tachyon::ID /*sourceID*/) {
                         if (dd->onDrop) dd->onDrop(payloadValue, capturedID);
                     },
                     [dd, capturedID](uintptr_t payloadValue) {
@@ -463,13 +463,13 @@ namespace interstice
             if (scrollManagement.IsScrollOffsetHandleValid(handle))
                 scrollY = -scrollManagement.GetScrollOffset(handle).y; // negative offset = scrolled down
         }
-        const auto range = interstice::TableHelpers::ComputeVirtualRowRange(
+        const auto range = tachyon::TableHelpers::ComputeVirtualRowRange(
             scrollY, viewH, rowStride, totalRows, kBufferRows);
         const int firstRow = range.firstVisible;
         const int lastRow  = range.lastVisible;
 
         // ---- Scroll container ------------------------------------------------
-        interstice::Element container{};
+        tachyon::Element container{};
         container.id       = id;
         container.styleRef = scrollStyle;
         container.state    = guiStateManager.GetCurrentState(id);
@@ -478,22 +478,22 @@ namespace interstice
             {
                 switch (event.type)
                 {
-                    case interstice::EventType::MouseDown:
+                    case tachyon::EventType::MouseDown:
                         if (!event.state.LeftPressed()) break;
                         guiStateManager.Interaction().SetFocusID(event.id);
                         guiStateManager.TextEditorFocus().Clear();
                         return true;
 
-                    case interstice::EventType::KeyDown:
+                    case tachyon::EventType::KeyDown:
                     {
                         // F2 - rename the selected item (only while it's within the emitted window).
-                        if (event.state.lastKey == interstice::KeyCode::F2)
+                        if (event.state.lastKey == tachyon::KeyCode::F2)
                         {
-                            interstice::ID target = interstice::ID::Invalid();
+                            tachyon::ID target = tachyon::ID::Invalid();
                             if (multiSelect)
                                 target = multiSelect->lastClickedID;
                             else if (selectedIndex && *selectedIndex >= 0
-                                     && vsPtr->internal.itemsRangeID != interstice::ID::Invalid())
+                                     && vsPtr->internal.itemsRangeID != tachyon::ID::Invalid())
                                 target = idManager.GetSubID(vsPtr->internal.itemsRangeID,
                                                             static_cast<uint32_t>(*selectedIndex));
                             auto it = m_gridItemRenameByID.find(target);
@@ -510,10 +510,10 @@ namespace interstice
                         int       next = cur;
                         switch (event.state.lastKey)
                         {
-                            case interstice::KeyCode::Right: next = std::min(cur + 1, itemCount - 1); break;
-                            case interstice::KeyCode::Left:  next = std::max(cur - 1, 0); break;
-                            case interstice::KeyCode::Down:  next = std::min(cur + navCols, itemCount - 1); break;
-                            case interstice::KeyCode::Up:    next = std::max(cur - navCols, 0); break;
+                            case tachyon::KeyCode::Right: next = std::min(cur + 1, itemCount - 1); break;
+                            case tachyon::KeyCode::Left:  next = std::max(cur - 1, 0); break;
+                            case tachyon::KeyCode::Down:  next = std::min(cur + navCols, itemCount - 1); break;
+                            case tachyon::KeyCode::Up:    next = std::max(cur - navCols, 0); break;
                             default: return false;
                         }
                         if (next == cur) break;
@@ -540,9 +540,9 @@ namespace interstice
         // Background drop target: onDrop fires with the container's ID ("dropped into the view").
         if (dragDrop && dragDrop->payloadType != 0)
         {
-            container.eventHandler = interstice::Chain(std::move(container.eventHandler),
-                interstice::MakeDropTargetHandler(dragDrop->payloadType,
-                    [dd = dragDrop, id](uintptr_t payloadValue, interstice::ID /*sourceID*/) {
+            container.eventHandler = tachyon::Chain(std::move(container.eventHandler),
+                tachyon::MakeDropTargetHandler(dragDrop->payloadType,
+                    [dd = dragDrop, id](uintptr_t payloadValue, tachyon::ID /*sourceID*/) {
                         if (dd->onDrop) dd->onDrop(payloadValue, id);
                     },
                     [dd = dragDrop, id](uintptr_t payloadValue) {
@@ -558,7 +558,7 @@ namespace interstice
         {
             GridViewVirtualState* vs = &vstate;
             (void)elementStorage.AddPostLayout(containerRef,
-                [vs](interstice::PostLayoutContext& plctx)
+                [vs](tachyon::PostLayoutContext& plctx)
                 {
                     const auto inner = plctx.ElementInnerRect();
                     vs->lastViewportW = inner.w;
@@ -569,13 +569,13 @@ namespace interstice
         // Scope internal dynamic IDs under `id`: the emitted row count varies with scroll and
         // would otherwise shift the IDs of later siblings. The scrollbar ID comes first so it's stable.
         (void)idManager.PushParent(id);
-        const interstice::ID scrollbarID = idManager.AllocateDynamicID("_grid_vscroll");
+        const tachyon::ID scrollbarID = idManager.AllocateDynamicID("_grid_vscroll");
 
         // One ranged ID spans all items; an item's ID is the sub-ID at its dataset index,
         // so it's stable across frames and the index is recoverable from it.
-        const interstice::ID itemsRangeID = (itemCount > 0)
+        const tachyon::ID itemsRangeID = (itemCount > 0)
             ? idManager.AllocateRangedID(static_cast<uint32_t>(itemCount), "_grid_items")
-            : interstice::ID::Invalid();
+            : tachyon::ID::Invalid();
         vstate.internal.itemsRangeID = itemsRangeID; // read by the container's F2 handler
 
         VERIFY(elementStorage.BeginChildren());
@@ -585,25 +585,25 @@ namespace interstice
         auto emitSpacer = [this](int height)
         {
             if (height <= 0) return;
-            const interstice::ID spacerID = idManager.AllocateDynamicID("_grid_spacer");
-            interstice::Element spacer{};
+            const tachyon::ID spacerID = idManager.AllocateDynamicID("_grid_spacer");
+            tachyon::Element spacer{};
             spacer.id       = spacerID;
             spacer.styleRef = theme.emptyHorzStyleRef;
-            spacer.flags    = interstice::ElementFlags::NoInput;
+            spacer.flags    = tachyon::ElementFlags::NoInput;
             RegisterElement(std::move(spacer),
-                            interstice::LayoutOverride{}.Height(Pixels{ height }).NoGrow().NoShrink());
+                            tachyon::LayoutOverride{}.Height(Pixels{ height }).NoGrow().NoShrink());
         };
 
         emitSpacer(firstRow * rowStride);
 
         for (int r = firstRow; r < lastRow; ++r)
         {
-            const interstice::ID rowID = idManager.AllocateDynamicID("_grid_row");
-            interstice::Element row{};
+            const tachyon::ID rowID = idManager.AllocateDynamicID("_grid_row");
+            tachyon::Element row{};
             row.id       = rowID;
             row.styleRef = rowStyle;
             RegisterElement(std::move(row),
-                            interstice::LayoutOverride{}.Height(Pixels{ rowStride }).NoGrow().NoShrink());
+                            tachyon::LayoutOverride{}.Height(Pixels{ rowStride }).NoGrow().NoShrink());
             VERIFY(elementStorage.BeginChildren());
             const int base = r * cols;
             for (int c = 0; c < cols; ++c)
@@ -615,7 +615,7 @@ namespace interstice
                 // GridViewItem reads nextItemIndex as the dataset index, so
                 // per-item selection and drag payloads map to the real index.
                 m_gridViewState.nextItemIndex = idx;
-                const interstice::ID itemID = idManager.GetSubID(itemsRangeID, static_cast<uint32_t>(idx));
+                const tachyon::ID itemID = idManager.GetSubID(itemsRangeID, static_cast<uint32_t>(idx));
                 generateItem(idx, itemID);
             }
             VERIFY(elementStorage.EndChildren());

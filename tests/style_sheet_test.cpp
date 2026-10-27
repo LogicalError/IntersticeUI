@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace interstice
+namespace tachyon
 {
 
     // ============================================================================
@@ -426,14 +426,14 @@ namespace interstice
 
     TEST(StyleSheet, IconSide)
     {
-        auto s = ParseStyleSheet(".a { -interstice-icon-side: right; }");
+        auto s = ParseStyleSheet(".a { -tachyon-icon-side: right; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
         EXPECT_EQ(s.GetStyle("a")->iconSide, IconSide::Right);
     }
 
     TEST(StyleSheet, IconTextGap)
     {
-        auto s = ParseStyleSheet(".a { -interstice-icon-text-gap: 4; }");
+        auto s = ParseStyleSheet(".a { -tachyon-icon-text-gap: 4; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
         EXPECT_EQ(s.GetStyle("a")->iconTextGap, 4u);
     }
@@ -594,15 +594,15 @@ namespace interstice
         EXPECT_NE(s.GetStyle("a"), nullptr);
     }
 
-    TEST(StyleSheet, IntersticeLanguage)
+    TEST(StyleSheet, TachyonLanguage)
     {
-        auto s = ParseStyleSheet(".a { -interstice-language: ja; } .b { -interstice-language: \"zh-Hant\"; } .c { -interstice-language: none; }");
+        auto s = ParseStyleSheet(".a { -tachyon-language: ja; } .b { -tachyon-language: \"zh-Hant\"; } .c { -tachyon-language: none; }");
         EXPECT_FALSE(s.HasErrors());
         EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.language.view(), "ja");
         EXPECT_EQ(s.GetStyle("b")->states[Style::kHover].textStyle.language.view(), "zh-Hant");
         EXPECT_TRUE(s.GetStyle("c")->states[Style::kNormal].textStyle.language.empty());
 
-        auto tooLong = ParseStyleSheet(".d { -interstice-language: zh-Hant-TW-x-private; }");
+        auto tooLong = ParseStyleSheet(".d { -tachyon-language: zh-Hant-TW-x-private; }");
         EXPECT_TRUE(tooLong.HasErrors());
     }
 
@@ -1669,11 +1669,11 @@ namespace interstice
 
     TEST(StyleSheet, VerticalTrim)
     {
-        auto s = ParseStyleSheet(".a { -interstice-vertical-trim: cap-to-baseline; } .b { -interstice-vertical-trim: normal; }");
+        auto s = ParseStyleSheet(".a { -tachyon-vertical-trim: cap-to-baseline; } .b { -tachyon-vertical-trim: normal; }");
         ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
         EXPECT_EQ(s.GetStyle("a")->textLayoutStyle.verticalTrim, VerticalTrim::CapToBaseline);
         EXPECT_EQ(s.GetStyle("b")->textLayoutStyle.verticalTrim, VerticalTrim::Default);
-        EXPECT_TRUE(ParseStyleSheet(".c { -interstice-vertical-trim: sideways; }").HasErrors());
+        EXPECT_TRUE(ParseStyleSheet(".c { -tachyon-vertical-trim: sideways; }").HasErrors());
     }
 
     // A number may start with its decimal point, as in rgba(0, 0, 0, .35).

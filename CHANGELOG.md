@@ -12,4 +12,4 @@ First public preview. The API is not stable yet.
 - Flex and grid layout, docking with saved layouts, tables, tree views, grid views, node view, color and gradient pickers, menus, tooltips and toolbars.
 - UI scaling that follows the display, with stored sizes in CSS pixels.
 - Retained render cache for panels that haven't changed.
-- CMake package: `find_package(IntersticeUI)` with `IntersticeUI::gui_core` and `IntersticeUI::gui_controls`; Windows x64 with MSVC.
+- CMake package: `find_package(TachyonUI)` with `TachyonUI::gui_core` and `TachyonUI::gui_controls`; Windows x64 with MSVC.

@@ -21,7 +21,7 @@
 #include <string_view>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class GUIApplication;
 
@@ -115,4 +115,4 @@ namespace interstice
     // EmitFloatingToolbarWindows is a GUIApplication member (it needs the protected
     // BeginWindow / EndWindow): `app.EmitFloatingToolbarWindows(items, opts)`.
 
-} // namespace interstice
+} // namespace tachyon

@@ -9,7 +9,7 @@
 
 #include <span>
 
-namespace interstice
+namespace tachyon
 {
     class GUIRenderer;
     class ElementStorage;
@@ -237,4 +237,4 @@ namespace interstice
         float3x2        m_contentTransform;
     };
 
-} // namespace interstice
+} // namespace tachyon

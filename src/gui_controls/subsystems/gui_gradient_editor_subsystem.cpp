@@ -3,7 +3,7 @@
 #include <gui_core/frame/gui_frame_pipeline.h>
 #include <gui_core/style/gui_style_manager.h>
 
-namespace interstice
+namespace tachyon
 {
     GradientEditorSubsystem::GradientEditorSubsystem(FramePipeline& frame)
     {
@@ -16,7 +16,7 @@ namespace interstice
         });
     }
 
-    VisualColorStyleIndex& GradientEditorSubsystem::ClaimSwatchStyle(interstice::ID swatchID)
+    VisualColorStyleIndex& GradientEditorSubsystem::ClaimSwatchStyle(tachyon::ID swatchID)
     {
         auto [it, inserted] = m_swatchStyles.try_emplace(swatchID, VisualColorStyleIndex::Invalid);
         if (inserted)
@@ -31,7 +31,7 @@ namespace interstice
         return it->second;
     }
 
-    void GradientEditorSubsystem::KeepSwatchAlive(interstice::ID swatchID)
+    void GradientEditorSubsystem::KeepSwatchAlive(tachyon::ID swatchID)
     {
         auto prev = m_prevSwatchStyles.find(swatchID);
         if (prev != m_prevSwatchStyles.end())

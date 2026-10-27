@@ -8,7 +8,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace interstice
+namespace tachyon
 {
     /// What an editable field takes as text, asked while it is edited. An instance given to
     /// the text system must outlive the field (a static or a member, not a temporary).

@@ -3,7 +3,7 @@
 #include <gui_controls/gui_application.h>
 #include <gui_controls/controls_toolbar_dock.h>
 
-namespace interstice
+namespace tachyon
 {
     enum class CommandMode : uint32_t;
 
@@ -92,13 +92,13 @@ namespace interstice
         StyleRef dataTableCellStyleRef, dataTableNumberStyleRef;
         StyleRef iconVAlignDemoStyleRefs[4][3];   // [IconSide L/R/T/B][top/mid/bot]
 
-        interstice::VisualColorStyleIndex triangleFillStyle;
-        interstice::VisualColorStyleIndex triangleFillStyle2;
-        interstice::VisualColorStyleIndex quadFillStyle;
-        interstice::VisualColorStyleIndex animatedHueStyle = interstice::VisualColorStyleIndex::Invalid; // misc panel; recreated after a theme reload
+        tachyon::VisualColorStyleIndex triangleFillStyle;
+        tachyon::VisualColorStyleIndex triangleFillStyle2;
+        tachyon::VisualColorStyleIndex quadFillStyle;
+        tachyon::VisualColorStyleIndex animatedHueStyle = tachyon::VisualColorStyleIndex::Invalid; // misc panel; recreated after a theme reload
 
-        interstice::ColorStyle triangleFillColorStyle;
-        interstice::ColorStyle quadFillColorStyle;
+        tachyon::ColorStyle triangleFillColorStyle;
+        tachyon::ColorStyle quadFillColorStyle;
 
         ImageIndex checkerboardIndex { ImageIndex::Invalid };
         ImageIndex demoImageIndex { ImageIndex::Invalid };   // sample image for the Image() element demo
@@ -124,10 +124,10 @@ namespace interstice
 
             float sliderValue = 0.5f;
             float sliderFieldValue = 50.0f; // SliderField demo (range [0, 100])
-            interstice::color4f demoColor { 0.2f, 0.5f, 0.8f, 0.5f }; // ColorField demo, half transparent to show its alpha
-            interstice::Gradient demoGradient = interstice::Gradient::Linear(
-                interstice::color4f{1.0f, 0.0f, 0.0f, 1.0f},
-                interstice::color4f{0.0f, 0.0f, 1.0f, 1.0f}); // GradientField demo
+            tachyon::color4f demoColor { 0.2f, 0.5f, 0.8f, 0.5f }; // ColorField demo, half transparent to show its alpha
+            tachyon::Gradient demoGradient = tachyon::Gradient::Linear(
+                tachyon::color4f{1.0f, 0.0f, 0.0f, 1.0f},
+                tachyon::color4f{0.0f, 0.0f, 1.0f, 1.0f}); // GradientField demo
             int listSelected = 0;
 
             // ListView
@@ -217,7 +217,7 @@ namespace interstice
                 bool         hasChildren = false;
                 bool         isOpen      = true;
                 IconID       icon        = IconID::Invalid;
-                interstice::ID      id          = interstice::ID::Invalid();
+                tachyon::ID      id          = tachyon::ID::Invalid();
                 // Descendant count. Recomputed by RebuildTreeTableIndex() after edits.
                 int          skipCount   = 0;
                 // Guide-line metadata (also recomputed by RebuildTreeTableIndex):
@@ -500,4 +500,4 @@ namespace interstice
         std::vector<std::string> m_floatPanels;   // --float: start in their own windows
     };
 
-} // namespace interstice
+} // namespace tachyon

@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// The hovered, active, focused and captured elements, the active window, the one-shot
     /// click, hover suppression and the focus scroll axis. Owned by GUIStateManager.

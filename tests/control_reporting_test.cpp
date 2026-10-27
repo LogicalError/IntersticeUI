@@ -9,7 +9,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     class ControlReportingTest : public ::testing::Test

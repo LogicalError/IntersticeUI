@@ -17,7 +17,7 @@
 
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

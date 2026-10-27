@@ -8,7 +8,7 @@
 
 // Small state values owned by GUIStateManager.
 
-namespace interstice
+namespace tachyon
 {
     enum class MouseCursor : uint8_t;   // gui_core/style/gui_style.h
 

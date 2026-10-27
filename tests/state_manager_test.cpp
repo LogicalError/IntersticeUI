@@ -4,7 +4,7 @@
 #include <gui_core/gui_id_manager.h>
 
 
-namespace interstice
+namespace tachyon
 {
 
     class StateManagerTest : public ::testing::Test

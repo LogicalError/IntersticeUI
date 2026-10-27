@@ -3,7 +3,7 @@
 #include <gui_core/style/gui_style.h>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     class IconTextLayoutTest : public ::testing::Test
     {
@@ -158,4 +158,4 @@ namespace interstice
         EXPECT_EQ(contentRuns[3].type, ContentRun::Text);
     }
 
-} // namespace interstice
+} // namespace tachyon

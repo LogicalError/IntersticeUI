@@ -1,8 +1,8 @@
-# Contributing to IntersticeUI
+# Contributing to TachyonUI
 
 Thanks for wanting to help! Bug reports, ideas and pull requests are all welcome.
 
-* **Report problems** with the steps, or a small `OnGUI` snippet, that show them: [open an issue](https://github.com/LogicalError/IntersticeUI/issues/new/choose).
+* **Report problems** with the steps, or a small `OnGUI` snippet, that show them: [open an issue](https://github.com/LogicalError/TachyonUI/issues/new/choose).
 * **Suggest features** the same way.
 * **Fix bugs or build features**, see below.
 
@@ -46,4 +46,4 @@ Please run both before opening a pull request.
 ## License
 
 By contributing, you agree that your contributions are licensed under the [MIT license](LICENSE), like the rest of
-IntersticeUI.
+TachyonUI.

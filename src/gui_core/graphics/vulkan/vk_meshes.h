@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 #include <vk_mem_alloc.h>
 
-namespace interstice::vulkan
+namespace tachyon::vulkan
 {
     struct Buffer
     {
@@ -18,10 +18,10 @@ namespace interstice::vulkan
     struct VisualColorStyleBuffers { Buffer colorStyleBuffer; VkDeviceAddress colorStyleBufferAddress; };
 
 
-    class VulkanBuffer : public interstice::Buffer
+    class VulkanBuffer : public tachyon::Buffer
     {
     public:
-        interstice::vulkan::VisualBoxStyleBuffers visualBoxStyleBuffers;
-        interstice::vulkan::VisualColorStyleBuffers visualColorStyleBuffers;
+        tachyon::vulkan::VisualBoxStyleBuffers visualBoxStyleBuffers;
+        tachyon::vulkan::VisualColorStyleBuffers visualColorStyleBuffers;
     };
 }

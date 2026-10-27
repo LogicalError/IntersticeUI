@@ -5,7 +5,7 @@
 // so we can quickly see if they work
 //
 
-namespace interstice
+namespace tachyon
 {
 
     void Application::RenderBoxTestPanel()

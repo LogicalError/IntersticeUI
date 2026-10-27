@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::HeadlessGUIApp;
 
@@ -21,8 +21,8 @@ namespace interstice
         {
         protected:
             HeadlessGUIApp app;
-            interstice::ID groupID{};
-            interstice::ID itemIDs[4]{};
+            tachyon::ID groupID{};
+            tachyon::ID itemIDs[4]{};
 
             std::optional<std::pair<int, int>> lastReorder;
             int reorderCalls = 0;
@@ -46,12 +46,12 @@ namespace interstice
                 };
                 if (app.BeginReorderableGroup(groupID, ReorderDirection::Vertical,
                                               onReorder,
-                                              interstice::LayoutOverride{}.Size(300, 400)))
+                                              tachyon::LayoutOverride{}.Size(300, 400)))
                 {
                     for (int i = 0; i < 4; i++)
                     {
                         app.BeginReorderableItem(itemIDs[i],
-                                                 interstice::LayoutOverride{}.Size(280, 50));
+                                                 tachyon::LayoutOverride{}.Size(280, 50));
                         app.EmitDragHandle();
                         app.EndReorderableItem();
                     }
@@ -60,32 +60,32 @@ namespace interstice
                 app.EndRootWindow();
             }
 
-            interstice::int2 ThumbCenter(interstice::ID itemID) const
+            tachyon::int2 ThumbCenter(tachyon::ID itemID) const
             {
                 const auto itemRef = app.elementStorage.FindElementRefByID(itemID);
                 if (!itemRef.IsValid()) return {};
                 const auto children = app.elementStorage.GetChildRange(itemRef);
                 if (children.Empty()) return {};
-                const interstice::ElementRef thumbRef{ itemRef.depth + 1, children.begin };
+                const tachyon::ElementRef thumbRef{ itemRef.depth + 1, children.begin };
                 const auto* tr = app.elementStorage.GetElementRectPtr(thumbRef);
                 if (!tr) return {};
                 return { tr->rect.x + tr->rect.w / 2, tr->rect.y + tr->rect.h / 2 };
             }
 
-            interstice::IntRect ItemRect(interstice::ID itemID) const
+            tachyon::IntRect ItemRect(tachyon::ID itemID) const
             {
                 return app.GetElementRect(itemID);
             }
 
             // Press on `srcItem`'s thumb, drag to `dstY`, release. One frame
             // per phase so threshold + edge-crossing logic sees each step.
-            void DragItemTo(interstice::ID srcItem, int dstY)
+            void DragItemTo(tachyon::ID srcItem, int dstY)
             {
                 const auto thumb = ThumbCenter(srcItem);
                 app.InjectMouseMove(thumb);
                 app.InjectMouseDown(thumb);
                 app.Frame([&] { EmitGroup(); });
-                app.InjectMouseMove({ thumb.x, dstY }, interstice::MouseButtons::Left);
+                app.InjectMouseMove({ thumb.x, dstY }, tachyon::MouseButtons::Left);
                 app.Frame([&] { EmitGroup(); });
                 app.InjectMouseUp({ thumb.x, dstY });
                 app.Frame([&] { EmitGroup(); });
@@ -152,7 +152,7 @@ namespace interstice
             app.InjectMouseMove(thumb);
             app.InjectMouseDown(thumb);
             app.Frame([&] { EmitGroup(); });
-            app.InjectMouseMove({ thumb.x, thumb.y + 20 }, interstice::MouseButtons::Left);
+            app.InjectMouseMove({ thumb.x, thumb.y + 20 }, tachyon::MouseButtons::Left);
             app.Frame([&] { EmitGroup(); });
             app.Frame([&] { EmitGroup(); }); // the offset is applied on the frame after the move is dispatched
             ASSERT_NE(ItemRect(itemIDs[0]).y, restingY) << "precondition: the drag is displacing the item";
@@ -173,7 +173,7 @@ namespace interstice
             app.InjectMouseMove(thumb);
             app.InjectMouseDown(thumb);
             app.Frame([&] { EmitGroup(); });
-            app.InjectMouseMove({ thumb.x + 2, thumb.y + 2 }, interstice::MouseButtons::Left);
+            app.InjectMouseMove({ thumb.x + 2, thumb.y + 2 }, tachyon::MouseButtons::Left);
             app.Frame([&] { EmitGroup(); });
             app.InjectMouseUp({ thumb.x + 2, thumb.y + 2 });
             app.Frame([&] { EmitGroup(); });
@@ -208,11 +208,11 @@ namespace interstice
                     reorderCalls++;
                 };
                 if (app.BeginReorderableGroup(groupID, ReorderDirection::Horizontal, /*isWrapped*/ true,
-                                              onReorder, interstice::LayoutOverride{}.Size(600, 200)))
+                                              onReorder, tachyon::LayoutOverride{}.Size(600, 200)))
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        app.BeginReorderableItem(itemIDs[i], interstice::LayoutOverride{}.Size(100, 40));
+                        app.BeginReorderableItem(itemIDs[i], tachyon::LayoutOverride{}.Size(100, 40));
                         app.EmitDragHandle();
                         app.EndReorderableItem();
                     }
@@ -221,13 +221,13 @@ namespace interstice
                 app.EndRootWindow();
             }
 
-            void DragToX(interstice::ID srcItem, int dstX)
+            void DragToX(tachyon::ID srcItem, int dstX)
             {
                 const auto thumb = ThumbCenter(srcItem);
                 app.InjectMouseMove(thumb);
                 app.InjectMouseDown(thumb);
                 app.Frame([&] { EmitWrapped(); });
-                app.InjectMouseMove({ dstX, thumb.y }, interstice::MouseButtons::Left);
+                app.InjectMouseMove({ dstX, thumb.y }, tachyon::MouseButtons::Left);
                 app.Frame([&] { EmitWrapped(); });
                 app.InjectMouseUp({ dstX, thumb.y });
                 app.Frame([&] { EmitWrapped(); });

@@ -12,7 +12,7 @@
 #include <string_view>
 #include <unordered_map>
 
-namespace interstice
+namespace tachyon
 {
     class StyleManager;
     class ITextSystem;
@@ -458,20 +458,20 @@ namespace interstice
         ///@}
 
         // Line colors, from the palette's custom properties.
-        interstice::VisualColorStyleIndex lineGrayStyle;          ///< --text-3
-        interstice::VisualColorStyleIndex lineYellowStyle;        ///< --warn
-        interstice::VisualColorStyleIndex lineWhiteStyle;         ///< --text-1
-        interstice::VisualColorStyleIndex lineDarkStyle;          ///< --bg-app
-        interstice::VisualColorStyleIndex treeGuideLineStyle;     ///< --line-node: tree guide lines
-        interstice::VisualColorStyleIndex dividerHoverLineStyle; ///< a hovered divider drawn as a line (label sizer)
-        interstice::VisualColorStyleIndex nanTextColor;          ///< a number field's NaN
-        interstice::color4b               scrim {};              ///< dims a window under its modal dialog (fading in and out)
-        interstice::VisualColorStyleIndex checkerAColor, checkerBColor;     ///< transparency checkerboard
-        interstice::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  ///< a color's alpha bar
-        interstice::VisualColorStyleIndex accentColor, panelColor;          ///< a selected swatch's ring and gap
-        interstice::VisualColorStyleIndex treeDropIndicatorStyle; ///< drop indicator lines + closed-branch outline
+        tachyon::VisualColorStyleIndex lineGrayStyle;          ///< --text-3
+        tachyon::VisualColorStyleIndex lineYellowStyle;        ///< --warn
+        tachyon::VisualColorStyleIndex lineWhiteStyle;         ///< --text-1
+        tachyon::VisualColorStyleIndex lineDarkStyle;          ///< --bg-app
+        tachyon::VisualColorStyleIndex treeGuideLineStyle;     ///< --line-node: tree guide lines
+        tachyon::VisualColorStyleIndex dividerHoverLineStyle; ///< a hovered divider drawn as a line (label sizer)
+        tachyon::VisualColorStyleIndex nanTextColor;          ///< a number field's NaN
+        tachyon::color4b               scrim {};              ///< dims a window under its modal dialog (fading in and out)
+        tachyon::VisualColorStyleIndex checkerAColor, checkerBColor;     ///< transparency checkerboard
+        tachyon::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  ///< a color's alpha bar
+        tachyon::VisualColorStyleIndex accentColor, panelColor;          ///< a selected swatch's ring and gap
+        tachyon::VisualColorStyleIndex treeDropIndicatorStyle; ///< drop indicator lines + closed-branch outline
 
-        interstice::VisualColorStyleIndex marqueeFillColorStyle; ///< selection-marquee fill (fixed translucent blue)
+        tachyon::VisualColorStyleIndex marqueeFillColorStyle; ///< selection-marquee fill (fixed translucent blue)
 
         /// Table row height in pixels, measured from real font metrics in ComputeRowMetrics.
         /// Must match the rendered rows exactly, or the max scroll oscillates.
@@ -520,4 +520,4 @@ namespace interstice
         mutable std::set<std::string, std::less<>>   m_missingWarned;
     };
 
-} // namespace interstice
+} // namespace tachyon

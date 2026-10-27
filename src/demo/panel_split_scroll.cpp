@@ -21,7 +21,7 @@
 //   - "Tag" is Stretch, so its trailing boundary is a separator, not a sizer.
 //
 
-namespace interstice
+namespace tachyon
 {
     void Application::RenderSplitScrollPanel()
     {

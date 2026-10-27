@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-namespace interstice
+namespace tachyon
 {
     /// X offset, in pixels, of `contentWidth` content aligned inside a `boxWidth` box.
     /// Vertical values map as skribidi does: Top acts as left, Bottom as right.
@@ -78,7 +78,7 @@ namespace interstice
         }
 
         // Bounding box of the packed [icon][text] block, for text-align and
-        // -interstice-vertical-text-align.
+        // -tachyon-vertical-text-align.
         int32_t combinedWidth  = textWidth;
         int32_t combinedHeight = textHeight;
         switch (iconSide)

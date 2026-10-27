@@ -1,6 +1,6 @@
 #include <gui_core/layout/gui_constraints.h>
 
-namespace interstice
+namespace tachyon
 {
     AnchorPlacement FlipHorizontal(AnchorPlacement p)
     {
@@ -79,4 +79,4 @@ namespace interstice
         }
     }
 
-} // namespace interstice
+} // namespace tachyon

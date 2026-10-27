@@ -17,9 +17,9 @@
 
 // Editable text, rich text and number registration, plus text get/apply.
 
-namespace interstice
+namespace tachyon
 {
-    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified,
+    TextID SkribidiTextSystem::RegisterEditableText(ID elementId, std::string& text, TextEditBehavior behavior, tachyon::StyleRef styleIndex, tachyon::ElementState state, bool& wasModified,
                                                     const ITextValidator* validator)
     {
         if (!m_skribidiContext)
@@ -54,7 +54,7 @@ namespace interstice
     }
 
     TextID SkribidiTextSystem::RegisterEditableRichText(ID elementId, const std::span<ContentRun>& runs, TextEditBehavior behavior,
-                                                        interstice::StyleRef styleIndex, interstice::ElementState state, bool& wasModified)
+                                                        tachyon::StyleRef styleIndex, tachyon::ElementState state, bool& wasModified)
     {
         if (!m_skribidiContext)
             return TextID::Invalid;

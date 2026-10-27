@@ -11,7 +11,7 @@
 
 // Helpers shared by the color picker (controls_color.cpp) and gradient editor (controls_gradient.cpp).
 
-namespace interstice
+namespace tachyon
 {
     // How a color shows in a swatch: the left half opaque, the right half at its alpha over
     // a checkerboard, and an alpha bar along the bottom (alphaBar 0 leaves it out).
@@ -75,10 +75,10 @@ namespace interstice
     }
 
     // Create or update a VisualColorStyleIndex with a solid color.
-    inline void SetColorStyle(interstice::StyleManager& sm, interstice::VisualColorStyleIndex& idx, interstice::color4f c)
+    inline void SetColorStyle(tachyon::StyleManager& sm, tachyon::VisualColorStyleIndex& idx, tachyon::color4f c)
     {
-        interstice::ColorStyle cs = interstice::ColorStyle::Create(c);
-        if (idx == interstice::VisualColorStyleIndex::Invalid)
+        tachyon::ColorStyle cs = tachyon::ColorStyle::Create(c);
+        if (idx == tachyon::VisualColorStyleIndex::Invalid)
             idx = sm.CreateColorStyle(cs);
         else
             sm.UpdateColorStyle(idx, cs);

@@ -14,52 +14,52 @@ namespace
     class GpuPrimitiveTest : public GpuTest
     {
     protected:
-        interstice::VisualColorStyleIndex solidColor{};
-        interstice::VisualColorStyleIndex gradientColor{};
+        tachyon::VisualColorStyleIndex solidColor{};
+        tachyon::VisualColorStyleIndex gradientColor{};
 
         // Quad/triangle/line/glyph index into the color-style buffer on the
         // GPU; register real entries so the draws don't read a sentinel slot.
         void RegisterColorStyles()
         {
             solidColor = styleManager.RegisterColorStyle(
-                interstice::ColorStyle::Create(interstice::color4b{ 255, 255, 255, 255 }));
+                tachyon::ColorStyle::Create(tachyon::color4b{ 255, 255, 255, 255 }));
             gradientColor = styleManager.RegisterColorStyle(
-                interstice::ColorStyle::Create(interstice::color4b{ 255, 0, 0, 255 },
-                                        interstice::color4b{ 0, 255, 0, 255 },
-                                        interstice::color4b{ 0, 0, 255, 255 },
-                                        interstice::color4b{ 255, 0, 255, 255 },
-                                        interstice::ColorType::InterpolatedBox));
+                tachyon::ColorStyle::Create(tachyon::color4b{ 255, 0, 0, 255 },
+                                        tachyon::color4b{ 0, 255, 0, 255 },
+                                        tachyon::color4b{ 0, 0, 255, 255 },
+                                        tachyon::color4b{ 255, 0, 255, 255 },
+                                        tachyon::ColorType::InterpolatedBox));
         }
 
-        void EmitAllPrimitives(interstice::GUIRenderer* r, interstice::int2 size)
+        void EmitAllPrimitives(tachyon::GUIRenderer* r, tachyon::int2 size)
         {
-            const interstice::IntRect clip{ 0, 0, size.x, size.y };
-            r->RenderBox(interstice::IntRect{ 4, 4, 64, 32 }, clip,
+            const tachyon::IntRect clip{ 0, 0, size.x, size.y };
+            r->RenderBox(tachyon::IntRect{ 4, 4, 64, 32 }, clip,
                          /*fromStyleIndex*/0, /*toStyleIndex*/0, /*blendT*/1.0f);
-            r->RenderQuad(interstice::IntRect{ 8, 48, 48, 24 }, clip, gradientColor);
-            r->RenderTriangle(interstice::float2{ 80, 8 }, interstice::float2{ 120, 8 },
-                              interstice::float2{ 100, 40 }, clip, solidColor);
-            r->RenderLine(interstice::int2{ 8, 90 }, interstice::int2{ 120, 90 }, clip,
-                          interstice::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 2.0f });
-            r->RenderDot(interstice::float2{ 140, 20 }, clip, 6.0f, interstice::color4f{ 1, 1, 1, 1 });
-            r->RenderGlyph(interstice::float2{ 8, 110 }, interstice::float2{ 16, 16 },
-                           interstice::float2{ 0, 0 }, interstice::float2{ 1, 1 },
+            r->RenderQuad(tachyon::IntRect{ 8, 48, 48, 24 }, clip, gradientColor);
+            r->RenderTriangle(tachyon::float2{ 80, 8 }, tachyon::float2{ 120, 8 },
+                              tachyon::float2{ 100, 40 }, clip, solidColor);
+            r->RenderLine(tachyon::int2{ 8, 90 }, tachyon::int2{ 120, 90 }, clip,
+                          tachyon::LineStyle{ .colorStyleIndex = solidColor, .lineWidth = 2.0f });
+            r->RenderDot(tachyon::float2{ 140, 20 }, clip, 6.0f, tachyon::color4f{ 1, 1, 1, 1 });
+            r->RenderGlyph(tachyon::float2{ 8, 110 }, tachyon::float2{ 16, 16 },
+                           tachyon::float2{ 0, 0 }, tachyon::float2{ 1, 1 },
                            /*scale*/1.0f, /*bpp*/8, /*mode*/0, solidColor, clip);
         }
 
         // One full window frame emitting every primitive kind - the all-kinds
         // analogue of the harness's RenderOneFrameWithDot.
-        void RenderOneFrameAllKinds(interstice::vulkan::VulkanWindowContext* ctx, interstice::int2 size)
+        void RenderOneFrameAllKinds(tachyon::vulkan::VulkanWindowContext* ctx, tachyon::int2 size)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+            tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
                 EmitAllPrimitives(r, size);
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, size.x, size.y }, false);
         }
     };
 

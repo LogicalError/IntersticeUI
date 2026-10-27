@@ -119,7 +119,7 @@
     padding: 4px 8px;
     overflow: hidden;
     vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     color: var(--text-2);
@@ -133,7 +133,7 @@
     padding: 4px 8px;
     overflow: hidden;
     vertical-align: baseline;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     text-overflow: ellipsis;
     color: var(--text-3);
@@ -151,8 +151,8 @@
     width: 16px;
     margin: 0px;
     padding: 0px;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
     border-width: 0px;
     background-color: transparent;
     border-color: transparent;
@@ -191,22 +191,22 @@
     margin: 0px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     font-family: monospace;
     font-size: 11px;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 7px;
-    -interstice-icon-text-gap: 5px;
-    -interstice-icon-color: var(--error);
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 7px;
+    -tachyon-icon-text-gap: 5px;
+    -tachyon-icon-color: var(--error);
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
 .log-level-error:hover { background-color: var(--bg-active); }
-.log-level-error::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--error); }
-.log-level-error:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--error); }
+.log-level-error::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -tachyon-icon-color: var(--error); }
+.log-level-error:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -tachyon-icon-color: var(--error); }
 .log-level-warning {
     height: 20px;
     border-width: 0px;
@@ -218,22 +218,22 @@
     margin: 0px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     font-family: monospace;
     font-size: 11px;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 7px;
-    -interstice-icon-text-gap: 5px;
-    -interstice-icon-color: var(--warn);
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 7px;
+    -tachyon-icon-text-gap: 5px;
+    -tachyon-icon-color: var(--warn);
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
 .log-level-warning:hover { background-color: var(--bg-active); }
-.log-level-warning::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--warn); }
-.log-level-warning:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--warn); }
+.log-level-warning::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -tachyon-icon-color: var(--warn); }
+.log-level-warning:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -tachyon-icon-color: var(--warn); }
 .log-level-info {
     height: 20px;
     border-width: 0px;
@@ -245,22 +245,22 @@
     margin: 0px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-align: center;
     text-wrap: nowrap;
     font-family: monospace;
     font-size: 11px;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 7px;
-    -interstice-icon-text-gap: 5px;
-    -interstice-icon-color: var(--info);
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 7px;
+    -tachyon-icon-text-gap: 5px;
+    -tachyon-icon-color: var(--info);
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
 .log-level-info:hover { background-color: var(--bg-active); }
-.log-level-info::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -interstice-icon-color: var(--info); }
-.log-level-info:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -interstice-icon-color: var(--info); }
+.log-level-info::highlight(selected) { background-color: var(--bg-control); color: var(--text-2); -tachyon-icon-color: var(--info); }
+.log-level-info:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-2); -tachyon-icon-color: var(--info); }
 
 /* A square icon toggle in a panel toolbar (log collapse, files grid/list),
    raised while on. */
@@ -277,8 +277,8 @@
     overflow: hidden;
     vertical-align: middle;
     text-align: center;
-    -interstice-icon-size: 13px;
-    -interstice-vertical-text-align: middle;
+    -tachyon-icon-size: 13px;
+    -tachyon-vertical-text-align: middle;
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
@@ -367,7 +367,7 @@
     text-align: start;
     text-wrap: nowrap;
     text-overflow: ellipsis;
-    -interstice-icon-text-gap: 4px;
+    -tachyon-icon-text-gap: 4px;
     min-height: 80px;
     color: var(--text-2);
     font-size: var(--font-size);
@@ -375,14 +375,14 @@
     border-color: var(--line-strong);
 }
 
-.icon-demo-left-top,   .icon-demo-left-mid,   .icon-demo-left-bot    { -interstice-icon-side: left;   }
-.icon-demo-right-top,  .icon-demo-right-mid,  .icon-demo-right-bot   { -interstice-icon-side: right;  }
-.icon-demo-top-top,    .icon-demo-top-mid,    .icon-demo-top-bot     { -interstice-icon-side: top;    }
-.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot  { -interstice-icon-side: bottom; }
+.icon-demo-left-top,   .icon-demo-left-mid,   .icon-demo-left-bot    { -tachyon-icon-side: left;   }
+.icon-demo-right-top,  .icon-demo-right-mid,  .icon-demo-right-bot   { -tachyon-icon-side: right;  }
+.icon-demo-top-top,    .icon-demo-top-mid,    .icon-demo-top-bot     { -tachyon-icon-side: top;    }
+.icon-demo-bottom-top, .icon-demo-bottom-mid, .icon-demo-bottom-bot  { -tachyon-icon-side: bottom; }
 
-.icon-demo-left-top,   .icon-demo-right-top,  .icon-demo-top-top,    .icon-demo-bottom-top { -interstice-vertical-text-align: top;    }
-.icon-demo-left-mid,   .icon-demo-right-mid,  .icon-demo-top-mid,    .icon-demo-bottom-mid { -interstice-vertical-text-align: middle; }
-.icon-demo-left-bot,   .icon-demo-right-bot,  .icon-demo-top-bot,    .icon-demo-bottom-bot { -interstice-vertical-text-align: bottom; }
+.icon-demo-left-top,   .icon-demo-right-top,  .icon-demo-top-top,    .icon-demo-bottom-top { -tachyon-vertical-text-align: top;    }
+.icon-demo-left-mid,   .icon-demo-right-mid,  .icon-demo-top-mid,    .icon-demo-bottom-mid { -tachyon-vertical-text-align: middle; }
+.icon-demo-left-bot,   .icon-demo-right-bot,  .icon-demo-top-bot,    .icon-demo-bottom-bot { -tachyon-vertical-text-align: bottom; }
 
 /* ---- hierarchy eye-toggle (visibility column) ---------------------------- */
 /* The cell wrapper: zero horizontal padding (unlike .table-cell) so the eye
@@ -426,8 +426,8 @@
     border-color: transparent;
     color: var(--text-3);
     text-align: center;
-    -interstice-icon-size: 16px;
-    -interstice-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
     cursor: pointer;
     overflow: visible;
 }
@@ -480,20 +480,20 @@
     margin: 0px;
     overflow: hidden;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     text-wrap: nowrap;
     font-size: var(--font-size);
-    -interstice-icon-side: left;
-    -interstice-icon-size: 8px;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-color: var(--text-3);
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 8px;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-color: var(--text-3);
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
 }
 .profiler-record:hover { background-color: var(--bg-active); }
-.profiler-record::highlight(selected) { color: var(--text-1); -interstice-icon-color: var(--error); }
-.profiler-record:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-1); -interstice-icon-color: var(--error); }
+.profiler-record::highlight(selected) { color: var(--text-1); -tachyon-icon-color: var(--error); }
+.profiler-record:hover ::highlight(selected) { background-color: var(--bg-active); color: var(--text-1); -tachyon-icon-color: var(--error); }
 .profiler-pause {
     width: 26px;
     height: 26px;
@@ -507,8 +507,8 @@
     overflow: hidden;
     vertical-align: middle;
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 12px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 12px;
     flex-grow: 0;
     flex-shrink: 0;
     cursor: pointer;
@@ -635,8 +635,8 @@
     border-color: transparent;
     color: var(--accent);
     text-align: center;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-size: 16px;
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-size: 16px;
     flex-grow: 0;
     flex-shrink: 0;
 }
@@ -696,11 +696,11 @@
     font-weight: 600;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-color: var(--text-3);
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-color: var(--text-3);
     cursor: pointer;
 }
 .inspector-section:hover { background-color: var(--bg-header); }
@@ -718,11 +718,11 @@
     font-weight: 600;
     text-align: start;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
-    -interstice-icon-side: left;
-    -interstice-icon-size: 12px;
-    -interstice-icon-text-gap: 6px;
-    -interstice-icon-color: var(--text-3);
+    -tachyon-vertical-text-align: middle;
+    -tachyon-icon-side: left;
+    -tachyon-icon-size: 12px;
+    -tachyon-icon-text-gap: 6px;
+    -tachyon-icon-color: var(--text-3);
     cursor: pointer;
 }
 .inspector-section-first:hover { background-color: var(--bg-header); }
@@ -779,6 +779,6 @@
     font-weight: 600;
     text-align: center;
     vertical-align: middle;
-    -interstice-vertical-text-align: middle;
+    -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }

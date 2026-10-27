@@ -6,7 +6,7 @@
 #include <gui_core/input/gui_platform_input_handler.h>
 #include <gui_core/input/gui_input_handler_func.h>
 
-namespace interstice
+namespace tachyon
 {
     class ScrollManagement;
     class ElementStorage;
@@ -19,7 +19,7 @@ namespace interstice
     {
         EventType  type     = EventType::None;
         InputState state    = {};
-        interstice::ID    windowId = interstice::ID::Invalid(); ///< OS window that received the event
+        tachyon::ID    windowId = tachyon::ID::Invalid(); ///< OS window that received the event
         bool       consumed = false; ///< already handled; Dispatch skips it
     };
 
@@ -33,11 +33,11 @@ namespace interstice
 
         /// IPlatformInputHandler: record OS events for this frame's dispatch.
         ///@{
-        void OnKeyboard(interstice::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
-        void OnMouseMove(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers) override;
-        void OnMouseButton(interstice::ID windowId, interstice::int2 screenPos, interstice::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;
-        void OnMouseScroll(interstice::ID windowId, interstice::int2 screenPos, interstice::float2 scrollOffset, KeyModifier modifiers) override;
-        void OnTextComposition(interstice::ID, std::string_view, int32_t) override {} // the text editor shows it
+        void OnKeyboard(tachyon::ID windowId, KeyCode key, int repeat, KeyModifier modifiers, KeyAction action) override;
+        void OnMouseMove(tachyon::ID windowId, tachyon::int2 screenPos, tachyon::MouseButtons buttons, KeyModifier modifiers) override;
+        void OnMouseButton(tachyon::ID windowId, tachyon::int2 screenPos, tachyon::MouseButtons buttons, KeyModifier modifiers, MouseAction action) override;
+        void OnMouseScroll(tachyon::ID windowId, tachyon::int2 screenPos, tachyon::float2 scrollOffset, KeyModifier modifiers) override;
+        void OnTextComposition(tachyon::ID, std::string_view, int32_t) override {} // the text editor shows it
         ///@}
 
         /// Pushes a global handler. Global handlers are tried last-pushed first, after

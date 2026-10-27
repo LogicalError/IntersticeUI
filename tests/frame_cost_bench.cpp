@@ -13,7 +13,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
     using GUITest::HeadlessGUIApp;
 
     TEST(FrameCostBench, DISABLED_AThousandRowsOfControls)

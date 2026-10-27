@@ -16,7 +16,7 @@
 #include "gui_text_system_stub.h"
 #include "mock_window_backend.h"
 
-namespace interstice
+namespace tachyon
 {
 
     using namespace testing;
@@ -1376,13 +1376,13 @@ namespace interstice
     TEST_F(LayoutEngineTest, WindowFixedWidthUsedAsContentPlusPaddingAndBorder)
     {
         Style menuStyle;
-        menuStyle.padding = interstice::BoxEdges(10);
-        menuStyle.borderWidths = interstice::BoxEdges(2);
+        menuStyle.padding = tachyon::BoxEdges(10);
+        menuStyle.borderWidths = tachyon::BoxEdges(2);
         StyleRef menuRef = styleManager.Register(menuStyle);
 
         Style buttonStyle;
-        buttonStyle.padding = interstice::BoxEdges(0);
-        buttonStyle.borderWidths = interstice::BoxEdges(0);
+        buttonStyle.padding = tachyon::BoxEdges(0);
+        buttonStyle.borderWidths = tachyon::BoxEdges(0);
         StyleRef buttonRef = styleManager.Register(buttonStyle);
 
         EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);

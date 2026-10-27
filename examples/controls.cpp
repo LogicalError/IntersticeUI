@@ -5,12 +5,12 @@
 
 #include <string>
 
-class ControlsApp : public interstice::GUIApplication
+class ControlsApp : public tachyon::GUIApplication
 {
 public:
-    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
+    tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+        if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;
         windowID = idManager.CreateStaticID();
         menuID   = idManager.CreateStaticID();
@@ -20,10 +20,10 @@ public:
     void OnGUI() override
     {
         // The scope ends the window when it leaves, open or not.
-        auto window = Window(windowID, "Controls", interstice::LayoutOverride{}.Size(480, 560));
+        auto window = Window(windowID, "Controls", tachyon::LayoutOverride{}.Size(480, 560));
         if (!window)
             return;
-        BeginVertical(interstice::LayoutOverride{}.FlexGrow(1));
+        BeginVertical(tachyon::LayoutOverride{}.FlexGrow(1));
 
         // A label group lines up Label + control pairs as rows with a shared,
         // resizable label column. DragLabel also drags the value it labels.
@@ -49,13 +49,13 @@ public:
         Field(text);
 
         Label("Multiline");
-        Field(notes, interstice::TextEditBehavior::ContinuousUpdate | interstice::TextEditBehavior::Multiline);
+        Field(notes, tachyon::TextEditBehavior::ContinuousUpdate | tachyon::TextEditBehavior::Multiline);
 
         DragLabel("Float");
         Field(floatValue);
 
         DragLabel("Int [0, 10]");
-        Field(intValue, interstice::NumericFieldConfig<int>{ .minVal = 0, .maxVal = 10 });
+        Field(intValue, tachyon::NumericFieldConfig<int>{ .minVal = 0, .maxVal = 10 });
 
         DragLabel("Vector");
         Field(position);
@@ -67,7 +67,7 @@ public:
         ColorField(color);
 
         Label("Menu");
-        if (BeginMenu(menuID, "Choose...", interstice::LayoutOverride{}.NoGrow().NoShrink()))
+        if (BeginMenu(menuID, "Choose...", tachyon::LayoutOverride{}.NoGrow().NoShrink()))
         {
             for (const char* item : { "Apple", "Banana", "Cherry" })
                 MenuItem(item, [this, item] { choice = item; });
@@ -90,8 +90,8 @@ public:
     }
 
 private:
-    interstice::ID     windowID = interstice::ID::Invalid();
-    interstice::ID     menuID   = interstice::ID::Invalid();
+    tachyon::ID     windowID = tachyon::ID::Invalid();
+    tachyon::ID     menuID   = tachyon::ID::Invalid();
     int         clicks   = 0;
     bool        enabled  = true;
     bool        bold = false, italic = false, underline = false;
@@ -99,9 +99,9 @@ private:
     std::string notes    = "Line one\nLine two";
     float       floatValue = 1.5f;
     int         intValue   = 5;
-    interstice::float3 position { 1.0f, 2.0f, 3.0f };
+    tachyon::float3 position { 1.0f, 2.0f, 3.0f };
     float       volume   = 75.0f;
-    interstice::color4f color   { 0.2f, 0.6f, 1.0f, 1.0f };
+    tachyon::color4f color   { 0.2f, 0.6f, 1.0f, 1.0f };
     std::string choice   = "(none)";
     int         selectedTab = 0;
 };
@@ -109,8 +109,8 @@ private:
 int main()
 {
     ControlsApp app;
-    app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-    interstice::Result<void> result = app.Initialize();
+    app.SetResourceRoot(TACHYON_RESOURCE_DIR);
+    tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();
     app.Cleanup();

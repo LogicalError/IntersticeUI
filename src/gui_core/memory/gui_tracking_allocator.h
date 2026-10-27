@@ -4,7 +4,7 @@
 
 #include <cstddef>
 
-namespace interstice
+namespace tachyon
 {
     /// Allocation hooks that count what is live, for finding leaks. Logs a warning
     /// for every allocation still live when it is destroyed. Thread-safe.

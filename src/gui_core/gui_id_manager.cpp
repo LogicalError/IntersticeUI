@@ -6,7 +6,7 @@
 #include <gui_core/diagnostics/gui_logging.h>
 #include <vector>
         
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -24,7 +24,7 @@ namespace interstice
         }
         m_dynamic_id_total = 0;
         m_ranged_count = 0;
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         m_debug_dynamic_ids.clear();
         m_debug_ranges.clear();
 #endif
@@ -220,7 +220,7 @@ namespace interstice
         ID id = ID::Invalid();
         id.value.dynamicParts.mode      = IDMode::Dynamic;
         id.value.dynamicParts.hashValue = hash;
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         m_debug_dynamic_ids.push_back(id);
 #endif
         return id;
@@ -237,7 +237,7 @@ namespace interstice
         if (id == ID::Invalid()) return false;
         const uint64_t hash = id.value.dynamicParts.hashValue;
         if (hash == 0) return false;
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         for (ID debug_id : m_debug_dynamic_ids)
         {
             if (debug_id.value.dynamicParts.hashValue == hash)
@@ -282,7 +282,7 @@ namespace interstice
         id.value.rangedParts.mode       = IDMode::Ranged;
         id.value.rangedParts.rangedSize = size;
         id.value.rangedParts.hashValue  = hash;
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         m_debug_ranges.push_back(id);
 #endif
         return id;
@@ -319,7 +319,7 @@ namespace interstice
         if (id == ID::Invalid()) return false;
         const uint64_t hash = id.value.rangedParts.hashValue;
         if (hash == 0) return false;
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         for (const auto& ranged_id : m_debug_ranges)
         {
             if (ranged_id.value.rangedParts.hashValue == hash)
@@ -384,7 +384,7 @@ namespace interstice
         if (parent_hash == 0) return false;
 
         // Find the parent range in debug info (only in debug mode)
-#ifdef INTERSTICE_ID_DEBUG
+#ifdef TACHYON_ID_DEBUG
         const uint32_t index = id.value.subRangeParts.index;
         for (const auto& ranged_id : m_debug_ranges)
         {
@@ -435,4 +435,4 @@ namespace interstice
         }
     }
 
-} // namespace interstice
+} // namespace tachyon

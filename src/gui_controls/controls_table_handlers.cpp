@@ -14,25 +14,25 @@
 #include <algorithm>
 #include <chrono>
 
-namespace interstice
+namespace tachyon
 {
-    using namespace interstice::TableInternal;
+    using namespace tachyon::TableInternal;
 
-    interstice::EventHandler GUIApplication::BuildTableContainerHandler(TableState* state,
-                                                                 interstice::ID /*containerID*/)
+    tachyon::EventHandler GUIApplication::BuildTableContainerHandler(TableState* state,
+                                                                 tachyon::ID /*containerID*/)
     {
         TableState* statePtr = state;
         return [this, statePtr](ElementEvent&& event) -> bool
         {
             switch (event.type)
             {
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                     if (!event.state.LeftPressed()) break;
                     guiStateManager.Interaction().SetFocusID(event.id);
                     guiStateManager.TextEditorFocus().Clear();
                     return true;
 
-                case interstice::EventType::MouseScroll:
+                case tachyon::EventType::MouseScroll:
                 {
                     // Find which section's body the cursor is over and route
                     // the wheel there. X scrolls that section directly; Y
@@ -46,13 +46,13 @@ namespace interstice
                     };
                     if (delta.x == 0 && delta.y == 0) return false;
 
-                    interstice::ID targetBodyID = interstice::ID::Invalid();
+                    tachyon::ID targetBodyID = tachyon::ID::Invalid();
                     // Compare against rect coords in layout space - convert the
                     // screen cursor through any ancestor contentTransform first.
                     const int2 localCursor = event.LocalCursor(elementStorage);
                     for (int i = 0; i < n; i++)
                     {
-                        const interstice::ID id = statePtr->SectionBodyID(i);
+                        const tachyon::ID id = statePtr->SectionBodyID(i);
                         auto ref = elementStorage.FindElementRefByID(id);
                         if (!ref.IsValid()) continue;
                         const auto& r = elementStorage.GetElementRectUnsafe(ref).rect;
@@ -63,7 +63,7 @@ namespace interstice
                             break;
                         }
                     }
-                    if (targetBodyID == interstice::ID::Invalid())
+                    if (targetBodyID == tachyon::ID::Invalid())
                         targetBodyID = statePtr->SectionBodyID(0);
 
                     auto bodyRef = elementStorage.FindElementRefByID(targetBodyID);
@@ -83,22 +83,22 @@ namespace interstice
                     return true;
                 }
 
-                case interstice::EventType::KeyDown:
+                case tachyon::EventType::KeyDown:
                 {
                     if (statePtr->internal.totalRowCount <= 0
-                        || statePtr->internal.rowsRangeID == interstice::ID::Invalid()) break;
+                        || statePtr->internal.rowsRangeID == tachyon::ID::Invalid()) break;
 
                     // The cursor is selectedRowID (every click and navigation
                     // moves it). MultiSelectState::lastClickedID is only the
                     // Shift-range anchor, which a Shift-click leaves in place.
-                    interstice::ID cursorID = (statePtr->selectedRowID == interstice::ID::Invalid() && statePtr->multiSelect)
+                    tachyon::ID cursorID = (statePtr->selectedRowID == tachyon::ID::Invalid() && statePtr->multiSelect)
                         ? statePtr->multiSelect->lastClickedID
                         : statePtr->selectedRowID;
 
                     // Navigation uses dataset row indices from the sub-range ID, so it
                     // can move outside the virtualization window.
-                    auto rowIndexOf = [](interstice::ID id) -> int {
-                        if (id.GetMode() != interstice::IDMode::SubRange) return -1;
+                    auto rowIndexOf = [](tachyon::ID id) -> int {
+                        if (id.GetMode() != tachyon::IDMode::SubRange) return -1;
                         return static_cast<int>(id.value.subRangeParts.index);
                     };
                     const int totalRows = statePtr->internal.totalRowCount;
@@ -120,8 +120,8 @@ namespace interstice
                         const int n = statePtr->internal.sectionCount;
                         for (int i = 0; i < n; i++)
                         {
-                            const interstice::ID sid = statePtr->SectionBodyID(i);
-                            if (sid == interstice::ID::Invalid()) continue;
+                            const tachyon::ID sid = statePtr->SectionBodyID(i);
+                            if (sid == tachyon::ID::Invalid()) continue;
                             auto sref = elementStorage.FindElementRefByID(sid);
                             if (!sref.IsValid()) continue;
                             const auto& sr = elementStorage.GetElementRectUnsafe(sref);
@@ -155,32 +155,32 @@ namespace interstice
                     int nextCol = statePtr->selectedColumn;
                     switch (event.state.lastKey)
                     {
-                        case interstice::KeyCode::Down:
+                        case tachyon::KeyCode::Down:
                             nextVis = (visIdx < 0) ? 0 : std::min(visIdx + 1, totalRows - 1);
                             break;
-                        case interstice::KeyCode::Up:
+                        case tachyon::KeyCode::Up:
                             nextVis = (visIdx < 0) ? totalRows - 1 : std::max(visIdx - 1, 0);
                             break;
-                        case interstice::KeyCode::Home:
+                        case tachyon::KeyCode::Home:
                             if (cellMode) nextCol = 0;
                             else          nextVis = 0;
                             break;
-                        case interstice::KeyCode::End:
+                        case tachyon::KeyCode::End:
                             if (cellMode) nextCol = std::max(0, colCount - 1);
                             else          nextVis = totalRows - 1;
                             break;
-                        case interstice::KeyCode::PageUp:
+                        case tachyon::KeyCode::PageUp:
                             if (visIdx < 0) nextVis = firstFullVis;
                             else if (visIdx > firstFullVis) nextVis = firstFullVis;
                             else nextVis = std::max(0, visIdx - (rowsPerPage - 1));
                             break;
-                        case interstice::KeyCode::PageDown:
+                        case tachyon::KeyCode::PageDown:
                             if (visIdx < 0) nextVis = lastFullVis;
                             else if (visIdx < lastFullVis) nextVis = lastFullVis;
                             else nextVis = std::min(totalRows - 1, visIdx + (rowsPerPage - 1));
                             break;
-                        case interstice::KeyCode::Space:
-                        case interstice::KeyCode::Return:
+                        case tachyon::KeyCode::Space:
+                        case tachyon::KeyCode::Return:
                             if (idx >= 0)
                             {
                                 const auto* info = statePtr->FindTreeRow(statePtr->selectedRowID);
@@ -188,7 +188,7 @@ namespace interstice
                                     { *info->isOpen = !*info->isOpen; guiStateManager.Interaction().SuppressHover(); return true; }
                             }
                             return false;
-                        case interstice::KeyCode::F2:
+                        case tachyon::KeyCode::F2:
                             if (idx >= 0)
                             {
                                 const auto* info = statePtr->FindTreeRow(statePtr->selectedRowID);
@@ -202,7 +202,7 @@ namespace interstice
                                 }
                             }
                             return false;
-                        case interstice::KeyCode::Left:
+                        case tachyon::KeyCode::Left:
                             if (cellMode) { nextCol = std::max(0, nextCol - 1); break; }
                             if (idx >= 0)
                             {
@@ -216,7 +216,7 @@ namespace interstice
                                     const int myDepth = info->depth;
                                     for (int i = idx - 1; i >= 0; --i)
                                     {
-                                        const interstice::ID prevID = idManager.GetSubID(
+                                        const tachyon::ID prevID = idManager.GetSubID(
                                             statePtr->internal.rowsRangeID, static_cast<uint32_t>(i));
                                         const auto* sib = statePtr->FindTreeRow(prevID);
                                         if (!sib) break;  // outside emit window
@@ -225,7 +225,7 @@ namespace interstice
                                 }
                             }
                             break;
-                        case interstice::KeyCode::Right:
+                        case tachyon::KeyCode::Right:
                             if (cellMode) { nextCol = std::min(std::max(0, colCount - 1), nextCol + 1); break; }
                             if (idx >= 0)
                             {
@@ -235,7 +235,7 @@ namespace interstice
                                     if (!*info->isOpen) { *info->isOpen = true; guiStateManager.Interaction().SuppressHover(); return true; }
                                     if (idx + 1 < totalRows)
                                     {
-                                        const interstice::ID childID = idManager.GetSubID(
+                                        const tachyon::ID childID = idManager.GetSubID(
                                             statePtr->internal.rowsRangeID, static_cast<uint32_t>(idx + 1));
                                         const auto* child = statePtr->FindTreeRow(childID);
                                         if (child && child->depth == info->depth + 1)
@@ -252,13 +252,13 @@ namespace interstice
                         next = statePtr->VisualToDataset(nextVis);
 
                     bool changed = false;
-                    interstice::ID newID = interstice::ID::Invalid();
+                    tachyon::ID newID = tachyon::ID::Invalid();
                     if (next != idx && next >= 0 && next < totalRows)
                     {
                         newID = idManager.GetSubID(statePtr->internal.rowsRangeID,
                                                    static_cast<uint32_t>(next));
                     }
-                    if (newID != interstice::ID::Invalid() && newID != statePtr->selectedRowID)
+                    if (newID != tachyon::ID::Invalid() && newID != statePtr->selectedRowID)
                     {
                         statePtr->selectedRowID = newID;
                         if (statePtr->multiSelect)
@@ -278,7 +278,7 @@ namespace interstice
                     if (changed)
                     {
                         guiStateManager.Interaction().SuppressHover();
-                        interstice::ElementRef rowRef = elementStorage.FindElementRefByID(statePtr->selectedRowID);
+                        tachyon::ElementRef rowRef = elementStorage.FindElementRefByID(statePtr->selectedRowID);
                         auto& scrollManagement = guiStateManager.GetScrollManagement();
 
                         // Scroll the row clear of the sticky header (top) and the
@@ -288,23 +288,23 @@ namespace interstice
                             : 0;
                         const int32_t hPad    = hOverflow
                             ? theme.scrollbarThickness : 0;
-                        if (rowRef != interstice::ElementRef::Invalid())
+                        if (rowRef != tachyon::ElementRef::Invalid())
                         {
                             // Inflate the target by the header (top) and scrollbar (bottom).
                             const auto& rrect = elementStorage.GetElementRectUnsafe(rowRef).rect;
-                            interstice::IntRect target = rrect;
+                            tachyon::IntRect target = rrect;
                             target.y -= headerH;
                             target.h += headerH + hPad;
                             scrollManagement.MakeRectVisibleHierarchically(
                                 elementStorage, target, rowRef);
                         }
-                        else if (statePtr->internal.rowsRangeID != interstice::ID::Invalid()
+                        else if (statePtr->internal.rowsRangeID != tachyon::ID::Invalid()
                                  && statePtr->internal.actualRowHeight > 0
-                                 && statePtr->internal.bodyID != interstice::ID::Invalid())
+                                 && statePtr->internal.bodyID != tachyon::ID::Invalid())
                         {
                             // Row not emitted: scroll by its VISUAL position (sorting
                             // makes dataset index differ from scroll row).
-                            const int datasetIdx = (newID.GetMode() == interstice::IDMode::SubRange)
+                            const int datasetIdx = (newID.GetMode() == tachyon::IDMode::SubRange)
                                 ? static_cast<int>(newID.value.subRangeParts.index) : 0;
                             const int rowIdx = statePtr->DatasetToVisual(datasetIdx);
                             if (rowIdx < 0) return true;  // not in dataset; nothing to scroll to
@@ -320,8 +320,8 @@ namespace interstice
                             const int n = statePtr->internal.sectionCount;
                             for (int i = 0; i < n; i++)
                             {
-                                const interstice::ID sid = statePtr->SectionBodyID(i);
-                                if (sid == interstice::ID::Invalid()) continue;
+                                const tachyon::ID sid = statePtr->SectionBodyID(i);
+                                if (sid == tachyon::ID::Invalid()) continue;
                                 auto sref = elementStorage.FindElementRefByID(sid);
                                 if (!sref.IsValid()) continue;
                                 const auto& srect = elementStorage.GetElementRectUnsafe(sref);
@@ -347,7 +347,7 @@ namespace interstice
                                 }
                                 writtenY = clamped.y;
                             }
-                            if (anyChange && statePtr->internal.bodyID != interstice::ID::Invalid())
+                            if (anyChange && statePtr->internal.bodyID != tachyon::ID::Invalid())
                             {
                                 auto bh = scrollManagement.GetOrCreateScrollOffsetHandle(statePtr->internal.bodyID);
                                 const int2 bcur = scrollManagement.GetScrollOffset(bh);
@@ -369,12 +369,12 @@ namespace interstice
     // One row-backdrop handler shared by every row; the row ID is the event's
     // element ID. With state->rowDragDrop set it also handles drag-and-drop with
     // Before/Inside/After zones (same contract as MakeTreeRowDragDropHandler).
-    interstice::EventHandler GUIApplication::BuildRowBackdropHandler(TableState* state,
-                                                              interstice::ID containerID)
+    tachyon::EventHandler GUIApplication::BuildRowBackdropHandler(TableState* state,
+                                                              tachyon::ID containerID)
     {
         return [this, state, containerID](ElementEvent&& event) -> bool
         {
-            const interstice::ID rowID = event.id;
+            const tachyon::ID rowID = event.id;
             ItemDragDropConfig* dd = state->rowDragDrop;
             const bool dragDropEnabled = (dd && dd->payloadType != 0);
 
@@ -382,18 +382,18 @@ namespace interstice
             // (TableState::internal.pendingRowClick) and dropped if a drag starts.
 
             // Selection shared by the immediate (MouseDown) and deferred (MouseUp) paths.
-            auto applyClickSelection = [&](interstice::ID id, interstice::KeyModifier mods) {
-                const bool ctrlSel  = (mods & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
-                const bool shiftSel = (mods & interstice::KeyModifier::Shift)   != interstice::KeyModifier::None;
+            auto applyClickSelection = [&](tachyon::ID id, tachyon::KeyModifier mods) {
+                const bool ctrlSel  = (mods & tachyon::KeyModifier::Control) != tachyon::KeyModifier::None;
+                const bool shiftSel = (mods & tachyon::KeyModifier::Shift)   != tachyon::KeyModifier::None;
                 if (state->multiSelect)
                 {
                     auto& ms = *state->multiSelect;
-                    if (shiftSel && ms.lastClickedID != interstice::ID::Invalid())
+                    if (shiftSel && ms.lastClickedID != tachyon::ID::Invalid())
                     {
-                        const bool anchorRanged  = ms.lastClickedID.GetMode() == interstice::IDMode::SubRange;
-                        const bool currentRanged = id.GetMode() == interstice::IDMode::SubRange;
+                        const bool anchorRanged  = ms.lastClickedID.GetMode() == tachyon::IDMode::SubRange;
+                        const bool currentRanged = id.GetMode() == tachyon::IDMode::SubRange;
                         if (anchorRanged && currentRanged
-                            && state->internal.rowsRangeID != interstice::ID::Invalid())
+                            && state->internal.rowsRangeID != tachyon::ID::Invalid())
                         {
                             const int anchorDs = static_cast<int>(ms.lastClickedID.value.subRangeParts.index);
                             const int currDs   = static_cast<int>(id.value.subRangeParts.index);
@@ -434,7 +434,7 @@ namespace interstice
             };
 
             // ---- MouseUp: resolve a deferred click selection, if any ----
-            if (event.type == interstice::EventType::MouseUp && event.state.LeftReleased())
+            if (event.type == tachyon::EventType::MouseUp && event.state.LeftReleased())
             {
                 if (dragDropEnabled
                     && state->internal.pendingRowClick.rowID == rowID
@@ -449,9 +449,9 @@ namespace interstice
 
             // ---- Drag-and-drop event branches (only when enabled) ----
             // MouseDown (selection + drag prime) is handled below.
-            if (dragDropEnabled && event.type != interstice::EventType::MouseDown)
+            if (dragDropEnabled && event.type != tachyon::EventType::MouseDown)
             {
-                auto computeZone = [&](const interstice::IntRect& rect) -> TreeDropPosition
+                auto computeZone = [&](const tachyon::IntRect& rect) -> TreeDropPosition
                 {
                     if (dd->dropInsideOnly) return TreeDropPosition::InsideLast;
                     // rect is in layout space - convert cursor through any
@@ -482,8 +482,8 @@ namespace interstice
                 // start below the sticky header and above the H-scrollbar.
                 auto autoScrollY = [&]() {
                     if (state->internal.sectionCount <= 0) return;
-                    const interstice::ID body0 = state->SectionBodyID(0);
-                    if (body0 == interstice::ID::Invalid()) return;
+                    const tachyon::ID body0 = state->SectionBodyID(0);
+                    if (body0 == tachyon::ID::Invalid()) return;
                     auto bodyRef = elementStorage.FindElementRefByID(body0);
                     if (!bodyRef.IsValid()) return;
                     const auto& bodyRect = elementStorage.GetElementRectUnsafe(bodyRef);
@@ -508,8 +508,8 @@ namespace interstice
                     const int n = state->internal.sectionCount;
                     for (int i = 0; i < n; i++)
                     {
-                        const interstice::ID sid = state->SectionBodyID(i);
-                        if (sid == interstice::ID::Invalid()) continue;
+                        const tachyon::ID sid = state->SectionBodyID(i);
+                        if (sid == tachyon::ID::Invalid()) continue;
                         auto sref = elementStorage.FindElementRefByID(sid);
                         if (!sref.IsValid()) continue;
                         const auto& srect = elementStorage.GetElementRectUnsafe(sref);
@@ -523,17 +523,17 @@ namespace interstice
 
                 switch (event.type)
                 {
-                    case interstice::EventType::MouseMove:
+                    case tachyon::EventType::MouseMove:
                     {
-                        if ((event.state.buttons & interstice::MouseButtons::Left) == interstice::MouseButtons::None) break;
+                        if ((event.state.buttons & tachyon::MouseButtons::Left) == tachyon::MouseButtons::None) break;
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         // A real drag cancels the deferred click selection.
                         if (guiStateManager.Drag().GetDraggedID() == rowID)
                             state->internal.pendingRowClick.dragPromoted = true;
                         return guiStateManager.Drag().GetDraggedID() == rowID;
                     }
-                    case interstice::EventType::DragEnter:
-                    case interstice::EventType::DragOver:
+                    case tachyon::EventType::DragEnter:
+                    case tachyon::EventType::DragOver:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (!event.rect) return true;
@@ -552,13 +552,13 @@ namespace interstice
                         m_treeDropState.targetDepth  = info ? info->depth : 0;
                         return true;
                     }
-                    case interstice::EventType::DragOut:
+                    case tachyon::EventType::DragOut:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (m_treeDropState.targetRowID == rowID) m_treeDropState = {};
                         return true;
                     }
-                    case interstice::EventType::Drop:
+                    case tachyon::EventType::Drop:
                     {
                         if (event.state.dragPayloadType != dd->payloadType) return false;
                         if (event.state.dragSourceID == rowID) { m_treeDropState = {}; return true; }
@@ -580,7 +580,7 @@ namespace interstice
                 return false;
             }
 
-            if (event.type != interstice::EventType::MouseDown) return false;
+            if (event.type != tachyon::EventType::MouseDown) return false;
             if (!event.state.LeftPressed()) return false;
 
             // One tracker for double-click (<300ms: toggle branch; in row mode the tree
@@ -591,8 +591,8 @@ namespace interstice
             const bool wasSelected = (state->selectedRowID == rowID)
                 || (state->multiSelect && state->multiSelect->selectedIDs.count(rowID) > 0);
 
-            const bool ctrl  = (event.state.modifiers & interstice::KeyModifier::Control) != interstice::KeyModifier::None;
-            const bool shift = (event.state.modifiers & interstice::KeyModifier::Shift)   != interstice::KeyModifier::None;
+            const bool ctrl  = (event.state.modifiers & tachyon::KeyModifier::Control) != tachyon::KeyModifier::None;
+            const bool shift = (event.state.modifiers & tachyon::KeyModifier::Shift)   != tachyon::KeyModifier::None;
             const bool ctrlShift = ctrl && shift;
 
             const auto* info = state->FindTreeRow(rowID);

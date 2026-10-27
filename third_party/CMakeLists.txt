@@ -16,7 +16,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   # link otherwise). Before project(), which picks the default flags by it.
   cmake_policy(SET CMP0141 NEW)
   set(CMAKE_POLICY_DEFAULT_CMP0141 NEW)
-  project(IntersticeThirdParty LANGUAGES C CXX)
+  project(TachyonThirdParty LANGUAGES C CXX)
 
   set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,9 +40,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   # SDL3, vkbootstrap, etc.
   set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "" FORCE)
 
-  set(_interstice_tp_standalone TRUE)
+  set(_tachyon_tp_standalone TRUE)
 else()
-  set(_interstice_tp_standalone FALSE)
+  set(_tachyon_tp_standalone FALSE)
 endif()
 
 find_package(Vulkan REQUIRED)
@@ -61,7 +61,7 @@ target_link_libraries(vkbootstrap PUBLIC Vulkan::Vulkan $<$<BOOL:UNIX>:${CMAKE_D
 set_property(TARGET vkbootstrap PROPERTY CXX_STANDARD 20)
 
 # ---- vma (header-only) ----
-if(NOT INTERSTICE_SYSTEM_VMA)
+if(NOT TACHYON_SYSTEM_VMA)
   add_library(vma INTERFACE)
   target_include_directories(vma INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vma/include>
@@ -76,14 +76,14 @@ add_subdirectory(nanosvg)
 # In standalone mode every sub-project must be in ALL so that `--target install`
 # actually builds and installs them. In legacy (add_subdirectory) mode we keep
 # EXCLUDE_FROM_ALL so the main project doesn't pay for unused artifacts.
-if(_interstice_tp_standalone)
-  set(_interstice_tp_exclude "")
+if(_tachyon_tp_standalone)
+  set(_tachyon_tp_exclude "")
 else()
-  set(_interstice_tp_exclude EXCLUDE_FROM_ALL)
+  set(_tachyon_tp_exclude EXCLUDE_FROM_ALL)
 endif()
 
-if((NOT DEFINED INTERSTICE_SDL OR INTERSTICE_SDL) AND NOT INTERSTICE_SYSTEM_SDL)
-  add_subdirectory(SDL ${_interstice_tp_exclude})
+if((NOT DEFINED TACHYON_SDL OR TACHYON_SDL) AND NOT TACHYON_SYSTEM_SDL)
+  add_subdirectory(SDL ${_tachyon_tp_exclude})
   # SDL counts its live allocations, so the GUI can tell when it is safe to
   # route SDL's memory through a host's allocation hooks.
   target_compile_definitions(SDL3-shared PRIVATE SDL_TRACK_ALLOCATION_COUNT)
@@ -96,16 +96,16 @@ set(FETCHCONTENT_SOURCE_DIR_HARFBUZZ    "${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz")
 set(FETCHCONTENT_SOURCE_DIR_SHEENBIDI   "${CMAKE_CURRENT_SOURCE_DIR}/SheenBidi")
 set(FETCHCONTENT_SOURCE_DIR_LIBUNIBREAK "${CMAKE_CURRENT_SOURCE_DIR}/libunibreak")
 set(FETCHCONTENT_SOURCE_DIR_BUDOUXC     "${CMAKE_CURRENT_SOURCE_DIR}/budouxc")
-if(INTERSTICE_SYSTEM_HARFBUZZ)
+if(TACHYON_SYSTEM_HARFBUZZ)
   # The host's harfbuzz, under the plain name skribidi links; its fetch gets an empty project.
   find_package(harfbuzz CONFIG REQUIRED)
   set_target_properties(harfbuzz::harfbuzz PROPERTIES IMPORTED_GLOBAL TRUE)
   add_library(harfbuzz ALIAS harfbuzz::harfbuzz)
   set(FETCHCONTENT_SOURCE_DIR_HARFBUZZ "${CMAKE_CURRENT_SOURCE_DIR}/host_harfbuzz")
 endif()
-add_subdirectory(skribidi ${_interstice_tp_exclude})
-if(NOT DEFINED INTERSTICE_BUILD_TESTS OR INTERSTICE_BUILD_TESTS)
-  add_subdirectory(googletest ${_interstice_tp_exclude})
+add_subdirectory(skribidi ${_tachyon_tp_exclude})
+if(NOT DEFINED TACHYON_BUILD_TESTS OR TACHYON_BUILD_TESTS)
+  add_subdirectory(googletest ${_tachyon_tp_exclude})
 endif()
 
 # IDE grouping — sit under "ThirdParty" in VS's solution explorer.
@@ -113,14 +113,14 @@ endif()
 # sets CMAKE_MSVC_RUNTIME_LIBRARY to /MT inside its scope, which would
 # conflict with the engine's default /MD at link time. A per-target
 # property override sidesteps patching vendored code.
-set(_interstice_third_party_targets
+set(_tachyon_third_party_targets
   vma nanosvg SDL_uclibc SDL3-shared vkbootstrap
   skribidi budouxc harfbuzz
   libunibreak SheenBidi
   gtest gtest_main gmock gmock_main
 )
-set(_interstice_msvc_rt "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-foreach(_tgt IN LISTS _interstice_third_party_targets)
+set(_tachyon_msvc_rt "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+foreach(_tgt IN LISTS _tachyon_third_party_targets)
   # The host's libraries (aliases of imported targets) are left as they are.
   set(_tgt_aliased "")
   if(TARGET ${_tgt})
@@ -130,7 +130,7 @@ foreach(_tgt IN LISTS _interstice_third_party_targets)
     set_target_properties(${_tgt} PROPERTIES FOLDER "ThirdParty")
     get_target_property(_tgt_type ${_tgt} TYPE)
     if(NOT _tgt_type STREQUAL "INTERFACE_LIBRARY")
-      set_target_properties(${_tgt} PROPERTIES MSVC_RUNTIME_LIBRARY ${_interstice_msvc_rt})
+      set_target_properties(${_tgt} PROPERTIES MSVC_RUNTIME_LIBRARY ${_tachyon_msvc_rt})
       # Ensure every library target has a Debug postfix — some (e.g. SheenBidi)
       # overwrite or ignore CMAKE_DEBUG_POSTFIX, which breaks multi-config
       # installs since Release overwrites Debug at the same lib path.
@@ -138,7 +138,7 @@ foreach(_tgt IN LISTS _interstice_third_party_targets)
       if(NOT _existing_postfix)
         set_target_properties(${_tgt} PROPERTIES DEBUG_POSTFIX "d")
       endif()
-      if(MSVC AND _interstice_tp_standalone)
+      if(MSVC AND _tachyon_tp_standalone)
         set_target_properties(${_tgt} PROPERTIES MSVC_DEBUG_INFORMATION_FORMAT Embedded)
         # skribidi adds /Zi itself, which would override the embedded format.
         get_target_property(_tgt_options ${_tgt} COMPILE_OPTIONS)
@@ -152,9 +152,9 @@ foreach(_tgt IN LISTS _interstice_third_party_targets)
 endforeach()
 
 # ---- Install rules (standalone mode only) ----
-if(_interstice_tp_standalone)
+if(_tachyon_tp_standalone)
   # vma — header-only
-  if(NOT INTERSTICE_SYSTEM_VMA)
+  if(NOT TACHYON_SYSTEM_VMA)
     install(TARGETS vma EXPORT vmaTargets)
     install(FILES vma/include/vk_mem_alloc.h
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vma)
@@ -203,7 +203,7 @@ if(_interstice_tp_standalone)
     # The Debug file name on this platform: SheenBidid.lib, libSheenBidid.a.
     set(_sheenbidi_debug "${CMAKE_STATIC_LIBRARY_PREFIX}SheenBidi${CMAKE_DEBUG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/SheenBidiTargets-debug.cmake"
-"# Injected by IntersticeThirdParty: SheenBidi's own install rule is Release-only.\n"
+"# Injected by TachyonThirdParty: SheenBidi's own install rule is Release-only.\n"
 "set_property(TARGET SheenBidi::SheenBidi APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)\n"
 "set_target_properties(SheenBidi::SheenBidi PROPERTIES\n"
 "  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG \"C\"\n"

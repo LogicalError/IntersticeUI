@@ -14,7 +14,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-namespace interstice
+namespace tachyon
 {
     static VkSurfaceKHR CreateSDLVulkanSurface(VkInstance instance, const VkAllocationCallbacks* callbacks, OSWindowHandle windowHandle)
     {
@@ -29,7 +29,7 @@ namespace interstice
 
     void InstallSDLVulkanSurfaceFactory(GraphicsContext* graphicsContext)
     {
-        if (auto* vk = dynamic_cast<interstice::vulkan::VulkanGraphicsContext*>(graphicsContext))
+        if (auto* vk = dynamic_cast<tachyon::vulkan::VulkanGraphicsContext*>(graphicsContext))
             vk->SetSurfaceFactory(&CreateSDLVulkanSurface);
     }
-} // namespace interstice
+} // namespace tachyon

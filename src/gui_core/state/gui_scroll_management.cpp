@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <assert.h>
 
-namespace interstice
+namespace tachyon
 {
     void ScrollManagement::BeginFrame()
     {

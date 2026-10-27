@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 {
     EnsureWorkingDirectory(argc > 0 ? argv[0] : nullptr);
     // Every test boots a theme; only problems are worth printing.
-    interstice::Diagnostics::SetMinimumLogSeverity(interstice::Diagnostics::LogSeverity::Warning);
+    tachyon::Diagnostics::SetMinimumLogSeverity(tachyon::Diagnostics::LogSeverity::Warning);
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

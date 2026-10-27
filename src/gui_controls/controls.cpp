@@ -7,22 +7,22 @@
 #include <format>
 #include <string>
 
-namespace interstice
+namespace tachyon
 {
     // ---------------------------------------------------------------------------
     // Event handler factories
     // ---------------------------------------------------------------------------
 
-    interstice::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return interstice::MakeButtonHandler(guiStateManager, [&toggle]() { toggle = !toggle; }); }
-    interstice::EventHandler GUIApplication::MakeButtonHandler(std::function<void()> onClick) { return interstice::MakeButtonHandler(guiStateManager, onClick); }
-    interstice::EventHandler GUIApplication::MakeLabelHandler() { return interstice::MakeLabelHandler(guiStateManager, elementStorage); }
+    tachyon::EventHandler GUIApplication::MakeToggleHandler(bool& toggle) { return tachyon::MakeButtonHandler(guiStateManager, [&toggle]() { toggle = !toggle; }); }
+    tachyon::EventHandler GUIApplication::MakeButtonHandler(std::function<void()> onClick) { return tachyon::MakeButtonHandler(guiStateManager, onClick); }
+    tachyon::EventHandler GUIApplication::MakeLabelHandler() { return tachyon::MakeLabelHandler(guiStateManager, elementStorage); }
 
 
     // ---------------------------------------------------------------------------
     // Element registration
     // ---------------------------------------------------------------------------
 
-    interstice::ElementRef GUIApplication::RegisterElementInternal(interstice::Element&& element, LayoutOverride&& constraints, bool updateState)
+    tachyon::ElementRef GUIApplication::RegisterElementInternal(tachyon::Element&& element, LayoutOverride&& constraints, bool updateState)
     {
         if (updateState) element.state |= guiStateManager.GetCurrentState(element.id);
         auto addRes = elementStorage.Add(std::move(element), std::move(constraints));
@@ -31,12 +31,12 @@ namespace interstice
         return addRes.ref;
     }
 
-    interstice::ElementRef GUIApplication::RegisterElement(interstice::Element&& element, LayoutOverride&& constraints)
+    tachyon::ElementRef GUIApplication::RegisterElement(tachyon::Element&& element, LayoutOverride&& constraints)
     {
 	    return RegisterElementInternal(std::move(element), std::move(constraints), true);
     }
 
-    interstice::ElementRef GUIApplication::RegisterElement(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints)
+    tachyon::ElementRef GUIApplication::RegisterElement(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.state |= guiStateManager.GetCurrentState(element.id); // required for RegisterText
         element.textID = textSystem->RegisterText(element.id, text, element.styleRef, element.state);
@@ -51,7 +51,7 @@ namespace interstice
             ReportMisuse("GUIApplication: a control with an invalid ID (it is drawn but takes no input and keeps no state)");
     }
 
-    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::string_view text, LayoutOverride&& constraints)
+    tachyon::ElementRef GUIApplication::RegisterControl(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         ReportInvalidControlID(element.id);
@@ -59,7 +59,7 @@ namespace interstice
         return RegisterElement(std::move(element), text, std::move(constraints));
     }
 
-    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, LayoutOverride&& constraints)
+    tachyon::ElementRef GUIApplication::RegisterControl(tachyon::Element&& element, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         ReportInvalidControlID(element.id);
@@ -67,7 +67,7 @@ namespace interstice
         return RegisterElement(std::move(element), std::move(constraints));
     }
 
-    interstice::ElementRef GUIApplication::RegisterControl(interstice::Element&& element, std::function<TextID(interstice::Element& element)> createTextID, LayoutOverride&& constraints)
+    tachyon::ElementRef GUIApplication::RegisterControl(tachyon::Element&& element, std::function<TextID(tachyon::Element& element)> createTextID, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         ReportInvalidControlID(element.id);
@@ -91,15 +91,15 @@ namespace interstice
 
         if (guiStateManager.Construction().IsIndeterminate())
         {
-            RegisterControl(interstice::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-                [this](interstice::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
+            RegisterControl(tachyon::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                [this](tachyon::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
                 std::move(constraints));
             return false;
         }
 
         bool modified = false;
-        RegisterControl(interstice::Element{ .id = id, .eventHandler = MakeTextBoxHandler(guiStateManager), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
-            [this, &modified, &value, textEditBehavior](interstice::Element& element)
+        RegisterControl(tachyon::Element{ .id = id, .eventHandler = MakeTextBoxHandler(guiStateManager), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+            [this, &modified, &value, textEditBehavior](tachyon::Element& element)
             {
                 return textSystem->RegisterEditableText(element.id, value, textEditBehavior, element.styleRef, element.state, modified);
             },
@@ -112,7 +112,7 @@ namespace interstice
     {
         // The container draws the textbox chrome and takes the inner field's
         // hover/focus state (PropagatesDescendantState); the field itself is borderless.
-        interstice::Element container{};
+        tachyon::Element container{};
         container.id       = id;
         container.styleRef = theme.searchTextboxStyleRef;
         container.flags    = ElementFlags::PropagatesDescendantState;
@@ -121,14 +121,14 @@ namespace interstice
         VERIFY(elementStorage.BeginChildren());
 
         {
-            const interstice::ID iconID = idManager.AllocateDynamicID("searchIcon");
-            interstice::Element iconElem{};
+            const tachyon::ID iconID = idManager.AllocateDynamicID("searchIcon");
+            tachyon::Element iconElem{};
             iconElem.id       = iconID;
             iconElem.iconID   = icon;
             iconElem.flags    = ElementFlags::NoInput;
             iconElem.state    = guiStateManager.GetCurrentState(iconID);
             iconElem.styleRef = theme.searchTextboxIconStyleRef;
-            auto res = elementStorage.Add(std::move(iconElem), interstice::LayoutOverride{});
+            auto res = elementStorage.Add(std::move(iconElem), tachyon::LayoutOverride{});
             VERIFY(res.status);
             VERIFY(windowRegistry.Add(res.ref));
         }
@@ -138,7 +138,7 @@ namespace interstice
         const bool modified = Field(fieldID,
                                     value, textEditBehavior,
                                     theme.searchTextboxFieldStyleRef,
-                                    interstice::LayoutOverride{}.FlexGrow(1));
+                                    tachyon::LayoutOverride{}.FlexGrow(1));
 
         VERIFY(elementStorage.EndChildren());
         return modified;
@@ -152,7 +152,7 @@ namespace interstice
     void GUIApplication::DragLabel(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
-        interstice::EventHandler handler;
+        tachyon::EventHandler handler;
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
@@ -175,7 +175,7 @@ namespace interstice
         {
             handler = MakeDraggableLabelHandler(guiStateManager, elementStorage);
         }
-        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
+        auto ref = RegisterElement(tachyon::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
                         std::move(constraints));
         if (gs)
         {
@@ -200,7 +200,7 @@ namespace interstice
         // A label container (the group label, with its width and sizer) holding the title
         // and the caption, at the top of its row.
         guiStateManager.Labels().RegisterPendingLabel(id);
-        interstice::EventHandler handler = MakeLabelHandler();
+        tachyon::EventHandler handler = MakeLabelHandler();
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
@@ -212,7 +212,7 @@ namespace interstice
                       &gs->labelTextIDs, textSystem,
                       &styleManager, theme.groupLabelStyleRef });
         }
-        const auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler),
+        const auto ref = RegisterElement(tachyon::Element{ .id = id, .eventHandler = std::move(handler),
                                                               .styleRef = theme.groupLabelTopStyleRef, .flags = ElementFlags::IsLabel },
                                          std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
@@ -242,7 +242,7 @@ namespace interstice
     void GUIApplication::Label(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         guiStateManager.Labels().RegisterPendingLabel(id);
-        interstice::EventHandler handler;
+        tachyon::EventHandler handler;
         auto* gs = m_labelGroup->GetActiveGroup();
         if (gs)
         {
@@ -267,7 +267,7 @@ namespace interstice
         {
             handler = MakeLabelHandler();
         }
-        auto ref = RegisterElement(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
+        auto ref = RegisterElement(tachyon::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style, .flags = ElementFlags::IsLabel }, text,
                         std::move(constraints));
         if (gs)
         {
@@ -290,7 +290,7 @@ namespace interstice
     void GUIApplication::Text(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         [[maybe_unused]]
-        auto ref = RegisterElement(interstice::Element{ .id = id, .styleRef = style }, text, std::move(constraints));
+        auto ref = RegisterElement(tachyon::Element{ .id = id, .styleRef = style }, text, std::move(constraints));
     }
 
     void GUIApplication::SelectableText(ID id, const std::span<ContentRun>& runs,
@@ -301,8 +301,8 @@ namespace interstice
         // (activate the link under it) while a drag is a text selection.
         struct PressState { int2 pressPos {}; };
 
-        interstice::EventHandler handler =
-            [this, id, onLinkActivate = std::move(onLinkActivate)](interstice::ElementEvent&& ev) -> bool
+        tachyon::EventHandler handler =
+            [this, id, onLinkActivate = std::move(onLinkActivate)](tachyon::ElementEvent&& ev) -> bool
         {
             // The editor's TextID isn't known when this handler is built (it's created by the
             // createTextID callback below), so resolve it at event time.
@@ -313,11 +313,11 @@ namespace interstice
             auto& store = guiStateManager.GetElementDataStore();
             switch (ev.type)
             {
-                case interstice::EventType::MouseMove:
+                case tachyon::EventType::MouseMove:
                     if (textID != TextID::Invalid)
                         textSystem->SetHoveredContent(textID, textSystem->HitTestContent(textID, localPos.x, localPos.y));
                     break;
-                case interstice::EventType::MouseDown:
+                case tachyon::EventType::MouseDown:
                     if (ev.state.LeftPressed())
                     {
                         // A press on a link only activates it (on release); elsewhere, focus the editor.
@@ -332,7 +332,7 @@ namespace interstice
                         return true;
                     }
                     break;
-                case interstice::EventType::MouseUp:
+                case tachyon::EventType::MouseUp:
                     if (onLinkActivate && textID != TextID::Invalid)
                         if (auto* press = store.Get<PressState>(id))
                         {
@@ -345,12 +345,12 @@ namespace interstice
                             }
                         }
                     break;
-                case interstice::EventType::KeyDown:
-                case interstice::EventType::KeyUp:
-                case interstice::EventType::TextInput:
+                case tachyon::EventType::KeyDown:
+                case tachyon::EventType::KeyUp:
+                case tachyon::EventType::TextInput:
                     // Takes the selection keys (Ctrl+C, Ctrl+A, arrows) while focused.
                     if (guiStateManager.Interaction().GetFocusedID() == id && !ev.state.consumed)
-                        return ev.type != interstice::EventType::TextInput && TextEditorUsesKey(ev.state, /*readOnly*/ true);
+                        return ev.type != tachyon::EventType::TextInput && TextEditorUsesKey(ev.state, /*readOnly*/ true);
                     break;
                 default:
                     break;
@@ -359,8 +359,8 @@ namespace interstice
         };
 
         bool modified = false;
-        RegisterControl(interstice::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style },
-            [this, &modified, &runs](interstice::Element& element)
+        RegisterControl(tachyon::Element{ .id = id, .eventHandler = std::move(handler), .styleRef = style },
+            [this, &modified, &runs](tachyon::Element& element)
             {
                 return textSystem->RegisterEditableRichText(element.id, runs,
                     TextEditBehavior::ReadOnly | TextEditBehavior::Multiline,
@@ -372,7 +372,7 @@ namespace interstice
     void GUIApplication::Image(ID id, ImageIndex image, StyleRef style, LayoutOverride&& constraints)
     {
         // Drawn as the element's backgroundImage; sized by style + constraints. Non-interactive.
-        interstice::Element el{ .id = id, .styleRef = style };
+        tachyon::Element el{ .id = id, .styleRef = style };
         el.backgroundImage = image;
         [[maybe_unused]]
         auto ref = RegisterElement(std::move(el), std::move(constraints));
@@ -398,7 +398,7 @@ namespace interstice
                 h = int32_t((int64_t(boxW) * sourceSize.y + sourceSize.x / 2) / sourceSize.x);
             }
         }
-        Image(id, image, style, interstice::LayoutOverride::FixedSize(Pixels{ w }, Pixels{ h }));
+        Image(id, image, style, tachyon::LayoutOverride::FixedSize(Pixels{ w }, Pixels{ h }));
     }
 
     bool GUIApplication::Button(ID id, const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
@@ -409,8 +409,8 @@ namespace interstice
         auto* gs = m_buttonGroup->GetActiveButton();
         if (gs) style = m_buttonGroup->NextItemStyleRef(*gs);
         auto ref = RegisterControl(
-            interstice::Element{ .id = id, .eventHandler = MakeButtonHandler(onClick), .styleRef = style },
-            [this, icon, text](interstice::Element& element) {
+            tachyon::Element{ .id = id, .eventHandler = MakeButtonHandler(onClick), .styleRef = style },
+            [this, icon, text](tachyon::Element& element) {
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
@@ -525,7 +525,7 @@ namespace interstice
         };
 
         // The box: a click anywhere in it starts typing.
-        interstice::Element box{};
+        tachyon::Element box{};
         box.id           = id;
         box.styleRef     = theme.commandSearchStyleRef;
         box.flags        = ElementFlags::PropagatesDescendantState;
@@ -541,7 +541,7 @@ namespace interstice
         RegisterElement(std::move(box), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
 
-        RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("icon"), .iconID = theme.searchIcon,
+        RegisterElement(tachyon::Element{ .id = idManager.AllocateDynamicID("icon"), .iconID = theme.searchIcon,
                                              .styleRef = theme.searchTextboxIconStyleRef, .flags = ElementFlags::NoInput },
                         LayoutOverride{});
 
@@ -575,9 +575,9 @@ namespace interstice
             return textBoxHandler(std::move(event));
         };
         bool modified = false;
-        RegisterControl(interstice::Element{ .id = fieldID, .eventHandler = std::move(fieldHandler),
+        RegisterControl(tachyon::Element{ .id = fieldID, .eventHandler = std::move(fieldHandler),
                                              .styleRef = theme.searchTextboxFieldStyleRef, .flags = ElementFlags::DoNotMeasureText },
-            [this, &modified, &state](interstice::Element& element)
+            [this, &modified, &state](tachyon::Element& element)
             {
                 return textSystem->RegisterEditableText(element.id, state.query, TextEditBehavior::ContinuousUpdate,
                                                         element.styleRef, element.state, modified);
@@ -587,11 +587,11 @@ namespace interstice
             state.current = 0;
 
         if (state.query.empty() && !state.hint.empty())
-            RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("hint"), .styleRef = theme.commandSearchHintStyleRef,
+            RegisterElement(tachyon::Element{ .id = idManager.AllocateDynamicID("hint"), .styleRef = theme.commandSearchHintStyleRef,
                                                  .flags = ElementFlags::NoInput },
                             state.hint, LayoutOverride{}.Anchored(fieldID, AnchorPlacement::InsideLeft | AnchorPlacement::CenterVert));
         if (!state.shortcut.empty())
-            RegisterElement(interstice::Element{ .id = idManager.AllocateDynamicID("key"), .styleRef = theme.commandSearchKeyStyleRef,
+            RegisterElement(tachyon::Element{ .id = idManager.AllocateDynamicID("key"), .styleRef = theme.commandSearchKeyStyleRef,
                                                  .flags = ElementFlags::NoInput },
                             state.shortcut, LayoutOverride{});
 
@@ -612,7 +612,7 @@ namespace interstice
                     const CommandID command = matches[size_t(i)];
                     const CommandManager::Command& c = *commandManager.GetCommand(command);
                     MenuItemRow(idManager.GetSubID(rowsID, uint32_t(i)),
-                                interstice::MakeButtonHandler(guiStateManager, [run, command] { run(command); }),
+                                tachyon::MakeButtonHandler(guiStateManager, [run, command] { run(command); }),
                                 i == state.current ? theme.commandSearchCurrentRowStyleRef : theme.menuItemRowStyleRef,
                                 /*reserveIcon*/ true, c.icon, c.description,
                                 c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
@@ -641,30 +641,30 @@ namespace interstice
     {
         // Selected while checked, so the box and label restyle with it.
         if (value) guiStateManager.Construction().PushSelected();
-        const interstice::ElementState state = guiStateManager.GetCurrentState(id);
-        interstice::Element control{};
+        const tachyon::ElementState state = guiStateManager.GetCurrentState(id);
+        tachyon::Element control{};
         control.id           = id;
         control.state        = state;
         control.styleRef     = theme.checkboxStyleRef;
-        control.eventHandler = interstice::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
+        control.eventHandler = tachyon::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
         RegisterElement(std::move(control), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         {
-            const interstice::ElementState partState = value ? (state | interstice::ElementState::Selected) : state;
-            interstice::Element box{};
+            const tachyon::ElementState partState = value ? (state | tachyon::ElementState::Selected) : state;
+            tachyon::Element box{};
             box.id       = idManager.AllocateDynamicID("checkboxBox");
             box.state    = partState;
             box.styleRef = theme.checkboxBoxStyleRef;
-            box.flags    = interstice::ElementFlags::NoInput;
+            box.flags    = tachyon::ElementFlags::NoInput;
             box.iconID   = value ? theme.menuCheckIcon : IconID::Invalid;
             RegisterElement(std::move(box), LayoutOverride{});
             if (!text.empty())
             {
-                interstice::Element label{};
+                tachyon::Element label{};
                 label.id       = idManager.AllocateDynamicID("checkboxLabel");
                 label.state    = partState;
                 label.styleRef = theme.checkboxLabelStyleRef;
-                label.flags    = interstice::ElementFlags::NoInput;
+                label.flags    = tachyon::ElementFlags::NoInput;
                 label.textID   = textSystem->RegisterText(label.id, text, label.styleRef, label.state);
                 RegisterElement(std::move(label), LayoutOverride{});
             }
@@ -681,10 +681,10 @@ namespace interstice
         // Inside a node row it sits at the right, by its socket, where fields end.
         if (nodeRowFieldMinWidth > 0)
         {
-            interstice::Element spacer{};
+            tachyon::Element spacer{};
             spacer.id       = idManager.AllocateDynamicID("switchSpacer");
             spacer.styleRef = theme.emptyHorzStyleRef;
-            spacer.flags    = interstice::ElementFlags::NoInput;
+            spacer.flags    = tachyon::ElementFlags::NoInput;
             RegisterElement(std::move(spacer), LayoutOverride{}.FlexGrow(1));
         }
 
@@ -692,20 +692,20 @@ namespace interstice
         if (value) guiStateManager.Construction().PushSelected();
 
         // The whole control takes the click; its parts are NoInput and share its state.
-        const interstice::ElementState state = guiStateManager.GetCurrentState(id);
-        interstice::Element control{};
+        const tachyon::ElementState state = guiStateManager.GetCurrentState(id);
+        tachyon::Element control{};
         control.id           = id;
         control.state        = state;
         control.styleRef     = style;
-        control.eventHandler = interstice::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
+        control.eventHandler = tachyon::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
         RegisterElement(std::move(control), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         {
-            interstice::Element track{};
+            tachyon::Element track{};
             track.id       = idManager.AllocateDynamicID("switchTrack");
             track.state    = state;
             track.styleRef = theme.switchTrackStyleRef;
-            track.flags    = interstice::ElementFlags::NoInput;
+            track.flags    = tachyon::ElementFlags::NoInput;
             const auto trackRef = RegisterElement(std::move(track), LayoutOverride{});
 
             // The knob, inset evenly, at the track's left when off and its right when on.
@@ -713,11 +713,11 @@ namespace interstice
             const int knobSize = (knobLayout && knobLayout->layoutData.width != LayoutData::kAutoSize)
                                ? int(knobLayout->layoutData.width) : styleManager.Px(12);
             // Drawn as a disc in the knob style's background color.
-            const interstice::ElementState knobState = value ? (state | interstice::ElementState::Selected) : state;
+            const tachyon::ElementState knobState = value ? (state | tachyon::ElementState::Selected) : state;
             const VisualBoxStyle* knobBox = styleManager.GetVisualBoxStyle(theme.switchKnobStyleRef.visualBoxStyleIndex, knobState);
             const VisualColorStyleIndex knobColor = knobBox ? knobBox->backgroundColorIndex : VisualColorStyleIndex::Invalid;
             VERIFY(elementStorage.AddCustomDraw(trackRef,
-                [knobColor, knobSize, value](interstice::CustomDrawContext& ctx)
+                [knobColor, knobSize, value](tachyon::CustomDrawContext& ctx)
                 {
                     const auto outer = ctx.ElementRect();
                     const int inset = std::max(0, (outer.h - knobSize) / 2);
@@ -728,11 +728,11 @@ namespace interstice
 
             if (!text.empty())
             {
-                interstice::Element label{};
+                tachyon::Element label{};
                 label.id       = idManager.AllocateDynamicID("switchLabel");
-                label.state    = value ? (state | interstice::ElementState::Selected) : state;
+                label.state    = value ? (state | tachyon::ElementState::Selected) : state;
                 label.styleRef = theme.switchLabelStyleRef;
-                label.flags    = interstice::ElementFlags::NoInput;
+                label.flags    = tachyon::ElementFlags::NoInput;
                 label.textID   = textSystem->RegisterText(label.id, text, label.styleRef, label.state);
                 RegisterElement(std::move(label), LayoutOverride{});
             }
@@ -755,17 +755,17 @@ namespace interstice
         auto* gs = m_buttonGroup->GetActiveToggle();
         if (gs) style = m_buttonGroup->NextItemStyleRef(*gs);
         auto ref = RegisterControl(
-            interstice::Element 
+            tachyon::Element 
             { 
                 .id = id, 
-                .eventHandler = interstice::MakeButtonHandler(guiStateManager, 
+                .eventHandler = tachyon::MakeButtonHandler(guiStateManager, 
                                                        [value, onToggle]() 
                                                        { 
                                                            onToggle(!value); 
                                                        }), 
                 .styleRef = style 
             },
-            [this, icon, text](interstice::Element& element) {
+            [this, icon, text](tachyon::Element& element) {
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
@@ -802,8 +802,8 @@ namespace interstice
 
     bool GUIApplication::BeginButtonGroup(LayoutOverride&& constraints)
     {
-        interstice::ID groupID = idManager.AllocateDynamicID("button_group");
-        interstice::Element wrap{};
+        tachyon::ID groupID = idManager.AllocateDynamicID("button_group");
+        tachyon::Element wrap{};
         wrap.id       = groupID;
         wrap.styleRef = theme.buttonGroupStyleRef;
         wrap.state    = guiStateManager.GetCurrentState(groupID);
@@ -826,8 +826,8 @@ namespace interstice
 
     bool GUIApplication::BeginToggleGroup(LayoutOverride&& constraints)
     {
-        interstice::ID groupID = idManager.AllocateDynamicID("toggle_group");
-        interstice::Element wrap{};
+        tachyon::ID groupID = idManager.AllocateDynamicID("toggle_group");
+        tachyon::Element wrap{};
         wrap.id       = groupID;
         wrap.styleRef = theme.toggleGroupStyleRef;
         wrap.state    = guiStateManager.GetCurrentState(groupID);
@@ -854,7 +854,7 @@ namespace interstice
 
     bool GUIApplication::BeginArea(ID id, StyleRef style, LayoutOverride&& constraints)
     {
-        interstice::Element container
+        tachyon::Element container
         {
             .id       = id,
             .styleRef = style,
@@ -888,9 +888,9 @@ namespace interstice
         assert(pushed && "BeginCached requires a valid, stable id");
 
         // The container itself is built every frame, so its layout and hit-testing stay live.
-        interstice::Element container{ .id = id, .styleRef = style, .flags = ElementFlags::IsCachedScope };
+        tachyon::Element container{ .id = id, .styleRef = style, .flags = ElementFlags::IsCachedScope };
         container.state = guiStateManager.GetCurrentState(id);
-        interstice::ElementRef containerRef = RegisterElement(std::move(container), std::move(constraints));
+        tachyon::ElementRef containerRef = RegisterElement(std::move(container), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
 
         UICacheManager::Scope& scope = m_uiCache->GetOrCreate(id);
@@ -1087,17 +1087,17 @@ namespace interstice
         {
             // Wrap MakeNumericalBoxHandler so Enter/Escape blur back to the slider bar.
             const NumericFieldConfig<float> cfg{ .minVal = minVal, .maxVal = maxVal };
-            interstice::EventHandler inner = MakeNumericalBoxHandler<float>(guiStateManager, value, cfg);
-            interstice::EventHandler editHandler =
-                [this, inner = std::move(inner)](interstice::ElementEvent&& event) -> bool
+            tachyon::EventHandler inner = MakeNumericalBoxHandler<float>(guiStateManager, value, cfg);
+            tachyon::EventHandler editHandler =
+                [this, inner = std::move(inner)](tachyon::ElementEvent&& event) -> bool
                 {
-                    if (event.type == interstice::EventType::KeyDown &&
-                        (event.state.lastKey == interstice::KeyCode::Return ||
-                         event.state.lastKey == interstice::KeyCode::Return2 ||
-                         event.state.lastKey == interstice::KeyCode::KeyPadEnter ||
-                         event.state.lastKey == interstice::KeyCode::Escape))
+                    if (event.type == tachyon::EventType::KeyDown &&
+                        (event.state.lastKey == tachyon::KeyCode::Return ||
+                         event.state.lastKey == tachyon::KeyCode::Return2 ||
+                         event.state.lastKey == tachyon::KeyCode::KeyPadEnter ||
+                         event.state.lastKey == tachyon::KeyCode::Escape))
                     {
-                        guiStateManager.Interaction().SetFocusID(interstice::ID::Invalid());
+                        guiStateManager.Interaction().SetFocusID(tachyon::ID::Invalid());
                         guiStateManager.TextEditorFocus().Clear();
                         return true;
                     }
@@ -1106,13 +1106,13 @@ namespace interstice
 
             bool modified = false;
             RegisterControl(
-                interstice::Element{
+                tachyon::Element{
                     .id           = id,
                     .eventHandler = std::move(editHandler),
                     .styleRef     = theme.regularControls.textbox,
                     .flags        = ElementFlags::DoNotMeasureText
                 },
-                [this, &modified, &value, cfg](interstice::Element& element)
+                [this, &modified, &value, cfg](tachyon::Element& element)
                 {
                     return textSystem->RegisterEditableNumber(element.id, value, TextEditBehavior::ContinuousUpdate,
                                                               element.styleRef, element.state, modified, cfg);
@@ -1132,7 +1132,7 @@ namespace interstice
 
             const float t = (maxVal > minVal) ? std::clamp((value - minVal) / (maxVal - minVal), 0.0f, 1.0f) : 0.0f;
 
-            interstice::Element track{};
+            tachyon::Element track{};
             track.id           = id;
             track.state        = guiStateManager.GetCurrentState(id);
             track.styleRef     = theme.sliderFieldTrackStyleRef;
@@ -1150,7 +1150,7 @@ namespace interstice
             const int32_t edgeWidth = (edgeLayout && edgeLayout->layoutData.width != LayoutData::kAutoSize)
                                     ? edgeLayout->layoutData.width : styleManager.Px(2);
             [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-                [bgStyle, fillStyle, edgeStyle, edgeWidth, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
+                [bgStyle, fillStyle, edgeStyle, edgeWidth, trackState, &widthMap, id, t](tachyon::CustomDrawContext& ctx)
                 {
                     // Both halves draw the full rounded track, sub-clipped at fillX.
                     // Coords are inner-rect-local, so the outer top-left is (outer.pos - inner.pos).
@@ -1164,22 +1164,22 @@ namespace interstice
                     const int32_t Y = outer.y - inner.y;
 
                     const int32_t fillX = int32_t(t * float(W) + 0.5f);
-                    const interstice::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
+                    const tachyon::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
 
                     if (fillX < W)
                         ctx.RenderBox(baseRect,
-                                      interstice::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
+                                      tachyon::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
                                       bgStyle, trackState);
                     if (fillX > 0)
                         ctx.RenderBox(baseRect,
-                                      interstice::IntRect{ .position = { X, Y }, .size = { fillX, H } },
+                                      tachyon::IntRect{ .position = { X, Y }, .size = { fillX, H } },
                                       fillStyle, trackState);
                     // The fill ends in an edge line, kept inside the track.
                     if (fillX > 0 && edgeWidth > 0)
                     {
                         const int32_t edgeX = std::clamp(fillX - edgeWidth, int32_t(0), std::max(0, W - edgeWidth));
                         ctx.RenderBox(baseRect,
-                                      interstice::IntRect{ .position = { X + edgeX, Y }, .size = { edgeWidth, H } },
+                                      tachyon::IntRect{ .position = { X + edgeX, Y }, .size = { edgeWidth, H } },
                                       edgeStyle, trackState);
                     }
                 });
@@ -1189,30 +1189,30 @@ namespace interstice
             VERIFY(elementStorage.BeginChildren());
             if (!text.empty())
             {
-                const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
-                const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
+                const tachyon::ID lblID = idManager.AllocateDynamicID("slider_field_label");
+                const tachyon::ElementState lblState = guiStateManager.GetCurrentState(lblID);
                 RegisterElement(
-                    interstice::Element {
+                    tachyon::Element {
                         .id       = lblID,
                         .textID   = textSystem->RegisterText(lblID, text, theme.sliderFieldTextStyleRef, lblState),
                         .styleRef = theme.sliderFieldTextStyleRef,
-                        .flags    = interstice::ElementFlags::NoInput,
+                        .flags    = tachyon::ElementFlags::NoInput,
                         .state    = lblState
                     },
                     LayoutOverride::Auto());
             }
             {
-                const interstice::ID valID = idManager.AllocateDynamicID("slider_field_value");
-                const interstice::ElementState valState = guiStateManager.GetCurrentState(valID);
+                const tachyon::ID valID = idManager.AllocateDynamicID("slider_field_value");
+                const tachyon::ElementState valState = guiStateManager.GetCurrentState(valID);
                 char valueBuffer[64]; // fits any float with 3 decimals
                 const auto formatted = std::format_to_n(valueBuffer, sizeof(valueBuffer), "{:.3f}", value);
                 const std::string_view valueText(valueBuffer, size_t(formatted.out - valueBuffer));
                 RegisterElement(
-                    interstice::Element {
+                    tachyon::Element {
                         .id       = valID,
                         .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldValueStyleRef, valState),
                         .styleRef = theme.sliderFieldValueStyleRef,
-                        .flags    = interstice::ElementFlags::NoInput,
+                        .flags    = tachyon::ElementFlags::NoInput,
                         .state    = valState
                     },
                     LayoutOverride::Auto());
@@ -1227,11 +1227,11 @@ namespace interstice
     {
         // Drag handler for the integer Slider / SliderField. Writes the caller's int
         // (must be stable storage) from the cursor X, rounded to a whole number.
-        interstice::EventHandler MakeIntSliderDrag(GUIStateManager& gsm, const ElementStorage& es,
+        tachyon::EventHandler MakeIntSliderDrag(GUIStateManager& gsm, const ElementStorage& es,
                                             int* valuePtr, int minVal, int maxVal, int trackWidth)
         {
             const int range = maxVal - minVal;
-            return [&gsm, &es, valuePtr, minVal, maxVal, range, trackWidth](interstice::ElementEvent&& event) -> bool
+            return [&gsm, &es, valuePtr, minVal, maxVal, range, trackWidth](tachyon::ElementEvent&& event) -> bool
             {
                 auto& store = gsm.GetElementDataStore();
                 auto setFromMouse = [&]()
@@ -1246,7 +1246,7 @@ namespace interstice
                 };
                 switch (event.type)
                 {
-                    case interstice::EventType::MouseDown:
+                    case tachyon::EventType::MouseDown:
                         if (event.state.LeftPressed())
                         {
                             gsm.Interaction().SetFocusID(event.id);
@@ -1256,13 +1256,13 @@ namespace interstice
                             return true;
                         }
                         break;
-                    case interstice::EventType::MouseMove:
+                    case tachyon::EventType::MouseMove:
                         if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
                         { setFromMouse(); return true; }
                         break;
-                    case interstice::EventType::MouseUp:
+                    case tachyon::EventType::MouseUp:
                         if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
-                        { s->draggingID = interstice::ID::Invalid(); return true; }
+                        { s->draggingID = tachyon::ID::Invalid(); return true; }
                         break;
                     default: break;
                 }
@@ -1290,7 +1290,7 @@ namespace interstice
             ? std::clamp(float(value - minVal) / float(range), 0.0f, 1.0f) : 0.0f;
 
         int* valuePtr = &value; // caller-owned, stable storage for the end-of-frame write
-        interstice::Element track{};
+        tachyon::Element track{};
         track.id       = id;
         track.state    = guiStateManager.GetCurrentState(id);
         track.styleRef = theme.sliderFieldTrackStyleRef;
@@ -1303,7 +1303,7 @@ namespace interstice
         const auto trackState = track.state;
         auto& widthMap        = m_sliderFieldTrack->Widths();
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-            [bgStyle, fillStyle, trackState, &widthMap, id, t](interstice::CustomDrawContext& ctx)
+            [bgStyle, fillStyle, trackState, &widthMap, id, t](tachyon::CustomDrawContext& ctx)
             {
                 const auto outer = ctx.ElementRect();
                 const auto inner = ctx.ElementInnerRect();
@@ -1314,42 +1314,42 @@ namespace interstice
                 const int32_t X = outer.x - inner.x;
                 const int32_t Y = outer.y - inner.y;
                 const int32_t fillX = int32_t(t * float(W) + 0.5f);
-                const interstice::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
+                const tachyon::IntRect baseRect{ .position = { X, Y }, .size = { W, H } };
                 if (fillX < W)
                     ctx.RenderBox(baseRect,
-                                  interstice::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
+                                  tachyon::IntRect{ .position = { X + fillX, Y }, .size = { W - fillX, H } },
                                   bgStyle, trackState);
                 if (fillX > 0)
                     ctx.RenderBox(baseRect,
-                                  interstice::IntRect{ .position = { X, Y }, .size = { fillX, H } },
+                                  tachyon::IntRect{ .position = { X, Y }, .size = { fillX, H } },
                                   fillStyle, trackState);
             });
 
         VERIFY(elementStorage.BeginChildren());
         if (!text.empty())
         {
-            const interstice::ID lblID = idManager.AllocateDynamicID("slider_field_label");
-            const interstice::ElementState lblState = guiStateManager.GetCurrentState(lblID);
+            const tachyon::ID lblID = idManager.AllocateDynamicID("slider_field_label");
+            const tachyon::ElementState lblState = guiStateManager.GetCurrentState(lblID);
             RegisterElement(
-                interstice::Element {
+                tachyon::Element {
                     .id       = lblID,
                     .textID   = textSystem->RegisterText(lblID, text, theme.sliderFieldTextStyleRef, lblState),
                     .styleRef = theme.sliderFieldTextStyleRef,
-                    .flags    = interstice::ElementFlags::NoInput,
+                    .flags    = tachyon::ElementFlags::NoInput,
                     .state    = lblState
                 },
                 LayoutOverride::Auto());
         }
         {
-            const interstice::ID valID = idManager.AllocateDynamicID("slider_field_value");
-            const interstice::ElementState valState = guiStateManager.GetCurrentState(valID);
+            const tachyon::ID valID = idManager.AllocateDynamicID("slider_field_value");
+            const tachyon::ElementState valState = guiStateManager.GetCurrentState(valID);
             const std::string valueText = std::format("{}", value);
             RegisterElement(
-                interstice::Element {
+                tachyon::Element {
                     .id       = valID,
                     .textID   = textSystem->RegisterText(valID, valueText, theme.sliderFieldTextStyleRef, valState),
                     .styleRef = theme.sliderFieldTextStyleRef,
-                    .flags    = interstice::ElementFlags::NoInput,
+                    .flags    = tachyon::ElementFlags::NoInput,
                     .state    = valState
                 },
                 LayoutOverride::Auto());
@@ -1377,7 +1377,7 @@ namespace interstice
         const float t = (range > 0)
             ? std::clamp(float(value - minVal) / float(range), 0.0f, 1.0f) : 0.0f;
 
-        interstice::Element track{};
+        tachyon::Element track{};
         track.id           = id;
         track.state        = guiStateManager.GetCurrentState(id);
         track.styleRef     = theme.sliderStyleRef;
@@ -1399,7 +1399,7 @@ namespace interstice
         const int grooveH = cssSize(theme.sliderGrooveStyleRef, false, styleManager.Px(4));
         const int knobSz  = cssSize(theme.sliderKnobStyleRef, true, styleManager.Px(14));
         [[maybe_unused]] auto cdRes = elementStorage.AddCustomDraw(trackRef,
-            [grooveStyle, fillStyle, knobStyle, trackState, &widthMap, id, t, grooveH, knobSz](interstice::CustomDrawContext& ctx)
+            [grooveStyle, fillStyle, knobStyle, trackState, &widthMap, id, t, grooveH, knobSz](tachyon::CustomDrawContext& ctx)
             {
                 const auto outer = ctx.ElementRect();
                 const auto inner = ctx.ElementInnerRect();
@@ -1411,15 +1411,15 @@ namespace interstice
 
                 // Groove: full width, centred; filled up to the knob's centre.
                 const int knobX = X + static_cast<int>(std::lround(t * float(std::max(0, W - knobSz))));
-                ctx.RenderBox(interstice::IntRect{ .position = { X, (Hc - grooveH) / 2 },
+                ctx.RenderBox(tachyon::IntRect{ .position = { X, (Hc - grooveH) / 2 },
                                             .size     = { W, grooveH } },
                               grooveStyle, trackState);
-                ctx.RenderBox(interstice::IntRect{ .position = { X, (Hc - grooveH) / 2 },
+                ctx.RenderBox(tachyon::IntRect{ .position = { X, (Hc - grooveH) / 2 },
                                             .size     = { knobX + knobSz / 2 - X, grooveH } },
                               fillStyle, trackState);
 
                 // Knob: kept inside the track.
-                ctx.RenderBox(interstice::IntRect{ .position = { knobX, (Hc - knobSz) / 2 },
+                ctx.RenderBox(tachyon::IntRect{ .position = { knobX, (Hc - knobSz) / 2 },
                                             .size     = { knobSz, knobSz } },
                               knobStyle, trackState);
             });

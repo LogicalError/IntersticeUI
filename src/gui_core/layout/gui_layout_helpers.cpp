@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <assert.h>
 
-namespace interstice
+namespace tachyon
 {
     int2 LayoutHelpers::ClampScrollOffsetToContent(int2 childOffset, const ElementRect& parentRect)
     {
@@ -33,7 +33,7 @@ namespace interstice
                                           const ElementRect& elementRect,
                                           int32_t& minContentWidth)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::CalculateLeafSize");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::CalculateLeafSize");
         minContentWidth = 0;
         // Border box without content
         int2 minimumStyleSize;
@@ -123,7 +123,7 @@ namespace interstice
     // Margin box -> border box on X, at the end of HorizontalPositioningPass.
     void LayoutHelpers::ApplyHorizontalStyleOffset(ElementRect& elementRect)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalStyleOffset");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalStyleOffset");
         elementRect.rect.x += elementRect.layoutStyle->margin.left;
         elementRect.rect.w -= elementRect.layoutStyle->margin.Horizontal();
         // A flex item shrunk to a zero margin box would otherwise go negative.
@@ -141,7 +141,7 @@ namespace interstice
     // Sets a container's rect.w to its MARGIN BOX width from its content width.
     void LayoutHelpers::ApplyHorizontalStyleSize(ElementRect& elementRect, const int32_t contentWidth)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalStyleSize");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalStyleSize");
         int32_t styleWidth = elementRect.layoutStyle->padding.Horizontal() + elementRect.layoutStyle->borderWidths.Horizontal();
         int32_t borderBoxWidth = elementRect.constraints.ApplyWidth(styleWidth + contentWidth);
         elementRect.rect.w = borderBoxWidth + elementRect.layoutStyle->margin.Horizontal();
@@ -150,7 +150,7 @@ namespace interstice
     // Sets a container's rect.h to its MARGIN BOX height from its content height.
     void LayoutHelpers::ApplyVerticalStyleSize(ElementRect& elementRect, const int32_t contentHeight)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::ApplyVerticalStyleSize");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::ApplyVerticalStyleSize");
         int32_t styleHeight = elementRect.layoutStyle->padding.Vertical() + elementRect.layoutStyle->borderWidths.Vertical();
         int32_t borderBoxHeight = elementRect.constraints.ApplyHeight(styleHeight + contentHeight);
         elementRect.rect.h = borderBoxHeight + elementRect.layoutStyle->margin.Vertical();
@@ -160,7 +160,7 @@ namespace interstice
                                                     const Element &element, 
                                                     const ElementRect &elementRect)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::RecalculateContentHeight");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::RecalculateContentHeight");
 
         int32_t availableWidth =
             elementRect.rect.w - elementRect.layoutStyle->GetMinWidth();
@@ -204,7 +204,7 @@ namespace interstice
 
     void LayoutHelpers::ApplyHorizontalPositionConstraints(OSWindowManager& osWindowManager, ElementStorage& storage, ElementRect& elementRect, const ElementRef& elementRef)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalPositionConstraints");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::ApplyHorizontalPositionConstraints");
         IntRect targetRect = {};
         LayoutOverride positionConstraints = elementRect.constraints;
         if (positionConstraints.x.type != PositionType::Relative)
@@ -296,7 +296,7 @@ namespace interstice
 
     void LayoutHelpers::ApplyVerticalPositionConstraints(OSWindowManager& osWindowManager, ElementStorage& storage, ElementRect& elementRect, const ElementRef& elementRef)
     {
-        //INTERSTICE_PROFILE_SCOPE("LayoutHelpers::ApplyVerticalPositionConstraints");
+        //TACHYON_PROFILE_SCOPE("LayoutHelpers::ApplyVerticalPositionConstraints");
         IntRect targetRect = {};
         LayoutOverride positionConstraints = elementRect.constraints;
         if (positionConstraints.y.type != PositionType::Relative)
@@ -433,4 +433,4 @@ namespace interstice
         }
     }
 
-} // namespace interstice
+} // namespace tachyon

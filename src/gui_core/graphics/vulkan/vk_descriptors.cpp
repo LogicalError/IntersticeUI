@@ -2,7 +2,7 @@
 #include <gui_core/graphics/vulkan/vk_descriptors.h>
 #include <gui_core/graphics/vulkan/vk_initializers.h>
 
-using namespace interstice::vulkan;
+using namespace tachyon::vulkan;
 
 void DescriptorLayoutBuilder::add_binding(uint32_t binding, VkDescriptorType type)
 {
@@ -80,7 +80,7 @@ VkDescriptorSet DescriptorAllocator::allocate(VkDevice device, VkDescriptorSetLa
     allocInfo.pSetLayouts = &layout;
 
     VkDescriptorSet ds;
-    INTERSTICE_VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, &ds));
+    TACHYON_VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, &ds));
 
     return ds;
 }
@@ -260,7 +260,7 @@ VkDescriptorSet DescriptorAllocatorGrowable::allocate(VkDevice device, VkDescrip
         poolToUse = get_pool(device);
         allocInfo.descriptorPool = poolToUse;
 
-       INTERSTICE_VK_CHECK( vkAllocateDescriptorSets(device, &allocInfo, &ds));
+       TACHYON_VK_CHECK( vkAllocateDescriptorSets(device, &allocInfo, &ds));
     }
   
     readyPools.push_back(poolToUse);

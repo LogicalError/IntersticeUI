@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     /// The app's undo history: steps that each undo and redo one change. Text fields push
     /// their committed edits here, and so can the app's own editors; Undo / Redo walk it.

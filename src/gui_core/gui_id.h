@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <memory>
 
-namespace interstice
+namespace tachyon
 {
     /// How an ID was made; stored in 2 bits of the ID.
     enum class IDMode : uint64_t
@@ -81,14 +81,14 @@ namespace interstice
     static_assert(sizeof(ID::Value::RangedParts) == sizeof(uint64_t), "ID size must be 64 bits");
     static_assert(sizeof(ID::Value::SubRangeParts) == sizeof(uint64_t), "ID size must be 64 bits");
 
-} // namespace interstice
+} // namespace tachyon
 
 namespace std
 {
     template<>
-    struct hash<interstice::ID>
+    struct hash<tachyon::ID>
     {
-        inline size_t operator()(const interstice::ID& id) const noexcept
+        inline size_t operator()(const tachyon::ID& id) const noexcept
         {
             return static_cast<size_t>(id.value.integer);
         }

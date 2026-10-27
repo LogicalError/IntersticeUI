@@ -11,7 +11,7 @@
 #include <span>
 
 
-namespace interstice
+namespace tachyon
 {
     // gui_core/windows/gui_window_flags.h
     enum class WindowFlags : uint32_t;
@@ -79,10 +79,10 @@ namespace interstice
         virtual bool IsTransparent() const = 0;
         /// A frame is recorded (drawn and submitted), then presented. RenderWindowFrame does
         /// both; a host loop records every window before presenting any.
-        virtual void RenderWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect, bool resizing) = 0;
+        virtual void RenderWindowFrame(tachyon::GraphicsContext* graphicsContext, tachyon::IntRect rect, bool resizing) = 0;
         /// Records and submits a frame without presenting it; PresentWindowFrame presents.
         /// The default does both, through RenderWindowFrame.
-        virtual void RecordWindowFrame(interstice::GraphicsContext* graphicsContext, interstice::IntRect rect) { RenderWindowFrame(graphicsContext, rect, false); }
+        virtual void RecordWindowFrame(tachyon::GraphicsContext* graphicsContext, tachyon::IntRect rect) { RenderWindowFrame(graphicsContext, rect, false); }
         /// May wait for vsync; nothing to do for a render-to-image window.
         virtual void PresentWindowFrame() {}
         /// A transparent window the OS composites from a CPU copy (a layered window on
@@ -247,4 +247,4 @@ namespace interstice
         GraphicsContext*      m_graphicsContext = nullptr;
 
     };
-} // namespace interstice
+} // namespace tachyon

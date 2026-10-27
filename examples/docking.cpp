@@ -7,38 +7,38 @@
 
 #include <string>
 
-class DockingApp : public interstice::GUIApplication
+class DockingApp : public tachyon::GUIApplication
 {
 public:
-    interstice::Result<void> Initialize(const InitializeOptions& options = {}) override
+    tachyon::Result<void> Initialize(const InitializeOptions& options = {}) override
     {
-        if (interstice::Result<void> result = GUIApplication::Initialize(options); !result)
+        if (tachyon::Result<void> result = GUIApplication::Initialize(options); !result)
             return result;
         windowID = idManager.CreateStaticID();
         dockID   = idManager.CreateStaticID();
 
         // Panels are created once; each draws its content in its callback.
-        const interstice::IconID noIcon = interstice::IconID::Invalid;
-        const interstice::ID scene   = CreatePanel(layout.panels, "Scene",   noIcon, [this] { ScenePanel(); });
-        const interstice::ID details = CreatePanel(layout.panels, "Details", noIcon, [this] { DetailsPanel(); });
-        const interstice::ID log     = CreatePanel(layout.panels, "Log",     noIcon, [this] { Text("Nothing logged yet."); });
-        const interstice::ID help    = CreatePanel(layout.panels, "Help",    noIcon, [this] { Text("Drag the tabs around."); });
+        const tachyon::IconID noIcon = tachyon::IconID::Invalid;
+        const tachyon::ID scene   = CreatePanel(layout.panels, "Scene",   noIcon, [this] { ScenePanel(); });
+        const tachyon::ID details = CreatePanel(layout.panels, "Details", noIcon, [this] { DetailsPanel(); });
+        const tachyon::ID log     = CreatePanel(layout.panels, "Log",     noIcon, [this] { Text("Nothing logged yet."); });
+        const tachyon::ID help    = CreatePanel(layout.panels, "Help",    noIcon, [this] { Text("Drag the tabs around."); });
 
         // Left column of 220 px, the rest split over a 150 px bottom row.
-        using interstice::DockSplitMode;
-        layout.root = interstice::MakeSplit(DockSplitMode::LeftPinned, 220,
-            interstice::MakeLeaf({ scene }),
-            interstice::MakeSplit(DockSplitMode::BottomPinned, 150,
-                interstice::MakeLeaf({ details, help }),
-                interstice::MakeLeaf({ log })));
+        using tachyon::DockSplitMode;
+        layout.root = tachyon::MakeSplit(DockSplitMode::LeftPinned, 220,
+            tachyon::MakeLeaf({ scene }),
+            tachyon::MakeSplit(DockSplitMode::BottomPinned, 150,
+                tachyon::MakeLeaf({ details, help }),
+                tachyon::MakeLeaf({ log })));
         return {};
     }
 
     void OnGUI() override
     {
-        if (BeginWindow(windowID, "Docking", theme.mainWindowStyleRef, interstice::LayoutOverride::FixedSize(900, 600).Centered()))
+        if (BeginWindow(windowID, "Docking", theme.mainWindowStyleRef, tachyon::LayoutOverride::FixedSize(900, 600).Centered()))
         {
-            BeginDockingContainer(dockID, &layout, interstice::LayoutOverride::Auto());
+            BeginDockingContainer(dockID, &layout, tachyon::LayoutOverride::Auto());
             EndDockingContainer();
             // Panels dragged out of the window get their own OS windows, owned by this one.
             EmitFloatingDockWindows();
@@ -50,7 +50,7 @@ private:
     void ScenePanel()
     {
         for (int i = 0; i < 4; ++i)
-            Button("Object " + std::to_string(i), [this, i] { selected = i; }, interstice::LayoutOverride{}.NoGrow());
+            Button("Object " + std::to_string(i), [this, i] { selected = i; }, tachyon::LayoutOverride{}.NoGrow());
     }
 
     void DetailsPanel()
@@ -62,9 +62,9 @@ private:
         EndLabelGroup();
     }
 
-    interstice::ID            windowID = interstice::ID::Invalid();
-    interstice::ID            dockID   = interstice::ID::Invalid();
-    interstice::DockingLayout layout;
+    tachyon::ID            windowID = tachyon::ID::Invalid();
+    tachyon::ID            dockID   = tachyon::ID::Invalid();
+    tachyon::DockingLayout layout;
     int                selected = 0;
     float              scale    = 1.0f;
 };
@@ -72,8 +72,8 @@ private:
 int main()
 {
     DockingApp app;
-    app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
-    interstice::Result<void> result = app.Initialize();
+    app.SetResourceRoot(TACHYON_RESOURCE_DIR);
+    tachyon::Result<void> result = app.Initialize();
     if (result)
         result = app.Run();
     app.Cleanup();

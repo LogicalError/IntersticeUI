@@ -8,7 +8,7 @@
 #include <chrono>
 #include <memory>
 
-namespace interstice
+namespace tachyon
 {
     bool TextEditorUsesKey(const InputState& state, bool readOnly)
     {
@@ -343,7 +343,7 @@ namespace interstice
                     break;
 
                 case EventType::MouseMove:
-                    if ((event.state.buttons & interstice::MouseButtons::Left) != interstice::MouseButtons::None)
+                    if ((event.state.buttons & tachyon::MouseButtons::Left) != tachyon::MouseButtons::None)
                     {
                         guiStateManager.Drag().UpdateFromInput(event.state);
                         return guiStateManager.Drag().GetDraggedID() == event.id;

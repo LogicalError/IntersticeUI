@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace interstice::ColorConvert
+namespace tachyon::ColorConvert
 {
     // ---- sRGB <-> Linear ----
 

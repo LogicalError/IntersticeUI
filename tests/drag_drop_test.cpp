@@ -13,7 +13,7 @@
 
 #include <any>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -174,4 +174,4 @@ namespace interstice
             EXPECT_FALSE(handler(MakeEvent(src, EventType::MouseMove, s)));
         }
     }
-} // namespace interstice
+} // namespace tachyon

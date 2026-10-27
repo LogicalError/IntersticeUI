@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string_view>
 
-namespace interstice
+namespace tachyon
 {
     /// Handle for text registered with the text system (ITextSystem::RegisterText and friends).
     enum class TextID : uint32_t { Invalid = 0 };
@@ -60,7 +60,7 @@ namespace interstice
 		WordChar,	///< at word boundaries; a word longer than the box breaks between characters (word-char)
 	};
 
-	/// Alignment of text in its box (CSS: text-align, -interstice-vertical-text-align).
+	/// Alignment of text in its box (CSS: text-align, -tachyon-vertical-text-align).
 	enum class TextAlign : uint8_t
 	{
 		Start = 0,	///< Horizontal: the language's start (left for LTR, right for RTL). Vertical: top.
@@ -159,7 +159,7 @@ namespace interstice
 		Absolute,		  ///< the value itself
 	};
 
-	/// Font metrics that bound a line for vertical alignment (CSS: -interstice-vertical-trim).
+	/// Font metrics that bound a line for vertical alignment (CSS: -tachyon-vertical-trim).
 	enum class VerticalTrim : uint8_t
 	{
 		Default = 0,    ///< ascender to descender; leaves room for accents
@@ -190,13 +190,13 @@ namespace interstice
 		TextWrap		 textWrapping		 = TextWrap::NoWrap;        ///< CSS: text-wrap
 		TextAlign		 horizontalAlignment = TextAlign::Start;        ///< CSS: text-align
 		/// Vertical position of the text (+ icon) block in its box; only Start / Center / End
-		/// (and their aliases) apply. CSS: `-interstice-vertical-text-align`.
+		/// (and their aliases) apply. CSS: `-tachyon-vertical-text-align`.
 		TextAlign		 verticalAlignment   = TextAlign::Start;
-		/// CSS: -interstice-text-baseline, dominant-baseline or vertical-align.
+		/// CSS: -tachyon-text-baseline, dominant-baseline or vertical-align.
 		TextBaseline	 baseline			 = TextBaseline::Alphabetic;
 		TextOverflow     textOverflow        = TextOverflow::Clip;     ///< CSS: text-overflow
 		WordWrap		 wrapMode			 = WordWrap::Normal;       ///< not read by the text system; see textWrapping
-		VerticalTrim	 verticalTrim		 = VerticalTrim::Default;  ///< CSS: -interstice-vertical-trim
+		VerticalTrim	 verticalTrim		 = VerticalTrim::Default;  ///< CSS: -tachyon-vertical-trim
 
 		uint64_t GetHashCode() const noexcept;
 
@@ -218,7 +218,7 @@ namespace interstice
 	class TextDecoration
 	{
 	public:
-		interstice::color4b	color = interstice::color4b{ 0,0,0,0 }; ///< line color
+		tachyon::color4b	color = tachyon::color4b{ 0,0,0,0 }; ///< line color
 		uint16_t		thickness = 0; ///< line thickness in CSS px; 0 = no line
 		uint16_t		offset = 0;    ///< CSS px from the default position; grows down for under / bottom lines, up otherwise
 		DecorationStyle	style = DecorationStyle::Solid; ///< line style
@@ -247,7 +247,7 @@ namespace interstice
 	{
 	public:
 		/// Solid text color (CSS: color); used when the state has no textColor of its own.
-		interstice::color4b		  color          = interstice::color4b{ 0,0,0,0 };
+		tachyon::color4b		  color          = tachyon::color4b{ 0,0,0,0 };
 		float				  fontSize       = 0;              ///< CSS: font-size, in CSS px
 		/// CSS: line-height, read per lineHeightType (by default a multiple of fontSize).
 		/// A fixed pitch, so a fallback font with tall metrics can't stretch a line.
@@ -305,4 +305,4 @@ namespace interstice
 		}
 	};
 
-}//namespace interstice
+}//namespace tachyon

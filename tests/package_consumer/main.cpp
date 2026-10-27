@@ -11,17 +11,17 @@
 
 namespace
 {
-    class ConsumerApp : public interstice::GUIApplication
+    class ConsumerApp : public tachyon::GUIApplication
     {
     public:
-        interstice::ID windowID     = interstice::ID::Invalid();
+        tachyon::ID windowID     = tachyon::ID::Invalid();
         int     framesBuilt  = 0;
 
         void OnGUI() override
         {
-            if (BeginWindow(windowID, "Package consumer", interstice::LayoutOverride{}.Size(320, 200)))
+            if (BeginWindow(windowID, "Package consumer", tachyon::LayoutOverride{}.Size(320, 200)))
             {
-                Label("IntersticeUI package consumer");
+                Label("TachyonUI package consumer");
             }
             EndWindow();
             if (++framesBuilt >= 3)
@@ -32,7 +32,7 @@ namespace
 
 int main()
 {
-    const auto requirements = interstice::vulkan::VulkanDeviceContext::GetDeviceRequirements();
+    const auto requirements = tachyon::vulkan::VulkanDeviceContext::GetDeviceRequirements();
     std::printf("GUI requires Vulkan %u.%u and %zu device extension(s)\n",
         VK_API_VERSION_MAJOR(requirements.apiVersion),
         VK_API_VERSION_MINOR(requirements.apiVersion),
@@ -40,7 +40,7 @@ int main()
 
     // Loads the installed resources, whatever the working directory is.
     ConsumerApp app;
-    app.SetResourceRoot(INTERSTICE_RESOURCE_DIR);
+    app.SetResourceRoot(TACHYON_RESOURCE_DIR);
     if (!app.Initialize())
     {
         std::printf("GUIApplication::Initialize failed\n");

@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace interstice 
+namespace tachyon 
 {
     // ============================================================================
     // StyleSheet - result of parsing a CSS-inspired style file
@@ -66,9 +66,9 @@ namespace interstice
         const CustomProperty* GetCustomProperty(std::string_view name) const;
     };
 
-    /// Parses a theme's CSS (the subset IntersticeUI supports, see docs/css.md) into a
+    /// Parses a theme's CSS (the subset TachyonUI supports, see docs/css.md) into a
     /// StyleSheet. Errors don't stop it: a bad declaration or rule is skipped and
     /// reported in StyleSheet::errors, and the rest is parsed.
     StyleSheet ParseStyleSheet(std::string_view source);
 
-} // namespace interstice
+} // namespace tachyon

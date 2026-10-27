@@ -5,7 +5,7 @@
 
 #include <gui_core/input/gui_undo_history.h>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

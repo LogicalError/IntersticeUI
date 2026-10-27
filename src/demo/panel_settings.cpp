@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -126,8 +126,8 @@ namespace interstice
 
         // The dynamic-ID counter makes repeated calls with one hint unique and
         // stable frame to frame.
-        const interstice::ID allCatID = idManager.AllocateDynamicID("shortcutCat_All");
-        interstice::ID catIDs[32];
+        const tachyon::ID allCatID = idManager.AllocateDynamicID("shortcutCat_All");
+        tachyon::ID catIDs[32];
         const uint32_t cappedCount = modeCount <= 32 ? modeCount : 32;
         for (uint32_t m = 0; m < cappedCount; m++)
             catIDs[m] = idManager.AllocateDynamicID("shortcutCat");
@@ -138,10 +138,10 @@ namespace interstice
         // keep-with-next, which disables its flex-grow and collapses the split.
         BeginHorizontal(idManager.AllocateDynamicID("shortcutSearchRow"),
                         theme.searchRowStyleRef,
-                        interstice::LayoutOverride::Auto().NoShrink());
+                        tachyon::LayoutOverride::Auto().NoShrink());
         if (SearchField(demo.settingsShortcutsSearch, demo.findIcon,
                         TextEditBehavior::ContinuousUpdate,
-                        interstice::LayoutOverride{}.FlexGrow(1)))
+                        tachyon::LayoutOverride{}.FlexGrow(1)))
         {
             demo.settingsShortcutsSearchLower.clear();
             demo.settingsShortcutsSearchLower.reserve(demo.settingsShortcutsSearch.size());
@@ -172,7 +172,7 @@ namespace interstice
         // table scrolls (the outer split in controls_settings.cpp is bounded too).
         BeginHorizontal(idManager.AllocateDynamicID("shortcutSplit"),
                         theme.flexFillRowStyleRef,
-                        interstice::LayoutOverride::Auto().FlexGrow(1));
+                        tachyon::LayoutOverride::Auto().FlexGrow(1));
 
         // Row IDs are the static category IDs, so the sync below can map
         // sub-range row IDs to and from `selection`.
@@ -188,15 +188,15 @@ namespace interstice
             TreeViewRow r{};
             r.id   = allCatID;
             r.name = "All";
-            r.icon = interstice::IconID::Invalid;
+            r.icon = tachyon::IconID::Invalid;
             catRows.push_back(std::move(r));
         }
         for (uint32_t m = 0; m < cappedCount; m++)
         {
             TreeViewRow r{};
             r.id   = catIDs[m];
-            r.name = commandManager.GetModeName(interstice::CommandMode(m));
-            r.icon = interstice::IconID::Invalid;
+            r.name = commandManager.GetModeName(tachyon::CommandMode(m));
+            r.icon = tachyon::IconID::Invalid;
             catRows.push_back(std::move(r));
         }
         RebuildTreeViewIndex(catRows);
@@ -205,9 +205,9 @@ namespace interstice
         // sync: clicks only mutate catInternal, and the forward sync would
         // clobber them.
         selection.selectedIDs.clear();
-        for (const interstice::ID& subRangeID : catInternal.selectedIDs)
+        for (const tachyon::ID& subRangeID : catInternal.selectedIDs)
         {
-            if (subRangeID.GetMode() != interstice::IDMode::SubRange) continue;
+            if (subRangeID.GetMode() != tachyon::IDMode::SubRange) continue;
             const int visIdx = static_cast<int>(subRangeID.value.subRangeParts.index);
             if (visIdx < 0 || visIdx >= int(catVisibleIdx.size())) continue;
             const int flatIdx = catVisibleIdx[visIdx];
@@ -220,7 +220,7 @@ namespace interstice
 
         // Forward sync (selection -> catInternal). Row IDs exist once the table
         // has run once.
-        if (catTableState.RowIDInRange(0) != interstice::ID::Invalid())
+        if (catTableState.RowIDInRange(0) != tachyon::ID::Invalid())
         {
             catInternal.selectedIDs.clear();
             for (size_t i = 0; i < catRows.size(); ++i)
@@ -237,18 +237,18 @@ namespace interstice
         VirtualTreeView(idManager.AllocateDynamicID("shortcutCatTree"),
                         catRows, catVisibleIdx, catTableState,
                         shortcutCategoryStyleRef,
-                        interstice::LayoutOverride::Auto().FixedWidth(CssPx(demo.settingsShortcutsCategoryWidth)).NoGrow(),
+                        tachyon::LayoutOverride::Auto().FixedWidth(CssPx(demo.settingsShortcutsCategoryWidth)).NoGrow(),
                         "Category");
 
         {
-            interstice::ID sizerID = idManager.AllocateDynamicID("shortcutSizer");
-            interstice::Element sizer{};
+            tachyon::ID sizerID = idManager.AllocateDynamicID("shortcutSizer");
+            tachyon::Element sizer{};
             sizer.id       = sizerID;
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
-            sizer.eventHandler = interstice::MakeHorizontalSizerHandler(
+            sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
                 guiStateManager, demo.settingsShortcutsCategoryWidth, 100, 400, nullptr, nullptr, false, styleManager.GetUIScale());
-            auto sRes = elementStorage.Add(std::move(sizer), interstice::LayoutOverride::FixedWidth(4));
+            auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));
         }
@@ -257,7 +257,7 @@ namespace interstice
         // body scrolls instead of overflowing.
         BeginHorizontal(idManager.AllocateDynamicID("shortcutGridCol"),
                         theme.flexFillRowStyleRef,
-                        interstice::LayoutOverride::Auto().FlexGrow(1));
+                        tachyon::LayoutOverride::Auto().FlexGrow(1));
 
         // The Context column only shows when more than one mode is selected.
         uint32_t selectedModes = allSelected ? modeCount : 0;
@@ -286,7 +286,7 @@ namespace interstice
             {
                 if (!allSelected && selection.selectedIDs.count(catIDs[mode]) == 0)
                     continue;
-                for (const CommandID id : commandManager.GetCommandsForMode(interstice::CommandMode(mode)))
+                for (const CommandID id : commandManager.GetCommandsForMode(tachyon::CommandMode(mode)))
                 {
                     const uint32_t i = uint32_t(CommandManager::IndexOf(id));
                     const auto& e = entries[i];
@@ -330,18 +330,18 @@ namespace interstice
                 // record/replay. Commands without an icon use the indented
                 // style so their labels line up with the icon'd ones.
                 std::string label = e.description.empty() ? "(no description)" : e.description;
-                const interstice::IconID icon = e.icon;
-                const interstice::StyleRef labelStyle = (icon != interstice::IconID::Invalid)
+                const tachyon::IconID icon = e.icon;
+                const tachyon::StyleRef labelStyle = (icon != tachyon::IconID::Invalid)
                     ? theme.iconLabelStyleRef : theme.iconLabelNoIconStyleRef;
                 Cell([this, icon, labelStyle, label = std::move(label)]() {
-                    const interstice::ID id = idManager.AllocateDynamicID();
-                    interstice::Element el{};
+                    const tachyon::ID id = idManager.AllocateDynamicID();
+                    tachyon::Element el{};
                     el.id       = id;
-                    el.flags    = interstice::ElementFlags::NoInput;
+                    el.flags    = tachyon::ElementFlags::NoInput;
                     el.state    = guiStateManager.GetCurrentState(id);
                     el.styleRef = labelStyle;
                     el.textID   = textSystem->RegisterText(id, icon, label, el.styleRef, el.state);
-                    auto res = elementStorage.Add(std::move(el), interstice::LayoutOverride::Auto());
+                    auto res = elementStorage.Add(std::move(el), tachyon::LayoutOverride::Auto());
                     VERIFY(res.status);
                     VERIFY(windowRegistry.Add(res.ref));
                 });
@@ -352,13 +352,13 @@ namespace interstice
             cols[1].sortAscending = [this](int a, int b) {
                 const auto& vr = demo.settingsShortcutsVisRows;
                 return CaseInsensitiveLess(
-                    commandManager.GetModeName(interstice::CommandMode(vr[a].mode)),
-                    commandManager.GetModeName(interstice::CommandMode(vr[b].mode)));
+                    commandManager.GetModeName(tachyon::CommandMode(vr[a].mode)),
+                    commandManager.GetModeName(tachyon::CommandMode(vr[b].mode)));
             };
             cols[1].generateCell = [this](int rowIdx) {
                 auto& vr = demo.settingsShortcutsVisRows;
                 if (rowIdx < 0 || rowIdx >= int(vr.size())) return;
-                Cell(commandManager.GetModeName(interstice::CommandMode(vr[rowIdx].mode)));
+                Cell(commandManager.GetModeName(tachyon::CommandMode(vr[rowIdx].mode)));
             };
 
             // Shortcut - the bound key combo (a flat rebind button).
@@ -437,7 +437,7 @@ namespace interstice
                      int(visRows.size()),
                      /*rowHeight*/0,
                      shortcutTableStyleRef,   // bound to the pane; columns scroll instead of growing the table
-                     interstice::LayoutOverride{}.FlexGrow(1));
+                     tachyon::LayoutOverride{}.FlexGrow(1));
 
         EndHorizontal();  // shortcutGridCol
         EndHorizontal();  // shortcutSplit
@@ -446,7 +446,7 @@ namespace interstice
     void Application::RenderSettingsAbout()
     {
         Text(idManager.AllocateDynamicID("settingsTitle"), "About", settingsTitleStyleRef);
-        Text("IntersticeUI — Vulkan-based GUI framework demo.");
+        Text("TachyonUI — Vulkan-based GUI framework demo.");
         Text("These are placeholder settings pages.");
     }
 

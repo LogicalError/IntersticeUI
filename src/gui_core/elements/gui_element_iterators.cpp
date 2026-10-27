@@ -1,6 +1,6 @@
 #include <gui_core/elements/gui_element_storage.h>
 
-namespace interstice
+namespace tachyon
 {
     // ------------------------------------------------------------------------
     // DepthScanCursor (members)
@@ -35,4 +35,4 @@ namespace interstice
         return storage.GetChildRectSpanUnsafe(parentDepth + 1, childRange);
     }
 
-}//namespace interstice
+}//namespace tachyon

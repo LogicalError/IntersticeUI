@@ -9,7 +9,7 @@
 
 namespace
 {
-    using namespace interstice;
+    using namespace tachyon;
 
     // Node 0 has `wires` outputs; node 1 has as many inputs, each wired to the matching output.
     NodeView WiredPair(int wires)

@@ -16,17 +16,17 @@
 // Docking + panel data model: Panel, DockingLayout (tree + panel registry),
 // per-frame construction state, hit-test results and floating windows.
 
-namespace interstice
+namespace tachyon
 {
 
     // ---- TabBar: reorderable tabs ----
     /// Construction state of the current tab bar; internal.
     struct TabBarState {
-        interstice::ID barID = interstice::ID::Invalid();
+        tachyon::ID barID = tachyon::ID::Invalid();
         int*    selectedIndex = nullptr;
         int     nextTabIndex = 0;
         std::function<void(int)>               onClose;    ///< tab index, when its close button is clicked
-        std::function<void(int, interstice::int2)>    onDragOut;  ///< tab index and mouse release pos
+        std::function<void(int, tachyon::int2)>    onDragOut;  ///< tab index and mouse release pos
     };
 
     /// A tab bar's keyboard navigation, kept across frames (element data store, by bar ID).
@@ -40,9 +40,9 @@ namespace interstice
     // panel IDs; the Panels live in the DockingLayout.
     /// A unit of docked UI content: a title, an optional icon, and the callback that builds it.
     struct Panel {
-        interstice::ID               id = interstice::ID::Invalid();      ///< key in DockingLayout::panels
+        tachyon::ID               id = tachyon::ID::Invalid();      ///< key in DockingLayout::panels
         std::string           title;                                      ///< tab label
-        interstice::IconID           icon = interstice::IconID::Invalid;  ///< tab icon
+        tachyon::IconID           icon = tachyon::IconID::Invalid;  ///< tab icon
 
         /// Optional kind tag that presets serialize to pick a factory on load.
         /// Empty for one-off panels.
@@ -71,17 +71,17 @@ namespace interstice
 
         /// Scroll position, kept here so a hidden tab keeps it (ScrollManagement prunes
         /// handles of elements not in the tree).
-        interstice::int2             scrollOffset { 0, 0 };
+        tachyon::int2             scrollOffset { 0, 0 };
     };
 
     /// A docking area: the split/tab tree and the panels its leaves refer to by ID.
     struct DockingLayout {
-        std::unique_ptr<interstice::DockNode>     root;    ///< the dock tree; leaves hold panel tabs
-        std::unordered_map<interstice::ID, Panel> panels;  ///< every panel of this layout, by ID
+        std::unique_ptr<tachyon::DockNode>     root;    ///< the dock tree; leaves hold panel tabs
+        std::unordered_map<tachyon::ID, Panel> panels;  ///< every panel of this layout, by ID
 
         /// OS window hosting this layout, refreshed each frame. A cross-window tab drop
         /// raises it, since the OS may otherwise focus an arbitrary window when the source closes.
-        interstice::ID hostWindowID = interstice::ID::Invalid();
+        tachyon::ID hostWindowID = tachyon::ID::Invalid();
 
         /// A torn-off window's layout: a root leaf puts its tabs in the window's title bar.
         bool                  tabsInTitleBar = false;
@@ -91,19 +91,19 @@ namespace interstice
     /// Construction state of the current docking container. Valid only between
     /// BeginDockingContainer and EndDockingContainer; handlers must capture pointers instead.
     struct DockingConstructionState {
-        interstice::ID        containerID = interstice::ID::Invalid();
+        tachyon::ID        containerID = tachyon::ID::Invalid();
         DockingLayout* layout      = nullptr;
     };
 
     /// Result of FindDockLeafAtScreenPos: the leaf and its layout, both null on a miss.
     struct DockLeafResult {
-        interstice::DockNode* leaf   = nullptr;
+        tachyon::DockNode* leaf   = nullptr;
         DockingLayout* layout = nullptr;
     };
 
     /// Result of FindDockDropTargetAtScreenPos: the drop target and its layout.
     struct DockDropResult {
-        interstice::DockDropTarget target;
+        tachyon::DockDropTarget target;
         DockingLayout*      layout = nullptr;
     };
 
@@ -111,12 +111,12 @@ namespace interstice
     // A torn-off tab dropped outside every dock area gets its own OS window.
     /// A floating OS window holding torn-off panels in its own layout.
     struct FloatingDockWindow {
-        interstice::ID       windowID    = interstice::ID::Invalid();  ///< static, persists across frames
+        tachyon::ID       windowID    = tachyon::ID::Invalid();  ///< static, persists across frames
         DockingLayout layout;                                     ///< the window's own dock tree and panels
-        interstice::int2     spawnPosition {};                   ///< screen pixels, used on the first frame only
+        tachyon::int2     spawnPosition {};                   ///< screen pixels, used on the first frame only
         bool          positioned = false;                 ///< once true, the OS manages the position
         DockingLayout*  home       = nullptr;                ///< layout Dock returns the panels to
-        interstice::ID  homeLeafID = interstice::ID::Invalid(); ///< leaf the panels were torn from
+        tachyon::ID  homeLeafID = tachyon::ID::Invalid(); ///< leaf the panels were torn from
         bool            dockRequested = false;                ///< Dock clicked; done next frame
     };
 

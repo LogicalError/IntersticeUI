@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -211,7 +211,7 @@ namespace interstice
         if (childRects.size() == 0)
             return 0;
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::HorizontalSizing");
+        //TACHYON_PROFILE_SCOPE("LayoutFlexbox::HorizontalSizing");
         const FlexProperties& flexLayout = parentRect.layoutStyle->layoutData.flex;
         switch (flexLayout.direction)
         {
@@ -275,7 +275,7 @@ namespace interstice
         if (childRects.empty())
             return 0;
         
-        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::VerticalSizing");
+        //TACHYON_PROFILE_SCOPE("LayoutFlexbox::VerticalSizing");
         const FlexProperties &flexLayout = parentRect.layoutStyle->layoutData.flex;
         switch (flexLayout.direction)
         {
@@ -331,7 +331,7 @@ namespace interstice
         if (childRects.empty())
             return;
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::HorizontalPositioning");
+        //TACHYON_PROFILE_SCOPE("LayoutFlexbox::HorizontalPositioning");
         const LayoutStyle* layoutStyle = parentRect.layoutStyle;
         const FlexProperties& flexLayout = layoutStyle->layoutData.flex;
         const IntRect& parentContentRect = parentRect.innerRect;
@@ -447,7 +447,7 @@ namespace interstice
             return {};
         }
 
-        //INTERSTICE_PROFILE_SCOPE("LayoutFlexbox::VerticalPositioning");
+        //TACHYON_PROFILE_SCOPE("LayoutFlexbox::VerticalPositioning");
         const LayoutStyle* layoutStyle = parentRect.layoutStyle;
         const FlexProperties& flexLayout = layoutStyle->layoutData.flex;
         const IntRect& parentContentRect = parentRect.innerRect;

@@ -7,7 +7,7 @@
 
 // MessageDialog: a modal question with verb buttons (see MessageDialogDesc).
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {
@@ -170,7 +170,7 @@ namespace interstice
                 { .type = ContentRun::Text, .text = label.substr(0, label.empty() ? 0 : 1), .textStyleOverride = &underlined },
                 { .type = ContentRun::Text, .text = label.empty() ? label : label.substr(1) },
             };
-            auto click = interstice::MakeButtonHandler(guiStateManager, [choose, i] { choose(i); });
+            auto click = tachyon::MakeButtonHandler(guiStateManager, [choose, i] { choose(i); });
             RegisterControl(Element{ .id = bid,
                 .eventHandler = [click, choose, cancelButton, mnemonics](ElementEvent&& event) -> bool
                 {

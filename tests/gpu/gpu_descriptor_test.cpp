@@ -25,11 +25,11 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
 
     // Descriptors may alias, so one real image backs every write.
     uint32_t pixel = 0xffffffffu;
-    interstice::Image* img = dc.CreateImage(&pixel, interstice::uint2{ 1, 1 },
-                                     interstice::ImageFormat::R8G8B8A8,
-                                     interstice::Sampler::LinearClampToEdge, false);
+    tachyon::Image* img = dc.CreateImage(&pixel, tachyon::uint2{ 1, 1 },
+                                     tachyon::ImageFormat::R8G8B8A8,
+                                     tachyon::Sampler::LinearClampToEdge, false);
     ASSERT_NE(img, nullptr);
-    VkImageView view = static_cast<interstice::vulkan::VulkanImage*>(img)->imageView;
+    VkImageView view = static_cast<tachyon::vulkan::VulkanImage*>(img)->imageView;
 
     constexpr uint32_t kCount = 17;
     std::vector<VkDescriptorImageInfo> infos(
@@ -37,8 +37,8 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
         VkDescriptorImageInfo{ dc.defaultSamplerLinear, view,
                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
 
-    interstice::vulkan::DescriptorAllocatorGrowable alloc;
-    std::vector<interstice::vulkan::DescriptorAllocatorGrowable::PoolSizeRatio> ratios = {
+    tachyon::vulkan::DescriptorAllocatorGrowable alloc;
+    std::vector<tachyon::vulkan::DescriptorAllocatorGrowable::PoolSizeRatio> ratios = {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256.0f }
     };
     alloc.init(dc.device, 4, ratios, dc.AllocationCallbacks());
@@ -47,7 +47,7 @@ TEST_F(GpuTest, TextureDescriptorWriteBeyondSixteenIsValidationClean)
 
     // Mirror the per-frame write in VulkanGraphicsContext::RenderWindowFrame:
     // update_set fills in dstSet for each pushed write.
-    interstice::vulkan::DescriptorWriter writer;
+    tachyon::vulkan::DescriptorWriter writer;
     writer.writes.push_back(VkWriteDescriptorSet{
         .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .dstBinding      = 0,

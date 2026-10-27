@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdio>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

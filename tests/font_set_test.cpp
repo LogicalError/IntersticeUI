@@ -8,7 +8,7 @@
 #include <iterator>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace
     {

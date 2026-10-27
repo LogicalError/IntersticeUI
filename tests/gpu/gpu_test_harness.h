@@ -82,37 +82,37 @@ namespace GpuTestHarness
     class GpuTest : public ::testing::Test
     {
     protected:
-        interstice::GraphicsContext*          graphicsContext = nullptr;
-        interstice::SDLWindowBackend*         windowBackend   = nullptr;
-        interstice::vulkan::VulkanGraphicsContext* vk              = nullptr;
+        tachyon::GraphicsContext*          graphicsContext = nullptr;
+        tachyon::SDLWindowBackend*         windowBackend   = nullptr;
+        tachyon::vulkan::VulkanGraphicsContext* vk              = nullptr;
         ValidationSink                 sink;
 
         // Minimal style/gradient managers so the render path (PrepareFrame) has
         // something to upload. Device-independent, so safe as plain members.
-        interstice::GradientManager           gradientManager{ 256 };
-        interstice::StyleManager              styleManager{ gradientManager };
+        tachyon::GradientManager           gradientManager{ 256 };
+        tachyon::StyleManager              styleManager{ gradientManager };
 
         void SetUp() override
         {
-            vk              = new interstice::vulkan::VulkanGraphicsContext();
+            vk              = new tachyon::vulkan::VulkanGraphicsContext();
             graphicsContext = vk;
-            windowBackend   = new interstice::SDLWindowBackend();
+            windowBackend   = new tachyon::SDLWindowBackend();
             windowBackend->SetGraphicsContext(graphicsContext);
 
-            interstice::vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
+            tachyon::vulkan::VulkanDeviceContext::InstanceDebugConfig cfg;
             cfg.callback             = &ValidationCallback;
             cfg.userData             = &sink;
             // Synchronization validation is the most crash-prone layer feature. Set
-            // INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION=1 to run with core validation only,
+            // TACHYON_GPU_TEST_NO_SYNC_VALIDATION=1 to run with core validation only,
             // e.g. to tell a layer crash from a product bug.
 #if defined(_MSC_VER)
             char*  noSync    = nullptr;
             size_t noSyncLen = 0;
-            _dupenv_s(&noSync, &noSyncLen, "INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION");
+            _dupenv_s(&noSync, &noSyncLen, "TACHYON_GPU_TEST_NO_SYNC_VALIDATION");
             cfg.enableSyncValidation = noSync == nullptr;
             free(noSync);
 #else
-            cfg.enableSyncValidation = std::getenv("INTERSTICE_GPU_TEST_NO_SYNC_VALIDATION") == nullptr;
+            cfg.enableSyncValidation = std::getenv("TACHYON_GPU_TEST_NO_SYNC_VALIDATION") == nullptr;
 #endif
             vk->deviceContext.SetInstanceDebugConfig(cfg);
 
@@ -127,14 +127,14 @@ namespace GpuTestHarness
 
             // With zero styles PrepareFrame would upload a zero-size buffer, which
             // the driver rejects.
-            styleManager.Register(interstice::Style{});
+            styleManager.Register(tachyon::Style{});
         }
 
         // ---- Swapchain tier: a real (hidden) window + VulkanWindowContext ----
         struct OwnedWindowContext
         {
-            interstice::vulkan::VulkanWindowContext* context  = nullptr;
-            interstice::OSWindowHandle          osHandle = nullptr;
+            tachyon::vulkan::VulkanWindowContext* context  = nullptr;
+            tachyon::OSWindowHandle          osHandle = nullptr;
         };
         std::vector<OwnedWindowContext> m_windowContexts;
         uint32_t                        m_nextWindowId = 7000; // monotonic - never reused
@@ -148,19 +148,19 @@ namespace GpuTestHarness
         // nullptr (the test should SKIP) if no window/surface can be created.
         // Defaults to Hidden; pass WindowFlags::None when the test must actually
         // render/present (acquire+present need a presentable surface).
-        interstice::vulkan::VulkanWindowContext* CreateHiddenWindowContext(
-            interstice::int2 size = { 320, 240 },
-            interstice::WindowFlags flags = interstice::WindowFlags::Hidden)
+        tachyon::vulkan::VulkanWindowContext* CreateHiddenWindowContext(
+            tachyon::int2 size = { 320, 240 },
+            tachyon::WindowFlags flags = tachyon::WindowFlags::Hidden)
         {
-            interstice::OSWindowHandle osHandle =
+            tachyon::OSWindowHandle osHandle =
                 windowBackend->CreateWindow("gpu-test", size, flags, nullptr);
             if (osHandle == nullptr) return nullptr;
 
-            interstice::ID id{};
-            id.value.dynamicParts.mode      = interstice::IDMode::Static;
+            tachyon::ID id{};
+            id.value.dynamicParts.mode      = tachyon::IDMode::Static;
             id.value.dynamicParts.hashValue = m_nextWindowId++;
 
-            auto* ctx = interstice::vulkan::VulkanWindowContext::Create(
+            auto* ctx = tachyon::vulkan::VulkanWindowContext::Create(
                 id, windowBackend->GetNativeHandle(osHandle), osHandle, size,
                 flags, &vk->deviceContext, [] {});
             if (ctx == nullptr) { windowBackend->DestroyWindow(osHandle); return nullptr; }
@@ -171,14 +171,14 @@ namespace GpuTestHarness
 
         // A render-to-image window context: no OS window and no swapchain; ReadPixels
         // returns its frames. For tests that need pixels, not a presented window.
-        interstice::vulkan::VulkanWindowContext* CreateImageWindowContext(interstice::int2 size = { 320, 240 })
+        tachyon::vulkan::VulkanWindowContext* CreateImageWindowContext(tachyon::int2 size = { 320, 240 })
         {
-            interstice::ID id{};
-            id.value.dynamicParts.mode      = interstice::IDMode::Static;
+            tachyon::ID id{};
+            id.value.dynamicParts.mode      = tachyon::IDMode::Static;
             id.value.dynamicParts.hashValue = m_nextWindowId++;
 
-            auto* ctx = interstice::vulkan::VulkanWindowContext::Create(
-                id, nullptr, nullptr, size, interstice::WindowFlags::RenderToImage, &vk->deviceContext, [] {});
+            auto* ctx = tachyon::vulkan::VulkanWindowContext::Create(
+                id, nullptr, nullptr, size, tachyon::WindowFlags::RenderToImage, &vk->deviceContext, [] {});
             if (ctx == nullptr) return nullptr;
             m_windowContexts.push_back({ ctx, nullptr });
             return ctx;
@@ -187,19 +187,19 @@ namespace GpuTestHarness
         // Drive one full window frame that emits a single dot, running the real
         // upload + draw + present path. This allocates the window's per-target
         // GPU buffers, so window-destroy buffer reclamation can be observed.
-        void RenderOneFrameWithDot(interstice::vulkan::VulkanWindowContext* ctx, interstice::int2 size)
+        void RenderOneFrameWithDot(tachyon::vulkan::VulkanWindowContext* ctx, tachyon::int2 size)
         {
             graphicsContext->PrepareFrame(styleManager, gradientManager, 0.0f);
-            interstice::GUIRenderer* r = graphicsContext->guiRenderer;
+            tachyon::GUIRenderer* r = graphicsContext->guiRenderer;
             r->Reset();
             if (r->BeginWindow(ctx->GetID()))
             {
-                r->RenderDot(interstice::float2{ 8.0f, 8.0f },
-                             interstice::IntRect{ 0, 0, size.x, size.y },
-                             4.0f, interstice::color4f{ 1, 1, 1, 1 });
+                r->RenderDot(tachyon::float2{ 8.0f, 8.0f },
+                             tachyon::IntRect{ 0, 0, size.x, size.y },
+                             4.0f, tachyon::color4f{ 1, 1, 1, 1 });
                 r->EndWindow();
             }
-            ctx->RenderWindowFrame(graphicsContext, interstice::IntRect{ 0, 0, size.x, size.y }, false);
+            ctx->RenderWindowFrame(graphicsContext, tachyon::IntRect{ 0, 0, size.x, size.y }, false);
         }
 
         void TearDown() override

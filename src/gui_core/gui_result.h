@@ -4,7 +4,7 @@
 #include <utility>
 #include <variant>
 
-namespace interstice
+namespace tachyon
 {
     /// Why a call failed.
     enum class ErrorCode : uint8_t

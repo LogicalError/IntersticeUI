@@ -12,7 +12,7 @@
 
 #include <skribidi/skb_attributes.h>
 
-namespace interstice
+namespace tachyon
 {
     using GUITest::SkribidiHeadlessTest;
 
@@ -393,7 +393,7 @@ namespace interstice
 }
 
 #include <harfbuzz/hb.h>
-namespace interstice { namespace {
+namespace tachyon { namespace {
     // The CJK fallback must be a full Noto Sans CJK font: subset fonts keep one
     // region's glyphs, so they can't switch letterforms by language (locl).
     TEST(SkribidiFonts, CjkFontHasRegionalFormsByLanguage)

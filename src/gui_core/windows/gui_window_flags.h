@@ -2,7 +2,7 @@
 
 #include <gui_core/gui_enum_operators.h>
 
-namespace interstice
+namespace tachyon
 {
     /// How an OS window is made and behaves (IWindowBackend::CreateWindow); flags combine with |.
     enum class WindowFlags : uint32_t
@@ -52,5 +52,5 @@ namespace interstice
 
 		DefaultFlags = AllowHighDPI
     };
-    INTERSTICE_ENUM_OPERATORS(WindowFlags)
+    TACHYON_ENUM_OPERATORS(WindowFlags)
 };

@@ -7,22 +7,22 @@
 # just because our code changes. Deleting the root `build/` tree does wipe
 # the cache, so a clean reconfigure pays the third-party build cost once.
 #
-# To force a rebuild without wiping `build/`: set `-DINTERSTICE_THIRD_PARTY_REBUILD=ON`.
+# To force a rebuild without wiping `build/`: set `-DTACHYON_THIRD_PARTY_REBUILD=ON`.
 
-set(INTERSTICE_TP_INSTALL "${PROJECT_BINARY_DIR}/third_party/install" CACHE PATH
+set(TACHYON_TP_INSTALL "${PROJECT_BINARY_DIR}/third_party/install" CACHE PATH
   "Install prefix for prebuilt third-party libraries")
 
-set(INTERSTICE_TP_BUILD "${PROJECT_BINARY_DIR}/third_party/build" CACHE PATH
+set(TACHYON_TP_BUILD "${PROJECT_BINARY_DIR}/third_party/build" CACHE PATH
   "Build tree for the third-party superproject")
 
-option(INTERSTICE_THIRD_PARTY_REBUILD
+option(TACHYON_THIRD_PARTY_REBUILD
   "Wipe the third-party install prefix and rebuild from source" OFF)
 
-if(INTERSTICE_THIRD_PARTY_REBUILD)
-  message(STATUS "[third-party] INTERSTICE_THIRD_PARTY_REBUILD=ON — clearing cache")
-  file(REMOVE_RECURSE "${INTERSTICE_TP_INSTALL}")
-  file(REMOVE_RECURSE "${INTERSTICE_TP_BUILD}")
-  set(INTERSTICE_THIRD_PARTY_REBUILD OFF CACHE BOOL "" FORCE)
+if(TACHYON_THIRD_PARTY_REBUILD)
+  message(STATUS "[third-party] TACHYON_THIRD_PARTY_REBUILD=ON — clearing cache")
+  file(REMOVE_RECURSE "${TACHYON_TP_INSTALL}")
+  file(REMOVE_RECURSE "${TACHYON_TP_BUILD}")
+  set(TACHYON_THIRD_PARTY_REBUILD OFF CACHE BOOL "" FORCE)
 endif()
 
 # Which configs do we need to have installed?
@@ -30,41 +30,41 @@ endif()
 # time, so we need every listed configuration available in the install prefix.
 # Default to Debug;Release - rebuilding MinSizeRel/RelWithDebInfo too would
 # double first-configure time for little benefit. Users who want those can
-# override INTERSTICE_TP_CONFIGS at configure time.
-set(INTERSTICE_TP_CONFIGS "Debug;Release" CACHE STRING
+# override TACHYON_TP_CONFIGS at configure time.
+set(TACHYON_TP_CONFIGS "Debug;Release" CACHE STRING
   "Configurations to prebuild the third-party cache for (multi-config only)")
 
 if(CMAKE_CONFIGURATION_TYPES)
-  set(_interstice_tp_configs ${INTERSTICE_TP_CONFIGS})
+  set(_tachyon_tp_configs ${TACHYON_TP_CONFIGS})
 else()
   if(CMAKE_BUILD_TYPE)
-    set(_interstice_tp_configs ${CMAKE_BUILD_TYPE})
+    set(_tachyon_tp_configs ${CMAKE_BUILD_TYPE})
   else()
-    set(_interstice_tp_configs Release)
+    set(_tachyon_tp_configs Release)
   endif()
 endif()
 
 # What the cache was built for; a cache built for other choices is rebuilt.
-set(_interstice_tp_signature
-  "sdl=${INTERSTICE_SDL};system-sdl=${INTERSTICE_SYSTEM_SDL};system-harfbuzz=${INTERSTICE_SYSTEM_HARFBUZZ};system-vma=${INTERSTICE_SYSTEM_VMA}")
+set(_tachyon_tp_signature
+  "sdl=${TACHYON_SDL};system-sdl=${TACHYON_SYSTEM_SDL};system-harfbuzz=${TACHYON_SYSTEM_HARFBUZZ};system-vma=${TACHYON_SYSTEM_VMA}")
 
-function(_interstice_build_third_party_config cfg)
-  set(stamp "${INTERSTICE_TP_INSTALL}/.stamp-${cfg}")
+function(_tachyon_build_third_party_config cfg)
+  set(stamp "${TACHYON_TP_INSTALL}/.stamp-${cfg}")
   if(EXISTS "${stamp}")
     file(READ "${stamp}" _stamp_text)
-    if(NOT _stamp_text STREQUAL "${_interstice_tp_signature}")
+    if(NOT _stamp_text STREQUAL "${_tachyon_tp_signature}")
       file(REMOVE "${stamp}")
     endif()
   endif()
   # A cache built with the tests off has no googletest: rebuild once they're on.
-  if(INTERSTICE_BUILD_TESTS AND NOT EXISTS "${INTERSTICE_TP_INSTALL}/lib/cmake/GTest")
+  if(TACHYON_BUILD_TESTS AND NOT EXISTS "${TACHYON_TP_INSTALL}/lib/cmake/GTest")
     file(REMOVE "${stamp}")
   endif()
   if(EXISTS "${stamp}")
     return()
   endif()
 
-  message(STATUS "[third-party] building ${cfg} -> ${INTERSTICE_TP_INSTALL}")
+  message(STATUS "[third-party] building ${cfg} -> ${TACHYON_TP_INSTALL}")
 
   set(cfg_args -G "${CMAKE_GENERATOR}")
   if(CMAKE_GENERATOR_PLATFORM)
@@ -86,20 +86,20 @@ function(_interstice_build_third_party_config cfg)
       string(APPEND _host_cache "set(${_var} [==[${${_var}}]==] CACHE STRING \"\")\n")
     endif()
   endforeach()
-  file(WRITE "${INTERSTICE_TP_BUILD}-host.cmake" "${_host_cache}")
-  list(APPEND cfg_args -C "${INTERSTICE_TP_BUILD}-host.cmake")
+  file(WRITE "${TACHYON_TP_BUILD}-host.cmake" "${_host_cache}")
+  list(APPEND cfg_args -C "${TACHYON_TP_BUILD}-host.cmake")
 
   execute_process(
     COMMAND ${CMAKE_COMMAND}
       ${cfg_args}
       -S "${PROJECT_SOURCE_DIR}/third_party"
-      -B "${INTERSTICE_TP_BUILD}"
-      "-DCMAKE_INSTALL_PREFIX=${INTERSTICE_TP_INSTALL}"
-      "-DINTERSTICE_BUILD_TESTS=${INTERSTICE_BUILD_TESTS}"
-      "-DINTERSTICE_SDL=${INTERSTICE_SDL}"
-      "-DINTERSTICE_SYSTEM_SDL=${INTERSTICE_SYSTEM_SDL}"
-      "-DINTERSTICE_SYSTEM_HARFBUZZ=${INTERSTICE_SYSTEM_HARFBUZZ}"
-      "-DINTERSTICE_SYSTEM_VMA=${INTERSTICE_SYSTEM_VMA}"
+      -B "${TACHYON_TP_BUILD}"
+      "-DCMAKE_INSTALL_PREFIX=${TACHYON_TP_INSTALL}"
+      "-DTACHYON_BUILD_TESTS=${TACHYON_BUILD_TESTS}"
+      "-DTACHYON_SDL=${TACHYON_SDL}"
+      "-DTACHYON_SYSTEM_SDL=${TACHYON_SYSTEM_SDL}"
+      "-DTACHYON_SYSTEM_HARFBUZZ=${TACHYON_SYSTEM_HARFBUZZ}"
+      "-DTACHYON_SYSTEM_VMA=${TACHYON_SYSTEM_VMA}"
     RESULT_VARIABLE _rc
   )
   if(NOT _rc EQUAL 0)
@@ -108,7 +108,7 @@ function(_interstice_build_third_party_config cfg)
 
   execute_process(
     COMMAND ${CMAKE_COMMAND}
-      --build "${INTERSTICE_TP_BUILD}"
+      --build "${TACHYON_TP_BUILD}"
       --config ${cfg}
       --target install
       --parallel
@@ -118,14 +118,14 @@ function(_interstice_build_third_party_config cfg)
     message(FATAL_ERROR "[third-party] ${cfg} build/install failed (rc=${_rc})")
   endif()
 
-  file(WRITE "${stamp}" "${_interstice_tp_signature}")
+  file(WRITE "${stamp}" "${_tachyon_tp_signature}")
 endfunction()
 
-foreach(_cfg IN LISTS _interstice_tp_configs)
-  _interstice_build_third_party_config(${_cfg})
+foreach(_cfg IN LISTS _tachyon_tp_configs)
+  _tachyon_build_third_party_config(${_cfg})
 endforeach()
 
-list(PREPEND CMAKE_PREFIX_PATH "${INTERSTICE_TP_INSTALL}")
+list(PREPEND CMAKE_PREFIX_PATH "${TACHYON_TP_INSTALL}")
 
 # RelWithDebInfo and MinSizeRel use the RELEASE runtime (MD), but the cache only
 # prebuilds Debug + Release. Without an explicit mapping CMake resolves their
@@ -137,7 +137,7 @@ set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO "RelWithDebInfo;Release")
 set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL     "MinSizeRel;Release")
 
 # A target the host already defined is used as it is.
-if(INTERSTICE_SDL AND NOT TARGET SDL3::SDL3)
+if(TACHYON_SDL AND NOT TARGET SDL3::SDL3)
   find_package(SDL3 CONFIG REQUIRED)
 endif()
 
@@ -154,7 +154,7 @@ find_package(libunibreak CONFIG REQUIRED)
 find_package(budouxc CONFIG REQUIRED)
 find_package(skribidi CONFIG REQUIRED)
 
-if(INTERSTICE_SYSTEM_VMA)
+if(TACHYON_SYSTEM_VMA)
   if(NOT TARGET GPUOpen::VulkanMemoryAllocator)
     find_package(VulkanMemoryAllocator CONFIG REQUIRED)
   endif()
@@ -169,7 +169,7 @@ else()
 endif()
 find_package(nanosvg CONFIG REQUIRED)
 find_package(vkbootstrap CONFIG REQUIRED)
-if(INTERSTICE_BUILD_TESTS)
+if(TACHYON_BUILD_TESTS)
   find_package(GTest CONFIG REQUIRED)
 endif()
 

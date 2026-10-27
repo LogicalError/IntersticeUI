@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace interstice
+namespace tachyon
 {
     namespace {
 
@@ -22,7 +22,7 @@ namespace interstice
             bool        isLastSibling    = false;
         };
 
-        using DropPos = interstice::TreeDropPosition;
+        using DropPos = tachyon::TreeDropPosition;
 
         // A(0)
         //   B(1)

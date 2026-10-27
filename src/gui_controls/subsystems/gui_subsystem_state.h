@@ -11,14 +11,14 @@
 
 // Plain state holders for several controls (no frame callbacks or logic).
 
-namespace interstice
+namespace tachyon
 {
     /// In-place rename of a tree / list / grid row (F2, Ctrl+Shift+Click or a slow re-click);
     /// the target row emits a text field instead of its label. One rename at a time.
     class RenameSubsystem
     {
     public:
-        interstice::ID      targetID   = interstice::ID::Invalid();   ///< the row being renamed
+        tachyon::ID      targetID   = tachyon::ID::Invalid();   ///< the row being renamed
         bool         isActive   = false;
         /// Set on the frame the rename starts, when a commit left over from an earlier edit
         /// must not end it; cleared once the field is built.
@@ -26,7 +26,7 @@ namespace interstice
         std::string* editBuffer = nullptr;   ///< the caller's buffer the field edits
 
         /// Starts renaming row `id`: `buffer` is set to `text` and edited in place.
-        void Start(interstice::ID id, std::string* buffer, std::string_view text)
+        void Start(tachyon::ID id, std::string* buffer, std::string_view text)
         {
             targetID = id; isActive = true; firstFrame = true;
             editBuffer = buffer; *buffer = text;
@@ -34,7 +34,7 @@ namespace interstice
         /// Ends the rename without touching the buffer.
         void Cancel()
         {
-            targetID = interstice::ID::Invalid(); isActive = false; firstFrame = false; editBuffer = nullptr;
+            targetID = tachyon::ID::Invalid(); isActive = false; firstFrame = false; editBuffer = nullptr;
         }
     };
 
@@ -44,24 +44,24 @@ namespace interstice
     {
     public:
         /// 0 until the slider has drawn once.
-        int GetWidth(interstice::ID id) const
+        int GetWidth(tachyon::ID id) const
         {
             auto it = m_widths.find(id);
             return (it != m_widths.end()) ? it->second : 0;
         }
 
         /// For the custom-draw lambdas to write into.
-        std::unordered_map<interstice::ID, int>& Widths() { return m_widths; }
+        std::unordered_map<tachyon::ID, int>& Widths() { return m_widths; }
 
     private:
-        std::unordered_map<interstice::ID, int> m_widths;
+        std::unordered_map<tachyon::ID, int> m_widths;
     };
 
     /// Set when a dock tab drag starts, so any target leaf can emit a phantom tab during
     /// construction. Cleared at frame start when no drag is active.
     struct DockTabDragInfo
     {
-        interstice::ID    panelID  = interstice::ID::Invalid();
+        tachyon::ID    panelID  = tachyon::ID::Invalid();
         std::string title;
         IconID     icon     = IconID::Invalid;
         int        tabWidth = 0; ///< the dragged tab's width at drag start, pixels
@@ -110,24 +110,24 @@ namespace interstice
     {
     public:
         /// Last frame's rect of menu trigger `id`; nullptr if absent.
-        const interstice::IntRect* FindTriggerRect(interstice::ID id) const
+        const tachyon::IntRect* FindTriggerRect(tachyon::ID id) const
         {
             auto it = m_triggerRects.find(id);
             return (it == m_triggerRects.end()) ? nullptr : &it->second;
         }
         /// Last frame's rect of menu popup window `id`; nullptr if absent.
-        const interstice::IntRect* FindWindowRect(interstice::ID id) const
+        const tachyon::IntRect* FindWindowRect(tachyon::ID id) const
         {
             auto it = m_windowRects.find(id);
             return (it == m_windowRects.end()) ? nullptr : &it->second;
         }
 
         /// For the AddPostLayout lambdas to write into.
-        std::unordered_map<interstice::ID, interstice::IntRect>& TriggerRects() { return m_triggerRects; }
-        std::unordered_map<interstice::ID, interstice::IntRect>& WindowRects()  { return m_windowRects; }
+        std::unordered_map<tachyon::ID, tachyon::IntRect>& TriggerRects() { return m_triggerRects; }
+        std::unordered_map<tachyon::ID, tachyon::IntRect>& WindowRects()  { return m_windowRects; }
 
     private:
-        std::unordered_map<interstice::ID, interstice::IntRect> m_triggerRects;
-        std::unordered_map<interstice::ID, interstice::IntRect> m_windowRects;
+        std::unordered_map<tachyon::ID, tachyon::IntRect> m_triggerRects;
+        std::unordered_map<tachyon::ID, tachyon::IntRect> m_windowRects;
     };
 }

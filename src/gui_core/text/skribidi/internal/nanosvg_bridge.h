@@ -4,7 +4,7 @@
 
 #include <cstddef>
 
-namespace interstice
+namespace tachyon
 {
 	// Parses an SVG document via NanoSVG and constructs an icon in the given
 	// skribidi icon_collection by driving skb_icon_builder. Strokes are

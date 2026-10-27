@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace interstice
+namespace tachyon
 {
     /// A window backend without an OS: windows are records with a rect, and no
     /// input arrives (inject it with GUIApplication::Inject*). For headless runs,

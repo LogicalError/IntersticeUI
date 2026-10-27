@@ -8,7 +8,7 @@
 
 #include <atomic>
 
-using namespace interstice::vulkan;
+using namespace tachyon::vulkan;
 
 namespace
 {
@@ -45,30 +45,30 @@ namespace
     }
 }
 
-void interstice::vulkan::OnVulkanError(VkResult result, const char* call)
+void tachyon::vulkan::OnVulkanError(VkResult result, const char* call)
 {
-    const auto category = ::interstice::Diagnostics::MakeLogCategory("vulkan");
+    const auto category = ::tachyon::Diagnostics::MakeLogCategory("vulkan");
     if (result == VK_ERROR_DEVICE_LOST)
     {
         if (!g_deviceLost.exchange(true))
-            INTERSTICE_LOG_CRITICAL(category, "Vulkan device lost in {}; it is recreated before the next frame", call);
+            TACHYON_LOG_CRITICAL(category, "Vulkan device lost in {}; it is recreated before the next frame", call);
         return;
     }
     if (g_deviceLost)
         return;   // the calls after a loss fail too
     if (result < 0)
-        INTERSTICE_LOG_CRITICAL(category, "Vulkan error {} ({}) in {}", ResultName(result), int(result), call);
+        TACHYON_LOG_CRITICAL(category, "Vulkan error {} ({}) in {}", ResultName(result), int(result), call);
     else
-        INTERSTICE_LOG_WARNING(category, "Vulkan status {} ({}) in {}", ResultName(result), int(result), call);
+        TACHYON_LOG_WARNING(category, "Vulkan status {} ({}) in {}", ResultName(result), int(result), call);
 }
 
-bool interstice::vulkan::IsDeviceLost()          { return g_deviceLost; }
-void interstice::vulkan::SetDeviceLost(bool lost) { g_deviceLost = lost; }
+bool tachyon::vulkan::IsDeviceLost()          { return g_deviceLost; }
+void tachyon::vulkan::SetDeviceLost(bool lost) { g_deviceLost = lost; }
 
 void VulkanDeviceContext::WaitIdle() const
 {
     auto queueLock = LockQueue();
-    INTERSTICE_VK_CHECK(vkDeviceWaitIdle(device));
+    TACHYON_VK_CHECK(vkDeviceWaitIdle(device));
 }
 
 bool VulkanDeviceContext::Initialize()

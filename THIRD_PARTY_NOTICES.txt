@@ -1,8 +1,8 @@
-IntersticeUI third-party notices
+TachyonUI third-party notices
 
-IntersticeUI itself is licensed under the MIT license (see LICENSE).
+TachyonUI itself is licensed under the MIT license (see LICENSE).
 
-IntersticeUI includes the components below. Each section gives the source,
+TachyonUI includes the components below. Each section gives the source,
 the license and the full license text. GoogleTest is used only to build the
 tests and is not distributed.
 

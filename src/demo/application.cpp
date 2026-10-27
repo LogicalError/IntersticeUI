@@ -18,9 +18,9 @@
 #include <sstream>
 #include <string>
 
-static constexpr interstice::Diagnostics::LogCategory kLogDemo = interstice::Diagnostics::MakeLogCategory("demo");
+static constexpr tachyon::Diagnostics::LogCategory kLogDemo = tachyon::Diagnostics::MakeLogCategory("demo");
 
-namespace interstice
+namespace tachyon
 {
 
     Result<void> Application::Initialize(const InitializeOptions& options)
@@ -50,7 +50,7 @@ namespace interstice
         {
             demo.savedUIState.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             if (Result<void> restored = RestoreUIState(demo.savedUIState); !restored)
-                INTERSTICE_LOG_WARNING(kLogDemo, "{} not restored: {}", kUIStateFile, restored.GetError().message);
+                TACHYON_LOG_WARNING(kLogDemo, "{} not restored: {}", kUIStateFile, restored.GetError().message);
         }
         return {};
     }
@@ -60,7 +60,7 @@ namespace interstice
         // A theme reload wipes styleManager, so every demo StyleRef is stale and
         // gets re-registered. Icons and textures survive the reload.
         boxStyleRefs.clear();
-        animatedHueStyle = interstice::VisualColorStyleIndex::Invalid;
+        animatedHueStyle = tachyon::VisualColorStyleIndex::Invalid;
         InitializeDemoStyles();
         ApplyNodeCategories();
     }
@@ -242,7 +242,7 @@ namespace interstice
             src.erase(src.begin() + from);
             toolbars.sides[(int)targetSide].push_back(std::move(item));
         };
-        toolbarCallbacks.onTearOff = [this](ToolbarSide srcSide, int from, interstice::int2 mousePos)
+        toolbarCallbacks.onTearOff = [this](ToolbarSide srcSide, int from, tachyon::int2 mousePos)
         {
             auto& src = toolbars.sides[(int)srcSide];
             if (from < 0 || from >= (int)src.size()) return;
@@ -283,25 +283,25 @@ namespace interstice
         nodeViewMode = commandManager.RegisterMode("NodeView");
         commandManager.RegisterCommand(
             nodeViewMode,
-            interstice::KeyCode::Home,
-            interstice::KeyModifier::None,
+            tachyon::KeyCode::Home,
+            tachyon::KeyModifier::None,
             [this]()
             {
-                INTERSTICE_LOG_INFO(kLogDemo, "Reset view");
-                demo.nodeView.transform = interstice::float3x2::Identity();
+                TACHYON_LOG_INFO(kLogDemo, "Reset view");
+                demo.nodeView.transform = tachyon::float3x2::Identity();
             },
             "Reset view"
         );
 
         // Example edit mode registration
-        [[maybe_unused]] interstice::CommandMode sculptMode = commandManager.RegisterMode("Sculpt");
+        [[maybe_unused]] tachyon::CommandMode sculptMode = commandManager.RegisterMode("Sculpt");
 
         // Example: Ctrl+D fires in every edit mode (Default fallback)
         commandManager.RegisterCommand(
             demo.duplicateIcon,
-            interstice::KeyCode::KeyD,
-            interstice::KeyModifier::Control,
-            []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Duplicate"); },
+            tachyon::KeyCode::KeyD,
+            tachyon::KeyModifier::Control,
+            []() { TACHYON_LOG_INFO(kLogDemo, "Command: Duplicate"); },
             "Duplicate"
         );
 
@@ -310,25 +310,25 @@ namespace interstice
         // Callbacks just print for now. A command may have no shortcut key (still
         // listed in the panel, where the user can bind one).
         auto& cmds = commandManager;
-        demo.cmdNew    = cmds.RegisterCommand(interstice::CommandMode::Default, demo.newIcon,      interstice::KeyCode::KeyN, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: New"); },     "New");
-        demo.cmdOpen   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.openFileIcon, interstice::KeyCode::KeyO, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
-        demo.cmdSave   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.saveIcon,     interstice::KeyCode::KeyS, interstice::KeyModifier::Control,                           []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
-        demo.cmdSaveAs = cmds.RegisterCommand(interstice::CommandMode::Default, demo.saveAsIcon,   interstice::KeyCode::KeyS, interstice::KeyModifier::Control | interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
-        demo.cmdExit   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.closeIcon,    interstice::KeyCode::F4,   interstice::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
+        demo.cmdNew    = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.newIcon,      tachyon::KeyCode::KeyN, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: New"); },     "New");
+        demo.cmdOpen   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.openFileIcon, tachyon::KeyCode::KeyO, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: Open"); },    "Open...");
+        demo.cmdSave   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.saveIcon,     tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control,                           []() { TACHYON_LOG_INFO(kLogDemo, "Command: Save"); },    "Save");
+        demo.cmdSaveAs = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.saveAsIcon,   tachyon::KeyCode::KeyS, tachyon::KeyModifier::Control | tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Save As"); }, "Save As...");
+        demo.cmdExit   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.closeIcon,    tachyon::KeyCode::F4,   tachyon::KeyModifier::Alt,                               [this]() { RequestExit(); },   "Exit");
 
-        demo.cmdUndo   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.undoIcon,  interstice::KeyCode::KeyZ, interstice::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
-        demo.cmdRedo   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.redoIcon,  interstice::KeyCode::KeyY, interstice::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
-        demo.cmdCut    = cmds.RegisterCommand(interstice::CommandMode::Default, demo.cutIcon,   interstice::KeyCode::KeyX, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
-        demo.cmdCopy   = cmds.RegisterCommand(interstice::CommandMode::Default, demo.copyIcon,  interstice::KeyCode::KeyC, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
-        demo.cmdPaste  = cmds.RegisterCommand(interstice::CommandMode::Default, demo.pasteIcon, interstice::KeyCode::KeyV, interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
+        demo.cmdUndo   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.undoIcon,  tachyon::KeyCode::KeyZ, tachyon::KeyModifier::Control, [this]() { commandManager.History().Undo(); }, "Undo");
+        demo.cmdRedo   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.redoIcon,  tachyon::KeyCode::KeyY, tachyon::KeyModifier::Control, [this]() { commandManager.History().Redo(); },  "Redo");
+        demo.cmdCut    = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.cutIcon,   tachyon::KeyCode::KeyX, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Cut"); },   "Cut");
+        demo.cmdCopy   = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.copyIcon,  tachyon::KeyCode::KeyC, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Copy"); },  "Copy");
+        demo.cmdPaste  = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.pasteIcon, tachyon::KeyCode::KeyV, tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Paste"); }, "Paste");
 
         // Commands shown on a menu but with NO shortcut key (the user can assign
         // one in the Shortcuts panel).
-        demo.cmdFullscreen = cmds.RegisterCommand(interstice::CommandMode::Default, demo.fullscreenIcon, interstice::KeyCode::F11, interstice::KeyModifier::None,
+        demo.cmdFullscreen = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.fullscreenIcon, tachyon::KeyCode::F11, tachyon::KeyModifier::None,
                                                   [this]() { ToggleFullscreen(WindowMode::Fullscreen); }, "Fullscreen");
-        demo.cmdDocumentation = cmds.RegisterCommand(interstice::CommandMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
-        demo.cmdAbout         = cmds.RegisterCommand(interstice::CommandMode::Default, interstice::IconID::Invalid, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: About IntersticeUI"); }, "About IntersticeUI");
-        demo.cmdSearchCommands = cmds.RegisterCommand(interstice::CommandMode::Default, demo.findIcon, interstice::KeyCode::KeyK, interstice::KeyModifier::Control,
+        demo.cmdDocumentation = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogDemo, "Command: Documentation"); },     "Documentation");
+        demo.cmdAbout         = cmds.RegisterCommand(tachyon::CommandMode::Default, tachyon::IconID::Invalid, []() { TACHYON_LOG_INFO(kLogDemo, "Command: About TachyonUI"); }, "About TachyonUI");
+        demo.cmdSearchCommands = cmds.RegisterCommand(tachyon::CommandMode::Default, demo.findIcon, tachyon::KeyCode::KeyK, tachyon::KeyModifier::Control,
                                                        [this]() { FocusCommandSearch(demo.commandSearch); }, "Search Commands");
         demo.commandSearch.shortcut = cmds.GetCommand(demo.cmdSearchCommands)->displayString;
 
@@ -336,29 +336,29 @@ namespace interstice
         // These are panel/keyboard only (not referenced by the menu or toolbar).
 
         // Default (global).
-        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.selectAllIcon, interstice::KeyCode::KeyA,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
-        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.deleteIcon, interstice::KeyCode::Delete, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
-        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.findIcon, interstice::KeyCode::KeyF,   interstice::KeyModifier::Control, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
-        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.playIcon, interstice::KeyCode::F5,     interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
-        commandManager.RegisterCommand(interstice::CommandMode::Default, demo.stopIcon, interstice::KeyCode::F5,     interstice::KeyModifier::Shift, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.selectAllIcon, tachyon::KeyCode::KeyA,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Select All"); }, "Select All");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.deleteIcon, tachyon::KeyCode::Delete, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Delete Selection"); }, "Delete Selection");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.findIcon, tachyon::KeyCode::KeyF,   tachyon::KeyModifier::Control, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Find"); }, "Find");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.playIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Play"); }, "Play");
+        commandManager.RegisterCommand(tachyon::CommandMode::Default, demo.stopIcon, tachyon::KeyCode::F5,     tachyon::KeyModifier::Shift, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Stop"); }, "Stop");
         // Held shortcut: onBegin fires on press, onEnd on release.
-        commandManager.RegisterHeldCommand(interstice::CommandMode::Default, interstice::KeyCode::Space, interstice::KeyModifier::None,
-            []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
-            []() { INTERSTICE_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
+        commandManager.RegisterHeldCommand(tachyon::CommandMode::Default, tachyon::KeyCode::Space, tachyon::KeyModifier::None,
+            []() { TACHYON_LOG_INFO(kLogDemo, "Hold begin: Pan View"); },
+            []() { TACHYON_LOG_INFO(kLogDemo, "Hold end: Pan View"); },
             "Pan View (hold)");
 
         // NodeView - graph navigation
-        commandManager.RegisterCommand(nodeViewMode, demo.frameSelectedIcon, interstice::KeyCode::KeyF,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
-        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::KeyA,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
-        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::Space, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
-        commandManager.RegisterCommand(nodeViewMode,                         interstice::KeyCode::KeyG,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
+        commandManager.RegisterCommand(nodeViewMode, demo.frameSelectedIcon, tachyon::KeyCode::KeyF,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Frame Selected"); }, "Frame Selected");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyA,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Frame All"); }, "Frame All");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::Space, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Search Nodes"); }, "Search Nodes");
+        commandManager.RegisterCommand(nodeViewMode,                         tachyon::KeyCode::KeyG,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Group Selection"); }, "Group Selection");
 
         // Sculpt - brush operations.
-        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::LeftBracket,  interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
-        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::RightBracket, interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
-        commandManager.RegisterCommand(sculptMode, demo.brushIcon,  interstice::KeyCode::KeyB,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
-        commandManager.RegisterCommand(sculptMode, demo.eraserIcon, interstice::KeyCode::KeyE,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Erase Tool"); }, "Erase Tool");
-        commandManager.RegisterCommand(sculptMode,                  interstice::KeyCode::KeyM,         interstice::KeyModifier::None, []() { INTERSTICE_LOG_INFO(kLogDemo, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::LeftBracket,  tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Decrease Brush Size"); }, "Decrease Brush Size");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::RightBracket, tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Increase Brush Size"); }, "Increase Brush Size");
+        commandManager.RegisterCommand(sculptMode, demo.brushIcon,  tachyon::KeyCode::KeyB,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Brush Tool"); }, "Brush Tool");
+        commandManager.RegisterCommand(sculptMode, demo.eraserIcon, tachyon::KeyCode::KeyE,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Erase Tool"); }, "Erase Tool");
+        commandManager.RegisterCommand(sculptMode,                  tachyon::KeyCode::KeyM,         tachyon::KeyModifier::None, []() { TACHYON_LOG_INFO(kLogDemo, "Command: {}", "Smooth Tool"); }, "Smooth Tool");
 
         // Seed the demo node-view. Each renderBody fills the row's middle slot;
         // sockets come from input/output presence.
@@ -367,9 +367,9 @@ namespace interstice
 
             // Socket colours double as the connection type: canConnect below only
             // allows wires between same-coloured sockets.
-            const interstice::color4f kTeal  { 0.20f, 0.75f, 0.72f, 1.0f };
-            const interstice::color4f kAmber { 0.95f, 0.62f, 0.20f, 1.0f };
-            const interstice::color4f kPurple{ 0.62f, 0.45f, 0.92f, 1.0f };
+            const tachyon::color4f kTeal  { 0.20f, 0.75f, 0.72f, 1.0f };
+            const tachyon::color4f kAmber { 0.95f, 0.62f, 0.20f, 1.0f };
+            const tachyon::color4f kPurple{ 0.62f, 0.45f, 0.92f, 1.0f };
 
             // NodeText aligns to its socket (output => right, input => left,
             // pass-through => centred); editable rows use Label + Field.
@@ -461,7 +461,7 @@ namespace interstice
                 tex.properties.push_back(NodeProperty
                 {
                     .output      = true,   // Color output - the dot sits at the image's bottom grid line
-                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, interstice::uint2{ 64, 64 }, interstice::LayoutOverride::FixedSize(Pixels{ imgSide }, Pixels{ imgSide })); },
+                    .renderBody  = [this, imgSide]() { Image(demoImageIndex, tachyon::uint2{ 64, 64 }, tachyon::LayoutOverride::FixedSize(Pixels{ imgSide }, Pixels{ imgSide })); },
                     .socketColor = kTeal,                // can feed Mix.Strength / Output.Value
                     .rowSpan     = rowSpan,
                 });
@@ -604,18 +604,18 @@ namespace interstice
 
         Style boxStyle;
         {
-            boxStyle.textLayoutStyle = interstice::TextLayoutStyle
+            boxStyle.textLayoutStyle = tachyon::TextLayoutStyle
             {
-                .textDirection = interstice::TextDirection::Auto,
-                .textWrapping = interstice::TextWrap::WordChar,
-                .horizontalAlignment = interstice::TextAlign::Start,
-                .baseline = interstice::TextBaseline::Middle
+                .textDirection = tachyon::TextDirection::Auto,
+                .textWrapping = tachyon::TextWrap::WordChar,
+                .horizontalAlignment = tachyon::TextAlign::Start,
+                .baseline = tachyon::TextBaseline::Middle
             };
             boxStyle.borderWidths = noBorder;
             boxStyle.borderRadius = noRadius;
             boxStyle.margin = BoxEdges(2);
-            boxStyle.SetOverflow(interstice::Overflow::Hidden);
-            boxStyle.padding = interstice::BoxEdges(10);
+            boxStyle.SetOverflow(tachyon::Overflow::Hidden);
+            boxStyle.padding = tachyon::BoxEdges(10);
             for (int i = 0; i < Style::kStateCount; i++)
             {
                 boxStyle.states[i].SetBorderColor({});
@@ -809,9 +809,9 @@ namespace interstice
         {
             //checkerboard image
             {
-                interstice::color4b black = interstice::color4b(0, 0, 0, 255);
-                interstice::color4b magenta = interstice::color4b(255, 0, 255, 255);
-                std::array<interstice::color4b, 16 * 16 > pixels{};
+                tachyon::color4b black = tachyon::color4b(0, 0, 0, 255);
+                tachyon::color4b magenta = tachyon::color4b(255, 0, 255, 255);
+                std::array<tachyon::color4b, 16 * 16 > pixels{};
                 for (int y = 0, n = 0; y < 16; y++)
                 {
                     for (int x = 0; x < 16; x++, n++)
@@ -819,37 +819,37 @@ namespace interstice
                         pixels[n] = ((x % 2) ^ (y % 2)) ? magenta : black;
                     }
                 }
-                interstice::Image* checkerboardImage = graphicsContext->CreateImage(pixels.data(), uint2{ 16, 16 }, interstice::ImageFormat::R8G8B8A8, interstice::Sampler::LinearRepeat, true);
+                tachyon::Image* checkerboardImage = graphicsContext->CreateImage(pixels.data(), uint2{ 16, 16 }, tachyon::ImageFormat::R8G8B8A8, tachyon::Sampler::LinearRepeat, true);
                 if (checkerboardImage == nullptr)
                 {
-                    INTERSTICE_LOG_ERROR(kLogDemo, "Failed to create checkerboard image");
+                    TACHYON_LOG_ERROR(kLogDemo, "Failed to create checkerboard image");
                     return false;
                 }
                 checkerboardIndex = graphicsContext->RegisterImage(checkerboardImage);
 
-                graphicsContext->DestroyImageAtEnd(checkerboardImage, interstice::DeviceScope::Application);
+                graphicsContext->DestroyImageAtEnd(checkerboardImage, tachyon::DeviceScope::Application);
             }
 
             // Sample gradient image to showcase the Image() element (image fields,
             // node thumbnails, ...).
             {
                 constexpr int W = 64, H = 64;
-                std::array<interstice::color4b, W * H> pixels{};
+                std::array<tachyon::color4b, W * H> pixels{};
                 for (int y = 0, n = 0; y < H; y++)
                     for (int x = 0; x < W; x++, n++)
-                        pixels[n] = interstice::color4b(static_cast<interstice::byte>(x * 4),
-                                                 static_cast<interstice::byte>(y * 4),
-                                                 static_cast<interstice::byte>(160 - (x + y)), 255);
-                interstice::Image* gradient = graphicsContext->CreateImage(
-                    pixels.data(), uint2{ W, H }, interstice::ImageFormat::R8G8B8A8,
-                    interstice::Sampler::LinearClampToEdge, true);
+                        pixels[n] = tachyon::color4b(static_cast<tachyon::byte>(x * 4),
+                                                 static_cast<tachyon::byte>(y * 4),
+                                                 static_cast<tachyon::byte>(160 - (x + y)), 255);
+                tachyon::Image* gradient = graphicsContext->CreateImage(
+                    pixels.data(), uint2{ W, H }, tachyon::ImageFormat::R8G8B8A8,
+                    tachyon::Sampler::LinearClampToEdge, true);
                 if (gradient == nullptr)
                 {
-                    INTERSTICE_LOG_ERROR(kLogDemo, "Failed to create demo image");
+                    TACHYON_LOG_ERROR(kLogDemo, "Failed to create demo image");
                     return false;
                 }
                 demoImageIndex = graphicsContext->RegisterImage(gradient);
-                graphicsContext->DestroyImageAtEnd(gradient, interstice::DeviceScope::Application);
+                graphicsContext->DestroyImageAtEnd(gradient, tachyon::DeviceScope::Application);
             }
 
             // Register icons from SVG
