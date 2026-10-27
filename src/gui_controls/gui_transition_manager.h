@@ -7,6 +7,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     enum class ElementState : uint8_t;
     enum class VisualBoxStyleIndex : uint16_t;
 
@@ -63,4 +66,5 @@ namespace tachyon
         bool m_enabled = true;
     };
 
+    /// @}
 } // namespace tachyon

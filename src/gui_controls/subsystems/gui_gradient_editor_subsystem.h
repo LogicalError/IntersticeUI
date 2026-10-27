@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     class FramePipeline;
     struct FrameContext;
 
@@ -67,4 +70,5 @@ namespace tachyon
         GradientEditorState m_state{};
         std::unordered_map<tachyon::ID, tachyon::VisualColorStyleIndex> m_swatchStyles, m_prevSwatchStyles;
     };
+    /// @}
 }

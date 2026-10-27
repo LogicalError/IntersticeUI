@@ -11,6 +11,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     class FramePipeline;
     struct FrameContext;
     class ElementStorage;
@@ -160,4 +163,5 @@ namespace tachyon
         /// frame is built before last frame's measured size exists.
         static constexpr uint64_t kSettleFrames = 2;
     };
+    /// @}
 }

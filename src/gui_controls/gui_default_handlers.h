@@ -21,6 +21,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     class ElementStorage;
     class ITextSystem;
     class StyleManager;
@@ -320,4 +323,5 @@ namespace tachyon
             return false;
         };
     }
+    /// @}
 }

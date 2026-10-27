@@ -1,0 +1,73 @@
+/**
+@defgroup app Application
+@brief GUIApplication, the frame, GUIContent and event handlers.
+
+Derive from tachyon::GUIApplication and describe the UI in `OnGUI()`; every control
+is one of its member functions. The class page groups them by family. The
+@ref md_docs_2overview "Overview" explains the frame model, and
+@ref md_docs_2controls "Controls" covers each control.
+
+@defgroup controls Controls
+@brief Types the controls take and return: bindings, widget state, list and group helpers.
+
+The controls themselves are member functions of tachyon::GUIApplication; this topic
+holds the types they use. See the @ref md_docs_2controls "Controls" guide.
+
+@defgroup controls_data Tables, trees and grids
+@ingroup controls
+@brief Columns, sorting, selection and data sources for tables, tree views and grid views.
+
+@defgroup controls_docking Docking and toolbars
+@ingroup controls
+@brief Dock nodes, dock layouts and the toolbar dock.
+
+@defgroup controls_menus Menus and tooltips
+@ingroup controls
+@brief The menu and tooltip managers.
+
+@defgroup controls_nodes Node view
+@ingroup controls
+@brief Nodes, pins and links for the node graph editor.
+
+@defgroup layout Layout
+@brief Flexbox and grid layout, constraints and units.
+
+Sizes are CSS px scaled by the UI scale; see
+@ref md_docs_2overview_2values "Return values, content and units".
+
+@defgroup styling Styling
+@brief Themes, styles, colors and gradients.
+
+See @ref md_docs_2css "CSS and theming" for the CSS the themes are written in.
+
+@defgroup text Text
+@brief Shaping, fonts, text atlases, numeric text and the clipboard.
+
+@defgroup input Input
+@brief Input state, handlers, commands, shortcuts and undo history.
+
+@defgroup elements Elements and state
+@brief IDs, element storage and the state kept between frames.
+
+See @ref md_docs_2overview_2ids "IDs" for how IDs stay stable.
+
+@defgroup graphics Graphics
+@brief The graphics backend interface, renderer, images and custom drawing.
+
+@defgroup graphics_vulkan Vulkan backend
+@ingroup graphics
+@brief The Vulkan graphics backend, and sharing a host's device and images.
+
+See @ref md_docs_2integration_2vulkan-device "Using your own Vulkan device".
+
+@defgroup windows Windows and platform
+@brief Window backends (SDL, null, image), OS windows and window flags.
+
+See @ref md_docs_2integration_2window-and-input "Your own window and input".
+
+@defgroup diagnostics Diagnostics and memory
+@brief Logging, the profiler and allocation hooks.
+
+@defgroup utilities Utilities
+@brief Base types, results, hashing, JSON and number parsing.
+*/

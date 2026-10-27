@@ -7,6 +7,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class ElementStorage;
 
     // ------------------------------------------------------------------------
@@ -128,4 +131,5 @@ namespace tachyon
     using TopDownDepthScanRangeIterator = Range<TopDownDepthScanIterator>;
     using BottomUpDepthScanRangeIterator = Range<BottomUpDepthScanIterator>;
 
+    /// @}
 } // namespace tachyon

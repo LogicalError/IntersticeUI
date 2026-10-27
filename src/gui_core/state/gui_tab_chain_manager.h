@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class GUIStateManager;
     
     /// Tracks the next/prev tab targets around the focused element, rebuilt each frame during
@@ -121,4 +124,5 @@ namespace tachyon
         ID GetDefaultFocus() const { return m_defaultFocusID != ID::Invalid() ? m_defaultFocusID : m_firstTabTarget; }
     };
 
+    /// @}
 } // namespace tachyon

@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// What an editable field takes as text, asked while it is edited. An instance given to
     /// the text system must outlive the field (a static or a member, not a temporary).
     class ITextValidator
@@ -73,4 +76,5 @@ namespace tachyon
         static const TextConverter<T> converter;
         return converter;
     }
+    /// @}
 }

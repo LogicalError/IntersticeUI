@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     template<typename T>
     struct TypeDimensions
     {
@@ -39,4 +42,5 @@ namespace tachyon
 
     template<> struct TypeDimensions<color4b> { using Type = color4b; using ComponentType = decltype(Type::r); static constexpr int dimensions = 4; inline static ComponentType& GetComponent(Type& value, int index) { return value[index]; } static constexpr char const* const names[dimensions] = { "R", "G", "B", "A" }; };
     template<> struct TypeDimensions<color4f> { using Type = color4f; using ComponentType = decltype(Type::r); static constexpr int dimensions = 4; inline static ComponentType& GetComponent(Type& value, int index) { return value[index]; } static constexpr char const* const names[dimensions] = { "R", "G", "B", "A" }; };
+    /// @}
 }

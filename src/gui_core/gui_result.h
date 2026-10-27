@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup utilities
+    /// @{
+
     /// Why a call failed.
     enum class ErrorCode : uint8_t
     {
@@ -26,6 +29,7 @@ namespace tachyon
     };
 
     /// A value, or the Error saying why there is none. True when it holds the value:
+    ///
     ///     if (auto image = LoadImage(path)) Use(*image); else Log(image.GetError().message);
     template<class T>
     class [[nodiscard]] Result
@@ -82,4 +86,5 @@ namespace tachyon
         Error m_error {};
         bool  m_failed = false;
     };
+    /// @}
 }

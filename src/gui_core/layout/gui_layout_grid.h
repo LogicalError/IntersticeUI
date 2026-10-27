@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup layout
+    /// @{
+
     struct int2;
     struct IntRect;
     struct ElementRect;
@@ -93,4 +96,5 @@ namespace tachyon
                                      GridPlacement* outPlacement = nullptr);
     };
 
+    /// @}
 } // namespace tachyon

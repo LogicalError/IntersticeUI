@@ -12,6 +12,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_nodes
+    /// @{
+
     class CustomDrawContext;
     struct LineStyle;
 
@@ -162,4 +165,5 @@ namespace tachyon
         const float3x2&            viewTransform,
         int2                       marqueeStartScreen,
         int2                       marqueeCurrentScreen);
+    /// @}
 }

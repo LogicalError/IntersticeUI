@@ -15,6 +15,9 @@ union SDL_Event;
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     class GraphicsContext;
 
     // Outside the class: GCC can't use a nested struct's member initializers in a default
@@ -150,4 +153,5 @@ namespace tachyon
     private:
     };
 
+    /// @}
 } // namespace tachyon

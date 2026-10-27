@@ -15,6 +15,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     struct alignas(16) glsl_float4 { float x, y, z, w; };
 
     struct alignas(16) Box
@@ -191,4 +194,5 @@ namespace tachyon
         float _timePad    = 0.0f; ///< pad to 128 bytes (Vulkan minimum)
     };
     static_assert(sizeof(GPUDrawPushConstants) == 128, "GPUDrawPushConstants must be 128 bytes");
+    /// @}
 }

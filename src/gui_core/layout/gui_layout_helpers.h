@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup layout
+    /// @{
+
 	struct int2;
 	class ElementStorage;
 	class OSWindowManager;
@@ -297,4 +300,5 @@ namespace tachyon
         }
 
     };
+    /// @}
 } // namespace tachyon

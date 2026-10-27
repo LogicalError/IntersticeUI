@@ -5,6 +5,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     // ------------------------------------------------------------------------
     // Element Flags
     // ------------------------------------------------------------------------
@@ -49,4 +52,5 @@ namespace tachyon
     };
     TACHYON_ENUM_OPERATORS(ElementFlags)
 
+    /// @}
 } // namespace tachyon

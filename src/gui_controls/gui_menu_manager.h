@@ -13,6 +13,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_menus
+    /// @{
+
     class ElementStorage;
     class GUIStateManager;
     class InputManager;
@@ -165,4 +168,5 @@ namespace tachyon
                                            MenuManager& menuManager,
                                            int depth);
 
+    /// @}
 } // namespace tachyon

@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup utilities
+    /// @{
+
     using OnGuiFunc = std::function<void()>;
 
     /// Integer 2D vector. Trivial (no member initializers) so IntRect can overlay it in a
@@ -468,4 +471,5 @@ namespace tachyon
     /// widely-included headers.
     int64_t SteadyClockNowNanos();
 
+    /// @}
 }// namespace tachyon

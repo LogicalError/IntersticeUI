@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     enum class MouseCursor : uint8_t;   // gui_core/style/gui_style.h
 
     /// The mouse cursor requested this frame.
@@ -73,4 +76,5 @@ namespace tachyon
             Diagnostics::ReportMisuse(Diagnostics::MakeLogCategory("state"), message);
         }
     };
+    /// @}
 }

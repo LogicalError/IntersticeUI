@@ -18,6 +18,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class GUIRenderer;
     class ElementStorage;
     class CustomDrawContext;
@@ -197,4 +200,5 @@ namespace tachyon
         IntRect            afterDrawSnappedRect        = {};  ///< snapped pixel rect custom-draw boxes snap to
     };
 
+    /// @}
 } // namespace tachyon

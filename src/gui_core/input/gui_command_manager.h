@@ -15,6 +15,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     /// A set of shortcuts that is active while the app says so (e.g. a node view's while it has
     /// the focus). Opaque: other values come from CommandManager::RegisterMode. Default is
     /// always registered and is the fallback when the active mode has no matching command.
@@ -601,4 +604,5 @@ namespace tachyon
         std::vector<HeldActive>            m_activeHeld;      ///< held commands with key currently down
     };
 
+    /// @}
 } // namespace tachyon

@@ -14,6 +14,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
     class StyleManager;
     class ITextSystem;
 
@@ -32,6 +35,12 @@ namespace tachyon
     /// LoadTheme registers every class of the style files; each xxxStyleRef below is the
     /// class of the same name in kebab-case (tableRowAltStyleRef -> .table-row-alt) unless
     /// its comment names another. They are reassigned on every theme (re)load.
+    ///
+    /// An app's own classes (from SetStyleFiles) are found by name; look them up in OnGUI,
+    /// since a reload registers them again:
+    ///
+    ///     Text("My themed app", theme.GetStyle("banner"));
+    ///     Button("Careful!", onClick, theme.GetStyle("warning-button"));
     class GUITheme
     {
     public:
@@ -520,4 +529,5 @@ namespace tachyon
         mutable std::set<std::string, std::less<>>   m_missingWarned;
     };
 
+    /// @}
 } // namespace tachyon

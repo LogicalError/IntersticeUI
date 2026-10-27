@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup diagnostics
+    /// @{
+
     /// Memory functions a host gives the library, for the allocations that can be routed:
     /// Vulkan objects, VMA, vk-bootstrap and SDL. They must be thread-safe (drivers call
     /// them from their own threads) and stay valid for the rest of the process: SDL can keep
@@ -22,4 +25,5 @@ namespace tachyon
         /// The hooks are used only when all three functions are set.
         bool IsSet() const { return allocate && reallocate && free; }
     };
+    /// @}
 }

@@ -3,19 +3,27 @@
 # does the Docs workflow that publishes it.
 PROJECT_NAME           = TachyonUI
 PROJECT_NUMBER         = $(TACHYON_VERSION)
+PROJECT_BRIEF          = "Tool UI that keeps up with your engine."
+PROJECT_LOGO           = docs/doxygen/logo.svg
 OUTPUT_DIRECTORY       = $(DOXYGEN_OUTPUT)
 INPUT                  = src/gui_core src/gui_controls docs
 RECURSIVE              = YES
-FILE_PATTERNS          = *.h *.md
-EXCLUDE                = docs/design
+FILE_PATTERNS          = *.h *.md *.dox
+EXCLUDE                = docs/design docs/doxygen
 EXCLUDE_PATTERNS       = *_internal.h */internal/*
+# The example programs, shown in full by docs/examples.dox and linked from the members they use
+EXAMPLE_PATH           = examples
+EXAMPLE_PATTERNS       = *.cpp *.css
 USE_MDFILE_AS_MAINPAGE = docs/README.md
-STRIP_FROM_PATH        = src
+# Headers show as gui_core/..., and the guides' pages are named md_docs_2<path>, which the
+# guides' hidden \subpage lists rely on.
+STRIP_FROM_PATH        = src .
 STRIP_FROM_INC_PATH    = src
 JAVADOC_AUTOBRIEF      = YES
 DISTRIBUTE_GROUP_DOC   = YES
 # Heading anchors as on GitHub, so links between the guides work in both
 MARKDOWN_ID_STYLE      = GITHUB
+TOC_INCLUDE_HEADINGS   = 3
 # Expands the LayoutOverride builder macro so its builders show up as functions
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
@@ -23,8 +31,32 @@ EXPAND_AS_DEFINED      = TACHYON_LO_BUILDER
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 WARN_IF_UNDOCUMENTED   = NO
+# Members in the order the headers declare them, each @name section under its own heading
+SORT_MEMBER_DOCS       = NO
+SUBGROUPING            = NO
+SHOW_GROUPED_MEMB_INC  = YES
+LAYOUT_FILE            = docs/doxygen/DoxygenLayout.xml
+
+# Look: doxygen-awesome-css (docs/doxygen, MIT) with TachyonUI's colors
+HTML_HEADER            = docs/doxygen/header.html
+HTML_EXTRA_STYLESHEET  = docs/doxygen/doxygen-awesome.css \
+                         docs/doxygen/doxygen-awesome-sidebar-only.css \
+                         docs/doxygen/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         docs/doxygen/tachyon.css
+HTML_EXTRA_FILES       = docs/doxygen/doxygen-awesome-darkmode-toggle.js \
+                         docs/doxygen/doxygen-awesome-fragment-copy-button.js \
+                         docs/doxygen/doxygen-awesome-paragraph-link.js \
+                         docs/doxygen/doxygen-awesome-interactive-toc.js \
+                         docs/doxygen/logo.svg \
+                         docs/banner.png \
+                         docs/screenshot.png
+HTML_COLORSTYLE        = LIGHT
 GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+TREEVIEW_WIDTH         = 300
 HTML_DYNAMIC_SECTIONS  = YES
+HTML_COPY_CLIPBOARD    = NO
 GENERATE_LATEX         = NO
 HAVE_DOT               = NO
 QUIET                  = YES

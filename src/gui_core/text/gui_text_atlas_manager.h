@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
 	enum ImageIndex : uint32_t; ///< defined in gui_image.h
 	class GraphicsContext;
 	class ImageSet;
@@ -23,4 +26,5 @@ namespace tachyon
 		virtual ImageIndex GetImageIndex(TextureIndex textureIndex) = 0;
 		virtual void SyncTextureIndices() = 0;
 	};
+    /// @}
 }

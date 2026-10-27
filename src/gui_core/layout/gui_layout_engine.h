@@ -2,6 +2,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup layout
+    /// @{
+
     class ScrollManagement;
     class ElementStorage;
     class OSWindowManager;
@@ -40,5 +43,6 @@ namespace tachyon
         void HorizontalPositioningPass(OSWindowManager& osWindowManager, ElementStorage& storage);
         void VerticalPositioningPass(OSWindowManager& osWindowManager, ElementStorage& storage);
     };
+    /// @}
 }
 

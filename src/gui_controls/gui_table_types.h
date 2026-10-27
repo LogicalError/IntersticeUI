@@ -26,6 +26,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_data
+    /// @{
+
     // ---- Table widget: row x column data grid ----
     //
     // TableColumn describes a column; callers pass an array each frame.
@@ -75,6 +78,14 @@ namespace tachyon
 
     /// A VirtualTable column: the TableColumn plus cell generator, sort order and section.
     /// Reorder columns by reordering the array.
+    ///
+    ///     std::vector<VirtualTableColumn> columns = {
+    ///         { .column = { .header = "Name", .initialWidth = 160 },
+    ///           .generateCell  = [this](int row) { Cell(rows[row].name); },
+    ///           .sortAscending = [this](int a, int b) { return rows[a].name < rows[b].name; } },
+    ///     };
+    ///     VirtualTable(tableID, tableState, columns, int(rows.size()), 0, theme.tableFillStyleRef,
+    ///                  LayoutOverride::Auto().FlexGrow(1).MinHeight(0));
     struct VirtualTableColumn {
         TableColumn                       column;
         /// Emits the cell of dataset row `rowIndex`; null in the BeginTable/Cell flow.
@@ -441,4 +452,5 @@ namespace tachyon
         std::vector<std::vector<std::function<void()>>> columnCells;
     };
 
+    /// @}
 }

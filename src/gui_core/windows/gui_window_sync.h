@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     class OSWindowManager;
     class WindowRegistry;
     class ElementStorage;
@@ -20,4 +23,5 @@ namespace tachyon
     /// After layout: creates or updates an OS window for each declared window element.
     void SyncWindowsAfterLayout(OSWindowManager& windowManager, const WindowRegistry& windowRegistry,
                                 ElementStorage& elementStorage, ITextSystem* textSystem, OnGuiFunc onGui);
+    /// @}
 }

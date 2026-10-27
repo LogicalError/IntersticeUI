@@ -18,6 +18,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_nodes
+    /// @{
+
     /// A property on a node. Default-constructed is invalid: in a socket it means "present, unwired".
     struct PropertyEndpoint
     {
@@ -241,4 +244,5 @@ namespace tachyon
         std::unordered_map<uint32_t, tachyon::VisualColorStyleIndex> wireColorStyles;
         uint32_t wireColorStylesGeneration = 0; ///< StyleManager::Generation() of the cache
     };
+    /// @}
 }

@@ -5,6 +5,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     /// How an ID was made; stored in 2 bits of the ID.
     enum class IDMode : uint64_t
     {
@@ -81,6 +84,7 @@ namespace tachyon
     static_assert(sizeof(ID::Value::RangedParts) == sizeof(uint64_t), "ID size must be 64 bits");
     static_assert(sizeof(ID::Value::SubRangeParts) == sizeof(uint64_t), "ID size must be 64 bits");
 
+    /// @}
 } // namespace tachyon
 
 namespace std

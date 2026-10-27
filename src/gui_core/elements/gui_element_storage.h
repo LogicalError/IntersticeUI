@@ -22,6 +22,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class GUIRenderer;
     class ElementStorage;
     class StyleManager;
@@ -497,4 +500,5 @@ namespace tachyon
     inline BottomUpDepthScanIterator& BottomUpDepthScanIterator::operator++() { if (!Validate()) cursor.SetDone(); else storage.AdvanceBottomUpDepthScan(cursor); return *this; }
     inline BottomUpDepthScanIterator BottomUpDepthScanIterator::operator++(int) { BottomUpDepthScanIterator tmp = *this; if (!Validate()) cursor.SetDone(); else storage.AdvanceBottomUpDepthScan(cursor); return tmp; }
 
+    /// @}
 } // namespace tachyon

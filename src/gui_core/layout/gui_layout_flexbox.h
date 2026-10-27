@@ -6,6 +6,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup layout
+    /// @{
+
     struct IntRect;
 	struct ElementRect;
 
@@ -27,4 +30,5 @@ namespace tachyon
                                            const IntRect&         clipRect,
                                            std::span<ElementRect> childRects);
     };
+    /// @}
 } // namespace tachyon

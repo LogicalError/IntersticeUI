@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     class ScrollManagement;
     class ElementStorage;
     class GUIStateManager;
@@ -99,4 +102,5 @@ namespace tachyon
         std::vector<RecordedInputEvent> m_recordedEvents;
         std::vector<EventHandler>       m_globalHandlers;
     };
+    /// @}
 }

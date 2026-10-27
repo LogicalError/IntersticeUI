@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup graphics
+    /// @{
+
     /// Pixel formats for GraphicsContext::CreateImage, 8 bits per channel. The _SRGB
     /// formats decode sRGB to linear when sampled.
     enum class ImageFormat
@@ -48,4 +51,5 @@ namespace tachyon
 		/// Frees the index for reuse; the image itself stays.
 		virtual void Remove(ImageIndex index) = 0;
 	};
+    /// @}
 }

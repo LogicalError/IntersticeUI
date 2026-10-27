@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     /// Main axis of a reorderable group.
     enum class ReorderDirection : uint8_t { Horizontal, Vertical };
 
@@ -74,4 +77,5 @@ namespace tachyon
         ReorderableDragState         m_drag{};
         ReorderableConstructionState m_construction{};
     };
+    /// @}
 }

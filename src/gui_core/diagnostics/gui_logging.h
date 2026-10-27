@@ -22,6 +22,9 @@
 
 namespace tachyon::Diagnostics
 {
+    /// @addtogroup diagnostics
+    /// @{
+
     enum class LogSeverity : uint8_t { Trace = 0, Debug, Info, Warning, Error, Critical };
 
     const char* LogSeverityName(LogSeverity severity);
@@ -173,6 +176,7 @@ namespace tachyon::Diagnostics
         const LogArg packed[sizeof...(Args) + 1] = { MakeLogArg(args)..., LogArg{} };
         LogMessage(category, severity, messageTemplate, std::span<const LogArg>(packed, sizeof...(Args)), file, line);
     }
+    /// @}
 }
 
 #define TACHYON_LOG_TRACE(category, ...)    ::tachyon::Diagnostics::Log(category, ::tachyon::Diagnostics::LogSeverity::Trace,    __FILE__, __LINE__, __VA_ARGS__)

@@ -7,6 +7,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup input
+    /// @{
+
     struct ElementRect;    // gui_core/elements/gui_element.h
     struct ElementRef;     // gui_core/elements/gui_element.h
     class  ElementStorage; // gui_core/elements/gui_element_storage.h
@@ -41,4 +44,5 @@ namespace tachyon
             return false;
         };
     }
+    /// @}
 }

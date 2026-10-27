@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup styling
+    /// @{
+
 	// Defined in gui_core/style/gui_style_ref.h.
     struct StyleRef;
     enum class LayoutStyleIndex : uint32_t;
@@ -197,4 +200,5 @@ namespace tachyon
         /// Free list for on-demand (runtime-mutable) color style slots.
         std::vector<VisualColorStyleIndex> m_freeColorStyleSlots;
     };
+    /// @}
 }

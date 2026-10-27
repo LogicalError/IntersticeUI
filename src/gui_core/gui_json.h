@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup utilities
+    /// @{
+
     /// A JSON value (RFC 8259): null, bool, number, string, array or object. Objects keep
     /// their members in order, so what is written reads back the same.
     class JsonValue
@@ -80,4 +83,5 @@ namespace tachyon
 
         std::variant<std::nullptr_t, bool, double, std::string, Array, Object> m_value = nullptr;
     };
+    /// @}
 }

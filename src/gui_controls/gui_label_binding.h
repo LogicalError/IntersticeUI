@@ -15,6 +15,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     class ElementStorage;
 
     /// Links labels to the controls they describe during construction; owned by GUIStateManager.
@@ -40,4 +43,5 @@ namespace tachyon
         /// First IsControl element in `rootRef`'s subtree (pre-order), or Invalid.
         static ID FindFirstControlInSubtree(const ElementStorage& storage, const ElementRef& rootRef);
     };
+    /// @}
 }

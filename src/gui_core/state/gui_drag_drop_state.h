@@ -10,6 +10,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     struct InputState;
 
     /// What a DragVisualizer draws from: the pointer, the source and target, and the payload.
@@ -108,4 +111,5 @@ namespace tachyon
         void BeginFrame();
         void EndFrameUpdate(ID hoveredForDrop, bool leftButtonDown);
     };
+    /// @}
 }

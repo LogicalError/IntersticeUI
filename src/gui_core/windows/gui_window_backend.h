@@ -13,6 +13,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     // gui_core/windows/gui_window_flags.h
     enum class WindowFlags : uint32_t;
 
@@ -247,4 +250,5 @@ namespace tachyon
         GraphicsContext*      m_graphicsContext = nullptr;
 
     };
+    /// @}
 } // namespace tachyon

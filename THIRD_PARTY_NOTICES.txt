@@ -22,6 +22,7 @@ tests and is not distributed.
   - Material Icons Round font (fonts/MaterialIconsRound-Regular.otf): Apache-2.0 (https://github.com/google/material-design-icons)
   - Material Symbols icons (icons/*.svg; visibility_mixed.svg is modified from "visibility"): Apache-2.0 (https://github.com/google/material-design-icons)
   - Lucide icons 1.61.0 (icons/lucide/*.svg and the built-in theme icons; view-textured.svg is drawn in its style): ISC, parts MIT (https://github.com/lucide-icons/lucide)
+  - doxygen-awesome-css v2.5.0 (docs/doxygen; styles the API reference only, not part of the library): MIT (https://github.com/jothepro/doxygen-awesome-css)
 
 ==============================================================================
 SDL 3 release-3.4.6
@@ -1231,6 +1232,33 @@ airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circl
 The MIT License (MIT) (for the icons listed above)
 
 Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+doxygen-awesome-css v2.5.0
+MIT - https://github.com/jothepro/doxygen-awesome-css
+==============================================================================
+
+MIT License
+
+Copyright (c) 2021 - 2023 jothepro
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

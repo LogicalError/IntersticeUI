@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls
+    /// @{
+
     class ElementStorage;
     class StyleManager;
     class FramePipeline;
@@ -67,4 +70,5 @@ namespace tachyon
         ElementStorage&         m_elementStorage;
         StyleManager&           m_styleManager;
     };
+    /// @}
 }

@@ -4,6 +4,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup controls_menus
+    /// @{
+
     /// Decides which element's tooltip shows: the hovered one after a delay, or at once
     /// for focus moved by the keyboard. Presses, keys, scrolling and open menus dismiss it.
     class TooltipManager
@@ -38,4 +41,5 @@ namespace tachyon
         bool  m_pressedLastFrame = false; ///< a press's focus change lands on the next frame
     };
 
+    /// @}
 } // namespace tachyon

@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     // Numbers as the text a field shows and edits.
 
     /// `value` as text; floats use up to 9 significant digits, NaN and infinities spelled out.
@@ -19,4 +22,5 @@ namespace tachyon
     bool FilterNumberText(NumericType type, std::string& text);
     /// Whether `codepoint` can be typed into a number of `type`.
     bool IsNumberCharacter(NumericType type, uint32_t codepoint);
+    /// @}
 }

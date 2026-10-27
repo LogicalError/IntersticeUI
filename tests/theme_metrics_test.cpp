@@ -1,4 +1,4 @@
-// Theme metrics from the Graphite spec that code relies on.
+// Theme metrics from the default theme that code relies on.
 
 #include <gtest/gtest.h>
 

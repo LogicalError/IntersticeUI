@@ -33,6 +33,9 @@ namespace tachyon
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     struct Style;
 
 
@@ -335,4 +338,5 @@ namespace tachyon::vulkan
         /// Library internal.
         void DestroyShader(const VkShaderModule& shader) const;
     };
+    /// @}
 }

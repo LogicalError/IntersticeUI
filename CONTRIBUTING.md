@@ -8,7 +8,7 @@ Thanks for wanting to help! Bug reports, ideas and pull requests are all welcome
 
 ## Setting up
 
-Follow [Requirements](README.md#requirements) and [Build](README.md#build) in the README. In short: clone with
+Follow [Quick start](README.md#quick-start) and [Reference](README.md#reference) in the README. In short: clone with
 `--recursive`, have [Git LFS](https://git-lfs.com/) installed (the fonts live in LFS) and the
 [Vulkan SDK](https://vulkan.lunarg.com/), then configure and build with CMake.
 

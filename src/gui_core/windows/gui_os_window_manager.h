@@ -13,6 +13,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     // Forward declarations
     class GraphicsContext;
     class IWindowBackend;
@@ -531,4 +534,5 @@ namespace tachyon
         void RemoveWindow(int32_t window_index);
 
     };
+    /// @}
 }

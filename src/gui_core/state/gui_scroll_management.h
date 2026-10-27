@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class IDManager;
     class ElementStorage;
     struct ElementRef;
@@ -65,4 +68,5 @@ namespace tachyon
 		/// Scrolls a text editor to show its cursor; `cursorPos` is in the editor's content space.
         bool MakeTextCursorVisibleInTextBox(ElementStorage& elementStorage, const ElementRef& textEditorRef, int2 cursorPos, int cursorHeight = 1);
     };
+    /// @}
 }

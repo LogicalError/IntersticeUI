@@ -8,6 +8,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup windows
+    /// @{
+
     /// A window backend without an OS: windows are records with a rect, and no
     /// input arrives (inject it with GUIApplication::Inject*). For headless runs,
     /// builds without SDL, and as the minimal example of a window backend.
@@ -61,4 +64,5 @@ namespace tachyon
         uintptr_t                                      m_nextHandle = 0;
         std::chrono::steady_clock::time_point          m_start = std::chrono::steady_clock::now();
     };
+    /// @}
 }

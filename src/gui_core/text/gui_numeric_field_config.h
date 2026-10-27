@@ -8,8 +8,12 @@
 
 namespace tachyon
 {
+    /// @addtogroup text
+    /// @{
+
     /// Drag speed and range of a numeric Field, specialized per value type. Typed and
     /// dragged values are clamped to [minVal, maxVal].
+    ///
     ///     Field(opacity, NumericFieldConfig<float>{ .minVal = 0.0f, .maxVal = 1.0f });
     template<typename T>
     struct NumericFieldConfig {};
@@ -177,4 +181,5 @@ namespace tachyon
             return int8_t(std::clamp(result, double(minVal), double(maxVal)));
         }
     };
+    /// @}
 }

@@ -19,6 +19,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup elements
+    /// @{
+
     class IDManager;
 
     /// What the window layer reports at the end of a frame's construction;
@@ -123,4 +126,5 @@ namespace tachyon
         /// the hovered element from `input`, then ends the frame's state.
         FrameHover EndFrame(const FrameInput& input, IDManager& idManager);
     };
+    /// @}
 }

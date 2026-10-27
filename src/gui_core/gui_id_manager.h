@@ -13,9 +13,16 @@
 // ID system: static, dynamic and ranged identifiers for GUI elements.
 namespace tachyon 
 {
+    /// @addtogroup elements
+    /// @{
+
     struct ID;
     /// Makes element IDs: per-frame dynamic / ranged IDs (hashed from the call site or a hint
     /// and the parent stack) and persistent static IDs.
+    ///
+    ///     windowID = idManager.CreateStaticID();              // once: windows, panels, docks
+    ///     Button("OK", onOK);                                 // the call site is the ID
+    ///     BeginTabBar(idManager.AllocateDynamicID("tabs"), &selectedTab, nullptr);   // a hint
     class IDManager
     {
         // ------------------------------------------------------------------------
@@ -193,4 +200,5 @@ namespace tachyon
 #endif
     };
 
+    /// @}
 } // namespace tachyon

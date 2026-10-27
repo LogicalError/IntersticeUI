@@ -7,11 +7,16 @@
 
 namespace tachyon
 {
+    /// @addtogroup app
+    /// @{
+
     /// What a control shows: a text, an icon or both, and an optional tooltip. It converts
     /// from a string or an icon, so a control showing one of them takes it as is:
+    ///
     ///     Button("Save", onSave);
     ///     Button(saveIcon, onSave);
     ///     Button({ saveIcon, "Save", "Write the file to disk" }, onSave);
+    ///
     /// It refers to its strings, which only need to live for the call.
     struct GUIContent
     {
@@ -30,4 +35,5 @@ namespace tachyon
         constexpr GUIContent(IconID icon, std::string_view text = {}, std::string_view tooltip = {})
             : icon(icon), text(text), tooltip(tooltip) {}
     };
+    /// @}
 }

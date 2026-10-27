@@ -9,6 +9,9 @@
 
 namespace tachyon
 {
+    /// @addtogroup utilities
+    /// @{
+
     /// std::from_chars for a decimal number, through a classic-locale stream. For standard
     /// libraries without floating-point from_chars. The number is scanned first, as
     /// from_chars does ([-]digits[.digits][e[+-]digits], no '+' or whitespace before it):
@@ -57,4 +60,5 @@ namespace tachyon
         return FromCharsStream(first, last, value);
 #endif
     }
+    /// @}
 }

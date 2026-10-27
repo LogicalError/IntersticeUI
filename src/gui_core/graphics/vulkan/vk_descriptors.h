@@ -7,6 +7,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     struct DescriptorLayoutBuilder 
     {
         ::std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -72,4 +75,5 @@ namespace tachyon::vulkan
         uint32_t setsPerPool;
         const VkAllocationCallbacks* callbacks = nullptr;
     };
+    /// @}
 }

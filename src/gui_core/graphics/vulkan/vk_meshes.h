@@ -7,6 +7,9 @@
 
 namespace tachyon::vulkan
 {
+    /// @addtogroup graphics_vulkan
+    /// @{
+
     struct Buffer
     {
         VkBuffer buffer;
@@ -24,4 +27,5 @@ namespace tachyon::vulkan
         tachyon::vulkan::VisualBoxStyleBuffers visualBoxStyleBuffers;
         tachyon::vulkan::VisualColorStyleBuffers visualColorStyleBuffers;
     };
+    /// @}
 }
