@@ -1,12 +1,31 @@
 #include <gui_core/gui_resources.h>
 #include <gui_core/gui_embedded_files_internal.h>
+#include <gui_core/diagnostics/gui_logging.h>
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 
 namespace tachyon
 {
+    namespace
+    {
+        constexpr Diagnostics::LogCategory kLogResources = Diagnostics::MakeLogCategory("resources");
+
+        // Windows file names ignore case, so the built-in copies do too there.
+        bool SameName(std::string_view a, std::string_view b)
+        {
+#ifdef _WIN32
+            return std::equal(a.begin(), a.end(), b.begin(), b.end(), [](char x, char y)
+                { return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y)); });
+#else
+            return a == b;
+#endif
+        }
+    }
+
     namespace detail
     {
         std::span<const std::byte> FindEmbeddedFile(std::span<const EmbeddedFile> files, std::string_view path)
@@ -15,9 +34,11 @@ namespace tachyon
             const std::string_view p = normal;
             for (const EmbeddedFile& file : files)
             {
-                if (p == file.key)
-                    return file.data;
-                if (p.size() > file.key.size() && p.ends_with(file.key) && p[p.size() - file.key.size() - 1] == '/')
+                if (p.size() < file.key.size())
+                    continue;
+                const std::string_view tail = p.substr(p.size() - file.key.size());
+                const bool atBoundary = p.size() == file.key.size() || p[p.size() - file.key.size() - 1] == '/';
+                if (atBoundary && SameName(tail, file.key))
                     return file.data;
             }
             return {};
@@ -43,7 +64,10 @@ namespace tachyon
             return Error{ ErrorCode::Failed, "could not read " + std::string(path) };
         }
         if (const std::span<const std::byte> data = FindBuiltInResource(path); !data.empty())
+        {
+            TACHYON_LOG_INFO(kLogResources, "{}: no such file, using the built-in copy", path);
             return std::string(reinterpret_cast<const char*>(data.data()), data.size());
+        }
         return Error{ ErrorCode::NotFound, std::string(path) + " not found, and the library has no built-in copy" };
     }
 }

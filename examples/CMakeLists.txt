@@ -1,6 +1,6 @@
-# The examples, one folder each. The small ones are standalone programs that load the
-# resources through SetResourceRoot(TACHYON_RESOURCE_DIR), so they run from any folder;
-# the showcase is a larger editor-style app that runs from workdirectory/.
+# The examples, one folder each, all of which run from any folder. The small ones need no
+# resource files; the showcase finds its own (showcase.css, icons) through
+# SetResourceRoot(TACHYON_RESOURCE_DIR).
 
 # tachyon_add_example(<name> <sources...> [LIBS <libraries...>]): an example executable in
 # the current folder. TACHYON_EXAMPLE_DIR is that folder, for the example's own files.

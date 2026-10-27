@@ -48,7 +48,7 @@ cd TachyonUI
 | Windows | `build.bat` | `bin\Debug\showcase.exe` |
 | Linux and macOS | `./build.sh` | `bin/Debug/showcase` |
 
-`build Release` builds the Release configuration into `bin/Release`. Every program in `bin/`
+`build.bat Release` (or `./build.sh Release`) builds the Release configuration into `bin/Release`. Every program in `bin/`
 runs on its own: the examples, the showcase and the tests.
 
 The scripts use the CMake presets in `CMakePresets.json`, which Visual Studio, VS Code
@@ -140,7 +140,7 @@ The first configure builds the third-party libraries once into `build/third_part
 | `TACHYON_SDL` | on | The SDL window backend; off builds without SDL |
 | `TACHYON_SYSTEM_SDL`, `_HARFBUZZ`, `_VMA` | off | Use the host's copy of that library |
 | `TACHYON_FALLBACK_FONTS` | off | Copy and install the Noto fallback fonts |
-| `TACHYON_EMBED_RESOURCES` | on | Build the default themes and fonts into the library |
+| `TACHYON_EMBED_RESOURCES` | on | Build the default themes and fonts into the library; off needs `SetResourceRoot` in every program |
 </details>
 
 <details>

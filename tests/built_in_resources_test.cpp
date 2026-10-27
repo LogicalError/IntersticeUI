@@ -32,8 +32,13 @@ namespace
     {
         if (!Embedded()) GTEST_SKIP() << "built without TACHYON_EMBED_RESOURCES";
         EXPECT_FALSE(FindBuiltInResource("themes/styles.css").empty());
-        EXPECT_FALSE(FindBuiltInResource("C:\\app\\resources\\themes\\styles.css").empty());
+        EXPECT_FALSE(FindBuiltInResource("C:/app/resources/themes/styles.css").empty());
         EXPECT_FALSE(FindBuiltInResource("/opt/app/themes/../fonts/Inter/Inter-Regular.ttf").empty());
+#ifdef _WIN32
+        // Backslashes separate folders only on Windows.
+        EXPECT_FALSE(FindBuiltInResource("C:\\app\\resources\\themes\\styles.css").empty());
+        EXPECT_FALSE(FindBuiltInResource("C:\\app\\Resources\\Themes\\Styles.css").empty()) << "Windows paths ignore case";
+#endif
         EXPECT_FALSE(FindBuiltInResource("fonts/JetBrainsMono/JetBrainsMono-Bold.ttf").empty());
     }
 
@@ -58,13 +63,26 @@ namespace
         }
     }
 
+    // A file on disk wins over the built-in copy of the same name.
     TEST(BuiltInResources, ReadResourcePrefersTheFileOnDisk)
     {
-        // showcase.css has no built-in copy, so this can only come from disk.
-        const Result<std::string> onDisk = ReadResource("themes/showcase.css");
-        ASSERT_TRUE(onDisk) << onDisk.GetError().message;
-        EXPECT_FALSE(onDisk->empty());
+        if (!Embedded()) GTEST_SKIP() << "built without TACHYON_EMBED_RESOURCES";
+        const std::filesystem::path folder = std::filesystem::temp_directory_path() / "tachyon-resource-test" / "themes";
+        std::filesystem::create_directories(folder);
+        const std::filesystem::path file = folder / "dark.css";
+        {
+            std::ofstream out(file, std::ios::binary);
+            out << ":root { --accent: #123456; }\n";
+        }
+        const Result<std::string> read = ReadResource(file.string());
+        std::error_code ec;
+        std::filesystem::remove(file, ec);
+        ASSERT_TRUE(read) << read.GetError().message;
+        EXPECT_EQ(*read, ":root { --accent: #123456; }\n");
+    }
 
+    TEST(BuiltInResources, ReadResourceReportsAFileWithNoBuiltInCopy)
+    {
         const Result<std::string> missing = ReadResource(MissingFolder() + "/themes/showcase.css");
         ASSERT_FALSE(missing);
         EXPECT_EQ(missing.GetError().code, ErrorCode::NotFound);

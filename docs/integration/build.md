@@ -31,7 +31,7 @@ Options, set before `add_subdirectory`:
 | `TACHYON_SYSTEM_VMA` | off | Use the host's VulkanMemoryAllocator |
 | `TACHYON_VMA_IMPLEMENTATION` | on | Compile VMA's implementation into `gui_core`; off when the host links its own |
 | `TACHYON_FALLBACK_FONTS` | off | Copy (and install) the Noto fallback fonts with the resources |
-| `TACHYON_EMBED_RESOURCES` | on | Build the default themes and fonts into `gui_core` (about 3 MB); off loads them from the resource root only |
+| `TACHYON_EMBED_RESOURCES` | on | Build the default themes and fonts into `gui_core` (about 3 MB). Off loads them from the resource root only, so every program, the examples included, must call `SetResourceRoot` with a folder that holds `themes/` and `fonts/` |
 
 The `TACHYON_SYSTEM_*` options take a target the host already defined
 (`SDL3::SDL3`, `harfbuzz::harfbuzz`, `GPUOpen::VulkanMemoryAllocator`), or else one

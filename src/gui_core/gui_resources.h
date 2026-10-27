@@ -18,9 +18,10 @@ namespace tachyon
     /// and "C:/app/resources/themes/styles.css" both find it. Empty when there is none.
     std::span<const std::byte> FindBuiltInResource(std::string_view path);
 
-    /// A resource's contents: the file at `path` when it exists, else its built-in copy.
-    /// The library reads its themes this way, so an app needs no resource files, and a file
-    /// of the same name under the resource root replaces the built-in one.
+    /// A resource's contents: the file at `path` when it exists, else its built-in copy (which
+    /// is logged, so a theme file that went missing shows up). The library reads its themes
+    /// this way, so an app needs no resource files, and a file of the same name under the
+    /// resource root replaces the built-in one.
     Result<std::string> ReadResource(std::string_view path);
 
     /// @}

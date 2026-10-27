@@ -1,7 +1,7 @@
 // An app that links the library and does nothing else: no resource root, no files. The
 // shaders, themes and fonts it needs are built into the library.
 
-#include <gtest/gtest.h>
+#include "gpu_test_harness.h"
 
 #include <gui_controls/gui_application_internal.h>
 
@@ -36,13 +36,13 @@ namespace
 
     TEST(GpuZeroSetup, AnAppWithNoResourceFilesInitializesAndDraws)
     {
+        if (!GpuTestHarness::VulkanDeviceAvailable())
+            GTEST_SKIP() << "no Vulkan device available";
+
         ZeroSetupApp app;
         app.SetResourceRoot((std::filesystem::temp_directory_path() / "tachyon-no-such-resources").string());
-        if (!app.Initialize())
-        {
-            app.Cleanup();
-            GTEST_SKIP() << "no Vulkan device available";
-        }
+        const tachyon::Result<void> initialized = app.Initialize();
+        ASSERT_TRUE(initialized) << initialized.GetError().message;
         app.windowID = app.idManager.CreateStaticID();
         app.buttonID = app.idManager.CreateStaticID();
         EXPECT_TRUE(app.theme.FindStyle("button")) << "the built-in theme is loaded";

@@ -138,16 +138,20 @@ set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO "RelWithDebInfo;Release")
 set(CMAKE_MAP_IMPORTED_CONFIG_MINSIZEREL     "MinSizeRel;Release")
 
 # A target the host already defined is used as it is.
-if(TACHYON_SDL AND NOT TARGET SDL3::SDL3)
+set(_tachyon_host_sdl FALSE)
+if(TACHYON_SDL AND TARGET SDL3::SDL3)
+  set(_tachyon_host_sdl TRUE)
+elseif(TACHYON_SDL)
   find_package(SDL3 CONFIG REQUIRED)
 endif()
 # The SDL the project links: the host's SDL3::SDL3, or the bundled static library by name,
-# since SDL3::SDL3 means the shared one wherever its files are present too.
+# since SDL3::SDL3 means the shared one wherever its files are present too. Cached, so a
+# host that calls SDL itself can link the same one.
 if(TACHYON_SDL)
-  if(TACHYON_SYSTEM_SDL)
-    set(TACHYON_SDL_TARGET SDL3::SDL3)
+  if(TACHYON_SYSTEM_SDL OR _tachyon_host_sdl)
+    set(TACHYON_SDL_TARGET SDL3::SDL3 CACHE INTERNAL "The SDL target TachyonUI links")
   else()
-    set(TACHYON_SDL_TARGET SDL3::SDL3-static)
+    set(TACHYON_SDL_TARGET SDL3::SDL3-static CACHE INTERNAL "The SDL target TachyonUI links")
   endif()
 endif()
 

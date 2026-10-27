@@ -11,6 +11,8 @@
 #                                                        library has the default ones built in
 #   TACHYON_RESOURCE_DIR (compile definition)         the same folder, for
 #                                                        GUIApplication::SetResourceRoot
+#   TACHYON_SDL_TARGET                                the SDL target the libraries link
+#                                                        (SDL3::SDL3-static when bundled)
 #
 # The package is built with MSVC for Windows x64 and links the same toolchain
 # as its consumer; mixing C++ runtimes or standard library versions is not
@@ -24,6 +26,8 @@ list(PREPEND CMAKE_PREFIX_PATH "${PACKAGE_PREFIX_DIR}")
 find_dependency(Vulkan)
 if(@TACHYON_SDL@)
   find_dependency(SDL3 CONFIG)
+  # The SDL the libraries link, for a consumer that calls SDL too.
+  set(TACHYON_SDL_TARGET "@TACHYON_SDL_TARGET@")
 endif()
 # harfbuzz links Threads::Threads where it uses pthreads, without finding it.
 find_dependency(Threads)

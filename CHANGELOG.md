@@ -13,3 +13,7 @@ First public preview. The API is not stable yet.
 - UI scaling that follows the display, with stored sizes in CSS pixels.
 - Retained render cache for panels that haven't changed.
 - CMake package: `find_package(TachyonUI)` with `TachyonUI::gui_core` and `TachyonUI::gui_controls`; Windows x64 with MSVC.
+- No files or DLLs to ship: the shaders, the default themes and the fonts are built into the library (`TACHYON_EMBED_RESOURCES`), and the bundled SDL3 is linked statically. `SetResourceRoot` is only needed for an app's own themes and fonts; a file there replaces the built-in one of the same name.
+- `GraphicsContext::SetShaderDirectory` is gone; `VulkanGraphicsContext::SetShaderDirectory` loads shaders from disk instead of the built-in ones. The package no longer installs `shaders_compiled/`.
+- `TACHYON_SDL_TARGET`: the SDL target the libraries link (`SDL3::SDL3-static`, or the host's `SDL3::SDL3`), for a host that calls SDL too.
+- `build.bat` / `build.sh` and `CMakePresets.json`; every example runs from any folder.

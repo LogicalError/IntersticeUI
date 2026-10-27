@@ -31,8 +31,11 @@ if(FILES)
     if(_size EQUAL 0)
       set(_bytes "0x00")
     else()
+      # 32 bytes a line. CMake regexes have no {n}, so the line's pattern is spelled out.
+      string(REPEAT "[0-9a-f][0-9a-f]" 32 _line)
+      string(REGEX REPLACE "(${_line})" "\\1\n" _hex "${_hex}")
       string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," _bytes "${_hex}")
-      string(REGEX REPLACE "((0x[0-9a-f][0-9a-f],){24})" "\\1\n            " _bytes "${_bytes}")
+      string(REPLACE "\n" "\n            " _bytes "${_bytes}")
     endif()
 
     string(APPEND _source "        // ${_key}\n")
@@ -55,3 +58,5 @@ string(APPEND _source "    }\n}\n")
 file(WRITE "${OUTPUT}.tmp" "${_source}")
 file(COPY_FILE "${OUTPUT}.tmp" "${OUTPUT}" ONLY_IF_DIFFERENT)
 file(REMOVE "${OUTPUT}.tmp")
+# Newer than the inputs even when unchanged, or Visual Studio runs this again on every build.
+file(TOUCH_NOCREATE "${OUTPUT}")
