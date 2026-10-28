@@ -866,9 +866,10 @@ namespace tachyon
                 if (desiredStyle != style)
                 {
                     SetWindowLongPtr(hwnd, GWL_STYLE, desiredStyle);
-                    // Force a frame update so the style change takes effect.
+                    // Force a frame update so the style change takes effect, without
+                    // activating the window (that would take the keyboard from its owner).
                     SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
                 }
             }
 
@@ -1478,6 +1479,23 @@ namespace tachyon
         m_suppressLiveResize = true;
         SDL_SetWindowPosition(sdl_window, clientRect.x, clientRect.y);
         SDL_SetWindowSize(sdl_window, std::max(0, RoundToInt(clientRect.w * k)), std::max(0, RoundToInt(clientRect.h * k)));
+#ifdef _WIN32
+        // A window that draws its own title bar has no OS caption, but SDL still allows for one
+        // when it turns this client rect into a window rect: it comes out a caption higher up
+        // and taller. Set it again, off by what it came out off by.
+        const HWND hwnd = static_cast<HWND>(SDL_GetPointerProperty(SDL_GetWindowProperties(sdl_window),
+                                                                   SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+        if (hwnd != nullptr && GetPropW(hwnd, kPrevWndProcProp) != nullptr)
+        {
+            const IntRect got = GetWindowRect(h);
+            if (got.position != clientRect.position || got.size != clientRect.size)
+            {
+                SDL_SetWindowPosition(sdl_window, 2 * clientRect.x - got.x, 2 * clientRect.y - got.y);
+                SDL_SetWindowSize(sdl_window, std::max(0, RoundToInt((2 * clientRect.w - got.w) * k)),
+                                              std::max(0, RoundToInt((2 * clientRect.h - got.h) * k)));
+            }
+        }
+#endif
         m_suppressLiveResize = false;
         return true;
     }

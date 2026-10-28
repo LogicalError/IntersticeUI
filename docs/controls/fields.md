@@ -48,8 +48,8 @@ bool AutocompleteField(ID id, std::string& value, std::span<const std::string_vi
                        LayoutOverride&& constraints = {});
 ```
 
-The list holds the suggestions that contain the typed text, ignoring case, at most 12;
-none when the only one is exactly what's typed. Up / Down highlight one, and Enter or a
+Once something is typed, the list holds the suggestions that contain it, ignoring case, at
+most 12; none when the only one is exactly what's typed. Up / Down highlight one, and Enter or a
 click puts it into `value`. Nothing is highlighted until Down, so Enter on its own keeps
 what was typed. Escape, a pick or a click elsewhere closes the list, and typing opens it
 again. Returns `true` when `value` changed, by typing or by a pick. Classes: `textbox` for

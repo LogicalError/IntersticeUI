@@ -211,6 +211,24 @@ namespace
         EXPECT_EQ(created.y, 20);
     }
 
+    // On the screen but with its top above it, where it can't be grabbed or closed: placed by
+    // the app, as if off every monitor.
+    TEST_F(UIStateTest, AWindowSavedWithItsTopOffTheScreenIsPlacedByTheApp)
+    {
+        const ID windowID = app.idManager.CreateStaticID();
+        app.PersistWindow("main", windowID);
+        app.Frame([&] {});
+        ASSERT_TRUE(app.RestoreUIState(R"({"windows":{"main":{"x":331,"y":-77,"w":1700,"h":900}}})"));
+        app.Frame([&] {
+            if (app.BeginWindow(windowID, "Main", LayoutOverride{}.Size(300, 200).Position(10, 20)))
+                app.Label("inside");
+            app.EndWindow();
+        });
+        const IntRect created = app.GetElementRect(windowID);
+        EXPECT_EQ(created.h, 900) << "its size is kept";
+        EXPECT_EQ(created.y, 20) << "the app's own position, not with its top off the screen";
+    }
+
     TEST_F(UIStateTest, MalformedOrNewerStateIsAnError)
     {
         EXPECT_FALSE(app.RestoreUIState("{ not json"));

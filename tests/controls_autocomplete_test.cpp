@@ -76,11 +76,13 @@ namespace tachyon
             int            changes = 0;
         };
 
-        TEST_F(AutocompleteTest, ListsNothingUntilFocused)
+        TEST_F(AutocompleteTest, ListsNothingUntilSomethingIsTyped)
         {
             EXPECT_EQ(ListedCount(), 0);
             Focus();
-            EXPECT_EQ(ListedCount(), 6) << "every suggestion contains the empty text";
+            EXPECT_EQ(ListedCount(), 0) << "focusing an empty field shows no list";
+            Type("a");
+            EXPECT_GT(ListedCount(), 0);
         }
 
         TEST_F(AutocompleteTest, TypingFiltersIgnoringCase)
