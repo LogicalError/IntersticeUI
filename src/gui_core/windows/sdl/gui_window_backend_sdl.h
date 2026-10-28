@@ -88,6 +88,7 @@ namespace tachyon
 
         bool SetWindowRect(OSWindowHandle, const IntRect& clientRect) override;
         void SetWindowVisible(OSWindowHandle, bool visible) override;
+        bool SetWindowCloaked(OSWindowHandle, bool cloaked) override;
         void       SetWindowMode(OSWindowHandle, WindowMode) override;
         WindowMode GetWindowMode(OSWindowHandle) const override;
 

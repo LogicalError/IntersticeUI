@@ -208,8 +208,17 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     // -- Layout. SyncWindowsBeforeLayout is skipped (no live OS windows).
     layoutEngine->Layout(*windowManager, elementStorage);
 
-    // Per-element AddPostLayout callbacks are skipped (they need a
-    // PostLayoutContext the stub doesn't model); subsystem OnPostLayout runs.
+    // AddPostLayout callbacks only when asked (runPostLayoutCallbacks); the subsystems'
+    // OnPostLayout always runs, after them as in GUIApplication::Frame.
+    for (const auto& entry : elementStorage.GetPostLayoutEntries())
+    {
+        if (!runPostLayoutCallbacks) break;
+        const auto* er = elementStorage.GetElementRectPtr(entry.ownerRef);
+        if (!er) continue;
+        tachyon::PostLayoutContext plCtx{ elementStorage, entry.ownerRef,
+                                          er->rect, er->innerRect, er->contentTransform };
+        entry.callback(plCtx);
+    }
     m_frame.RunStage(tachyon::FrameStage::PostLayout, ctx);
 
     windowRegistry.BuildRenderSkipLinks();
@@ -235,6 +244,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     const tachyon::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
 
     menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
+    RunPressOutsideWatches();
     InvalidateCachedScopesForInput(overID);
 
     // -- Dispatch the queued input events to element handlers.

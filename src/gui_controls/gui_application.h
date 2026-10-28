@@ -12,6 +12,7 @@
 #include <source_location>
 #include <span>
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <string>
 #include <utility>
@@ -581,6 +582,21 @@ namespace tachyon
         inline bool BeginMenu(       std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenu(idManager.AllocateDynamicID(site), text, buttonStyle, menuStyle, itemStyle, std::move(constraints)); }
         /// As above, with the call site as the ID, in the theme's menu styles.
         inline bool BeginMenu(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenu(idManager.AllocateDynamicID(site), text, theme.controls->menuTrigger, theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)); }
+        /// A dropdown: a field showing options[selected] that opens the list of options under
+        /// itself. Picking one (click, or arrows and Enter) sets `selected` and returns true on
+        /// that frame; Escape or a click elsewhere closes the list unchanged. The open list
+        /// starts on the current option. An out-of-range `selected` shows an empty field.
+        bool        Dropdown(ID id, int& selected, std::span<const std::string_view> options, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's dropdown style.
+        inline bool Dropdown(ID id, int& selected, std::span<const std::string_view> options, LayoutOverride&& constraints = {}) { return Dropdown(id, selected, options, theme.controls->menuTrigger, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool Dropdown(       int& selected, std::span<const std::string_view> options, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Dropdown(idManager.AllocateDynamicID(site), selected, options, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's dropdown style.
+        inline bool Dropdown(       int& selected, std::span<const std::string_view> options, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Dropdown(idManager.AllocateDynamicID(site), selected, options, theme.controls->menuTrigger, std::move(constraints)); }
+        /// With the options written in place: Dropdown(quality, { "Low", "Medium", "High" }).
+        inline bool Dropdown(ID id, int& selected, std::initializer_list<std::string_view> options, LayoutOverride&& constraints = {}) { return Dropdown(id, selected, std::span<const std::string_view>(options.begin(), options.size()), theme.controls->menuTrigger, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool Dropdown(       int& selected, std::initializer_list<std::string_view> options, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Dropdown(idManager.AllocateDynamicID(site), selected, std::span<const std::string_view>(options.begin(), options.size()), theme.controls->menuTrigger, std::move(constraints)); }
         /// A section's name between items, e.g. "View", lined up with the labels.
         void        MenuHeader(std::string_view text);
         /// A modal question with verb buttons, centered. Call it every frame while asking; it
@@ -2205,6 +2221,12 @@ namespace tachyon
         /// Invalidates the scopes under the cursor and, on key input, the focused one.
         /// Call after hit-testing, before dispatch.
         void        InvalidateCachedScopesForInput(ID overID);
+        /// Rebuilds, next frame, the cached scopes `id` is in.
+        void        InvalidateCachedScopesAbove(ID id);
+        /// As InvalidateCachedScopesAbove, from layout: this frame's capture would clear it, so
+        /// it applies after the frame is drawn.
+        void        RebuildCachedScopesAbove(ID id) { m_cacheRebuildRequests.push_back(id); }
+        std::vector<ID> m_cacheRebuildRequests;
 
         /// Internal: called by the docking each frame.
         void        NotePanelContentID(ID panelId, ID contentID) { m_panelContentIDs[panelId] = contentID; }
@@ -2231,6 +2253,13 @@ namespace tachyon
         std::vector<ID> m_titleBarStack;    ///< bar IDs between BeginTitleBar and EndTitleBar
         std::vector<ID> m_titleBarCaptions; ///< controls in the open title bar whose background drags the window
         std::unordered_set<ID> m_closeRequests;   ///< ConfirmClose windows whose title-bar close was clicked
+        /// A popup that isn't a menu (the command search's list) and closes on a press outside
+        /// its elements: they take no focus, so the press may not move it away from them.
+        struct PressOutsideWatch { ID inside[2]; std::function<void()> onPressOutside; };
+        std::vector<PressOutsideWatch> m_pressOutsideWatches;   ///< this frame's, from construction
+        void CloseOnPressOutside(ID inside, ID alsoInside, std::function<void()> onPressOutside)
+        { m_pressOutsideWatches.push_back({ { inside, alsoInside }, std::move(onPressOutside) }); }
+        void RunPressOutsideWatches();
         std::vector<TextStyle> m_mnemonicStyles;  ///< this frame's underlined mnemonic letters (MessageDialog)
         /// Windows dimmed under a modal dialog, by window ID: fading in while wanted, out after.
         struct ScrimFade { float amount = 0.0f; bool wanted = false; VisualColorStyleIndex color = VisualColorStyleIndex::Invalid; };

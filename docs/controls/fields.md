@@ -39,6 +39,31 @@ bool SearchField(ID id, std::string& value, IconID icon,
 
 Classes: `search-textbox`, `search-textbox-icon`, `search-textbox-field`.
 
+## Dropdown
+
+A field that shows the selected option and opens the list of options under itself.
+
+```cpp
+bool Dropdown(ID id, int& selected, std::span<const std::string_view> options, StyleRef style,
+              LayoutOverride&& constraints = {});
+bool Dropdown(int& selected, std::initializer_list<std::string_view> options,
+              LayoutOverride&& constraints = {});
+```
+
+Picking an option, with a click or with the arrow keys and Enter, sets `selected` and
+returns `true` on that frame; the field shows the new option from the next frame. Escape
+or a click elsewhere closes the list without a change. The list opens with the keyboard
+on the current option. A `selected` outside the options shows an empty field. Default
+class: `menu-trigger` (popup `menu`, rows `menu-item-row`).
+
+```cpp
+static constexpr std::string_view kThemes[] = { "Dark", "Light" };
+if (Dropdown(themeIndex, kThemes))
+    ApplyTheme(themeIndex);
+
+Dropdown(quality, { "Low", "Medium", "High" });
+```
+
 ## Numeric fields
 
 ```cpp

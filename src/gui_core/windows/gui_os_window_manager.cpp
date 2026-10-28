@@ -164,6 +164,26 @@ namespace tachyon
         // or resolution changed.
         RefreshMonitors();
 
+        // New popups show after this frame's present once they've been drawn enough.
+        for (auto& window : windows)
+        {
+            if (window.framesHidden == 0)
+                continue;
+            const bool show = window.state != WindowState::Alive || --window.framesHidden == 0;
+            if (!show)
+                continue;
+            window.framesHidden = 0;
+            if (window.GetWindowHandle() == nullptr)
+                continue;
+            if (std::exchange(window.cloaked, false))
+                windowBackendManager->SetWindowCloaked(window.GetWindowHandle(), false);
+            if (window.state == WindowState::Alive)   // a closed one shows when it's reopened
+            {
+                windowBackendManager->SetWindowVisible(window.GetWindowHandle(), true);
+                RaisePopup(window);
+            }
+        }
+
         // Remove windows after all processing is done
         for (int32_t window_index = 0; window_index < static_cast<int32_t>(windows.size()); )
         {
@@ -380,11 +400,23 @@ namespace tachyon
         }
 
         Window* parentWindow = FindWindow(parentID);
-        
-        tachyon::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect, windowFlags,
+
+        // A new popup shows once it has been drawn a few times: shown at once, it is an empty
+        // frame until its first presents reach the screen, and its first layout lacks what it
+        // learns from being open (a menu's icon column). Meanwhile it is shown cloaked where
+        // the backend can, since what's presented to a hidden window doesn't show when it
+        // appears. Reopening reuses the window, drawn.
+        const bool newPopup = (windowFlags & WindowFlags::PopupMenu) != WindowFlags::None;
+        constexpr int32_t kNewPopupFramesHidden = 4;
+
+        tachyon::OSWindowHandle osHandle = windowBackendManager->CreateWindow(title, rect,
+                newPopup ? windowFlags | WindowFlags::Hidden : windowFlags,
                 parentWindow != nullptr ? parentWindow->GetWindowHandle() : nullptr);
         if (osHandle == nullptr)
             return AddWindowResult::FailedToCreateOSWindow;
+        const bool cloaked = newPopup && windowBackendManager->SetWindowCloaked(osHandle, true);
+        if (cloaked)
+            windowBackendManager->SetWindowVisible(osHandle, true);
 
         IWindowContext* windowContext = nullptr;
         if (graphicsContext != nullptr)
@@ -417,6 +449,8 @@ namespace tachyon
             .monitorIndex = monitorIndex,
             .displayScale = QueryDisplayScale(osHandle),
             .sequence     = m_nextSequence++,
+            .framesHidden = newPopup ? kNewPopupFramesHidden : 0,
+            .cloaked      = cloaked,
             .osHandle     = osHandle,
             .context      = windowContext,
             .onGui        = std::move(onGui)
@@ -425,7 +459,8 @@ namespace tachyon
         window.parentID = ID::Invalid();
         windows.push_back(std::move(window));
         LinkToParent(idx, parentID);
-        RaisePopup(windows.back());
+        if (!newPopup)
+            RaisePopup(windows.back());   // a new popup is raised when it shows
         return AddWindowResult::SuccessCreate;
     }
 

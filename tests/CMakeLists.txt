@@ -92,6 +92,7 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_shaping_test.cpp
   font_set_test.cpp
   built_in_resources_test.cpp
+  controls_dropdown_test.cpp
   tutorial_test.cpp
   tutorial_snippets_test.cpp
   skribidi_editor_test.cpp

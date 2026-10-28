@@ -2,9 +2,10 @@
 
 ## BeginMenu / EndMenu
 
-Outside a menu, `BeginMenu` is a dropdown button that opens a menu (this is also the
-dropdown / combo box). Inside a menu it is a submenu item. Inside a menu bar it is a bar
-trigger. Returns whether the menu is open; call `EndMenu` either way.
+Outside a menu, `BeginMenu` is a dropdown button that opens a menu. Inside a menu it is a
+submenu item. Inside a menu bar it is a bar trigger. Returns whether the menu is open;
+call `EndMenu` either way. To pick one value from a list, use
+[`Dropdown`](fields.md#dropdown) instead.
 
 ```cpp
 bool BeginMenu(ID id, std::string_view text, StyleRef buttonStyle, StyleRef menuStyle, StyleRef itemStyle,

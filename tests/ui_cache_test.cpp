@@ -114,6 +114,59 @@ namespace tachyon
             EXPECT_FALSE(app.HasElement(btnA)); // content absent
         }
 
+        // A node view centers its nodes with last frame's canvas size. When the canvas
+        // changes size on a frame its cached panel rebuilds anyway (here: a taller header
+        // and a new signature), the panel must rebuild once more, or it keeps showing the
+        // nodes centered for the old size until something else rebuilds it.
+        TEST_F(UICacheTest, ANodeViewRebuildsItsCachedPanelWhenItsCanvasResizes)
+        {
+            app.SetDrawCacheEnabled(true);
+            app.runPostLayoutCallbacks = true;   // the view learns its canvas size there
+            NodeView view;
+            NodeModel node{};
+            node.stableID = app.idManager.CreateStaticID();
+            node.title    = "A";
+            node.pos      = { 40, 40 };
+            view.nodes.push_back(std::move(node));
+            const ID headerID = app.idManager.CreateStaticID();
+            uint64_t signature = 0;
+            int headerHeight = 20;
+            auto frame = [&] {
+                // Laid out as a docked panel: the canvas fills what the header leaves.
+                app.Frame([&] {
+                    app.BeginRootWindow({ 1920, 1080 }, ElementFlags::None, app.theme.mainWindowStyleRef);
+                    if (app.BeginCached(scopeID, app.theme.dockContentStyleRef, signature,
+                                        tachyon::LayoutOverride{}.Width(600).Height(400)))
+                    {
+                        bodyRuns++;
+                        app.BeginVertical(headerID, LayoutOverride{}.Height(CssPx(headerHeight)).NoGrow().NoShrink());
+                        app.EndVertical();
+                        app.RenderNodeView(view);
+                    }
+                    app.EndCached();
+                    app.EndRootWindow();
+                });
+            };
+
+            for (int i = 0; i < 4; ++i)
+                frame();
+            const int settled = bodyRuns;
+            frame();
+            ASSERT_EQ(bodyRuns, settled) << "test setup: the panel is served from the cache";
+
+            const int2 before = view.lastInnerSize;
+            signature = 1;
+            headerHeight = 80;
+            frame();
+            ASSERT_GT(before.y, 0) << "test setup: the canvas has a size";
+            ASSERT_NE(view.lastInnerSize.y, before.y) << "test setup: the canvas got shorter";
+            ASSERT_EQ(bodyRuns, settled + 1) << "test setup: the new signature rebuilds it";
+            frame();
+            EXPECT_EQ(bodyRuns, settled + 2) << "rebuilt with the nodes centered for the new size";
+            frame();
+            EXPECT_EQ(bodyRuns, settled + 2) << "then served from the cache again";
+        }
+
         // A scrollable scope keeps its scroll handle alive across clean frames (so the
         // offset persists), and a scroll change forces a rebuild.
         TEST_F(UICacheTest, RetainedCacheKeepsScrollHandleAndRebuildsOnScroll)
