@@ -1,11 +1,60 @@
 #include <gui_controls/gui_application.h>
 
+#include <algorithm>
+#include <string>
+
 namespace tachyon
 {
 
     // ---------------------------------------------------------------------------
     // TabBar
     // ---------------------------------------------------------------------------
+
+    namespace
+    {
+        // Which tabs fit in the bar, from last frame's sizes: the first ones, in order, and the
+        // selected one in place of the last ones that fit when it isn't among them. Room is left
+        // for the overflow button. Empty: every tab fits.
+        std::vector<bool> ShownTabs(const TabBarMemory& fit, int selected, int32_t gap)
+        {
+            const int count = int(fit.widths.size());
+            if (count == 0 || fit.barWidth <= 0)
+                return {};
+            int64_t total = int64_t(gap) * (count - 1);
+            for (const int32_t w : fit.widths)
+                total += w;
+            if (total <= fit.barWidth)
+                return {};
+
+            const int64_t room = int64_t(fit.barWidth) - fit.overflowWidth - gap;
+            std::vector<int> taken;
+            int64_t used = 0;
+            auto widthWith = [&](int index) { return used + (taken.empty() ? 0 : gap) + fit.widths[size_t(index)]; };
+            for (int i = 0; i < count && widthWith(i) <= room; ++i)
+            {
+                used = widthWith(i);
+                taken.push_back(i);
+            }
+            if (selected >= 0 && selected < count && std::find(taken.begin(), taken.end(), selected) == taken.end())
+            {
+                while (!taken.empty() && widthWith(selected) > room)
+                {
+                    taken.pop_back();
+                    used = 0;
+                    for (size_t k = 0; k < taken.size(); ++k)
+                        used += (k == 0 ? 0 : gap) + fit.widths[size_t(taken[k])];
+                }
+                taken.push_back(selected);   // after the others, as its index is higher
+            }
+            if (taken.empty())
+                taken.push_back(0);
+
+            std::vector<bool> shown(size_t(count), false);
+            for (const int i : taken)
+                shown[size_t(i)] = true;
+            return shown;
+        }
+    }
 
     bool GUIApplication::BeginTabBar(ID id, int* selectedIndex,
                                   std::function<void(int, int)> onReorder,
@@ -23,18 +72,72 @@ namespace tachyon
         if (style == StyleRef{})
             style = theme.tabBarStyleRef;
 
-        // Wrapped, so tabs flow onto multiple rows when the bar is too narrow.
+        // The tabs that fit, from last frame's sizes; the rest are listed by an overflow button.
+        TabBarMemory fit = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(id);
+        if (fit.overflowWidth <= 0)
+            fit.overflowWidth = styleManager.Px(48);   // until it has been laid out once
+        const LayoutStyle* barLayout = styleManager.GetLayoutStyle(style.layoutStyleIndex);
+        const int32_t gap = barLayout ? int32_t(barLayout->layoutData.flex.gap) : 0;
+        m_tabBarState.shown = ShownTabs(fit, selectedIndex ? *selectedIndex : -1, gap);
+
+        // The reorderable group counts only the tabs it holds: map its indices to the tabs'.
         // onDragOut/dragVisualizer go through the group so handlers capture them;
         // m_tabBarState is cleared in EndTabBar, before input dispatch runs.
-        return BeginReorderableGroup(id, ReorderDirection::Horizontal, true,
-                                     std::move(onReorder), style, std::move(constraints),
-                                     std::move(onDragOut), std::move(dragVisualizer));
+        std::vector<int> order;
+        for (size_t i = 0; i < m_tabBarState.shown.size(); ++i)
+            if (m_tabBarState.shown[i])
+                order.push_back(int(i));
+        if (!order.empty())
+        {
+            auto tabIndex = [order](int i) { return i >= 0 && i < int(order.size()) ? order[size_t(i)] : i; };
+            if (onReorder)
+                onReorder = [inner = std::move(onReorder), tabIndex](int from, int to) { inner(tabIndex(from), tabIndex(to)); };
+            if (onDragOut)
+                onDragOut = [inner = std::move(onDragOut), tabIndex](int i, int2 at) { inner(tabIndex(i), at); };
+            if (dragVisualizer)
+                dragVisualizer = [inner = std::move(dragVisualizer), tabIndex](int i, int2 at) { inner(tabIndex(i), at); };
+        }
+
+        const bool open = BeginReorderableGroup(id, ReorderDirection::Horizontal, false,
+                                                std::move(onReorder), style, std::move(constraints),
+                                                std::move(onDragOut), std::move(dragVisualizer));
+        if (const ElementRef barRef = elementStorage.FindElementRefByID(id); barRef.IsValid())
+            [[maybe_unused]] auto added = elementStorage.AddPostLayout(barRef, [this, id](PostLayoutContext& ctx)
+                { guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(id).barWidth = ctx.ElementInnerRect().w; });
+        return open;
     }
 
     void GUIApplication::EndTabBar()
     {
-        if (m_tabBarState.barID != ID::Invalid())
-            guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(m_tabBarState.barID).tabCount = m_tabBarState.nextTabIndex;
+        const ID barID = m_tabBarState.barID;
+        if (barID != ID::Invalid())
+        {
+            auto& store = guiStateManager.GetElementDataStore();
+            store.GetOrCreate<TabBarMemory>(barID).tabCount = m_tabBarState.nextTabIndex;
+            store.GetOrCreate<TabBarMemory>(barID).widths.resize(size_t(m_tabBarState.nextTabIndex), 0);
+        }
+
+        // "+N" after the tabs that fit: a menu of the rest; picking one selects it, and then
+        // it's shown in the bar.
+        if (barID != ID::Invalid() && !m_tabBarState.hidden.empty())
+        {
+            [[maybe_unused]] const bool pushed = idManager.PushParent(barID);
+            const ID overflowID = idManager.AllocateDynamicID("tab_overflow");
+            if (pushed) (void)idManager.PopParent();
+            const std::string label = "+" + std::to_string(m_tabBarState.hidden.size());
+            int* const selectedIndex = m_tabBarState.selectedIndex;
+            if (BeginMenu(overflowID, label, theme.tabOverflowStyleRef, theme.menuStyleRef, theme.menuItemRowStyleRef,
+                          LayoutOverride{}.NoGrow().NoShrink()))
+            {
+                for (const TabBarState::HiddenTab& hidden : m_tabBarState.hidden)
+                    MenuItem({ hidden.icon, hidden.text }, [selectedIndex, index = hidden.index] { if (selectedIndex) *selectedIndex = index; });
+            }
+            EndMenu();
+            if (const ElementRef ref = elementStorage.FindElementRefByID(overflowID); ref.IsValid())
+                [[maybe_unused]] auto added = elementStorage.AddPostLayout(ref, [this, barID](PostLayoutContext& ctx)
+                    { guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID).overflowWidth = ctx.ElementRect().w; });
+        }
+
         EndReorderableGroup();
         m_tabBarState = {};
     }
@@ -54,12 +157,6 @@ namespace tachyon
         const auto& onClose       = m_tabBarState.onClose;
         bool        isSelected    = selectedIndex && *selectedIndex == tabIndex;
 
-        if (isSelected) guiStateManager.Construction().PushSelected();
-
-        BeginReorderableItem(id, std::move(constraints));
-
-        // Tab body: container only; icon+text and close button live as children. Its ID is
-        // the tab's own, so keyboard focus stays on the tab when tabs move.
         auto capturedIndex = tabIndex;
         const ID barID = m_tabBarState.barID;
         [[maybe_unused]] const bool pushed = idManager.PushParent(id);
@@ -67,9 +164,36 @@ namespace tachyon
         tachyon::ID contentID = idManager.AllocateDynamicID("tab_content");
         if (pushed) (void)idManager.PopParent();
 
+        // A tab that doesn't fit goes to the overflow button's list. Its width, for deciding
+        // what fits, is its last one, or measured from its text until it has been shown.
+        auto& fit = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID);
+        if (fit.widths.size() <= size_t(tabIndex))
+            fit.widths.resize(size_t(tabIndex) + 1, 0);
+        const auto& shown = m_tabBarState.shown;
+        if (!shown.empty() && (size_t(tabIndex) >= shown.size() || !shown[size_t(tabIndex)]))
+        {
+            if (fit.widths[size_t(tabIndex)] <= 0)
+            {
+                const TextID measured = textSystem->RegisterText(contentID, icon, text, theme.tabContentStyleRef, ElementState::None);
+                int32_t width = textSystem->GetTextMeasurement(measured).maxWidth;
+                if (const LayoutStyle* tabLayout = styleManager.GetLayoutStyle(style.layoutStyleIndex))
+                    width += int32_t(tabLayout->padding.Horizontal() + tabLayout->borderWidths.Horizontal());
+                fit.widths[size_t(tabIndex)] = width;
+            }
+            m_tabBarState.hidden.push_back({ tabIndex, icon, std::string(text) });
+            return false;
+        }
+
+        if (isSelected) guiStateManager.Construction().PushSelected();
+
+        BeginReorderableItem(id, std::move(constraints));
+
+        // Tab body: container only; icon+text and close button live as children. Its ID is
+        // the tab's own, so keyboard focus stays on the tab when tabs move.
+
         // The keyboard reaches the bar at its selected tab (the first without a selection);
         // arrows then move along the tabs.
-        auto& keyboard = guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(barID);
+        auto& keyboard = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID);
         if (isSelected || (!selectedIndex && tabIndex == 0))
             RegisterTabStop(bodyID);
         if (keyboard.focusIndex == tabIndex)
@@ -96,7 +220,7 @@ namespace tachyon
                     if (event.type == tachyon::EventType::KeyDown &&
                         (guiStateManager.GetCurrentState(event.id) & ElementState::Focused) != ElementState::None)
                     {
-                        auto& keys = guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(barID);
+                        auto& keys = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID);
                         int next = capturedIndex;
                         switch (event.state.lastKey)
                         {
@@ -141,6 +265,13 @@ namespace tachyon
         VERIFY(elementStorage.EndChildren());
 
         EndReorderableItem();
+        if (const ElementRef itemRef = elementStorage.FindElementRefByID(id); itemRef.IsValid())
+            [[maybe_unused]] auto added = elementStorage.AddPostLayout(itemRef, [this, barID, tabIndex](PostLayoutContext& ctx)
+            {
+                auto& widths = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID).widths;
+                if (widths.size() > size_t(tabIndex))
+                    widths[size_t(tabIndex)] = ctx.ElementRect().w;
+            });
 
         // Right-click a tab -> "Close Panel".
         if (onClose != nullptr)

@@ -620,6 +620,7 @@ namespace tachyon
         }
         tabBarStyleRef                    = registerCSS("tab-bar");
         tabStyleRef                       = registerCSS("tab");
+        tabOverflowStyleRef               = registerCSS("tab-overflow");
         tabContentStyleRef                = registerCSS("tab-content");
         tabCloseStyleRef                  = registerCSS("tab-close");
 

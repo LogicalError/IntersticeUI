@@ -30,12 +30,20 @@ namespace tachyon
         int     nextTabIndex = 0;
         std::function<void(int)>               onClose;    ///< tab index, when its close button is clicked
         std::function<void(int, tachyon::int2)>    onDragOut;  ///< tab index and mouse release pos
+        std::vector<bool> shown;                ///< by tab index; empty: every tab is shown
+        struct HiddenTab { int index = 0; tachyon::IconID icon = tachyon::IconID::Invalid; std::string text; };
+        std::vector<HiddenTab> hidden;          ///< the tabs left out, listed by the overflow button
     };
 
-    /// A tab bar's keyboard navigation, kept across frames (element data store, by bar ID).
-    struct TabBarKeyboard {
+    /// What a tab bar keeps across frames (element data store, by bar ID): its keyboard
+    /// navigation, and the sizes it measured, in pixels, that decide which tabs fit.
+    struct TabBarMemory {
         int tabCount   = 0;  ///< last frame's
         int focusIndex = -1; ///< the tab that takes focus as it's built, after an arrow key
+
+        std::vector<int32_t> widths;        ///< by tab index; a hidden tab keeps its last width
+        int32_t              barWidth = 0;  ///< the bar's inner width
+        int32_t              overflowWidth = 0; ///< the overflow button's width
     };
 
     // ---- Panel + DockingContainer ----

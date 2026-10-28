@@ -347,5 +347,130 @@ namespace tachyon
             Press(KeyCode::Right);
             EXPECT_EQ(selected, 1);
         }
+
+        // ---- Tabs that don't fit -------------------------------------------------
+
+        // A bar of `count` tabs named "Panel 1".. in a bar `width` wide: the ones that fit are
+        // shown, then a "+N" button listing the rest.
+        class TabOverflowTest : public ControlsTabsTest
+        {
+        protected:
+            int selected = 0;
+            int count    = 12;
+            int width    = 600;
+            std::vector<ID> tabIDs;
+            std::vector<std::string> names;
+
+            void SetUp() override
+            {
+                ControlsTabsTest::SetUp();
+                app.runPostLayoutCallbacks = true;   // the bar measures its tabs there
+                for (int i = 0; i < 20; ++i)
+                {
+                    tabIDs.push_back(app.idManager.CreateStaticID());
+                    names.push_back("Panel " + std::to_string(i + 1));
+                }
+            }
+
+            void Frame()
+            {
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    if (app.BeginTabBar(barID, &selected, nullptr, nullptr, nullptr, nullptr,
+                                        StyleRef{}, LayoutOverride{}.Size(width, 40)))
+                    {
+                        for (int i = 0; i < count; ++i)
+                            app.Tab(tabIDs[size_t(i)], std::string_view(names[size_t(i)]), LayoutOverride::Auto());
+                        app.EndTabBar();
+                    }
+                    app.EndRootWindow();
+                });
+            }
+
+            void Settle() { for (int i = 0; i < 4; ++i) Frame(); }
+
+            std::vector<int> Shown() const
+            {
+                std::vector<int> shown;
+                for (int i = 0; i < count; ++i)
+                    if (app.HasElement(tabIDs[size_t(i)]))
+                        shown.push_back(i);
+                return shown;
+            }
+
+            // The overflow button, found by its "+N" text.
+            ID Overflow() const
+            {
+                for (int n = 1; n <= count; ++n)
+                    if (const ID id = app.FindByText("+" + std::to_string(n)); id != ID::Invalid())
+                        return id;
+                return ID::Invalid();
+            }
+        };
+
+        TEST_F(TabOverflowTest, TabsThatFitHaveNoOverflowButton)
+        {
+            count = 3;
+            Settle();
+            EXPECT_EQ(Shown().size(), 3u);
+            EXPECT_EQ(Overflow(), ID::Invalid());
+        }
+
+        TEST_F(TabOverflowTest, TheFirstTabsThatFitAreShownAndTheButtonCountsTheRest)
+        {
+            Settle();
+            const std::vector<int> shown = Shown();
+            ASSERT_GT(shown.size(), 1u);
+            ASSERT_LT(shown.size(), size_t(count)) << "test setup: they don't all fit";
+            for (size_t i = 0; i < shown.size(); ++i)
+                EXPECT_EQ(shown[i], int(i)) << "the first ones, in order";
+            const ID overflow = Overflow();
+            ASSERT_NE(overflow, ID::Invalid());
+            EXPECT_EQ(app.TextOf(overflow), "+" + std::to_string(count - int(shown.size())));
+            const IntRect bar = app.GetElementRect(barID);
+            const IntRect button = app.GetElementRect(overflow);
+            EXPECT_LE(button.x + button.w, bar.x + bar.w) << "the button fits in the bar";
+        }
+
+        TEST_F(TabOverflowTest, TheSelectedTabIsAlwaysShown)
+        {
+            Settle();
+            selected = count - 1;
+            Settle();
+            const std::vector<int> shown = Shown();
+            ASSERT_FALSE(shown.empty());
+            EXPECT_EQ(shown.back(), count - 1) << "in place of the last ones that fit";
+            EXPECT_NE(Overflow(), ID::Invalid());
+        }
+
+        TEST_F(TabOverflowTest, PickingFromTheListSelectsAndShowsTheTab)
+        {
+            Settle();
+            const ID overflow = Overflow();
+            ASSERT_NE(overflow, ID::Invalid());
+            app.ClickAt(app.CenterOf(overflow));
+            Settle();
+            const ID item = app.FindByText(names[size_t(count - 2)]);
+            ASSERT_NE(item, ID::Invalid()) << "the list holds the hidden tabs";
+            app.ClickAt(app.CenterOf(item));
+            Settle();
+            EXPECT_EQ(selected, count - 2);
+            EXPECT_TRUE(app.HasElement(tabIDs[size_t(count - 2)]));
+        }
+
+        TEST_F(TabOverflowTest, ArrowsMoveOnToTheTabsInTheList)
+        {
+            Settle();
+            const std::vector<int> shown = Shown();
+            ASSERT_LT(shown.size(), size_t(count));
+            selected = shown.back();
+            Settle();
+            app.InjectKey(KeyCode::Tab);
+            Settle();
+            app.InjectKey(KeyCode::Right);
+            Settle();
+            EXPECT_EQ(selected, shown.back() + 1);
+            EXPECT_TRUE(app.HasElement(tabIDs[size_t(selected)])) << "the tab moved to is shown";
+        }
     }
 }

@@ -43,7 +43,7 @@ knob, a table's header) have their own classes, listed with the control above.
 | `VirtualTreeView` | `tree-view` |
 | `BeginGridView`, `GridViewItem` | `grid-view`, `grid-view-item` |
 | `VirtualGridView` | `grid-view-scroll`, `grid-view-row` |
-| `BeginTabBar`, `Tab` | `tab-bar`, `tab` |
+| `BeginTabBar`, `Tab` | `tab-bar`, `tab`, `tab-overflow` |
 | `BeginDockingContainer` | `dock-container` |
 | `BeginToolbar` | controls inside use `toolbar-*` variants |
 | `Breadcrumb` | `breadcrumb` |

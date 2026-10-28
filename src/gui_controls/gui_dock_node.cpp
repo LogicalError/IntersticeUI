@@ -287,6 +287,8 @@ namespace tachyon
         int bestY = cursor.y, bestDistance = -1;
         for (const IntRect& r : leaf.cachedTabRects)
         {
+            if (r.w <= 0)
+                continue;   // in the overflow list, not the bar
             if (r.y <= cursor.y && cursor.y < r.y + r.h)
                 return cursor;
             const int nearestY = cursor.y < r.y ? r.y : r.y + r.h - 1;
@@ -307,6 +309,8 @@ namespace tachyon
         for (int i = 0; i < (int)leaf.cachedTabRects.size(); i++)
         {
             const IntRect& r = leaf.cachedTabRects[i];
+            if (r.w <= 0)
+                continue;   // in the overflow list, not the bar
             const bool rowAbove = r.y + r.h <= at.y;
             const bool onRow    = r.y <= at.y && at.y < r.y + r.h;
             if (rowAbove || (onRow && at.x >= r.x + r.w / 2))
