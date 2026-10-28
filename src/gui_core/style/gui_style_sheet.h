@@ -51,11 +51,23 @@ namespace tachyon
         std::string src; ///< as written; relative paths are relative to the stylesheet
     };
 
+    /// A class's styles for where an element is among its parent's children, from its
+    /// `:first-child`, `:last-child` and `:only-child` rules (box properties only).
+    struct ChildStyles
+    {
+        Style first; ///< the first of several children
+        Style last;  ///< the last of several children
+        Style only;  ///< the only child: the first-, last- and only-child rules apply
+    };
+
     /// A parsed style sheet: named styles, custom properties and font faces.
     /// Register a style with StyleManager::Register to use it.
     struct StyleSheet
     {
         std::unordered_map<std::string, Style>          styles; ///< keyed by class name, without the '.'
+        /// The classes with `:first-child` / `:last-child` / `:only-child` rules; register them
+        /// with StyleManager::RegisterWithChildStyles.
+        std::unordered_map<std::string, ChildStyles>    childStyles;
         std::unordered_map<std::string, CustomProperty> customProperties; ///< keyed by name including the leading "--"
         std::vector<FontFace>                           fontFaces; ///< in source order
         Style                                           baseStyle; ///< what `*` rules set; styles start from it

@@ -164,8 +164,9 @@ bool BeginToggleGroup(LayoutOverride&& constraints = {});
 void EndToggleGroup();
 ```
 
-Classes: `button-group` with `first-button`, `mid-button`, `last-button`;
-`toggle-group` with `first-toggle`, `mid-toggle`, `last-toggle`.
+Classes: `button-group` with `group-button`; `toggle-group` with `group-toggle`. A
+single item uses `button` or `toggle`. The group's ends can be styled with
+`.group-button:first-child` and `:last-child` (see [Syntax](../css/syntax.md#child-position)).
 
 ```cpp
 BeginToggleGroup(LayoutOverride{}.NoGrow());

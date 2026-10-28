@@ -96,12 +96,7 @@ namespace tachyon
 
     tachyon::StyleRef ButtonGroupSubsystem::NextItemStyleRef(ItemState& state)
     {
-        const int currentCount = state.itemCount;
         state.itemCount++;
-        if (currentCount == 0)
-            return state.firstStyleRef;
-        if (currentCount >= 2)
-            UpdateElementStyleRef(m_elementStorage, m_styleManager, state.lastRef, state.midStyleRef);
-        return state.lastStyleRef;
+        return state.itemStyleRef;
     }
 }

@@ -14,7 +14,8 @@
   of every class defined after it. Class rules override it. Put it before the rules it
   should be the base of. A library style whose class no file defines gets the base.
 - A class can appear in any number of rules; later declarations overwrite earlier ones.
-  File order is the only priority (there is no specificity).
+  File order is the only priority (there is no specificity), except for the
+  [child position](#child-position) rules, which always win over the class's other rules.
 - There are no combinators: `.a .b`, `.a > .b` and the like are reported as errors.
 
 ## Pseudo-classes and states
@@ -56,6 +57,31 @@ A `:disabled` rule changes only what it declares; the rest comes from the class'
 Only per-state properties (marked "state" in the tables below) differ between slots. A
 layout property such as `padding` or `border-style` written in a `:hover` rule changes the
 whole style, for every state.
+
+## Child position
+
+`:first-child`, `:last-child` and `:only-child` style an element by where it is among its
+parent's children:
+
+```css
+.segment             { border-radius: 0; }
+.segment:first-child { border-radius: 4px 0 0 4px; }
+.segment:last-child  { border-radius: 0 4px 4px 0; }
+.segment:only-child  { border-radius: 4px; }
+```
+
+- An only child is both the first and the last, so it takes the `:first-child` and
+  `:last-child` rules, then the `:only-child` ones. `:first-child:last-child` is the same
+  as `:only-child`.
+- These rules apply on top of all of the class's other rules, wherever those are in the
+  files, and on top of `*`.
+- They take the box properties only: backgrounds, borders (`border-*` and
+  `-tachyon-border-dash-*`), `box-shadow`, `margin`, `padding`, `gap`, `row-gap`,
+  `column-gap` and `cursor`. Any other property is an error. The element's size and text are
+  worked out before its parent's last child is known.
+- They combine with states (`.a:first-child:hover`), but not with `:focus-visible`, and need
+  a class (`*:first-child` is an error).
+- Every child counts, hidden ones too.
 
 ## Comments
 

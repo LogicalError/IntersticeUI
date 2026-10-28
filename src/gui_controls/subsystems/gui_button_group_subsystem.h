@@ -16,23 +16,20 @@ namespace tachyon
     class FramePipeline;
     struct FrameContext;
 
-    /// Button/toggle groups share borders between adjacent items: the first item gets
-    /// .first, each next one demotes the previous "last" to "mid" and becomes "last",
-    /// and a single-item group reverts to "solo" in EndGroup. Owns the group stacks;
-    /// GUIApplication does the element registration.
+    /// Button/toggle groups: every item takes the group's item style (its :first-child and
+    /// :last-child rules shape the ends), and a single-item group reverts to "solo", a plain
+    /// button, in EndGroup. Owns the group stacks; GUIApplication does the element
+    /// registration.
     class ButtonGroupSubsystem
     {
     public:
-        /// One open group: the four position styles and the items registered so far.
+        /// One open group: its styles and the items registered so far.
         struct ItemState
         {
-            tachyon::StyleRef firstStyleRef{};
-            tachyon::StyleRef midStyleRef{};
-            tachyon::StyleRef lastStyleRef{};
+            tachyon::StyleRef itemStyleRef{};
             tachyon::StyleRef soloStyleRef{};
             int32_t       itemCount = 0;
             tachyon::ElementRef firstRef = tachyon::ElementRef::Invalid();
-            tachyon::ElementRef lastRef  = tachyon::ElementRef::Invalid();
         };
 
         ButtonGroupSubsystem(FramePipeline& frame, ElementStorage& elementStorage, StyleManager& styleManager);
@@ -53,8 +50,8 @@ namespace tachyon
         /// else nullptr.
         ItemState* GetActiveToggle();
 
-        /// Style for the next item, restyling the previous last item as mid. The caller then
-        /// stores the registered ref in state.firstRef (first item) and state.lastRef.
+        /// Style for the next item. The caller then stores the first item's registered ref
+        /// in state.firstRef.
         tachyon::StyleRef NextItemStyleRef(ItemState& state);
 
         /// True iff every Begin*Group was matched by End*Group.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/style/gui_style.h>
+#include <gui_core/style/gui_style_ref.h>
 #include <gui_core/style/gui_gradient_manager.h>
 
 #include <stdint.h>
@@ -13,11 +14,6 @@ namespace tachyon
     /// @addtogroup styling
     /// @{
 
-	// Defined in gui_core/style/gui_style_ref.h.
-    struct StyleRef;
-    enum class LayoutStyleIndex : uint32_t;
-    enum class VisualBoxStyleIndex : uint16_t;
-    enum class VisualTextStyleIndex : uint16_t;
 
 
     /// A box style's variants, one per visual element state (Style::kStateCount).
@@ -50,6 +46,18 @@ namespace tachyon
         /// `s` is in CSS px and stored at the UI scale (SetUIScale); StyleUnits::Pixels
         /// registers a style that is already at it (see ToPixels).
         StyleRef Register(const Style &s, StyleUnits units = StyleUnits::Css) noexcept;
+
+        /// A style's variants for where an element is among its parent's children.
+        struct ChildStyleRefs { StyleRef first, last, only; };
+        /// Registers `s` as a style of its own (never shared, so its variants are its alone)
+        /// with the styles its elements take as a first, last or only child (ElementStorage
+        /// swaps them in when the parent's children are done).
+        StyleRef RegisterWithChildStyles(const Style& s, const Style& first, const Style& last, const Style& only,
+                                         StyleUnits units = StyleUnits::Css) noexcept;
+        /// The child styles of a style registered with them, by its layout style; nullptr for others.
+        const ChildStyleRefs* GetChildStyles(LayoutStyleIndex index) const noexcept;
+        /// Whether any style has child styles (a quick test before looking one up).
+        bool HasChildStyles() const noexcept { return !m_childStyles.empty(); }
         /// A CSS-pixel style at the UI scale, as Register would store it.
         Style     ToPixels(const Style &s) const noexcept;
         /// A CSS-pixel text style at the UI scale.
@@ -166,6 +174,10 @@ namespace tachyon
 
     private:
         float m_uiScale = 1.0f;
+        /// Register; `distinct` gives the style a layout style of its own, which no other
+        /// registration will share.
+        StyleRef RegisterImpl(const Style& s, StyleUnits units, bool distinct) noexcept;
+        std::unordered_map<uint32_t, ChildStyleRefs> m_childStyles;   ///< by layout style index
         /// Deduplication helpers used by Register / RegisterVisualColorStyle.
         VisualColorStyleIndex TryDedupVisualColorStyle(const VisualColorStyle& s,
                                                        uint64_t hash) const noexcept;

@@ -1683,4 +1683,115 @@ namespace tachyon
         ASSERT_FALSE(s.HasErrors());
         EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color, RGB(0, 0, 0, 128));
     }
+
+    // ============================================================================
+    // :first-child / :last-child / :only-child
+    // ============================================================================
+
+    TEST(StyleSheet, ChildRulesBuildTheChildStyles)
+    {
+        auto s = ParseStyleSheet(R"(
+            .a { padding: 2; margin: 3; }
+            .a:first-child { padding-left: 10; }
+            .a:last-child  { padding-right: 20; }
+        )");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        ASSERT_TRUE(s.childStyles.contains("a"));
+        const ChildStyles& c = s.childStyles.at("a");
+
+        EXPECT_EQ(s.GetStyle("a")->padding.left,  2u);
+        EXPECT_EQ(s.GetStyle("a")->padding.right, 2u);
+
+        EXPECT_EQ(c.first.padding.left,  10u);
+        EXPECT_EQ(c.first.padding.right, 2u);
+        EXPECT_EQ(c.last.padding.left,   2u);
+        EXPECT_EQ(c.last.padding.right,  20u);
+        // An only child is both the first and the last.
+        EXPECT_EQ(c.only.padding.left,   10u);
+        EXPECT_EQ(c.only.padding.right,  20u);
+        for (const Style* v : { &c.first, &c.last, &c.only })
+            EXPECT_EQ(v->margin.top, 3u);
+    }
+
+    TEST(StyleSheet, OnlyChildRuleAppliesToTheOnlyChildAlone)
+    {
+        auto s = ParseStyleSheet(".a { padding: 2; } .a:only-child { padding: 7; }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const ChildStyles& c = s.childStyles.at("a");
+        EXPECT_EQ(c.first.padding.top, 2u);
+        EXPECT_EQ(c.last.padding.top,  2u);
+        EXPECT_EQ(c.only.padding.top,  7u);
+
+        // :first-child:last-child is the same as :only-child.
+        auto both = ParseStyleSheet(".a { padding: 2; } .a:first-child:last-child { padding: 7; }");
+        ASSERT_FALSE(both.HasErrors()) << both.errors[0].message;
+        const ChildStyles& b = both.childStyles.at("a");
+        EXPECT_EQ(b.first.padding.top, 2u);
+        EXPECT_EQ(b.last.padding.top,  2u);
+        EXPECT_EQ(b.only.padding.top,  7u);
+    }
+
+    // A child rule wins over the class's own rules wherever they are, as its selector is more specific.
+    TEST(StyleSheet, ChildRulesTakeLaterBaseRules)
+    {
+        auto s = ParseStyleSheet(R"(
+            .a:first-child { border-width: 4; }
+            .a { border-width: 1; margin: 5; }
+            * { cursor: pointer; }
+        )");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const ChildStyles& c = s.childStyles.at("a");
+        EXPECT_EQ(c.first.borderWidths.top, 4u);
+        EXPECT_EQ(c.first.margin.top,       5u);
+        EXPECT_EQ(c.first.cursor,           MouseCursor::Pointer);
+        EXPECT_EQ(c.last.borderWidths.top,  1u);
+        EXPECT_EQ(c.last.margin.top,        5u);
+        EXPECT_EQ(c.last.cursor,            MouseCursor::Pointer);
+        EXPECT_EQ(s.GetStyle("a")->borderWidths.top, 1u);
+    }
+
+    TEST(StyleSheet, ChildRulesTakeStates)
+    {
+        auto s = ParseStyleSheet(R"(
+            .a { background-color: #000000; }
+            .a:first-child:hover { background-color: #ff0000; }
+        )");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const ChildStyles& c = s.childStyles.at("a");
+        EXPECT_TRUE(GradientColorEq(c.first.states[Style::kNormal].backgroundColor.gradient, 0, RGB(0, 0, 0)));
+        EXPECT_TRUE(GradientColorEq(c.first.states[Style::kHover].backgroundColor.gradient,  0, RGB(255, 0, 0)));
+        EXPECT_TRUE(GradientColorEq(c.last.states[Style::kHover].backgroundColor.gradient,   0, RGB(0, 0, 0)));
+    }
+
+    TEST(StyleSheet, ChildRulesOnlyTakeBoxProperties)
+    {
+        auto s = ParseStyleSheet(".a { padding: 2; } .a:first-child { padding: 6; color: red; width: 10; }");
+        EXPECT_EQ(s.errors.size(), 2u);
+        const ChildStyles& c = s.childStyles.at("a");
+        EXPECT_EQ(c.first.padding.top, 6u);   // the box property is still taken
+        EXPECT_EQ(c.first.states[Style::kNormal].textStyle.color, s.GetStyle("a")->states[Style::kNormal].textStyle.color);
+        EXPECT_EQ(c.first.layoutData.width, s.GetStyle("a")->layoutData.width);
+
+        for (const char* src : { ".a:first-child { font-size: 20; }",
+                                 ".a:last-child { box-shadow: inset 0 0 0 1px blue; }",
+                                 "*:first-child { padding: 1; }",
+                                 ".a:first-child:focus-visible { box-shadow: 0 0 0 1px blue; }" })
+            EXPECT_TRUE(ParseStyleSheet(src).HasErrors()) << src;
+        for (const char* src : { ".a:first-child { background-color: red; border-color: red; border-radius: 3; }",
+                                 ".a:first-child { box-shadow: 0 1px 2px black; -tachyon-border-dash-size: 4px; }",
+                                 ".a:last-child { margin: 1; padding: 1; gap: 2; row-gap: 2; column-gap: 2; cursor: pointer; }" })
+            EXPECT_FALSE(ParseStyleSheet(src).HasErrors()) << src;
+    }
+
+    TEST(StyleSheet, ClassesWithoutChildRulesHaveNoChildStyles)
+    {
+        auto s = ParseStyleSheet(".a { padding: 2; } .b { padding: 2; } .b:last-child { padding: 3; } .c:first-child { margin: 1; }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        EXPECT_FALSE(s.childStyles.contains("a"));
+        EXPECT_TRUE(s.childStyles.contains("b"));
+        // A class written only with child rules still exists.
+        ASSERT_NE(s.GetStyle("c"), nullptr);
+        EXPECT_EQ(s.childStyles.at("c").first.margin.top, 1u);
+        EXPECT_EQ(s.GetStyle("c")->margin.top, 0u);
+    }
 }

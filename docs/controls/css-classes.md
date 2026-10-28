@@ -9,7 +9,7 @@ knob, a table's header) have their own classes, listed with the control above.
 | `BeginGhostWindow`, `AddGhostIcon` | `ghost-window`, `ghost-icon` |
 | `BeginHorizontal`, `BeginVertical` and Wrap variants | none (plain flex box built in code) |
 | `BeginArea`, `BeginCached` | `collection` |
-| `BeginButtonGroup`, `BeginToggleGroup` | `button-group`, `toggle-group` |
+| `BeginButtonGroup`, `BeginToggleGroup` | `button-group`, `toggle-group`; items `group-button`, `group-toggle` (`button`, `toggle` when alone) |
 | `Text` | `static-text` |
 | `Label`, `DragLabel` | `label`, `drag-label` (`group-label`, `group-drag-label` in a resizable label group) |
 | `Image` | none (built in code) |

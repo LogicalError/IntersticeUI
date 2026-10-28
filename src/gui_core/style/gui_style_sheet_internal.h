@@ -252,12 +252,60 @@ public:
                 if (!ParseRule()) SkipToNextRule();
             }
         }
+        BuildChildStyles();
         return std::move(m_result);
     }
 
 private:
     Lexer&     m_lex;
     StyleSheet m_result;
+
+    // ---- :first-child / :last-child / :only-child --------------------------
+
+    enum ChildPosition : int { kFirstChild = 1, kLastChild = 2, kOnlyChild = kFirstChild | kLastChild };
+
+    /// A structural rule, kept until the whole sheet is read: its class's other rules,
+    /// wherever they are, come first.
+    struct ChildRule
+    {
+        std::string            name;
+        int                    position   = 0;
+        int                    stateIndex = 0;
+        int                    notMask    = 0;
+        std::vector<StyleDecl> decls;
+    };
+    std::vector<ChildRule> m_childRules;
+
+    /// The element is swapped to its child style once its parent is built, after its size
+    /// and text are known: only what draws the box and spaces it can differ.
+    static bool IsChildStyleProperty(const std::string& p)
+    {
+        static constexpr const char* kPrefixes[] = { "background", "border", "box-shadow", "margin", "padding",
+                                                     "-tachyon-border-dash" };
+        for (const char* prefix : kPrefixes)
+            if (p.size() >= std::strlen(prefix) && ICEq(p.substr(0, std::strlen(prefix)), prefix))
+                return true;
+        return ICEq(p, "cursor") || ICEq(p, "gap") || ICEq(p, "row-gap") || ICEq(p, "column-gap");
+    }
+
+    void BuildChildStyles()
+    {
+        for (const ChildRule& rule : m_childRules)
+        {
+            auto [it, added] = m_result.childStyles.try_emplace(rule.name);
+            if (added)
+            {
+                const Style& base = GetOrCreate(rule.name);
+                it->second = ChildStyles{ base, base, base };
+            }
+            ChildStyles& styles = it->second;
+            if (rule.position == kFirstChild)
+                ApplyDecls(styles.first, rule.stateIndex, rule.notMask, rule.decls);
+            if (rule.position == kLastChild)
+                ApplyDecls(styles.last, rule.stateIndex, rule.notMask, rule.decls);
+            ApplyDecls(styles.only, rule.stateIndex, rule.notMask, rule.decls);   // an only child is both
+        }
+    }
 
     // ---- Error helpers -----------------------------------------------------
 
@@ -540,7 +588,7 @@ private:
 
     bool ParseRule()
     {
-        struct Selector { std::string name; int stateIndex; int notMask = 0; bool focusVisible = false; };
+        struct Selector { std::string name; int stateIndex; int notMask = 0; bool focusVisible = false; int childPosition = 0; };
         std::vector<Selector> selectors;
 
         do {
@@ -593,6 +641,11 @@ private:
                     continue;
                 }
 
+                // Where the element is among its parent's children.
+                if (ICEq(pseudo, "first-child")) { sel.childPosition |= kFirstChild; continue; }
+                if (ICEq(pseudo, "last-child"))  { sel.childPosition |= kLastChild;  continue; }
+                if (ICEq(pseudo, "only-child"))  { sel.childPosition |= kOnlyChild;  continue; }
+
                 // :not(:pseudo) negation
                 if (ICEq(pseudo, "not"))
                 {
@@ -638,6 +691,28 @@ private:
 
         for (const auto& sel : selectors)
         {
+            if (sel.childPosition != 0)
+            {
+                if (sel.name == "*" || sel.focusVisible)
+                {
+                    Error("':first-child', ':last-child' and ':only-child' take a class, without ':focus-visible'");
+                    continue;
+                }
+                ChildRule rule{ .name = sel.name, .position = sel.childPosition, .stateIndex = sel.stateIndex, .notMask = sel.notMask };
+                for (const StyleDecl& d : decls)
+                {
+                    if (ICEq(d.prop, "box-shadow") && (d.shadowVal[0].inset || d.shadowVal[1].inset))
+                        Error("An inset box-shadow is only supported in ':focus-visible'");
+                    else if (IsChildStyleProperty(d.prop))
+                        rule.decls.push_back(d);
+                    else
+                        Error("'" + d.prop + "' can't depend on ':first-child', ':last-child' or ':only-child': "
+                              "they take backgrounds, borders, shadows, margin, padding, gap and cursor");
+                }
+                GetOrCreate(sel.name);   // the class exists, even when only its child rules are written
+                m_childRules.push_back(std::move(rule));
+                continue;
+            }
             if (!sel.focusVisible)
                 for (const StyleDecl& d : decls)
                     if (ICEq(d.prop, "box-shadow") && (d.shadowVal[0].inset || d.shadowVal[1].inset))
