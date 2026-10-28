@@ -64,6 +64,10 @@ public:
     // EndFrame. Handler effects from frame N are observable from frame N+1.
     void Frame(std::function<void()> onGuiFn);
 
+    // Whether Frame runs the elements' AddPostLayout callbacks after layout, as the real
+    // frame does. Off by default: several tests check frames without them.
+    bool runPostLayoutCallbacks = false;
+
     // Emit a root "window" element filling the monitor area. Widgets
     // emitted between BeginRootWindow/EndRootWindow become its children
     // and participate in hit-testing/layout.

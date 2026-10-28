@@ -18,3 +18,4 @@ First public preview. The API is not stable yet.
 - `TACHYON_SDL_TARGET`: the SDL target the libraries link (`SDL3::SDL3-static`, or the host's `SDL3::SDL3`), for a host that calls SDL too.
 - `build.bat` / `build.sh` and `CMakePresets.json`; every example runs from any folder.
 - A step-by-step tutorial (`docs/tutorial.md`) whose code is the `examples/tutorial` app, kept in sync by tests.
+- `Dropdown`: pick one of a list of options; the list opens on the current option.

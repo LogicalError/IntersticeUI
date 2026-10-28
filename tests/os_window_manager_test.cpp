@@ -1085,8 +1085,9 @@ namespace tachyon
         manager->EndFrame();
     }
 
-    // The window manager raises a focusable popup when it opens; not-focusable ones
-    // (tooltips) and other windows are left where they are.
+    // The window manager raises a focusable popup when it appears (a new one after it has
+    // been drawn a few frames); not-focusable ones (tooltips) and other windows are left
+    // where they are.
     TEST_F(OSWindowManagerTest, OpeningAPopupBringsItToFront)
     {
         const ID mainId    = CreateTestID(1);
@@ -1104,11 +1105,14 @@ namespace tachyon
                                    WindowFlags::DefaultFlags | WindowFlags::PopupMenu | WindowFlags::NotFocusable, mainId);
         manager->EndFrame();
 
-        // Still open next frame: not raised again.
-        manager->BeginFrame();
-        manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
-                                   WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
-        manager->EndFrame();
+        // It appears within a few frames, raised then, and isn't raised again while open.
+        for (int i = 0; i < 8; ++i)
+        {
+            manager->BeginFrame();
+            manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
+                                       WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+            manager->EndFrame();
+        }
 
         // Hidden, then shown again: raised again.
         manager->BeginFrame();
@@ -1118,6 +1122,50 @@ namespace tachyon
         manager->BeginFrame();
         manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
                                    WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+        manager->EndFrame();
+    }
+
+    // A new popup is created hidden and shows once it has been drawn a few frames, so it
+    // never appears empty; reopening it shows it at once. (The mock can't cloak, so this is
+    // the hidden path.)
+    TEST_F(OSWindowManagerTest, ANewPopupShowsOnceDrawn)
+    {
+        const ID mainId  = CreateTestID(1);
+        const ID popupId = CreateTestID(2);
+        auto declare = [&] {
+            manager->GetOrCreateWindow(popupId, "Popup", IntRect{ 10, 10, 100, 100 }, nullptr,
+                                       WindowFlags::DefaultFlags | WindowFlags::PopupMenu, mainId);
+        };
+
+        manager->BeginFrame();
+        manager->GetOrCreateWindow(mainId, "Main", IntRect{ 0, 0, 800, 600 }, nullptr);
+        const OSWindowHandle popupHandle = reinterpret_cast<OSWindowHandle>(handleCounter + 1);
+        EXPECT_CALL(*mockBackend, CreateWindow(_, testing::A<IntRect>(),
+                                               testing::Truly([](WindowFlags f) { return (f & WindowFlags::Hidden) != WindowFlags::None; }), _));
+        declare();
+        manager->EndFrame();
+        testing::Mock::VerifyAndClearExpectations(mockBackend);
+
+        int framesUntilShown = 1;
+        bool shown = false;
+        ON_CALL(*mockBackend, SetWindowVisible(popupHandle, true)).WillByDefault([&] { shown = true; });
+        for (; framesUntilShown < 10 && !shown; ++framesUntilShown)
+        {
+            manager->BeginFrame();
+            declare();
+            manager->EndFrame();
+        }
+        EXPECT_TRUE(shown);
+        EXPECT_GT(framesUntilShown, 2) << "drawn more than once first";
+
+        // Hidden, then declared again: shown in that frame.
+        manager->BeginFrame();
+        manager->ReleaseUndeclaredWindows([&](ID id) { return id == mainId; });
+        manager->EndFrame();
+        shown = false;
+        manager->BeginFrame();
+        declare();
+        EXPECT_TRUE(shown) << "reopening shows it at once";
         manager->EndFrame();
     }
 

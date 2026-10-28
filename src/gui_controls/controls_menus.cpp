@@ -511,6 +511,44 @@ namespace tachyon
         return false;
     }
 
+    bool GUIApplication::Dropdown(ID id, int& selected, std::span<const std::string_view> options, StyleRef style, LayoutOverride&& constraints)
+    {
+        const int count = int(options.size());
+        const int shown = selected;
+        const bool valid = shown >= 0 && shown < count;
+        bool changed = false;
+        if (BeginMenu(id, valid ? options[size_t(shown)] : std::string_view{}, style,
+                      theme.menuStyleRef, theme.menuItemRowStyleRef, std::move(constraints)))
+        {
+            // The rows' IDs up front, so the list can open on the current option instead
+            // of the first one.
+            std::vector<ID> rows(options.size());
+            for (ID& row : rows)
+                row = idManager.AllocateDynamicID("dropdown_option");
+
+            auto& level = menuManager.levels[menuManager.currentDepth];
+            if (valid && level.isOpen && level.activeItemID == ID::Invalid() && menuManager.focusSubmenuOnOpen)
+            {
+                level.activeItemID = rows[size_t(shown)];
+                guiStateManager.Interaction().SetFocusID(level.activeItemID);
+            }
+
+            for (int i = 0; i < count; ++i)
+            {
+                const bool current = i == shown;
+                if (current) BeginSelected();
+                if (MenuItem(rows[size_t(i)], options[size_t(i)]) && !current)
+                {
+                    selected = i;
+                    changed = true;
+                }
+                if (current) EndSelected();
+            }
+        }
+        EndMenu();
+        return changed;
+    }
+
     namespace
     {
         bool ContainsIgnoringCase(std::string_view text, std::string_view part)

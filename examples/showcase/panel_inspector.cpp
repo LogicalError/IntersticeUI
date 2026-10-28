@@ -237,6 +237,25 @@ namespace tachyon
             EndMenu();
         });
 
+        add("Dropdown", [this]() {
+            Label("Dropdown");
+            if (Dropdown(showcase.quality, { "Low", "Medium", "High", "Ultra" }))
+                TACHYON_LOG_INFO(kLogShowcase, "Quality {}", showcase.quality);
+        });
+
+        // A long list: it scrolls, and opens on the current option.
+        add("Long dropdown", [this]() {
+            Label("Long dropdown");
+            static const std::vector<std::string> names = [] {
+                std::vector<std::string> list;
+                for (int i = 1; i <= 40; ++i)
+                    list.push_back("Font " + std::to_string(i));
+                return list;
+            }();
+            static const std::vector<std::string_view> options(names.begin(), names.end());
+            Dropdown(showcase.fontIndex, options);
+        });
+
         if (inspectorLabelGroupID == ID::Invalid())
             inspectorLabelGroupID = idManager.CreateStaticID();
         inspectorFilterDirty = true;

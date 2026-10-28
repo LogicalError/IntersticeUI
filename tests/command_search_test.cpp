@@ -170,6 +170,42 @@ namespace
         EXPECT_TRUE(Rows().empty());
     }
 
+    // A click anywhere outside the box and its list leaves the search, also on what takes
+    // no focus (a panel's background, plain text), which leaves a text field focused.
+    TEST_F(CommandSearchTest, AClickOutsideLeavesTheSearch)
+    {
+        const ID panelID = app.idManager.CreateStaticID();
+        const ID textID  = app.idManager.CreateStaticID();
+        auto draw = [&] {
+            app.BeginRootWindow();
+            app.CommandSearch(searchID, state);
+            app.BeginVertical(panelID, LayoutOverride::Auto().Height(200));
+            app.Text(textID, "Some text");
+            app.EndVertical();
+            app.EndRootWindow();
+        };
+        for (const bool onText : { false, true })
+        {
+            app.Frame(draw);
+            GUIApplication::FocusCommandSearch(state);
+            app.Frame(draw);
+            app.Frame(draw);
+            app.InjectText("sa");
+            app.Frame(draw);
+            ASSERT_FALSE(Rows().empty());
+
+            const IntRect panel = app.GetElementRect(panelID);
+            app.ClickAt(onText ? app.CenterOf(textID) : int2{ panel.x + panel.w / 2, panel.y + panel.h - 10 });
+            app.Frame(draw);
+            app.Frame(draw);
+            const char* where = onText ? "click on text" : "click on the panel's background";
+            EXPECT_TRUE(Rows().empty()) << where;
+            EXPECT_TRUE(state.query.empty()) << where;
+            EXPECT_EQ(app.guiStateManager.Interaction().GetFocusedID(), ID::Invalid()) << where;
+            EXPECT_TRUE(ran.empty());
+        }
+    }
+
     TEST_F(CommandSearchTest, OtherModesCommandsAreLeftOut)
     {
         const CommandMode sculpt = app.commandManager.RegisterMode("Sculpt");

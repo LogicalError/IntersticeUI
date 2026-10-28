@@ -80,6 +80,8 @@ namespace tachyon
             int32_t         monitorIndex  = -1;
             float           displayScale  = 1.0f; ///< the OS UI scale where the window is
             uint32_t        sequence      = 0;    ///< creation order
+            int32_t         framesHidden  = 0;    ///< a new popup's frames still drawn before it shows
+            bool            cloaked       = false; ///< shown but cloaked meanwhile, rather than hidden
 
             OSWindowHandle  osHandle = nullptr;
             IWindowContext* context  = nullptr;

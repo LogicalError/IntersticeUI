@@ -3,8 +3,16 @@
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_style_ref.h>
 
+#include <algorithm>
+
 namespace tachyon
 {
+    namespace
+    {
+        // Smoothstep: eases in and out, and Ease(1 - t) == 1 - Ease(t).
+        float Ease(float t) { return t * t * (3.0f - 2.0f * t); }
+    }
+
     uint32_t ComputeGPUStyleIndex(VisualBoxStyleIndex base, ElementState state)
     {
         if (base == VisualBoxStyleIndex::Invalid) return 0;
@@ -22,13 +30,28 @@ namespace tachyon
         auto it = m_transitions.find(id);
         if (it != m_transitions.end())
         {
+            TransitionEntry& running = it->second;
             // Already heading there: don't restart.
-            if (it->second.toState == toState)
+            if (running.toState == toState)
                 return;
-            // Otherwise start from the running transition's target, so the visual
-            // doesn't snap backward. Style indices are discrete, so this can't resume
-            // mid-blend (#65).
-            fromState = it->second.toState;
+            const float progress = std::clamp((elapsedSecs - running.startTime) / running.duration, 0.0f, 1.0f);
+            if (progress < 1.0f && toState == running.fromState)
+            {
+                // Back where it came from (out again before the hover finished): run the
+                // blend backwards from where it is. The easing is symmetric, so starting
+                // at 1 - progress shows the same mix.
+                running = TransitionEntry
+                {
+                    .fromState = running.toState,
+                    .toState   = toState,
+                    .startTime = elapsedSecs - (1.0f - progress) * running.duration,
+                    .duration  = running.duration
+                };
+                return;
+            }
+            // A blend is between two styles only, so a third state starts from the one
+            // the blend is closer to.
+            fromState = Ease(progress) < 0.5f ? running.fromState : running.toState;
         }
         m_transitions[id] = TransitionEntry
         {
@@ -55,12 +78,9 @@ namespace tachyon
         if (rawT >= 1.0f)
             return r;
 
-        // Smoothstep easing
-        float t = rawT * rawT * (3.0f - 2.0f * rawT);
-
         r.fromStyleIndex = ComputeGPUStyleIndex(base, e.fromState);
         r.toStyleIndex   = ComputeGPUStyleIndex(base, e.toState);
-        r.blendT         = t;
+        r.blendT         = Ease(std::max(rawT, 0.0f));
         return r;
     }
 

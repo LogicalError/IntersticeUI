@@ -19,6 +19,7 @@ knob, a table's header) have their own classes, listed with the control above.
 | `Checkbox` | `checkbox` |
 | `Field(std::string&)` | `textbox` |
 | `SearchField` | `search-textbox` |
+| `Dropdown` | `menu-trigger`, popup `menu` |
 | `Field` (numbers) | `number-field` |
 | `Field` (vectors) | `vector-component`, `axis-label-x` / `-y` / `-z` / `-w` |
 | `TypedField` | `typed-field` |

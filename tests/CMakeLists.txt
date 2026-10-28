@@ -5,6 +5,7 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_text_measurement_test.cpp
   controls_grid_view_test.cpp
   controls_menu_test.cpp
+  transition_manager_test.cpp
   controls_scrollbar_test.cpp
   controls_slider_integration_test.cpp
   controls_tabs_test.cpp
@@ -92,6 +93,7 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_shaping_test.cpp
   font_set_test.cpp
   built_in_resources_test.cpp
+  controls_dropdown_test.cpp
   tutorial_test.cpp
   tutorial_snippets_test.cpp
   skribidi_editor_test.cpp

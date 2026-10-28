@@ -1422,6 +1422,7 @@ namespace tachyon
 
             if (inputManager)
                 menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
+            RunPressOutsideWatches();
 
             InvalidateCachedScopesForInput(overID);
 
@@ -1482,5 +1483,29 @@ namespace tachyon
             ref = storage.GetParentRef(ref);
         }
         return result;
+    }
+
+    void GUIApplication::RunPressOutsideWatches()
+    {
+        std::vector<PressOutsideWatch> watches = std::move(m_pressOutsideWatches);
+        m_pressOutsideWatches.clear();
+        if (!inputManager)
+            return;
+        auto contains = [&](ID id, int2 pos)
+        {
+            const ElementRef ref = elementStorage.FindElementRefByID(id);
+            return ref.IsValid() && elementStorage.GetElementRectUnsafe(ref).rect.Contains(pos);
+        };
+        for (PressOutsideWatch& watch : watches)
+            for (const auto& e : inputManager->GetRecordedEvents())
+            {
+                if (e.type != EventType::MouseDown || e.consumed)
+                    continue;
+                if (!contains(watch.inside[0], e.state.screenPos) && !contains(watch.inside[1], e.state.screenPos))
+                {
+                    watch.onPressOutside();
+                    break;
+                }
+            }
     }
 }
