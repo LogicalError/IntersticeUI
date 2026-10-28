@@ -198,6 +198,7 @@ namespace tachyon
         PendingConnection       pendingConnection;   ///< internal: the wire being dragged
         tachyon::float3x2           transform;                  ///< identity = centered view (no pan/zoom)
         tachyon::int2               lastInnerSize{ 0, 0 };      ///< last frame's canvas size, for centering
+        tachyon::ID                 revealedFocusID = tachyon::ID::Invalid();   ///< internal: the focus last scrolled into view
         /// Command mode set while the canvas has focus.
         CommandMode             commandMode = CommandMode::Default;
         /// Z-order, last == front (a clicked node moves there).

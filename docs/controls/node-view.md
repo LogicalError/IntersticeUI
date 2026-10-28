@@ -24,6 +24,11 @@ each finished edit as a `NodeViewEdit` (for undo; `ApplyNodeViewEdit` in
 `gui_node_view_helpers.h` applies or reverts one), `onBreadcrumb(index)` handles the
 breadcrumb. `showZoomControls` and `showMinimap` turn the overlays on and off.
 
+Tab reaches the controls in every node, in or out of view; when keyboard focus moves to
+a node that isn't fully in view, the view pans just enough to show it, at the same zoom.
+Home frames all nodes. `ScrollNodeIntoView` and `FrameAllNodes` in
+`gui_node_view_helpers.h` do the same from code.
+
 Classes: `node-view`, `node`, `node-header`, `node-title`, `node-category`,
 `node-row`, `node-socket`, `node-view-overlay`, `node-view-minimap`.
 

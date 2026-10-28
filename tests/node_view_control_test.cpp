@@ -317,5 +317,65 @@ namespace tachyon
             EXPECT_EQ(app.commandManager.GetMode(), CommandMode::Default);
         }
 
+        // Tab reaches the fields of a node out of view, and the view pans to that node.
+        TEST_F(NodeViewControlTest, TabToANodeOutOfViewPansToIt)
+        {
+            app.runPostLayoutCallbacks = true;   // the view learns its size and the nodes theirs there
+            const ID farID = app.idManager.CreateStaticID();
+            NodeModel far{};
+            far.stableID = farID;
+            far.title    = "Far";
+            far.pos      = { 4000, 80 };
+            far.properties.push_back(NodeProperty{ .renderBody = [this] { app.Button("Go", [] {}); } });
+            view.nodes.push_back(std::move(far));
+            Settle();
+
+            // The node's rect on screen: the canvas centre plus the view transform of its
+            // canvas position.
+            const tachyon::IntRect inner = CanvasInner();
+            auto onScreen = [&] {
+                const NodeModel& node = view.nodes[2];
+                const float2 a = view.transform.TransformPoint(float2{ (float)node.pos.x, (float)node.pos.y });
+                const float2 b = view.transform.TransformPoint(float2{ (float)(node.pos.x + node.lastSize.x),
+                                                                       (float)(node.pos.y + node.lastSize.y) });
+                const float2 c{ inner.x + inner.w * 0.5f, inner.y + inner.h * 0.5f };
+                return tachyon::IntRect{ int(c.x + a.x), int(c.y + a.y), int(b.x - a.x), int(b.y - a.y) };
+            };
+            ASSERT_GT(view.nodes[2].lastSize.x, 0);
+            ASSERT_GT(onScreen().x, inner.x + inner.w) << "test setup: the node starts out of view";
+
+            auto focusInFar = [&] {
+                return (app.guiStateManager.GetCurrentState(farID) & ElementState::Focused) != ElementState::None;
+            };
+            for (int i = 0; i < 8 && !focusInFar(); ++i)
+            {
+                app.InjectKey(KeyCode::Tab);
+                Settle();
+            }
+            ASSERT_TRUE(focusInFar()) << "Tab reaches the far node's button";
+            Settle();
+
+            const tachyon::IntRect node = onScreen();
+            EXPECT_GE(node.x, inner.x);
+            EXPECT_LE(node.x + node.w, inner.x + inner.w) << "the view panned to the node";
+            EXPECT_GE(node.y, inner.y);
+            EXPECT_LE(node.y + node.h, inner.y + inner.h);
+        }
+
+        // Panning away from the focused node keeps the view where it was put.
+        TEST_F(NodeViewControlTest, PanningAwayFromTheFocusedNodeStays)
+        {
+            app.runPostLayoutCallbacks = true;
+            view.nodes[0].properties.push_back(NodeProperty{ .renderBody = [this] { app.Button("Go", [] {}); } });
+            Settle();
+            app.InjectKey(KeyCode::Tab);
+            Settle();
+            ASSERT_TRUE((app.guiStateManager.GetCurrentState(nodeA) & ElementState::Focused) != ElementState::None);
+
+            view.transform = tachyon::float3x2::Translate(tachyon::float2{ -5000.0f, 0.0f });
+            Settle();
+            EXPECT_EQ(view.transform.r0.z, -5000.0f) << "focus that didn't move doesn't pan";
+        }
+
     } // namespace
 }

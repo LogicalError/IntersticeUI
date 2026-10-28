@@ -412,6 +412,7 @@ namespace tachyon
         ///@{
         StyleRef tabBarStyleRef {};
         StyleRef tabStyleRef {};
+        StyleRef tabOverflowStyleRef {};   ///< the "+N" button after the tabs that fit
         StyleRef tabContentStyleRef {};
         StyleRef tabCloseStyleRef {};
         ///@}

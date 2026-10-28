@@ -1283,4 +1283,16 @@ namespace tachyon
         EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 100, 60 }), 4);
         EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 300, 60 }), 5);
     }
+
+    // Tabs in the overflow list have an empty rect: the drop goes between the tabs in the bar,
+    // and an empty rect at the bar's corner doesn't count as a row above the cursor.
+    TEST(TabInsertion, TabsInTheOverflowListAreSkipped)
+    {
+        tachyon::DockNode leaf;
+        leaf.cachedTabRects = { { 0, 10, 80, 24 }, { 82, 10, 80, 24 }, {}, {}, { 164, 10, 80, 24 } };
+        EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 10, 20 }),  0);
+        EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 150, 20 }), 2) << "after tab 1, before the hidden ones";
+        EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 230, 20 }), 5) << "after the last tab in the bar";
+        EXPECT_EQ(tachyon::TabInsertionIndex(leaf, { 10, 40 }),  0) << "below the bar is its row, not past an empty rect";
+    }
 }

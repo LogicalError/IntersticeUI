@@ -68,8 +68,15 @@ namespace tachyon
         IntRect TabBarDropHitRect(const DockNode* leaf)
         {
             IntRect r = leaf->cachedTabBarRect;
-            if (r.w > 0 && r.h > 0 && !leaf->cachedTabRects.empty())
-                r.h += leaf->cachedTabRects.front().h;
+            if (r.w <= 0 || r.h <= 0)
+                return r;
+            // A row's height, from a tab in the bar (an empty rect is one in the overflow list).
+            for (const IntRect& tab : leaf->cachedTabRects)
+                if (tab.w > 0)
+                {
+                    r.h += tab.h;
+                    break;
+                }
             return r;
         }
 
@@ -128,12 +135,16 @@ namespace tachyon
             // (possibly new) row, which is left-aligned to the bar.
             const int rowY = TabRowCursor(*node, mousePos).y;
             const IntRect& bar = node->cachedTabBarRect;
+            // The tab before it in the bar: tabs in the overflow list (empty rects) are skipped.
+            int pred = std::min(phantomIdx, (int)rects.size()) - 1;
+            while (pred >= 0 && rects[pred].w <= 0)
+                --pred;
             const bool flowsAfterPred =
-                phantomIdx > 0 && phantomIdx - 1 < (int)rects.size()
-                && TabOnCursorRow(rects[phantomIdx - 1], rowY)
-                && rects[phantomIdx - 1].x + rects[phantomIdx - 1].w + phantomWidth <= bar.x + bar.w;
+                pred >= 0
+                && TabOnCursorRow(rects[pred], rowY)
+                && rects[pred].x + rects[pred].w + phantomWidth <= bar.x + bar.w;
             const int estimatedX = flowsAfterPred
-                ? rects[phantomIdx - 1].x + rects[phantomIdx - 1].w
+                ? rects[pred].x + rects[pred].w
                 : bar.x;
 
             // Grab offset: distance from tab left edge to mouse at drag start
@@ -1092,11 +1103,13 @@ namespace tachyon
                 auto tabBarRef = elementStorage.FindElementRefByID(node->tabBarID);
                 if (const auto* tabBarRectPtr = elementStorage.GetElementRectPtr(tabBarRef))
                     node->cachedTabBarRect = tabBarRectPtr->rect;
+                // One per panel, so the index is the panel's; an empty rect for a tab that's in
+                // the overflow list rather than the bar.
                 for (const auto& panelId : node->panelIds)
                 {
                     auto tabRef = elementStorage.FindElementRefByID(panelId);
-                    if (const auto* r = elementStorage.GetElementRectPtr(tabRef))
-                        node->cachedTabRects.push_back(r->rect);
+                    const auto* r = elementStorage.GetElementRectPtr(tabRef);
+                    node->cachedTabRects.push_back(r ? r->rect : IntRect{});
                 }
                 return;
             }

@@ -5,9 +5,14 @@
 ### BeginTabBar / Tab
 
 A bar of tabs. `*selectedIndex` is the selected tab; clicking or the arrow keys change
-it. The tabs can be dragged into a new order (`onReorder(from, to)`), wrap onto more
-rows when the bar is narrow, and with `onClose(index)` set get a "Close Panel" context
-menu. `onDragOut` and `dragVisualizer` work as in the reorderable group. The content
+it. The tabs can be dragged into a new order (`onReorder(from, to)`), and with
+`onClose(index)` set get a "Close Panel" context menu.
+
+When the tabs don't fit, the bar shows the first ones and a "+N" button that lists the
+rest; picking one there selects it. The selected tab is always in the bar, in place of
+the last ones that fit, so the arrow keys and Home/End also reach the listed tabs. A
+`Tab` that is in the list builds nothing and returns false. Which tabs fit is decided
+from the sizes of the frame before, so a resize settles a frame later. `onDragOut` and `dragVisualizer` work as in the reorderable group. The content
 under the bar is up to the app.
 
 ```cpp
@@ -20,7 +25,8 @@ void EndTabBar();
 bool Tab(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
-`BeginTabBar` has no form without an ID. Classes: `tab-bar`, `tab`, `tab-content`.
+`BeginTabBar` has no form without an ID. Classes: `tab-bar`, `tab`, `tab-content`,
+`tab-overflow` (the "+N" button; its list uses the menu classes).
 
 ```cpp
 BeginTabBar(idManager.AllocateDynamicID("tabs"), &selectedTab, nullptr);

@@ -62,4 +62,43 @@ namespace
         EXPECT_GE(bottomRight.x, 1000.0f);
         EXPECT_GE(bottomRight.y, 650.0f);
     }
+
+    TEST(NodeViewScrollIntoView, ANodeInViewDoesntMove)
+    {
+        NodeView view;
+        view.lastInnerSize = { 400, 300 };
+        view.nodes.resize(1);
+        view.nodes[0].pos = { -50, -20 }; view.nodes[0].lastSize = { 100, 40 };
+        const float3x2 before = view.transform;
+        ScrollNodeIntoView(view, 0, 10);
+        EXPECT_EQ(view.transform.r0.z, before.r0.z);
+        EXPECT_EQ(view.transform.r1.z, before.r1.z);
+    }
+
+    TEST(NodeViewScrollIntoView, PansByAsLittleAsBringsItIn)
+    {
+        NodeView view;
+        view.lastInnerSize = { 400, 300 };
+        view.transform = float3x2::Scale(0.5f);
+        view.nodes.resize(1);
+        view.nodes[0].pos = { 1000, -2000 }; view.nodes[0].lastSize = { 100, 40 };
+        ScrollNodeIntoView(view, 0, 10);
+        EXPECT_NEAR(NodeViewZoom(view), 0.5f, 1e-4f) << "the zoom stays";
+        const float2 tl = view.transform.TransformPoint({ 1000.0f, -2000.0f });
+        const float2 br = view.transform.TransformPoint({ 1100.0f, -1960.0f });
+        EXPECT_NEAR(br.x, 200.0f - 10.0f, 1e-3f) << "right edge just inside";
+        EXPECT_NEAR(tl.y, -150.0f + 10.0f, 1e-3f) << "top edge just inside";
+    }
+
+    TEST(NodeViewScrollIntoView, ANodeLargerThanTheViewShowsItsTopLeft)
+    {
+        NodeView view;
+        view.lastInnerSize = { 400, 300 };
+        view.nodes.resize(1);
+        view.nodes[0].pos = { 2000, 2000 }; view.nodes[0].lastSize = { 900, 700 };
+        ScrollNodeIntoView(view, 0, 10);
+        const float2 tl = view.transform.TransformPoint({ 2000.0f, 2000.0f });
+        EXPECT_NEAR(tl.x, -200.0f + 10.0f, 1e-3f);
+        EXPECT_NEAR(tl.y, -150.0f + 10.0f, 1e-3f);
+    }
 }

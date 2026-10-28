@@ -21,3 +21,6 @@ First public preview. The API is not stable yet.
 - `Dropdown`: pick one of a list of options; the list opens on the current option.
 - `AutocompleteField`: a text field that lists the suggestions matching what's typed.
 - Keyboard focus: Tab reaches every control (not disabled ones, which also ignore keys) and every control shows it has the focus; [Writing a control](docs/controls/writing-controls.md) lists what each control must do.
+- Node view: keyboard focus moving to a node out of view pans the view to it.
+- Color and gradient swatches show keyboard focus with an accent border, like the fields next to them.
+- Tab bars no longer wrap: the tabs that don't fit are listed by a "+N" button after the others, and the selected tab is always shown.
