@@ -53,29 +53,12 @@ namespace tachyon
 
         BeginLabelGroup(140);
 
-        // Theme picker. Uses BeginMenu as a stand-in dropdown (#63): the menu button
-        // shows the active theme name; opening it lists the available palettes.
-        // RequestReloadTheme is a no-op when the params haven't changed, so there's
-        // no ping-pong when the user reselects the current theme.
+        // Theme picker: the dropdown returns true on the frame a different palette is picked.
         Label("Theme");
-        static const char* const themeNames[] = { "Dark", "Light" };
+        static constexpr std::string_view themeNames[] = { "Dark", "Light" };
         static const char* const themePaths[] = { "themes/dark.css", "themes/light.css" };
-        const char* currentName = themeNames[showcase.settingsThemeIndex];
-        if (BeginMenu(idManager.AllocateDynamicID("settingsThemeMenu"), currentName))
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                int idx = i;
-                bool isCurrent = (idx == showcase.settingsThemeIndex);
-                if (isCurrent) BeginSelected();
-                MenuItem(themeNames[i], [this, idx]() {
-                    showcase.settingsThemeIndex = idx;
-                    RequestReloadTheme(themePaths[idx], showcase.settingsFontScalePct / 100.0f);
-                });
-                if (isCurrent) EndSelected();
-            }
-        }
-        EndMenu();
+        if (Dropdown(idManager.AllocateDynamicID("settingsThemeMenu"), showcase.settingsThemeIndex, themeNames))
+            RequestReloadTheme(themePaths[showcase.settingsThemeIndex], showcase.settingsFontScalePct / 100.0f);
 
         // Font size (percent), snapped to steps of 10 in [100, 300] before
         // SliderField so knob and textbox show the quantized value. SliderField's

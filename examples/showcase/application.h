@@ -378,6 +378,8 @@ namespace tachyon
             ID cameraMenuID{ ID::Invalid() };
             int cameraView = 0;   // the viewport toolbar's camera menu: perspective, orthographic, ...
             ID bigMenuID{ ID::Invalid() };
+            int quality = 1;      // the inspector's dropdowns
+            int fontIndex = 0;
 
             // GridView demo
             int gridViewSelected = -1;

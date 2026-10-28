@@ -963,9 +963,13 @@ namespace tachyon
         }
 
         VERIFY(elementStorage.AddPostLayout(canvasRes.ref,
-            [&view](tachyon::PostLayoutContext& ctx)
+            [this, &view, canvasID, centeredFor = view.lastInnerSize](tachyon::PostLayoutContext& ctx)
             {
                 view.lastInnerSize = ctx.ElementInnerRect().size;
+                // The nodes were centered for last frame's size. A cached panel around the
+                // view only rebuilds when its own size changes, so ask for the redraw.
+                if (view.lastInnerSize.x != centeredFor.x || view.lastInnerSize.y != centeredFor.y)
+                    RebuildCachedScopesAbove(canvasID);
             }));
 
         // Axis lines + wires draw in the canvas's OWN (pre-children) pass, so they sit

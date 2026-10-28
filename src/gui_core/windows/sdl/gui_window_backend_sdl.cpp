@@ -687,6 +687,10 @@ namespace tachyon
             case WM_NCLBUTTONDOWN:
             case WM_NCLBUTTONDBLCLK:
             case WM_NCLBUTTONUP:
+                // A press on the caption goes to the window drag, which takes the mouse until
+                // it's released; the GUI gets it as a click first, so popups close on it.
+                if (wParam == HTCAPTION && (msg == WM_NCLBUTTONDOWN || msg == WM_NCLBUTTONDBLCLK))
+                    ForwardCaptionButtonInput(window, WM_NCLBUTTONUP, lParam);
                 if (wParam == HTMAXBUTTON)
                 {
                     if (msg == WM_NCMOUSEMOVE)
@@ -1489,6 +1493,21 @@ namespace tachyon
         else
             SDL_HideWindow(sdl_window);
         m_suppressLiveResize = false;
+    }
+
+    bool SDLWindowBackend::SetWindowCloaked([[maybe_unused]] OSWindowHandle h, [[maybe_unused]] bool cloaked)
+    {
+#ifdef _WIN32
+        SDL_Window* sdl_window = m_sdlInitialized ? ToSDL(h) : nullptr;
+        if (sdl_window == nullptr)
+            return false;
+        HWND hwnd = static_cast<HWND>(SDL_GetPointerProperty(SDL_GetWindowProperties(sdl_window),
+                                                             SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+        const BOOL value = cloaked ? TRUE : FALSE;
+        return hwnd != nullptr && SUCCEEDED(DwmSetWindowAttribute(hwnd, DWMWA_CLOAK, &value, sizeof(value)));
+#else
+        return false;
+#endif
     }
 
     void SDLWindowBackend::SetWindowMode(OSWindowHandle h, WindowMode mode)

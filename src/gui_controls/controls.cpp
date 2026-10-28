@@ -512,6 +512,10 @@ namespace tachyon
             guiStateManager.Interaction().SetFocusID(ID::Invalid());
             guiStateManager.TextEditorFocus().Clear();
         };
+        // A press outside the box and the list leaves the search, also one on what takes no
+        // focus (a panel's background), which would leave the field focused.
+        if (focused)
+            CloseOnPressOutside(id, state.listWindowID, leave);
         auto run = [this, &state, leave](CommandID command)
         {
             const CommandManager::Command* found = commandManager.GetCommand(command);
@@ -978,19 +982,14 @@ namespace tachyon
 
     void GUIApplication::InvalidateCachedScopesForInput(ID overID)
     {
-        if (!m_uiCache || !inputManager) return;
+        if (!m_uiCache) return;
+        // Requests made during layout, now that this frame's capture is done.
+        for (const ID id : std::exchange(m_cacheRebuildRequests, {}))
+            InvalidateCachedScopesAbove(id);
+        if (!inputManager) return;
         RefreshCachedInputFlags();
 
-        auto invalidateScopesAbove = [&](ID id)
-        {
-            for (ElementRef r = elementStorage.FindElementRefByID(id);
-                 r != ElementRef::Invalid(); r = elementStorage.GetParentRef(r))
-            {
-                const Element* e = elementStorage.GetElementPtr(r);
-                if (e && (e->flags & ElementFlags::IsCachedScope) != ElementFlags::None)
-                    m_uiCache->Invalidate(e->id);
-            }
-        };
+        auto invalidateScopesAbove = [this](ID id) { InvalidateCachedScopesAbove(id); };
 
         if (overID != ID::Invalid())
         {
@@ -1013,6 +1012,18 @@ namespace tachyon
     void GUIApplication::Invalidate(ID id)
     {
         if (m_uiCache) m_uiCache->Invalidate(id);
+    }
+
+    void GUIApplication::InvalidateCachedScopesAbove(ID id)
+    {
+        if (!m_uiCache) return;
+        for (ElementRef r = elementStorage.FindElementRefByID(id);
+             r != ElementRef::Invalid(); r = elementStorage.GetParentRef(r))
+        {
+            const Element* e = elementStorage.GetElementPtr(r);
+            if (e && (e->flags & ElementFlags::IsCachedScope) != ElementFlags::None)
+                m_uiCache->Invalidate(e->id);
+        }
     }
 
     void GUIApplication::InvalidatePanel(ID panelId)

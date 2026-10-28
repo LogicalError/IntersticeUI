@@ -197,6 +197,10 @@ namespace tachyon
         virtual bool SetWindowRect(OSWindowHandle, const IntRect& clientRect) = 0;
         /// Shows or hides the window; hiding doesn't destroy it.
         virtual void SetWindowVisible(OSWindowHandle, bool visible) = 0;
+        /// Cloaks a shown window: it takes frames but stays invisible, so it can be drawn
+        /// before it appears. False when the backend can't (then the window is hidden until
+        /// drawn instead).
+        virtual bool SetWindowCloaked(OSWindowHandle, bool /*cloaked*/) { return false; }
 
         /// Every monitor, the primary first.
         virtual std::vector<MonitorInfo> GetMonitors() const = 0;

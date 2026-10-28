@@ -18,7 +18,7 @@ This guide has these pages:
 | [Windows and layout](controls/windows-and-layout.md) | Windows, horizontal and vertical groups, areas, scroll bars, caching, label and button groups. |
 | [Text and images](controls/text-and-images.md) | `Text`, `Label`, `DragLabel`, `SelectableText` and `Image`. |
 | [Buttons and toggles](controls/buttons-and-toggles.md) | `Button`, `CommandButton`, `Toggle`, `Switch` and `Checkbox`. |
-| [Fields](controls/fields.md) | Text, search, numeric, vector and typed fields, lists and dictionaries. |
+| [Fields](controls/fields.md) | Text, search, numeric, vector and typed fields, dropdowns, lists and dictionaries. |
 | [Sliders](controls/sliders.md) | `SliderField` and `Slider`. |
 | [Color and gradient fields](controls/color-and-gradient.md) | `ColorField` and `GradientField` with their picker popups. |
 | [Menus](controls/menus.md) | Menus, menu items, the menu bar and title bar, and context menus. |
