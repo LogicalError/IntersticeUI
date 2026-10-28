@@ -962,6 +962,28 @@ namespace tachyon
             VERIFY(elementStorage.EndChildren()); // close outer .node
         }
 
+        // Keyboard focus moving onto a field of a node that is out of view pans the view to
+        // it, this frame; a click doesn't, as what's clicked is already in view.
+        {
+            const auto& interaction = guiStateManager.Interaction();
+            const ID focusedID = interaction.GetFocusedID();
+            if (focusedID != view.revealedFocusID && interaction.IsFocusVisible())
+            {
+                view.revealedFocusID = focusedID;
+                const std::vector<ID> around = CollectPropagatedAncestors(elementStorage, focusedID);
+                for (int n = 0; n < nodeCount; ++n)
+                    if (std::find(around.begin(), around.end(), view.nodes[n].stableID) != around.end())
+                    {
+                        ScrollNodeIntoView(view, n, theme.nodeGridSize);
+                        elementStorage.SetContentTransform(canvasRes.ref,
+                            tachyon::float3x2::Translate(tachyon::float2{ (float)(view.lastInnerSize.x / 2),
+                                                                          (float)(view.lastInnerSize.y / 2) })
+                            * view.transform);
+                        break;
+                    }
+            }
+        }
+
         VERIFY(elementStorage.AddPostLayout(canvasRes.ref,
             [this, &view, canvasID, centeredFor = view.lastInnerSize](tachyon::PostLayoutContext& ctx)
             {

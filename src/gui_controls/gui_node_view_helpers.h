@@ -26,6 +26,9 @@ namespace tachyon
     void  SetNodeViewCenter(NodeView& view, float2 center, float zoom);
     /// Centres and zooms the view on all nodes (Home, the Fit button).
     void  FrameAllNodes(NodeView& view);
+    /// Pans the view, at the same zoom, by as little as brings node `nodeIdx` inside it with
+    /// `margin` pixels to spare; a node larger than the view shows its top-left.
+    void  ScrollNodeIntoView(NodeView& view, int nodeIdx, int32_t margin);
 
     /// Infinite background dot grid for a pan/zoom canvas, drawn from a CustomDrawContext
     /// callback in the canvas's layout space (node.pos space): a dot on every grid point.

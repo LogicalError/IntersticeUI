@@ -62,6 +62,34 @@ namespace tachyon
         SetNodeViewCenter(view, float2{ (float)((bmin.x + bmax.x) / 2), (float)((bmin.y + bmax.y) / 2) }, zoom);
     }
 
+    void ScrollNodeIntoView(NodeView& view, int nodeIdx, int32_t margin)
+    {
+        if (nodeIdx < 0 || nodeIdx >= (int)view.nodes.size())
+            return;
+        const int2 vp = view.lastInnerSize;
+        if (vp.x <= 0 || vp.y <= 0)
+            return;
+        const NodeModel& node = view.nodes[size_t(nodeIdx)];
+        const float2 a = view.transform.TransformPoint(float2{ (float)node.pos.x, (float)node.pos.y });
+        const float2 b = view.transform.TransformPoint(float2{ (float)(node.pos.x + node.lastSize.x),
+                                                               (float)(node.pos.y + node.lastSize.y) });
+        // The smallest move that brings each side in, the top-left winning for a node larger
+        // than the view. View space has the canvas centre at 0.
+        auto shift = [margin](float lo, float hi, int32_t size)
+        {
+            const float half = 0.5f * (float)size;
+            const float m    = (float)margin;
+            float d = 0.0f;
+            if (hi + d > half - m)  d = (half - m) - hi;
+            if (lo + d < -half + m) d = (-half + m) - lo;
+            return d;
+        };
+        const float2 d{ shift(std::min(a.x, b.x), std::max(a.x, b.x), vp.x),
+                        shift(std::min(a.y, b.y), std::max(a.y, b.y), vp.y) };
+        if (d.x != 0.0f || d.y != 0.0f)
+            view.transform = float3x2::Translate(d) * view.transform;
+    }
+
     void RenderCanvasGrid(CustomDrawContext& ctx, int32_t baseGridSize,
                           color4f dotColor, float dotSize, int2 originOffset, IntRect clipCurrent)
     {
