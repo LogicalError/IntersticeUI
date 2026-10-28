@@ -3777,6 +3777,7 @@
     font-size: 11.5px;
 }
 .color-swatch:hover { border-color: var(--line-strong); }
+.color-swatch:focus { border-color: var(--accent); }
 
 .color-picker {
     width: 640px;   /* the spec's 560, wider for the Lab and Oklab spaces */
@@ -4113,6 +4114,7 @@
     flex-shrink: 0;
     cursor: pointer;
 }
+.color-picker-swatch:focus, .color-picker-recent:focus { border-color: var(--accent); }
 /* Adds the current color to the swatches. */
 .color-picker-new {
     width: 22px;
@@ -4563,6 +4565,7 @@
     overflow: visible;
 }
 .gradient-swatch:hover { border-color: var(--line-strong); }
+.gradient-swatch:focus { border-color: var(--accent); }
 
 .gradient-editor {
     width: 720px;
