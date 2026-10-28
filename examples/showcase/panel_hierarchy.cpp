@@ -274,13 +274,13 @@ namespace tachyon
                 const VizAgg agg = HierComputeAgg(nodeId);
                 Cell([this, nodeId, rowID, agg]()
                 {
-                    // Wrapper uses the row's id so hovering the eye highlights the row;
-                    // the eye keeps its own id so clicks reach its toggle handler.
+                    // The column is interactiveContent, so the table makes this cell part of
+                    // the row: hovering the eye highlights the row, and the eye keeps its own
+                    // ID so clicks reach its toggle handler.
                     tachyon::Element wrap{};
-                    wrap.id       = rowID;
-                    wrap.flags    = tachyon::ElementFlags::PropagatesDescendantState;
+                    wrap.id       = idManager.AllocateDynamicID("hierVizBox");
                     wrap.styleRef = hierarchyVisibilityStyleRef;
-                    wrap.state    = guiStateManager.GetCurrentState(rowID);
+                    wrap.state    = guiStateManager.GetCurrentState(rowID);   // drawn with the row
                     auto wRes = elementStorage.Add(std::move(wrap), tachyon::LayoutOverride::Auto().FlexGrow(1));
                     VERIFY(wRes.status);
                     VERIFY(windowRegistry.Add(wRes.ref));

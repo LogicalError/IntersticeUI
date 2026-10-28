@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include "headless_gui_app.h"
+#include "misuse_reports.h"
 
 #include <gui_controls/gui_application.h>
 #include <gui_core/state/gui_state_manager.h>
@@ -1559,6 +1560,56 @@ namespace tachyon
             EXPECT_GT(table.h, 100);
             EXPECT_GE(table.y, pane.y);
             EXPECT_LE(table.y + table.h, pane.y + pane.h);
+        }
+
+        // A column with its own widgets (interactiveContent): in row selection its cells are
+        // part of the row, so the row stays hovered over a widget, while the widget keeps its
+        // own ID and gets its clicks. No element shares an ID by accident.
+        TEST_F(TableVirtualScrollTest, AWidgetInARowKeepsTheRowHoveredAndGetsItsClicks)
+        {
+            tachyon::TableState state{};
+            std::vector<ID> buttonIDs(5);
+            for (ID& id : buttonIDs) id = app.idManager.CreateStaticID();
+            int clicked = -1;
+            std::vector<tachyon::VirtualTableColumn> cols;
+            cols.push_back({
+                .column = { .header = "Eye", .initialWidth = 60, .minWidth = 60, .maxWidth = 60, .interactiveContent = true },
+                .generateCell = [&](int r) {
+                    app.Cell([&, r] { app.Button(buttonIDs[size_t(r)], "o", [&clicked, r] { clicked = r; }); });
+                },
+            });
+            cols.push_back({
+                .column = { .header = "Name", .initialWidth = 200, .minWidth = 60, .maxWidth = 400 },
+                .generateCell = [this](int r) { char b[16]; std::snprintf(b, sizeof(b), "Row %d", r); app.Cell(b); },
+            });
+            auto frame = [&] {
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    std::span<tachyon::VirtualTableColumn> sp(cols.data(), cols.size());
+                    app.VirtualTable(tableID, state, sp, int(buttonIDs.size()), 0, app.theme.tableStyleRef,
+                                     LayoutOverride{}.Size(400, 300));
+                    app.EndRootWindow();
+                });
+            };
+            GUITest::MisuseReports misuse;
+            frame();
+            frame();
+            const ID row2 = state.RowIDForIndex(2);
+            ASSERT_TRUE(app.HasElement(buttonIDs[2]));
+
+            app.InjectMouseMove(app.CenterOf(buttonIDs[2]));
+            frame();
+            frame();
+            const auto hovered = [&](ID id) { return (app.guiStateManager.GetCurrentState(id) & ElementState::Hover) != ElementState::None; };
+            EXPECT_TRUE(hovered(buttonIDs[2])) << "the widget is hovered";
+            EXPECT_TRUE(hovered(row2)) << "and so is its row";
+            EXPECT_FALSE(hovered(state.RowIDForIndex(1)));
+
+            app.ClickAt(app.CenterOf(buttonIDs[2]));
+            frame();
+            frame();
+            EXPECT_EQ(clicked, 2) << "the widget gets its click";
+            EXPECT_FALSE(misuse.Contains("share an ID")) << misuse.All();
         }
 } // namespace
 } // namespace tachyon

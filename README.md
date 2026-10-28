@@ -23,7 +23,13 @@
   <a href="CHANGELOG.md"><b>Changelog</b></a>
 </p>
 
-![The showcase application: docking, a node graph, an inspector, a file browser and a log](docs/screenshot.png)
+![The showcase application: docking, a node graph, the profiler, a file browser and a log](docs/screenshot.png)
+
+<p align="center">
+  Every frame of this UI is built and rendered in <b>under a millisecond</b>: 0.91 ms (1,097 fps) with the
+  profiler recording, as it shows above.<br>
+  <sub>Release build of <code>examples/showcase</code> on a Ryzen 9 7950X3D with a GeForce RTX 4070 Ti SUPER.</sub>
+</p>
 
 ## At a glance
 

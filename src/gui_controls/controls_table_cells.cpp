@@ -243,14 +243,19 @@ namespace tachyon
             : (emit.cellStyleRef.layoutStyleIndex != LayoutStyleIndex::Invalid) ? emit.cellStyleRef
             : theme.tableCellStyleRef;
 
-        const tachyon::ID cellID = idManager.AllocateDynamicID();
+        // Row-mode cells are NoInput (click -> select row), except columns that
+        // host their own widget - those stay hittable so the widget gets input. Such a
+        // cell is part of the row: it has the row's ID and passes its widgets' hover and
+        // focus to the row, so the row stays highlighted over them. The widgets keep
+        // their own IDs and handlers.
+        const bool rowPart = !cellMode && emit.columns[c].column.interactiveContent;
+        const tachyon::ID cellID = rowPart ? rowID : idManager.AllocateDynamicID();
         auto [cellState, cellSelected] = ComputeCellSelectionBits(
             guiStateManager, state, cellID, rowID, c, cellMode);
-        // Row-mode cells are NoInput (click -> select row), except columns that
-        // host their own widget - those stay hittable so the widget gets input.
-        const bool cellInteractive = cellMode || emit.columns[c].column.interactiveContent;
         const tachyon::ElementFlags cellFlags =
-            cellInteractive ? tachyon::ElementFlags::None : tachyon::ElementFlags::NoInput;
+            rowPart  ? tachyon::ElementFlags::SharesID | tachyon::ElementFlags::PropagatesDescendantState
+          : cellMode ? tachyon::ElementFlags::None
+                     : tachyon::ElementFlags::NoInput;
 
         tachyon::EventHandler cellHandler;
         if (cellMode)

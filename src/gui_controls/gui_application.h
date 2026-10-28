@@ -2221,6 +2221,8 @@ namespace tachyon
         /// Invalidates the scopes under the cursor and, on key input, the focused one.
         /// Call after hit-testing, before dispatch.
         void        InvalidateCachedScopesForInput(ID overID);
+        /// The PropagatesDescendantState ancestors of `leafID`'s element, innermost first.
+        static std::vector<ID> CollectPropagatedAncestors(const ElementStorage& storage, ID leafID);
         /// Rebuilds, next frame, the cached scopes `id` is in.
         void        InvalidateCachedScopesAbove(ID id);
         /// As InvalidateCachedScopesAbove, from layout: this frame's capture would clear it, so
