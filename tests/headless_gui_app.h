@@ -68,6 +68,10 @@ public:
     // frame does. Off by default: several tests check frames without them.
     bool runPostLayoutCallbacks = false;
 
+    // The window with the keyboard, which alone builds a Tab order; Invalid: the root.
+    // A modal dialog's window has it in the real app.
+    tachyon::ID activeWindow = tachyon::ID::Invalid();
+
     // Emit a root "window" element filling the monitor area. Widgets
     // emitted between BeginRootWindow/EndRootWindow become its children
     // and participate in hit-testing/layout.

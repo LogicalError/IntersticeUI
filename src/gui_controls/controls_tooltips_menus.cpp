@@ -1,5 +1,6 @@
 #include <gui_controls/gui_application.h>
 
+#include <algorithm>
 #include <string>
 
 namespace tachyon
@@ -116,27 +117,40 @@ namespace tachyon
 
     bool GUIApplication::OpenContextMenuWindow(ID targetID)
     {
-        // Detect right-click from recorded input events.
-        // Match against the previous frame's hovered element (GetHoveredID is set
-        // in the prior EndFrame and is still valid during OnGUI construction).
-        if (targetID != ID::Invalid() && inputManager)
+        // A right-click on the target (last frame's hovered element) or on a part of it that
+        // it takes the states of, or Shift+F10 / the Menu key with the focus there, opens
+        // it. The first target that claims the request this frame wins: a control's menu,
+        // declared right after it, over the one of a row or node it is in.
+        if (targetID != ID::Invalid() && inputManager && !m_contextMenuClaimed)
         {
-            bool hasRightClick = false;
+            bool byMouse = false, byKeyboard = false;
             for (const auto& e : inputManager->GetRecordedEvents())
             {
                 if (e.type == tachyon::EventType::MouseDown && e.state.RightPressed())
-                {
-                    hasRightClick = true;
-                    break;
-                }
+                    byMouse = true;
+                if (e.type == tachyon::EventType::KeyDown &&
+                    (e.state.lastKey == tachyon::KeyCode::Application || e.state.lastKey == tachyon::KeyCode::Menu ||
+                     (e.state.lastKey == tachyon::KeyCode::F10 && (e.state.modifiers & KeyModifier::Shift) != KeyModifier::None)))
+                    byKeyboard = true;
             }
-            if (hasRightClick && guiStateManager.Interaction().GetHoveredID() == targetID)
+            auto isIn = [targetID](ID leaf, const std::vector<ID>& around)
             {
+                return leaf != ID::Invalid() &&
+                       (leaf == targetID || std::find(around.begin(), around.end(), targetID) != around.end());
+            };
+            const auto& interaction = guiStateManager.Interaction();
+            const bool mouseHit = byMouse && isIn(interaction.GetHoveredID(), interaction.GetPropagatedHoverIDs());
+            const bool keyHit   = !mouseHit && byKeyboard && isIn(interaction.GetFocusedID(), interaction.GetPropagatedFocusedIDs());
+            if (mouseHit || keyHit)
+            {
+                m_contextMenuClaimed = true;
                 contextMenuTargetID = targetID;
                 contextMenuScreenPos.reset();
                 if (menuManager.IsOpen())
                     menuManager.CloseAll(guiStateManager);
                 menuManager.OpenMenu(guiStateManager, contextMenuWindowID);
+                if (keyHit)
+                    menuManager.mouseHiddenForMenu = true;   // the keyboard leads in the menu
             }
         }
 

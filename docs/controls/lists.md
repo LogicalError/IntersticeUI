@@ -35,6 +35,13 @@ fires on drop; the app moves its data. `isWrapped` lets the items wrap onto more
 `dragVisualizer(index, screenPos)` runs each frame while one is dragged outside it
 (typically to draw a ghost window).
 
+From the keyboard, Alt and an arrow along the group (Up / Down in a vertical one, Left /
+Right in a horizontal one, any in a wrapped one) moves the item the focus is in by one
+place, through the same `onReorder`, called after `EndReorderableGroup` has seen every
+item. The focus stays in the moved item: where the item's IDs go with its data (tabs), it
+already is there; where they belong to the slot (a `Field` list's rows), it moves to the
+same control in the item's new slot.
+
 ```cpp
 bool BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped,
                            std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style,

@@ -119,12 +119,14 @@ namespace
     {
         const ID labelID = app.idManager.CreateStaticID();
         float number = 50.0f;
+        bool returned = false, modified = false;
         auto frame = [&] {
             app.Frame([&] {
                 app.BeginRootWindow({ 800, 600 });
                 app.BeginLabelGroup(120, 40, 300);
                 app.DragLabel(labelID, "Number");
-                app.Field(fieldID, number);
+                returned = app.Field(fieldID, number) || returned;
+                modified = app.guiStateManager.IsModified() || modified;
                 app.EndLabelGroup();
                 app.EndRootWindow();
             });
@@ -143,5 +145,7 @@ namespace
         app.InjectMouseUp({ from.x + 60, from.y });
         frame();
         EXPECT_GT(number, 50.0f);
+        EXPECT_TRUE(returned) << "the field reports the change";
+        EXPECT_TRUE(modified);
     }
 }

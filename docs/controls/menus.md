@@ -53,7 +53,7 @@ MenuItem("Copy", "Ctrl+C", [this] { Copy(); });
 
 ```cpp
 bool DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut,
-                         std::function<void()> onClick, LayoutOverride&& constraints = {});
+                         std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
 void MenuSeparator();
 void MenuHeader(std::string_view text);
 void MenuFilter();
@@ -98,8 +98,11 @@ EndMenuBar();
 
 ## Context menus
 
-A menu that opens on a right-click of the target element, below it. Without a target it
-attaches to the element registered last.
+A menu that opens below the target element on a right-click on it, or on Shift+F10 or the
+Menu key while it has the focus. Without a target it attaches to the control just drawn
+(as `SetTooltip` does); a control made of several parts opens it from any of them. When
+several targets match (a control in a table row that has a menu too), the first
+`BeginContextMenu` of the frame wins: the control's, declared right after it.
 
 ```cpp
 bool BeginContextMenu(ID targetID);

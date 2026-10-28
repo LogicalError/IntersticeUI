@@ -276,47 +276,31 @@ namespace tachyon
 
         VERIFY(elementStorage.BeginChildren());
 
+        // A part of the row: drawn, not a control or a Tab stop.
+        auto addPart = [this](StyleRef style, IconID partIcon, std::string_view partText)
+        {
+            tachyon::Element part{};
+            part.id       = idManager.AllocateDynamicID();
+            part.flags    = tachyon::ElementFlags::NoInput;
+            part.styleRef = style;
+            part.state    = guiStateManager.GetCurrentState(part.id);
+            part.textID   = textSystem->RegisterText(part.id, partIcon, partText, part.styleRef, part.state);
+            RegisterElementInternal(std::move(part), tachyon::LayoutOverride{}, false);
+        };
+
         // Left column - present for every item in a menu that uses icons or has a
         // checkable (selected) item, so labels line up. A selected item shows a
         // checkmark here; otherwise the item's own icon, if any.
         if (reserveIcon)
-        {
-            tachyon::Element iconEl{};
-            iconEl.id       = idManager.AllocateDynamicID();
-            iconEl.flags    = tachyon::ElementFlags::NoInput;
-            iconEl.styleRef = destructive ? theme.menuItemDestructiveIconStyleRef : theme.menuItemIconStyleRef;
-            if (selected)
-                RegisterControl(std::move(iconEl),
-                    [this](tachyon::Element& e) { return textSystem->RegisterText(e.id, theme.menuCheckIcon, std::string_view{}, e.styleRef, e.state); },
-                    tachyon::LayoutOverride{});
-            else
-                RegisterControl(std::move(iconEl),
-                    [this, icon](tachyon::Element& e) { return textSystem->RegisterText(e.id, icon, std::string_view{}, e.styleRef, e.state); },
-                    tachyon::LayoutOverride{});
-        }
+            addPart(destructive ? theme.menuItemDestructiveIconStyleRef : theme.menuItemIconStyleRef,
+                    selected ? theme.menuCheckIcon : icon, std::string_view{});
 
         // Label fills the row and pushes any trailing text to the right edge.
-        {
-            tachyon::Element labelEl{};
-            labelEl.id       = idManager.AllocateDynamicID();
-            labelEl.flags    = tachyon::ElementFlags::NoInput;
-            labelEl.styleRef = destructive ? theme.menuItemDestructiveLabelStyleRef : theme.menuItemLabelStyleRef;
-            RegisterControl(std::move(labelEl),
-                [this, text](tachyon::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, text, e.styleRef, e.state); },
-                tachyon::LayoutOverride{});
-        }
+        addPart(destructive ? theme.menuItemDestructiveLabelStyleRef : theme.menuItemLabelStyleRef, IconID::Invalid, text);
 
         // Trailing keyboard shortcut or submenu arrow, pinned right.
         if (!trailing.empty())
-        {
-            tachyon::Element trailEl{};
-            trailEl.id       = idManager.AllocateDynamicID();
-            trailEl.flags    = tachyon::ElementFlags::NoInput;
-            trailEl.styleRef = trailingStyle;
-            RegisterControl(std::move(trailEl),
-                [this, trailing](tachyon::Element& e) { return textSystem->RegisterText(e.id, IconID::Invalid, trailing, e.styleRef, e.state); },
-                tachyon::LayoutOverride{});
-        }
+            addPart(trailingStyle, IconID::Invalid, trailing);
 
         VERIFY(elementStorage.EndChildren());
         return rowRef;
@@ -546,6 +530,7 @@ namespace tachyon
             }
         }
         EndMenu();
+        guiStateManager.SetModified(changed);
         return changed;
     }
 
@@ -569,7 +554,7 @@ namespace tachyon
         auto& level = menuManager.levels[menuManager.currentDepth];
         ID fieldID = ID::Invalid();
         SearchField(idManager.AllocateDynamicID("menu_filter"), level.filter, theme.searchIcon,
-                    TextEditBehavior::ContinuousUpdate, tachyon::LayoutOverride{}.NoShrink(), &fieldID);
+                    TextEditBehavior::ContinuousUpdate, theme.searchTextboxStyleRef, tachyon::LayoutOverride{}.NoShrink(), &fieldID);
         // The filter takes the keyboard when the menu opens; holding the menu's active
         // slot keeps the first item from taking it.
         if (level.isOpen && level.activeItemID == ID::Invalid())
@@ -609,9 +594,9 @@ namespace tachyon
         return MenuItemImpl(id, content, shortcut, std::move(onClick), style, false, std::move(constraints));
     }
 
-    bool GUIApplication::DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints)
+    bool GUIApplication::DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints)
     {
-        return MenuItemImpl(id, content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, true, std::move(constraints));
+        return MenuItemImpl(id, content, shortcut, std::move(onClick), style, true, std::move(constraints));
     }
 
     bool GUIApplication::MenuItemImpl(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick,

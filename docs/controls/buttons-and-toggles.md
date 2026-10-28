@@ -63,11 +63,13 @@ Switch(enabled, enabled ? "On" : "Off");
 
 ## Checkbox
 
-A box with a tick, and its label. There is only the form with an ID and a callback.
+A box with a tick, and its label. A click calls onToggle with the new value; the forms with
+a `bool&` change it themselves.
 
 ```cpp
 bool Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle,
-              LayoutOverride&& constraints = {});
+              StyleRef style, LayoutOverride&& constraints = {});
+bool Checkbox(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `checkbox`, `checkbox-box`, `checkbox-label`.

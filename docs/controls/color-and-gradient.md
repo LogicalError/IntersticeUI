@@ -3,12 +3,14 @@
 ## ColorField
 
 A swatch, the color as hex and its alpha in percent. Clicking the swatch opens the color
-picker; OK keeps the color, Cancel and the close button restore the original.
-`allowHDR` allows values above 1.
+picker; OK keeps the color, Cancel, Escape and the close button restore the original, and
+Escape puts the keyboard back on the swatch. In the picker the square and the hue and
+alpha strips take the arrow keys (1% a step, with Shift 10%), Page Up / Down and Home /
+End. `allowHDR` allows values above 1.
 
 ```cpp
-bool ColorField(ID id, color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
-bool ColorField(ID id, color4b& value, LayoutOverride&& constraints = {});
+bool ColorField(ID id, color4f& value, bool allowHDR, StyleRef style, LayoutOverride&& constraints = {});
+bool ColorField(ID id, color4b& value, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Returns `true` when the value changed. Classes: `color-field`, `color-swatch`,
@@ -22,11 +24,11 @@ ColorField(color);
 
 ## GradientField
 
-A gradient swatch; clicking it opens the gradient editor, with the same OK / Cancel
-behavior.
+A gradient swatch; clicking it opens the gradient editor, with the same OK / Cancel /
+Escape behavior.
 
 ```cpp
-bool GradientField(ID id, Gradient& value, LayoutOverride&& constraints = {});
+bool GradientField(ID id, Gradient& value, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `gradient-swatch`; the editor uses `gradient-editor` and the

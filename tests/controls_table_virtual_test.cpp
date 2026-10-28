@@ -1105,6 +1105,51 @@ namespace tachyon
         }
 
         // ---------------------------------------------------------------
+        // The keyboard does what the mouse does on a header: Tab reaches it, Space sorts
+        // by it, Alt+Right / Left moves the column and the focus goes with it.
+        // ---------------------------------------------------------------
+        TEST_F(TableVirtualScrollTest, TheKeyboardSortsAndMovesColumns)
+        {
+            for (auto& c : columns) c.column.sortable = true;
+            tachyon::TableState state{};
+            int reorderFrom = -1, reorderTo = -1;
+            state.onReorderColumns = [&](int f, int t) {
+                reorderFrom = f; reorderTo = t;
+                if (f < t) std::rotate(columns.begin() + f, columns.begin() + f + 1, columns.begin() + t + 1);
+                else       std::rotate(columns.begin() + t, columns.begin() + f, columns.begin() + f + 1);
+            };
+            auto frame = [&] { app.Frame([&] { Emit(state); PinViewport(state); }); };
+            frame();
+            frame();
+            auto focused = [&] { return app.guiStateManager.Interaction().GetFocusedID(); };
+            auto press = [&](KeyCode key, KeyModifier mods = KeyModifier::None) { app.InjectKey(key, KeyAction::KeyDown, mods); frame(); frame(); };
+
+            for (int i = 0; i < 4 && focused() != columns[0].internal.headerCellID; ++i)
+                press(KeyCode::Tab);
+            ASSERT_EQ(focused(), columns[0].internal.headerCellID) << "the headers are Tab stops";
+            press(KeyCode::Tab);
+            ASSERT_EQ(focused(), columns[1].internal.headerCellID);
+
+            press(KeyCode::Space);
+            EXPECT_EQ(state.sortColumn, 1);
+            EXPECT_FALSE(state.sortDescending);
+            press(KeyCode::Return);
+            EXPECT_TRUE(state.sortDescending) << "again: the other way";
+
+            press(KeyCode::Right, KeyModifier::Alt);
+            EXPECT_EQ(reorderFrom, 1);
+            EXPECT_EQ(reorderTo, 2);
+            EXPECT_EQ(state.sortColumn, 2) << "the sort follows the column";
+            EXPECT_EQ(focused(), columns[2].internal.headerCellID) << "so does the focus";
+            EXPECT_EQ(columns[2].column.header, "B");
+
+            press(KeyCode::Left, KeyModifier::Alt);
+            EXPECT_EQ(reorderTo, 1);
+            EXPECT_EQ(columns[1].column.header, "B");
+            EXPECT_EQ(focused(), columns[1].internal.headerCellID);
+        }
+
+        // ---------------------------------------------------------------
         // Widths belong to columns too: after a reorder each column keeps
         // its own width (the caller only rotates its column array).
         // ---------------------------------------------------------------

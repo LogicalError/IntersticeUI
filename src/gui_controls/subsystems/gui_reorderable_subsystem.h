@@ -52,6 +52,20 @@ namespace tachyon
         int                          nextItemIndex = 0;
         tachyon::ElementRef              groupRef      = tachyon::ElementRef::Invalid();
         std::vector<tachyon::ElementRef> itemRefs;
+        /// Alt + an arrow along the group with the focus in item `keyboardFrom`: moved by
+        /// `keyboardStep` in EndReorderableGroup, after the caller's items are built.
+        int keyboardFrom = -1;
+        int keyboardStep = 0;
+    };
+
+    /// After a keyboard move: where the focus was in the moved item, to put it back there
+    /// next frame, in the item's new slot, unless its ID moved with the item.
+    struct ReorderableFocusFollow
+    {
+        tachyon::ID           groupID = tachyon::ID::Invalid();
+        int                   toSlot  = -1;
+        tachyon::ID           focusID = tachyon::ID::Invalid();
+        std::vector<uint32_t> path;   ///< child positions from the item down to the focused element
     };
 
     class FramePipeline;
@@ -66,6 +80,7 @@ namespace tachyon
 
         ReorderableDragState&         Drag()         { return m_drag; }           ///< the drag in progress
         ReorderableConstructionState& Construction() { return m_construction; }   ///< the group being built
+        ReorderableFocusFollow&       FocusFollow()  { return m_focusFollow; }    ///< after a keyboard move
 
         /// True iff every BeginReorderableGroup was matched by EndReorderableGroup.
         bool IsBalanced() const { return m_construction.groupID == tachyon::ID::Invalid(); }
@@ -76,6 +91,7 @@ namespace tachyon
 
         ReorderableDragState         m_drag{};
         ReorderableConstructionState m_construction{};
+        ReorderableFocusFollow       m_focusFollow{};
     };
     /// @}
 }

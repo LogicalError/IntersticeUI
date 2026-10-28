@@ -182,6 +182,10 @@ namespace tachyon
         inline bool Empty() const { return m_elementCount == 0; }
         inline uint32_t ElementCount() const { return m_elementCount; }
         inline ID GetLastAddedID() const { return m_lastAddedID; }
+        /// The element last added at the level being built, its children done: after a
+        /// control with parts, the control's outer element rather than its last part. A
+        /// window (a popup the control opened) and what's in it don't count.
+        inline ID GetLastItemID() const { return m_lastItemID; }
         inline ElementRef GetLastAddedRef() const { return m_lastAddedRef; }
         inline uint32_t GetCurrentNestingDepth() const { return static_cast<uint32_t>(m_parentStack.size()); }
         inline uint32_t NumberOfDepthLevels() const { return m_usedDepthCount; }
@@ -456,6 +460,7 @@ namespace tachyon
         {
             ElementRef ref = {};
             uint32_t startChildIndex = 0;
+            ID itemBefore = ID::Invalid();   ///< for a window: the last item before it
         };
 
         std::vector<ParentStackEntry> m_parentStack;
@@ -463,6 +468,7 @@ namespace tachyon
         /// Invalid means BeginChildren is disallowed.
         ElementRef m_lastAddedRef = ElementRef::Invalid();
         ID m_lastAddedID = ID::Invalid();  ///< persists across BeginChildren/EndChildren
+        ID m_lastItemID = ID::Invalid();   ///< see GetLastItemID
         bool m_childrenBegun = false;
 
         uint32_t m_elementCount = 0;

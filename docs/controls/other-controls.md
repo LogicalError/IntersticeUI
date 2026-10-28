@@ -21,7 +21,7 @@ A strip of short status texts, usually along a window's bottom edge. Give one
 ```cpp
 bool BeginStatusBar(ID id, StyleRef style, LayoutOverride&& constraints = {});
 void EndStatusBar();
-void StatusText(ID id, std::string_view text, LayoutOverride&& constraints = {});
+void StatusText(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `status-bar`, `status-text`.
@@ -42,7 +42,7 @@ since the last call. `FocusCommandSearch(state)` puts the keyboard in it next fr
 (bind it to a shortcut such as Ctrl+K).
 
 ```cpp
-bool CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints = {});
+bool CommandSearch(ID id, CommandSearchState& state, StyleRef style, LayoutOverride&& constraints = {});
 static void FocusCommandSearch(CommandSearchState& state);
 ```
 

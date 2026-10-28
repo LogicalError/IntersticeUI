@@ -128,6 +128,75 @@ namespace
         EXPECT_EQ(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "and closed the dialog";
     }
 
+    // Escape in the dialog is Cancel, and the keyboard goes back to the swatch.
+    TEST_F(ColorPickerDialog, EscapeCancels)
+    {
+        const color4f original = color;
+        Open();
+        Click(app.theme.colorPickerSquareStyleRef);
+        ASSERT_NE(color.r, original.r);
+        app.activeWindow = app.m_colorPickerSub->State().windowID;   // the dialog has the keyboard
+        Emit();
+        app.InjectKey(KeyCode::Escape);
+        Emit();
+        Emit();
+        app.activeWindow = ID::Invalid();
+        EXPECT_EQ(color.r, original.r);
+        EXPECT_EQ(color.b, original.b);
+        EXPECT_EQ(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "closed";
+        EXPECT_EQ(app.guiStateManager.Interaction().GetFocusedID(), FindByStyle(app.theme.colorSwatchStyleRef));
+    }
+
+    // The square and the strips work from the keyboard: arrows move their point.
+    TEST_F(ColorPickerDialog, TheArrowsMoveTheSquareAndStrips)
+    {
+        Open();
+        app.activeWindow = app.m_colorPickerSub->State().windowID;
+        Emit();
+        auto press = [&](ID id, KeyCode key, KeyModifier mods = KeyModifier::None) {
+            app.guiStateManager.Interaction().SetFocusID(id);
+            Emit();
+            app.InjectKey(key, KeyAction::KeyDown, mods);
+            Emit();
+            Emit();
+        };
+        const ID square = FindByStyle(app.theme.colorPickerSquareStyleRef);
+        ASSERT_NE(square, ID::Invalid());
+        const color4f before = color;
+        press(square, KeyCode::Down, KeyModifier::Shift);
+        EXPECT_NE(color, before) << "Down on the square changes the color";
+
+        const color4f mid = color;
+        press(square, KeyCode::Left, KeyModifier::Shift);
+        EXPECT_NE(color, mid) << "and so does Left";
+
+        // The strips: hue first, then alpha.
+        std::vector<ID> strips;
+        const auto& storage = app.elementStorage;
+        for (auto it = storage.TopDownDepthScanBegin(); it != storage.TopDownDepthScanEnd(); ++it)
+            for (const Element& e : it->GetChildren(storage))
+                if (e.styleRef.layoutStyleIndex == app.theme.colorPickerStripStyleRef.layoutStyleIndex
+                    && e.styleRef.visualBoxStyleIndex == app.theme.colorPickerStripStyleRef.visualBoxStyleIndex)
+                    strips.push_back(e.id);
+        ASSERT_EQ(strips.size(), 2u);
+        press(strips[1], KeyCode::End);
+        EXPECT_NEAR(color.a, 0.0f, 1e-4f) << "End takes the alpha strip to its bottom";
+        press(strips[1], KeyCode::Up, KeyModifier::Shift);
+        EXPECT_NEAR(color.a, 0.1f, 1e-3f);
+        app.activeWindow = ID::Invalid();
+    }
+
+    // An Escape meant for another window leaves the dialog open.
+    TEST_F(ColorPickerDialog, EscapeElsewhereLeavesItOpen)
+    {
+        Open();
+        app.guiStateManager.Interaction().SetFocusID(ID::Invalid());
+        app.InjectKey(KeyCode::Escape);
+        Emit();
+        Emit();
+        EXPECT_NE(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid());
+    }
+
     // The header is the dialog's title bar: it drags the window, its close button doesn't.
     TEST_F(ColorPickerDialog, TheHeaderDragsTheDialog)
     {

@@ -22,5 +22,10 @@ First public preview. The API is not stable yet.
 - `AutocompleteField`: a text field that lists the suggestions matching what's typed.
 - Keyboard focus: Tab reaches every control (not disabled ones, which also ignore keys) and every control shows it has the focus; [Writing a control](docs/controls/writing-controls.md) lists what each control must do.
 - Node view: keyboard focus moving to a node out of view pans the view to it.
+- `SetTooltip`, `BeginTooltip` and `BeginContextMenu` without a target go on the whole control just drawn, not its last part; a color field's, breadcrumb's or vector field's tooltip and context menu work over each of its parts.
+- Context menus open from the keyboard (Shift+F10, the Menu key); tabs close on Ctrl+W / Ctrl+F4; Alt + an arrow moves list rows, tabs and table columns; table headers sort with Space / Enter; the color picker's square and strips take the arrow keys; the node view moves, selects, collapses, pans and zooms from the keyboard.
+- Escape closes the color picker and gradient editor as Cancel. The message dialog lets Tab reach all its controls, and takes Esc and its Alt mnemonics from any of them.
+- Every control has the four forms (an ID or the call site, a style or the theme's): style overloads for the fields, sliders, dropdowns, menu items, status text, command search and message dialog; call-site forms for the containers, tables and tree, grid and list views; `Checkbox` with a `bool&`; list and dictionary fields take an ID like the others. A control's parts get IDs under its own.
+- Sliders, slider fields, a number field's label drag, color, gradient and dropdown fields report a change (return value and `IsModified`) like the other fields; a clicked tab takes the focus; menu items' parts are no longer Tab stops.
 - Color and gradient swatches show keyboard focus with an accent border, like the fields next to them.
 - Tab bars no longer wrap: the tabs that don't fit are listed by a "+N" button after the others, and the selected tab is always shown.

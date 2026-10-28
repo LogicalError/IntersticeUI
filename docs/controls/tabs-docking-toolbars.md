@@ -6,7 +6,9 @@
 
 A bar of tabs. `*selectedIndex` is the selected tab; clicking or the arrow keys change
 it. The tabs can be dragged into a new order (`onReorder(from, to)`), and with
-`onClose(index)` set get a "Close Panel" context menu.
+`onClose(index)` set get a "Close Panel" context menu (Shift+F10 opens it from the
+keyboard) and close on Ctrl+W or Ctrl+F4 while focused. A click focuses the tab; Alt+Left /
+Right moves the focused one.
 
 When the tabs don't fit, the bar shows the first ones and a "+N" button that lists the
 rest; picking one there selects it. The selected tab is always in the bar, in place of

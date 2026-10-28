@@ -63,6 +63,8 @@ namespace tachyon
 
         /// This frame's recorded events, e.g. to read them before Process.
         const std::vector<RecordedInputEvent>& GetRecordedEvents() const { return m_recordedEvents; }
+        /// Marks recorded event `index` as consumed, for something that acted on it while building.
+        void ConsumeEvent(size_t index) { if (index < m_recordedEvents.size()) m_recordedEvents[index].consumed = true; }
 
         /// Mouse buttons held as of the last recorded button event.
         MouseButtons GetCurrentButtons() const { return m_currentButtons; }

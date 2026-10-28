@@ -134,5 +134,48 @@ namespace tachyon
             EXPECT_GT(v, 0.0f);
         }
 
+        // A drag that changes the value makes the call return true on some frame, with
+        // IsModified() saying the same; frames without a change return false.
+        TEST_F(ControlsSliderIntegrationTest, EachSliderReportsTheFrameItsValueChanged)
+        {
+            enum class Kind { FloatField, IntField, IntSlider };
+            for (const Kind kind : { Kind::FloatField, Kind::IntField, Kind::IntSlider })
+            {
+                HeadlessGUIApp drag;
+                ASSERT_TRUE(drag.Initialize());
+                const ID id = drag.idManager.CreateStaticID();
+                float f = 0.0f;
+                int   i = 0;
+                bool returned = false, modified = false, mismatch = false;
+                auto draw = [&] {
+                    drag.BeginRootWindow();
+                    bool r = false;
+                    switch (kind)
+                    {
+                        case Kind::FloatField: r = drag.SliderField(id, f, 0.0f, 1.0f, "", LayoutOverride{}.Size(300, 30)); break;
+                        case Kind::IntField:   r = drag.SliderField(id, i, 0, 10, "", LayoutOverride{}.Size(300, 30));     break;
+                        case Kind::IntSlider:  r = drag.Slider(id, i, 0, 10, LayoutOverride{}.Size(300, 30));               break;
+                    }
+                    const bool m = drag.guiStateManager.IsModified();
+                    returned = returned || r;
+                    modified = modified || m;
+                    mismatch = mismatch || (r != m);
+                    drag.EndRootWindow();
+                };
+                drag.Frame(draw);
+                drag.Frame(draw);
+                EXPECT_FALSE(returned) << "no change yet, kind " << int(kind);
+                const IntRect r = drag.GetElementRect(id);
+                drag.DragFrom({ r.x + 1, r.y + r.h / 2 }, { r.x + r.w - 1, r.y + r.h / 2 });
+                for (int frame = 0; frame < 3; ++frame)
+                    drag.Frame(draw);
+                EXPECT_TRUE(f > 0.5f || i > 5) << "the drag moved it, kind " << int(kind);
+                EXPECT_TRUE(returned) << "kind " << int(kind);
+                EXPECT_TRUE(modified) << "kind " << int(kind);
+                EXPECT_FALSE(mismatch) << "kind " << int(kind);
+                drag.Cleanup();
+            }
+        }
+
     } // namespace
 } // namespace tachyon

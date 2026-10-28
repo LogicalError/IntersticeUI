@@ -266,12 +266,79 @@ namespace tachyon
                     }
                     case tachyon::EventType::KeyDown:
                     {
-                        if (event.state.lastKey != tachyon::KeyCode::Home || view.nodes.empty())
+                        // With the canvas focused, the keys do what the mouse does: Home frames all
+                        // nodes; the arrows move the selected nodes a grid step (Shift: four), or pan
+                        // the view when none is selected; + and - zoom; Ctrl+A selects every node,
+                        // Escape none; Enter collapses or expands the selected ones.
+                        if (guiStateManager.Interaction().GetFocusedID() != canvasID)
                             return false;
-
-                        // Home = frame all nodes.
-                        FrameAllNodes(view);
-                        return true;
+                        const KeyCode key   = event.state.lastKey;
+                        const bool    shift = (event.state.modifiers & KeyModifier::Shift)   != KeyModifier::None;
+                        const bool    ctrl  = (event.state.modifiers & KeyModifier::Control) != KeyModifier::None;
+                        int2 dir{};
+                        switch (key)
+                        {
+                            case KeyCode::Left:  dir = { -1, 0 }; break;
+                            case KeyCode::Right: dir = { +1, 0 }; break;
+                            case KeyCode::Up:    dir = { 0, -1 }; break;
+                            case KeyCode::Down:  dir = { 0, +1 }; break;
+                            default: break;
+                        }
+                        if (dir.x != 0 || dir.y != 0)
+                        {
+                            if (!view.selectedNodeIDs.empty())
+                            {
+                                const int32_t grid = std::max<int32_t>(1, theme.nodeGridSize) * (shift ? 4 : 1);
+                                NodeViewEdit edit;
+                                for (int i = 0; i < (int)view.nodes.size(); ++i)
+                                    if (view.selectedNodeIDs.count(view.nodes[i].stableID))
+                                        edit.moves.push_back({ i, view.nodes[i].pos, view.nodes[i].pos + int2{ dir.x * grid, dir.y * grid } });
+                                CommitNodeViewEdit(view, edit);
+                            }
+                            else
+                            {
+                                const float pan = float(styleManager.Px(shift ? 200 : 40));
+                                view.transform = tachyon::float3x2::Translate(tachyon::float2{ -float(dir.x) * pan, -float(dir.y) * pan }) * view.transform;
+                            }
+                            return true;
+                        }
+                        switch (key)
+                        {
+                            case KeyCode::Home:
+                                if (!view.nodes.empty())
+                                    FrameAllNodes(view);
+                                return true;
+                            case KeyCode::Plus: case KeyCode::Equals: case KeyCode::KeyPadPlus:
+                                ZoomNodeView(view, 1.1f);
+                                return true;
+                            case KeyCode::Minus: case KeyCode::KeyPadMinus:
+                                ZoomNodeView(view, 1.0f / 1.1f);
+                                return true;
+                            case KeyCode::Escape:
+                                if (view.selectedNodeIDs.empty())
+                                    return false;
+                                view.selectedNodeIDs.clear();
+                                return true;
+                            case KeyCode::KeyA:
+                                if (!ctrl)
+                                    return false;
+                                for (const NodeModel& node : view.nodes)
+                                    view.selectedNodeIDs.insert(node.stableID);
+                                return true;
+                            case KeyCode::Return: case KeyCode::Return2: case KeyCode::KeyPadEnter:
+                            {
+                                NodeViewEdit edit;
+                                for (int i = 0; i < (int)view.nodes.size(); ++i)
+                                    if (view.selectedNodeIDs.count(view.nodes[i].stableID))
+                                        edit.collapses.push_back({ i, view.nodes[i].collapsed, !view.nodes[i].collapsed });
+                                if (edit.collapses.empty())
+                                    return false;
+                                CommitNodeViewEdit(view, edit);
+                                return true;
+                            }
+                            default:
+                                return false;
+                        }
                     }
                     default: break;
                 }

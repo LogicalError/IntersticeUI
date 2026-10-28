@@ -26,8 +26,13 @@ breadcrumb. `showZoomControls` and `showMinimap` turn the overlays on and off.
 
 Tab reaches the controls in every node, in or out of view; when keyboard focus moves to
 a node that isn't fully in view, the view pans just enough to show it, at the same zoom.
-Home frames all nodes. `ScrollNodeIntoView` and `FrameAllNodes` in
-`gui_node_view_helpers.h` do the same from code.
+`ScrollNodeIntoView` and `FrameAllNodes` in `gui_node_view_helpers.h` do the same from
+code.
+
+With the canvas focused (click its background): Home frames all nodes; the arrows move the
+selected nodes a grid step (Shift: four) as one edit, or pan the view when none is
+selected; + and - zoom; Ctrl+A selects every node and Escape none; Enter collapses or
+expands the selected nodes. Wires are made and removed with the mouse.
 
 Classes: `node-view`, `node`, `node-header`, `node-title`, `node-category`,
 `node-row`, `node-socket`, `node-view-overlay`, `node-view-minimap`.

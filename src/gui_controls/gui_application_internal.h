@@ -44,6 +44,7 @@ namespace tachyon
         using GUIApplication::ApplyPendingStyleReload;
         using GUIApplication::InvalidateCachedScopesForInput;
         using GUIApplication::CollectPropagatedAncestors;
+        using GUIApplication::NoteTargetAncestors;
         using GUIApplication::RunPressOutsideWatches;
         using GUIApplication::BeginDockingFrame;
         using GUIApplication::EndDockingFrame;
