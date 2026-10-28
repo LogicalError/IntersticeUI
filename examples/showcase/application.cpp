@@ -549,6 +549,8 @@ namespace tachyon
         shortcutCellStyleRef        = theme.GetStyle("shortcut-cell");
         dataTableCellStyleRef       = theme.GetStyle("data-table-cell");
         dataTableNumberStyleRef     = theme.GetStyle("data-table-number");
+        textShadowSampleStyleRef    = theme.GetStyle("text-shadow-sample");
+        textGlowSampleStyleRef      = theme.GetStyle("text-glow-sample");
         settingsTitleStyleRef       = theme.GetStyle("settings-title");
         {
             const char* kSideTag[4]   = { "left", "right", "top", "bottom" };

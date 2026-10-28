@@ -386,4 +386,34 @@ namespace tachyon
         shadowed.states[Style::kNormal].boxShadow[0] = BoxShadow{ .y = 1, .blur = 2, .color = { 0, 0, 0, 40 } };
         EXPECT_NE(sm.Register(plain).visualBoxStyleIndex, sm.Register(shadowed).visualBoxStyleIndex);
     }
+
+    // text-shadow goes with the state's text style, at the UI scale, its color registered.
+    TEST(StyleManagerTest, TextShadowsAreScaledPerState)
+    {
+        GradientManager gm(16);
+        StyleManager    sm(gm);
+        sm.SetUIScale(2.0f);
+
+        Style s{};
+        s.states[Style::kHover].textShadow[0] = BoxShadow{ .x = 1, .y = -2, .blur = 3, .color = { 255, 0, 0, 255 } };
+        s.states[Style::kHover].textShadow[1] = BoxShadow{ .blur = 4, .color = { 0, 0, 255, 128 } };
+        const StyleRef ref = sm.Register(s);
+
+        const VisualTextStyle* normal = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::None);
+        ASSERT_NE(normal, nullptr);
+        for (const VisualShadow& v : normal->textShadows)
+            EXPECT_TRUE(v.IsNone());
+
+        const VisualTextStyle* hover = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::Hover);
+        ASSERT_NE(hover, nullptr);
+        EXPECT_EQ(hover->textShadows[0].x, 2);
+        EXPECT_EQ(hover->textShadows[0].y, -4);
+        EXPECT_EQ(hover->textShadows[0].blur, 6u);
+        EXPECT_EQ(hover->textShadows[0].color, sm.RegisterColorStyle(ColorStyle::Create(color4b{ 255, 0, 0, 255 })));
+        EXPECT_EQ(hover->textShadows[1].blur, 8u);
+        EXPECT_EQ(hover->textShadows[1].color, sm.RegisterColorStyle(ColorStyle::Create(color4b{ 0, 0, 255, 128 })));
+
+        // Text styles that differ only in their shadows aren't shared.
+        EXPECT_NE(sm.Register(Style{}).visualTextStyleIndex, ref.visualTextStyleIndex);
+    }
 }

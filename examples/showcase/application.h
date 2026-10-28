@@ -94,6 +94,7 @@ namespace tachyon
         StyleRef logDetailPaneStyleRef, logDetailTextStyleRef;
         StyleRef shortcutCategoryStyleRef, shortcutTableStyleRef, shortcutCellStyleRef, settingsTitleStyleRef;
         StyleRef dataTableCellStyleRef, dataTableNumberStyleRef;
+        StyleRef textShadowSampleStyleRef, textGlowSampleStyleRef;
         StyleRef iconVAlignDemoStyleRefs[4][3];   // [IconSide L/R/T/B][top/mid/bot]
 
         tachyon::VisualColorStyleIndex triangleFillStyle;

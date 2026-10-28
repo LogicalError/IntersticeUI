@@ -12,6 +12,7 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_stdinc.h>
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <functional>
@@ -668,6 +669,169 @@ namespace
         EXPECT_EQ(app.PixelAt({ o.x + 1, o.y + o.h / 2 }), 0x0000FFu) << "the outline, inside the edge";
         EXPECT_EQ(app.PixelAt({ o.x + o.w / 2, o.y + o.h / 2 }), fill) << "the middle keeps its fill";
         EXPECT_EQ(app.PixelAt({ o.x - 3, o.y + o.h / 2 }), outside) << "nothing outside the box";
+        app.Cleanup();
+    }
+
+    // An "I" drawn only by its green text-shadow (the text itself is transparent) on black,
+    // in four boxes: a sharp shadow, the same moved right, a blurred one, and small text
+    // blurred further than its distance field reaches. A fifth box holds only an icon.
+    class TextShadowApp : public tachyon::GUIApplicationInternals
+    {
+    public:
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID ids[5] {};
+        tachyon::IntRect rects[5] {};
+        tachyon::IconID dot = tachyon::IconID::Invalid;
+        enum { kSharp, kMoved, kBlurred, kWide, kIcon };
+
+        tachyon::StyleRef Shadowed(float fontSize, tachyon::BoxShadow shadow)
+        {
+            tachyon::Style s{};
+            s.textLayoutStyle.horizontalAlignment = tachyon::TextAlign::Center;
+            s.textLayoutStyle.verticalAlignment   = tachyon::TextAlign::Center;
+            for (tachyon::StyleState& state : s.states)
+            {
+                state.backgroundColor    = tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 0, 255 });
+                state.textStyle.fontSize = fontSize;
+                state.textStyle.color    = { 0, 0, 0, 0 };
+                state.textShadow[0]      = shadow;
+            }
+            return styleManager.Register(s);
+        }
+
+        void OnGUI() override
+        {
+            constexpr tachyon::color4b kGreen{ 0, 255, 0, 255 };
+            const tachyon::StyleRef styles[4] = {
+                Shadowed(40.0f, tachyon::BoxShadow{ .color = kGreen }),
+                Shadowed(40.0f, tachyon::BoxShadow{ .x = 10, .color = kGreen }),
+                Shadowed(40.0f, tachyon::BoxShadow{ .blur = 6, .color = kGreen }),
+                Shadowed(14.0f, tachyon::BoxShadow{ .blur = 16, .color = kGreen }),
+            };
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(500, 120),
+                            tachyon::ElementFlags::WindowRenderToImage))
+            {
+                for (int i = 0; i < 4; ++i)
+                    Text(ids[i], "I", styles[i], tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 80 }, tachyon::Pixels{ 80 }).Position(10 + 95 * i, 20));
+                RegisterElement(tachyon::Element{ .id = ids[kIcon], .iconID = dot, .styleRef = styles[kSharp] },
+                                tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 80 }, tachyon::Pixels{ 80 }).Position(10 + 95 * kIcon, 20));
+            }
+            EndWindow();
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            transitionManager.SetEnabled(false);
+            windowID = idManager.CreateStaticID();
+            for (tachyon::ID& id : ids)
+                id = idManager.CreateStaticID();
+            static constexpr char kDot[] = R"(<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#000"/></svg>)";
+            dot = textSystem->RegisterIconFromSVG("text-shadow-dot", kDot, sizeof(kDot) - 1);
+            m_frame.OnPostLayout([this](tachyon::FrameContext&)
+            {
+                for (int i = 0; i < 5; ++i)
+                {
+                    const tachyon::ElementRef ref = elementStorage.FindElementRefByID(ids[i]);
+                    rects[i] = ref.IsValid() ? elementStorage.GetElementRectPtr(ref)->rect : tachyon::IntRect{};
+                }
+            });
+            return true;
+        }
+
+        bool Frames(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (!UpdateFrame() || !RecordFrame()) return false;
+                PresentFrame();
+            }
+            return true;
+        }
+
+        // The red, green and blue of the middle row of box `box`, left to right (BGRA8 image).
+        struct Row { std::vector<int> r, g, b; };
+        Row MiddleRow(int box)
+        {
+            Row row;
+            const tachyon::IntRect window = windowManager->GetWindowRect(windowID);
+            std::vector<uint8_t> pixels(size_t(window.w) * window.h * 4);
+            if (window.w <= 0 || !ReadWindowPixels(windowID, pixels)) return row;
+            const tachyon::IntRect& rect = rects[box];
+            const int y = rect.y + rect.h / 2;
+            for (int x = rect.x; x < rect.x + rect.w; ++x)
+            {
+                const size_t i = (size_t(y) * window.w + size_t(x)) * 4;
+                row.b.push_back(pixels[i]);
+                row.g.push_back(pixels[i + 1]);
+                row.r.push_back(pixels[i + 2]);
+            }
+            return row;
+        }
+    };
+
+    // The first and last pixel at or over `threshold`; {-1, -1} for none.
+    static std::pair<int, int> Extent(const std::vector<int>& v, int threshold)
+    {
+        int first = -1, last = -1;
+        for (int i = 0; i < int(v.size()); ++i)
+            if (v[i] >= threshold) { if (first < 0) first = i; last = i; }
+        return { first, last };
+    }
+
+    // text-shadow draws the glyph's shape in the shadow's color, moved by its offset and
+    // blurred by its blur, fading out before the glyph's distance field ends.
+    TEST(GpuApplicationInit, TextShadowsDrawTheGlyphsShape)
+    {
+        TextShadowApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        ASSERT_TRUE(app.Frames(3));
+        ASSERT_EQ(app.rects[TextShadowApp::kSharp].w, 80);
+
+        const auto sharp = app.MiddleRow(TextShadowApp::kSharp);
+        ASSERT_EQ(sharp.g.size(), 80u);
+        const auto [s0, s1] = Extent(sharp.g, 128);
+        ASSERT_GE(s0, 0) << "the shadow of the I's stem";
+        EXPECT_LE(s1 - s0, 10) << "just the stem";
+        EXPECT_EQ(sharp.g[s0 + (s1 - s0) / 2], 255);
+        EXPECT_LT(sharp.g[s0 - 3], 16) << "a sharp edge";
+        EXPECT_EQ(Extent(sharp.r, 1).first, -1) << "the shadow's color alone; the text is transparent";
+        EXPECT_EQ(Extent(sharp.b, 1).first, -1);
+
+        const auto moved = app.MiddleRow(TextShadowApp::kMoved);
+        EXPECT_EQ(Extent(moved.g, 128), std::make_pair(s0 + 10, s1 + 10)) << "moved by its offset";
+
+        const auto blurred = app.MiddleRow(TextShadowApp::kBlurred);
+        const auto [b0, b1] = Extent(blurred.g, 8);
+        ASSERT_GE(b0, 0);
+        EXPECT_LE(b0, s0 - 4) << "spread out by the blur";
+        EXPECT_GE(b1, s1 + 4);
+        for (int x = b0; x < s0; ++x)
+            EXPECT_LE(blurred.g[x], blurred.g[x + 1]) << "darker away from the glyph, at " << x;
+        EXPECT_LT(blurred.g[s0 - 12], 4) << "gone well past the blur";
+
+        // Small text holds less distance field than this blur needs: the shadow still fades out
+        // from nothing instead of stopping at an edge.
+        const auto wide = app.MiddleRow(TextShadowApp::kWide);
+        const auto [w0, w1] = Extent(wide.g, 1);
+        ASSERT_GT(w0, 0);
+        const int peak = int(std::max_element(wide.g.begin(), wide.g.end()) - wide.g.begin());
+        EXPECT_GE(peak - w0, 5) << "a wide blur";
+        EXPECT_LE(wide.g[w0], 6) << "no edge where the shadow ends";
+        EXPECT_LE(wide.g[w1], 6);
+        for (int x = w0; x < peak; ++x)
+            EXPECT_LE(wide.g[x], wide.g[x + 1]) << "at " << x;
+
+        // An icon on its own has its style's text shadows too.
+        ASSERT_NE(app.dot, tachyon::IconID::Invalid);
+        const auto icon = app.MiddleRow(TextShadowApp::kIcon);
+        const auto [i0, i1] = Extent(icon.g, 128);
+        EXPECT_GE(i1 - i0, 20) << "the dot's shadow";
         app.Cleanup();
     }
 }

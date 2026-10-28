@@ -369,7 +369,9 @@ namespace tachyon
 
         /// Draws `iconId` fitted into `rect` (aspect kept, centered), clipped to `clipRect`.
         /// Single-color icons are drawn in `tint`, like text; colored icons keep their colors.
-        virtual void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint) = 0;
+        /// `shadows` (a text style's textShadows, the first on top) are drawn under it.
+        virtual void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint,
+                                std::span<const VisualShadow> shadows = {}) = 0;
 
 
 

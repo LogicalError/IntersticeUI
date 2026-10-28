@@ -142,7 +142,8 @@ namespace tachyon
 
         // -------------------- Icon Rendering --------------------
 
-        void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint) override;
+        void RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint,
+                        std::span<const VisualShadow> shadows = {}) override;
 
         static void ScreenToTextEditorLocalPoint(tachyon::int2 screenSpace, const IntRect& textEditorInnerRect, tachyon::float2& outLocal,
                                                  const float3x2& screenToLayout = float3x2::Identity());
@@ -160,6 +161,8 @@ namespace tachyon
         void EndTextDragging();
 
         void RenderText(RegisteredText* entry, IntRect rect, IntRect innerRectScreen, IntRect clipRect, float pixelScale);
+        /// RenderIcon in the current shadow pass (SkribidiContext::DrawWithShadows).
+        void DrawIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint);
         void RenderEditor(RegisteredText* entry, IntRect rect, IntRect innerRectScreen, IntRect clipRect, float pixelScale);
         bool UpdateText(RegisteredText* entry, std::string_view text);
 

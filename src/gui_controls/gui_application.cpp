@@ -985,7 +985,8 @@ namespace tachyon
                             iconRectLayout.y -= childElementRect.layoutStyle->iconOffsetY;
                         const VisualTextStyle* iconText = styleManager.GetVisualTextStyle(childElement.styleRef.visualTextStyleIndex, state);
                         textSystem->RenderIcon(childElement.iconID, iconRectLayout, contentClipRectScreen,
-                                               iconText ? iconText->iconColorIndex : VisualColorStyleIndex::Invalid);
+                                               iconText ? iconText->iconColorIndex : VisualColorStyleIndex::Invalid,
+                                               iconText ? std::span<const VisualShadow>(iconText->textShadows) : std::span<const VisualShadow>());
                     }
 
                     // Custom draws take inner-rect-local LAYOUT pixels, in the same content

@@ -96,6 +96,32 @@ properties, all per state; a line is drawn when its thickness is above 0.
 For example `text-underline-color: var(--text-1); text-underline-offset: 2px;`. There is
 no `text-decoration` shorthand.
 
+## Text shadow and glow
+
+| Property | Values | |
+| --- | --- | --- |
+| `text-shadow` | `none`, or 1 or 2 layers separated by commas | state |
+
+A layer is `<x> <y> [<blur>]` and a color, before or after the lengths, or a `var()`
+holding shadows. The first layer draws on top. A shadow is the shape of the text, its
+decorations and its icon, in the shadow's color (a color emoji's too), moved by the offset
+and blurred like a `box-shadow`. With no offset it is a glow:
+
+```css
+.title   { text-shadow: 0 1px 2px #00000080; }
+.warning { text-shadow: 0 0 6px var(--accent); }   /* a glow */
+```
+
+- At most 2 layers. The color is required and blur can't be negative. There is no
+  spread and no `inset`.
+- The blur comes from the glyphs' distance field in the atlas, which reaches 16 atlas
+  pixels past the text. Small text is rasterized at 32px, so that is about 7px around
+  14px text; text of 32px and up gets 11px or more. A blur up to two thirds of that (about 4px on
+  14px text) is drawn as asked; a wider one is narrowed to fit, so it still fades out
+  smoothly, just less far.
+- Shadows are clipped to the element's padding box, like its text.
+- A shadow changes with the state at once; it doesn't take part in transitions.
+
 ## Flex
 
 Every box is a flex container unless it is `display: grid`.
@@ -185,8 +211,8 @@ needs, or gets it from `*`.
 
 Compared with browser CSS, these are not implemented and are errors or ignored:
 
-- Selectors: combinators, type, id and attribute selectors, `:first-child` and other
-  structural pseudo-classes, `::before`/`::after`.
+- Selectors: combinators, type, id and attribute selectors, structural pseudo-classes
+  other than `:first-child`, `:last-child` and `:only-child`, `::before`/`::after`.
 - At-rules other than `@font-face` (`@media`, `@import`, `@keyframes`, ...).
 - `!important`, `inherit`, `initial` (except `direction: initial`), `unset`.
 - Units other than px (`%`, `rem`, `vw`, ...; `em` only in `line-height`), `calc()`,

@@ -1203,8 +1203,9 @@ private:
 
     // box-shadow: none | <layer> [, <layer>]. A layer is [inset] <x> <y> [<blur> [<spread>]]
     // with a color before or after, or a var() holding shadows. `pre` holds lengths
-    // of the first layer that were already read.
-    bool ParseShadowList(BoxShadow (&out)[kMaxBoxShadows], const float* pre = nullptr, int preCount = 0)
+    // of the first layer that were already read; `prop` names the property in errors.
+    bool ParseShadowList(BoxShadow (&out)[kMaxBoxShadows], const float* pre = nullptr, int preCount = 0,
+                         const char* prop = "box-shadow")
     {
         for (BoxShadow& b : out) b = {};
         if (preCount == 0 && m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "none"))
@@ -1217,7 +1218,7 @@ private:
         auto add = [&](const BoxShadow& b) {
             if (count == kMaxBoxShadows)
             {
-                Error(std::format("box-shadow takes at most {} layers", kMaxBoxShadows));
+                Error(std::format("{} takes at most {} layers", prop, kMaxBoxShadows));
                 return false;
             }
             out[count++] = b;
@@ -1237,7 +1238,7 @@ private:
             {
                 if (m_lex.Check(TT::Number))
                 {
-                    if (n == 4) { Error("box-shadow takes at most 4 lengths per layer"); return false; }
+                    if (n == 4) { Error(std::string(prop) + " takes at most 4 lengths per layer"); return false; }
                     len[n++] = ConsumeFloat();
                     if (m_lex.Check(TT::Ident) && ICEq(m_lex.Peek().text, "px")) m_lex.Consume();
                 }
@@ -1257,7 +1258,7 @@ private:
                         fromVar = true;
                         break;
                     }
-                    if (!v->hasColor || hasColor) { Error("Expected a length or a color in box-shadow"); return false; }
+                    if (!v->hasColor || hasColor) { Error(std::string("Expected a length or a color in ") + prop); return false; }
                     color    = v->color;
                     hasColor = true;
                 }
@@ -1270,8 +1271,8 @@ private:
                     break;
             }
             if (fromVar) continue;
-            if (n < 2 || !hasColor) { Error("box-shadow needs an x and a y offset and a color"); return false; }
-            if (len[2] < 0.0f)      { Error("box-shadow blur can't be negative"); return false; }
+            if (n < 2 || !hasColor) { Error(std::string(prop) + " needs an x and a y offset and a color"); return false; }
+            if (len[2] < 0.0f)      { Error(std::string(prop) + " blur can't be negative"); return false; }
 
             auto i16 = [](float v) { return int16_t(std::clamp(int(std::lround(v)), -32768, 32767)); };
             BoxShadow b;

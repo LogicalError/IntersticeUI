@@ -51,14 +51,33 @@ void main()
         _sample = srgbToLinear(_sample);
 
         float w = inSurface.scale * 0.8;
-	    float d = (_sample.a - (128./255.)) / (32./255.);
+	    float d = (_sample.a - kSdfEdge) / kSdfPerTexel;
 	    float a = 1.f - clamp((d + 0.5 * w - 0.1) / w, 0.0, 1.0);
+        if (inSurface.shadowBlur > 0.0)
+        {
+            // Gaussian falloff across the edge (sigma = blur / 2, as CSS): 0.5 * erfc(d / (sigma * sqrt 2)).
+            // A blur wider than the distance field reaches is narrowed until the falloff ends
+            // inside it (3 sigma), so it fades out instead of stopping at an edge.
+            float reachPx = kSdfReachTexels / inSurface.scale;
+            float sigma   = min(inSurface.shadowBlur * 0.5, reachPx / 3.0);
+            float x  = (d / inSurface.scale) / (sigma * 1.41421356);
+            float x2 = x * x;
+            const float k = 0.147;
+            float erfx = sign(x) * sqrt(1.0 - exp(-x2 * (1.27323954 + k * x2) / (1.0 + k * x2)));
+            a = 0.5 * (1.0 - erfx) * (1.0 - smoothstep(kSdfReachTexels - 1.0, kSdfReachTexels, d));
+        }
 
         glyphSample = vec4(_sample.rgb, a);
     }
 
     vec4 color;
-    if (bpp == 4)
+    if (inSurface.shadowBlur >= 0.0)
+    {
+        // A shadow takes the glyph's shape alone, color glyphs included.
+        vec4 shadowColor = getSDFColor(inSurface.textColorIndex, vec2(0), vec2(1), 0.0, 0, vec2(1), vec4(0));
+        color = vec4(1, 1, 1, glyphSample.a) * srgbToLinear(shadowColor);
+    }
+    else if (bpp == 4)
     {
         // Colored glyph (emoji): use the glyph's own RGBA colors unchanged.
         color = glyphSample;

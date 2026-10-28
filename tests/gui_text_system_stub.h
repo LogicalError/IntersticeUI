@@ -214,7 +214,8 @@ namespace tachyon
 
         // -------------------- Icon Rendering --------------------
 
-        void RenderIcon(IconID /*iconId*/, IntRect /*rect*/, IntRect /*clipRect*/, VisualColorStyleIndex /*tint*/) override
+        void RenderIcon(IconID /*iconId*/, IntRect /*rect*/, IntRect /*clipRect*/, VisualColorStyleIndex /*tint*/,
+                        std::span<const VisualShadow> /*shadows*/ = {}) override
         {
             // No-op for stub
         }

@@ -1783,6 +1783,60 @@ namespace tachyon
             EXPECT_FALSE(ParseStyleSheet(src).HasErrors()) << src;
     }
 
+    // ============================================================================
+    // text-shadow
+    // ============================================================================
+
+    TEST(StyleSheet, TextShadow)
+    {
+        auto s = ParseStyleSheet(R"(
+            :root { --glow: 0 0 6px #00ff00; }
+            .a { text-shadow: 1px 2px 3px red, #0000ff -1 0; }
+            .a:hover { text-shadow: var(--glow); }
+            .b { text-shadow: 1 1 black; }
+            .b:active { text-shadow: none; }
+        )");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        const Style& a = *s.GetStyle("a");
+        const BoxShadow& first  = a.states[Style::kNormal].textShadow[0];
+        const BoxShadow& second = a.states[Style::kNormal].textShadow[1];
+        EXPECT_EQ(first.x, 1);
+        EXPECT_EQ(first.y, 2);
+        EXPECT_EQ(first.blur, 3u);
+        EXPECT_EQ(first.color, RGB(255, 0, 0));
+        EXPECT_EQ(second.x, -1);
+        EXPECT_EQ(second.blur, 0u);
+        EXPECT_EQ(second.color, RGB(0, 0, 255));
+        // A box-shadow is a property of its own.
+        EXPECT_TRUE(a.states[Style::kNormal].boxShadow[0].IsNone());
+
+        const BoxShadow& glow = a.states[Style::kHover].textShadow[0];
+        EXPECT_EQ(glow.x, 0);
+        EXPECT_EQ(glow.blur, 6u);
+        EXPECT_EQ(glow.color, RGB(0, 255, 0));
+        EXPECT_TRUE(a.states[Style::kHover].textShadow[1].IsNone());
+
+        EXPECT_EQ(s.GetStyle("b")->states[Style::kNormal].textShadow[0].blur, 0u);
+        EXPECT_TRUE(s.GetStyle("b")->states[Style::kActive].textShadow[0].IsNone());
+    }
+
+    TEST(StyleSheet, TextShadowErrors)
+    {
+        for (const char* src : { ".a { text-shadow: 0 0 2px 1px red; }",       // no spread
+                                 ".a { text-shadow: inset 0 0 2px red; }",       // never inset
+                                 ".a { text-shadow: 1px red; }",                 // needs x and y
+                                 ".a { text-shadow: 1 1 -2 red; }",              // negative blur
+                                 ".a { text-shadow: 1 1 red, 2 2 red, 3 3 red; }", // two layers at most
+                                 ":root { --s: 0 0 0 2px red; } .a { text-shadow: var(--s); }",
+                                 ".a:first-child { text-shadow: 1 1 red; }" })   // not a box property
+            EXPECT_TRUE(ParseStyleSheet(src).HasErrors()) << src;
+
+        // The error names the property.
+        auto s = ParseStyleSheet(".a { text-shadow: 1px red; }");
+        ASSERT_FALSE(s.errors.empty());
+        EXPECT_NE(s.errors[0].message.find("text-shadow"), std::string::npos) << s.errors[0].message;
+    }
+
     TEST(StyleSheet, ClassesWithoutChildRulesHaveNoChildStyles)
     {
         auto s = ParseStyleSheet(".a { padding: 2; } .b { padding: 2; } .b:last-child { padding: 3; } .c:first-child { margin: 1; }");

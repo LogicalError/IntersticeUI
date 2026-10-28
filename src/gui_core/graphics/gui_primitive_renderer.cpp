@@ -144,7 +144,7 @@ void PrimitiveRenderTarget::RenderShadow(tachyon::IntRect rect, tachyon::IntRect
                     });
 }
 
-void PrimitiveRenderTarget::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex)
+void PrimitiveRenderTarget::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex, float shadowBlur)
 {
     Append(PrimitiveKind::Glyph, Glyph
                     {
@@ -164,6 +164,7 @@ void PrimitiveRenderTarget::RenderGlyph(tachyon::float2 pos, tachyon::float2 siz
                         .textureIndex = textureIndex,
 
                         .textColorIndex = int16_t(textColorIndex),
+                        .shadowBlur = shadowBlur < 0.0f ? int16_t(-1) : int16_t(std::min(shadowBlur * 8.0f + 0.5f, 32767.0f)),
                      });
 }
 
@@ -402,10 +403,10 @@ void PrimitiveRenderer::RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRe
     currentTarget->RenderBox(rect, clipRect, fromStyleIndex, toStyleIndex, blendT, colorStyleIndex, textureIndex, snappedPx);
 }
 
-void PrimitiveRenderer::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex)
+void PrimitiveRenderer::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex, float shadowBlur)
 {
     assert(currentTarget != nullptr);
-    currentTarget->RenderGlyph(pos, size, uvMin, uvMax, scale, bpp, mode, textColorIndex, clipRect, textureIndex);
+    currentTarget->RenderGlyph(pos, size, uvMin, uvMax, scale, bpp, mode, textColorIndex, clipRect, textureIndex, shadowBlur);
 }
 
 void PrimitiveRenderer::RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle)
