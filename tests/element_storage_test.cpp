@@ -810,4 +810,114 @@ namespace tachyon
         ASSERT_TRUE(registry.EndWindowScope() == RegistryResult::Success);
         ASSERT_TRUE(storage.EndConstruction() == ElementStorageResult::Success);
     }
+
+    // ---- :first-child / :last-child / :only-child ----
+
+    class ChildStyleTest : public ElementStorageTest
+    {
+    protected:
+        static Style Padded(uint16_t left, uint16_t right)
+        {
+            Style s;
+            s.padding = BoxEdges(1, right, 1, left);
+            s.borderRadius = BoxCorners(left, right, right, left);   // a box style of its own for each variant
+            return s;
+        }
+
+        StyleRef plain = styleManager.Register(Padded(2, 2));
+        StyleRef grouped = styleManager.RegisterWithChildStyles(Padded(2, 2), Padded(9, 2), Padded(2, 9), Padded(9, 9));
+
+        ElementRef AddWithStyle(uint64_t id, StyleRef style)
+        {
+            Element e = CreateElement(id);
+            e.styleRef = style;
+            const auto result = storage.Add(std::move(e));
+            EXPECT_TRUE(result);
+            return result.ref;
+        }
+
+        const LayoutStyle* LayoutOf(ElementRef ref) const { return styleManager.GetLayoutStyle(storage.GetElementPtr(ref)->styleRef.layoutStyleIndex); }
+    };
+
+    // A style registered with child styles is its own, even when another registration has the same values.
+    TEST_F(ChildStyleTest, StylesWithChildStylesAreNeverShared)
+    {
+        EXPECT_NE(plain.layoutStyleIndex, grouped.layoutStyleIndex);
+        EXPECT_EQ(styleManager.GetChildStyles(plain.layoutStyleIndex), nullptr);
+        ASSERT_NE(styleManager.GetChildStyles(grouped.layoutStyleIndex), nullptr);
+        EXPECT_EQ(styleManager.Register(Padded(2, 2)).layoutStyleIndex, plain.layoutStyleIndex);
+    }
+
+    TEST_F(ChildStyleTest, FirstAndLastChildrenTakeTheirStyles)
+    {
+        const StyleManager::ChildStyleRefs& variants = *styleManager.GetChildStyles(grouped.layoutStyleIndex);
+        ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        AddWithStyle(1, defaultStyleIndex);
+        ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            const ElementRef first  = AddWithStyle(10, grouped);
+            const ElementRef middle = AddWithStyle(11, grouped);
+            const ElementRef last   = AddWithStyle(12, grouped);
+            // Not yet: whether an element is the last is only known when its parent is done.
+            EXPECT_EQ(storage.GetElementPtr(first)->styleRef, grouped);
+        ASSERT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        EXPECT_EQ(storage.GetElementPtr(first)->styleRef.layoutStyleIndex,     variants.first.layoutStyleIndex);
+        EXPECT_EQ(storage.GetElementPtr(first)->styleRef.visualBoxStyleIndex,  variants.first.visualBoxStyleIndex);
+        EXPECT_EQ(storage.GetElementPtr(middle)->styleRef, grouped);
+        EXPECT_EQ(storage.GetElementPtr(last)->styleRef.layoutStyleIndex,      variants.last.layoutStyleIndex);
+        EXPECT_EQ(storage.GetElementPtr(last)->styleRef.visualBoxStyleIndex,   variants.last.visualBoxStyleIndex);
+
+        // Layout reads the style through the rect.
+        EXPECT_EQ(storage.GetElementRectPtr(first)->layoutStyle, LayoutOf(first));
+        EXPECT_EQ(storage.GetElementRectPtr(last)->layoutStyle,  LayoutOf(last));
+        EXPECT_EQ(LayoutOf(first)->padding.left,  9u);
+        EXPECT_EQ(LayoutOf(first)->padding.right, 2u);
+        EXPECT_EQ(LayoutOf(last)->padding.left,   2u);
+        EXPECT_EQ(LayoutOf(last)->padding.right,  9u);
+    }
+
+    TEST_F(ChildStyleTest, AnOnlyChildTakesTheOnlyStyle)
+    {
+        const StyleManager::ChildStyleRefs& variants = *styleManager.GetChildStyles(grouped.layoutStyleIndex);
+        ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        AddWithStyle(1, defaultStyleIndex);
+        ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            const ElementRef only = AddWithStyle(10, grouped);
+        ASSERT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        EXPECT_EQ(storage.GetElementPtr(only)->styleRef.layoutStyleIndex, variants.only.layoutStyleIndex);
+        EXPECT_EQ(LayoutOf(only)->padding.left,  9u);
+        EXPECT_EQ(LayoutOf(only)->padding.right, 9u);
+    }
+
+    // Elements of other styles, and the ones between the ends, stay as they are; the text style is never swapped.
+    TEST_F(ChildStyleTest, OnlyTheBoxOfStylesWithChildStylesIsSwapped)
+    {
+        // An element's own text, as a text override gives it.
+        Style redText;
+        redText.states[Style::kNormal].textStyle.color = { 255, 0, 0, 255 };
+        StyleRef textVariant = grouped;
+        textVariant.visualTextStyleIndex = styleManager.Register(redText).visualTextStyleIndex;
+        ASSERT_NE(textVariant.visualTextStyleIndex, grouped.visualTextStyleIndex);
+
+        ASSERT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        AddWithStyle(1, defaultStyleIndex);
+        ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            const ElementRef first = AddWithStyle(10, plain);
+            const ElementRef last  = AddWithStyle(11, textVariant);
+            ASSERT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+                const ElementRef nested = AddWithStyle(20, grouped);
+            ASSERT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        ASSERT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        EXPECT_EQ(storage.GetElementPtr(first)->styleRef, plain);
+        const StyleRef lastStyle = storage.GetElementPtr(last)->styleRef;
+        EXPECT_EQ(lastStyle.layoutStyleIndex, styleManager.GetChildStyles(grouped.layoutStyleIndex)->last.layoutStyleIndex);
+        EXPECT_EQ(lastStyle.visualTextStyleIndex, textVariant.visualTextStyleIndex);
+        // A child's own children are a list of their own.
+        EXPECT_EQ(storage.GetElementPtr(nested)->styleRef.layoutStyleIndex, styleManager.GetChildStyles(grouped.layoutStyleIndex)->only.layoutStyleIndex);
+    }
 }

@@ -517,7 +517,8 @@
     border-color: transparent;
 }
 
-.first-button {
+/* A segment of a button group; :first-child / :last-child rules can shape the group's ends. */
+.group-button {
     -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
@@ -538,61 +539,9 @@
     flex-shrink: 0;
     cursor: pointer;
 }
-.first-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.first-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.first-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
-
-
-.mid-button {
-    -tachyon-icon-size: 14px;
-    height: 20px;
-    border-width: 0px;
-    border-radius: var(--radius-md);
-    border-color: transparent;
-    background-color: transparent;
-    color: var(--text-2);
-    margin: 0px;
-    padding: 0px 10px;
-    overflow: hidden;
-    vertical-align: middle;
-    -tachyon-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.mid-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.mid-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.mid-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
-
-
-.last-button {
-    -tachyon-icon-size: 14px;
-    height: 20px;
-    border-width: 0px;
-    border-radius: var(--radius-md);
-    border-color: transparent;
-    background-color: transparent;
-    color: var(--text-2);
-    margin: 0px;
-    padding: 0px 10px;
-    overflow: hidden;
-    vertical-align: middle;
-    -tachyon-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.last-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.last-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.last-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
+.group-button:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.group-button:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.group-button::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 /* ---- menuTriggerStyle ----------------------------------------------------- */
 /* Dropdown / menu trigger. Visually matches .button, but its label is left-
@@ -1115,7 +1064,8 @@
 .toggle:active::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 .toggle:focus ::highlight(selected) { border-color: var(--accent); background-color: var(--bg-pressed); }
 
-.first-toggle {
+/* A segment of a toggle group; :first-child / :last-child rules can shape the group's ends. */
+.group-toggle {
     -tachyon-icon-size: 14px;
     height: 20px;
     border-width: 0px;
@@ -1136,63 +1086,13 @@
     flex-shrink: 0;
     cursor: pointer;
 }
-.first-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.first-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.first-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
-
-.mid-toggle {
-    -tachyon-icon-size: 14px;
-    height: 20px;
-    border-width: 0px;
-    border-radius: var(--radius-md);
-    border-color: transparent;
-    background-color: transparent;
-    color: var(--text-2);
-    margin: 0px;
-    padding: 0px 10px;
-    overflow: hidden;
-    vertical-align: middle;
-    -tachyon-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.mid-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.mid-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.mid-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
-
-.last-toggle {
-    -tachyon-icon-size: 14px;
-    height: 20px;
-    border-width: 0px;
-    border-radius: var(--radius-md);
-    border-color: transparent;
-    background-color: transparent;
-    color: var(--text-2);
-    margin: 0px;
-    padding: 0px 10px;
-    overflow: hidden;
-    vertical-align: middle;
-    -tachyon-vertical-text-align: middle;
-    text-align: center;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size);
-    flex-grow: 0;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.last-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
-.last-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
-.last-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
+.group-toggle:hover  { background-color: var(--bg-active); color: var(--text-1); }
+.group-toggle:active { background-color: var(--bg-pressed); color: var(--text-1); }
+.group-toggle::highlight(selected) { background-color: var(--bg-pressed); color: var(--text-1); }
 
 /* ---- button-group / toggle-group containers ------------------------------ */
-/* A segmented control: a recessed well holding its segments (.first-/.mid-/
-   .last-button or -toggle), the pressed one raised. */
+/* A segmented control: a recessed well holding its segments (.group-button or
+   .group-toggle), the pressed one raised. */
 .button-group, .toggle-group {
     border-width: 1px;
     border-radius: var(--radius-lg);
@@ -5266,8 +5166,7 @@
 .node                      { box-shadow: var(--shadow-node); }
 .node::highlight(selected) { box-shadow: var(--selected-ring), var(--shadow-node); }
 .button, .toggle, .menu-trigger { box-shadow: var(--shadow-control); }
-.first-button::highlight(selected), .mid-button::highlight(selected), .last-button::highlight(selected),
-.first-toggle::highlight(selected), .mid-toggle::highlight(selected), .last-toggle::highlight(selected) {
+.group-button::highlight(selected), .group-toggle::highlight(selected) {
     box-shadow: var(--shadow-chip);
 }
 
@@ -5276,8 +5175,7 @@
 .vector-component:focus-visible, .collection-value:focus-visible, .command-search:focus-visible,
 .dashed:focus-visible, .first-icon:focus-visible, .icon-left:focus-visible, .icon-right:focus-visible,
 .icon-top:focus-visible, .icon-bottom:focus-visible,
-.first-button:focus-visible, .mid-button:focus-visible, .last-button:focus-visible,
-.first-toggle:focus-visible, .mid-toggle:focus-visible, .last-toggle:focus-visible,
+.group-button:focus-visible, .group-toggle:focus-visible,
 .dialog-button:focus-visible, .dialog-button-primary:focus-visible, .dialog-button-danger:focus-visible,
 .checkbox:focus-visible, .switch:focus-visible, .slider:focus-visible, .slider-field-track:focus-visible,
 .color-swatch:focus-visible, .color-alpha:focus-visible, .gradient-swatch:focus-visible,

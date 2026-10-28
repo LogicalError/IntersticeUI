@@ -126,6 +126,25 @@ namespace tachyon
 
     StyleRef StyleManager::Register(const Style &given, StyleUnits units) noexcept
     {
+        return RegisterImpl(given, units, false);
+    }
+
+    StyleRef StyleManager::RegisterWithChildStyles(const Style& s, const Style& first, const Style& last, const Style& only,
+                                                   StyleUnits units) noexcept
+    {
+        const StyleRef base = RegisterImpl(s, units, true);
+        m_childStyles[uint32_t(base.layoutStyleIndex)] = ChildStyleRefs{ Register(first, units), Register(last, units), Register(only, units) };
+        return base;
+    }
+
+    const StyleManager::ChildStyleRefs* StyleManager::GetChildStyles(LayoutStyleIndex index) const noexcept
+    {
+        const auto it = m_childStyles.find(uint32_t(index));
+        return it != m_childStyles.end() ? &it->second : nullptr;
+    }
+
+    StyleRef StyleManager::RegisterImpl(const Style &given, StyleUnits units, bool distinct) noexcept
+    {
         const Style style = units == StyleUnits::Pixels ? given : ToPixels(given);
 
         LayoutStyle layoutStyle
@@ -234,7 +253,7 @@ namespace tachyon
             const uint64_t layoutHash = layoutStyle.GetHashCode();
 
             auto layoutIterator = m_layoutHashMap.find(layoutHash);
-            if (layoutIterator != m_layoutHashMap.end())
+            if (!distinct && layoutIterator != m_layoutHashMap.end())
             {
                 // Check collision bucket for an exact match.
                 for (auto index : layoutIterator->second)
@@ -253,7 +272,8 @@ namespace tachyon
                 m_layoutStyles.push_back(layoutStyle);
                 int32_t idx = static_cast<int32_t>(m_layoutStyles.size()) - 1;
                 layoutIndex = static_cast<LayoutStyleIndex>(idx + 1);
-                m_layoutHashMap[layoutHash].push_back(layoutIndex);
+                if (!distinct)   // a distinct one is never handed to another registration
+                    m_layoutHashMap[layoutHash].push_back(layoutIndex);
             }
         }
 
@@ -500,6 +520,7 @@ namespace tachyon
         m_visualColorStyles.clear();
         m_visualColorHashMap.clear();
         m_freeColorStyleSlots.clear();
+        m_childStyles.clear();
 
         m_layoutStyles.clear();
         m_layoutHashMap.clear();

@@ -85,18 +85,14 @@ namespace tachyon
         StyleRef dragLabelStyleRef {};   ///< DragLabel()'s default
 
         /// @name Button and toggle groups
-        /// Tight-packed button/toggle group: container + first/mid/last item styles.
-        /// Used by BeginButtonGroup / BeginToggleGroup so adjacent items share
-        /// borders and only the outer corners are rounded.
+        /// Tight-packed button/toggle group: the container and its items' style. Used by
+        /// BeginButtonGroup / BeginToggleGroup; the items' :first-child and :last-child
+        /// rules shape the group's ends.
         ///@{
         StyleRef buttonGroupStyleRef {};
-        StyleRef firstButtonStyleRef {};
-        StyleRef midButtonStyleRef {};
-        StyleRef lastButtonStyleRef {};
+        StyleRef groupButtonStyleRef {};   ///< .group-button
         StyleRef toggleGroupStyleRef {};
-        StyleRef firstToggleStyleRef {};
-        StyleRef midToggleStyleRef {};
-        StyleRef lastToggleStyleRef {};
+        StyleRef groupToggleStyleRef {};   ///< .group-toggle
         ///@}
 
         StyleRef dashedStyleRef{};          ///< a box with a dashed border

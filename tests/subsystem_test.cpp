@@ -261,16 +261,12 @@ namespace tachyon
 
 
     // ---------------------------------------------------------------------
-    // ButtonGroupSubsystem - verify the first/mid/last/solo style cycle.
-    //
-    // Item 1   -> first
-    // Item 2   -> last (item 1 stays as first)
-    // Item 3   -> last (item 2 demoted to mid via storage mutation)
-    // Item 4+  -> last (item N-1 demoted to mid)
-    // EndGroup -> if itemCount == 1, item 1 reverted to solo.
+    // ButtonGroupSubsystem: every item takes the group's item style (its
+    // :first-child / :last-child rules shape the ends); EndGroup reverts a
+    // single item to solo.
     // ---------------------------------------------------------------------
 
-    TEST(ButtonGroupSubsystemTest, NextItemStyleRefCyclesFirstThenLast)
+    TEST(ButtonGroupSubsystemTest, EveryItemTakesTheItemStyle)
     {
         HeadlessGUIApp app;
         ASSERT_TRUE(app.Initialize());
@@ -279,23 +275,14 @@ namespace tachyon
         ButtonGroupSubsystem sub(pipeline, app.elementStorage, app.styleManager);
 
         ButtonGroupSubsystem::ItemState s{};
-        // Distinct sentinel layoutStyleIndex per role so we can compare.
-        s.firstStyleRef.layoutStyleIndex = static_cast<tachyon::LayoutStyleIndex>(101);
-        s.midStyleRef.layoutStyleIndex   = static_cast<tachyon::LayoutStyleIndex>(202);
-        s.lastStyleRef.layoutStyleIndex  = static_cast<tachyon::LayoutStyleIndex>(303);
-        s.soloStyleRef.layoutStyleIndex  = static_cast<tachyon::LayoutStyleIndex>(404);
+        s.itemStyleRef.layoutStyleIndex = static_cast<tachyon::LayoutStyleIndex>(101);
+        s.soloStyleRef.layoutStyleIndex = static_cast<tachyon::LayoutStyleIndex>(404);
 
-        EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.firstStyleRef.layoutStyleIndex);
-        EXPECT_EQ(s.itemCount, 1);
-
-        EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.lastStyleRef.layoutStyleIndex);
-        EXPECT_EQ(s.itemCount, 2);
-
-        EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.lastStyleRef.layoutStyleIndex);
-        EXPECT_EQ(s.itemCount, 3);
-
-        EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.lastStyleRef.layoutStyleIndex);
-        EXPECT_EQ(s.itemCount, 4);
+        for (int i = 1; i <= 4; ++i)
+        {
+            EXPECT_EQ(sub.NextItemStyleRef(s).layoutStyleIndex, s.itemStyleRef.layoutStyleIndex);
+            EXPECT_EQ(s.itemCount, i);
+        }
     }
 
     TEST(ButtonGroupSubsystemTest, GetActiveReturnsNullOutsideStack)

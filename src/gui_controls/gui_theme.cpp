@@ -299,22 +299,36 @@ namespace tachyon
         marqueeFillColorStyle = styleManager.RegisterColorStyle(
             ColorStyle::Create(color4f{ 0.3f, 0.6f, 1.0f, 0.15f }));
 
-        // Registers a parsed style by name, with the global font scale applied.
-        auto registerCSS = [&](std::string_view name) -> StyleRef
+        // Registers a parsed style by name, with the global font scale applied. A class with
+        // :first-child / :last-child rules is registered once, with its child styles.
+        auto scaled = [&](Style s)
             {
-                const Style* p = sheet.GetStyle(name);
-                Style s = p ? *p : sheet.baseStyle;
                 if (fontScale != 1.0f)
                 {
                     for (int i = 0; i < Style::kStateCount; i++)
                         s.states[i].textStyle.fontSize *= fontScale;
                 }
+                return s;
+            };
+        auto registerCSS = [&](std::string_view name) -> StyleRef
+            {
+                const std::string key(name);
+                if (const auto known = m_classStyles.find(key); known != m_classStyles.end())
+                    return known->second;
+                const Style* p = sheet.GetStyle(name);
+                const Style s = scaled(p ? *p : sheet.baseStyle);
+                if (const auto child = sheet.childStyles.find(key); child != sheet.childStyles.end())
+                    return styleManager.RegisterWithChildStyles(s, scaled(child->second.first), scaled(child->second.last),
+                                                               scaled(child->second.only));
                 return styleManager.Register(s);
             };
 
         m_classStyles.clear();
         for (const auto& [name, style] : sheet.styles)
-            m_classStyles.emplace(name, registerCSS(name));
+        {
+            const StyleRef ref = registerCSS(name);
+            m_classStyles.emplace(name, ref);
+        }
 
         // -------------------------------------------------------------------------
         // Named widget styles from CSS
@@ -375,13 +389,9 @@ namespace tachyon
 
         toolbarFloatingWindowStyleRef     = registerCSS("toolbar-floating-window");
         viewContentStyleRef               = registerCSS("view-content");
-        firstButtonStyleRef               = registerCSS("first-button");
-        midButtonStyleRef                 = registerCSS("mid-button");
-        lastButtonStyleRef                = registerCSS("last-button");
+        groupButtonStyleRef               = registerCSS("group-button");
         toggleGroupStyleRef               = registerCSS("toggle-group");
-        firstToggleStyleRef               = registerCSS("first-toggle");
-        midToggleStyleRef                 = registerCSS("mid-toggle");
-        lastToggleStyleRef                = registerCSS("last-toggle");
+        groupToggleStyleRef               = registerCSS("group-toggle");
         panelDropVisualizationStyleRef    = registerCSS("panel-drop-visualization");
         ghostWindowStyleRef               = registerCSS("ghost-window");
         ghostIconStyleRef                 = registerCSS("ghost-icon");

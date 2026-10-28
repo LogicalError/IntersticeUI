@@ -437,11 +437,8 @@ namespace tachyon
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
-        if (gs)
-        {
-            if (gs->itemCount == 1) gs->firstRef = ref;
-            gs->lastRef = ref;
-        }
+        if (gs && gs->itemCount == 1)
+            gs->firstRef = ref;
         return guiStateManager.Interaction().HasBeenClicked(id);
     }
 
@@ -912,11 +909,8 @@ namespace tachyon
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
             },
             std::move(constraints));
-        if (gs)
-        {
-            if (gs->itemCount == 1) gs->firstRef = ref;
-            gs->lastRef = ref;
-        }
+        if (gs && gs->itemCount == 1)
+            gs->firstRef = ref;
         if (currentValue) guiStateManager.Construction().PopSelected();
         bool modified = guiStateManager.Interaction().HasBeenClicked(id);
         guiStateManager.SetModified(modified);
@@ -953,10 +947,8 @@ namespace tachyon
         RegisterElement(std::move(wrap), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         m_buttonGroup->BeginButtonGroup({
-            .firstStyleRef = theme.firstButtonStyleRef,
-            .midStyleRef   = theme.midButtonStyleRef,
-            .lastStyleRef  = theme.lastButtonStyleRef,
-            .soloStyleRef  = theme.regularControls.button
+            .itemStyleRef = theme.groupButtonStyleRef,
+            .soloStyleRef = theme.regularControls.button
         });
         return true;
     }
@@ -977,10 +969,8 @@ namespace tachyon
         RegisterElement(std::move(wrap), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         m_buttonGroup->BeginToggleGroup({
-            .firstStyleRef = theme.firstToggleStyleRef,
-            .midStyleRef   = theme.midToggleStyleRef,
-            .lastStyleRef  = theme.lastToggleStyleRef,
-            .soloStyleRef  = theme.regularControls.toggle
+            .itemStyleRef = theme.groupToggleStyleRef,
+            .soloStyleRef = theme.regularControls.toggle
         });
         return true;
     }

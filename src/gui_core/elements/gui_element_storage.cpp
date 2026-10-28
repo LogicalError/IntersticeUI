@@ -272,6 +272,27 @@ namespace tachyon
         parentHierarchy->childOffset = entry.startChildIndex;
         parentHierarchy->childCount = childCount;
 
+        // :first-child / :last-child / :only-child: the children are known now. The box and
+        // its layout take the variant; the text keeps the style it was registered with.
+        if (childCount > 0 && m_styleManager.HasChildStyles())
+        {
+            auto applyChildStyle = [&](uint32_t index, bool first, bool last)
+            {
+                const ElementRef ref{ childDepth, index };
+                Element& element = GetElementUnsafe(ref);
+                const StyleManager::ChildStyleRefs* styles = m_styleManager.GetChildStyles(element.styleRef.layoutStyleIndex);
+                if (!styles)
+                    return;
+                const StyleRef& to = (first && last) ? styles->only : first ? styles->first : styles->last;
+                element.styleRef.layoutStyleIndex    = to.layoutStyleIndex;
+                element.styleRef.visualBoxStyleIndex = to.visualBoxStyleIndex;
+                GetElementRectUnsafe(ref).layoutStyle = m_styleManager.GetLayoutStyle(to.layoutStyleIndex);
+            };
+            applyChildStyle(entry.startChildIndex, true, childCount == 1);
+            if (childCount > 1)
+                applyChildStyle(endChildIndex - 1, false, true);
+        }
+
         // The parent, finished, is the item at its level; a window leaves the item as it was.
         const Element& parent = GetElementUnsafe(entry.ref);
         m_lastItemID = (parent.flags & ElementFlags::IsWindow) != ElementFlags::None ? entry.itemBefore : parent.id;
