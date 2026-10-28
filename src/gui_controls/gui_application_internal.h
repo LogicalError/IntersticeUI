@@ -43,6 +43,7 @@ namespace tachyon
         using GUIApplication::RegisterFrameHooks;
         using GUIApplication::ApplyPendingStyleReload;
         using GUIApplication::InvalidateCachedScopesForInput;
+        using GUIApplication::CollectPropagatedAncestors;
         using GUIApplication::BeginDockingFrame;
         using GUIApplication::EndDockingFrame;
         using GUIApplication::OnFrame;

@@ -2205,6 +2205,8 @@ namespace tachyon
         /// Invalidates the scopes under the cursor and, on key input, the focused one.
         /// Call after hit-testing, before dispatch.
         void        InvalidateCachedScopesForInput(ID overID);
+        /// The PropagatesDescendantState ancestors of `leafID`'s element, innermost first.
+        static std::vector<ID> CollectPropagatedAncestors(const ElementStorage& storage, ID leafID);
 
         /// Internal: called by the docking each frame.
         void        NotePanelContentID(ID panelId, ID contentID) { m_panelContentIDs[panelId] = contentID; }

@@ -234,6 +234,13 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     };
     const tachyon::ID overID = guiStateManager.EndFrame(frameInput, idManager).overID;
 
+    // The PropagatesDescendantState ancestors of the hovered and focused elements, as in
+    // GUIApplication::Frame (without its transitions).
+    guiStateManager.Interaction().SetPropagatedHoverIDs(
+        CollectPropagatedAncestors(elementStorage, guiStateManager.Interaction().GetHoveredID()));
+    guiStateManager.Interaction().SetPropagatedFocusedIDs(
+        CollectPropagatedAncestors(elementStorage, guiStateManager.Interaction().GetFocusedID()));
+
     menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
     InvalidateCachedScopesForInput(overID);
 

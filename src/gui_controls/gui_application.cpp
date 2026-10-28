@@ -28,24 +28,6 @@ namespace tachyon
     {
         constexpr Diagnostics::LogCategory kLogApp = Diagnostics::MakeLogCategory("app");
 
-        std::vector<ID> CollectPropagatedAncestors(const ElementStorage& storage, ID leafID)
-        {
-            std::vector<ID> result;
-            if (leafID == ID::Invalid()) return result;
-            ElementRef ref = storage.FindElementRefByID(leafID);
-            if (!ref.IsValid()) return result;
-            ref = storage.GetParentRef(ref);
-            while (ref.IsValid())
-            {
-                const Element* el = storage.GetElementPtr(ref);
-                if (!el) break;
-                if ((el->flags & ElementFlags::PropagatesDescendantState) != ElementFlags::None)
-                    result.push_back(el->id);
-                ref = storage.GetParentRef(ref);
-            }
-            return result;
-        }
-
         void FireEffectiveSetTransitions(
             const std::vector<ID>& oldSet, const std::vector<ID>& newSet,
             ElementState bit,
@@ -1482,5 +1464,23 @@ namespace tachyon
         {
             applicationQuit = true;
         }
+    }
+
+    std::vector<ID> GUIApplication::CollectPropagatedAncestors(const ElementStorage& storage, ID leafID)
+    {
+        std::vector<ID> result;
+        if (leafID == ID::Invalid()) return result;
+        ElementRef ref = storage.FindElementRefByID(leafID);
+        if (!ref.IsValid()) return result;
+        ref = storage.GetParentRef(ref);
+        while (ref.IsValid())
+        {
+            const Element* el = storage.GetElementPtr(ref);
+            if (!el) break;
+            if ((el->flags & ElementFlags::PropagatesDescendantState) != ElementFlags::None)
+                result.push_back(el->id);
+            ref = storage.GetParentRef(ref);
+        }
+        return result;
     }
 }
