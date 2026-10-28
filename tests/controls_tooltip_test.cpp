@@ -274,5 +274,173 @@ namespace tachyon
             EXPECT_FALSE(app.tooltipManager.IsVisible());
         }
 
+        // ---------------------------------------------------------------------
+        // A tooltip or context menu set right after a control is on the whole control.
+        // ---------------------------------------------------------------------
+
+        // Hovers `pos` long enough for a tooltip.
+        void HoverFor(HeadlessGUIApp& app, int2 pos, const std::function<void()>& draw)
+        {
+            app.InjectMouseMove(pos);
+            app.Frame(draw);
+            app.Frame(draw);
+            app.AdvanceTime(700);
+            app.Frame(draw);
+        }
+
+        // The checkbox's label is drawn last; the tooltip still goes on the checkbox.
+        TEST_F(ControlsTooltipTest, SetTooltipAfterACheckboxIsOnTheCheckbox)
+        {
+            const ID boxID = app.idManager.CreateStaticID();
+            ID item = ID::Invalid();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Checkbox(boxID, false, "Label", [](bool) {});
+                item = app.elementStorage.GetLastItemID();
+                app.SetTooltip("Help text");
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            EXPECT_EQ(item, boxID);
+            HoverFor(app, app.CenterOf(boxID), draw);
+            EXPECT_TRUE(app.tooltipManager.IsVisible());
+        }
+
+        // A color field is a swatch, a hex field and an alpha field: its tooltip shows over each.
+        TEST_F(ControlsTooltipTest, AColorFieldsTooltipShowsOverEachPart)
+        {
+            const ID fieldID = app.idManager.CreateStaticID();
+            color4f color{ 0.2f, 0.4f, 0.6f, 1.0f };
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.ColorField(fieldID, color);
+                app.SetTooltip("Help text");
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            const IntRect r = app.GetElementRect(fieldID);
+            for (const int2 at : { int2{ r.x + 4, r.y + r.h / 2 }, int2{ r.x + r.w / 2, r.y + r.h / 2 }, int2{ r.x + r.w - 4, r.y + r.h / 2 } })
+            {
+                app.InjectMouseMove({ 2, 2 });
+                app.Frame(draw);
+                app.Frame(draw);
+                HoverFor(app, at, draw);
+                EXPECT_TRUE(app.tooltipManager.IsVisible()) << "at " << at.x;
+            }
+        }
+
+        // A popup a control opens isn't the control: the item stays the control.
+        TEST_F(ControlsTooltipTest, APopupDoesntBecomeTheLastItem)
+        {
+            const ID buttonID = app.idManager.CreateStaticID();
+            const ID popupID  = app.idManager.CreateStaticID();
+            ID item = ID::Invalid();
+            app.Frame([&] {
+                app.BeginRootWindow();
+                app.Button(buttonID, "B", [] {});
+                if (app.BeginWindow(popupID, LayoutOverride{}.Position(10, 10),
+                                    ElementFlags::WindowIsPopup | ElementFlags::WindowNoCaption))
+                    app.Text("In the popup");
+                app.EndWindow();
+                item = app.elementStorage.GetLastItemID();
+                app.EndRootWindow();
+            });
+            EXPECT_EQ(item, buttonID);
+        }
+
+        // Of two targets holding the hovered element, the first declared shows: the inner
+        // control's, declared right after it, not its box's.
+        TEST_F(ControlsTooltipTest, TheFirstMatchingTooltipWins)
+        {
+            TooltipManager tm;
+            tm.delaySeconds = 0.0f;
+            ID inner{}; inner.value.dynamicParts.hashValue = 11;
+            ID outer{}; outer.value.dynamicParts.hashValue = 12;
+            ID other{}; other.value.dynamicParts.hashValue = 13;
+            tm.BeginFrame(inner, ID::Invalid(), 0.0f, true, false, false, false, false);
+            tm.BeginFrame(inner, ID::Invalid(), 0.0f, false, false, false, false, false);
+            tm.SetTargetAncestors({ outer });
+            EXPECT_FALSE(tm.ShouldShow(other)) << "not around the hovered element";
+            EXPECT_TRUE(tm.ShouldShow(inner));
+            EXPECT_FALSE(tm.ShouldShow(outer)) << "one tooltip a frame";
+
+            tm.BeginFrame(inner, ID::Invalid(), 0.1f, false, false, false, false, false);
+            tm.SetTargetAncestors({ outer });
+            EXPECT_TRUE(tm.ShouldShow(outer)) << "the box's, when the control has none";
+        }
+
+        // Right-clicking any part of a color field opens the context menu set after it.
+        TEST_F(ControlsTooltipTest, RightClickingAPartOpensTheControlsContextMenu)
+        {
+            const ID fieldID = app.idManager.CreateStaticID();
+            color4f color{ 0.2f, 0.4f, 0.6f, 1.0f };
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.ColorField(fieldID, color);
+                if (app.BeginContextMenu())
+                    app.MenuItem("Reset", [] {});
+                app.EndContextMenu();
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            const IntRect r = app.GetElementRect(fieldID);
+            const int2 swatch{ r.x + 4, r.y + r.h / 2 };
+            app.InjectMouseMove(swatch);
+            app.Frame(draw);
+            app.ClickAt(swatch, MouseButtons::Right);
+            app.Frame(draw);
+            EXPECT_TRUE(app.menuManager.IsOpen());
+            EXPECT_NE(app.FindByText("Reset"), ID::Invalid());
+        }
+
+        // Shift+F10 and the Menu key open the focused control's context menu.
+        TEST_F(ControlsTooltipTest, TheKeyboardOpensTheFocusedControlsContextMenu)
+        {
+            for (const auto& [key, mods] : { std::pair{ KeyCode::F10, KeyModifier::Shift },
+                                             std::pair{ KeyCode::Application, KeyModifier::None },
+                                             std::pair{ KeyCode::Menu, KeyModifier::None } })
+            {
+                HeadlessGUIApp keys;
+                ASSERT_TRUE(keys.Initialize());
+                const ID buttonID = keys.idManager.CreateStaticID();
+                auto draw = [&] {
+                    keys.BeginRootWindow();
+                    keys.Button(buttonID, "B", [] {});
+                    if (keys.BeginContextMenu())
+                        keys.MenuItem("Reset", [] {});
+                    keys.EndContextMenu();
+                    keys.EndRootWindow();
+                };
+                keys.Frame(draw);
+                keys.InjectKey(KeyCode::Tab);
+                keys.Frame(draw);
+                keys.Frame(draw);
+                ASSERT_EQ(keys.guiStateManager.Interaction().GetFocusedID(), buttonID);
+                EXPECT_FALSE(keys.menuManager.IsOpen());
+                keys.InjectKey(key, KeyAction::KeyDown, mods);
+                keys.Frame(draw);
+                keys.Frame(draw);
+                EXPECT_TRUE(keys.menuManager.IsOpen()) << int(key);
+                keys.Cleanup();
+            }
+            // F10 alone isn't it.
+            const ID buttonID = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Button(buttonID, "B", [] {});
+                if (app.BeginContextMenu())
+                    app.MenuItem("Reset", [] {});
+                app.EndContextMenu();
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            app.InjectKey(KeyCode::Tab);
+            app.Frame(draw);
+            app.InjectKey(KeyCode::F10);
+            app.Frame(draw);
+            app.Frame(draw);
+            EXPECT_FALSE(app.menuManager.IsOpen());
+        }
+
     } // namespace
 } // namespace tachyon

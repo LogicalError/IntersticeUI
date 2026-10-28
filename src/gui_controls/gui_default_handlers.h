@@ -201,6 +201,23 @@ namespace tachyon
         return speed;
     }
 
+    /// Wraps a handler that writes `*value`: it runs during input, after the control's call
+    /// returned, so a change marks the element clicked and the next call reports it
+    /// (`Interaction().HasBeenClicked(id)`).
+    template<typename T>
+    inline EventHandler ReportingChanges(GUIStateManager& guiStateManager, T* value, EventHandler inner)
+    {
+        return [&guiStateManager, value, inner = std::move(inner)](ElementEvent&& event) -> bool
+        {
+            const T  before = *value;
+            const ID id     = event.id;
+            const bool used = inner(std::move(event));
+            if (!(*value == before))
+                guiStateManager.Interaction().SetClicked(id);
+            return used;
+        };
+    }
+
     /// Numeric field handler: a left click focuses it for typing, and LabelDrag* events from
     /// its label drag `value` (a cancelled drag restores the start value).
     template<typename T>

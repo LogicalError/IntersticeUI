@@ -434,7 +434,10 @@ namespace tachyon
         // 2) Drag knob child (leftmost). It captures the mouse on MouseDown, so the drag
         //    must be advanced from its own MouseMove.
         {
+            // The parts' IDs under the item's own, so they don't depend on what came before.
+            [[maybe_unused]] const bool pushed = idManager.PushParent(id);
             tachyon::ID knobID = idManager.AllocateDynamicID("list_drag_knob");
+            if (pushed) (void)idManager.PopParent();
             tachyon::Element knob{};
             knob.id       = knobID;
             knob.state    = guiStateManager.GetCurrentState(knobID);
@@ -497,7 +500,9 @@ namespace tachyon
 
         // 3) Body child (text + icon, flex-grows to fill the remaining width).
         {
+            [[maybe_unused]] const bool pushed = idManager.PushParent(id);
             tachyon::ID bodyID = idManager.AllocateDynamicID("list_item_body");
+            if (pushed) (void)idManager.PopParent();
             tachyon::Element body{};
             body.id       = bodyID;
             body.state    = guiStateManager.GetCurrentState(bodyID);

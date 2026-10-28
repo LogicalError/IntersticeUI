@@ -5,15 +5,23 @@
 ```cpp
 void SetTooltip(ID targetID, std::string_view text);
 void SetTooltip(ID targetID, IconID icon, std::string_view text);
-void SetTooltip(std::string_view text);           // the element registered last
+void SetTooltip(std::string_view text);           // the control just drawn
 bool BeginTooltip(ID targetID);
-bool BeginTooltip();                              // the element registered last
+bool BeginTooltip();                              // the control just drawn
 void EndTooltip();
 ```
 
-`SetTooltip` shows a text (and icon) on hover. `BeginTooltip` builds any content; it
-returns `true` while the tooltip shows, and `EndTooltip` is called either way. A
-`GUIContent` with a tooltip sets it too. Classes: `tooltip`, `tooltip-text`.
+`SetTooltip` shows a text (and icon) on hover, or right away when Tab moves the focus to
+the target. `BeginTooltip` builds any content; it returns `true` while the tooltip shows,
+and `EndTooltip` is called either way. A `GUIContent` with a tooltip sets it too. Classes:
+`tooltip`, `tooltip-text`.
+
+Without a target, the tooltip goes on the control just drawn: its outer element, whatever
+parts it drew after it (a checkbox's label, a slider's value), and not a popup it opened. A
+control made of several (a color field's swatch, hex and alpha fields, a breadcrumb's
+segments) takes their states, so its tooltip shows over each of them. When the hovered
+element and a control around it both have one, the first declared shows: a control's,
+set right after it, over its row's.
 
 ```cpp
 Button(gridIcon, [this] { showGrid = !showGrid; });
@@ -28,10 +36,12 @@ SetTooltip(showGrid ? "Grid on" : "Grid off");
 A modal question with verb buttons, centered. Call it every frame while
 asking; it returns the index of the chosen button once, in the frame after, else -1.
 Esc and the close button choose `cancelButton`; Alt and a button's first letter choose
-that button.
+that button, wherever the focus is in the dialog. The default button has the focus first;
+Tab goes through all the dialog's controls (the close button, the checkboxes, Details) and
+the focus stays in the dialog.
 
 ```cpp
-int MessageDialog(ID id, const MessageDialogDesc& desc);
+int MessageDialog(ID id, const MessageDialogDesc& desc, StyleRef style);
 ```
 
 `MessageDialogDesc` fields: `icon` (`MessageIcon::Warning`, `Quit`, `Question`, `Info`,

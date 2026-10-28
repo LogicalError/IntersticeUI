@@ -20,6 +20,10 @@ reorder the columns.
 `rowStyle`, `cellStyle`, `showHeaders`, `columnSeparators`, `onReorderColumns` (headers
 become drag-to-reorder when set) and `onRowDoubleClick`.
 
+A header that sorts or moves its column is a Tab stop. With it focused, Space or Enter
+sorts by the column (again: the other way), and Alt+Left / Right moves the column, the
+focus going with it.
+
 Classes: `table` (`table-fill` fills its parent), `table-header`, `table-row`,
 `table-row-alt`, `table-cell`, `table-cell-number`, `table-sizer`, `table-separator`.
 

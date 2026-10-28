@@ -491,6 +491,10 @@ namespace tachyon
         tachyon::ElementRef RegisterElement(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints);
 
 
+        /// While building a popup's trigger: true, and the key taken, when Escape was pressed
+        /// this frame with the keyboard in the popup's window or on the trigger.
+        bool TakeEscapeFor(ID popupWindowID, ID triggerID);
+
         /// As RegisterElement, for a control: it joins the Tab order and needs a valid ID.
         tachyon::ElementRef RegisterControl(tachyon::Element&& element, LayoutOverride&& constraints);
         /// As above, with `text` registered as its text.
@@ -506,7 +510,6 @@ namespace tachyon
                                     std::string_view trailing, StyleRef trailingStyle,
                                     LayoutOverride&& constraints, bool destructive = false);
         /// SearchField, also giving the ID of its text field (to focus it).
-        bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, LayoutOverride&& constraints, ID* outFieldID);
         /// Internal: the body of MenuItem and DestructiveMenuItem.
         bool MenuItemImpl(ID id, const GUIContent& content, std::string_view shortcut,
                           std::function<void()> onClick, StyleRef style, bool destructive, LayoutOverride&& constraints);
@@ -541,15 +544,39 @@ namespace tachyon
         /// As above, in the theme's button style.
         inline bool CommandButton(CommandID command, LayoutOverride&& constraints = {}) { return CommandButton(command, theme.controls->button, std::move(constraints)); }
 
-        /// A checkbox (a box, checked with a tick) and its label.
-        bool        Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, LayoutOverride&& constraints = {});
+        /// A checkbox (a box, checked with a tick) and its label; a click calls onToggle with the new value.
+        bool        Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's checkbox style.
+        inline bool Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Checkbox(id, value, text, std::move(onToggle), theme.checkboxStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool Checkbox(       bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Checkbox(idManager.AllocateDynamicID(site), value, text, std::move(onToggle), style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's checkbox style.
+        inline bool Checkbox(       bool value, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Checkbox(idManager.AllocateDynamicID(site), value, text, std::move(onToggle), theme.checkboxStyleRef, std::move(constraints)); }
+        /// Checks and unchecks `value` itself.
+        inline bool Checkbox(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Checkbox(id, value, text, [&value](bool newValue){ value = newValue; }, style, std::move(constraints)); }
+        /// As above, in the theme's checkbox style.
+        inline bool Checkbox(ID id, bool& value, std::string_view text = {},           LayoutOverride&& constraints = {}) { return Checkbox(id, value, text, [&value](bool newValue){ value = newValue; }, theme.checkboxStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool Checkbox(       bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Checkbox(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's checkbox style.
+        inline bool Checkbox(       bool& value, std::string_view text = {},           LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Checkbox(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, theme.checkboxStyleRef, std::move(constraints)); }
 
         /// An on/off switch (track and knob) with an optional label after it, e.g. "On".
         bool        Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
-        /// Switches `value` itself.
-        inline bool Switch(ID id, bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}) { return Switch(id,                            value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+        /// As above, in the theme's switch style.
+        inline bool Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}) { return Switch(id, value, text, std::move(onToggle), theme.switchStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool Switch(       bool& value, std::string_view text = {}, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+        inline bool Switch(       bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, std::move(onToggle), style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's switch style.
+        inline bool Switch(       bool value, std::string_view text, std::function<void(bool)> onToggle,                 LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, std::move(onToggle), theme.switchStyleRef, std::move(constraints)); }
+        /// Switches `value` itself.
+        inline bool Switch(ID id, bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}) { return Switch(id, value, text, [&value](bool newValue){ value = newValue; }, style, std::move(constraints)); }
+        /// As above, in the theme's switch style.
+        inline bool Switch(ID id, bool& value, std::string_view text = {},           LayoutOverride&& constraints = {}) { return Switch(id,                            value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool Switch(       bool& value, std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's switch style.
+        inline bool Switch(       bool& value, std::string_view text = {},           LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Switch(idManager.AllocateDynamicID(site), value, text, [&value](bool newValue){ value = newValue; }, theme.switchStyleRef, std::move(constraints)); }
 
         /// A button that shows pressed while `value` is on; a click calls onToggle with the new value.
         bool        Toggle(ID id, bool value, const GUIContent& content, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints = {});
@@ -597,12 +624,22 @@ namespace tachyon
         inline bool Dropdown(ID id, int& selected, std::initializer_list<std::string_view> options, LayoutOverride&& constraints = {}) { return Dropdown(id, selected, std::span<const std::string_view>(options.begin(), options.size()), theme.controls->menuTrigger, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool Dropdown(       int& selected, std::initializer_list<std::string_view> options, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Dropdown(idManager.AllocateDynamicID(site), selected, std::span<const std::string_view>(options.begin(), options.size()), theme.controls->menuTrigger, std::move(constraints)); }
+        /// As above, in `style`.
+        inline bool Dropdown(ID id, int& selected, std::initializer_list<std::string_view> options, StyleRef style, LayoutOverride&& constraints = {}) { return Dropdown(id, selected, std::span<const std::string_view>(options.begin(), options.size()), style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool Dropdown(       int& selected, std::initializer_list<std::string_view> options, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Dropdown(idManager.AllocateDynamicID(site), selected, std::span<const std::string_view>(options.begin(), options.size()), style, std::move(constraints)); }
         /// A section's name between items, e.g. "View", lined up with the labels.
         void        MenuHeader(std::string_view text);
         /// A modal question with verb buttons, centered. Call it every frame while asking; it
         /// returns the index of the button chosen (once, on the frame after), else -1. Esc and
         /// the close button choose desc.cancelButton; Alt + a button's first letter chooses it.
-        int         MessageDialog(ID id, const MessageDialogDesc& desc);
+        int         MessageDialog(ID id, const MessageDialogDesc& desc, StyleRef style);
+        /// As above, in the theme's message box style.
+        inline int  MessageDialog(ID id, const MessageDialogDesc& desc) { return MessageDialog(id, desc, theme.messageBoxStyleRef); }
+        /// As above, with the call site as the ID.
+        inline int  MessageDialog(       const MessageDialogDesc& desc, StyleRef style, std::source_location site = std::source_location::current()) { return MessageDialog(idManager.AllocateDynamicID(site), desc, style); }
+        /// As above, with the call site as the ID, in the theme's message box style.
+        inline int  MessageDialog(       const MessageDialogDesc& desc, std::source_location site = std::source_location::current()) { return MessageDialog(idManager.AllocateDynamicID(site), desc, theme.messageBoxStyleRef); }
         /// Whether the user asked to close a window flagged WindowConfirmClose (its close
         /// button, Alt+F4, the OS quitting) since last asked. The window stays until the app
         /// closes it, e.g. after asking with a MessageDialog.
@@ -623,13 +660,31 @@ namespace tachyon
         inline bool MenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return MenuItem(id, content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool MenuItem(       const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        /// With a shortcut, the call site as the ID and `style`.
+        inline bool MenuItem(       const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), content, shortcut, std::move(onClick), style, std::move(constraints)); }
+        /// Without a shortcut, in `style`.
+        inline bool MenuItem(ID id, const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return MenuItem(id, content, std::string_view{}, std::move(onClick), style, std::move(constraints)); }
+        /// Without a shortcut, with the call site as the ID, in `style`.
+        inline bool MenuItem(       const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return MenuItem(idManager.AllocateDynamicID(site), content, std::string_view{}, std::move(onClick), style, std::move(constraints)); }
 
         /// Menu item for a command: icon, label, shortcut and callback come from the command.
         bool MenuItem(CommandID command);
         /// An item that destroys something (Delete, Discard), in the error color.
-        bool        DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {});
-        /// As above, without a shortcut, with the call site as the ID.
-        inline bool DestructiveMenuItem(       const GUIContent& content, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), content, std::string_view{}, std::move(onClick), std::move(constraints)); }
+        bool        DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's item style.
+        inline bool DestructiveMenuItem(ID id, const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return DestructiveMenuItem(id, content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool DestructiveMenuItem(       const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), content, shortcut, std::move(onClick), style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's item style.
+        inline bool DestructiveMenuItem(       const GUIContent& content, std::string_view shortcut, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), content, shortcut, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        /// Without a shortcut, in `style`.
+        inline bool DestructiveMenuItem(ID id, const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}) { return DestructiveMenuItem(id, content, std::string_view{}, std::move(onClick), style, std::move(constraints)); }
+        /// Without a shortcut, in the theme's item style.
+        inline bool DestructiveMenuItem(ID id, const GUIContent& content, std::function<void()> onClick, LayoutOverride&& constraints = {}) { return DestructiveMenuItem(id, content, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
+        /// Without a shortcut, with the call site as the ID, in `style`.
+        inline bool DestructiveMenuItem(       const GUIContent& content, std::function<void()> onClick, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), content, std::string_view{}, std::move(onClick), style, std::move(constraints)); }
+        /// Without a shortcut, with the call site as the ID, in the theme's item style.
+        inline bool DestructiveMenuItem(       const GUIContent& content, std::function<void()> onClick, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return DestructiveMenuItem(idManager.AllocateDynamicID(site), content, std::string_view{}, std::move(onClick), theme.menuItemRowStyleRef, std::move(constraints)); }
         /// Closes BeginMenu; called whether or not it returned true.
         void EndMenu();
 
@@ -640,6 +695,8 @@ namespace tachyon
         inline bool BeginMenuBar(ID id, LayoutOverride&& constraints = {}) { return BeginMenuBar(id, theme.menuBarStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool BeginMenuBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenuBar(idManager.AllocateDynamicID(site), theme.menuBarStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool BeginMenuBar(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginMenuBar(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
         /// Closes BeginMenuBar.
         void EndMenuBar();
 
@@ -660,6 +717,8 @@ namespace tachyon
         inline bool BeginTitleBar(ID id, LayoutOverride&& constraints = {}) { return BeginTitleBar(id, theme.titleBarStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool BeginTitleBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginTitleBar(idManager.AllocateDynamicID(site), theme.titleBarStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool BeginTitleBar(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginTitleBar(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
         /// Closes BeginTitleBar, adding the window buttons in a custom-title-bar window.
         void        EndTitleBar();
 
@@ -673,23 +732,26 @@ namespace tachyon
         void SetTooltip(ID targetID, std::string_view text);
         /// As above, with an icon before the text.
         void SetTooltip(ID targetID, IconID icon, std::string_view text);
-        /// As above, on the last registered element.
-        inline void SetTooltip(std::string_view text) { SetTooltip(elementStorage.GetLastAddedID(), text); }
-        /// As above, with an icon, on the last registered element.
-        inline void SetTooltip(IconID icon, std::string_view text) { SetTooltip(elementStorage.GetLastAddedID(), icon, text); }
+        /// As above, on the control just drawn (its outer element, shown over all its parts).
+        inline void SetTooltip(std::string_view text) { SetTooltip(elementStorage.GetLastItemID(), text); }
+        /// As above, with an icon, on the control just drawn.
+        inline void SetTooltip(IconID icon, std::string_view text) { SetTooltip(elementStorage.GetLastItemID(), icon, text); }
 
         /// A tooltip with any content on targetID: build it while this returns true.
         /// EndTooltip is called either way.
         bool BeginTooltip(ID targetID);
-        /// As above, on the last registered element.
-        inline bool BeginTooltip() { return BeginTooltip(elementStorage.GetLastAddedID()); }
+        /// As above, on the control just drawn.
+        inline bool BeginTooltip() { return BeginTooltip(elementStorage.GetLastItemID()); }
         /// Closes BeginTooltip; called whether or not it returned true.
         void EndTooltip();
 
-        /// Context menu: opens on right-click of the target element, below it.
+        /// Context menu: opens below the target element on a right-click on it, or on
+        /// Shift+F10 or the Menu key while it has the focus. A target that takes its parts'
+        /// states (PropagatesDescendantState) opens for them too; when several targets match,
+        /// the first BeginContextMenu of the frame wins.
         bool BeginContextMenu(ID targetID);
-        /// As above, on the last registered element.
-        inline bool BeginContextMenu() { return BeginContextMenu(elementStorage.GetLastAddedID()); }
+        /// As above, on the control just drawn.
+        inline bool BeginContextMenu() { return BeginContextMenu(elementStorage.GetLastItemID()); }
         /// Closes BeginContextMenu; called whether or not it returned true.
         void EndContextMenu();
         /// Opens `targetID`'s context menu at a screen point, e.g. for something that isn't an
@@ -851,20 +913,28 @@ namespace tachyon
         { return BeginReorderableGroup(id, direction, false, std::move(onReorder), style, std::move(constraints)); }
         /// As above, not wrapped, in the theme's style for the direction.
         inline bool BeginReorderableGroup(ID id, ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, LayoutOverride&& constraints = {})
-        {
-            return BeginReorderableGroup(id, direction, false, std::move(onReorder),
-                direction == ReorderDirection::Horizontal ? theme.horzReorderableGroupStyleRef : theme.vertReorderableGroupStyleRef,
-                std::move(constraints));
-        }
+        { return BeginReorderableGroup(id, direction, false, std::move(onReorder), ReorderableGroupStyle(direction, false), std::move(constraints)); }
         /// As above, in the theme's style for the direction and wrapping.
         inline bool BeginReorderableGroup(ID id, ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, LayoutOverride&& constraints = {})
+        { return BeginReorderableGroup(id, direction, isWrapped, std::move(onReorder), ReorderableGroupStyle(direction, isWrapped), std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool BeginReorderableGroup(ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { return BeginReorderableGroup(idManager.AllocateDynamicID(site), direction, isWrapped, std::move(onReorder), style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's style for the direction and wrapping.
+        inline bool BeginReorderableGroup(ReorderDirection direction, bool isWrapped, std::function<void(int fromIndex, int toIndex)> onReorder, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { return BeginReorderableGroup(idManager.AllocateDynamicID(site), direction, isWrapped, std::move(onReorder), ReorderableGroupStyle(direction, isWrapped), std::move(constraints)); }
+        /// As above, not wrapped, with the call site as the ID.
+        inline bool BeginReorderableGroup(ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { return BeginReorderableGroup(idManager.AllocateDynamicID(site), direction, false, std::move(onReorder), style, std::move(constraints)); }
+        /// As above, not wrapped, with the call site as the ID, in the theme's style for the direction.
+        inline bool BeginReorderableGroup(ReorderDirection direction, std::function<void(int fromIndex, int toIndex)> onReorder, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { return BeginReorderableGroup(idManager.AllocateDynamicID(site), direction, false, std::move(onReorder), ReorderableGroupStyle(direction, false), std::move(constraints)); }
+        /// The theme's reorderable group style for a direction and wrapping.
+        StyleRef ReorderableGroupStyle(ReorderDirection direction, bool isWrapped) const
         {
-            StyleRef style;
             if (isWrapped)
-                style = direction == ReorderDirection::Horizontal ? theme.horzReorderableGroupWrapStyleRef : theme.vertReorderableGroupWrapStyleRef;
-            else
-                style = direction == ReorderDirection::Horizontal ? theme.horzReorderableGroupStyleRef : theme.vertReorderableGroupStyleRef;
-            return BeginReorderableGroup(id, direction, isWrapped, std::move(onReorder), style, std::move(constraints));
+                return direction == ReorderDirection::Horizontal ? theme.horzReorderableGroupWrapStyleRef : theme.vertReorderableGroupWrapStyleRef;
+            return direction == ReorderDirection::Horizontal ? theme.horzReorderableGroupStyleRef : theme.vertReorderableGroupStyleRef;
         }
         /// Closes BeginReorderableGroup.
         void EndReorderableGroup();
@@ -902,6 +972,10 @@ namespace tachyon
         inline bool BeginListView(ID id, int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}) { return BeginListView(id, selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool BeginListView(       int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginListView(idManager.AllocateDynamicID(site), selectedIndex, itemCount, dragDrop, theme.listViewStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool BeginListView(       int* selectedIndex, int itemCount, ItemDragDropConfig* dragDrop, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginListView(idManager.AllocateDynamicID(site), selectedIndex, itemCount, dragDrop, style, std::move(constraints)); }
+        /// As above, without drag and drop, with the call site as the ID, in `style`.
+        inline bool BeginListView(       int* selectedIndex, int itemCount, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginListView(idManager.AllocateDynamicID(site), selectedIndex, itemCount, nullptr, style, std::move(constraints)); }
         /// Closes BeginListView.
         void EndListView();
 
@@ -915,6 +989,8 @@ namespace tachyon
         inline bool ListItem(ID id, const GUIContent& content, LayoutOverride&& constraints = {}) { return ListItem(id, content, theme.listItemStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool ListItem(       const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ListItem(idManager.AllocateDynamicID(site), content, theme.listItemStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool ListItem(       const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ListItem(idManager.AllocateDynamicID(site), content, style, std::move(constraints)); }
 
 
         /// Recomputes skipCount / ancestorLineMask / isLastSibling from row depths.
@@ -934,6 +1010,11 @@ namespace tachyon
                              StyleRef style = {},
                              LayoutOverride&& constraints = {},
                              std::string_view header = {});
+        /// As above, with the call site as the ID.
+        inline void VirtualTreeView(std::vector<TreeViewRow>& rows, std::vector<int>& visibleIdx, TableState& state,
+                                    StyleRef style = {}, LayoutOverride&& constraints = {}, std::string_view header = {},
+                                    std::source_location site = std::source_location::current())
+            { VirtualTreeView(idManager.AllocateDynamicID(site), rows, visibleIdx, state, style, std::move(constraints), header); }
 
         /// The tree row a drag is over (drives the drop indicator), or Invalid.
         ID TreeDropTargetRow() const { return m_treeDropState.targetRowID; }
@@ -959,6 +1040,10 @@ namespace tachyon
         bool        BeginGridView(ID id, int* selectedIndex, StyleRef style, MultiSelectState* multiSelect = nullptr, ItemDragDropConfig* dragDrop = nullptr, LayoutOverride&& constraints = {});
         /// As above, in the theme's grid style.
         inline bool BeginGridView(ID id, int* selectedIndex = nullptr, MultiSelectState* multiSelect = nullptr, ItemDragDropConfig* dragDrop = nullptr, LayoutOverride&& constraints = {}) { return BeginGridView(id, selectedIndex, theme.gridViewStyleRef, multiSelect, dragDrop, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool BeginGridView(int* selectedIndex, StyleRef style, MultiSelectState* multiSelect = nullptr, ItemDragDropConfig* dragDrop = nullptr, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginGridView(idManager.AllocateDynamicID(site), selectedIndex, style, multiSelect, dragDrop, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's grid style.
+        inline bool BeginGridView(int* selectedIndex, MultiSelectState* multiSelect = nullptr, ItemDragDropConfig* dragDrop = nullptr, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginGridView(idManager.AllocateDynamicID(site), selectedIndex, theme.gridViewStyleRef, multiSelect, dragDrop, std::move(constraints)); }
         /// Closes BeginGridView.
         void EndGridView();
 
@@ -975,6 +1060,12 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline bool GridViewItem(const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
             { return GridViewItem(idManager.AllocateDynamicID(site), content, tachyon::ElementState::None, nullptr, {}, std::move(constraints)); }
+        /// Without rename, in `style`.
+        inline bool GridViewItem(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {})
+            { return GridViewItem(id, content, tachyon::ElementState::None, nullptr, style, std::move(constraints)); }
+        /// Without rename, with the call site as the ID, in `style`.
+        inline bool GridViewItem(const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return GridViewItem(idManager.AllocateDynamicID(site), content, tachyon::ElementState::None, nullptr, style, std::move(constraints)); }
 
         /// Whether an inline rename editor (a grid item's, a tree row's) is open; an app that
         /// sorts by name re-sorts once it closes.
@@ -993,6 +1084,13 @@ namespace tachyon
                              StyleRef scrollStyle = {},
                              StyleRef rowStyle = {},
                              LayoutOverride&& constraints = {});
+        /// As above, with the call site as the ID.
+        inline void VirtualGridView(GridViewVirtualState& vstate, int itemCount, int2 cellSize,
+                                    const std::function<void(int index, ID itemID)>& generateItem,
+                                    int* selectedIndex = nullptr, MultiSelectState* multiSelect = nullptr,
+                                    ItemDragDropConfig* dragDrop = nullptr, StyleRef scrollStyle = {}, StyleRef rowStyle = {},
+                                    LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { VirtualGridView(idManager.AllocateDynamicID(site), vstate, itemCount, cellSize, generateItem, selectedIndex, multiSelect, dragDrop, scrollStyle, rowStyle, std::move(constraints)); }
 
         ///@}
 
@@ -1021,6 +1119,24 @@ namespace tachyon
         inline bool BeginTable(ID id, VirtualTableColumn (&columns)[N], TableState& state,
                                LayoutOverride&& constraints = {})
             { return BeginTable(id, columns, N, state, theme.tableStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool BeginTable(VirtualTableColumn* columns, size_t columnCount, TableState& state, StyleRef style,
+                               LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginTable(idManager.AllocateDynamicID(site), columns, columnCount, state, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's table style.
+        inline bool BeginTable(VirtualTableColumn* columns, size_t columnCount, TableState& state,
+                               LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginTable(idManager.AllocateDynamicID(site), columns, columnCount, state, theme.tableStyleRef, std::move(constraints)); }
+        /// As above, for a C array of columns, with the call site as the ID.
+        template <size_t N>
+        inline bool BeginTable(VirtualTableColumn (&columns)[N], TableState& state, StyleRef style,
+                               LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginTable(idManager.AllocateDynamicID(site), columns, N, state, style, std::move(constraints)); }
+        /// As above, for a C array of columns, with the call site as the ID, in the theme's table style.
+        template <size_t N>
+        inline bool BeginTable(VirtualTableColumn (&columns)[N], TableState& state,
+                               LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginTable(idManager.AllocateDynamicID(site), columns, N, state, theme.tableStyleRef, std::move(constraints)); }
         /// Builds the recorded rows as a VirtualTable.
         void EndTable();
 
@@ -1069,6 +1185,11 @@ namespace tachyon
                           CssPx rowHeight = 0,
                           StyleRef style = {},
                           LayoutOverride&& constraints = {});
+        /// As above, with the call site as the ID.
+        inline void VirtualTable(TableState& state, std::span<VirtualTableColumn> columns, int totalRowCount,
+                                 CssPx rowHeight = 0, StyleRef style = {}, LayoutOverride&& constraints = {},
+                                 std::source_location site = std::source_location::current())
+            { VirtualTable(idManager.AllocateDynamicID(site), state, columns, totalRowCount, rowHeight, style, std::move(constraints)); }
 
         ///@}
 
@@ -1083,6 +1204,8 @@ namespace tachyon
         inline bool Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}) { return Breadcrumb(id, segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Breadcrumb(idManager.AllocateDynamicID(site), segments, std::move(onSelect), theme.breadcrumbStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool Breadcrumb(       std::span<const std::string> segments, std::function<void(int)> onSelect, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Breadcrumb(idManager.AllocateDynamicID(site), segments, std::move(onSelect), style, std::move(constraints)); }
 
         ///@}
 
@@ -1097,12 +1220,18 @@ namespace tachyon
         inline bool BeginStatusBar(ID id, LayoutOverride&& constraints = {}) { return BeginStatusBar(id, theme.statusBarStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool BeginStatusBar(       LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginStatusBar(idManager.AllocateDynamicID(site), theme.statusBarStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool BeginStatusBar(       StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return BeginStatusBar(idManager.AllocateDynamicID(site), style, std::move(constraints)); }
         /// Closes BeginStatusBar.
         void        EndStatusBar();
         /// A text in the status bar.
-        void        StatusText(ID id, std::string_view text, LayoutOverride&& constraints = {});
+        void        StatusText(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's status text style.
+        inline void StatusText(ID id, std::string_view text, LayoutOverride&& constraints = {}) { StatusText(id, text, theme.statusTextStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { StatusText(idManager.AllocateDynamicID(site), text, std::move(constraints)); }
+        inline void StatusText(       std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { StatusText(idManager.AllocateDynamicID(site), text, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's status text style.
+        inline void StatusText(       std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { StatusText(idManager.AllocateDynamicID(site), text, theme.statusTextStyleRef, std::move(constraints)); }
 
         ///@}
 
@@ -1113,9 +1242,13 @@ namespace tachyon
         /// Finds and runs commandManager's commands: focused, it lists those whose description
         /// contains the query; Up / Down move through them, Enter or a click runs one, Escape
         /// leaves. `state` must outlive the frame. True when a command ran since the last call.
-        bool        CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints = {});
+        bool        CommandSearch(ID id, CommandSearchState& state, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's command search style.
+        inline bool CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints = {}) { return CommandSearch(id, state, theme.commandSearchStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool CommandSearch(       CommandSearchState& state, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return CommandSearch(idManager.AllocateDynamicID(site), state, std::move(constraints)); }
+        inline bool CommandSearch(       CommandSearchState& state, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return CommandSearch(idManager.AllocateDynamicID(site), state, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's command search style.
+        inline bool CommandSearch(       CommandSearchState& state, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return CommandSearch(idManager.AllocateDynamicID(site), state, theme.commandSearchStyleRef, std::move(constraints)); }
         /// Puts the keyboard in the search next frame; bind it to a command such as Ctrl+K.
         static void FocusCommandSearch(CommandSearchState& state) { state.focusRequested = true; }
 
@@ -1149,6 +1282,15 @@ namespace tachyon
                          std::function<void(int, tachyon::int2)> dragVisualizer = nullptr,
                          StyleRef style = {},
                          LayoutOverride&& constraints = {});
+        /// As above, with the call site as the ID.
+        inline bool BeginTabBar(int* selectedIndex,
+                                std::function<void(int, int)> onReorder,
+                                std::function<void(int)> onClose = nullptr,
+                                std::function<void(int, tachyon::int2)> onDragOut = nullptr,
+                                std::function<void(int, tachyon::int2)> dragVisualizer = nullptr,
+                                StyleRef style = {},
+                                LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginTabBar(idManager.AllocateDynamicID(site), selectedIndex, std::move(onReorder), std::move(onClose), std::move(onDragOut), std::move(dragVisualizer), style, std::move(constraints)); }
         /// Closes BeginTabBar.
         void EndTabBar();
 
@@ -1158,6 +1300,8 @@ namespace tachyon
         inline bool Tab(ID id, const GUIContent& content, LayoutOverride&& constraints = {}) { return Tab(id, content, theme.tabStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool Tab(       const GUIContent& content, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Tab(idManager.AllocateDynamicID(site), content, theme.tabStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID, in `style`.
+        inline bool Tab(       const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Tab(idManager.AllocateDynamicID(site), content, style, std::move(constraints)); }
 
         ///@}
 
@@ -1171,6 +1315,12 @@ namespace tachyon
         /// As above, in the theme's dock style.
         inline bool BeginDockingContainer(ID id, DockingLayout* layout, LayoutOverride&& constraints = {})
             { return BeginDockingContainer(id, layout, theme.dockContainerStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool BeginDockingContainer(DockingLayout* layout, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginDockingContainer(idManager.AllocateDynamicID(site), layout, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's dock style.
+        inline bool BeginDockingContainer(DockingLayout* layout, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+            { return BeginDockingContainer(idManager.AllocateDynamicID(site), layout, theme.dockContainerStyleRef, std::move(constraints)); }
         /// Closes BeginDockingContainer.
         void EndDockingContainer();
 
@@ -1206,20 +1356,27 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline bool Field(       std::string& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, theme.controls->textbox, std::move(constraints)); }
 
-        /// A Field with a leading icon inside its border.
-        bool        SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {})
-        { return SearchField(id, value, icon, textEditBehavior, std::move(constraints), nullptr); }
+        /// A Field with a leading icon inside its border; `style` is the border's.
+        inline bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}) { return SearchField(id, value, icon, textEditBehavior, style, std::move(constraints), nullptr); }
+        /// As above, in the theme's search style.
+        inline bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}) { return SearchField(id, value, icon, textEditBehavior, theme.searchTextboxStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, std::move(constraints)); }
+        inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's search style.
+        inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, theme.searchTextboxStyleRef, std::move(constraints)); }
 
         /// A text field that lists, under itself while it has the keyboard and holds text, the
         /// suggestions that contain that text (ignoring case), at most 12. Up / Down highlight one,
         /// Enter or a click puts it into `value`; nothing is highlighted until Down, so Enter
         /// keeps what was typed. Escape, a pick or a click elsewhere closes the list; typing
         /// opens it again. True when `value` changed: typed, or a suggestion picked.
-        bool        AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {});
+        bool        AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's textbox style.
+        inline bool AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {}) { return AutocompleteField(id, value, suggestions, theme.controls->textbox, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool AutocompleteField(       std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return AutocompleteField(idManager.AllocateDynamicID(site), value, suggestions, std::move(constraints)); }
+        inline bool AutocompleteField(       std::string& value, std::span<const std::string_view> suggestions, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return AutocompleteField(idManager.AllocateDynamicID(site), value, suggestions, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's textbox style.
+        inline bool AutocompleteField(       std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return AutocompleteField(idManager.AllocateDynamicID(site), value, suggestions, theme.controls->textbox, std::move(constraints)); }
 
 
 
@@ -1235,6 +1392,7 @@ namespace tachyon
                 RegisterControl(tachyon::Element { .id = id, .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
                     [this](tachyon::Element& element) { return textSystem->RegisterText(element.id, "\xe2\x80\x94", element.styleRef, element.state); },
                     std::move(constraints));
+                guiStateManager.SetModified(false);
                 return false;
             }
 
@@ -1244,7 +1402,8 @@ namespace tachyon
                 if (nodeRowFieldMinWidth > 0 && !constraints.HasFixedWidth())
                     constraints.FlexGrow(1).MinWidth(Pixels{ nodeRowFieldMinWidth });
                 bool modified = false;
-                RegisterControl(tachyon::Element { .id = id, .eventHandler = MakeNumericalBoxHandler(guiStateManager, value, config), .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
+                RegisterControl(tachyon::Element { .id = id, .eventHandler = ReportingChanges(guiStateManager, &value, MakeNumericalBoxHandler(guiStateManager, value, config)),
+                                                   .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
                                 [this, &modified, &value, textEditBehavior, config](tachyon::Element& element) {
                                     const TextID textID = textSystem->RegisterEditableNumber(element.id, value, textEditBehavior, element.styleRef, element.state, modified, config);
                                     if constexpr (std::is_floating_point_v<T>)
@@ -1253,6 +1412,8 @@ namespace tachyon
                                     return textID;
                                 },
                                 std::move(constraints));
+                // A label drag writes the value from the handler: reported the frame after.
+                modified = modified || guiStateManager.Interaction().HasBeenClicked(id);
                 guiStateManager.SetModified(modified);
                 return modified;
             } else
@@ -1260,7 +1421,10 @@ namespace tachyon
                 bool modified = false;
                 // Width 0 + flex-grow: the group fills remaining space after the label.
                 constraints.Width(0);
-                RegisterElement(tachyon::Element{ .id = id, .eventHandler = MakeMultiDimDragHandler<T>(guiStateManager, value, config), .styleRef = theme.fieldElementGroupStyleRef }, std::move(constraints));
+                // Takes its components' states, so a tooltip or context menu on it covers them.
+                RegisterElement(tachyon::Element{ .id = id, .eventHandler = ReportingChanges(guiStateManager, &value, MakeMultiDimDragHandler<T>(guiStateManager, value, config)),
+                                                  .styleRef = theme.fieldElementGroupStyleRef,
+                                                  .flags = ElementFlags::PropagatesDescendantState }, std::move(constraints));
                 VERIFY(elementStorage.BeginChildren());
                 {
 					// Each component: a colored axis label (drag it to change the value) attached
@@ -1275,6 +1439,8 @@ namespace tachyon
                     }
                 }
                 VERIFY(elementStorage.EndChildren());
+                modified = modified || guiStateManager.Interaction().HasBeenClicked(id);
+                guiStateManager.SetModified(modified);
                 return modified;
             }
         }
@@ -1287,6 +1453,18 @@ namespace tachyon
         /// As above, updating continuously.
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
         inline bool Field(ID id, T& value, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, theme.controls->number, {}, std::move(constraints)); }
+        /// As the first, updating continuously.
+        template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
+        inline bool Field(ID id, T& value, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, style, config, std::move(constraints)); }
+        /// As the first, updating continuously, with the default config.
+        template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
+        inline bool Field(ID id, T& value, StyleRef style, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, style, {}, std::move(constraints)); }
+        /// As the first, updating continuously, in the theme's number style.
+        template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
+        inline bool Field(ID id, T& value, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}) { return Field<T>(id, value, TextEditBehavior::ContinuousUpdate, theme.controls->number, config, std::move(constraints)); }
+        /// As the first, with the call site as the ID, updating continuously, with the default config.
+        template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
+        inline bool Field(T& value, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, TextEditBehavior::ContinuousUpdate, style, {}, std::move(constraints)); }
         /// As the first, with the call site as the ID.
         template<typename T, typename ComponentT = typename TypeDimensions<T>::ComponentType>
         inline bool Field(       T& value, TextEditBehavior textEditBehavior, StyleRef style, NumericFieldConfig<ComponentT> config, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Field<T>(idManager.AllocateDynamicID(site), value, textEditBehavior, style, config, std::move(constraints)); }
@@ -1331,27 +1509,40 @@ namespace tachyon
 
         /// A number field with its type after the value, e.g. "0.5  f32".
         template<typename T>
-        bool TypedField(ID id, T& value, LayoutOverride&& constraints = {})
+        bool TypedField(ID id, T& value, LayoutOverride&& constraints = {}) { return TypedField(id, value, theme.typedFieldStyleRef, std::move(constraints)); }
+        /// As above; `style` is the box's around the number and its type.
+        template<typename T>
+        bool TypedField(ID id, T& value, StyleRef style, LayoutOverride&& constraints = {})
         {
-            BeginFieldBox(idManager.AllocateDynamicID("typed_field"), theme.typedFieldStyleRef, std::move(constraints));
+            // The box's and the type's IDs under the field's own, so they don't depend on what came before.
+            [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+            const ID boxID  = idManager.AllocateDynamicID("typed_field");
+            const ID typeID = idManager.AllocateDynamicID("typed_field_type");
+            if (pushed) (void)idManager.PopParent();
+            BeginFieldBox(boxID, style, std::move(constraints));
             const bool changed = Field(id, value, TextEditBehavior::ContinuousUpdate, theme.typedFieldInputStyleRef, {},
                                        LayoutOverride{}.FlexGrow(1));
-            Text(idManager.AllocateDynamicID("typed_field_type"), TypeTag<T>(), theme.typedFieldTypeStyleRef);
+            Text(typeID, TypeTag<T>(), theme.typedFieldTypeStyleRef);
             EndFieldBox();
             return changed;
         }
         /// As above, with the call site as the ID.
         template<typename T>
         bool TypedField(T& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return TypedField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+        /// As above, with the call site as the ID and a style for the box.
+        template<typename T>
+        bool TypedField(T& value, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return TypedField(idManager.AllocateDynamicID(site), value, style, std::move(constraints)); }
 
         /// A reorderable list: each row a grip, its index, the field (numbers with their type)
-        /// and a remove button; "Add item" after the rows. groupID must be stable so the
-        /// reorder state survives across frames.
+        /// and a remove button; "Add item" after the rows. The ID must be the same every frame
+        /// so the reorder state survives.
         template<typename T>
-        void Field(ID groupID, std::vector<T>& items, StyleRef style, LayoutOverride layoutOverride = {}, std::source_location site = std::source_location::current())
+        void Field(ID id, std::vector<T>& items, StyleRef style, LayoutOverride&& constraints = {})
         {
-            if (BeginArea(style, std::move(layoutOverride)))
+            if (BeginArea(id, style, std::move(constraints)))
             {
+                // Everything inside under the list's own ID.
+                [[maybe_unused]] const bool pushed = idManager.PushParent(id);
                 auto onReorder = [&items](int from, int to)
                 {
                     if (from < 0 || from >= (int)items.size()) return;
@@ -1361,12 +1552,12 @@ namespace tachyon
                     items.insert(items.begin() + to, std::move(moved));
                 };
 
-                if (BeginReorderableGroup(groupID, ReorderDirection::Vertical, std::move(onReorder),
+                if (BeginReorderableGroup(idManager.AllocateDynamicID("list_rows"), ReorderDirection::Vertical, std::move(onReorder),
                                           theme.collectionListStyleRef, tachyon::LayoutOverride{}.FlexGrow(1)))
                 {
                     for (int i = 0; i < (int)items.size(); i++)
                     {
-                        BeginReorderableItem(idManager.AllocateDynamicID(site), theme.collectionRowStyleRef,
+                        BeginReorderableItem(idManager.AllocateDynamicID("list_row"), theme.collectionRowStyleRef,
                                              tachyon::LayoutOverride{}.FlexGrow(1));
                         {
                             EmitDragHandle();
@@ -1384,21 +1575,29 @@ namespace tachyon
                 }
                 Button(idManager.AllocateDynamicID("list_add"), "+  Add item", [&items]() { items.push_back({}); },
                        theme.collectionAddStyleRef);
+                if (pushed) (void)idManager.PopParent();
                 EndArea();
             }
         }
-
         /// As above, in the theme's collection style.
         template<typename T>
-        void Field(ID groupID, std::vector<T>& items, LayoutOverride layoutOverride = {}) { Field(groupID, items, theme.collectionAreaStyleRef, layoutOverride); }
+        void Field(ID id, std::vector<T>& items, LayoutOverride&& constraints = {}) { Field(id, items, theme.collectionAreaStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        template<typename T>
+        void Field(std::vector<T>& items, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's collection style.
+        template<typename T>
+        void Field(std::vector<T>& items, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, theme.collectionAreaStyleRef, std::move(constraints)); }
 
         /// A key-value list (std::string keys, V values): a Key / Value header with the types,
         /// then a row per entry (key, value, remove) and "Add entry".
         template<typename V>
-        void Field(std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride layoutOverride = {})
+        void Field(ID id, std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride&& constraints = {})
         {
-            if (BeginArea(style, std::move(layoutOverride)))
+            if (BeginArea(id, style, std::move(constraints)))
             {
+                // Everything inside under the dictionary's own ID.
+                [[maybe_unused]] const bool pushed = idManager.PushParent(id);
                 CollectionHeader(TypeTag<V>());
                 for (int i = 0; i < (int)items.size(); i++)
                 {
@@ -1411,21 +1610,29 @@ namespace tachyon
                 }
                 Button(idManager.AllocateDynamicID("dictionary_add"), "+  Add entry",
                        [&items]() { items.push_back({ std::string{}, V{} }); }, theme.collectionAddEntryStyleRef);
+                if (pushed) (void)idManager.PopParent();
                 EndArea();
             }
         }
         /// As above, in the theme's collection style.
         template<typename V>
-        void Field(std::vector<std::pair<std::string, V>>& items, LayoutOverride layoutOverride = {}) { Field(items, theme.collectionAreaStyleRef, layoutOverride); }
-
+        void Field(ID id, std::vector<std::pair<std::string, V>>& items, LayoutOverride&& constraints = {}) { Field(id, items, theme.collectionAreaStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        template<typename V>
+        void Field(std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's collection style.
+        template<typename V>
+        void Field(std::vector<std::pair<std::string, V>>& items, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, theme.collectionAreaStyleRef, std::move(constraints)); }
 
 		/// Key-value list over an unordered_map. Row order can change when the map rehashes;
         /// use the vector-of-pairs version for stable rows.
         template<typename V>
-        void Field(std::unordered_map<std::string, V>& items, StyleRef style, LayoutOverride layoutOverride = {})
+        void Field(ID id, std::unordered_map<std::string, V>& items, StyleRef style, LayoutOverride&& constraints = {})
         {
-            if (BeginArea(style, std::move(layoutOverride)))
+            if (BeginArea(id, style, std::move(constraints)))
             {
+                // Everything inside under the dictionary's own ID.
+                [[maybe_unused]] const bool pushed = idManager.PushParent(id);
                 CollectionHeader(TypeTag<V>());
                 // Map keys are const: edit a copy, committed on Enter/blur, and re-key
                 // after the loop (renaming onto an existing key is ignored).
@@ -1454,12 +1661,19 @@ namespace tachyon
                 }
                 Button(idManager.AllocateDynamicID("dictionary_add"), "+  Add entry",
                        [&items]() { items.emplace(std::string{}, V{}); }, theme.collectionAddEntryStyleRef);
+                if (pushed) (void)idManager.PopParent();
                 EndArea();
             }
         }
         /// As above, in the theme's collection style.
         template<typename V>
-        void Field(std::unordered_map<std::string, V>& items, LayoutOverride layoutOverride = {}) { Field(items, theme.collectionAreaStyleRef, layoutOverride); }
+        void Field(ID id, std::unordered_map<std::string, V>& items, LayoutOverride&& constraints = {}) { Field(id, items, theme.collectionAreaStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        template<typename V>
+        void Field(std::unordered_map<std::string, V>& items, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's collection style.
+        template<typename V>
+        void Field(std::unordered_map<std::string, V>& items, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Field(idManager.AllocateDynamicID(site), items, theme.collectionAreaStyleRef, std::move(constraints)); }
 
         /// A dictionary's header row: "Key string", "Value <type>".
         void CollectionHeader(std::string_view valueType);
@@ -1473,19 +1687,31 @@ namespace tachyon
         // ---- ColorField: swatch + color picker popup ----
         /// A color swatch that opens a color picker; true when the color changed. allowHDR lets
         /// the picker take brightness over 1.
-        bool        ColorField(ID id, tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, tachyon::color4f& value, bool allowHDR, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's color field style.
+        inline bool ColorField(ID id, tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}) { return ColorField(id, value, allowHDR, theme.colorFieldStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID.
+        inline bool ColorField(       tachyon::color4f& value, bool allowHDR, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's color field style.
+        inline bool ColorField(       tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, theme.colorFieldStyleRef, std::move(constraints)); }
         /// As above, for an 8-bit color.
-        bool        ColorField(ID id, tachyon::color4b& value, LayoutOverride&& constraints = {});
+        bool        ColorField(ID id, tachyon::color4b& value, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's color field style.
+        inline bool ColorField(ID id, tachyon::color4b& value, LayoutOverride&& constraints = {}) { return ColorField(id, value, theme.colorFieldStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool ColorField(       tachyon::color4f& value, bool allowHDR = false, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, allowHDR, std::move(constraints)); }
-        /// As above, with the call site as the ID.
-        inline bool ColorField(       tachyon::color4b& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())                        { return ColorField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+        inline bool ColorField(       tachyon::color4b& value, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return ColorField(idManager.AllocateDynamicID(site), value, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's color field style.
+        inline bool ColorField(       tachyon::color4b& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())                        { return ColorField(idManager.AllocateDynamicID(site), value, theme.colorFieldStyleRef, std::move(constraints)); }
 
         // ---- GradientField: gradient swatch + editor popup ----
         /// A gradient swatch that opens a gradient editor; true when the gradient changed.
-        bool        GradientField(ID id, tachyon::Gradient& value, LayoutOverride&& constraints = {});
+        bool        GradientField(ID id, tachyon::Gradient& value, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's gradient swatch style.
+        inline bool GradientField(ID id, tachyon::Gradient& value, LayoutOverride&& constraints = {}) { return GradientField(id, value, theme.gradientSwatchStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool GradientField(       tachyon::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, std::move(constraints)); }
+        inline bool GradientField(       tachyon::Gradient& value, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's gradient swatch style.
+        inline bool GradientField(       tachyon::Gradient& value, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return GradientField(idManager.AllocateDynamicID(site), value, theme.gradientSwatchStyleRef, std::move(constraints)); }
 
         ///@}
 
@@ -1496,22 +1722,38 @@ namespace tachyon
         /// A label, a slider track and a number field for value in [minVal, maxVal]; true when
         /// it changed.
         bool        SliderField(ID id, float& value, float minVal, float maxVal,
-                                std::string_view text, LayoutOverride&& constraints = {});
+                                std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's slider field style.
+        inline bool SliderField(ID id, float& value, float minVal, float maxVal,
+                                std::string_view text, LayoutOverride&& constraints = {}) { return SliderField(id, value, minVal, maxVal, text, theme.sliderFieldTrackStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool SliderField(float& value, float minVal, float maxVal,
-                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, std::move(constraints)); }
+                                std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's slider field style.
+        inline bool SliderField(float& value, float minVal, float maxVal,
+                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, theme.sliderFieldTrackStyleRef, std::move(constraints)); }
 
         /// Integer variant: snaps to whole numbers.
         bool        SliderField(ID id, int& value, int minVal, int maxVal,
-                                std::string_view text, LayoutOverride&& constraints = {});
+                                std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's slider field style.
+        inline bool SliderField(ID id, int& value, int minVal, int maxVal,
+                                std::string_view text, LayoutOverride&& constraints = {}) { return SliderField(id, value, minVal, maxVal, text, theme.sliderFieldTrackStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
         inline bool SliderField(int& value, int minVal, int maxVal,
-                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, std::move(constraints)); }
+                                std::string_view text, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's slider field style.
+        inline bool SliderField(int& value, int minVal, int maxVal,
+                                std::string_view text, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SliderField(idManager.AllocateDynamicID(site), value, minVal, maxVal, text, theme.sliderFieldTrackStyleRef, std::move(constraints)); }
 
         /// Groove + knob without value text; drag-only, integer-valued.
-        bool        Slider(ID id, int& value, int minVal, int maxVal, LayoutOverride&& constraints = {});
+        bool        Slider(ID id, int& value, int minVal, int maxVal, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's slider style.
+        inline bool Slider(ID id, int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}) { return Slider(id, value, minVal, maxVal, theme.sliderStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline bool Slider(int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Slider(idManager.AllocateDynamicID(site), value, minVal, maxVal, std::move(constraints)); }
+        inline bool Slider(int& value, int minVal, int maxVal, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Slider(idManager.AllocateDynamicID(site), value, minVal, maxVal, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's slider style.
+        inline bool Slider(int& value, int minVal, int maxVal, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return Slider(idManager.AllocateDynamicID(site), value, minVal, maxVal, theme.sliderStyleRef, std::move(constraints)); }
 
 
 
@@ -1535,9 +1777,13 @@ namespace tachyon
         void        Label(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints = {});
         /// A label over a field taller than a row (a list): at the top, with a caption under
         /// it such as "3 items".
-        void        Label(ID id, std::string_view text, std::string_view caption, LayoutOverride&& constraints = {});
+        void        Label(ID id, std::string_view text, std::string_view caption, StyleRef style, LayoutOverride&& constraints = {});
+        /// As above, in the theme's top label style.
+        inline void Label(ID id, std::string_view text, std::string_view caption, LayoutOverride&& constraints = {}) { Label(id, text, caption, theme.groupLabelTopStyleRef, std::move(constraints)); }
         /// As above, with the call site as the ID.
-        inline void Label(       std::string_view text, std::string_view caption, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, caption, std::move(constraints)); }
+        inline void Label(       std::string_view text, std::string_view caption, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, caption, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's top label style.
+        inline void Label(       std::string_view text, std::string_view caption, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { Label(idManager.AllocateDynamicID(site), text, caption, theme.groupLabelTopStyleRef, std::move(constraints)); }
         /// As the first, in the theme's label style.
         inline void Label(ID id, std::string_view text,                 LayoutOverride&& constraints = {}) { Label(id, text, theme.labelStyleRef, std::move(constraints)); }
         /// As the first, with the call site as the ID.
@@ -1562,6 +1808,15 @@ namespace tachyon
         /// As above, without link handling.
         inline void SelectableText(ID id, const std::span<ContentRun>& runs, StyleRef style, LayoutOverride&& constraints = {})
         { SelectableText(id, runs, {}, style, std::move(constraints)); }
+        /// As above, in the theme's text style.
+        inline void SelectableText(ID id, const std::span<ContentRun>& runs, LayoutOverride&& constraints = {})
+        { SelectableText(id, runs, {}, theme.staticTextStyleRef, std::move(constraints)); }
+        /// As above, with the call site as the ID (the same every frame).
+        inline void SelectableText(const std::span<ContentRun>& runs, StyleRef style, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { SelectableText(idManager.AllocateDynamicID(site), runs, {}, style, std::move(constraints)); }
+        /// As above, with the call site as the ID, in the theme's text style.
+        inline void SelectableText(const std::span<ContentRun>& runs, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
+        { SelectableText(idManager.AllocateDynamicID(site), runs, {}, theme.staticTextStyleRef, std::move(constraints)); }
 
         /// Draws `image` (from graphicsContext->RegisterImage) stretched over the element's box.
         void        Image(ID id, ImageIndex image, StyleRef style, LayoutOverride&& constraints = {});
@@ -2097,6 +2352,7 @@ namespace tachyon
         ID contextMenuWindowID { ID::Invalid() };
         ID contextMenuTargetID { ID::Invalid() }; ///< element the context menu is attached to
         std::optional<int2> contextMenuScreenPos; ///< where OpenContextMenu put it; else below the target
+        bool m_contextMenuClaimed = false;   ///< a context menu opened this frame; the first one wins
         ID tabDragGhostWindowID{ ID::Invalid() }; ///< ghost window for dragged dock tab / drop overlay
 
         FrameTimingSample frameTimingHistory[kFrameHistoryCount] = {};
@@ -2173,6 +2429,8 @@ namespace tachyon
         static void ReportInvalidControlID(ID id);
         /// Adds `id` to the Tab order, unless it's disabled.
         void RegisterTabStop(ID id);
+        /// SearchField, also giving the inner text field's ID.
+        bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints, ID* outFieldID);
         /// A box that draws the border of the field inside it (a field with a caption or a
         /// unit): it takes the field's hover and focus, so its :hover / :focus rules show them.
         void BeginFieldBox(ID id, StyleRef style, LayoutOverride&& constraints);
@@ -2238,6 +2496,9 @@ namespace tachyon
         void        InvalidateCachedScopesForInput(ID overID);
         /// The PropagatesDescendantState ancestors of `leafID`'s element, innermost first.
         static std::vector<ID> CollectPropagatedAncestors(const ElementStorage& storage, ID leafID);
+        /// Before construction: a tooltip or context menu on an element that takes its parts'
+        /// states (PropagatesDescendantState) is for those parts too.
+        void NoteTargetAncestors();
         /// Rebuilds, next frame, the cached scopes `id` is in.
         void        InvalidateCachedScopesAbove(ID id);
         /// As InvalidateCachedScopesAbove, from layout: this frame's capture would clear it, so

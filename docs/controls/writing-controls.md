@@ -61,7 +61,9 @@ The [Common conventions](conventions.md) page describes the API shape this build
 
 - [ ] A value control takes a `T&` and writes it; it returns `true` on the frame the value
       changed (by the user, not on every commit), and calls
-      `guiStateManager.SetModified(changed)`.
+      `guiStateManager.SetModified(changed)`. A handler that writes the value runs after
+      the control's call returned: wrap it in `ReportingChanges`, and count
+      `Interaction().HasBeenClicked(id)` as changed in the next call.
 - [ ] Callbacks run from the input handler, after the frame: they capture copies, or
       references to storage that outlives the frame, never the caller's temporaries
       (a `span` of the caller's strings, say).
@@ -74,8 +76,15 @@ The [Common conventions](conventions.md) page describes the API shape this build
       the next element, or its first control is.
 - [ ] A numeric field works after `DragLabel(...)`: dragging the label scrubs the value
       (`LabelDrag*` events).
-- [ ] `SetTooltip` right after it attaches to it (`GetLastAddedID()` is the control, not a
-      part); a `GUIContent` tooltip is shown with `ShowContentTooltip`.
+- [ ] `SetTooltip` and `BeginContextMenu` right after it attach to it: they take the
+      element last finished at the caller's level (`GetLastItemID()`), so the control's
+      outer element is the one it adds there, with its parts inside. When the parts take
+      input of their own (a swatch and fields), the outer element has
+      `ElementFlags::PropagatesDescendantState` (`BeginFieldBox`), so the tooltip and the
+      context menu work over each part. A `GUIContent` tooltip is shown with
+      `ShowContentTooltip`.
+- [ ] Its context menu opens from the keyboard too (Shift+F10, the Menu key), which
+      `BeginContextMenu` does for the focused control.
 
 **Popups**
 
@@ -84,7 +93,9 @@ A control that opens a popup (a list, a picker, a menu):
 - [ ] The popup is anchored to the control (`Anchored(id, ...)`, flipping at the screen
       edge) and is at least as wide as it when it's a list for it.
 - [ ] Closes on Escape, on a press anywhere outside it and the control (including the
-      window's title bar) and when the focus leaves; `CloseOnPressOutside` does the press.
+      window's title bar) and when the focus leaves; `CloseOnPressOutside` does the press,
+      `TakeEscapeFor` Escape for a picker window. Escape cancels and puts the focus back on
+      the control.
 - [ ] Keeps the keyboard where it belongs: in the field for a suggestion list
       (`WindowNotFocusable`), in the popup for a menu or picker.
 - [ ] Tab from the control goes on to the next control, not into the popup.
@@ -130,7 +141,9 @@ like it:
 | --- | --- | --- |
 | Drag to change | Numbers, sliders, colors | Press, a threshold (`kDragStartDistance`), then drag; Escape during the drag restores the value |
 | Edit as text | A value that also has a text form (a slider's number) | Click to type; Enter commits, Escape cancels |
-| Context menu | Anything with actions beyond the main one | `BeginContextMenu(id)` on right-click |
+| Context menu | Anything with actions beyond the main one | `BeginContextMenu(id)`: right-click, Shift+F10, the Menu key |
+| Move in a list | Items the user orders (rows, tabs, columns) | Drag, and Alt + an arrow on the focused item (a reorderable group does both) |
+| Close | Items that close (tabs) | A "Close" context menu item, and Ctrl+W / Ctrl+F4 on the focused one |
 | Drag and drop | Values that move between controls | A drag source and drop target with a payload type |
 | Copy and paste | Values with a text form | Ctrl+C / Ctrl+V while focused |
 | Placeholder text | Empty text fields | The hint style, shown while empty |

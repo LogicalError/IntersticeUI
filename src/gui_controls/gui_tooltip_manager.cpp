@@ -1,5 +1,7 @@
 #include <gui_controls/gui_tooltip_manager.h>
 
+#include <algorithm>
+
 namespace tachyon
 {
     void TooltipManager::BeginFrame(ID currentHoveredID, ID currentFocusedID, float elapsedTimeSecs,
@@ -83,8 +85,10 @@ namespace tachyon
     bool TooltipManager::ShouldShow(ID targetID)
     {
         if (targetID == ID::Invalid()) return false;
-        if (targetID != m_activeTargetID) return false;
-        if (!m_isReady) return false;
+        if (!m_isReady || m_declaredThisFrame) return false;
+        if (targetID != m_activeTargetID &&
+            std::find(m_targetAncestors.begin(), m_targetAncestors.end(), targetID) == m_targetAncestors.end())
+            return false;
 
         m_declaredThisFrame = true;
         m_isVisible = true;

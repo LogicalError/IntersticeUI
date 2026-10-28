@@ -1195,6 +1195,7 @@ namespace tachyon
                 tooltipManager.BeginFrame(guiStateManager.Interaction().GetHoveredID(), guiStateManager.Interaction().GetFocusedID(),
                     elapsedTimeSecs, hasMouseMove, hasMousePress, hasKeyboard, hasScroll,
                     menuManager.IsOpen());
+                NoteTargetAncestors();
 
                 // Any mouse activity ends keyboard-nav hover suppression.
                 if (hasMouseMove || hasMousePress || hasScroll)
@@ -1483,6 +1484,33 @@ namespace tachyon
             ref = storage.GetParentRef(ref);
         }
         return result;
+    }
+
+    void GUIApplication::NoteTargetAncestors()
+    {
+        // The tooltip follows the focus after a Tab, else the mouse.
+        const auto& interaction = guiStateManager.Interaction();
+        const ID target = tooltipManager.GetActiveTargetID();
+        tooltipManager.SetTargetAncestors(target == interaction.GetFocusedID() && target != interaction.GetHoveredID()
+                                          ? interaction.GetPropagatedFocusedIDs() : interaction.GetPropagatedHoverIDs());
+        m_contextMenuClaimed = false;
+    }
+
+    bool GUIApplication::TakeEscapeFor(ID popupWindowID, ID triggerID)
+    {
+        if (!inputManager)
+            return false;
+        const auto& interaction = guiStateManager.Interaction();
+        if (interaction.GetActiveWindowID() != popupWindowID && interaction.GetFocusedID() != triggerID)
+            return false;
+        const auto& events = inputManager->GetRecordedEvents();
+        for (size_t e = 0; e < events.size(); ++e)
+            if (events[e].type == EventType::KeyDown && !events[e].consumed && events[e].state.lastKey == KeyCode::Escape)
+            {
+                inputManager->ConsumeEvent(e);
+                return true;
+            }
+        return false;
     }
 
     void GUIApplication::RunPressOutsideWatches()

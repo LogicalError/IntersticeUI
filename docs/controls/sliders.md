@@ -8,9 +8,9 @@ clamped to `[minVal, maxVal]`; the `int` form snaps to whole numbers.
 
 ```cpp
 bool SliderField(ID id, float& value, float minVal, float maxVal, std::string_view text,
-                 LayoutOverride&& constraints = {});
+                 StyleRef style, LayoutOverride&& constraints = {});
 bool SliderField(ID id, int& value, int minVal, int maxVal, std::string_view text,
-                 LayoutOverride&& constraints = {});
+                 StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `slider-field-track`, `slider-field-bg`, `slider-field-fill`,
@@ -25,7 +25,7 @@ SliderField(volume, 0.0f, 100.0f, "Volume");
 A groove and a knob, without value text; drag only, integer valued.
 
 ```cpp
-bool Slider(ID id, int& value, int minVal, int maxVal, LayoutOverride&& constraints = {});
+bool Slider(ID id, int& value, int minVal, int maxVal, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `slider`, `slider-groove`, `slider-fill`, `slider-knob`.

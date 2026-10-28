@@ -98,6 +98,23 @@ namespace
         EXPECT_EQ(FindByStyle(app.theme.gradientEditorBarStyleRef), ID::Invalid()) << "and closed the dialog";
     }
 
+    // Escape in the dialog is Cancel, and the keyboard goes back to the swatch.
+    TEST_F(GradientEditorDialog, EscapeCancels)
+    {
+        Open();
+        ClickAt(OnTheBar(0.5f));
+        ASSERT_EQ(gradient.stopCount, 3);
+        app.activeWindow = GUIApplicationInternals::GradientEditor(app).State().windowID;   // the dialog has the keyboard
+        Emit();
+        app.InjectKey(KeyCode::Escape);
+        Emit();
+        Emit();
+        app.activeWindow = ID::Invalid();
+        EXPECT_EQ(gradient.stopCount, 2);
+        EXPECT_EQ(FindByStyle(app.theme.gradientEditorBarStyleRef), ID::Invalid()) << "closed";
+        EXPECT_EQ(app.guiStateManager.Interaction().GetFocusedID(), FindByStyle(app.theme.gradientSwatchStyleRef));
+    }
+
     TEST_F(GradientEditorDialog, TheHeaderDragsTheDialog)
     {
         Open();

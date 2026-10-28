@@ -15,6 +15,7 @@ namespace tachyon
         {
             int  choice      = -1;      // set by a button (or Esc / the close button), returned next frame
             bool detailsOpen = false;
+            std::vector<ID> controls;   // last frame's: focus on one of them stays where it is
         };
 
         // The letter of a key, for Alt mnemonics; 0 for other keys.
@@ -25,7 +26,7 @@ namespace tachyon
         }
     }
 
-    int GUIApplication::MessageDialog(ID id, const MessageDialogDesc& desc)
+    int GUIApplication::MessageDialog(ID id, const MessageDialogDesc& desc, StyleRef style)
     {
         auto& store = guiStateManager.GetElementDataStore();
         auto& state = store.GetOrCreate<MessageDialogState>(id);
@@ -52,7 +53,7 @@ namespace tachyon
         if (self.w <= 0 || self.h <= 0) self.size = { styleManager.Px(456), styleManager.Px(160) };
         const int2 at = ownerRect.position + int2{ (ownerRect.w - self.w) / 2, (ownerRect.h - self.h) / 2 };
 
-        if (!BeginWindow(id, desc.title, theme.messageBoxStyleRef, LayoutOverride{}.Position(at),
+        if (!BeginWindow(id, desc.title, style, LayoutOverride{}.Position(at),
                          ElementFlags::WindowNoCaption | ElementFlags::WindowIsModal | ElementFlags::Shadows))
         {
             EndWindow();
@@ -63,18 +64,52 @@ namespace tachyon
         const ID buttonRange = idManager.AllocateRangedID(uint32_t(count), "message_box_button");
         auto buttonID = [&](int i) { return idManager.GetSubID(buttonRange, uint32_t(i)); };
 
-        // The keyboard stays on the buttons, starting on the default one, which shows the focus ring.
+        // The keyboard starts on the default button, which shows the focus ring, and stays in
+        // the dialog: Tab goes through all its controls, and focus anywhere else (still on
+        // what asked, say) moves back to that button.
         const ID focused = guiStateManager.Interaction().GetFocusedID();
-        bool onAButton = false;
-        for (int i = 0; i < count; ++i) onAButton |= focused == buttonID(i);
-        if (!onAButton)
+        bool inside = std::find(state.controls.begin(), state.controls.end(), focused) != state.controls.end();
+        for (int i = 0; i < count; ++i) inside |= focused == buttonID(i);
+        if (!inside)
         {
             guiStateManager.Interaction().SetFocusID(buttonID(defaultButton));
             guiStateManager.Interaction().SetFocusVisible(true);
         }
+        std::vector<ID> controls;
+
+        // Esc chooses the cancel button and Alt + a button's first letter that button, from
+        // anywhere in the dialog while it's the one on top.
+        const ID topModal = windowManager->GetTopModalWindow();
+        if (inputManager && (topModal == id || topModal == ID::Invalid()))
+        {
+            const auto& events = inputManager->GetRecordedEvents();
+            for (size_t e = 0; e < events.size(); ++e)
+            {
+                const auto& event = events[e];
+                if (event.type != EventType::KeyDown || event.consumed)
+                    continue;
+                int chosen = -1;
+                if (event.state.lastKey == KeyCode::Escape)
+                    chosen = cancelButton;
+                else if ((event.state.modifiers & KeyModifier::Alt) != KeyModifier::None)
+                    if (const char letter = KeyLetter(event.state.lastKey))
+                        for (int m = 0; m < count && chosen < 0; ++m)
+                            if (!desc.buttons[size_t(m)].label.empty() &&
+                                char(std::tolower(static_cast<unsigned char>(desc.buttons[size_t(m)].label[0]))) == letter)
+                                chosen = m;
+                if (chosen >= 0)
+                {
+                    choose(chosen);
+                    inputManager->ConsumeEvent(e);
+                    break;
+                }
+            }
+        }
 
         // The close button, top right: as Cancel.
-        Button(idManager.AllocateDynamicID("message_box_close"), theme.tabCloseIcon, [choose, cancelButton] { choose(cancelButton); },
+        const ID closeID = idManager.AllocateDynamicID("message_box_close");
+        controls.push_back(closeID);
+        Button(closeID, theme.tabCloseIcon, [choose, cancelButton] { choose(cancelButton); },
                theme.messageBoxCloseStyleRef,
                LayoutOverride{}.Absolute(styleManager.Px(8), styleManager.Px(8), PositionConstraintAxis::kAuto, PositionConstraintAxis::kAuto));
 
@@ -107,7 +142,11 @@ namespace tachyon
                     [[maybe_unused]] const bool itemScope = idManager.PushParent(idManager.GetSubID(itemRange, uint32_t(i)));
                     BeginHorizontal(idManager.AllocateDynamicID("row"), theme.messageBoxItemStyleRef, LayoutOverride{}.NoShrink());
                     if (item.checked)
-                        Checkbox(idManager.AllocateDynamicID("check"), *item.checked, {}, [checked = item.checked](bool on) { *checked = on; });
+                    {
+                        const ID checkID = idManager.AllocateDynamicID("check");
+                        controls.push_back(checkID);
+                        Checkbox(checkID, *item.checked, {}, [checked = item.checked](bool on) { *checked = on; });
+                    }
                     if (item.color.a > 0.0f)
                     {
                         const ElementRef dot = RegisterElement(Element{ .id = idManager.AllocateDynamicID("dot"), .styleRef = theme.messageBoxItemDotStyleRef,
@@ -128,13 +167,19 @@ namespace tachyon
             }
 
             if (desc.dontAskAgain)
-                Checkbox(idManager.AllocateDynamicID("message_box_dont_ask"), *desc.dontAskAgain, "Don't ask again",
+            {
+                const ID dontAskID = idManager.AllocateDynamicID("message_box_dont_ask");
+                controls.push_back(dontAskID);
+                Checkbox(dontAskID, *desc.dontAskAgain, "Don't ask again",
                          [flag = desc.dontAskAgain](bool on) { *flag = on; }, LayoutOverride{}.NoGrow());
+            }
 
             // Collapsible technical details.
             if (!desc.details.empty())
             {
-                Button(idManager.AllocateDynamicID("message_box_details_toggle"),
+                const ID toggleID = idManager.AllocateDynamicID("message_box_details_toggle");
+                controls.push_back(toggleID);
+                Button(toggleID,
                        { state.detailsOpen ? theme.dropdownArrowIcon : theme.chevronRightIcon, "Details" },
                        [this, id] { auto& s = guiStateManager.GetElementDataStore().GetOrCreate<MessageDialogState>(id); s.detailsOpen = !s.detailsOpen; },
                        theme.messageBoxDetailsToggleStyleRef, LayoutOverride{}.NoGrow());
@@ -146,11 +191,7 @@ namespace tachyon
         EndHorizontal();
 
         // Footer: left-aligned buttons, then the rest on the right. Each button's first letter is
-        // its Alt mnemonic (underlined); Esc chooses the cancel button.
-        std::vector<char> mnemonics(static_cast<size_t>(count));
-        for (int i = 0; i < count; ++i)
-            mnemonics[size_t(i)] = desc.buttons[size_t(i)].label.empty() ? 0
-                                 : char(std::tolower(static_cast<unsigned char>(desc.buttons[size_t(i)].label[0])));
+        // its Alt mnemonic, underlined (the keys are handled above).
         m_mnemonicStyles.clear();
         m_mnemonicStyles.reserve(size_t(count));
         BeginHorizontal(idManager.AllocateDynamicID("message_box_footer"), theme.dialogFooterStyleRef, LayoutOverride{}.NoShrink());
@@ -170,20 +211,8 @@ namespace tachyon
                 { .type = ContentRun::Text, .text = label.substr(0, label.empty() ? 0 : 1), .textStyleOverride = &underlined },
                 { .type = ContentRun::Text, .text = label.empty() ? label : label.substr(1) },
             };
-            auto click = tachyon::MakeButtonHandler(guiStateManager, [choose, i] { choose(i); });
             RegisterControl(Element{ .id = bid,
-                .eventHandler = [click, choose, cancelButton, mnemonics](ElementEvent&& event) -> bool
-                {
-                    if (event.type == EventType::KeyDown)
-                    {
-                        if (event.state.lastKey == KeyCode::Escape) { choose(cancelButton); return true; }
-                        if ((event.state.modifiers & KeyModifier::Alt) != KeyModifier::None)
-                            if (const char letter = KeyLetter(event.state.lastKey))
-                                for (size_t m = 0; m < mnemonics.size(); ++m)
-                                    if (mnemonics[m] == letter) { choose(int(m)); return true; }
-                    }
-                    return click(std::move(event));
-                },
+                .eventHandler = tachyon::MakeButtonHandler(guiStateManager, [choose, i] { choose(i); }),
                 .styleRef = style },
                 [this, runs](Element& e) mutable { return textSystem->RegisterRichText(e.id, std::span<ContentRun>(runs), e.styleRef, e.state); },
                 LayoutOverride{});
@@ -195,6 +224,7 @@ namespace tachyon
             if (!desc.buttons[size_t(i)].alignLeft) emitButton(i);
         EndHorizontal();
 
+        store.GetOrCreate<MessageDialogState>(id).controls = std::move(controls);
         if (pushed) (void)idManager.PopParent();
         EndWindow();
         return -1;

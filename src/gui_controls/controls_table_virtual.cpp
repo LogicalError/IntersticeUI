@@ -79,10 +79,73 @@ namespace tachyon
                 if (columns[i].column.locked) { maxTarget = i - 1; break; }
         }
 
+        // Sorting and moving the column, by mouse or keyboard.
+        auto sortBy = [statePtr, colIdx]
+        {
+            if (statePtr->sortColumn == colIdx)
+                statePtr->sortDescending = !statePtr->sortDescending;
+            else
+            {
+                statePtr->sortColumn     = colIdx;
+                statePtr->sortDescending = false;
+            }
+        };
+        auto moveColumn = [this, statePtr](int from, int to)
+        {
+            TableState::ReorderColumnsFn* onReorder = statePtr->onReorderColumns.get();
+            if (from == to || !onReorder || !*onReorder)
+                return false;
+            (*onReorder)(from, to);
+            // Rotate the column-indexed state the same way so it follows its column.
+            auto applyRotate = [from, to](int idx) {
+                if (idx == from) return to;
+                if (from < to && idx > from && idx <= to) return idx - 1;
+                if (from > to && idx >= to && idx < from) return idx + 1;
+                return idx;
+            };
+            if (statePtr->sortColumn >= 0)
+                statePtr->sortColumn = applyRotate(statePtr->sortColumn);
+            statePtr->selectedColumn = applyRotate(statePtr->selectedColumn);
+            // Widths belong to columns as well.
+            auto& widths = statePtr->columnWidths;
+            if (from < int(widths.size()) && to < int(widths.size()))
+            {
+                if (from < to) std::rotate(widths.begin() + from, widths.begin() + from + 1, widths.begin() + to + 1);
+                else           std::rotate(widths.begin() + to, widths.begin() + from, widths.begin() + from + 1);
+            }
+            transitionManager.Clear();
+            return true;
+        };
+        // With the header focused: Space or Enter sorts by it, Alt+Left / Right moves the
+        // column (as Alt + an arrow moves any reorderable item), the focus going with it
+        // (header IDs go by position).
+        const ID leftHeaderID  = isReorderable && colIdx - 1 >= minTarget ? columns[colIdx - 1].internal.headerCellID : tachyon::ID::Invalid();
+        const ID rightHeaderID = isReorderable && colIdx + 1 <= maxTarget ? columns[colIdx + 1].internal.headerCellID : tachyon::ID::Invalid();
+        auto headerKeys = [this, colIdx, isSortable, sortBy, moveColumn, leftHeaderID, rightHeaderID](const ElementEvent& event) -> bool
+        {
+            if (event.type != tachyon::EventType::KeyDown || guiStateManager.Interaction().GetFocusedID() != event.id)
+                return false;
+            if (isSortable && IsActivationKey(event))
+            {
+                sortBy();
+                return true;
+            }
+            const bool alt  = (event.state.modifiers & KeyModifier::Alt) != KeyModifier::None;
+            const bool left = event.state.lastKey == tachyon::KeyCode::Left, right = event.state.lastKey == tachyon::KeyCode::Right;
+            if (alt && (left || right))
+            {
+                const ID target = left ? leftHeaderID : rightHeaderID;
+                if (target != tachyon::ID::Invalid() && moveColumn(colIdx, left ? colIdx - 1 : colIdx + 1))
+                    guiStateManager.Interaction().SetFocusID(target);
+                return true;
+            }
+            return false;
+        };
+
         if (isReorderable)
         {
             cell.eventHandler = [this, statePtr, tableID, colIdx, isSortable, minTarget, maxTarget,
-                                 sectionIdx, colCount]
+                                 sectionIdx, colCount, sortBy, moveColumn, headerKeys]
                 (ElementEvent&& event) -> bool
             {
                 auto& drag = m_columnDrag;
@@ -91,6 +154,8 @@ namespace tachyon
                     case tachyon::EventType::MouseDown:
                     {
                         if (!event.state.LeftPressed()) return false;
+                        guiStateManager.Interaction().SetFocusID(event.id);
+                        guiStateManager.TextEditorFocus().Clear();
                         drag = {};
                         drag.tableID   = tableID;
                         drag.fromCol   = colIdx;
@@ -182,47 +247,18 @@ namespace tachyon
                         const bool  committed = drag.active;
                         const int   from      = drag.fromCol;
                         const int   to        = drag.toCol;
-                        // Snapshot the callback before clearing drag state (owned by TableState).
-                        TableState::ReorderColumnsFn* onReorder = statePtr->onReorderColumns.get();
                         drag = {};
                         guiStateManager.Interaction().ReleaseCaptureID();
                         if (committed)
                         {
-                            if (from != to && onReorder && *onReorder)
+                            if (moveColumn(from, to))
                             {
-                                (*onReorder)(from, to);
-                                // Rotate the column-indexed state the same way so it follows its column.
-                                auto applyRotate = [from, to](int idx) {
-                                    if (idx == from) return to;
-                                    if (from < to && idx > from && idx <= to) return idx - 1;
-                                    if (from > to && idx >= to && idx < from) return idx + 1;
-                                    return idx;
-                                };
-                                if (statePtr->sortColumn >= 0)
-                                    statePtr->sortColumn = applyRotate(statePtr->sortColumn);
-                                statePtr->selectedColumn = applyRotate(statePtr->selectedColumn);
-                                // Widths belong to columns as well.
-                                auto& widths = statePtr->columnWidths;
-                                if (from < int(widths.size()) && to < int(widths.size()))
-                                {
-                                    if (from < to) std::rotate(widths.begin() + from, widths.begin() + from + 1, widths.begin() + to + 1);
-                                    else           std::rotate(widths.begin() + to, widths.begin() + from, widths.begin() + from + 1);
-                                }
                                 guiStateManager.Interaction().SetFocusID(tachyon::ID::Invalid());
                                 guiStateManager.TextEditorFocus().Clear();
-                                transitionManager.Clear();
                             }
                         }
                         else if (isSortable)
-                        {
-                            if (statePtr->sortColumn == colIdx)
-                                statePtr->sortDescending = !statePtr->sortDescending;
-                            else
-                            {
-                                statePtr->sortColumn     = colIdx;
-                                statePtr->sortDescending = false;
-                            }
-                        }
+                            sortBy();
                         return true;
                     }
 
@@ -235,7 +271,7 @@ namespace tachyon
                             guiStateManager.Interaction().ReleaseCaptureID();
                             return true;
                         }
-                        break;
+                        return headerKeys(event);
                     }
 
                     default: break;
@@ -245,21 +281,23 @@ namespace tachyon
         }
         else if (isSortable)
         {
-            cell.eventHandler = [statePtr, colIdx](ElementEvent&& event) -> bool
+            cell.eventHandler = [this, sortBy, headerKeys](ElementEvent&& event) -> bool
             {
                 if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
-                    if (statePtr->sortColumn == colIdx)
-                        statePtr->sortDescending = !statePtr->sortDescending;
-                    else
-                    {
-                        statePtr->sortColumn     = colIdx;
-                        statePtr->sortDescending = false;
-                    }
+                    guiStateManager.Interaction().SetFocusID(event.id);
+                    guiStateManager.TextEditorFocus().Clear();
+                    sortBy();
                     return true;
                 }
-                return false;
+                return headerKeys(event);
             };
+        }
+        // A header that sorts or moves is a control: a Tab stop that shows the focus.
+        if (isInteractive)
+        {
+            cell.flags |= ElementFlags::IsControl;
+            RegisterTabStop(cellID);
         }
 
         const GridTrack track = ComputeColumnTrack(styleManager,

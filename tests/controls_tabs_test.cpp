@@ -348,6 +348,84 @@ namespace tachyon
             EXPECT_EQ(selected, 1);
         }
 
+        // A click focuses the tab, so the arrow keys go on from the one clicked.
+        TEST_F(TabKeyboardTest, AClickedTabTakesTheFocus)
+        {
+            selected = 0;
+            Frame();
+            const std::vector<ID> tabs = EmitTabBar(selected, 3);
+            ClickTabBody(tabs[1]);
+            Frame();
+            Frame();
+            EXPECT_EQ(selected, 1);
+            EXPECT_TRUE(FocusIsOnATab());
+            Press(KeyCode::Right);
+            EXPECT_EQ(selected, 2);
+        }
+
+        // Ctrl+W and Ctrl+F4 close the focused tab, as "Close Panel" does.
+        TEST_F(TabKeyboardTest, CtrlWClosesTheFocusedTab)
+        {
+            for (const KeyCode key : { KeyCode::KeyW, KeyCode::F4 })
+            {
+                int closed = -1;
+                auto frame = [&] { EmitTabBar(selected, 3, [&](int i) { closed = i; }); };
+                frame();
+                frame();
+                app.InjectKey(KeyCode::Tab);
+                frame();
+                frame();
+                ASSERT_TRUE(FocusIsOnATab());
+                app.InjectKey(key, KeyAction::KeyDown, KeyModifier::Control);
+                frame();
+                EXPECT_EQ(closed, 1) << int(key);
+                app.guiStateManager.Interaction().SetFocusID(ID::Invalid());
+                frame();
+            }
+        }
+
+        // Alt+Right / Left moves the focused tab; the focus stays on it.
+        TEST_F(TabKeyboardTest, AltArrowsMoveTheFocusedTab)
+        {
+            std::vector<std::string> names{ "One", "Two", "Three" };
+            std::vector<ID> ids;
+            for (int i = 0; i < 3; ++i) ids.push_back(app.idManager.CreateStaticID());
+            auto frame = [&] {
+                app.Frame([&] {
+                    app.BeginRootWindow();
+                    auto onReorder = [&](int from, int to) {
+                        std::string n = names[size_t(from)]; names.erase(names.begin() + from); names.insert(names.begin() + to, n);
+                        ID id = ids[size_t(from)];          ids.erase(ids.begin() + from);     ids.insert(ids.begin() + to, id);
+                        if (selected == from) selected = to;
+                    };
+                    if (app.BeginTabBar(barID, &selected, onReorder, nullptr, nullptr, nullptr, StyleRef{}, LayoutOverride{}.Size(600, 40)))
+                    {
+                        for (int i = 0; i < 3; ++i)
+                            app.Tab(ids[size_t(i)], std::string_view(names[size_t(i)]), LayoutOverride::Auto());
+                        app.EndTabBar();
+                    }
+                    app.EndRootWindow();
+                });
+            };
+            frame();
+            frame();
+            app.InjectKey(KeyCode::Tab);
+            frame();
+            frame();
+            ASSERT_TRUE(FocusIsOnATab());
+            const ID focusedTab = Focused();
+            app.InjectKey(KeyCode::Right, KeyAction::KeyDown, KeyModifier::Alt);
+            frame();
+            frame();
+            EXPECT_EQ(names, (std::vector<std::string>{ "One", "Three", "Two" }));
+            EXPECT_EQ(selected, 2) << "Alt+Right moved it rather than selecting the next";
+            EXPECT_EQ(Focused(), focusedTab) << "the tab's IDs go with it, so does the focus";
+            app.InjectKey(KeyCode::Left, KeyAction::KeyDown, KeyModifier::Alt);
+            frame();
+            frame();
+            EXPECT_EQ(names, (std::vector<std::string>{ "One", "Two", "Three" }));
+        }
+
         // ---- Tabs that don't fit -------------------------------------------------
 
         // A bar of `count` tabs named "Panel 1".. in a bar `width` wide: the ones that fit are

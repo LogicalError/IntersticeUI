@@ -101,6 +101,57 @@ namespace
         EXPECT_EQ(choice, 1);
     }
 
+    // Tab goes through every control in the dialog, and the focus stays where Tab put it;
+    // Esc cancels wherever the focus is in the dialog.
+    TEST_F(MessageDialogTest, TabReachesTheDialogsOtherControls)
+    {
+        static constexpr MessageButton kButtons[] = { { .label = "Cancel" }, { .label = "Quit" } };
+        bool dontAsk = false;
+        int choice = -1;
+        auto emit = [&] {
+            app.Frame([&] {
+                app.BeginRootWindow({ 1200, 800 });
+                choice = app.MessageDialog(dialogID, MessageDialogDesc{
+                    .title = "Quit Test?", .message = "Running tasks will be stopped.",
+                    .buttons = kButtons, .defaultButton = 0, .cancelButton = 0, .dontAskAgain = &dontAsk, .details = "Task 3 of 5" });
+                app.EndRootWindow();
+            });
+        };
+        app.activeWindow = dialogID;   // the modal dialog has the keyboard
+        emit();
+        emit();
+        const ID cancel = FindByStyle(app.theme.dialogButtonStyleRef);
+        ASSERT_EQ(app.guiStateManager.Interaction().GetFocusedID(), cancel);
+
+        // Round the dialog: every control reached once, none of them pulled back.
+        std::vector<ID> reached;
+        for (int i = 0; i < 8; ++i)
+        {
+            app.InjectKey(KeyCode::Tab);
+            emit();
+            emit();
+            const ID now = app.guiStateManager.Interaction().GetFocusedID();
+            if (std::find(reached.begin(), reached.end(), now) == reached.end())
+                reached.push_back(now);
+        }
+        EXPECT_GE(reached.size(), 5u) << "close, don't ask again, details and both buttons";
+
+        // Focus on the checkbox: Esc still cancels.
+        const ID dontAskID = app.FindByText("Don't ask again");
+        ASSERT_NE(dontAskID, ID::Invalid());
+        for (int i = 0; i < 8 && (app.guiStateManager.GetCurrentState(dontAskID) & ElementState::Focused) == ElementState::None; ++i)
+        {
+            app.InjectKey(KeyCode::Tab);
+            emit();
+            emit();
+        }
+        app.InjectKey(KeyCode::Escape);
+        emit();
+        if (choice < 0) emit();
+        EXPECT_EQ(choice, 0);
+        EXPECT_FALSE(dontAsk) << "Esc didn't reach the checkbox";
+    }
+
     // The dialog is its own window over the one it's asked from: it takes no room in that
     // window's layout, and dims it (the window's scrim draw) only while asking.
     TEST_F(MessageDialogTest, TheDialogTakesNoRoomAndDimsItsWindow)

@@ -152,7 +152,7 @@ namespace tachyon
     // GradientField - gradient swatch + editor popup
     // ---------------------------------------------------------------------------
 
-    bool GUIApplication::GradientField(ID id, Gradient& value, LayoutOverride&& constraints)
+    bool GUIApplication::GradientField(ID id, Gradient& value, StyleRef style, LayoutOverride&& constraints)
     {
         if (value.stopCount > Gradient::kMaxStops)
         {
@@ -165,6 +165,12 @@ namespace tachyon
         const ID swatchID = id;
         const std::string context = PendingLabelText();
         auto& ge = m_gradientEditorSub->State();
+        // Escape is Cancel, and the keyboard goes back to the swatch.
+        if (ge.triggerID == swatchID && ge.closeRequest == GradientEditorState::CloseRequest::None && TakeEscapeFor(ge.windowID, swatchID))
+        {
+            ge.closeRequest = GradientEditorState::CloseRequest::Cancel;
+            guiStateManager.Interaction().SetFocusID(swatchID);
+        }
         // OK keeps the gradient; Cancel and the close button restore the original.
         if (ge.triggerID == swatchID && ge.closeRequest != GradientEditorState::CloseRequest::None)
         {
@@ -182,10 +188,11 @@ namespace tachyon
 
         Element swatch {};
         swatch.id              = swatchID;
-        swatch.styleRef        = theme.gradientSwatchStyleRef;
+        swatch.styleRef        = style;
         swatch.state           = guiStateManager.GetCurrentState(swatchID);
         swatch.colorStyleIndex = swatchStyle;
-        swatch.eventHandler = MakeButtonHandler([this, &value, swatchID, editorIsOpen, context]()
+        // A copy: the editor starts from the gradient as drawn, whatever becomes of the caller's.
+        swatch.eventHandler = MakeButtonHandler([this, value, swatchID, editorIsOpen, context]()
         {
             auto& ge = m_gradientEditorSub->State();
             if (editorIsOpen)
@@ -253,7 +260,9 @@ namespace tachyon
             EndWindow();
         }
 
-        return !(value == before);
+        const bool changed = !(value == before);
+        guiStateManager.SetModified(changed);
+        return changed;
     }
 
     // ---------------------------------------------------------------------------

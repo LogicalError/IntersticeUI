@@ -172,6 +172,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
                                static_cast<float>(m_timeMs) / 1000.0f,
                                hasMouseMove, hasMousePress, hasKeyboard, hasScroll,
                                menuManager.IsOpen());
+    NoteTargetAncestors();
     textSystem->BeginFrame(m_mousePos, m_buttonsHeld, m_timeMs);
 
     VERIFY(elementStorage.BeginConstruction());
@@ -230,7 +231,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     inputManager->UpdatePreHover(guiStateManager);
     tachyon::FrameInput frameInput
     {
-        .activeWindowID   = m_rootWindowID,
+        .activeWindowID   = activeWindow != tachyon::ID::Invalid() ? activeWindow : m_rootWindowID,
         .windowUnderMouse = m_rootWindowID,
         .mousePos         = m_mousePos,
         .mouseButtons     = m_buttonsHeld,

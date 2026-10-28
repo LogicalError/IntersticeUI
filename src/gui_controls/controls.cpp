@@ -127,17 +127,18 @@ namespace tachyon
         return modified;
     }
 
-    bool GUIApplication::SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, LayoutOverride&& constraints, ID* outFieldID)
+    bool GUIApplication::SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior, StyleRef style, LayoutOverride&& constraints, ID* outFieldID)
     {
         // The container draws the textbox chrome and takes the inner field's
         // hover/focus state (PropagatesDescendantState); the field itself is borderless.
         tachyon::Element container{};
         container.id       = id;
-        container.styleRef = theme.searchTextboxStyleRef;
+        container.styleRef = style;
         container.flags    = ElementFlags::PropagatesDescendantState;
         container.state    = guiStateManager.GetCurrentState(id);
         RegisterElement(std::move(container), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);   // the parts' IDs under the search's
 
         {
             const tachyon::ID iconID = idManager.AllocateDynamicID("searchIcon");
@@ -159,6 +160,7 @@ namespace tachyon
                                     theme.searchTextboxFieldStyleRef,
                                     tachyon::LayoutOverride{}.FlexGrow(1));
 
+        if (pushed) (void)idManager.PopParent();
         VERIFY(elementStorage.EndChildren());
         return modified;
     }
@@ -214,7 +216,7 @@ namespace tachyon
         }
     }
 
-    void GUIApplication::Label(ID id, std::string_view text, std::string_view caption, LayoutOverride&& constraints)
+    void GUIApplication::Label(ID id, std::string_view text, std::string_view caption, StyleRef style, LayoutOverride&& constraints)
     {
         // A label container (the group label, with its width and sizer) holding the title
         // and the caption, at the top of its row.
@@ -232,11 +234,13 @@ namespace tachyon
                       &styleManager, theme.groupLabelStyleRef });
         }
         const auto ref = RegisterElement(tachyon::Element{ .id = id, .eventHandler = std::move(handler),
-                                                              .styleRef = theme.groupLabelTopStyleRef, .flags = ElementFlags::IsLabel },
+                                                              .styleRef = style, .flags = ElementFlags::IsLabel },
                                          std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);   // the parts' IDs under the label's
         Text(idManager.AllocateDynamicID("label_title"), text, theme.groupLabelTitleStyleRef);
         Text(idManager.AllocateDynamicID("label_caption"), caption, theme.groupLabelCaptionStyleRef);
+        if (pushed) (void)idManager.PopParent();
         VERIFY(elementStorage.EndChildren());
         if (gs && gs->resizable)
             m_labelGroup->AddDragger(ref);
@@ -444,8 +448,8 @@ namespace tachyon
     bool GUIApplication::Breadcrumb(ID id, std::span<const std::string> segments, std::function<void(int)> onSelect, StyleRef style, LayoutOverride&& constraints)
     {
         bool clicked = false;
-        if (!BeginHorizontal(id, style, std::move(constraints)))
-            return false;
+        // The trail takes its segments' states, so a tooltip or context menu on it covers them.
+        BeginFieldBox(id, style, std::move(constraints));
         // Under the trail's own ID, so the segment IDs don't depend on what came before.
         [[maybe_unused]] const bool pushed = idManager.PushParent(id);
         const int count = int(segments.size());
@@ -462,7 +466,7 @@ namespace tachyon
         }
         if (pushed)
             (void)idManager.PopParent();
-        EndHorizontal();
+        EndFieldBox();
         return clicked;
     }
 
@@ -476,9 +480,9 @@ namespace tachyon
         EndHorizontal();
     }
 
-    void GUIApplication::StatusText(ID id, std::string_view text, LayoutOverride&& constraints)
+    void GUIApplication::StatusText(ID id, std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
-        Text(id, text, theme.statusTextStyleRef, std::move(constraints));
+        Text(id, text, style, std::move(constraints));
     }
 
     namespace
@@ -547,7 +551,7 @@ namespace tachyon
     }
 
     bool GUIApplication::AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions,
-                                           LayoutOverride&& constraints)
+                                           StyleRef style, LayoutOverride&& constraints)
     {
         AutocompleteState& state = m_autocomplete[id];
         if (state.listWindowID == ID::Invalid())
@@ -601,7 +605,7 @@ namespace tachyon
         bool modified = false;
         const ElementRef fieldRef = RegisterControl(
             tachyon::Element{ .id = id, .eventHandler = MakeSuggestionFieldHandler(guiStateManager, move, enter, escape, open),
-                              .styleRef = theme.controls->textbox, .flags = ElementFlags::DoNotMeasureText },
+                              .styleRef = style, .flags = ElementFlags::DoNotMeasureText },
             [this, &modified, &value](tachyon::Element& element)
             {
                 return textSystem->RegisterEditableText(element.id, value, TextEditBehavior::ContinuousUpdate,
@@ -631,7 +635,7 @@ namespace tachyon
         return typed || picked;
     }
 
-    bool GUIApplication::CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints)
+    bool GUIApplication::CommandSearch(ID id, CommandSearchState& state, StyleRef style, LayoutOverride&& constraints)
     {
         const bool ran = std::exchange(state.ranCommand, false);
         if (state.listWindowID == ID::Invalid())
@@ -696,7 +700,7 @@ namespace tachyon
         // The box: a click anywhere in it starts typing.
         tachyon::Element box{};
         box.id           = id;
-        box.styleRef     = theme.commandSearchStyleRef;
+        box.styleRef     = style;
         box.flags        = ElementFlags::PropagatesDescendantState;
         box.state        = guiStateManager.GetCurrentState(id);
         box.eventHandler = [this, fieldID](ElementEvent&& event) -> bool
@@ -769,7 +773,7 @@ namespace tachyon
         return textID != TextID::Invalid ? std::string(textSystem->GetText(textID)) : std::string{};
     }
 
-    bool GUIApplication::Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, LayoutOverride&& constraints)
+    bool GUIApplication::Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
     {
         // Selected while checked, so the box and label restyle with it.
         if (value) guiStateManager.Construction().PushSelected();
@@ -777,10 +781,12 @@ namespace tachyon
         tachyon::Element control{};
         control.id           = id;
         control.state        = state;
-        control.styleRef     = theme.checkboxStyleRef;
+        control.styleRef     = style;
         control.eventHandler = tachyon::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
         RegisterControl(std::move(control), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
+        // Under the checkbox's own ID, so its parts' IDs don't depend on what came before.
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
         {
             const tachyon::ElementState partState = value ? (state | tachyon::ElementState::Selected) : state;
             tachyon::Element box{};
@@ -801,6 +807,7 @@ namespace tachyon
                 RegisterElement(std::move(label), LayoutOverride{});
             }
         }
+        if (pushed) (void)idManager.PopParent();
         VERIFY(elementStorage.EndChildren());
         if (value) guiStateManager.Construction().PopSelected();
         const bool modified = guiStateManager.Interaction().HasBeenClicked(id);
@@ -810,6 +817,9 @@ namespace tachyon
 
     bool GUIApplication::Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style, LayoutOverride&& constraints)
     {
+        // Its parts' IDs go under the switch's own, so they don't depend on what came before.
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+
         // Inside a node row it sits at the right, by its socket, where fields end.
         if (nodeRowFieldMinWidth > 0)
         {
@@ -869,6 +879,7 @@ namespace tachyon
                 RegisterElement(std::move(label), LayoutOverride{});
             }
         }
+        if (pushed) (void)idManager.PopParent();
         VERIFY(elementStorage.EndChildren());
 
         if (value) guiStateManager.Construction().PopSelected();
@@ -1205,7 +1216,7 @@ namespace tachyon
     // numeric Field. Optional `label` is rendered as text overlay on the bar.
     // ---------------------------------------------------------------------------
     bool GUIApplication::SliderField(ID id, float& value, float minVal, float maxVal,
-                                  std::string_view text, LayoutOverride&& constraints)
+                                  std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         if (maxVal < minVal) std::swap(minVal, maxVal);
         value = std::clamp(value, minVal, maxVal);
@@ -1274,9 +1285,10 @@ namespace tachyon
             tachyon::Element track{};
             track.id           = id;
             track.state        = guiStateManager.GetCurrentState(id);
-            track.styleRef     = theme.sliderFieldTrackStyleRef;
-            track.eventHandler = MakeSliderHandler(guiStateManager, elementStorage, &value, trackWidth,
-                                                   /*onChanged*/ nullptr, minVal, maxVal);
+            track.styleRef     = style;
+            track.eventHandler = ReportingChanges(guiStateManager, &value,
+                                                  MakeSliderHandler(guiStateManager, elementStorage, &value, trackWidth,
+                                                                    /*onChanged*/ nullptr, minVal, maxVal));
             const auto trackRef = RegisterControl(std::move(track),
                                                   std::move(constraints).FlexGrow(1));
 
@@ -1326,6 +1338,7 @@ namespace tachyon
             // Text overlays as flex children, centered by the track's justify-content.
             // NoInput so clicks pass through to the track's slider handler.
             VERIFY(elementStorage.BeginChildren());
+            [[maybe_unused]] const bool pushed = idManager.PushParent(id);   // the parts' IDs under the field's
             if (!text.empty())
             {
                 const tachyon::ID lblID = idManager.AllocateDynamicID("slider_field_label");
@@ -1356,10 +1369,13 @@ namespace tachyon
                     },
                     LayoutOverride::Auto());
             }
+            if (pushed) (void)idManager.PopParent();
             VERIFY(elementStorage.EndChildren());
         }
 
-        return textModified || (value != before);
+        const bool changed = textModified || value != before || guiStateManager.Interaction().HasBeenClicked(id);
+        guiStateManager.SetModified(changed);
+        return changed;
     }
 
     namespace
@@ -1436,7 +1452,7 @@ namespace tachyon
     // Integer SliderField - same bar as the float version, drag-only (a click just focuses).
     // ---------------------------------------------------------------------------
     bool GUIApplication::SliderField(ID id, int& value, int minVal, int maxVal,
-                                     std::string_view text, LayoutOverride&& constraints)
+                                     std::string_view text, StyleRef style, LayoutOverride&& constraints)
     {
         if (maxVal < minVal) std::swap(minVal, maxVal);
         value = std::clamp(value, minVal, maxVal);
@@ -1454,9 +1470,10 @@ namespace tachyon
         tachyon::Element track{};
         track.id       = id;
         track.state    = guiStateManager.GetCurrentState(id);
-        track.styleRef = theme.sliderFieldTrackStyleRef;
-        track.eventHandler = MakeIntSliderDrag(guiStateManager, elementStorage,
-                                               valuePtr, minVal, maxVal, trackWidth);
+        track.styleRef = style;
+        track.eventHandler = ReportingChanges(guiStateManager, valuePtr,
+                                              MakeIntSliderDrag(guiStateManager, elementStorage,
+                                                                valuePtr, minVal, maxVal, trackWidth));
         const auto trackRef = RegisterControl(std::move(track), std::move(constraints).FlexGrow(1));
 
         const auto bgStyle    = theme.sliderFieldBgStyleRef.visualBoxStyleIndex;
@@ -1487,6 +1504,7 @@ namespace tachyon
             });
 
         VERIFY(elementStorage.BeginChildren());
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);   // the parts' IDs under the field's
         if (!text.empty())
         {
             const tachyon::ID lblID = idManager.AllocateDynamicID("slider_field_label");
@@ -1515,16 +1533,19 @@ namespace tachyon
                 },
                 LayoutOverride::Auto());
         }
+        if (pushed) (void)idManager.PopParent();
         VERIFY(elementStorage.EndChildren());
 
-        return value != before;
+        const bool changed = value != before || guiStateManager.Interaction().HasBeenClicked(id);
+        guiStateManager.SetModified(changed);
+        return changed;
     }
 
     // ---------------------------------------------------------------------------
     // Slider - groove + knob without value text; drag-only, integer-valued.
     // ---------------------------------------------------------------------------
     bool GUIApplication::Slider(ID id, int& value, int minVal, int maxVal,
-                                LayoutOverride&& constraints)
+                                StyleRef style, LayoutOverride&& constraints)
     {
         if (maxVal < minVal) std::swap(minVal, maxVal);
         value = std::clamp(value, minVal, maxVal);
@@ -1541,9 +1562,10 @@ namespace tachyon
         tachyon::Element track{};
         track.id           = id;
         track.state        = guiStateManager.GetCurrentState(id);
-        track.styleRef     = theme.sliderStyleRef;
-        track.eventHandler = MakeIntSliderDrag(guiStateManager, elementStorage,
-                                               &value, minVal, maxVal, trackWidth);
+        track.styleRef     = style;
+        track.eventHandler = ReportingChanges(guiStateManager, &value,
+                                              MakeIntSliderDrag(guiStateManager, elementStorage,
+                                                                &value, minVal, maxVal, trackWidth));
         const auto trackRef = RegisterControl(std::move(track), std::move(constraints));
 
         const auto grooveStyle = theme.sliderGrooveStyleRef.visualBoxStyleIndex;
@@ -1585,6 +1607,8 @@ namespace tachyon
                               knobStyle, trackState);
             });
 
-        return value != before;
+        const bool changed = value != before || guiStateManager.Interaction().HasBeenClicked(id);
+        guiStateManager.SetModified(changed);
+        return changed;
     }
 }

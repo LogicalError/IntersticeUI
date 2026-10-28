@@ -10,6 +10,7 @@
 #include "headless_gui_app.h"
 
 #include <gui_core/gui_id.h>
+#include <gui_controls/gui_node_view_helpers.h>
 
 #include <algorithm>
 #include <unordered_set>
@@ -315,6 +316,49 @@ namespace tachyon
             // The default view editMode is Default, so this just verifies the
             // path runs without disturbing the mode.
             EXPECT_EQ(app.commandManager.GetMode(), CommandMode::Default);
+        }
+
+        // With the canvas focused, the keys do what the mouse does.
+        TEST_F(NodeViewControlTest, TheKeyboardPansZoomsSelectsAndMovesNodes)
+        {
+            Settle();
+            app.ClickAt(CanvasPoint());   // focuses the canvas, selects nothing
+            Settle();
+            auto press = [&](KeyCode key, KeyModifier mods = KeyModifier::None) {
+                app.InjectKey(key, KeyAction::KeyDown, mods);
+                Frame();
+            };
+
+            const float panBefore = view.transform.r0.z;
+            press(KeyCode::Right);
+            EXPECT_LT(view.transform.r0.z, panBefore) << "Right with nothing selected pans";
+
+            press(KeyCode::Equals);
+            EXPECT_GT(NodeViewZoom(view), 0.99f);
+            view.transform = tachyon::float3x2::Scale(0.5f);
+            press(KeyCode::Equals);
+            EXPECT_NEAR(NodeViewZoom(view), 0.55f, 1e-3f) << "+ zooms in";
+            press(KeyCode::Minus);
+            EXPECT_NEAR(NodeViewZoom(view), 0.5f, 1e-3f) << "- zooms out";
+
+            press(KeyCode::KeyA, KeyModifier::Control);
+            EXPECT_EQ(view.selectedNodeIDs.size(), 2u) << "Ctrl+A selects every node";
+
+            const int2 a = view.nodes[0].pos, b = view.nodes[1].pos;
+            const int32_t grid = app.theme.nodeGridSize;
+            press(KeyCode::Down);
+            EXPECT_EQ(view.nodes[0].pos, (int2{ a.x, a.y + grid })) << "Down moves the selected nodes a grid step";
+            EXPECT_EQ(view.nodes[1].pos, (int2{ b.x, b.y + grid }));
+            press(KeyCode::Left, KeyModifier::Shift);
+            EXPECT_EQ(view.nodes[0].pos, (int2{ a.x - 4 * grid, a.y + grid })) << "Shift: four steps";
+
+            press(KeyCode::Return);
+            EXPECT_TRUE(view.nodes[0].collapsed && view.nodes[1].collapsed) << "Enter collapses them";
+            press(KeyCode::Return);
+            EXPECT_FALSE(view.nodes[0].collapsed) << "and expands them";
+
+            press(KeyCode::Escape);
+            EXPECT_TRUE(view.selectedNodeIDs.empty()) << "Escape selects none";
         }
 
         // Tab reaches the fields of a node out of view, and the view pans to that node.

@@ -32,9 +32,8 @@ Field(notes, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
 A text field with a leading icon inside its border.
 
 ```cpp
-bool SearchField(ID id, std::string& value, IconID icon,
-                 TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate,
-                 LayoutOverride&& constraints = {});
+bool SearchField(ID id, std::string& value, IconID icon, TextEditBehavior textEditBehavior,
+                 StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Classes: `search-textbox`, `search-textbox-icon`, `search-textbox-field`.
@@ -45,7 +44,7 @@ A text field that lists matching suggestions under itself while it has the keybo
 
 ```cpp
 bool AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions,
-                       LayoutOverride&& constraints = {});
+                       StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Once something is typed, the list holds the suggestions that contain it, ignoring case, at
@@ -134,13 +133,14 @@ Classes: `typed-field`, `typed-field-input`, `typed-field-type`.
 
 A reorderable list over a `std::vector<T>`: each row has a grip, its index, the field
 (numbers with their type) and a remove button, with "Add item" after the rows. `T` is
-any type `Field` takes. `groupID` must be stable so the reorder state survives.
+any type `Field` takes. The ID must be the same every frame so the reorder state survives. Alt+Up /
+Down moves the row the focus is in, the focus going with it.
 
 ```cpp
 template<typename T>
-void Field(ID groupID, std::vector<T>& items, StyleRef style, LayoutOverride layoutOverride = {});
+void Field(ID id, std::vector<T>& items, StyleRef style, LayoutOverride&& constraints = {});
 template<typename T>
-void Field(ID groupID, std::vector<T>& items, LayoutOverride layoutOverride = {});
+void Field(ID id, std::vector<T>& items, LayoutOverride&& constraints = {});
 ```
 
 ```cpp
@@ -160,9 +160,9 @@ committed on Enter or focus loss (a rename onto an existing key is ignored).
 
 ```cpp
 template<typename V>
-void Field(std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride layoutOverride = {});
+void Field(ID id, std::vector<std::pair<std::string, V>>& items, StyleRef style, LayoutOverride&& constraints = {});
 template<typename V>
-void Field(std::unordered_map<std::string, V>& items, StyleRef style, LayoutOverride layoutOverride = {});
+void Field(ID id, std::unordered_map<std::string, V>& items, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
 Both also have a form without the style. Classes: `collection-area`,

@@ -208,10 +208,13 @@ namespace tachyon
             tachyon::Element
             {
                 .id       = bodyID,
-                .eventHandler = [this, id, barID, capturedIndex, selectedIndex](ElementEvent&& event) -> bool
+                .eventHandler = [this, id, barID, capturedIndex, selectedIndex, onClose](ElementEvent&& event) -> bool
                 {
                     if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                     {
+                        // A click focuses the tab, so the arrow keys go on from it.
+                        guiStateManager.Interaction().SetFocusID(event.id);
+                        guiStateManager.TextEditorFocus().Clear();
                         if (selectedIndex)
                             *selectedIndex = capturedIndex;
                         guiStateManager.Interaction().SetClicked(id);
@@ -220,6 +223,13 @@ namespace tachyon
                     if (event.type == tachyon::EventType::KeyDown &&
                         (guiStateManager.GetCurrentState(event.id) & ElementState::Focused) != ElementState::None)
                     {
+                        // Ctrl+W or Ctrl+F4 closes the focused tab, as "Close Panel" does.
+                        if (onClose && (event.state.modifiers & KeyModifier::Control) != KeyModifier::None &&
+                            (event.state.lastKey == KeyCode::KeyW || event.state.lastKey == KeyCode::F4))
+                        {
+                            onClose(capturedIndex);
+                            return true;
+                        }
                         auto& keys = guiStateManager.GetElementDataStore().GetOrCreate<TabBarMemory>(barID);
                         int next = capturedIndex;
                         switch (event.state.lastKey)

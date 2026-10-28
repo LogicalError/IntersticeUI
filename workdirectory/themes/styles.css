@@ -5293,7 +5293,8 @@
 }
 
 /* Tabs, rows and menu items sit flush with their neighbours: an outline inside them instead. */
-.tab:focus-visible, .title-bar-tab:focus-visible, .tab-overflow:focus-visible, .list-item:focus-visible, .list-item-row:focus-visible,
+.tab:focus-visible, .title-bar-tab:focus-visible, .tab-overflow:focus-visible, .table-header:focus-visible,
+.list-item:focus-visible, .list-item-row:focus-visible,
 .menu-item:focus-visible, .menu-item-row:focus-visible, .menu-bar-trigger:focus-visible,
 .title-bar-button:focus-visible, .title-bar-close-button:focus-visible,
 .color-picker-square:focus-visible, .gradient-editor-bar:focus-visible {

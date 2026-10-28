@@ -5,6 +5,43 @@
 
 namespace tachyon
 {
+    namespace
+    {
+        // The child positions from `itemRef` down to element `id`; false when it isn't in the item.
+        bool PathInItem(const ElementStorage& storage, ID id, ElementRef itemRef, std::vector<uint32_t>& path)
+        {
+            path.clear();
+            if (id == ID::Invalid() || !itemRef.IsValid())
+                return false;
+            ElementRef ref = storage.FindElementRefByID(id);
+            while (ref.IsValid() && !(ref.depth == itemRef.depth && ref.index == itemRef.index))
+            {
+                const ElementRef parent = storage.GetParentRef(ref);
+                if (!parent.IsValid() || parent.depth < itemRef.depth)
+                    return false;
+                path.push_back(ref.index - storage.GetChildRange(parent).begin);
+                ref = parent;
+            }
+            if (!ref.IsValid())
+                return false;
+            std::reverse(path.begin(), path.end());
+            return true;
+        }
+
+        // The element at `path` under `itemRef`; invalid when the item is shaped differently.
+        ElementRef AtPath(const ElementStorage& storage, ElementRef itemRef, const std::vector<uint32_t>& path)
+        {
+            ElementRef ref = itemRef;
+            for (const uint32_t p : path)
+            {
+                const IndexRange range = storage.GetChildRange(ref);
+                if (p >= range.Size())
+                    return ElementRef::Invalid();
+                ref = ElementRef{ ref.depth + 1, range.begin + p };
+            }
+            return ref;
+        }
+    }
 
 
     // ---------------------------------------------------------------------------
@@ -373,6 +410,33 @@ namespace tachyon
         auto& drag = m_reorderable->Drag();
         int itemIndex = m_reorderable->Construction().nextItemIndex - 1;
 
+        // Alt + an arrow along the group, with the focus in this item, moves the item: taken
+        // here, where the item's elements are known, and done in EndReorderableGroup.
+        auto& group = m_reorderable->Construction();
+        std::vector<uint32_t> focusPath;
+        if (group.onReorder && group.keyboardFrom < 0 && inputManager && !group.itemRefs.empty()
+            && PathInItem(elementStorage, guiStateManager.Interaction().GetFocusedID(), group.itemRefs.back(), focusPath))
+        {
+            const bool alongX = group.isWrapped || group.direction == ReorderDirection::Horizontal;
+            const bool alongY = group.isWrapped || group.direction == ReorderDirection::Vertical;
+            const auto& events = inputManager->GetRecordedEvents();
+            for (size_t e = 0; e < events.size() && group.keyboardFrom < 0; ++e)
+            {
+                const auto& event = events[e];
+                if (event.type != EventType::KeyDown || event.consumed || (event.state.modifiers & KeyModifier::Alt) == KeyModifier::None)
+                    continue;
+                const KeyCode key = event.state.lastKey;
+                const int step = (alongX && key == KeyCode::Left) || (alongY && key == KeyCode::Up)    ? -1
+                               : (alongX && key == KeyCode::Right) || (alongY && key == KeyCode::Down) ? +1 : 0;
+                if (step == 0)
+                    continue;
+                inputManager->ConsumeEvent(e);
+                group.keyboardFrom = itemIndex;
+                group.keyboardStep = step;
+                m_reorderable->FocusFollow() = { group.groupID, -1, guiStateManager.Interaction().GetFocusedID(), std::move(focusPath) };
+            }
+        }
+
         if (drag.isDragging && drag.dragActivated && drag.groupID == m_reorderable->Construction().groupID)
         {
             int from = drag.draggedIndex;
@@ -517,6 +581,38 @@ namespace tachyon
                 // Render dragged item on top
                 windowRegistry.MoveSubtreeToEnd(draggedRef);
             }
+        }
+
+        // The frame after a keyboard move: the focus stays in the moved item. Where the item's
+        // IDs go with it (tabs), it is already there; where they belong to the slot (list
+        // rows), it goes to the same place in the item's new slot.
+        auto& group  = m_reorderable->Construction();
+        auto& follow = m_reorderable->FocusFollow();
+        if (follow.groupID == group.groupID && follow.toSlot >= 0)
+        {
+            if (size_t(follow.toSlot) < group.itemRefs.size())
+            {
+                const ElementRef slot = group.itemRefs[size_t(follow.toSlot)];
+                std::vector<uint32_t> path;
+                if (!PathInItem(elementStorage, follow.focusID, slot, path))
+                    if (const ElementRef target = AtPath(elementStorage, slot, follow.path); target.IsValid())
+                        guiStateManager.Interaction().SetFocusID(elementStorage.GetElementUnsafe(target).id);
+            }
+            follow = {};
+        }
+
+        // A keyboard move, now the caller has built its items and can change its data.
+        if (group.keyboardFrom >= 0 && group.onReorder)
+        {
+            const int to = std::clamp(group.keyboardFrom + group.keyboardStep, 0, int(group.itemRefs.size()) - 1);
+            if (to != group.keyboardFrom)
+            {
+                follow.toSlot = to;
+                group.onReorder(group.keyboardFrom, to);
+                transitionManager.Clear();
+            }
+            else
+                follow = {};
         }
 
         m_reorderable->Construction() = {};

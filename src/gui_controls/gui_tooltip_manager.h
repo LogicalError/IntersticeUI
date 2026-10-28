@@ -2,6 +2,8 @@
 
 #include <gui_core/gui_id.h>
 
+#include <vector>
+
 namespace tachyon
 {
     /// @addtogroup controls_menus
@@ -18,8 +20,16 @@ namespace tachyon
         void BeginFrame(ID currentHoveredID, ID currentFocusedID, float elapsedTimeSecs,
                         bool hasMouseMove, bool hasMousePress, bool hasKeyboard, bool hasScroll, bool menuIsOpen);
 
-        /// True when the tooltip for `targetID` should be shown this frame; a true result
-        /// declares it, keeping it visible.
+        /// The element the tooltip is for: the hovered one, or the focused one after a Tab.
+        ID GetActiveTargetID() const { return m_activeTargetID; }
+        /// The elements that take the active target's states (PropagatesDescendantState); a
+        /// tooltip on any of them shows too. Call after BeginFrame.
+        void SetTargetAncestors(std::vector<ID> ancestors) { m_targetAncestors = std::move(ancestors); }
+
+        /// True when the tooltip for `targetID` should be shown this frame: it is the
+        /// active target or one around it, and no other tooltip was shown this frame, so
+        /// a control's own tooltip (declared first) wins over its container's. A true
+        /// result declares it, keeping it visible.
         bool ShouldShow(ID targetID);
 
         /// Call after OnGUI. Hides the tooltip if nothing declared it this frame.
@@ -30,6 +40,7 @@ namespace tachyon
 
     private:
         ID    m_activeTargetID   = ID::Invalid();
+        std::vector<ID> m_targetAncestors;
         ID    m_prevFocusedID    = ID::Invalid();
         float m_targetStartTime  = 0.0f;
         float m_currentTime      = 0.0f;

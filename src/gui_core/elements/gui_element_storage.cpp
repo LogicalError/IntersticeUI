@@ -87,6 +87,8 @@ namespace tachyon
 
         m_lastAddedRef = newChildRef;
         m_lastAddedID = GetElementUnsafe(newChildRef).id;
+        if ((GetElementUnsafe(newChildRef).flags & ElementFlags::IsWindow) == ElementFlags::None)
+            m_lastItemID = m_lastAddedID;
         m_childrenBegun = false;
 
         if (!m_idIndexStale)
@@ -247,7 +249,8 @@ namespace tachyon
         m_parentStack.push_back(ParentStackEntry
             {
                 .ref = parentRef,
-                .startChildIndex = startChildIndex
+                .startChildIndex = startChildIndex,
+                .itemBefore = m_lastItemID
             });
         return ElementStorageResult::Success;
     }
@@ -268,6 +271,10 @@ namespace tachyon
         HierarchyInfo* parentHierarchy = GetHierarchyInfoPtrUnsafe(entry.ref);
         parentHierarchy->childOffset = entry.startChildIndex;
         parentHierarchy->childCount = childCount;
+
+        // The parent, finished, is the item at its level; a window leaves the item as it was.
+        const Element& parent = GetElementUnsafe(entry.ref);
+        m_lastItemID = (parent.flags & ElementFlags::IsWindow) != ElementFlags::None ? entry.itemBefore : parent.id;
 
         // Prevents a second BeginChildren on the now-complete element.
         m_lastAddedRef = ElementRef::Invalid();
@@ -494,6 +501,7 @@ namespace tachyon
         m_usedDepthCount = 0;
         m_lastAddedRef = ElementRef::Invalid();
         m_lastAddedID = ID::Invalid();
+        m_lastItemID = ID::Invalid();
         m_childrenBegun = false;
         m_idIndex.clear();
         m_idIndexStale = false;

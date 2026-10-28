@@ -170,7 +170,11 @@ namespace tachyon
                                          || vts->iconSide == IconSide::Right);
             const int32_t iconSize = (vts && vts->iconSize > 0) ? vts->iconSize : styleManager.Px(16);
 
-            tachyon::ID boxID = idManager.AllocateDynamicID();
+            // The parts' IDs under the item's own, so they don't depend on what came before.
+            [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+            const tachyon::ID boxID      = idManager.AllocateDynamicID("rename_box");
+            const tachyon::ID iconElemID = idManager.AllocateDynamicID("rename_icon");
+            if (pushed) (void)idManager.PopParent();
             tachyon::Element box{};
             box.id       = boxID;
             box.styleRef = iconBeside ? theme.gridViewRenameListItemStyleRef
@@ -183,7 +187,6 @@ namespace tachyon
 
             if (icon != IconID::Invalid)
             {
-                tachyon::ID iconElemID = idManager.AllocateDynamicID();
                 tachyon::Element icn{};
                 icn.id       = iconElemID;
                 icn.iconID   = icon;

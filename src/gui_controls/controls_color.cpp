@@ -403,32 +403,61 @@ namespace tachyon
         // ---- Left: the square and the strips ----
         BeginHorizontal(idManager.AllocateDynamicID("cp_planes"), theme.colorPickerPlanesStyleRef, LayoutOverride{}.NoShrink());
         {
-            // One handler for the three: a press picks the target, the drag follows it.
-            auto planeHandler = [this](ColorPickerState::DragTarget target, ID id) {
-                return [this, target, id](ElementEvent&& event) -> bool {
+            // One handler for the three: a press picks the target, the drag follows it. With the
+            // focus, the arrows move the point (1%, with Shift 10%), Page Up / Down a strip's
+            // by 10% and Home / End to its ends. `at` is where the point is now, as fractions
+            // of the width and height.
+            auto planeHandler = [this](ColorPickerState::DragTarget target, ID id, float2 at) {
+                return [this, target, id, at](ElementEvent&& event) -> bool {
                     auto& cp = m_colorPickerSub->State();
-                    auto apply = [&]() {
-                        if (!event.rect || event.rect->rect.w <= 0 || event.rect->rect.h <= 0) return;
-                        const IntRect& r = event.rect->rect;
-                        const int2 c = event.LocalCursor(elementStorage);
-                        const float fx = float(c.x - r.x) / float(r.w);
-                        const float fy = std::clamp(float(c.y - r.y) / float(r.h), 0.0f, 1.0f);
-                        switch (cp.drag)
+                    auto applyAt = [&](float fx, float fy) {
+                        fy = std::clamp(fy, 0.0f, 1.0f);
+                        switch (target)
                         {
-                            case ColorPickerState::DragTarget::Square: ApplySquare(cp.activeSpace, fx, fy, cp.h, cp.s, cp.v); break;
+                            case ColorPickerState::DragTarget::Square: ApplySquare(cp.activeSpace, std::clamp(fx, 0.0f, 1.0f), fy, cp.h, cp.s, cp.v); break;
                             case ColorPickerState::DragTarget::Hue:    ApplyStripHue(cp.activeSpace, fy, cp.h, cp.s, cp.v);  break;
                             case ColorPickerState::DragTarget::Alpha:  cp.a = 1.0f - fy; break;
                             default: break;
                         }
                     };
+                    auto apply = [&]() {
+                        if (!event.rect || event.rect->rect.w <= 0 || event.rect->rect.h <= 0) return;
+                        const IntRect& r = event.rect->rect;
+                        const int2 c = event.LocalCursor(elementStorage);
+                        applyAt(float(c.x - r.x) / float(r.w), float(c.y - r.y) / float(r.h));
+                    };
                     switch (event.type)
                     {
                         case EventType::MouseDown:
                             if (!event.state.LeftPressed()) break;
+                            guiStateManager.Interaction().SetFocusID(id);
+                            guiStateManager.TextEditorFocus().Clear();
                             cp.drag = target;
                             guiStateManager.Interaction().SetCaptureID(id);
                             apply();
                             return true;
+                        case EventType::KeyDown:
+                        {
+                            if (guiStateManager.Interaction().GetFocusedID() != id || cp.drag != ColorPickerState::DragTarget::None)
+                                break;
+                            const bool  square = target == ColorPickerState::DragTarget::Square;
+                            const float step   = (event.state.modifiers & KeyModifier::Shift) != KeyModifier::None ? 0.1f : 0.01f;
+                            float2 to = at;
+                            switch (event.state.lastKey)
+                            {
+                                case KeyCode::Left:     if (!square) return false; to.x -= step; break;
+                                case KeyCode::Right:    if (!square) return false; to.x += step; break;
+                                case KeyCode::Up:       to.y -= step; break;
+                                case KeyCode::Down:     to.y += step; break;
+                                case KeyCode::PageUp:   to.y -= 0.1f; break;
+                                case KeyCode::PageDown: to.y += 0.1f; break;
+                                case KeyCode::Home:     to.y = 0.0f;  break;
+                                case KeyCode::End:      to.y = 1.0f;  break;
+                                default: return false;
+                            }
+                            applyAt(to.x, to.y);
+                            return true;
+                        }
                         case EventType::MouseMove:
                             if (cp.drag != target || !event.state.LeftDown()) break;
                             apply();
@@ -447,7 +476,8 @@ namespace tachyon
             // Saturation/value (per space) square with its cursor ring.
             const ID squareID = idManager.AllocateDynamicID("cp_square");
             const ElementRef squareRef = RegisterControl(Element{ .id = squareID,
-                .eventHandler = planeHandler(ColorPickerState::DragTarget::Square, squareID), .styleRef = theme.colorPickerSquareStyleRef },
+                .eventHandler = planeHandler(ColorPickerState::DragTarget::Square, squareID, float2{ squareX, 1.0f - squareY }),
+                .styleRef = theme.colorPickerSquareStyleRef },
                 LayoutOverride{});
             VERIFY(elementStorage.AddCustomDraw(squareRef,
                 [quad = cp.svQuadColor, white = cp.whiteColor, outline = cp.outlineColor, squareX, squareY,
@@ -466,7 +496,7 @@ namespace tachyon
             {
                 const ID stripID = idManager.AllocateDynamicID(name);
                 const ElementRef stripRef = RegisterControl(Element{ .id = stripID,
-                    .eventHandler = planeHandler(target, stripID), .styleRef = theme.colorPickerStripStyleRef },
+                    .eventHandler = planeHandler(target, stripID, float2{ 0.5f, position }), .styleRef = theme.colorPickerStripStyleRef },
                     LayoutOverride{});
                 VERIFY(elementStorage.AddCustomDraw(stripRef,
                     [fill, checker, position, handleFill, look, white = cp.whiteColor, outline = cp.outlineColor,
@@ -941,20 +971,27 @@ namespace tachyon
         };
     }
 
-    bool GUIApplication::ColorField(ID id, color4f& value, bool allowHDR, LayoutOverride&& constraints)
+    bool GUIApplication::ColorField(ID id, color4f& value, bool allowHDR, StyleRef style, LayoutOverride&& constraints)
     {
         const color4f before = value;
 
-        // A swatch (opens the picker), the color as hex, and its alpha in percent.
-        BeginHorizontal(id, theme.colorFieldStyleRef, std::move(constraints));
+        // A swatch (opens the picker), the color as hex, and its alpha in percent. The row
+        // takes their states, so a tooltip or context menu on the field covers all three.
+        BeginFieldBox(id, style, std::move(constraints));
 
         // ---- Swatch button ----
-        (void)idManager.PushParent(id);
+        // The parts' IDs go under the field's own, so they don't depend on what came before.
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
         const ID swatchID = idManager.AllocateDynamicID("color_swatch");
-        (void)idManager.PopParent();
         const std::string context = PendingLabelText();
         auto& cp = m_colorPickerSub->State();
 
+        // Escape is Cancel, and the keyboard goes back to the swatch.
+        if (cp.triggerID == swatchID && cp.closeRequest == ColorPickerState::CloseRequest::None && TakeEscapeFor(cp.windowID, swatchID))
+        {
+            cp.closeRequest = ColorPickerState::CloseRequest::Cancel;
+            guiStateManager.Interaction().SetFocusID(swatchID);
+        }
         // OK keeps the color and remembers it; Cancel and the close button restore the original.
         if (cp.triggerID == swatchID && cp.closeRequest != ColorPickerState::CloseRequest::None)
         {
@@ -1036,7 +1073,8 @@ namespace tachyon
         Text(idManager.AllocateDynamicID("color_alpha_unit"), "%", theme.colorAlphaUnitStyleRef);
         EndFieldBox();
 
-        EndHorizontal();
+        if (pushed) (void)idManager.PopParent();
+        EndFieldBox();   // the row
 
         // ---- Picker popup ----
         if (pickerIsOpen && cp.windowID != ID::Invalid())
@@ -1057,10 +1095,12 @@ namespace tachyon
             EndWindow();
         }
 
-        return value != before;
+        const bool changed = value != before;
+        guiStateManager.SetModified(changed);
+        return changed;
     }
 
-    bool GUIApplication::ColorField(ID id, color4b& value, LayoutOverride&& constraints)
+    bool GUIApplication::ColorField(ID id, color4b& value, StyleRef style, LayoutOverride&& constraints)
     {
         color4f f {
             value.r / 255.0f,
@@ -1068,7 +1108,7 @@ namespace tachyon
             value.b / 255.0f,
             value.a / 255.0f
         };
-        bool changed = ColorField(id, f, false, std::move(constraints));
+        bool changed = ColorField(id, f, false, style, std::move(constraints));
         if (changed)
         {
             value.r = static_cast<byte>(std::clamp(int(f.r * 255.0f + 0.5f), 0, 255));
