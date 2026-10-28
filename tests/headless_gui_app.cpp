@@ -33,6 +33,7 @@ tachyon::Result<void> HeadlessGUIApp::Initialize(const InitializeOptions& option
     // One fake 1920x1080 monitor; layout queries GetMonitorArea for absolute
     // elements and auto-centered windows.
     tachyon::MonitorInfo monitor{};
+    monitor.rect       = tachyon::IntRect{ 0, 0, 1920, 1080 };
     monitor.workArea   = tachyon::IntRect{ 0, 0, 1920, 1080 };
     monitor.isPrimary  = true;
     std::vector<tachyon::MonitorInfo> monitors{ monitor };

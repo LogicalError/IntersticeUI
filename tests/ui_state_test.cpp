@@ -229,6 +229,96 @@ namespace
         EXPECT_EQ(created.y, 20) << "the app's own position, not with its top off the screen";
     }
 
+    // A window saved with its monitor: on that monitor where it was; with the displays
+    // rearranged, at the same place on the monitor of the same size; with that monitor gone,
+    // at the same place on the primary one, inside its work area.
+    class WindowMonitorTest : public UIStateTest
+    {
+    protected:
+        ID windowID = ID::Invalid();
+        void SetUp() override
+        {
+            UIStateTest::SetUp();
+            windowID = app.idManager.CreateStaticID();
+            app.PersistWindow("main", windowID);
+        }
+        void SetMonitors(std::vector<MonitorInfo> monitors)
+        {
+            ON_CALL(app.mockBackend, GetMonitors()).WillByDefault(::testing::Return(monitors));
+            app.windowManager->RefreshMonitors();
+        }
+        static MonitorInfo Monitor(IntRect rect, bool primary)
+        {
+            MonitorInfo m{};
+            m.rect = rect;
+            m.workArea = IntRect{ rect.x, rect.y, rect.w, rect.h - 40 };   // a taskbar along the bottom
+            m.isPrimary = primary;
+            return m;
+        }
+        IntRect Restore(std::string_view json)
+        {
+            EXPECT_TRUE(app.RestoreUIState(json));
+            app.Frame([&] {
+                if (app.BeginWindow(windowID, "Main", LayoutOverride{}.Size(300, 200).Position(10, 20)))
+                    app.Label("inside");
+                app.EndWindow();
+            });
+            return app.GetElementRect(windowID);
+        }
+    };
+
+    TEST_F(WindowMonitorTest, OnItsMonitorWhereItWas)
+    {
+        SetMonitors({ Monitor({ 0, 0, 1920, 1080 }, true), Monitor({ 1920, 0, 2560, 1440 }, false) });
+        const IntRect r = Restore(R"({"windows":{"main":{"x":2100,"y":150,"w":800,"h":600,"monitor":{"x":1920,"y":0,"w":2560,"h":1440}}}})");
+        EXPECT_EQ(r.x, 2100);
+        EXPECT_EQ(r.y, 150);
+    }
+
+    TEST_F(WindowMonitorTest, DisplaysRearrangedGoesToTheMonitorOfTheSameSize)
+    {
+        // Saved with the big monitor on the left; now it's on the right.
+        SetMonitors({ Monitor({ 0, 0, 1920, 1080 }, true), Monitor({ 1920, 0, 2560, 1440 }, false) });
+        const IntRect r = Restore(R"({"windows":{"main":{"x":-2460,"y":150,"w":800,"h":600,"monitor":{"x":-2560,"y":0,"w":2560,"h":1440}}}})");
+        EXPECT_EQ(r.x, 1920 + 100) << "the same place on it";
+        EXPECT_EQ(r.y, 150);
+        EXPECT_EQ(r.w, 800);
+    }
+
+    TEST_F(WindowMonitorTest, MonitorGoneGoesToThePrimaryInsideItsWorkArea)
+    {
+        SetMonitors({ Monitor({ 0, 0, 1920, 1080 }, true) });
+        const IntRect r = Restore(R"({"windows":{"main":{"x":3500,"y":900,"w":2400,"h":600,"monitor":{"x":1920,"y":0,"w":2560,"h":1440}}}})");
+        EXPECT_EQ(r.w, 1920) << "no wider than the monitor";
+        EXPECT_EQ(r.x, 0);
+        EXPECT_EQ(r.y, 1080 - 40 - 600) << "pulled up above the taskbar";
+        EXPECT_EQ(r.h, 600);
+    }
+
+    // Saving records the monitor the window's center is on.
+    TEST_F(WindowMonitorTest, SavingRecordsTheMonitor)
+    {
+        using ::testing::_;
+        SetMonitors({ Monitor({ 0, 0, 1920, 1080 }, true), Monitor({ 1920, 0, 2560, 1440 }, false) });
+        // An OS window, 800x600 at (2100, 150): on the second monitor.
+        ON_CALL(app.mockBackend, CreateWindow(_, ::testing::A<IntRect>(), _, _))
+            .WillByDefault([](std::string_view, IntRect, WindowFlags, OSWindowHandle) { return reinterpret_cast<OSWindowHandle>(uintptr_t(0x100)); });
+        ON_CALL(app.mockBackend, IsWindow(_)).WillByDefault(::testing::Return(true));
+        ON_CALL(app.mockBackend, GetWindowRect(_)).WillByDefault(::testing::Return(IntRect{ 2100, 150, 800, 600 }));
+        app.Frame([&] { (void)app.windowManager->GetOrCreateWindow(windowID, "Main", IntRect{ 2100, 150, 800, 600 }, nullptr); });
+        ASSERT_NE(app.windowManager->GetWindowHandle(windowID), nullptr);
+
+        Result<JsonValue> saved = JsonValue::Parse(app.SaveUIState());
+        ASSERT_TRUE(saved);
+        const JsonValue* window = saved->Find("windows") ? saved->Find("windows")->Find("main") : nullptr;
+        ASSERT_NE(window, nullptr);
+        const JsonValue* monitor = window->Find("monitor");
+        ASSERT_NE(monitor, nullptr);
+        EXPECT_EQ(monitor->Find("x")->AsNumber(), 1920);
+        EXPECT_EQ(monitor->Find("w")->AsNumber(), 2560);
+        EXPECT_EQ(monitor->Find("h")->AsNumber(), 1440);
+    }
+
     TEST_F(UIStateTest, MalformedOrNewerStateIsAnError)
     {
         EXPECT_FALSE(app.RestoreUIState("{ not json"));
