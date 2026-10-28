@@ -26,7 +26,7 @@ wherever it likes. Name what to keep once, by keys that stay the same between ru
 the named objects must outlive the naming:
 
 ```cpp
-PersistWindow("main", mainWindowID);         // position, size, mode
+PersistWindow("main", mainWindowID);         // position, size, mode and monitor
 PersistDocking("dock", dockingLayout);       // panels by type, else title
 PersistTable("assets", tableState, columns); // column widths and order
 PersistValue("zoom", zoom);                  // an app setting (bool, int, float, string)
@@ -42,7 +42,13 @@ if (tachyon::Result<void> restored = RestoreUIState(json); !restored)
 ```
 
 `RestoreUIState` applies windows when they are next declared and everything else at
-once. Keys, panels and columns it doesn't know are skipped. The demo calls the
+once. Keys, panels and columns it doesn't know are skipped.
+
+A window comes back on the monitor it was saved on. When that monitor is gone, it goes to
+the same place on a monitor of the same size (the displays were rearranged), else on the
+primary monitor, made to fit inside its work area. A window whose top would still be off
+every monitor, where it couldn't be grabbed or closed, keeps only its size and is placed by
+the app. The demo calls the
 `Persist*` functions and `RestoreUIState` at the end of `Initialize`, and
 `SaveUIState` after `Run()` returns.
 

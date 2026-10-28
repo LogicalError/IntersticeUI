@@ -35,6 +35,12 @@ namespace tachyon
             return WindowMode::Normal;
         }
 
+        // A monitor's whole area, or its work area where the backend gives no other.
+        IntRect MonitorBounds(const MonitorInfo& monitor)
+        {
+            return monitor.rect.w > 0 && monitor.rect.h > 0 ? monitor.rect : monitor.workArea;
+        }
+
         // A panel's key: its type when it has one, else its title.
         std::string PanelKey(const Panel& panel) { return panel.panelType.empty() ? panel.title : panel.panelType; }
 
@@ -81,6 +87,20 @@ namespace tachyon
             JsonValue w = JsonValue::MakeObject();
             w.Set("x", rect.x); w.Set("y", rect.y); w.Set("w", rect.w); w.Set("h", rect.h);
             w.Set("mode", ModeName(windowManager->GetWindowMode(windowID)));
+            // The monitor it's on (its center's), so it can come back there, or to the same
+            // place on another monitor when that one is gone.
+            const int2 center{ rect.x + rect.w / 2, rect.y + rect.h / 2 };
+            for (const MonitorInfo& monitor : windowManager->Monitors())
+            {
+                const IntRect bounds = MonitorBounds(monitor);
+                if (bounds.Contains(center))
+                {
+                    JsonValue m = JsonValue::MakeObject();
+                    m.Set("x", bounds.x); m.Set("y", bounds.y); m.Set("w", bounds.w); m.Set("h", bounds.h);
+                    w.Set("monitor", std::move(m));
+                    break;
+                }
+            }
             windows.Set(key, std::move(w));
         }
         doc.Set("windows", std::move(windows));
@@ -167,6 +187,12 @@ namespace tachyon
             if (restored.rect.w <= 0 || restored.rect.h <= 0)
                 continue;
             restored.mode = ModeFromName(w->Find("mode") ? w->Find("mode")->AsString() : std::string_view{});
+            if (const JsonValue* m = w->Find("monitor"); m && m->IsObject())
+            {
+                auto number = [m](const char* name) { const JsonValue* v = m->Find(name); return v ? int32_t(v->AsNumber()) : 0; };
+                restored.monitor    = IntRect{ number("x"), number("y"), number("w"), number("h") };
+                restored.hasMonitor = restored.monitor.w > 0 && restored.monitor.h > 0;
+            }
             m_restoredWindows[windowID] = restored;
         }
 
@@ -271,6 +297,36 @@ namespace tachyon
         return {};
     }
 
+    void GUIApplication::PlaceOnSavedMonitor(RestoredWindow& restored) const
+    {
+        // Its monitor is still there: where it was. Gone (unplugged, or the displays
+        // rearranged): the same place on a monitor of the same size, else on the primary one,
+        // inside that monitor's work area.
+        const auto& monitors = windowManager->Monitors();
+        if (!restored.hasMonitor || monitors.empty())
+            return;
+        const MonitorInfo* target = nullptr;
+        for (const MonitorInfo& monitor : monitors)
+            if (MonitorBounds(monitor) == restored.monitor)
+                return;
+        for (const MonitorInfo& monitor : monitors)
+            if (MonitorBounds(monitor).size == restored.monitor.size)
+            {
+                target = &monitor;
+                break;
+            }
+        if (!target)
+            target = &windowManager->GetPrimaryMonitor();
+
+        IntRect& rect = restored.rect;
+        rect.position = MonitorBounds(*target).position + (rect.position - restored.monitor.position);
+        const IntRect& area = target->workArea;
+        rect.w = std::min(rect.w, area.w);
+        rect.h = std::min(rect.h, area.h);
+        rect.x = std::clamp(rect.x, area.x, area.x + area.w - rect.w);
+        rect.y = std::clamp(rect.y, area.y, area.y + area.h - rect.h);
+    }
+
     void GUIApplication::ApplyRestoredWindow(ID windowID, LayoutOverride& constraints, ElementFlags& flags)
     {
         const auto it = m_restoredWindows.find(windowID);
@@ -287,6 +343,7 @@ namespace tachyon
             restored.hasPosition = false;
             if (windowManager->Monitors().empty())   // the first frame's are read at its end
                 windowManager->RefreshMonitors();
+            PlaceOnSavedMonitor(restored);
             for (const MonitorInfo& monitor : windowManager->Monitors())
             {
                 const IntRect& a = monitor.workArea;

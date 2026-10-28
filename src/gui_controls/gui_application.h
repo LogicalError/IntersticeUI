@@ -2467,7 +2467,15 @@ namespace tachyon
         struct PersistedTable    { struct Target { TableState* state; std::span<VirtualTableColumn> columns; }; std::string key; Target target; };
         struct PersistedToolbars { std::string key; std::span<std::vector<ToolbarItem>, kToolbarSideCount> target; };
         struct PersistedValue    { using Target = std::variant<bool*, int*, float*, std::string*>; std::string key; Target target; };
-        struct RestoredWindow    { IntRect rect {}; WindowMode mode = WindowMode::Normal; bool hasPosition = false; bool rectDone = false; };
+        struct RestoredWindow
+        {
+            IntRect    rect {};
+            IntRect    monitor {};            ///< the bounds of the monitor it was on, when saved with them
+            WindowMode mode = WindowMode::Normal;
+            bool       hasMonitor  = false;
+            bool       hasPosition = false;
+            bool       rectDone    = false;
+        };
         std::vector<PersistedWindow>   m_persistWindows;
         std::vector<PersistedDock>     m_persistDocks;
         std::vector<PersistedTable>    m_persistTables;
@@ -2475,6 +2483,8 @@ namespace tachyon
         std::vector<PersistedValue>    m_persistValues;
         std::unordered_map<ID, RestoredWindow> m_restoredWindows;
         void ApplyRestoredWindow(ID windowID, LayoutOverride& constraints, ElementFlags& flags);
+        /// Moves a restored rect onto the monitor it was saved on, or the same place on another.
+        void PlaceOnSavedMonitor(RestoredWindow& restored) const;
         int32_t      m_cursorSize  = 0;   ///< the OS cursor's, in pixels (0: unknown); read with the styles
         /// Begin/End contract: whether each open BeginWindow / BeginMenu (and BeginContextMenu)
         /// / BeginTooltip / BeginCached scope is showing; its End pops it.
