@@ -70,7 +70,11 @@ namespace tachyon
         /// on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
         virtual void RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
 
-        virtual void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) = 0;
+        /// A glyph from the text atlas. `scale` is atlas texels per pixel. With a `shadowBlur`
+        /// of 0 or more it is a text shadow instead: the glyph's shape in `textColorIndex`
+        /// alone (a color glyph's too), blurred by that many pixels (Gaussian,
+        /// sigma = blur / 2, as CSS) as far as the atlas' distance field reaches.
+        virtual void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, float shadowBlur = -1.0f) = 0;
 
         /// Convex polygon, fan-triangulated from points[0]; needs at least 3 points.
         void RenderFilledPolygon(std::span<const tachyon::float2> points, tachyon::IntRect clipRect,

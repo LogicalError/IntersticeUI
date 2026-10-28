@@ -54,6 +54,24 @@ namespace tachyon
             EXPECT_FLOAT_EQ(g->transform1.z, 70.0f);
         }
 
+        // A glyph is itself unless given a shadow blur, which it keeps in 1/8 pixels.
+        TEST(PrimitiveCacheTest, AGlyphKeepsItsShadowBlur)
+        {
+            PrimitiveRenderTarget t;
+            const tachyon::IntRect clip{ 0, 0, 200, 200 };
+            t.RenderGlyph(tachyon::float2{ 5, 6 }, tachyon::float2{ 7, 8 }, tachyon::float2{ 0, 0 }, tachyon::float2{ 1, 1 },
+                          1.0f, 1, 1, tachyon::VisualColorStyleIndex{}, clip);
+            t.RenderGlyph(tachyon::float2{ 5, 6 }, tachyon::float2{ 7, 8 }, tachyon::float2{ 0, 0 }, tachyon::float2{ 1, 1 },
+                          1.0f, 1, 1, tachyon::VisualColorStyleIndex{}, clip, tachyon::ImageIndex::Invalid, 0.0f);
+            t.RenderGlyph(tachyon::float2{ 5, 6 }, tachyon::float2{ 7, 8 }, tachyon::float2{ 0, 0 }, tachyon::float2{ 1, 1 },
+                          1.0f, 1, 1, tachyon::VisualColorStyleIndex{}, clip, tachyon::ImageIndex::Invalid, 2.5f);
+            t.FinishRenderPass();
+            const Glyph* g = reinterpret_cast<const Glyph*>(t.streams[size_t(PrimitiveKind::Glyph)].cpu.data());
+            EXPECT_EQ(g[0].shadowBlur, -1);
+            EXPECT_EQ(g[1].shadowBlur, 0);
+            EXPECT_EQ(g[2].shadowBlur, 20);
+        }
+
         TEST(PrimitiveCacheTest, AppendCapturedZeroDeltaIsVerbatim)
         {
             PrimitiveRenderTarget src;

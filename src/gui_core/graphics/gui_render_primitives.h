@@ -64,8 +64,10 @@ namespace tachyon
 
         tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid;
         int16_t         textColorIndex = 0;
-        int16_t         _pad = 0;
+        /// -1: the glyph itself; 0 and up: a text shadow blurred by this many 1/8 pixels
+        int16_t         shadowBlur = -1;
     };
+    static_assert(sizeof(Glyph) == 96, "Glyph struct size must be 96 bytes to match GLSL std430 layout");
     static_assert(sizeof(Glyph::textureIndex) == sizeof(uint32_t), "Glyph::textureIndex must be uint32_t for packing reasons");
 
     struct alignas(16) Dot

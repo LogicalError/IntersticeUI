@@ -68,6 +68,7 @@ void main()
 	outSurface.bpp = glyph.glyph_type.x;
 	outSurface.mode = glyph.glyph_type.y;
 	outSurface.textColorIndex = int(glyph.textColorIndex);
+	outSurface.shadowBlur = glyph.shadowBlur < 0 ? -1.0 : float(glyph.shadowBlur) / 8.0;
 
 	gl_Position = PushConstants.worldMatrix * vec4(position, 0, 1.0f);
 }

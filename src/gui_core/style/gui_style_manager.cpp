@@ -102,6 +102,8 @@ namespace tachyon
             state.textStyle = ScaledTextStyle(state.textStyle, s);
             for (BoxShadow& b : state.boxShadow)
                 b = shadow(b);
+            for (BoxShadow& b : state.textShadow)
+                b = shadow(b);
         }
         return out;
     }
@@ -243,6 +245,10 @@ namespace tachyon
                 .iconOffsetY       = style.iconOffsetY,
                 .iconSide          = style.iconSide
             };
+            for (int t = 0; t < kMaxTextShadows; ++t)
+                if (const BoxShadow& b = styleState.textShadow[t]; !b.IsNone())
+                    visualTextStyle[i].textShadows[t] = VisualShadow{ .x = b.x, .y = b.y, .blur = b.blur,
+                                                                      .color = RegisterColorStyle(ColorStyle::Create(b.color)) };
             visualTextHash = Hash::Combine(visualTextHash, visualTextStyle[i].GetHashCode());
         }
 

@@ -74,9 +74,12 @@ namespace GUITest
                             tachyon::VisualColorStyleIndex, tachyon::ImageIndex) override {}
         void RenderQuad(tachyon::IntRect, tachyon::IntRect, tachyon::VisualColorStyleIndex, float, tachyon::ImageIndex) override {}
         void RenderShadow(tachyon::IntRect, tachyon::IntRect, tachyon::VisualColorStyleIndex, float, int) override {}
-        void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2, tachyon::float2, float scale, int, int,
-                         tachyon::VisualColorStyleIndex, tachyon::IntRect, tachyon::ImageIndex) override
+        void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int, int,
+                         tachyon::VisualColorStyleIndex color, tachyon::IntRect, tachyon::ImageIndex, float shadowBlur) override
         {
+            glyphDraws.push_back({ pos, size, uvMin, uvMax, color, shadowBlur });
+            if (shadowBlur >= 0.0f)
+                return;
             glyphRight = std::max(glyphRight, pos.x + size.x);
             glyphTop   = std::min(glyphTop, pos.y);
             lastGlyphScale = scale;
@@ -85,6 +88,14 @@ namespace GUITest
         void StopResizing() override {}
         bool BeginWindow(tachyon::ID) override { return true; }
         void EndWindow() override {}
+
+        struct GlyphDraw
+        {
+            tachyon::float2 pos, size, uvMin, uvMax;
+            tachyon::VisualColorStyleIndex color;
+            float shadowBlur; // below 0: the glyph itself
+        };
+        std::vector<GlyphDraw> glyphDraws; // every glyph quad drawn since last cleared, shadows included
 
         float glyphRight     = 0.0f; // right edge of the rightmost glyph drawn since last reset
         float glyphTop       = 1e9f; // top edge of the highest glyph drawn since last reset

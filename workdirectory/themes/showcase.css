@@ -784,3 +784,17 @@
     -tachyon-vertical-text-align: middle;
     flex-shrink: 0;
 }
+
+/* Text shadow and glow samples in the misc panel; the padding leaves the glow room. */
+.text-shadow-sample, .text-glow-sample {
+    padding: 8px;
+    border-width: 0px;
+    background-color: transparent;
+    color: var(--text-1);
+    font-size: 20px;
+    font-weight: 600;
+    text-wrap: nowrap;
+    vertical-align: middle;
+}
+.text-shadow-sample { text-shadow: 1px 2px 3px #00000099; }
+.text-glow-sample   { text-shadow: 0 0 5px var(--accent); }

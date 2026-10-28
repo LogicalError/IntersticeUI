@@ -16,6 +16,8 @@
 #include <gui_core/style/gui_style_gradient.h>
 #include <gui_core/graphics/gui_image.h>
 
+#include <algorithm>
+
 namespace tachyon
 {
     /// @addtogroup styling
@@ -107,6 +109,8 @@ namespace tachyon
 
     /// CSS box-shadow layers per state; the first is drawn on top.
     inline constexpr int kMaxBoxShadows = 2;
+    /// CSS text-shadow layers per state; the first is drawn on top.
+    inline constexpr int kMaxTextShadows = kMaxBoxShadows;
 
     /// One CSS box-shadow layer, outside the border box. A transparent color is no shadow.
     /// Inset is for the focus ring only: an outline `spread` wide inside the border box.
@@ -639,6 +643,9 @@ namespace tachyon
         ColorStyle textColor {};        ///< CSS: color; when it has no stops, textStyle.color is used
         ColorStyle iconColor {};        ///< -tachyon-icon-color; none = the text color
         BoxShadow  boxShadow[kMaxBoxShadows] {}; ///< CSS: box-shadow; the first is drawn on top
+        /// CSS: text-shadow, under the text, its decorations and its icon; the first is drawn
+        /// on top. No spread, never inset.
+        BoxShadow  textShadow[kMaxTextShadows] {};
 
         /// Sets all four border colors to `c`.
         void SetBorderColor(const ColorStyle& c) { borderColors[0] = borderColors[1] = borderColors[2] = borderColors[3] = c; }
@@ -944,10 +951,12 @@ namespace tachyon
         uint16_t              iconSize    = 0; ///< icon size in pixels; 0 = its natural size
         int16_t               iconOffsetY = 0; ///< vertical nudge of the icon in pixels; positive = up
         IconSide              iconSide = IconSide::Left; ///< see Style::iconSide
+        VisualShadow          textShadows[kMaxTextShadows] {}; ///< see StyleState::textShadow
 
         uint64_t GetHashCode() const noexcept
         {
-            return Hash::Combine(textStyle.GetHashCode(),
+            return Hash::Combine(Hash::CalculateBytes(textShadows, sizeof(textShadows)),
+                                 textStyle.GetHashCode(),
                                  textLayoutStyle.GetHashCode(),
                                  Hash::Calculate(textColorIndex),
                                  Hash::Calculate(iconColorIndex),
@@ -966,7 +975,8 @@ namespace tachyon
                    iconTextGap       == other.iconTextGap &&
                    iconSize          == other.iconSize &&
                    iconOffsetY       == other.iconOffsetY &&
-                   iconSide          == other.iconSide;
+                   iconSide          == other.iconSide &&
+                   std::ranges::equal(textShadows, other.textShadows);
         }
     };
     /// @}

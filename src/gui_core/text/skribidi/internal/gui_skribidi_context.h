@@ -82,6 +82,7 @@ namespace tachyon
 		TextWrap  textWrapping = TextWrap::NoWrap;
 		VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid;
 		VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid;
+		VisualShadow          textShadows[kMaxTextShadows] {}; // the state's text-shadow, the first on top
 
 		skb_attribute_t		text_attributes[kMaxTextAttributeCount] {};
 		int32_t				text_attribute_count = 0;
@@ -318,6 +319,35 @@ namespace tachyon
 
 		view_t view {};
 
+		// The glyph distance field: levels per atlas texel (glyph_common.glsl decodes with
+		// it) and the padding around every glyph, icon and pattern. Quads stop a texel short
+		// of the padding, so the field reaches 16 texels past the ink: room for a text
+		// shadow's blur.
+		static constexpr float kSdfDistanceScale = 8.0f;
+		static constexpr int   kSdfPadding       = 17;
+		// Texels past the ink that a glyph or icon quad keeps when it isn't a shadow: more
+		// than its edge needs, so the rest of the padding isn't drawn for nothing.
+		static constexpr float kGlyphMargin = 7.0f;
+
+		// The text shadow being drawn (DrawWithShadows): every quad is moved by it and drawn in
+		// its color, blurred. None while the text itself is drawn.
+		VisualShadow shadow {};
+
+		// Calls `draw` once per shadow, the last first, then once for the text itself.
+		template <typename Draw>
+		void DrawWithShadows(std::span<const VisualShadow> shadows, Draw&& draw)
+		{
+			for (size_t i = shadows.size(); i-- > 0;)
+			{
+				if (shadows[i].IsNone())
+					continue;
+				shadow = shadows[i];
+				draw();
+			}
+			shadow = {};
+			draw();
+		}
+
 		// Atlas lookups. While a scope is being recorded, each lookup is also noted
 		// so ReplayAtlasTouches can keep that scope's entries alive.
 		skb_quad_t GetGlyphQuad(float x, float y, float pixelScale, skb_font_collection_t* fontCollection,
@@ -409,6 +439,10 @@ namespace tachyon
 	void on_editor_text_change(skb_editor_t* /*editor*/, skb_editor_text_change_reason_t /*reason*/, void* context);
 
 	void draw_image_quad_sdf(SkribidiContext* ctx, skb_rect2_t geom, skb_rect2_t image, float scale, int bpp, skb_rasterize_alpha_mode_t mode, VisualColorStyleIndex textColorIndex, uint32_t texID, IntRect clipRect);
+
+	// A glyph or icon quad from the atlas: draw_image_quad_sdf, without the part of the
+	// padding only a shadow needs.
+	void draw_glyph_quad_sdf(SkribidiContext* ctx, skb_rect2_t geom, skb_rect2_t image, float scale, int bpp, skb_rasterize_alpha_mode_t mode, VisualColorStyleIndex textColorIndex, uint32_t texID, IntRect clipRect);
 
 	void draw_image_pattern_quad_sdf(SkribidiContext* ctx, skb_rect2_t geom, skb_rect2_t pattern, skb_rect2_t image, float scale, int bpp, skb_rasterize_alpha_mode_t mode, VisualColorStyleIndex textColorIndex, uint32_t texID, IntRect clipRect);
 

@@ -99,6 +99,7 @@ list(APPEND GUI_CORE_TEST_FILES
   tutorial_test.cpp
   tutorial_snippets_test.cpp
   skribidi_editor_test.cpp
+  text_shadow_test.cpp
   table_scrollbar_test.cpp
   controls_table_frozen_test.cpp
   controls_table_cells_test.cpp

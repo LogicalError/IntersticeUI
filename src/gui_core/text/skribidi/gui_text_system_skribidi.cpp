@@ -313,6 +313,7 @@ namespace tachyon
 		{
 			entry->textColorIndex = colors->textColorIndex;
 			entry->iconColorIndex = colors->iconColorIndex;
+			std::ranges::copy(colors->textShadows, entry->textShadows);
 		}
 		state = state & ~ElementState::Selected;
 
@@ -789,7 +790,14 @@ namespace tachyon
 
 	// -------------------- Icon Rendering --------------------
 
-	void SkribidiTextSystem::RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint)
+	void SkribidiTextSystem::RenderIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint, std::span<const VisualShadow> shadows)
+	{
+		if (!m_skribidiContext)
+			return;
+		m_skribidiContext->DrawWithShadows(shadows, [&] { DrawIcon(iconId, rect, clipRect, tint); });
+	}
+
+	void SkribidiTextSystem::DrawIcon(IconID iconId, IntRect rect, IntRect clipRect, VisualColorStyleIndex tint)
 	{
 		if (!m_skribidiContext || !m_skribidiContext->icon_collection)
 			return;
@@ -849,7 +857,7 @@ namespace tachyon
 		
 		int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
 		
-		draw_image_quad_sdf(ctx,
+		draw_glyph_quad_sdf(ctx,
 			view_transform_rect(&ctx->view, quad.geom),
 			quad.texture,
 			1.f / quad.scale, bpp, mode,
@@ -915,7 +923,7 @@ namespace tachyon
 
 		float prev_x = ctx->view.cx;
 		float prev_y = ctx->view.cy;
-		ctx->view = view_t 
+		const view_t textView
 		{ 
 			.cx = float(textRect.position.x), 
 			.cy = float(textRect.position.y), 
@@ -940,143 +948,148 @@ namespace tachyon
 			return m_skribidiContext->styleManager->RegisterColorStyle(ColorStyle::Create(c), ImageIndex::Invalid);
 		};
 
-		for (int32_t i = 0; i < decorations_count; i++)
+		// Under the text, its decorations and its icon, every shadow; then those themselves.
+		ctx->DrawWithShadows(entry->textShadows, [&]
 		{
-			const skb_decoration_t* decoration = &decorations[i];
-			if (decoration->layer != SKB_DECORATION_UNDER)
-				continue;
-
-			const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
-			const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
-			const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
-				? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
-			// A link's underline is shown ONLY on hover; plain underlines always show.
-			const bool isLinkDeco = (decoration->line.paint_tag == SKB_PAINT_DECORATION_LINK);
-			if (isLinkDeco && paint_state != SKB_PAINT_STATE_HOVER)
-				continue;
-			const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, paint_state, run_attributes, layout_params->attribute_collection);
-			if (paint.paint_tag != decoration->line.paint_tag)
-				continue;
-
-			skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
-				(skb_decoration_position_t)decoration->line.position,
-				(skb_decoration_style_t)decoration->line.style,
-				decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
-				paint.color, mode);
-
-			int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
-			// Snap the underline to whole pixel rows so the SDF doesn't blur it.
-			skb_rect2_t decoRect = view_transform_rect(&ctx->view, pat_quad.geom);
-			decoRect.y      = std::round(decoRect.y);
-			decoRect.height = std::max(1.0f, std::round(decoRect.height));
-			draw_image_pattern_quad_sdf(ctx,
-				decoRect,
-				pat_quad.pattern, pat_quad.texture,
-				1.0f / pat_quad.scale, bpp, mode,
-				isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
-				(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
-				clipRect);
-		}
-
-		for (int32_t ri = 0; ri < layout_runs_count; ri++)
-		{
-			const skb_layout_run_t* run = &layout_runs[ri];
-			
-			if (run->type == SKB_CONTENT_RUN_ICON)
+			ctx->view = textView;
+			for (int32_t i = 0; i < decorations_count; i++)
 			{
-				skb_quad_t quad = ctx->GetIconQuad(run->bounds.x, run->bounds.y,
-				 pixelScale,  // pixel_scale
-					ctx->icon_collection,
-					run->icon_handle,
-					run->bounds.width,
-					run->bounds.height,
-					skb_rgba(255, 255, 255, 255), // tint_color
-					mode);  // alpha_mode
-				
-				int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
-				
-				draw_image_quad_sdf(ctx,
-					view_transform_rect(&ctx->view, quad.geom),
-					quad.texture,
-					1.f / quad.scale, bpp, mode,
-					(quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : entry->textColorIndex,
-					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
-					clipRect);
-
-				continue;
-			}
-			
-			const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
-			const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
-				? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
-			skb_attribute_paint_t paint = skb_attributes_get_paint(SKB_PAINT_TEXT, paint_state, run_attributes, layout_params->attribute_collection);
-
-			skb_color_t color = paint.color;
-			// A run with its own colour (link) renders in that colour; otherwise the
-			// element's single text colour is used.
-			const VisualColorStyleIndex glyphColor = (run->content_id != 0) ? runColorIndex(paint) : entry->textColorIndex;
-			for (int32_t gi = run->glyph_range.start; gi < run->glyph_range.end; gi++)
-			{
-				const skb_glyph_t* glyph = &glyphs[gi];
-				const float gx = glyph->offset_x;
-				const float gy = glyph->offset_y;
-
-				skb_quad_t quad = ctx->GetGlyphQuad(gx, gy, pixelScale,
-					layout_params->font_collection, run->font_handle, glyph->gid,
-					run->font_size, color, mode);
-				if (quad.flags & SKB_QUAD_IS_EMPTY)
+				const skb_decoration_t* decoration = &decorations[i];
+				if (decoration->layer != SKB_DECORATION_UNDER)
 					continue;
 
-				int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
+				const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
+				const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
+				const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
+					? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
+				// A link's underline is shown ONLY on hover; plain underlines always show.
+				const bool isLinkDeco = (decoration->line.paint_tag == SKB_PAINT_DECORATION_LINK);
+				if (isLinkDeco && paint_state != SKB_PAINT_STATE_HOVER)
+					continue;
+				const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, paint_state, run_attributes, layout_params->attribute_collection);
+				if (paint.paint_tag != decoration->line.paint_tag)
+					continue;
 
-				draw_image_quad_sdf(ctx,
-					view_transform_rect(&ctx->view, quad.geom),
-					quad.texture,
-					1.f / quad.scale, bpp, mode,
-					(quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : glyphColor,
-					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
+				skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
+					(skb_decoration_position_t)decoration->line.position,
+					(skb_decoration_style_t)decoration->line.style,
+					decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
+					paint.color, mode);
+
+				int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
+				// Snap the underline to whole pixel rows so the SDF doesn't blur it.
+				skb_rect2_t decoRect = view_transform_rect(&ctx->view, pat_quad.geom);
+				decoRect.y      = std::round(decoRect.y);
+				decoRect.height = std::max(1.0f, std::round(decoRect.height));
+				draw_image_pattern_quad_sdf(ctx,
+					decoRect,
+					pat_quad.pattern, pat_quad.texture,
+					1.0f / pat_quad.scale, bpp, mode,
+					isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
+					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
 					clipRect);
 			}
-		}
 
-		for (int32_t i = 0; i < decorations_count; i++)
-		{
-			const skb_decoration_t* decoration = &decorations[i];
-			if (decoration->layer != SKB_DECORATION_OVER)
-				continue;
+			for (int32_t ri = 0; ri < layout_runs_count; ri++)
+			{
+				const skb_layout_run_t* run = &layout_runs[ri];
+			
+				if (run->type == SKB_CONTENT_RUN_ICON)
+				{
+					skb_quad_t quad = ctx->GetIconQuad(run->bounds.x, run->bounds.y,
+					 pixelScale,  // pixel_scale
+						ctx->icon_collection,
+						run->icon_handle,
+						run->bounds.width,
+						run->bounds.height,
+						skb_rgba(255, 255, 255, 255), // tint_color
+						mode);  // alpha_mode
+				
+					int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
+				
+					draw_glyph_quad_sdf(ctx,
+						view_transform_rect(&ctx->view, quad.geom),
+						quad.texture,
+						1.f / quad.scale, bpp, mode,
+						(quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : entry->textColorIndex,
+						(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
+						clipRect);
 
-			const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
-			const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
-			const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
-				? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
-			const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, paint_state, run_attributes, layout_params->attribute_collection);
-			if (paint.paint_tag != decoration->line.paint_tag)
-				continue;
+					continue;
+				}
+			
+				const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
+				const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
+					? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
+				skb_attribute_paint_t paint = skb_attributes_get_paint(SKB_PAINT_TEXT, paint_state, run_attributes, layout_params->attribute_collection);
 
-			skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
-				(skb_decoration_position_t)decoration->line.position,
-				(skb_decoration_style_t)decoration->line.style,
-				decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
-				paint.color, mode);
+				skb_color_t color = paint.color;
+				// A run with its own colour (link) renders in that colour; otherwise the
+				// element's single text colour is used.
+				const VisualColorStyleIndex glyphColor = (run->content_id != 0) ? runColorIndex(paint) : entry->textColorIndex;
+				for (int32_t gi = run->glyph_range.start; gi < run->glyph_range.end; gi++)
+				{
+					const skb_glyph_t* glyph = &glyphs[gi];
+					const float gx = glyph->offset_x;
+					const float gy = glyph->offset_y;
 
-			int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
-			draw_image_pattern_quad_sdf(ctx,
-				view_transform_rect(&ctx->view, pat_quad.geom),
-				pat_quad.pattern, pat_quad.texture,
-				1.0f / pat_quad.scale, bpp, mode,
-				entry->textColorIndex,
-				(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
-				clipRect);
-		}
+					skb_quad_t quad = ctx->GetGlyphQuad(gx, gy, pixelScale,
+						layout_params->font_collection, run->font_handle, glyph->gid,
+						run->font_size, color, mode);
+					if (quad.flags & SKB_QUAD_IS_EMPTY)
+						continue;
 
-		ctx->view.cx = prev_x;
-		ctx->view.cy = prev_y;
+					int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
 
-		// After restoring the view: RenderIcon sets its own.
-		if (entry->iconId != IconID::Invalid)
-		{
-			RenderIcon(entry->iconId, iconRenderRect, clipRect, entry->iconColorIndex);
-		}
+					draw_glyph_quad_sdf(ctx,
+						view_transform_rect(&ctx->view, quad.geom),
+						quad.texture,
+						1.f / quad.scale, bpp, mode,
+						(quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : glyphColor,
+						(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
+						clipRect);
+				}
+			}
+
+			for (int32_t i = 0; i < decorations_count; i++)
+			{
+				const skb_decoration_t* decoration = &decorations[i];
+				if (decoration->layer != SKB_DECORATION_OVER)
+					continue;
+
+				const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
+				const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(layout, run);
+				const uint32_t paint_state = (run->content_id != 0 && run->content_id == entry->hoveredContentId)
+					? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
+				const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, paint_state, run_attributes, layout_params->attribute_collection);
+				if (paint.paint_tag != decoration->line.paint_tag)
+					continue;
+
+				skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
+					(skb_decoration_position_t)decoration->line.position,
+					(skb_decoration_style_t)decoration->line.style,
+					decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
+					paint.color, mode);
+
+				int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
+				draw_image_pattern_quad_sdf(ctx,
+					view_transform_rect(&ctx->view, pat_quad.geom),
+					pat_quad.pattern, pat_quad.texture,
+					1.0f / pat_quad.scale, bpp, mode,
+					entry->textColorIndex,
+					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
+					clipRect);
+			}
+
+			ctx->view.cx = prev_x;
+			ctx->view.cy = prev_y;
+
+			// After restoring the view: DrawIcon sets its own.
+			if (entry->iconId != IconID::Invalid)
+			{
+				DrawIcon(entry->iconId, iconRenderRect, clipRect, entry->iconColorIndex);
+			}
+		});
 	}
 
 } // namespace tachyon

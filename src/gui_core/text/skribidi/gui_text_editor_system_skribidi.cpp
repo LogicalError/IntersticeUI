@@ -233,150 +233,154 @@ namespace tachyon
             skb_rich_layout_get_text_range_bounds(rich_layout, text_range, draw_selection_rect, &sel_ctx);
         }
 
-        for (int32_t pi = 0; pi < skb_editor_get_paragraph_count(editor); pi++)
+        // Under the text and its decorations, every shadow; then those themselves.
+        ctx->DrawWithShadows(entry->textShadows, [&]
         {
-            const skb_vec2_t paragraph_offset = skb_editor_get_paragraph_offset(editor, pi);
-            ctx->view = base_view;
-            ctx->view.cx = ox + paragraph_offset.x;
-            ctx->view.cy = oy + paragraph_offset.y;
-
-            const skb_layout_t* edit_layout = skb_editor_get_paragraph_layout(editor, pi);
-            const skb_layout_line_t* lines = skb_layout_get_lines(edit_layout);
-            const int32_t lines_count = skb_layout_get_lines_count(edit_layout);
-            const skb_layout_run_t* layout_runs = skb_layout_get_layout_runs(edit_layout);
-            const skb_glyph_t* glyphs = skb_layout_get_glyphs(edit_layout);
-            const skb_cluster_t* clusters = skb_layout_get_clusters(edit_layout);
-            const int32_t para_global_offset = skb_editor_get_paragraph_global_text_offset(editor, pi);
-
-            const skb_layout_params_t* layout_params = skb_layout_get_params(edit_layout);
-            const int32_t decorations_count = skb_layout_get_decorations_count(edit_layout);
-            const skb_decoration_t* decorations = skb_layout_get_decorations(edit_layout);
-
-            skb_rasterize_alpha_mode_t mode = SKB_RASTERIZE_ALPHA_SDF;
-
-            // Draw underlines
-            for (int32_t i = 0; i < decorations_count; i++)
+            for (int32_t pi = 0; pi < skb_editor_get_paragraph_count(editor); pi++)
             {
-                const skb_decoration_t* decoration = &decorations[i];
-                if (decoration->layer == SKB_DECORATION_UNDER)
+                const skb_vec2_t paragraph_offset = skb_editor_get_paragraph_offset(editor, pi);
+                ctx->view = base_view;
+                ctx->view.cx = ox + paragraph_offset.x;
+                ctx->view.cy = oy + paragraph_offset.y;
+
+                const skb_layout_t* edit_layout = skb_editor_get_paragraph_layout(editor, pi);
+                const skb_layout_line_t* lines = skb_layout_get_lines(edit_layout);
+                const int32_t lines_count = skb_layout_get_lines_count(edit_layout);
+                const skb_layout_run_t* layout_runs = skb_layout_get_layout_runs(edit_layout);
+                const skb_glyph_t* glyphs = skb_layout_get_glyphs(edit_layout);
+                const skb_cluster_t* clusters = skb_layout_get_clusters(edit_layout);
+                const int32_t para_global_offset = skb_editor_get_paragraph_global_text_offset(editor, pi);
+
+                const skb_layout_params_t* layout_params = skb_layout_get_params(edit_layout);
+                const int32_t decorations_count = skb_layout_get_decorations_count(edit_layout);
+                const skb_decoration_t* decorations = skb_layout_get_decorations(edit_layout);
+
+                skb_rasterize_alpha_mode_t mode = SKB_RASTERIZE_ALPHA_SDF;
+
+                // Draw underlines
+                for (int32_t i = 0; i < decorations_count; i++)
                 {
-                    const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
-                    const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
-                    // A link's underline shows only while it's hovered; plain underlines always show.
-                    const bool isLinkDeco = (decoration->line.paint_tag == SKB_PAINT_DECORATION_LINK);
-                    intptr_t linkContentId = 0;
-                    if (isLinkDeco && run->glyph_range.start < run->glyph_range.end)
-                        linkAtOffset(para_global_offset + clusters[glyphs[run->glyph_range.start].cluster_idx].text_offset, linkContentId);
-                    // linkContentId != 0 guards the "nothing hovered" case (hoveredContentId == 0).
-                    const uint32_t state = (isLinkDeco && linkContentId != 0 && linkContentId == entry->hoveredContentId)
-                        ? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
-                    if (isLinkDeco && state != SKB_PAINT_STATE_HOVER)
-                        continue;
-                    const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, state, run_attributes, layout_params->attribute_collection);
-                    if (paint.paint_tag == decoration->line.paint_tag)
+                    const skb_decoration_t* decoration = &decorations[i];
+                    if (decoration->layer == SKB_DECORATION_UNDER)
                     {
-                        skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
-                            (skb_decoration_position_t)decoration->line.position,
-                            (skb_decoration_style_t)decoration->line.style,
-                            decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
-                            paint.color, mode);
-
-                        int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
-
-                        draw_image_pattern_quad_sdf(ctx,
-                                                    view_transform_rect(&ctx->view, pat_quad.geom),
-                                                    pat_quad.pattern, pat_quad.texture,
-                                                    1.0f / pat_quad.scale, bpp, mode,
-                                                    isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
-                                                    (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
-                                                    clipRect);
-                    }
-                }
-            }
-
-            // Draw glyphs
-            for (int li = 0; li < lines_count; li++)
-            {
-                const skb_layout_line_t* line = &lines[li];
-
-
-
-                for (int32_t ri = line->layout_run_range.start; ri < line->layout_run_range.end; ri++)
-                {
-                    const skb_layout_run_t* run = &layout_runs[ri];
-                    const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
-                    // Link runs use the link colour, other runs the element's text colour.
-                    intptr_t linkContentId = 0;
-                    const bool runIsLink = (run->glyph_range.start < run->glyph_range.end)
-                        && linkAtOffset(para_global_offset + clusters[glyphs[run->glyph_range.start].cluster_idx].text_offset, linkContentId);
-                    const uint32_t state = (runIsLink && linkContentId == entry->hoveredContentId)
-                        ? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
-                    skb_attribute_paint_t paint = skb_attributes_get_paint(SKB_PAINT_TEXT, state, run_attributes, layout_params->attribute_collection);
-                    const VisualColorStyleIndex runColorIdx = runIsLink ? runColorIndex(paint) : entry->textColorIndex;
-
-                    for (int32_t gi = run->glyph_range.start; gi < run->glyph_range.end; gi++)
-                    {
-                        const skb_glyph_t* glyph = &glyphs[gi];
-
-                        float gx = glyph->offset_x;
-                        float gy = glyph->offset_y;
-
-                        const skb_paragraph_position_t glyph_pos = { .paragraph_idx = pi, .text_offset = clusters[glyph->cluster_idx].text_offset };
-                        const bool glyph_selected = skb_paragraph_position_less_or_equal(sel_start, glyph_pos)
-                                                 && !skb_paragraph_position_less_or_equal(sel_end, glyph_pos);
-                        VisualColorStyleIndex glyphColorIndex = glyph_selected ? selectionTextColorIndex : runColorIdx;
-
-                        skb_quad_t quad = ctx->GetGlyphQuad(gx, gy, pixelScale,
-                                                            layout_params->font_collection, run->font_handle, glyph->gid,
-                                                            run->font_size, paint.color, SKB_RASTERIZE_ALPHA_SDF);
-                        if (quad.flags & SKB_QUAD_IS_EMPTY)
+                        const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
+                        const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
+                        // A link's underline shows only while it's hovered; plain underlines always show.
+                        const bool isLinkDeco = (decoration->line.paint_tag == SKB_PAINT_DECORATION_LINK);
+                        intptr_t linkContentId = 0;
+                        if (isLinkDeco && run->glyph_range.start < run->glyph_range.end)
+                            linkAtOffset(para_global_offset + clusters[glyphs[run->glyph_range.start].cluster_idx].text_offset, linkContentId);
+                        // linkContentId != 0 guards the "nothing hovered" case (hoveredContentId == 0).
+                        const uint32_t state = (isLinkDeco && linkContentId != 0 && linkContentId == entry->hoveredContentId)
+                            ? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
+                        if (isLinkDeco && state != SKB_PAINT_STATE_HOVER)
                             continue;
+                        const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, state, run_attributes, layout_params->attribute_collection);
+                        if (paint.paint_tag == decoration->line.paint_tag)
+                        {
+                            skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
+                                (skb_decoration_position_t)decoration->line.position,
+                                (skb_decoration_style_t)decoration->line.style,
+                                decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
+                                paint.color, mode);
 
-                        int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
+                            int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
 
-                        draw_image_quad_sdf(ctx,
-                                            view_transform_rect(&ctx->view, quad.geom),
-                                            quad.texture,
-                                            1.f / quad.scale, bpp, mode,
-                                            (quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : glyphColorIndex,
-                                            (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
-                                            clipRect);
+                            draw_image_pattern_quad_sdf(ctx,
+                                                        view_transform_rect(&ctx->view, pat_quad.geom),
+                                                        pat_quad.pattern, pat_quad.texture,
+                                                        1.0f / pat_quad.scale, bpp, mode,
+                                                        isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
+                                                        (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
+                                                        clipRect);
+                        }
                     }
                 }
-            }
 
-            // Draw through lines.
-            for (int32_t i = 0; i < decorations_count; i++)
-            {
-                const skb_decoration_t* decoration = &decorations[i];
-                if (decoration->layer == SKB_DECORATION_OVER)
+                // Draw glyphs
+                for (int li = 0; li < lines_count; li++)
                 {
-                    const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
-                    const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
-                    const uint32_t state = SKB_PAINT_STATE_DEFAULT;
-                    const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, state, run_attributes, layout_params->attribute_collection);
-                    if (paint.paint_tag == decoration->line.paint_tag)
+                    const skb_layout_line_t* line = &lines[li];
+
+
+
+                    for (int32_t ri = line->layout_run_range.start; ri < line->layout_run_range.end; ri++)
                     {
-                        skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
-                         (skb_decoration_position_t)decoration->line.position,
-                         (skb_decoration_style_t)decoration->line.style,
-                         decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
-                         paint.color, mode);
+                        const skb_layout_run_t* run = &layout_runs[ri];
+                        const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
+                        // Link runs use the link colour, other runs the element's text colour.
+                        intptr_t linkContentId = 0;
+                        const bool runIsLink = (run->glyph_range.start < run->glyph_range.end)
+                            && linkAtOffset(para_global_offset + clusters[glyphs[run->glyph_range.start].cluster_idx].text_offset, linkContentId);
+                        const uint32_t state = (runIsLink && linkContentId == entry->hoveredContentId)
+                            ? SKB_PAINT_STATE_HOVER : SKB_PAINT_STATE_DEFAULT;
+                        skb_attribute_paint_t paint = skb_attributes_get_paint(SKB_PAINT_TEXT, state, run_attributes, layout_params->attribute_collection);
+                        const VisualColorStyleIndex runColorIdx = runIsLink ? runColorIndex(paint) : entry->textColorIndex;
+
+                        for (int32_t gi = run->glyph_range.start; gi < run->glyph_range.end; gi++)
+                        {
+                            const skb_glyph_t* glyph = &glyphs[gi];
+
+                            float gx = glyph->offset_x;
+                            float gy = glyph->offset_y;
+
+                            const skb_paragraph_position_t glyph_pos = { .paragraph_idx = pi, .text_offset = clusters[glyph->cluster_idx].text_offset };
+                            const bool glyph_selected = skb_paragraph_position_less_or_equal(sel_start, glyph_pos)
+                                                     && !skb_paragraph_position_less_or_equal(sel_end, glyph_pos);
+                            VisualColorStyleIndex glyphColorIndex = glyph_selected ? selectionTextColorIndex : runColorIdx;
+
+                            skb_quad_t quad = ctx->GetGlyphQuad(gx, gy, pixelScale,
+                                                                layout_params->font_collection, run->font_handle, glyph->gid,
+                                                                run->font_size, paint.color, SKB_RASTERIZE_ALPHA_SDF);
+                            if (quad.flags & SKB_QUAD_IS_EMPTY)
+                                continue;
+
+                            int bpp = skb_image_atlas_get_texture(ctx->atlas, quad.texture_idx)->bpp;
+
+                            draw_glyph_quad_sdf(ctx,
+                                                view_transform_rect(&ctx->view, quad.geom),
+                                                quad.texture,
+                                                1.f / quad.scale, bpp, mode,
+                                                (quad.flags & SKB_QUAD_IS_COLOR) ? VisualColorStyleIndex::Invalid : glyphColorIndex,
+                                                (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, quad.texture_idx),
+                                                clipRect);
+                        }
+                    }
+                }
+
+                // Draw through lines.
+                for (int32_t i = 0; i < decorations_count; i++)
+                {
+                    const skb_decoration_t* decoration = &decorations[i];
+                    if (decoration->layer == SKB_DECORATION_OVER)
+                    {
+                        const skb_layout_run_t* run = &layout_runs[decoration->line.layout_run_idx];
+                        const skb_attribute_set_t run_attributes = skb_layout_get_layout_run_attributes(edit_layout, run);
+                        const uint32_t state = SKB_PAINT_STATE_DEFAULT;
+                        const skb_attribute_paint_t paint = skb_attributes_get_paint(decoration->line.paint_tag, state, run_attributes, layout_params->attribute_collection);
+                        if (paint.paint_tag == decoration->line.paint_tag)
+                        {
+                            skb_quad_t pat_quad = ctx->GetDecorationQuad(decoration->line.x, decoration->line.y, pixelScale,
+                             (skb_decoration_position_t)decoration->line.position,
+                             (skb_decoration_style_t)decoration->line.style,
+                             decoration->line.length, decoration->line.pattern_offset, decoration->line.thickness,
+                             paint.color, mode);
 
 
-                     int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
+                         int bpp = skb_image_atlas_get_texture(ctx->atlas, pat_quad.texture_idx)->bpp;
 
-                     draw_image_pattern_quad_sdf(ctx,
-                                                    view_transform_rect(&ctx->view, pat_quad.geom),
-                                                    pat_quad.pattern, pat_quad.texture,
-                                                    1.0f / pat_quad.scale, bpp, mode,
-                                                    entry->textColorIndex,
-                                                    (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
-                                                    clipRect);
+                         draw_image_pattern_quad_sdf(ctx,
+                                                        view_transform_rect(&ctx->view, pat_quad.geom),
+                                                        pat_quad.pattern, pat_quad.texture,
+                                                        1.0f / pat_quad.scale, bpp, mode,
+                                                        entry->textColorIndex,
+                                                        (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
+                                                        clipRect);
+                        }
                     }
                 }
             }
-        }
+        });
 
 
         // Caret is generally drawn only when there is no selection.

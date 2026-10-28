@@ -63,7 +63,7 @@ struct Glyph
                
     int        textureIndex; // Glyph atlas, not to be confused with ColorStyle texture index
     int16_t    textColorIndex; // ColorStyle index for text color (1-based, 0 = invalid)
-    int16_t    _pad;
+    int16_t    shadowBlur;     // -1: the glyph itself; 0 and up: a text shadow blurred by this many 1/8 pixels
 }; 
 
 layout(buffer_reference, std430)

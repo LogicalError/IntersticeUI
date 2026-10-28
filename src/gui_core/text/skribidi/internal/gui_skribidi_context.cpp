@@ -102,12 +102,16 @@ namespace tachyon
 		
 		config.init_width = 1024;
 		config.init_height = 1024;
+		config.glyph_sdf.padding   = kSdfPadding;
+		config.icon_sdf.padding    = kSdfPadding;
+		config.pattern_sdf.padding = kSdfPadding;
 
 		atlas = skb_image_atlas_create(&config);
 		assert(atlas);
 		skb_image_atlas_set_create_texture_callback(atlas, &OnCreateTexture, this);
 
         skb_rasterizer_config_t rasterizer_config = skb_rasterizer_get_default_config();
+		rasterizer_config.pixel_dist_scale = kSdfDistanceScale;
 		rasterizer = skb_rasterizer_create(&rasterizer_config);
 		assert(rasterizer);
 
@@ -727,8 +731,28 @@ namespace tachyon
 		auto textureIndex = (TextureIndex)texID;
 		ImageIndex image_index = ctx->textAtlasManager->GetImageIndex(textureIndex);
 
+		if (!ctx->shadow.IsNone())
+		{
+			const float2 offset = float2{ float(ctx->shadow.x), float(ctx->shadow.y) };
+			ctx->guiRenderer->RenderGlyph(
+				pos + offset, size, uv0, uv1, scale, bpp, (int)mode, ctx->shadow.color, clipRect, image_index, float(ctx->shadow.blur));
+			return;
+		}
 		ctx->guiRenderer->RenderGlyph(
 			pos, size, uv0, uv1, scale, bpp, (int)mode, textColorIndex, clipRect, image_index);
+	}
+
+	void draw_glyph_quad_sdf(SkribidiContext* ctx, skb_rect2_t geom, skb_rect2_t image, float scale, int bpp, skb_rasterize_alpha_mode_t mode, VisualColorStyleIndex textColorIndex, uint32_t texID, IntRect clipRect)
+	{
+		constexpr float kTrim = float(SkribidiContext::kSdfPadding - 1) - SkribidiContext::kGlyphMargin;
+		if (ctx->shadow.IsNone() && mode == SKB_RASTERIZE_ALPHA_SDF && image.width > 2.0f * kTrim && image.height > 2.0f * kTrim)
+		{
+			const float trimX = kTrim * geom.width / image.width;
+			const float trimY = kTrim * geom.height / image.height;
+			geom  = { geom.x + trimX, geom.y + trimY, geom.width - 2.0f * trimX, geom.height - 2.0f * trimY };
+			image = { image.x + kTrim, image.y + kTrim, image.width - 2.0f * kTrim, image.height - 2.0f * kTrim };
+		}
+		draw_image_quad_sdf(ctx, geom, image, scale, bpp, mode, textColorIndex, texID, clipRect);
 	}
 
 	void draw_image_pattern_quad_sdf(SkribidiContext* ctx, skb_rect2_t geom, skb_rect2_t pattern, skb_rect2_t image, float scale, int bpp, skb_rasterize_alpha_mode_t mode, VisualColorStyleIndex textColorIndex, uint32_t texID, IntRect clipRect)

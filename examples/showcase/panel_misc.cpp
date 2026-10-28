@@ -390,6 +390,12 @@ namespace tachyon
             EndVertical();
         }
 
+        // --- Text shadow and glow (CSS text-shadow) --------------------------------
+        BeginHorizontal(tachyon::LayoutOverride::Auto().NoGrow());
+        Text("Text shadow", textShadowSampleStyleRef);
+        Text("Glow", textGlowSampleStyleRef);
+        EndHorizontal();
+
         // --- Per-element text overrides (StyleManager::WithTextOverride) -----------
         {
             // Translation table: each column's text is in its own language, so shared

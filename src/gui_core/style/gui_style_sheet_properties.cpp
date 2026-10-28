@@ -27,6 +27,13 @@ bool Parser::ParseDeclValue(StyleDecl& d)
 
     if (ICEq(p,"box-shadow"))
         return ParseShadowList(d.shadowVal);
+    if (ICEq(p,"text-shadow"))
+    {
+        if (!ParseShadowList(d.shadowVal, nullptr, 0, "text-shadow")) return false;
+        for (const BoxShadow& b : d.shadowVal)
+            if (b.inset || b.spread != 0) { Error("text-shadow takes an x and a y offset, a blur and a color: no spread, never inset"); return false; }
+        return true;
+    }
 
     // --- Box model shorthands -----------------------------------------------
     if (ICEq(p,"margin") || ICEq(p,"padding") || ICEq(p,"border-width"))
@@ -511,6 +518,12 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     {
         for (int i = 0; i < kMaxBoxShadows; ++i)
             s.states[si].boxShadow[i] = d.shadowVal[i];
+        return;
+    }
+    if (ICEq(p,"text-shadow"))
+    {
+        for (int i = 0; i < kMaxTextShadows; ++i)
+            s.states[si].textShadow[i] = d.shadowVal[i];
         return;
     }
     if (ICEq(p,"color"))
