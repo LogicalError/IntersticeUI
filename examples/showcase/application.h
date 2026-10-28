@@ -153,6 +153,7 @@ namespace tachyon
 
             std::string textBox1;
             std::string textBox2;
+            std::string fruit;    // the inspector's autocomplete field
 
             // Inline-edit
             std::string inlineEditText = "Click me to edit";

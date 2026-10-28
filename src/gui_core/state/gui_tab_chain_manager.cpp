@@ -9,6 +9,7 @@ namespace tachyon
         m_currentFocusedID = guiStateManager.Interaction().GetFocusedID();
         m_activeWindowID = guiStateManager.Interaction().GetActiveWindowID();
         m_currentWindowID = ID::Invalid();
+        m_outerWindowIDs.clear();
         m_nextTabTarget = ID::Invalid();
         m_prevTabTarget = ID::Invalid();
         m_firstTabTarget = ID::Invalid();

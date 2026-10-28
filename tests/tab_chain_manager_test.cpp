@@ -349,3 +349,23 @@ TEST_F(TabChainManagerTest, MultipleWindows_OnlyActiveWindowBuildsChain)
     EXPECT_EQ(tabChainManager.GetNextTabTarget(), elementID1); // wraps to first
     EXPECT_EQ(tabChainManager.GetPrevTabTarget(), elementID1);
 }
+
+// A popup made inside a window (a field's suggestion list) doesn't end that window's tab
+// chain: the targets after it still follow the focused one.
+TEST_F(TabChainManagerTest, APopupMadeInsideAWindowKeepsItsChainGoing)
+{
+    stateManager.Interaction().SetActiveWindowID(windowID1);
+    CommitFocused(elementID1);
+    tabChainManager.BeginFrame(stateManager);
+
+    tabChainManager.BeginWindow(windowID1);
+    tabChainManager.RegisterTabTarget(elementID1);
+    tabChainManager.BeginWindow(windowID2);     // the popup, not the active window
+    tabChainManager.RegisterTabTarget(elementID3);
+    tabChainManager.EndWindow();
+    tabChainManager.RegisterTabTarget(elementID2);
+    tabChainManager.EndWindow();
+    tabChainManager.EndFrame();
+
+    EXPECT_EQ(tabChainManager.GetNextTabTarget(), elementID2);
+}

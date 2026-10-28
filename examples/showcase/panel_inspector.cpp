@@ -116,6 +116,15 @@ namespace tachyon
             Field(showcase.textBox2, TextEditBehavior::ContinuousUpdate | TextEditBehavior::Multiline);
         });
 
+        add("Autocomplete", [this]() {
+            Label("Autocomplete");
+            static constexpr std::string_view kFruits[] = {
+                "Apple", "Apricot", "Banana", "Blackberry", "Blueberry", "Cherry", "Grape",
+                "Kiwi", "Lemon", "Lime", "Mango", "Orange", "Peach", "Pear", "Pineapple", "Plum" };
+            AutocompleteField(showcase.fruit, kFruits);
+            SetTooltip("Type to see matching fruit; Up / Down and Enter pick one");
+        });
+
         add("Indeterminate", [this]() {
             BeginIndeterminate();
             DragLabel("Indeterminate");

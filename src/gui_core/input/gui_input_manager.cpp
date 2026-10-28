@@ -543,7 +543,8 @@ namespace tachyon
             if (!handled && focused != ID::Invalid())
             {
                 ElementRef ref = storage.FindElementRefByID(focused);
-                if (ref.IsValid())
+                // A control disabled while it has the focus takes no keys, as it takes no clicks.
+                if (ref.IsValid() && (storage.GetElementUnsafe(ref).state & ElementState::Disabled) == ElementState::None)
                 {
                     const Element&     elem = storage.GetElementUnsafe(ref);
                     const ElementRect& rect = storage.GetElementRectUnsafe(ref);

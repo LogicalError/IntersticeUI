@@ -51,11 +51,30 @@ namespace tachyon
             ReportMisuse("GUIApplication: a control with an invalid ID (it is drawn but takes no input and keeps no state)");
     }
 
+    void GUIApplication::BeginFieldBox(ID id, StyleRef style, LayoutOverride&& constraints)
+    {
+        RegisterElement(tachyon::Element{ .id = id, .styleRef = style, .flags = ElementFlags::PropagatesDescendantState },
+                        std::move(constraints));
+        VERIFY(elementStorage.BeginChildren());
+    }
+
+    void GUIApplication::EndFieldBox()
+    {
+        VERIFY(elementStorage.EndChildren());
+    }
+
+    // Tab skips a disabled control, as the mouse does.
+    void GUIApplication::RegisterTabStop(ID id)
+    {
+        if (!guiStateManager.Construction().IsDisabled())
+            tabChainManager.RegisterTabTarget(id);
+    }
+
     tachyon::ElementRef GUIApplication::RegisterControl(tachyon::Element&& element, std::string_view text, LayoutOverride&& constraints)
     {
         element.flags |= ElementFlags::IsControl;
         ReportInvalidControlID(element.id);
-        tabChainManager.RegisterTabTarget(element.id);
+        RegisterTabStop(element.id);
         return RegisterElement(std::move(element), text, std::move(constraints));
     }
 
@@ -63,7 +82,7 @@ namespace tachyon
     {
         element.flags |= ElementFlags::IsControl;
         ReportInvalidControlID(element.id);
-        tabChainManager.RegisterTabTarget(element.id);
+        RegisterTabStop(element.id);
         return RegisterElement(std::move(element), std::move(constraints));
     }
 
@@ -73,7 +92,7 @@ namespace tachyon
         ReportInvalidControlID(element.id);
         element.state |= guiStateManager.GetCurrentState(element.id); // required for createTextID callback
         element.textID = createTextID(element);
-        tabChainManager.RegisterTabTarget(element.id);
+        RegisterTabStop(element.id);
         return RegisterElementInternal(std::move(element), std::move(constraints),
             false); // already updated state, so skipping it in RegisterElementInternal
     }
@@ -462,6 +481,155 @@ namespace tachyon
         Text(id, text, theme.statusTextStyleRef, std::move(constraints));
     }
 
+    namespace
+    {
+        // A text field with a suggestion list: Up / Down move through it, and Enter and Escape
+        // go to the list first (when they return true they're used); other keys edit the text.
+        EventHandler MakeSuggestionFieldHandler(GUIStateManager& guiStateManager, std::function<void(int)> move,
+                                                std::function<bool()> enter, std::function<bool()> escape,
+                                                std::function<void()> onPress = {})
+        {
+            return [&guiStateManager, textBox = MakeTextBoxHandler(guiStateManager),
+                    move = std::move(move), enter = std::move(enter), escape = std::move(escape),
+                    onPress = std::move(onPress)](ElementEvent&& event) -> bool
+            {
+                if (event.type == EventType::MouseDown && event.state.LeftPressed() && onPress)
+                    onPress();
+                if (event.type == EventType::KeyDown && !event.state.consumed
+                    && guiStateManager.Interaction().GetFocusedID() == event.id)
+                {
+                    switch (event.state.lastKey)
+                    {
+                        case KeyCode::Down:    move(+1); return true;
+                        case KeyCode::Up:      move(-1); return true;
+                        case KeyCode::Return:
+                        case KeyCode::Return2: if (enter()) return true; break;
+                        case KeyCode::Escape:  if (escape()) return true; break;
+                        default: break;
+                    }
+                }
+                return textBox(std::move(event));
+            };
+        }
+
+        bool ContainsIgnoringCase(std::string_view text, std::string_view part)
+        {
+            const auto sameLetter = [](char a, char b)
+                { return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); };
+            return std::search(text.begin(), text.end(), part.begin(), part.end(), sameLetter) != text.end();
+        }
+    }
+
+    void GUIApplication::SuggestionPopup(ID windowID, ID anchorID, std::span<const SuggestionRow> rows, int current,
+                                         bool reserveIcon, int32_t minWidth, std::function<void(int)> onPick)
+    {
+        if (rows.empty())
+            return;
+        auto position = LayoutOverride{}.Anchored(anchorID, AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
+                                                  { 0, int16_t(styleManager.Px(4)) }, AutoFlipMode::FlipAvoidTarget);
+        if (minWidth > 0)
+            position.MinWidth(Pixels{ minWidth });
+        const ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup
+                                 | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
+        if (BeginWindow(windowID, theme.commandSearchListStyleRef, std::move(position), flags))
+        {
+            const ID rowsID = idManager.AllocateRangedID(uint32_t(kMaxSuggestions), "rows");
+            for (int i = 0; i < int(rows.size()) && i < kMaxSuggestions; ++i)
+            {
+                const SuggestionRow& row = rows[size_t(i)];
+                MenuItemRow(idManager.GetSubID(rowsID, uint32_t(i)),
+                            tachyon::MakeButtonHandler(guiStateManager, [onPick, i] { onPick(i); }),
+                            i == current ? theme.commandSearchCurrentRowStyleRef : theme.menuItemRowStyleRef,
+                            reserveIcon, row.icon, row.text, row.trailing, theme.menuItemShortcutStyleRef, LayoutOverride{});
+            }
+        }
+        EndWindow();
+    }
+
+    bool GUIApplication::AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions,
+                                           LayoutOverride&& constraints)
+    {
+        AutocompleteState& state = m_autocomplete[id];
+        if (state.listWindowID == ID::Invalid())
+            state.listWindowID = idManager.CreateStaticID();
+        const bool picked = std::exchange(state.picked, false);
+
+        // The suggestions that contain the text; none when it's all there is.
+        const bool focused = guiStateManager.Interaction().GetFocusedID() == id;
+        std::vector<int> matches;
+        if (focused && !state.dismissed)
+        {
+            for (int i = 0; i < int(suggestions.size()) && int(matches.size()) < kMaxSuggestions; ++i)
+                if (ContainsIgnoringCase(suggestions[size_t(i)], value))
+                    matches.push_back(i);
+            if (matches.size() == 1 && suggestions[size_t(matches[0])] == value)
+                matches.clear();
+        }
+        const int count = int(matches.size());
+        state.current = std::clamp(state.current, -1, count - 1);
+
+        // These run from event handlers, after the caller's suggestions may be gone: copies.
+        std::vector<std::string> matchTexts;
+        matchTexts.reserve(matches.size());
+        for (const int i : matches)
+            matchTexts.emplace_back(suggestions[size_t(i)]);
+        auto pick = [&state, &value, matchTexts](int row)
+        {
+            if (row < 0 || row >= int(matchTexts.size()))
+                return;
+            value         = matchTexts[size_t(row)];
+            state.picked  = true;
+            state.dismissed = true;
+            state.current = -1;
+        };
+        auto move = [&state, count](int step)
+        {
+            if (count == 0) return;
+            // -1 (nothing) sits between the last row and the first.
+            state.current = (state.current + 1 + step + (count + 1)) % (count + 1) - 1;
+        };
+        auto enter  = [&state, pick, count] { if (count == 0 || state.current < 0) return false; pick(state.current); return true; };
+        auto escape = [&state, count] { if (count == 0) return false; state.dismissed = true; state.current = -1; return true; };
+        auto open   = [&state] { state.dismissed = false; };
+        if (count > 0)
+            CloseOnPressOutside(id, state.listWindowID, [&state] { state.dismissed = true; state.current = -1; });
+
+        // The text system also reports a commit that didn't change the text (an arrow key in a
+        // one-line field), so compare instead.
+        const std::string before = value;
+        bool modified = false;
+        const ElementRef fieldRef = RegisterControl(
+            tachyon::Element{ .id = id, .eventHandler = MakeSuggestionFieldHandler(guiStateManager, move, enter, escape, open),
+                              .styleRef = theme.controls->textbox, .flags = ElementFlags::DoNotMeasureText },
+            [this, &modified, &value](tachyon::Element& element)
+            {
+                return textSystem->RegisterEditableText(element.id, value, TextEditBehavior::ContinuousUpdate,
+                                                        element.styleRef, element.state, modified);
+            },
+            std::move(constraints));
+        const bool typed = modified && value != before;
+        if (typed)
+        {
+            state.dismissed = false;
+            state.current   = -1;
+        }
+        if (fieldRef.IsValid())
+            [[maybe_unused]] auto added = elementStorage.AddPostLayout(fieldRef,
+                [&state](PostLayoutContext& ctx) { state.width = ctx.ElementRect().w; });
+
+        [[maybe_unused]] const bool pushed = idManager.PushParent(id);
+        std::vector<SuggestionRow> rows;
+        rows.reserve(matches.size());
+        for (const int i : matches)
+            rows.push_back({ .text = suggestions[size_t(i)] });
+        SuggestionPopup(state.listWindowID, id, rows, state.current, /*reserveIcon*/ false, state.width, pick);
+        if (pushed)
+            (void)idManager.PopParent();
+
+        guiStateManager.SetModified(typed || picked);
+        return typed || picked;
+    }
+
     bool GUIApplication::CommandSearch(ID id, CommandSearchState& state, LayoutOverride&& constraints)
     {
         const bool ran = std::exchange(state.ranCommand, false);
@@ -481,23 +649,19 @@ namespace tachyon
         const bool focused = (interaction.GetFocusedID() == fieldID);
 
         // The current mode's and Default's commands whose description contains the query.
-        constexpr size_t kMaxMatches = 12;
         const auto& commands = commandManager.GetCommands();
         const CommandMode mode = commandManager.GetMode();
         std::vector<CommandID> matches;
         if (focused)
         {
-            const auto sameLetter = [](char a, char b)
-                { return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); };
-            for (size_t i = 0; i < commands.size() && matches.size() < kMaxMatches; ++i)
+            for (size_t i = 0; i < commands.size() && int(matches.size()) < kMaxSuggestions; ++i)
             {
                 const CommandManager::Command& c = commands[i];
                 if (c.description.empty() || !c.callback || c.IsHeld())
                     continue;
                 if (c.mode != CommandMode::Default && c.mode != mode)
                     continue;
-                if (std::search(c.description.begin(), c.description.end(),
-                                state.query.begin(), state.query.end(), sameLetter) != c.description.end())
+                if (ContainsIgnoringCase(c.description, state.query))
                     matches.push_back(CommandManager::IDAt(i));
             }
         }
@@ -551,33 +715,10 @@ namespace tachyon
 
         // Up / Down / Enter / Escape drive the list; every other key edits the query.
         const CommandID currentCommand = matchCount > 0 ? matches[size_t(state.current)] : CommandID::Invalid();
-        auto textBoxHandler = MakeTextBoxHandler(guiStateManager);
-        auto fieldHandler = [this, &state, textBoxHandler, matchCount, currentCommand, run, leave](ElementEvent&& event) -> bool
-        {
-            if (event.type == EventType::KeyDown && !event.state.consumed
-                && guiStateManager.Interaction().GetFocusedID() == event.id)
-            {
-                switch (event.state.lastKey)
-                {
-                    case KeyCode::Down:
-                        if (matchCount > 0) state.current = (state.current + 1) % matchCount;
-                        return true;
-                    case KeyCode::Up:
-                        if (matchCount > 0) state.current = (state.current + matchCount - 1) % matchCount;
-                        return true;
-                    case KeyCode::Return:
-                    case KeyCode::Return2:
-                        run(currentCommand);
-                        return true;
-                    case KeyCode::Escape:
-                        leave();
-                        return true;
-                    default:
-                        break;
-                }
-            }
-            return textBoxHandler(std::move(event));
-        };
+        auto fieldHandler = MakeSuggestionFieldHandler(guiStateManager,
+            [&state, matchCount](int step) { if (matchCount > 0) state.current = (state.current + step + matchCount) % matchCount; },
+            [run, currentCommand] { run(currentCommand); return true; },
+            [leave] { leave(); return true; });
         bool modified = false;
         RegisterControl(tachyon::Element{ .id = fieldID, .eventHandler = std::move(fieldHandler),
                                              .styleRef = theme.searchTextboxFieldStyleRef, .flags = ElementFlags::DoNotMeasureText },
@@ -602,29 +743,15 @@ namespace tachyon
         VERIFY(elementStorage.EndChildren());
 
         // The matches, in a popup under the box that leaves the keyboard with the field.
-        if (matchCount > 0)
+        std::vector<SuggestionRow> rows;
+        rows.reserve(matches.size());
+        for (const CommandID command : matches)
         {
-            auto position = LayoutOverride{}.Anchored(id, AnchorPlacement::OutsideBottom | AnchorPlacement::InsideLeft,
-                                                      { 0, int16_t(styleManager.Px(4)) }, AutoFlipMode::FlipAvoidTarget);
-            const ElementFlags flags = ElementFlags::WindowNoCaption | ElementFlags::WindowIsPopup
-                                     | ElementFlags::Shadows | ElementFlags::WindowNotFocusable;
-            if (BeginWindow(state.listWindowID, theme.commandSearchListStyleRef, std::move(position), flags))
-            {
-                const ID rowsID = idManager.AllocateRangedID(uint32_t(kMaxMatches), "rows");
-                for (int i = 0; i < matchCount; ++i)
-                {
-                    const CommandID command = matches[size_t(i)];
-                    const CommandManager::Command& c = *commandManager.GetCommand(command);
-                    MenuItemRow(idManager.GetSubID(rowsID, uint32_t(i)),
-                                tachyon::MakeButtonHandler(guiStateManager, [run, command] { run(command); }),
-                                i == state.current ? theme.commandSearchCurrentRowStyleRef : theme.menuItemRowStyleRef,
-                                /*reserveIcon*/ true, c.icon, c.description,
-                                c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{},
-                                theme.menuItemShortcutStyleRef, LayoutOverride{});
-                }
-            }
-            EndWindow();
+            const CommandManager::Command& c = *commandManager.GetCommand(command);
+            rows.push_back({ c.icon, c.description, c.HasShortcut() ? std::string_view(c.displayString) : std::string_view{} });
         }
+        SuggestionPopup(state.listWindowID, id, rows, state.current, /*reserveIcon*/ true, /*minWidth*/ 0,
+                        [run, matches](int row) { run(matches[size_t(row)]); });
 
         if (pushed)
             (void)idManager.PopParent();
@@ -651,7 +778,7 @@ namespace tachyon
         control.state        = state;
         control.styleRef     = theme.checkboxStyleRef;
         control.eventHandler = tachyon::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
-        RegisterElement(std::move(control), std::move(constraints));
+        RegisterControl(std::move(control), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         {
             const tachyon::ElementState partState = value ? (state | tachyon::ElementState::Selected) : state;
@@ -702,7 +829,7 @@ namespace tachyon
         control.state        = state;
         control.styleRef     = style;
         control.eventHandler = tachyon::MakeButtonHandler(guiStateManager, [value, onToggle]() { onToggle(!value); });
-        RegisterElement(std::move(control), std::move(constraints));
+        RegisterControl(std::move(control), std::move(constraints));
         VERIFY(elementStorage.BeginChildren());
         {
             tachyon::Element track{};
@@ -1149,7 +1276,7 @@ namespace tachyon
             track.styleRef     = theme.sliderFieldTrackStyleRef;
             track.eventHandler = MakeSliderHandler(guiStateManager, elementStorage, &value, trackWidth,
                                                    /*onChanged*/ nullptr, minVal, maxVal);
-            const auto trackRef = RegisterElement(std::move(track),
+            const auto trackRef = RegisterControl(std::move(track),
                                                   std::move(constraints).FlexGrow(1));
 
             const auto bgStyle    = theme.sliderFieldBgStyleRef.visualBoxStyleIndex;
@@ -1275,6 +1402,28 @@ namespace tachyon
                         if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
                         { s->draggingID = tachyon::ID::Invalid(); return true; }
                         break;
+                    case tachyon::EventType::KeyDown:
+                    {
+                        // Arrows step 1, Page Up / Down a tenth of the range, Home / End to its ends.
+                        if (gsm.Interaction().GetFocusedID() != event.id || event.state.consumed)
+                            break;
+                        const int bigStep = std::max(1, range / 10);
+                        int step = 0;
+                        switch (event.state.lastKey)
+                        {
+                            case tachyon::KeyCode::Left:  case tachyon::KeyCode::Down:     step = -1;       break;
+                            case tachyon::KeyCode::Right: case tachyon::KeyCode::Up:       step = +1;       break;
+                            case tachyon::KeyCode::PageDown:                               step = -bigStep; break;
+                            case tachyon::KeyCode::PageUp:                                 step = +bigStep; break;
+                            case tachyon::KeyCode::Home: *valuePtr = minVal; return true;
+                            case tachyon::KeyCode::End:  *valuePtr = maxVal; return true;
+                            default: break;
+                        }
+                        if (step == 0)
+                            break;
+                        *valuePtr = std::clamp(*valuePtr + step, minVal, maxVal);
+                        return true;
+                    }
                     default: break;
                 }
                 return false;
@@ -1307,7 +1456,7 @@ namespace tachyon
         track.styleRef = theme.sliderFieldTrackStyleRef;
         track.eventHandler = MakeIntSliderDrag(guiStateManager, elementStorage,
                                                valuePtr, minVal, maxVal, trackWidth);
-        const auto trackRef = RegisterElement(std::move(track), std::move(constraints).FlexGrow(1));
+        const auto trackRef = RegisterControl(std::move(track), std::move(constraints).FlexGrow(1));
 
         const auto bgStyle    = theme.sliderFieldBgStyleRef.visualBoxStyleIndex;
         const auto fillStyle  = theme.sliderFieldFillStyleRef.visualBoxStyleIndex;
@@ -1394,7 +1543,7 @@ namespace tachyon
         track.styleRef     = theme.sliderStyleRef;
         track.eventHandler = MakeIntSliderDrag(guiStateManager, elementStorage,
                                                &value, minVal, maxVal, trackWidth);
-        const auto trackRef = RegisterElement(std::move(track), std::move(constraints));
+        const auto trackRef = RegisterControl(std::move(track), std::move(constraints));
 
         const auto grooveStyle = theme.sliderGrooveStyleRef.visualBoxStyleIndex;
         const auto fillStyle   = theme.sliderFillStyleRef.visualBoxStyleIndex;

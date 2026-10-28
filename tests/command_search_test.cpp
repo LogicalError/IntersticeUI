@@ -133,6 +133,24 @@ namespace
         EXPECT_TRUE(Rows().empty()) << "running a command leaves the search";
     }
 
+    // The highlight stays where Down put it until something is typed, however many frames pass.
+    TEST_F(CommandSearchTest, TheHighlightStaysUntilTheQueryChanges)
+    {
+        Focus();
+        app.InjectText("save");
+        Frame();
+        app.InjectKey(KeyCode::Down, KeyAction::KeyDown);
+        Frame();
+        app.InjectKey(KeyCode::Down, KeyAction::KeyUp);
+        for (int i = 0; i < 4; ++i)
+            Frame();
+        app.InjectKey(KeyCode::Return, KeyAction::KeyDown);
+        Frame();
+        Frame();
+        ASSERT_EQ(ran.size(), 1u);
+        EXPECT_EQ(ran[0], "Save As");
+    }
+
     TEST_F(CommandSearchTest, UpWrapsToTheLastMatch)
     {
         Focus();

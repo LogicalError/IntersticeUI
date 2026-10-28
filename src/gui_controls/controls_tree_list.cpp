@@ -315,7 +315,7 @@ namespace tachyon
         };
 
         RegisterElement(std::move(container), std::move(constraints));
-        tabChainManager.RegisterTabTarget(id);
+        RegisterTabStop(id);
         VERIFY(elementStorage.BeginChildren());
         return true;
     }

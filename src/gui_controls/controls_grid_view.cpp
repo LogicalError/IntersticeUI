@@ -106,7 +106,7 @@ namespace tachyon
         };
 
         RegisterElement(std::move(container), std::move(constraints));
-        tabChainManager.RegisterTabTarget(id);
+        RegisterTabStop(id);
         VERIFY(elementStorage.BeginChildren());
         return true;
     }
@@ -550,7 +550,7 @@ namespace tachyon
                     }));
         }
         RegisterElement(std::move(container), std::move(constraints));
-        tabChainManager.RegisterTabTarget(id);
+        RegisterTabStop(id);
 
         // Capture this frame's viewport for next frame's column / row-window math.
         const auto containerRef = elementStorage.FindElementRefByID(id);

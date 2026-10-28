@@ -766,11 +766,11 @@ namespace tachyon
                 BeginHorizontal(idManager.AllocateDynamicID("cp_hdr_row"), theme.colorPickerFieldRowStyleRef, LayoutOverride{}.NoShrink());
                 Text(idManager.AllocateDynamicID("cp_hdr_label"), "HDR", theme.colorPickerRowLabelStyleRef);
                 if (!allowHDR) guiStateManager.Construction().PushDisabled();
-                BeginHorizontal(idManager.AllocateDynamicID("cp_hdr_box"), theme.colorPickerHdrStyleRef, LayoutOverride{}.FlexGrow(1));
+                BeginFieldBox(idManager.AllocateDynamicID("cp_hdr_box"), theme.colorPickerHdrStyleRef, LayoutOverride{}.FlexGrow(1));
                 Text(idManager.AllocateDynamicID("cp_hdr_caption"), "Intensity", theme.colorPickerCaptionStyleRef);
                 Field(idManager.AllocateDynamicID("cp_hdr_value"), cp.hdrBrightness, TextEditBehavior::None, theme.colorPickerHdrValueStyleRef,
                       NumericFieldConfig<float>{ .minVal = 1.0f, .maxVal = 1000.0f }, LayoutOverride{}.FlexGrow(1));
-                EndHorizontal();
+                EndFieldBox();
                 if (!allowHDR) guiStateManager.Construction().PopDisabled();
                 SetTooltip(allowHDR ? "Brightness over 1" : "This color has no HDR range");
                 const bool linear = (cp.activeSpace == ColorSpace::LinearRGB);
@@ -1026,7 +1026,7 @@ namespace tachyon
                   LayoutOverride{}.FlexGrow(1)))
             ParseColorHex(hex, value);
 
-        BeginHorizontal(idManager.AllocateDynamicID("color_alpha"), theme.colorAlphaStyleRef, LayoutOverride{});
+        BeginFieldBox(idManager.AllocateDynamicID("color_alpha"), theme.colorAlphaStyleRef, LayoutOverride{});
         Text(idManager.AllocateDynamicID("color_alpha_caption"), "A", theme.colorAlphaCaptionStyleRef);
         int alphaPercent = int(std::lround(std::clamp(value.a, 0.0f, 1.0f) * 100.0f));
         if (Field(idManager.AllocateDynamicID("color_alpha_value"), alphaPercent, TextEditBehavior::ContinuousUpdate,
@@ -1034,7 +1034,7 @@ namespace tachyon
                   LayoutOverride{}.FlexGrow(1)))
             value.a = float(alphaPercent) / 100.0f;
         Text(idManager.AllocateDynamicID("color_alpha_unit"), "%", theme.colorAlphaUnitStyleRef);
-        EndHorizontal();
+        EndFieldBox();
 
         EndHorizontal();
 
