@@ -71,7 +71,7 @@ namespace tachyon
         // arrows then move along the tabs.
         auto& keyboard = guiStateManager.GetElementDataStore().GetOrCreate<TabBarKeyboard>(barID);
         if (isSelected || (!selectedIndex && tabIndex == 0))
-            tabChainManager.RegisterTabTarget(bodyID);
+            RegisterTabStop(bodyID);
         if (keyboard.focusIndex == tabIndex)
         {
             guiStateManager.Interaction().SetFocusID(bodyID);

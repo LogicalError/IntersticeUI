@@ -622,7 +622,7 @@ namespace tachyon
 
             BeginHorizontal(idManager.AllocateDynamicID("ge_location_row"), theme.gradientEditorRowStyleRef, LayoutOverride{}.NoShrink());
             Text(idManager.AllocateDynamicID("ge_location_label"), "Location", theme.gradientEditorLabelStyleRef);
-            BeginHorizontal(idManager.AllocateDynamicID("ge_location_box"), theme.gradientEditorLocationStyleRef, LayoutOverride{}.FlexGrow(1));
+            BeginFieldBox(idManager.AllocateDynamicID("ge_location_box"), theme.gradientEditorLocationStyleRef, LayoutOverride{}.FlexGrow(1));
             float percent = std::round(g.stops[size_t(ge.selectedStop)].GetOffset() * 1000.0f) / 10.0f;
             if (Field(idManager.AllocateDynamicID("ge_location_value"), percent, TextEditBehavior::None, theme.gradientEditorLocationInputStyleRef,
                       NumericFieldConfig<float>{ .stepPerPixel = 0.1, .minVal = 0.0f, .maxVal = 100.0f }, LayoutOverride{}.FlexGrow(1)))
@@ -631,7 +631,7 @@ namespace tachyon
                 ge.selectedStop = SortStops(g, ge.selectedStop);
             }
             Text(idManager.AllocateDynamicID("ge_location_unit"), "%", theme.gradientEditorLocationUnitStyleRef);
-            EndHorizontal();
+            EndFieldBox();
             Button(idManager.AllocateDynamicID("ge_duplicate"), theme.duplicateIcon, [this]() {
                 auto& ge = m_gradientEditorSub->State();
                 auto& g = ge.workingCopy;

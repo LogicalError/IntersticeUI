@@ -31,6 +31,7 @@ This guide has these pages:
 | [Other controls](controls/other-controls.md) | Breadcrumb, status bar, command search and the settings panel. |
 | [Custom drawing](controls/custom-drawing.md) | Drawing your own shapes and text inside an element. |
 | [Default CSS classes](controls/css-classes.md) | The CSS class each control uses unless you pass your own style. |
+| [Writing a control](controls/writing-controls.md) | What every control must do, and what to decide for the optional features. |
 
 <!--! Page tree for the API reference.
 \subpage md_docs_2controls_2conventions
@@ -50,4 +51,5 @@ This guide has these pages:
 \subpage md_docs_2controls_2other-controls
 \subpage md_docs_2controls_2custom-drawing
 \subpage md_docs_2controls_2css-classes
+\subpage md_docs_2controls_2writing-controls
 -->

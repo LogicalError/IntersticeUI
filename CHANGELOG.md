@@ -19,3 +19,5 @@ First public preview. The API is not stable yet.
 - `build.bat` / `build.sh` and `CMakePresets.json`; every example runs from any folder.
 - A step-by-step tutorial (`docs/tutorial.md`) whose code is the `examples/tutorial` app, kept in sync by tests.
 - `Dropdown`: pick one of a list of options; the list opens on the current option.
+- `AutocompleteField`: a text field that lists the suggestions matching what's typed.
+- Keyboard focus: Tab reaches every control (not disabled ones, which also ignore keys) and every control shows it has the focus; [Writing a control](docs/controls/writing-controls.md) lists what each control must do.

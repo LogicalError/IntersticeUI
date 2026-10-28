@@ -674,6 +674,7 @@
     background-color: var(--bg-panel);
     border-color: var(--line-subtle);
 }
+.table:focus { border-color: var(--line-strong); }   /* as .list-view and .tree-view */
 
 /* Table that fills its flex container instead of sizing to its columns.
    flex-basis:0 + grow:1 bounds the table to the available width/height, so
@@ -3703,6 +3704,9 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
+/* Boxes that are a field's border (BeginFieldBox): they take the field's states. */
+.color-alpha:hover, .typed-field:hover, .color-picker-hdr:hover, .gradient-editor-location:hover { border-color: var(--line-strong); }
+.color-alpha:focus, .typed-field:focus, .color-picker-hdr:focus, .gradient-editor-location:focus { border-color: var(--accent); }
 .color-alpha-caption {
     margin: 0px;
     padding: 0px 0px 0px 8px;
@@ -5245,12 +5249,24 @@
 .icon-top:focus-visible, .icon-bottom:focus-visible,
 .first-button:focus-visible, .mid-button:focus-visible, .last-button:focus-visible,
 .first-toggle:focus-visible, .mid-toggle:focus-visible, .last-toggle:focus-visible,
-.dialog-button:focus-visible, .dialog-button-primary:focus-visible, .dialog-button-danger:focus-visible {
+.dialog-button:focus-visible, .dialog-button-primary:focus-visible, .dialog-button-danger:focus-visible,
+.checkbox:focus-visible, .switch:focus-visible, .slider:focus-visible, .slider-field-track:focus-visible,
+.color-swatch:focus-visible, .color-alpha:focus-visible, .gradient-swatch:focus-visible,
+.color-hex:focus-visible, .typed-field:focus-visible, .color-picker-hdr:focus-visible, .gradient-editor-location:focus-visible,
+.collection-remove:focus-visible, .collection-add:focus-visible, .collection-add-entry:focus-visible,
+.toolbar-button:focus-visible, .toolbar-toggle:focus-visible, .toolbar-menu-trigger:focus-visible,
+.breadcrumb-segment:focus-visible, .message-box-close:focus-visible, .message-box-details-toggle:focus-visible,
+.dialog-close:focus-visible, .dialog-small-button:focus-visible, .dialog-icon-button:focus-visible,
+.dialog-square-button:focus-visible, .dialog-delete-button:focus-visible, .gradient-editor-preset:focus-visible,
+.color-picker-strip:focus-visible, .color-picker-track:focus-visible, .color-picker-swatch:focus-visible,
+.color-picker-recent:focus-visible, .color-picker-range:focus-visible, .color-picker-new:focus-visible {
     box-shadow: var(--focus-ring);
 }
 
 /* Tabs, rows and menu items sit flush with their neighbours: an outline inside them instead. */
 .tab:focus-visible, .title-bar-tab:focus-visible, .list-item:focus-visible, .list-item-row:focus-visible,
-.menu-item:focus-visible, .menu-item-row:focus-visible, .menu-bar-trigger:focus-visible {
+.menu-item:focus-visible, .menu-item-row:focus-visible, .menu-bar-trigger:focus-visible,
+.title-bar-button:focus-visible, .title-bar-close-button:focus-visible,
+.color-picker-square:focus-visible, .gradient-editor-bar:focus-visible {
     box-shadow: inset 0 0 0 1px var(--accent);
 }

@@ -39,6 +39,28 @@ bool SearchField(ID id, std::string& value, IconID icon,
 
 Classes: `search-textbox`, `search-textbox-icon`, `search-textbox-field`.
 
+## AutocompleteField
+
+A text field that lists matching suggestions under itself while it has the keyboard.
+
+```cpp
+bool AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions,
+                       LayoutOverride&& constraints = {});
+```
+
+The list holds the suggestions that contain the typed text, ignoring case, at most 12;
+none when the only one is exactly what's typed. Up / Down highlight one, and Enter or a
+click puts it into `value`. Nothing is highlighted until Down, so Enter on its own keeps
+what was typed. Escape, a pick or a click elsewhere closes the list, and typing opens it
+again. Returns `true` when `value` changed, by typing or by a pick. Classes: `textbox` for
+the field; `command-search-list`, `menu-item-row` and `command-search-current-row` for the
+list, as in the command search.
+
+```cpp
+static constexpr std::string_view kFruits[] = { "Apple", "Banana", "Cherry" };
+AutocompleteField(fruit, kFruits);
+```
+
 ## Dropdown
 
 A field that shows the selected option and opens the list of options under itself.

@@ -20,6 +20,7 @@ knob, a table's header) have their own classes, listed with the control above.
 | `Field(std::string&)` | `textbox` |
 | `SearchField` | `search-textbox` |
 | `Dropdown` | `menu-trigger`, popup `menu` |
+| `AutocompleteField` | `textbox`; list `command-search-list`, rows `menu-item-row`, highlighted row `command-search-current-row` |
 | `Field` (numbers) | `number-field` |
 | `Field` (vectors) | `vector-component`, `axis-label-x` / `-y` / `-z` / `-w` |
 | `TypedField` | `typed-field` |

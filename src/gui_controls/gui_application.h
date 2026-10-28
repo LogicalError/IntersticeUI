@@ -1212,6 +1212,15 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, std::move(constraints)); }
 
+        /// A text field that lists, under itself while it has the keyboard, the suggestions
+        /// that contain the typed text (ignoring case), at most 12. Up / Down highlight one,
+        /// Enter or a click puts it into `value`; nothing is highlighted until Down, so Enter
+        /// keeps what was typed. Escape, a pick or a click elsewhere closes the list; typing
+        /// opens it again. True when `value` changed: typed, or a suggestion picked.
+        bool        AutocompleteField(ID id, std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {});
+        /// As above, with the call site as the ID.
+        inline bool AutocompleteField(       std::string& value, std::span<const std::string_view> suggestions, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return AutocompleteField(idManager.AllocateDynamicID(site), value, suggestions, std::move(constraints)); }
+
 
 
 
@@ -1324,11 +1333,11 @@ namespace tachyon
         template<typename T>
         bool TypedField(ID id, T& value, LayoutOverride&& constraints = {})
         {
-            BeginHorizontal(idManager.AllocateDynamicID("typed_field"), theme.typedFieldStyleRef, std::move(constraints));
+            BeginFieldBox(idManager.AllocateDynamicID("typed_field"), theme.typedFieldStyleRef, std::move(constraints));
             const bool changed = Field(id, value, TextEditBehavior::ContinuousUpdate, theme.typedFieldInputStyleRef, {},
                                        LayoutOverride{}.FlexGrow(1));
             Text(idManager.AllocateDynamicID("typed_field_type"), TypeTag<T>(), theme.typedFieldTypeStyleRef);
-            EndHorizontal();
+            EndFieldBox();
             return changed;
         }
         /// As above, with the call site as the ID.
@@ -2162,6 +2171,12 @@ namespace tachyon
         bool OpenContextMenuWindow(ID targetID);
         bool OpenCached(ID id, StyleRef style, uint64_t signature, LayoutOverride&& constraints);
         static void ReportInvalidControlID(ID id);
+        /// Adds `id` to the Tab order, unless it's disabled.
+        void RegisterTabStop(ID id);
+        /// A box that draws the border of the field inside it (a field with a caption or a
+        /// unit): it takes the field's hover and focus, so its :hover / :focus rules show them.
+        void BeginFieldBox(ID id, StyleRef style, LayoutOverride&& constraints);
+        void EndFieldBox();
 
         /// Rebuilds the styles when a reload is pending or the main window's
         /// display scale changed. Runs before the managers begin their frame.
@@ -2255,6 +2270,24 @@ namespace tachyon
         std::vector<ID> m_titleBarStack;    ///< bar IDs between BeginTitleBar and EndTitleBar
         std::vector<ID> m_titleBarCaptions; ///< controls in the open title bar whose background drags the window
         std::unordered_set<ID> m_closeRequests;   ///< ConfirmClose windows whose title-bar close was clicked
+        /// The suggestion list of CommandSearch and AutocompleteField: rows in a popup under
+        /// `anchorID` that leaves the keyboard with the field, at least `minWidth` wide. A
+        /// click on row i calls onPick(i).
+        struct SuggestionRow { IconID icon = IconID::Invalid; std::string_view text; std::string_view trailing; };
+        static constexpr int kMaxSuggestions = 12;
+        void SuggestionPopup(ID windowID, ID anchorID, std::span<const SuggestionRow> rows, int current,
+                             bool reserveIcon, int32_t minWidth, std::function<void(int)> onPick);
+        /// AutocompleteField's state between frames, by field ID.
+        struct AutocompleteState
+        {
+            ID      listWindowID = ID::Invalid();
+            int     current      = -1;      ///< highlighted suggestion, -1 for none
+            bool    dismissed    = false;   ///< list closed until the text changes or the field is clicked
+            bool    picked       = false;   ///< a suggestion went into the value since the last call
+            int32_t width        = 0;       ///< the field's width last frame, for the list's
+        };
+        std::unordered_map<ID, AutocompleteState> m_autocomplete;
+
         /// A popup that isn't a menu (the command search's list) and closes on a press outside
         /// its elements: they take no focus, so the press may not move it away from them.
         struct PressOutsideWatch { ID inside[2]; std::function<void()> onPressOutside; };

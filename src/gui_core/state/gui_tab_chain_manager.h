@@ -2,6 +2,8 @@
 
 #include <gui_core/gui_id.h>
 
+#include <vector>
+
 namespace tachyon
 {
     /// @addtogroup elements
@@ -17,6 +19,9 @@ namespace tachyon
         ID m_currentFocusedID = ID::Invalid();
         ID m_currentWindowID = ID::Invalid();
         ID m_activeWindowID = ID::Invalid();
+        /// The windows a nested BeginWindow (a popup made inside a window) interrupted, so
+        /// EndWindow goes back to them.
+        std::vector<ID> m_outerWindowIDs;
         
         /// Results, for the active window only.
         ID m_nextTabTarget = ID::Invalid();
@@ -41,6 +46,7 @@ namespace tachyon
         /// builds a chain.
         void BeginWindow(ID windowID)
         {
+            m_outerWindowIDs.push_back(m_currentWindowID);
             m_currentWindowID = windowID;
             if (m_currentWindowID == m_activeWindowID)
             {
@@ -77,18 +83,25 @@ namespace tachyon
         /// Ends the window begun by BeginWindow; its chain wraps around.
         void EndWindow()
         {
-            if (m_currentWindowID != m_activeWindowID)
-                return;
-            
-            // Wrap around.
-            if (m_nextTabTarget == ID::Invalid() && m_firstTabTarget != ID::Invalid())
+            if (m_currentWindowID == m_activeWindowID)
             {
-                m_nextTabTarget = m_firstTabTarget;
+                // Wrap around.
+                if (m_nextTabTarget == ID::Invalid() && m_firstTabTarget != ID::Invalid())
+                {
+                    m_nextTabTarget = m_firstTabTarget;
+                }
+
+                if (m_prevTabTarget == ID::Invalid() && m_lastTabTarget != ID::Invalid())
+                {
+                    m_prevTabTarget = m_lastTabTarget;
+                }
             }
-            
-            if (m_prevTabTarget == ID::Invalid() && m_lastTabTarget != ID::Invalid())
+
+            // Back to the window this one was made inside, whose targets continue after it.
+            if (!m_outerWindowIDs.empty())
             {
-                m_prevTabTarget = m_lastTabTarget;
+                m_currentWindowID = m_outerWindowIDs.back();
+                m_outerWindowIDs.pop_back();
             }
         }
         

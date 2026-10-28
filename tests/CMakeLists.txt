@@ -94,6 +94,8 @@ list(APPEND GUI_CORE_TEST_FILES
   font_set_test.cpp
   built_in_resources_test.cpp
   controls_dropdown_test.cpp
+  controls_autocomplete_test.cpp
+  keyboard_focus_test.cpp
   tutorial_test.cpp
   tutorial_snippets_test.cpp
   skribidi_editor_test.cpp
