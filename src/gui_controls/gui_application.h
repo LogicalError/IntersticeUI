@@ -1212,8 +1212,8 @@ namespace tachyon
         /// As above, with the call site as the ID.
         inline bool SearchField(       std::string& value, IconID icon, TextEditBehavior textEditBehavior = TextEditBehavior::ContinuousUpdate, LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current()) { return SearchField(idManager.AllocateDynamicID(site), value, icon, textEditBehavior, std::move(constraints)); }
 
-        /// A text field that lists, under itself while it has the keyboard, the suggestions
-        /// that contain the typed text (ignoring case), at most 12. Up / Down highlight one,
+        /// A text field that lists, under itself while it has the keyboard and holds text, the
+        /// suggestions that contain that text (ignoring case), at most 12. Up / Down highlight one,
         /// Enter or a click puts it into `value`; nothing is highlighted until Down, so Enter
         /// keeps what was typed. Escape, a pick or a click elsewhere closes the list; typing
         /// opens it again. True when `value` changed: typed, or a suggestion picked.

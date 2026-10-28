@@ -280,16 +280,21 @@ namespace tachyon
         const bool exists = windowManager->GetWindowHandle(windowID) != nullptr;
         if (!restored.rectDone)
         {
-            // On no monitor any more (a display unplugged): keep the size, let the app place it.
-            // Checked here, in a frame, when the monitors are known.
+            // Off every monitor (a display unplugged, a position saved wrong): keep the size, let
+            // the app place it. Its top, where it's grabbed and closed, must be on a monitor:
+            // inside a work area, with some of its width. Checked here, in a frame, when the
+            // monitors are known.
             restored.hasPosition = false;
             if (windowManager->Monitors().empty())   // the first frame's are read at its end
                 windowManager->RefreshMonitors();
             for (const MonitorInfo& monitor : windowManager->Monitors())
             {
                 const IntRect& a = monitor.workArea;
-                if (restored.rect.x < a.x + a.w && restored.rect.x + restored.rect.w > a.x
-                    && restored.rect.y < a.y + a.h && restored.rect.y + restored.rect.h > a.y)
+                const int32_t  top = restored.rect.y;
+                const int32_t  visibleWidth = std::min(restored.rect.x + restored.rect.w, a.x + a.w)
+                                            - std::max(restored.rect.x, a.x);
+                if (top >= a.y && top < a.y + a.h - styleManager.Px(32)
+                    && visibleWidth >= std::min(restored.rect.w, int32_t(styleManager.Px(100))))
                     restored.hasPosition = true;
             }
             if (exists)

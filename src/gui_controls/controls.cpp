@@ -554,10 +554,11 @@ namespace tachyon
             state.listWindowID = idManager.CreateStaticID();
         const bool picked = std::exchange(state.picked, false);
 
-        // The suggestions that contain the text; none when it's all there is.
+        // The suggestions that contain the text, once something is typed; none when it's all
+        // there is.
         const bool focused = guiStateManager.Interaction().GetFocusedID() == id;
         std::vector<int> matches;
-        if (focused && !state.dismissed)
+        if (focused && !state.dismissed && !value.empty())
         {
             for (int i = 0; i < int(suggestions.size()) && int(matches.size()) < kMaxSuggestions; ++i)
                 if (ContainsIgnoringCase(suggestions[size_t(i)], value))
