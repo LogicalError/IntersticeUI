@@ -133,9 +133,14 @@ namespace tachyon
         m_renderer->RenderTriangle(p0, p1, p2, m_clipRect, colorStyleIndex, textureIndex);
     }
 
-    void CustomDrawContext::RenderCircle(int2 center, float radius, const LineStyle& style) const
+    void CustomDrawContext::RenderCircle(float2 center, float radius, const LineStyle& style) const
     {
         m_renderer->RenderCircle(center, radius, m_clipRect, style);
+    }
+
+    void CustomDrawContext::RenderCircle(int2 center, float radius, const LineStyle& style) const
+    {
+        RenderCircle(float2{ float(center.x), float(center.y) }, radius, style);
     }
 
     void CustomDrawContext::RenderDisc(int2 center, float radius, VisualColorStyleIndex colorStyleIndex) const

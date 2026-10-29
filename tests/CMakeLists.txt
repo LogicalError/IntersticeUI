@@ -33,6 +33,7 @@ list(APPEND GUI_CORE_TEST_FILES
   id_stability_test.cpp
   control_reporting_test.cpp
   frame_cost_bench.cpp
+  frame_alloc_bench.cpp
   units_test.cpp
   result_test.cpp
   measured_sizes_test.cpp
@@ -101,6 +102,7 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_editor_test.cpp
   text_shadow_test.cpp
   link_cursor_test.cpp
+  upload_worker_test.cpp
   table_scrollbar_test.cpp
   controls_table_frozen_test.cpp
   controls_table_cells_test.cpp

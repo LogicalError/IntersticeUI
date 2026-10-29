@@ -96,6 +96,11 @@ namespace tachyon
         const VisualTextStyle*       GetVisualTextStyle(VisualTextStyleIndex index, tachyon::ElementState state) const noexcept;
         /// The shadows of a box style by its flat GPU index (ComputeGPUStyleIndex); nullptr if none.
         const VisualShadowStyle*     GetVisualShadowStyle(uint32_t gpuStyleIndex) const noexcept;
+        /// A box style's state by its flat GPU index; nullptr out of range.
+        const VisualBoxStyle*        GetVisualBoxStyleAt(uint32_t gpuStyleIndex) const noexcept;
+        /// Whether the box style's background, by its flat GPU index, hides what's under it:
+        /// a color or gradient with every stop opaque (not a texture).
+        bool                         IsBoxBackgroundOpaque(uint32_t gpuStyleIndex) const noexcept;
         ///@}
 
         /// Number of registered (deduplicated) styles in each pool.
@@ -193,6 +198,7 @@ namespace tachyon
         /// deque: element rects hold LayoutStyle pointers across mid-frame registrations.
         std::deque<LayoutStyle>       m_layoutStyles;
         std::vector<VisualBoxStyle>   m_visualBoxStyles;
+        std::vector<bool>             m_opaqueBoxBackgrounds; ///< parallel to m_visualBoxStyles
         std::vector<VisualTextStyle>  m_visualTextStyles;
         std::vector<VisualColorStyle> m_visualColorStyles;
         std::vector<VisualShadowStyle> m_visualShadowStyles; ///< few: searched linearly at registration

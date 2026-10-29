@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "dot_common.glsl"
 
 layout (location = 0) in flat SurfaceData inSurface;
@@ -18,6 +21,12 @@ layout (location = 0) out vec4 outFragColor;
 
 void main() 
 {
+    // Clipped here, not by moving the triangle's corners; in window pixels before the world
+    // matrix, as the clip rect is.
+    vec2 pixel = floor(inData.windowPos + 0.5);
+    if (any(lessThan(pixel, inSurface.clip.xy)) || any(greaterThanEqual(pixel, inSurface.clip.zw)))
+        discard;
+
     vec2 uv = inData.UV;
     
     // sdf distance for dot    

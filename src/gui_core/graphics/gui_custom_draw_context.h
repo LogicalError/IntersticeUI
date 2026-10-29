@@ -147,8 +147,9 @@ namespace tachyon
                             VisualColorStyleIndex colorStyleIndex,
                             ImageIndex textureIndex = ImageIndex::Invalid) const;
 
-        /// A circle outline, stroked with `style`.
-        void RenderCircle(int2 center, float radius, const LineStyle& style) const;
+        /// A circle outline, stroked with `style`; see GUIRenderer::RenderCircle.
+        void RenderCircle(float2 center, float radius, const LineStyle& style) const;
+        void RenderCircle(int2 center, float radius, const LineStyle& style) const; ///< see above
         /// A filled, anti-aliased disc (a quad rounded to a circle).
         void RenderDisc(int2 center, float radius, VisualColorStyleIndex colorStyleIndex) const;
 

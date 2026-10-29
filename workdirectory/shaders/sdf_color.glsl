@@ -21,10 +21,11 @@ float cross2(vec2 a, vec2 b)
 // Resolve a ColorStyle index to a vec4 color.
 // colorStyleIndex: 1-based index (0 = invalid/transparent).
 // pos, size: position and half-size in local space (for gradient mapping).
-// outer_distance: SDF distance for SDFGradient type.
+// edgeDepth: how deep the point is inside its shape, 0 on the edge and 1 at the deepest
+//   point (the middle of a box, a ring's stroke or a triangle's incircle); SDFGradient uses it.
 // textureIndex: override texture index (1-based), or 0 to use ColorStyle's own texture.
 // boxSize: original box pixel size (for RepeatedTexture UV).
-vec4 getSDFColor(in int colorStyleIndex, vec2 pos, vec2 size, float outer_distance, int textureIndex, vec2 boxSize, vec4 weights)
+vec4 getSDFColor(in int colorStyleIndex, vec2 pos, vec2 size, float edgeDepth, int textureIndex, vec2 boxSize, vec4 weights)
 {
     if (colorStyleIndex < 1)
         return vec4(0); // default to transparent if no color style is set
@@ -135,11 +136,10 @@ vec4 getSDFColor(in int colorStyleIndex, vec2 pos, vec2 size, float outer_distan
                 (c10 * weights.w);
     }
 
-    else if (colorType == 9) // SDFGradient
+    else if (colorType == 9) // SDFGradient: the ramp by edge depth, mapped by the first row
     {
-        vec3 transformedUV = uv_transformation * vec3(abs(outer_distance) * -2.0, 0,1);
-        pos = transformedUV.xy / transformedUV.z;
-        color = getGradientColor(allTextures[nonuniformEXT(gradientPageIdx)], defaultTextureSize, -pos.x, colorPos.y);
+        float t = (uv_transformation * vec3(edgeDepth, 0, 1)).x;
+        color = getGradientColor(allTextures[nonuniformEXT(gradientPageIdx)], defaultTextureSize, t, colorPos.y);
     }
 
     else // SolidColor (default)

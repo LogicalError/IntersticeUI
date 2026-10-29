@@ -5,6 +5,7 @@
 
 #include <gui_controls/gui_application_internal.h>
 #include <gui_core/graphics/vulkan/vk_graphics_context.h>
+#include <gui_core/graphics/gui_primitive_renderer.h>
 #include <gui_controls/controls_toolbar_dock.h>
 #include <gui_controls/subsystems/gui_ui_cache_subsystem.h>
 #include <gui_core/memory/gui_tracking_allocator.h>
@@ -832,6 +833,126 @@ namespace
         const auto icon = app.MiddleRow(TextShadowApp::kIcon);
         const auto [i0, i1] = Extent(icon.g, 128);
         EXPECT_GE(i1 - i0, 20) << "the dot's shadow";
+        app.Cleanup();
+    }
+    // Three areas in a render-to-image window: an opaque red one, an opaque green one over
+    // it, and a translucent one. Opaque boxes come with an occluder; the picture is the same.
+    class OccluderApp : public tachyon::GUIApplicationInternals
+    {
+    public:
+        tachyon::ID windowID = tachyon::ID::Invalid();
+        tachyon::ID ids[3] {};
+        tachyon::IntRect rects[3] {};
+
+        tachyon::StyleRef Filled(tachyon::color4b color)
+        {
+            tachyon::Style s{};
+            s.borderWidths = tachyon::BoxEdges(4);
+            s.borderRadius = tachyon::BoxCorners(6);
+            for (tachyon::StyleState& state : s.states)
+            {
+                state.backgroundColor = tachyon::ColorStyle::Create(color);
+                state.SetBorderColor(tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 255, 255 }));
+            }
+            return styleManager.Register(s);
+        }
+
+        void OnGUI() override
+        {
+            const tachyon::StyleRef styles[3] = { Filled({ 255, 0, 0, 255 }), Filled({ 0, 255, 0, 255 }), Filled({ 255, 255, 255, 128 }) };
+            if (BeginWindow(windowID, "Image", theme.windowStyleRef, tachyon::LayoutOverride{}.Size(240, 160),
+                            tachyon::ElementFlags::WindowRenderToImage))
+            {
+                const tachyon::int2 at[3] = { { 20, 20 }, { 40, 40 }, { 140, 20 } };
+                for (int i = 0; i < 3; ++i)
+                {
+                    BeginArea(ids[i], styles[i], tachyon::LayoutOverride{}.Size(tachyon::Pixels{ 80 }, tachyon::Pixels{ 80 }).Position(at[i].x, at[i].y));
+                    EndArea();
+                }
+            }
+            EndWindow();
+        }
+
+        bool Start()
+        {
+            if (!Initialize())
+                return false;
+            transitionManager.SetEnabled(false);
+            windowID = idManager.CreateStaticID();
+            for (tachyon::ID& id : ids)
+                id = idManager.CreateStaticID();
+            m_frame.OnPostLayout([this](tachyon::FrameContext&)
+            {
+                for (int i = 0; i < 3; ++i)
+                {
+                    const tachyon::ElementRef ref = elementStorage.FindElementRefByID(ids[i]);
+                    rects[i] = ref.IsValid() ? elementStorage.GetElementRectPtr(ref)->rect : tachyon::IntRect{};
+                }
+            });
+            return true;
+        }
+
+        bool Frames(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (!UpdateFrame() || !RecordFrame()) return false;
+                PresentFrame();
+            }
+            return true;
+        }
+
+        uint32_t PixelAt(tachyon::int2 p)
+        {
+            const tachyon::IntRect rect = windowManager->GetWindowRect(windowID);
+            std::vector<uint8_t> pixels(size_t(rect.w) * rect.h * 4);
+            if (rect.w <= 0 || !ReadWindowPixels(windowID, pixels)) return 0;
+            const size_t i = (size_t(p.y) * rect.w + size_t(p.x)) * 4;
+            return uint32_t(pixels[i]) | uint32_t(pixels[i + 1]) << 8 | uint32_t(pixels[i + 2]) << 16;
+        }
+
+        // The occluders the window drew last frame, inside out from their rects.
+        std::vector<tachyon::Occluder> Occluders()
+        {
+            auto* renderer = static_cast<tachyon::PrimitiveRenderer*>(guiRenderer);
+            const auto& bytes = renderer->GetTarget(windowID).streams[size_t(tachyon::PrimitiveKind::Occluder)].cpu;
+            std::vector<tachyon::Occluder> out(bytes.size() / sizeof(tachyon::Occluder));
+            std::memcpy(out.data(), bytes.data(), out.size() * sizeof(tachyon::Occluder));
+            return out;
+        }
+    };
+
+    // An opaque box's middle gets an occluder, inside its border and corners; a translucent
+    // box gets none; the picture is drawn as before.
+    TEST(GpuApplicationInit, OpaqueBoxesComeWithAnOccluder)
+    {
+        OccluderApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        ASSERT_TRUE(app.Frames(3));
+        ASSERT_EQ(app.rects[0].w, 80);
+
+        const auto occluders = app.Occluders();
+        ASSERT_EQ(occluders.size(), 2u) << "the two opaque areas";
+        for (int i = 0; i < 2; ++i)
+        {
+            const tachyon::IntRect r = app.rects[i];
+            const tachyon::Occluder& o = occluders[size_t(i)];
+            EXPECT_GE(o.pos.x, r.x + 4 + 6) << "inside the border and the corner radius";
+            EXPECT_GE(o.pos.y, r.y + 4 + 6);
+            EXPECT_LE(o.pos.x + o.size.x, r.x + r.w - 10);
+            EXPECT_LE(o.pos.y + o.size.y, r.y + r.h - 10);
+            EXPECT_GT(o.size.x, 50);
+        }
+
+        const tachyon::IntRect red = app.rects[0], green = app.rects[1], glass = app.rects[2];
+        EXPECT_EQ(app.PixelAt({ red.x + 10, red.y + 10 }), 0xFF0000u) << "the red area outside the green one";
+        EXPECT_EQ(app.PixelAt({ green.x + 40, green.y + 40 }), 0x00FF00u) << "the green area over it";
+        EXPECT_EQ(app.PixelAt({ green.x + 1, green.y + 40 }), 0x0000FFu) << "the green area's border, over the red";
+        EXPECT_NE(app.PixelAt({ glass.x + 40, glass.y + 40 }), 0u) << "the translucent area";
         app.Cleanup();
     }
 }

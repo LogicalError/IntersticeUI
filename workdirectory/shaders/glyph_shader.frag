@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "glyph_common.glsl"
 
 layout (location = 0) in flat SurfaceData inSurface;

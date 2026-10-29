@@ -3,6 +3,7 @@
 // Vulkan implementation of the GUI RHI (gui_rhi.h).
 
 #include <gui_core/graphics/gui_rhi.h>
+#include <gui_core/graphics/vulkan/vk_meshes.h>
 
 #include <vulkan/vulkan.h>
 
@@ -23,7 +24,14 @@ namespace tachyon::vulkan
     {
         bool Create(VulkanDeviceContext& deviceContext);
 
+        /// The index buffer of quad-shaped primitives (0,1,3, 0,3,2 for each four vertices)
+        /// for at least `primitiveCount` of them, grown as passes need. A replaced buffer
+        /// stays until shutdown: frames in flight may still read it.
+        VkBuffer QuadIndices(VulkanDeviceContext& deviceContext, uint32_t primitiveCount);
+
         std::array<tachyon::RHI::GpuPipeline, tachyon::kPrimitiveKindCount> pipelines{};
+        Buffer   quadIndexBuffer {};
+        uint32_t quadIndexCapacity = 0; ///< primitives quadIndexBuffer holds indices for
     };
 
     class VulkanRenderDevice final : public tachyon::RHI::RenderDevice
@@ -55,9 +63,13 @@ namespace tachyon::vulkan
 
         void DrawPrimitives(const tachyon::RHI::GpuPipeline& pipeline,
                             const tachyon::GPUDrawPushConstants& pushConstants,
-                            uint32_t primitiveCount, uint32_t firstPrimitive) override;
+                            uint32_t primitiveCount, uint32_t firstPrimitive, tachyon::PrimitiveShape shape) override;
         void UploadTransientBuffers(std::span<const tachyon::RHI::UploadRequest> requests,
                                     std::span<tachyon::DeviceAddress> addresses) override;
+        tachyon::RHI::ResidentBufferId UploadResidentBuffers(std::span<const tachyon::RHI::UploadRequest> requests,
+                                                             std::span<tachyon::DeviceAddress> addresses) override;
+        tachyon::RHI::ResidentState ResidentBufferState(tachyon::RHI::ResidentBufferId id) const override;
+        void ReleaseResidentBuffer(tachyon::RHI::ResidentBufferId id) override;
 
     private:
         VulkanDeviceContext& dc;

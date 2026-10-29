@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "quad_common.glsl"
 
 layout (location = 0) in flat QuadSurfaceData inSurface;
@@ -51,7 +54,8 @@ void main()
     vec2  shape  = max(uvsize - vec2(blurPx * pixelrange), vec2(0.0));
     float dist = sdf_roundedBox(uv, shape, min(cornerRadius, min(shape.x, shape.y)));
 
-    vec4 color = getSDFColor(int(quad.colorIndex), uv, uvsize, dist,
+    // In units of the quad's smaller side: its middle is half a unit deep.
+    vec4 color = getSDFColor(int(quad.colorIndex), uv, uvsize, saturate(-dist * 2.0),
                              inSurface.textureIndex, inSurface.boxSize, weights);
 
     float alpha = clamp(1.0 - (dist / pixelrange), 0.0, 1.0);

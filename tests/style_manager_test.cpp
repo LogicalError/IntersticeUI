@@ -387,6 +387,40 @@ namespace tachyon
         EXPECT_NE(sm.Register(plain).visualBoxStyleIndex, sm.Register(shadowed).visualBoxStyleIndex);
     }
 
+    // A box background hides what's under it when every color it paints with is opaque.
+    TEST(StyleManagerTest, OpaqueBackgroundsArePerState)
+    {
+        GradientManager gm(16);
+        StyleManager    sm(gm);
+        auto opaque = [&](const ColorStyle& background, int state = Style::kNormal) {
+            Style s{};
+            for (StyleState& st : s.states)
+                st.backgroundColor = background;
+            const StyleRef ref = sm.Register(s);
+            return sm.IsBoxBackgroundOpaque((uint32_t(ref.visualBoxStyleIndex) - 1) * Style::kStateCount + uint32_t(state));
+        };
+        EXPECT_TRUE (opaque(ColorStyle::Create(color4b{ 10, 20, 30, 255 })));
+        EXPECT_FALSE(opaque(ColorStyle::Create(color4b{ 10, 20, 30, 254 })));
+        EXPECT_FALSE(opaque(ColorStyle{})) << "no background";
+        EXPECT_TRUE (opaque(ColorStyle::Create(color4b{ 0, 0, 0, 255 }, color4b{ 255, 255, 255, 255 }, ColorType::LinearGradient)));
+        EXPECT_FALSE(opaque(ColorStyle::Create(color4b{ 0, 0, 0, 255 }, color4b{ 255, 255, 255, 0 }, ColorType::LinearGradient)));
+        EXPECT_FALSE(opaque(ColorStyle::Create(color4b{ 0, 0, 0, 255 }, color4b{ 255, 255, 255, 255 }, ColorType::StretchedTexture)));
+        EXPECT_TRUE (opaque(ColorStyle::Create(color4b{ 1, 0, 0, 255 }, color4b{ 0, 1, 0, 255 }, color4b{ 0, 0, 1, 255 }, ColorType::InterpolatedTriangle)));
+        EXPECT_FALSE(opaque(ColorStyle::Create(color4b{ 1, 0, 0, 255 }, color4b{ 0, 1, 0, 255 }, color4b{ 0, 0, 1, 255 }, color4b{ 0, 0, 0, 0 }, ColorType::InterpolatedBox)));
+
+        // Per state: opaque only while hovered.
+        Style s{};
+        s.states[Style::kHover].backgroundColor = ColorStyle::Create(color4b{ 10, 20, 30, 255 });
+        const StyleRef ref = sm.Register(s);
+        const uint32_t base = (uint32_t(ref.visualBoxStyleIndex) - 1) * Style::kStateCount;
+        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + Style::kNormal));
+        EXPECT_TRUE (sm.IsBoxBackgroundOpaque(base + Style::kHover));
+        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(1000000)) << "out of range";
+
+        sm.ClearAll();
+        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + Style::kHover)) << "cleared with the styles";
+    }
+
     // text-shadow goes with the state's text style, at the UI scale, its color registered.
     TEST(StyleManagerTest, TextShadowsAreScaledPerState)
     {

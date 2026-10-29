@@ -48,8 +48,37 @@ bool GUIRenderContext::Create(tachyon::vulkan::VulkanDeviceContext& deviceContex
             vkDestroyPipelineLayout(vkDevice,
                                     reinterpret_cast<VkPipelineLayout>(pipelines[0].layout), callbacks);
         });
+    deviceContext.mainDeletionQueue.push_function([this, &deviceContext]()
+        {
+            if (quadIndexBuffer.buffer != VK_NULL_HANDLE)
+                deviceContext.DestroyBuffer(quadIndexBuffer);
+            quadIndexBuffer   = {};
+            quadIndexCapacity = 0;
+        });
 
     return true;
+}
+
+VkBuffer GUIRenderContext::QuadIndices(tachyon::vulkan::VulkanDeviceContext& deviceContext, uint32_t primitiveCount)
+{
+    if (primitiveCount <= quadIndexCapacity)
+        return quadIndexBuffer.buffer;
+
+    if (quadIndexBuffer.buffer != VK_NULL_HANDLE)
+        deviceContext.mainDeletionQueue.push_function([&deviceContext, old = quadIndexBuffer]() { deviceContext.DestroyBuffer(old); });
+
+    constexpr uint32_t kMinimumPrimitives = 4096;
+    const uint32_t capacity = std::bit_ceil(std::max(primitiveCount, kMinimumPrimitives));
+    quadIndexBuffer = deviceContext.CreateBuffer(size_t(capacity) * 6 * sizeof(uint32_t),
+                                                 VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+    auto* indices = static_cast<uint32_t*>(quadIndexBuffer.info.pMappedData);
+    static constexpr uint32_t kCorners[6] = { 0, 1, 3, 0, 3, 2 };
+    for (uint32_t p = 0; p < capacity; ++p)
+        for (uint32_t i = 0; i < 6; ++i)
+            indices[p * 6 + i] = p * 4 + kCorners[i];
+    vmaFlushAllocation(deviceContext.allocator, quadIndexBuffer.allocation, 0, VK_WHOLE_SIZE);
+    quadIndexCapacity = capacity;
+    return quadIndexBuffer.buffer;
 }
 
 // Reads a SPIR-V file into words; empty on failure.
@@ -128,7 +157,11 @@ tachyon::RHI::GpuPipeline VulkanRenderDevice::CreatePrimitivePipeline(const tach
     builder.set_cull_mode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
     builder.set_multisampling_none();
     builder.enable_blending_premultipliedalphablend();
-    builder.enable_depthtest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
+    // Depth is draw order (later is nearer): occluders write it first; the rest only test it,
+    // so what an opaque box drawn later covers is skipped.
+    builder.enable_depthtest(spec.depthOnly, VK_COMPARE_OP_GREATER_OR_EQUAL);
+    if (spec.depthOnly)
+        builder._colorBlendAttachment.colorWriteMask = 0;
     builder.set_color_attachment_format(tachyon::vulkan::drawImageFormat);
     builder.set_depth_format(tachyon::vulkan::depthImageFormat);
 
@@ -151,7 +184,7 @@ void VulkanRenderDevice::DestroySharedLayout()
 
 void VulkanRenderCommandList::DrawPrimitives(const tachyon::RHI::GpuPipeline& pipeline,
                                              const tachyon::GPUDrawPushConstants& pushConstants,
-                                             uint32_t primitiveCount, uint32_t firstPrimitive)
+                                             uint32_t primitiveCount, uint32_t firstPrimitive, tachyon::PrimitiveShape shape)
 {
     const auto vkPipeline = reinterpret_cast<VkPipeline>(pipeline.pipeline);
     const auto vkLayout   = reinterpret_cast<VkPipelineLayout>(pipeline.layout);
@@ -160,8 +193,14 @@ void VulkanRenderCommandList::DrawPrimitives(const tachyon::RHI::GpuPipeline& pi
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vkLayout, 0, 1, &imageSet, 0, nullptr);
     vkCmdPushConstants(cmd, vkLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                        0, sizeof(tachyon::GPUDrawPushConstants), &pushConstants);
-    // The GUI shaders expand each primitive to 6 vertices.
-    vkCmdDraw(cmd, primitiveCount * 6, 1, firstPrimitive * 6, 0);
+    if (shape == tachyon::PrimitiveShape::Quad)
+    {
+        // Four vertices a primitive, two triangles from them: the offset picks the pass's first.
+        vkCmdBindIndexBuffer(cmd, dc.renderContext.QuadIndices(dc, primitiveCount), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, primitiveCount * 6, 1, 0, int32_t(firstPrimitive * 4), 0);
+    }
+    else
+        vkCmdDraw(cmd, primitiveCount * 3, 1, firstPrimitive * 3, 0);
 }
 
 void VulkanRenderCommandList::UploadTransientBuffers(
@@ -233,6 +272,8 @@ void VulkanRenderCommandList::UploadTransientBuffers(
         }
     }
 
+    // The upload worker copies while this thread records the draws; the frame's submit waits
+    // for it. The streams stay as they are until then.
     auto* mapped = static_cast<std::byte*>(frame.primitiveUploadBuffer.info.pMappedData);
     size_t offset = batchStart;
     for (size_t i = 0; i < requests.size(); ++i)
@@ -242,12 +283,29 @@ void VulkanRenderCommandList::UploadTransientBuffers(
             continue;
         const size_t alignment = std::max<size_t>(request.alignment, 1);
         offset = (offset + alignment - 1) & ~(alignment - 1);
-        std::memcpy(mapped + offset, request.data, request.bytes);
+        dc.Uploads().Copy(mapped + offset, request.data, request.bytes);
         addresses[i] = frame.primitiveUploadAddress + offset;
         offset += request.bytes;
     }
 
-    vmaFlushAllocation(dc.allocator, frame.primitiveUploadBuffer.allocation,
-                       batchStart, offset - batchStart);
+    dc.Uploads().Then([allocator = dc.allocator, allocation = frame.primitiveUploadBuffer.allocation, batchStart, size = offset - batchStart]()
+                      { vmaFlushAllocation(allocator, allocation, batchStart, size); });
     frame.primitiveUploadOffset = offset;
+}
+
+tachyon::RHI::ResidentBufferId VulkanRenderCommandList::UploadResidentBuffers(
+    std::span<const tachyon::RHI::UploadRequest> requests,
+    std::span<tachyon::DeviceAddress> addresses)
+{
+    return dc.CreateResidentBuffer(requests, addresses);
+}
+
+tachyon::RHI::ResidentState VulkanRenderCommandList::ResidentBufferState(tachyon::RHI::ResidentBufferId id) const
+{
+    return dc.GetResidentBufferState(id);
+}
+
+void VulkanRenderCommandList::ReleaseResidentBuffer(tachyon::RHI::ResidentBufferId id)
+{
+    dc.ReleaseResidentBuffer(id);
 }

@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "line_common.glsl"
 
 layout(set = 0, binding = 0) uniform sampler2D allTextures[];
@@ -118,7 +121,8 @@ void main()
     vec2 halfSize = inSurface.lineSize * 0.5;
     vec2 cpos     = vec2(uv.x - inSurface.lineSize.x * 0.5,
                          (lineT - 0.5) * inSurface.lineSize.y);
-    vec4 color    = getSDFColor(inSurface.colorIndex, cpos, halfSize, distance, 0, inSurface.boxSize, vec4(0));
+    float depth   = saturate(1.0 - distance / max(lineWidth * 0.5, 0.5));
+    vec4 color    = getSDFColor(inSurface.colorIndex, cpos, halfSize, depth, 0, inSurface.boxSize, vec4(0));
 
     // make everything outside the line invisible
     color.a *= opacity;

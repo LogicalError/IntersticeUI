@@ -209,6 +209,9 @@ list(APPEND GUI_FILES
 
   gui_core/graphics/vulkan/vk_types.h
 
+  gui_core/graphics/vulkan/vk_upload_worker.cpp
+  gui_core/graphics/vulkan/vk_upload_worker.h
+
   gui_core/graphics/vulkan/vk_window_context.cpp
   gui_core/graphics/vulkan/vk_window_context.h
 )

@@ -152,6 +152,16 @@ bool tachyon::vulkan::VulkanGraphicsContext::RenderWindowFrame(VkCommandBuffer c
             );
 
         pushConstants.worldMatrix = scale * recenter;
+        {
+            // A primitive's depth is its draw order (transform0.w) a step apart, the first a step
+            // above the cleared depth. Column-major, as the shaders read it.
+            float m[16];
+            static_assert(sizeof(m) == sizeof(pushConstants.worldMatrix));
+            std::memcpy(m, &pushConstants.worldMatrix, sizeof(m));
+            m[10] = tachyon::kPrimitiveDepthStep;
+            m[14] = tachyon::kPrimitiveDepthStep;
+            std::memcpy(&pushConstants.worldMatrix, m, sizeof(m));
+        }
 
         VkViewport viewport{ .x = 0, .y = 0, .width = float(extent.x), .height = float(extent.y), .minDepth = 0.f, .maxDepth = 1.f };
         vkCmdSetViewport(cmd, 0, 1, &viewport);
@@ -1023,6 +1033,7 @@ bool tachyon::vulkan::VulkanDeviceContext::InitializeSharedResources()
 
 void tachyon::vulkan::VulkanDeviceContext::Flush()
 {
+    WaitForUploads();
     WaitIdle();
     WaitForFence(device, immFence);
 
@@ -1031,6 +1042,7 @@ void tachyon::vulkan::VulkanDeviceContext::Flush()
 
 void tachyon::vulkan::VulkanDeviceContext::Destroy()
 {
+    WaitForUploads();
     WaitIdle();
     WaitForFence(device, immFence);
     for (auto& q : frameDeletionQueues) q.flush();
@@ -1038,6 +1050,13 @@ void tachyon::vulkan::VulkanDeviceContext::Destroy()
     for (const PendingUpload& upload : m_pendingUploads) // never recorded: no frame ran
         DestroyBuffer(upload.staging);
     m_pendingUploads.clear();
+    for (const auto& [id, resident] : m_residentBuffers)
+    {
+        if (!resident.ready)
+            DestroyBuffer(resident.staging);
+        DestroyBuffer(resident.buffer);
+    }
+    m_residentBuffers.clear();
 
     // Dump VMA stats only for live allocations; empty reusable blocks are normal here.
     VmaTotalStatistics totalStats{};
@@ -1110,6 +1129,9 @@ tachyon::vulkan::Buffer tachyon::vulkan::VulkanDeviceContext::CreateMappedStorag
 
 void tachyon::vulkan::VulkanDeviceContext::DestroyBuffer(const Buffer& buffer) const
 {
+    // The upload worker may still be copying into it.
+    if (m_uploads.Busy())
+        m_uploads.Wait();
     if (buffer.buffer == nullptr)
         return;
     vmaDestroyBuffer(allocator, buffer.buffer, buffer.allocation);
@@ -1175,8 +1197,6 @@ tachyon::Image* tachyon::vulkan::VulkanDeviceContext::CreateImage(const void* da
     const size_t     dataSize = size_t(size.x) * size_t(size.y) * BytesPerPixel(vulkanFormat);
 
     Buffer staging = CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-    if (data == nullptr) memset(staging.info.pMappedData, 0, dataSize);
-    else                 memcpy(staging.info.pMappedData, data, dataSize);
 
     VulkanImage* image = new VulkanImage();
     // Mip generation blits from each level to the next, so it also reads the image.
@@ -1185,8 +1205,11 @@ tachyon::Image* tachyon::vulkan::VulkanDeviceContext::CreateImage(const void* da
     *image = CreateImage(extent, vulkanFormat, usage, ToVulkanSampler(sampler, this), mipmapped);
     m_pendingUploads.push_back({ staging, image->image, extent, mipmapped });
     image->recipe = { .usage = usage, .sampler = sampler, .mipmapped = mipmapped };
+    // The pixels are kept for a device loss; the staging copy reads them on the upload worker
+    // (DestroyImage waits for it).
     if (data != nullptr)
         image->recipe.pixels.assign(static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + dataSize);
+    m_uploads.Copy(staging.info.pMappedData, data != nullptr ? image->recipe.pixels.data() : nullptr, dataSize);
     m_liveImages.insert(image);
     return image;
 }
@@ -1210,6 +1233,98 @@ void tachyon::vulkan::VulkanDeviceContext::RecordPendingUploads(VkCommandBuffer 
         GetDeletionQueue(tachyon::DeviceScope::Frame).push_function([this, staging]() { DestroyBuffer(staging); });
     }
     m_pendingUploads.clear();
+
+    // Resident buffers: one barrier makes every copy visible to the shaders that read them.
+    bool copied = false;
+    for (auto& [id, resident] : m_residentBuffers)
+    {
+        if (resident.ready)
+            continue;
+        const VkBufferCopy region{ .srcOffset = 0, .dstOffset = 0, .size = resident.size };
+        vkCmdCopyBuffer(cmd, resident.staging.buffer, resident.buffer.buffer, 1, &region);
+        const Buffer staging = resident.staging;
+        GetDeletionQueue(tachyon::DeviceScope::Frame).push_function([this, staging]() { DestroyBuffer(staging); });
+        resident.staging = {};
+        resident.ready   = true;
+        copied = true;
+    }
+    if (copied)
+    {
+        const VkMemoryBarrier2 barrier{
+            .sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+            .srcStageMask  = VK_PIPELINE_STAGE_2_COPY_BIT,
+            .srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+            .dstStageMask  = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+            .dstAccessMask = VK_ACCESS_2_SHADER_STORAGE_READ_BIT };
+        const VkDependencyInfo dependency{ .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO, .memoryBarrierCount = 1, .pMemoryBarriers = &barrier };
+        vkCmdPipelineBarrier2(cmd, &dependency);
+    }
+}
+
+tachyon::RHI::ResidentBufferId tachyon::vulkan::VulkanDeviceContext::CreateResidentBuffer(
+    std::span<const tachyon::RHI::UploadRequest> requests, std::span<tachyon::DeviceAddress> addresses)
+{
+    assert(requests.size() == addresses.size());
+    std::fill(addresses.begin(), addresses.end(), tachyon::DeviceAddress{ 0 });
+
+    auto align = [](size_t offset, size_t alignment) { alignment = std::max<size_t>(alignment, 1); return (offset + alignment - 1) & ~(alignment - 1); };
+    size_t size = 0;
+    for (const auto& request : requests)
+        if (request.bytes != 0)
+            size = align(size, request.alignment) + request.bytes;
+    if (size == 0)
+        return 0;
+
+    ResidentBuffer resident;
+    resident.size    = size;
+    resident.buffer  = CreateBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                    VMA_MEMORY_USAGE_GPU_ONLY);
+    resident.staging = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+
+    const VkBufferDeviceAddressInfo addressInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = resident.buffer.buffer };
+    const VkDeviceAddress base = vkGetBufferDeviceAddress(device, &addressInfo);
+
+    auto* mapped = static_cast<std::byte*>(resident.staging.info.pMappedData);
+    size_t offset = 0;
+    for (size_t i = 0; i < requests.size(); ++i)
+    {
+        if (requests[i].bytes == 0)
+            continue;
+        offset = align(offset, requests[i].alignment);
+        m_uploads.Copy(mapped + offset, requests[i].data, requests[i].bytes);   // the capture keeps them
+        addresses[i] = base + offset;
+        offset += requests[i].bytes;
+    }
+    m_uploads.Then([allocator = allocator, allocation = resident.staging.allocation]() { vmaFlushAllocation(allocator, allocation, 0, VK_WHOLE_SIZE); });
+
+    const tachyon::RHI::ResidentBufferId id = m_nextResidentBuffer++;
+    m_residentBuffers.emplace(id, resident);
+    return id;
+}
+
+tachyon::RHI::ResidentState tachyon::vulkan::VulkanDeviceContext::GetResidentBufferState(tachyon::RHI::ResidentBufferId id) const
+{
+    const auto it = m_residentBuffers.find(id);
+    if (it == m_residentBuffers.end())
+        return tachyon::RHI::ResidentState::Gone;
+    return it->second.ready ? tachyon::RHI::ResidentState::Ready : tachyon::RHI::ResidentState::Pending;
+}
+
+void tachyon::vulkan::VulkanDeviceContext::ReleaseResidentBuffer(tachyon::RHI::ResidentBufferId id)
+{
+    const auto it = m_residentBuffers.find(id);
+    if (it == m_residentBuffers.end())
+        return;
+    const ResidentBuffer resident = it->second;
+    m_residentBuffers.erase(it);
+    if (!resident.ready)
+    {
+        // Never copied, so no command buffer refers to it.
+        DestroyBuffer(resident.staging);
+        DestroyBuffer(resident.buffer);
+        return;
+    }
+    GetDeletionQueue(tachyon::DeviceScope::Frame).push_function([this, buffer = resident.buffer]() { DestroyBuffer(buffer); });
 }
 
 void tachyon::vulkan::VulkanDeviceContext::DestroyImage(tachyon::Image* img)
@@ -1241,7 +1356,7 @@ void tachyon::vulkan::VulkanDeviceContext::RebuildLiveImages()
         if (recipe.pixels.empty())
             continue;
         Buffer staging = CreateBuffer(recipe.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-        memcpy(staging.info.pMappedData, recipe.pixels.data(), recipe.pixels.size());
+        m_uploads.Copy(staging.info.pMappedData, recipe.pixels.data(), recipe.pixels.size());
         m_pendingUploads.push_back({ staging, image->image, extent, recipe.mipmapped });
     }
 }
@@ -1298,6 +1413,9 @@ void tachyon::vulkan::VulkanDeviceContext::DestroyVisualBoxStylesAtEnd(tachyon::
 
 void tachyon::vulkan::VulkanDeviceContext::DestroyImage(const VulkanImage& img)
 {
+    // Its staging copy may still be filled from its pixels.
+    if (m_uploads.Busy())
+        m_uploads.Wait();
     // An upload still queued for this image has nothing left to fill.
     std::erase_if(m_pendingUploads, [&](const PendingUpload& upload)
     {

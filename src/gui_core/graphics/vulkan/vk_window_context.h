@@ -49,6 +49,11 @@ namespace tachyon::vulkan
         /// BeginWindowFrame gates their reuse.
         VulkanImage drawImage = {};
         VulkanImage depthImage = {};
+
+        /// GPU timestamps at the start and the end of the frame's drawing; none when the
+        /// queue can't time.
+        VkQueryPool timestamps        = VK_NULL_HANDLE;
+        bool        timestampsWritten = false; ///< by the last frame in this slot
     };
 
     struct SwapchainState
@@ -136,6 +141,12 @@ namespace tachyon::vulkan
         void EndWindowFrame(FrameData& currentFrame);
 
         void PerformReadback(const VulkanImage& drawImage);
+
+        /// GPU time of the drawing of this window's most recent finished frame, in seconds; 0
+        /// until one finished, or when the device can't time.
+        double LastGpuFrameSeconds() const { return lastGpuFrameSeconds; }
+        double lastGpuFrameSeconds = 0.0;
+        float  timestampPeriodNs   = 0.0f; ///< nanoseconds per timestamp tick; 0: no timestamps
         bool ReadPixels(std::span<uint8_t> bgra) override;
         /// The host image each frame is copied into (render-to-image windows); VK_NULL_HANDLE stops.
         void SetImageTarget(VkImage image, VkExtent2D extent);

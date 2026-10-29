@@ -8,6 +8,7 @@
 #include <gui_core/graphics/vulkan/vk_image.h>
 #include <gui_core/graphics/vulkan/vk_meshes.h>
 #include <gui_core/graphics/vulkan/vk_rhi.h>
+#include <gui_core/graphics/vulkan/vk_upload_worker.h>
 #include <gui_core/graphics/vulkan/vk_descriptors.h>
 #include <gui_core/memory/gui_allocation_hooks.h>
 
@@ -17,6 +18,7 @@
 #include <array>
 #include <mutex>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -166,6 +168,23 @@ namespace tachyon::vulkan
         tachyon::Image* CreateImage(const void* data, tachyon::uint2 size, tachyon::ImageFormat format, tachyon::Sampler sampler, bool mipmapped = false);
         /// Records the queued uploads into `cmd`, outside any rendering scope.
         void RecordPendingUploads(VkCommandBuffer cmd);
+
+        /// Library internal: GPU-only storage for the packed `requests`, copied in from a staging
+        /// buffer by the next RecordPendingUploads (see RHI::RenderCommandList::UploadResidentBuffers).
+        tachyon::RHI::ResidentBufferId CreateResidentBuffer(std::span<const tachyon::RHI::UploadRequest> requests,
+                                                            std::span<tachyon::DeviceAddress> addresses);
+        /// Library internal: whether the buffer exists and has been copied to the GPU.
+        tachyon::RHI::ResidentState GetResidentBufferState(tachyon::RHI::ResidentBufferId id) const;
+        /// Library internal: frees the buffer now if its copy was never recorded, else when the
+        /// frame deletion queue flushes.
+        void ReleaseResidentBuffer(tachyon::RHI::ResidentBufferId id);
+        /// Library internal: the resident buffers not released.
+        size_t ResidentBufferCount() const { return m_residentBuffers.size(); }
+
+        /// Library internal: copies into mapped memory, off the main thread. Everything a
+        /// submit reads must be copied first: WaitForUploads before vkQueueSubmit.
+        UploadWorker& Uploads() const { return m_uploads; }
+        void WaitForUploads() const { m_uploads.Wait(); }
         /// Destroys the image's Vulkan objects now, without waiting for the GPU; doesn't delete
         /// the object.
         void DestroyImage(tachyon::Image* img);
@@ -301,6 +320,13 @@ namespace tachyon::vulkan
 
         struct PendingUpload { Buffer staging; VkImage image; VkExtent3D extent; bool mipmapped; };
         std::vector<PendingUpload> m_pendingUploads;
+
+        mutable UploadWorker m_uploads;
+
+        /// A resident buffer, and its staging copy until the copy is recorded.
+        struct ResidentBuffer { Buffer buffer; Buffer staging; size_t size = 0; bool ready = false; };
+        std::unordered_map<tachyon::RHI::ResidentBufferId, ResidentBuffer> m_residentBuffers;
+        tachyon::RHI::ResidentBufferId m_nextResidentBuffer = 1;
         mutable std::unordered_set<VulkanImage*> m_liveImages;   ///< made by CreateImage, not yet destroyed
 
         std::mutex  m_ownedQueueMutex;

@@ -20,6 +20,15 @@ namespace tachyon
 
     struct alignas(16) glsl_float4 { float x, y, z, w; };
 
+    // Every primitive starts with the same header: transform0, transform1 (its 3x2 transform
+    // as two rows), clipMin, clipMax. transform0.w is its draw order in its target, which
+    // the world matrix makes its depth: later is nearer, so an occluder (opaque content drawn
+    // after) hides what was drawn before it.
+
+    /// The depth between two primitives drawn one after the other; past the depth range all
+    /// are at the nearest depth.
+    inline constexpr float kPrimitiveDepthStep = 1.0f / float(1 << 22);
+
     struct alignas(16) Box
     {
         glsl_float4     transform0 = { 1, 0, 0 };
@@ -147,6 +156,42 @@ namespace tachyon
         float           cornerRadius = 0.0f;
     };
 
+    /// A circle outline: the ring `lineWidth` wide around `center` at `radius`, its color
+    /// and dashes running clockwise from the right (+x towards +y), as LineStyle sets them.
+    struct alignas(16) Circle
+    {
+        glsl_float4     transform0 = { 1, 0, 0 };
+        glsl_float4     transform1 = { 0, 1, 0 };
+        tachyon::int2       clipMin = { 0,0 };
+        tachyon::int2       clipMax = { 0,0 };
+
+        tachyon::float2     center = { 0,0 };
+        float           radius         = 0;
+        float           lineWidth      = 0;
+        int             colorIndex     = 0;
+        float           dashSize       = 0;
+        float           dashOffset     = 0;
+        float           gradientOffset = 0;
+        float           gradientScale  = 1;
+    };
+    static_assert(sizeof(Circle) == 96,                  "Circle struct size mismatch with GLSL std430 layout");
+    static_assert(offsetof(Circle, center)     == 48,    "Circle::center offset mismatch");
+    static_assert(offsetof(Circle, colorIndex) == 64,    "Circle::colorIndex offset mismatch");
+
+    /// Depth only: marks `pos`/`size` as covered by opaque content drawn after it, so what
+    /// was drawn before under it is skipped (its fragments fail the depth test early).
+    struct alignas(16) Occluder
+    {
+        glsl_float4     transform0 = { 1, 0, 0 };
+        glsl_float4     transform1 = { 0, 1, 0 };
+        tachyon::int2       clipMin = { 0,0 };
+        tachyon::int2       clipMax = { 0,0 };
+
+        tachyon::int2       pos  = { 0,0 };
+        tachyon::int2       size = { 0,0 };
+    };
+    static_assert(sizeof(Occluder) == 64, "Occluder struct size mismatch with GLSL std430 layout");
+
     /// Shader-visible buffer address. uint64_t on every modern API
     /// (VkDeviceAddress / D3D12_GPU_VIRTUAL_ADDRESS / MTLGPUAddress).
     using DeviceAddress = uint64_t;
@@ -159,28 +204,44 @@ namespace tachyon
         Line,
         Triangle,
         Quad,
+        Circle,
+        Occluder,
         Count
     };
     inline constexpr size_t kPrimitiveKindCount = size_t(PrimitiveKind::Count);
 
+    /// The vertices a primitive's vertex shader is run for; gl_VertexIndex divided by
+    /// their count is the primitive, the remainder the corner.
+    enum class PrimitiveShape : uint8_t
+    {
+        Quad,     ///< 4 corners of its rectangle, drawn as two indexed triangles (0,1,3, 0,3,2)
+        Triangle, ///< 3 corners of one triangle around its shape (clipped per fragment)
+    };
+
     struct PrimitiveSpec
     {
-        const char* shaderBaseName; ///< backend composes path + stage suffix + format
-        uint32_t    stride;         ///< per-primitive byte size (std430)
-        uint8_t     pushSlot;       ///< index into GPUDrawPushConstants::primitiveAddresses
+        const char*    shaderBaseName; ///< backend composes path + stage suffix + format
+        uint32_t       stride;         ///< per-primitive byte size (std430)
+        uint8_t        pushSlot;       ///< index into GPUDrawPushConstants::primitiveAddresses
+        PrimitiveShape shape = PrimitiveShape::Quad;
+        /// Writes depth and no color, before the other kinds; they test depth without writing it.
+        bool           depthOnly = false;
     };
 
     /// Push-constant slot order matches the GLSL push block (box, glyph, dot,
-    /// line, triangle). The block is exactly 128 bytes, with no room for a sixth
-    /// address, so Quad shares the Triangle slot: each pass writes its own buffer
-    /// address into its slot before drawing, and a draw call holds one kind.
+    /// line, triangle). The block is exactly 128 bytes, with no room for more
+    /// addresses, so Quad shares the Triangle slot, Circle the Line slot and Occluder
+    /// the Box slot: each pass writes its own buffer address into its slot before
+    /// drawing, and a draw call holds one kind.
     inline constexpr PrimitiveSpec kPrimitiveSpecs[kPrimitiveKindCount] = {
         /* Box      */ { "box_shader",      sizeof(Box),      0 },
         /* Glyph    */ { "glyph_shader",    sizeof(Glyph),    1 },
-        /* Dot      */ { "dot_shader",      sizeof(Dot),      2 },
+        /* Dot      */ { "dot_shader",      sizeof(Dot),      2, PrimitiveShape::Triangle },
         /* Line     */ { "line_shader",     sizeof(Line),     3 },
         /* Triangle */ { "triangle_shader", sizeof(Triangle), 4 },
         /* Quad     */ { "quad_shader",     sizeof(Quad),     4 },
+        /* Circle   */ { "circle_shader",   sizeof(Circle),   3 },
+        /* Occluder */ { "occluder_shader", sizeof(Occluder), 0, PrimitiveShape::Quad, true },
     };
 
     struct GPUDrawPushConstants

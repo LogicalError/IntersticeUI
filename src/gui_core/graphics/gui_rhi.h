@@ -31,6 +31,17 @@ namespace tachyon::RHI
         size_t      alignment = 16;
     };
 
+    /// GPU storage kept across frames (UploadResidentBuffers); 0 is none.
+    using ResidentBufferId = uint64_t;
+
+    /// Where a resident buffer is.
+    enum class ResidentState : uint8_t
+    {
+        Gone,    ///< released, or never made (or lost with its device)
+        Pending, ///< its copy to the GPU isn't recorded yet: it can't be drawn from this frame
+        Ready,   ///< on the GPU: draws recorded from now on can read it
+    };
+
     /// Device-lifetime operations.
     class RenderDevice
     {
@@ -52,17 +63,27 @@ namespace tachyon::RHI
         virtual ~RenderCommandList() = default;
 
         /// Binds the pipeline and the GUI image set, pushes the constants and draws
-        /// `primitiveCount` primitives starting at `firstPrimitive`. The
-        /// per-primitive vertex expansion is a backend/shader contract detail.
+        /// `primitiveCount` primitives starting at `firstPrimitive`, each as `shape` says;
+        /// the vertex shader builds the vertices from the primitive.
         virtual void DrawPrimitives(const GpuPipeline& pipeline,
                                     const GPUDrawPushConstants& pushConstants,
-                                    uint32_t primitiveCount, uint32_t firstPrimitive) = 0;
+                                    uint32_t primitiveCount, uint32_t firstPrimitive, PrimitiveShape shape) = 0;
 
         /// Copies a batch of transient data into storage that remains valid until
         /// this command list's frame fence signals. One device address is
         /// returned per request; empty requests produce address 0.
         virtual void UploadTransientBuffers(std::span<const UploadRequest> requests,
                                             std::span<DeviceAddress> addresses) = 0;
+
+        /// Copies a batch of data into GPU memory that stays until released, for data drawn
+        /// again over many frames (a cached scope's primitives). The copy is made at the start
+        /// of a later frame (see ResidentBufferState); the addresses are its final ones. One
+        /// address per request; empty requests produce address 0, all-empty no buffer.
+        virtual ResidentBufferId UploadResidentBuffers(std::span<const UploadRequest> requests,
+                                                       std::span<DeviceAddress> addresses) = 0;
+        virtual ResidentState ResidentBufferState(ResidentBufferId id) const = 0;
+        /// Frees the buffer once no frame in flight reads it; an unknown id does nothing.
+        virtual void ReleaseResidentBuffer(ResidentBufferId id) = 0;
     };
     /// @}
 }

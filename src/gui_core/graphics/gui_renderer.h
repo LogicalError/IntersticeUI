@@ -58,7 +58,10 @@ namespace tachyon
         virtual void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const LineStyle& lineStyle) = 0;
         void         RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::IntRect clipRect, const LineStyle& lineStyle) { RenderLine(p0, p0, p1, p1, clipRect, lineStyle); }
 
-        void RenderCircle(tachyon::int2 center, float radius, tachyon::IntRect clipRect, const LineStyle& lineStyle);
+        /// A circle outline `lineStyle.lineWidth` wide, exactly round. A gradient and dashes run
+        /// clockwise from the right (+x towards +y); gradientOffset / gradientScale pick the
+        /// part of the gradient that goes once around.
+        virtual void RenderCircle(tachyon::float2 center, float radius, tachyon::IntRect clipRect, const LineStyle& lineStyle) = 0;
 
         virtual void RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color) = 0;
         virtual void RenderTriangle(tachyon::float2 p0, tachyon::float2 p1, tachyon::float2 p2, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid) = 0;
@@ -69,6 +72,10 @@ namespace tachyon
         /// A box shadow: `rect` is the shadow's shape, which fades out over `blur` pixels
         /// on either side of its edge (Gaussian, sigma = blur / 2, as CSS).
         virtual void RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur) = 0;
+        /// Draws nothing: marks `rect` as covered by opaque content drawn after this call, so
+        /// what was drawn before it there is skipped on the GPU. Only for a rect the later
+        /// content covers completely, with no anti-aliased edge.
+        virtual void RenderOccluder(tachyon::IntRect /*rect*/, tachyon::IntRect /*clipRect*/) {}
 
         /// A glyph from the text atlas. `scale` is atlas texels per pixel. With a `shadowBlur`
         /// of 0 or more it is a text shadow instead: the glyph's shape in `textColorIndex`

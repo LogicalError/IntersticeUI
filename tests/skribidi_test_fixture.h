@@ -69,6 +69,7 @@ namespace GUITest
         {
             lineStarts.push_back(p0);
         }
+        void RenderCircle(tachyon::float2, float, tachyon::IntRect, const tachyon::LineStyle&) override {}
         void RenderDot(tachyon::float2, tachyon::IntRect, float, tachyon::color4f) override {}
         void RenderTriangle(tachyon::float2, tachyon::float2, tachyon::float2, tachyon::IntRect,
                             tachyon::VisualColorStyleIndex, tachyon::ImageIndex) override {}

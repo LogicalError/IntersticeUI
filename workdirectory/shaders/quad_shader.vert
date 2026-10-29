@@ -10,12 +10,11 @@
 layout (location = 0) out flat QuadSurfaceData outSurface;
 layout (location = 5) out QuadFragmentData outData;
 
-int quadIndices[6] = { 0,1,3,  0,3,2 };
 
 void main()
 {
-    int quadIndex = gl_VertexIndex / 6;
-    int vertexIndex = quadIndices[gl_VertexIndex % 6];
+    int quadIndex = gl_VertexIndex / 4;
+    int vertexIndex = gl_VertexIndex % 4; // the corner, from the index buffer
 
     // Quads are stored in the triangleBuffer slot (reused per render pass)
     Quad quad = Quads(PushConstants.triangleBuffer).quads[quadIndex];
@@ -54,5 +53,5 @@ void main()
     outSurface.transformScale = sqrt(scaleX * scaleY);
     outSurface.cornerRadius = quad.cornerRadius;
 
-    gl_Position = PushConstants.worldMatrix * vec4(position, 0, 1.0);
+    gl_Position = PrimitivePosition(position, quad.transform0.w);
 }
