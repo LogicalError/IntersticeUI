@@ -421,7 +421,8 @@ namespace tachyon
             if (app.BeginTabBar(node->tabBarID, &node->selectedTab,
                                 std::move(onReorder), std::move(onClose),
                                 std::move(onDragOut), std::move(dragVisualizer),
-                                inTitleBar ? app.theme.titleBarTabBarStyleRef : app.theme.tabBarStyleRef))
+                                inTitleBar ? app.theme.titleBarTabBarStyleRef : app.theme.tabBarStyleRef,
+                                LayoutOverride{}, &node->tabLayout))
             {
                 // Between the tabs, the strip drags the window.
                 if (inTitleBar) GUIApplicationInternals::TitleBarCaption(app, node->tabBarID);

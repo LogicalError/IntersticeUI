@@ -124,10 +124,14 @@ namespace tachyon
         if (targetID != ID::Invalid() && inputManager && !m_contextMenuClaimed)
         {
             bool byMouse = false, byKeyboard = false;
+            int2 pressedAt{};
             for (const auto& e : inputManager->GetRecordedEvents())
             {
                 if (e.type == tachyon::EventType::MouseDown && e.state.RightPressed())
-                    byMouse = true;
+                {
+                    byMouse   = true;
+                    pressedAt = e.state.screenPos;
+                }
                 if (e.type == tachyon::EventType::KeyDown &&
                     (e.state.lastKey == tachyon::KeyCode::Application || e.state.lastKey == tachyon::KeyCode::Menu ||
                      (e.state.lastKey == tachyon::KeyCode::F10 && (e.state.modifiers & KeyModifier::Shift) != KeyModifier::None)))
@@ -145,7 +149,11 @@ namespace tachyon
             {
                 m_contextMenuClaimed = true;
                 contextMenuTargetID = targetID;
-                contextMenuScreenPos.reset();
+                // At the pointer when right-clicked; below the target from the keyboard.
+                if (mouseHit)
+                    contextMenuScreenPos = pressedAt;
+                else
+                    contextMenuScreenPos.reset();
                 if (menuManager.IsOpen())
                     menuManager.CloseAll(guiStateManager);
                 menuManager.OpenMenu(guiStateManager, contextMenuWindowID);
@@ -165,7 +173,7 @@ namespace tachyon
 
         auto& level = menuManager.GetOrCreateNextLevel(idManager);
 
-        // Below the target element, or where OpenContextMenu said.
+        // Where it was right-clicked or OpenContextMenu said, else below the target element.
         LayoutOverride pos = contextMenuScreenPos
             ? LayoutOverride{}.Position(contextMenuScreenPos->x, contextMenuScreenPos->y)
             : LayoutOverride{}.Anchored(targetID,

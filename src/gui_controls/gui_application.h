@@ -745,8 +745,8 @@ namespace tachyon
         /// Closes BeginTooltip; called whether or not it returned true.
         void EndTooltip();
 
-        /// Context menu: opens below the target element on a right-click on it, or on
-        /// Shift+F10 or the Menu key while it has the focus. A target that takes its parts'
+        /// Context menu: opens at the pointer on a right-click on the target element, or
+        /// below it on Shift+F10 or the Menu key while it has the focus. A target that takes its parts'
         /// states (PropagatesDescendantState) opens for them too; when several targets match,
         /// the first BeginContextMenu of the frame wins.
         bool BeginContextMenu(ID targetID);
@@ -1272,16 +1272,19 @@ namespace tachyon
         ///@{
 
         // ---- TabBar: reorderable tabs ----
-        /// Opens a tab bar of Tabs, which wrap onto more rows when it is narrow. selectedIndex
-        /// holds the selected tab; onReorder(from, to) runs on a drop, onClose(index) closes a tab
-        /// (none when null); onDragOut and dragVisualizer as for BeginReorderableGroup.
+        /// Opens a tab bar of Tabs. selectedIndex holds the selected tab; onReorder(from, to)
+        /// runs on a drop, onClose(index) closes a tab (none when null); onDragOut and
+        /// dragVisualizer as for BeginReorderableGroup. `layout` says what happens to tabs that
+        /// don't fit on one row (TabBarLayout); the bar's context menu changes it. Null keeps it
+        /// with the bar, by its ID.
         bool BeginTabBar(ID id, int* selectedIndex,
                          std::function<void(int, int)> onReorder,
                          std::function<void(int)> onClose = nullptr,
                          std::function<void(int, tachyon::int2)> onDragOut = nullptr,
                          std::function<void(int, tachyon::int2)> dragVisualizer = nullptr,
                          StyleRef style = {},
-                         LayoutOverride&& constraints = {});
+                         LayoutOverride&& constraints = {},
+                         TabBarLayout* layout = nullptr);
         /// As above, with the call site as the ID.
         inline bool BeginTabBar(int* selectedIndex,
                                 std::function<void(int, int)> onReorder,
@@ -1289,8 +1292,9 @@ namespace tachyon
                                 std::function<void(int, tachyon::int2)> onDragOut = nullptr,
                                 std::function<void(int, tachyon::int2)> dragVisualizer = nullptr,
                                 StyleRef style = {},
-                                LayoutOverride&& constraints = {}, std::source_location site = std::source_location::current())
-            { return BeginTabBar(idManager.AllocateDynamicID(site), selectedIndex, std::move(onReorder), std::move(onClose), std::move(onDragOut), std::move(dragVisualizer), style, std::move(constraints)); }
+                                LayoutOverride&& constraints = {}, TabBarLayout* layout = nullptr,
+                                std::source_location site = std::source_location::current())
+            { return BeginTabBar(idManager.AllocateDynamicID(site), selectedIndex, std::move(onReorder), std::move(onClose), std::move(onDragOut), std::move(dragVisualizer), style, std::move(constraints), layout); }
         /// Closes BeginTabBar.
         void EndTabBar();
 
@@ -2351,7 +2355,7 @@ namespace tachyon
         ID tooltipWindowID     { ID::Invalid() };
         ID contextMenuWindowID { ID::Invalid() };
         ID contextMenuTargetID { ID::Invalid() }; ///< element the context menu is attached to
-        std::optional<int2> contextMenuScreenPos; ///< where OpenContextMenu put it; else below the target
+        std::optional<int2> contextMenuScreenPos; ///< the right-click or OpenContextMenu point; else below the target
         bool m_contextMenuClaimed = false;   ///< a context menu opened this frame; the first one wins
         ID tabDragGhostWindowID{ ID::Invalid() }; ///< ghost window for dragged dock tab / drop overlay
 

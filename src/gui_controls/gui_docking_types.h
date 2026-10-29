@@ -30,6 +30,7 @@ namespace tachyon
         int     nextTabIndex = 0;
         std::function<void(int)>               onClose;    ///< tab index, when its close button is clicked
         std::function<void(int, tachyon::int2)>    onDragOut;  ///< tab index and mouse release pos
+        TabBarLayout* layout = nullptr;         ///< the bar's layout, which its context menu sets
         std::vector<bool> shown;                ///< by tab index; empty: every tab is shown
         struct HiddenTab { int index = 0; tachyon::IconID icon = tachyon::IconID::Invalid; std::string text; };
         std::vector<HiddenTab> hidden;          ///< the tabs left out, listed by the overflow button
@@ -40,6 +41,7 @@ namespace tachyon
     struct TabBarMemory {
         int tabCount   = 0;  ///< last frame's
         int focusIndex = -1; ///< the tab that takes focus as it's built, after an arrow key
+        TabBarLayout layout = TabBarLayout::OneRow;   ///< for a bar whose caller doesn't keep one
 
         std::vector<int32_t> widths;        ///< by tab index; a hidden tab keeps its last width
         int32_t              barWidth = 0;  ///< the bar's inner width

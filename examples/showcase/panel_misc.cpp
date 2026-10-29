@@ -339,7 +339,8 @@ namespace tachyon
             // A family registered from code (one face) and a generic family.
             static const tachyon::FontID boldFontId = [this]
             {
-                const std::string_view boldFaces[] = { "fonts/Inter/Inter-Bold.ttf" };
+                const std::string boldFace = ResourceFile("fonts/Inter/Inter-Bold.ttf");
+                const std::string_view boldFaces[] = { boldFace };
                 return textSystem->RegisterFontFamily("Inter Bold", boldFaces);
             }();
 
@@ -432,7 +433,8 @@ namespace tachyon
             // A text box with its own font; all other text keeps the CSS font.
             static const tachyon::FontID serifFont = [this]
             {
-                const std::string_view faces[] = { "fonts/Noto-otf/NotoSerif-Regular.otf" };
+                const std::string face = ResourceFile("fonts/Noto-otf/NotoSerif-Regular.otf");
+                const std::string_view faces[] = { face };
                 return textSystem->RegisterFontFamily("Noto Serif", faces);
             }();
             static std::string serifText = "This text box uses Noto Serif";

@@ -348,6 +348,46 @@ namespace tachyon
             EXPECT_EQ(rect.y, 200);
         }
 
+        // A right-click opens the menu where it was clicked, also deep inside a tall target;
+        // from the keyboard it opens below the target.
+        TEST_F(ControlsMenuTest, ARightClickOpensTheContextMenuAtThePointer)
+        {
+            const ID target = app.idManager.CreateStaticID();
+            auto draw = [&] {
+                app.BeginRootWindow();
+                app.Button(target, "Target", nullptr, LayoutOverride{}.Size(400, 200));
+                if (app.BeginContextMenu(target))
+                    app.MenuItem("Delete", nullptr);
+                app.EndContextMenu();
+                app.EndRootWindow();
+            };
+            app.Frame(draw);
+            const IntRect box = app.GetElementRect(target);
+            const int2 at{ box.x + 300, box.y + 40 };
+            app.InjectMouseMove(at);
+            app.Frame(draw);
+            app.ClickAt(at, MouseButtons::Right);
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_TRUE(app.menuManager.IsOpen());
+            IntRect menu = app.GetElementRect(app.menuManager.levels[0].windowID);
+            EXPECT_EQ(menu.x, at.x);
+            EXPECT_EQ(menu.y, at.y);
+
+            app.InjectKey(KeyCode::Escape);
+            app.Frame(draw);
+            ASSERT_FALSE(app.menuManager.IsOpen());
+            app.ClickAt(app.CenterOf(target));
+            app.Frame(draw);
+            app.InjectKey(KeyCode::F10, KeyAction::KeyDown, KeyModifier::Shift);
+            app.Frame(draw);
+            app.Frame(draw);
+            ASSERT_TRUE(app.menuManager.IsOpen());
+            menu = app.GetElementRect(app.menuManager.levels[0].windowID);
+            EXPECT_EQ(menu.x, box.x);
+            EXPECT_EQ(menu.y, box.y + box.h) << "below the target";
+        }
+
         TEST_F(ControlsMenuTest, ClickingOpenTriggerAgainTogglesItClosed)
         {
             ID menuID = app.idManager.CreateStaticID();

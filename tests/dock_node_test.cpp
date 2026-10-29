@@ -1111,7 +1111,7 @@ namespace tachyon
         {
             if (a == nullptr || b == nullptr) return a == b;
             if (a->isLeaf != b->isLeaf) return false;
-            if (a->isLeaf) return a->panelIds == b->panelIds && a->selectedTab == b->selectedTab;
+            if (a->isLeaf) return a->panelIds == b->panelIds && a->selectedTab == b->selectedTab && a->tabLayout == b->tabLayout;
             return a->mode == b->mode && a->splitSize == b->splitSize && a->minFirstSize == b->minFirstSize
                 && a->minSecondSize == b->minSecondSize && SameTree(a->first.get(), b->first.get())
                 && SameTree(a->second.get(), b->second.get());
@@ -1127,6 +1127,30 @@ namespace tachyon
         const auto restored = ParseDockTree(text, names.idOf());
         ASSERT_NE(restored, nullptr);
         EXPECT_TRUE(SameTree(tree.get(), restored.get()));
+    }
+
+    // A tab group on several rows is saved so; one on one row is saved as before, so layouts
+    // saved before there were two still load.
+    TEST(DockLayoutIO, KeepsATabGroupsLayout)
+    {
+        auto names = Names();
+        auto tree = SampleTree(names);
+        const std::string oneRow = SerializeDockTree(*tree, names.keyOf());
+        EXPECT_EQ(oneRow.find("rows"), std::string::npos);
+        const auto fromOneRow = ParseDockTree(oneRow, names.idOf());
+        ASSERT_NE(fromOneRow, nullptr);
+        EXPECT_EQ(fromOneRow->second->second->tabLayout, TabBarLayout::OneRow);
+
+        tree->second->second->tabLayout = TabBarLayout::Rows;
+        const std::string text = SerializeDockTree(*tree, names.keyOf());
+        const auto restored = ParseDockTree(text, names.idOf());
+        ASSERT_NE(restored, nullptr);
+        EXPECT_TRUE(SameTree(tree.get(), restored.get()));
+        EXPECT_EQ(restored->second->second->tabLayout, TabBarLayout::Rows);
+        EXPECT_EQ(restored->first->first->tabLayout, TabBarLayout::OneRow);
+
+        EXPECT_EQ(ParseDockTree(R"({"tabs":["Hierarchy"],"selected":0,"columns":1})", names.idOf()), nullptr)
+            << "an unknown key after the selection";
     }
 
     TEST(DockLayoutIO, DropsPanelsThatNoLongerExistAndCollapses)

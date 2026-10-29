@@ -212,5 +212,48 @@ namespace tachyon
             EXPECT_GT(CountColor(draws, ColorIndex(kGreen)), 0u);
             EXPECT_GT(CountColor(draws, ColorIndex(kWhite)), 0u);
         }
+
+        // A link run is drawn in its link color, the rest in the text color.
+        TEST_F(TextPaintTest, ALinkIsDrawnInItsColor)
+        {
+            const StyleRef style = styleManager.Register(BaseStyle());
+            std::vector<ContentRun> runs{
+                { .type = ContentRun::Text, .text = "ab" },
+                { .type = ContentRun::Text, .text = "cde", .contentId = 1, .isLink = true,
+                  .linkStyle = { .color = kGreen, .hoverColor = kRed } },
+            };
+            const std::vector<GlyphDraw> draws = Render(textSystem->RegisterRichText(element, runs, style, ElementState::None));
+            EXPECT_EQ(CountColor(draws, ColorIndex(kBlue)), 2u);
+            EXPECT_EQ(CountColor(draws, ColorIndex(kGreen)), 3u);
+        }
+
+        // So it is in selectable text, focused or not.
+        TEST_F(TextPaintTest, ASelectableLinkIsDrawnInItsColor)
+        {
+            const StyleRef style = styleManager.Register(BaseStyle());
+            std::vector<ContentRun> runs{
+                { .type = ContentRun::Text, .text = "ab" },
+                { .type = ContentRun::Text, .text = "cde", .contentId = 1, .isLink = true,
+                  .linkStyle = { .color = kGreen, .hoverColor = kRed } },
+            };
+            const ID field{ .value{ .integer = 83 } };
+            bool modified = false;
+            auto render = [&] {
+                return Render(textSystem->RegisterEditableRichText(field, runs, TextEditBehavior::ReadOnly, style,
+                                                                   ElementState::None, modified));
+            };
+            std::vector<GlyphDraw> draws = render();
+            EXPECT_EQ(CountColor(draws, ColorIndex(kBlue)), 2u);
+            EXPECT_EQ(CountColor(draws, ColorIndex(kGreen)), 3u);
+
+            auto& focus = stateManager.TextEditorFocus();
+            focus.Set(field);
+            textSystem->SwitchTextEditor(focus.GetPrevFocusedID(), field);
+            focus.Commit();
+            for (int frame = 0; frame < 2; ++frame)
+                draws = render();
+            EXPECT_EQ(CountColor(draws, ColorIndex(kBlue)), 2u) << "focused";
+            EXPECT_EQ(CountColor(draws, ColorIndex(kGreen)), 3u) << "focused";
+        }
     }
 }

@@ -529,4 +529,31 @@ namespace tachyon
         EXPECT_EQ(sm.GetLayoutStyle(a.layoutStyleIndex)->textLayoutStyle, TextLayoutStyle{});
         EXPECT_EQ(sm.Register(centered).layoutStyleIndex, b.layoutStyleIndex);
     }
+    // A wrapping variant of a style changes only its layout's flex-wrap and is registered once.
+    TEST(StyleManagerTest, WithFlexWrapChangesOnlyTheWrap)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        Style s{};
+        s.padding = BoxEdges(3);
+        s.layoutData.flex.gap = 7;
+        s.states[ElementState::None].backgroundColor = ColorStyle::Create(color4b(10, 20, 30, 255));
+        const StyleRef base = sm.Register(s);
+
+        const StyleRef wrapped = sm.WithFlexWrap(base, FlexWrap::Wrap);
+        EXPECT_NE(wrapped.layoutStyleIndex, base.layoutStyleIndex);
+        EXPECT_EQ(wrapped.visualBoxStyleIndex, base.visualBoxStyleIndex);
+        EXPECT_EQ(wrapped.visualTextStyleIndex, base.visualTextStyleIndex);
+        const LayoutStyle* a = sm.GetLayoutStyle(base.layoutStyleIndex);
+        const LayoutStyle* b = sm.GetLayoutStyle(wrapped.layoutStyleIndex);
+        ASSERT_TRUE(a && b);
+        EXPECT_EQ(b->layoutData.flex.wrap, FlexWrap::Wrap);
+        LayoutStyle same = *b;
+        same.layoutData.flex.wrap = a->layoutData.flex.wrap;
+        EXPECT_EQ(same, *a) << "nothing else changed";
+
+        EXPECT_EQ(sm.WithFlexWrap(base, FlexWrap::Wrap).layoutStyleIndex, wrapped.layoutStyleIndex) << "registered once";
+        EXPECT_EQ(sm.WithFlexWrap(base, FlexWrap::NoWrap), base) << "already that way";
+        EXPECT_EQ(sm.WithFlexWrap(wrapped, FlexWrap::NoWrap).layoutStyleIndex, base.layoutStyleIndex) << "and back to the base";
+    }
 }

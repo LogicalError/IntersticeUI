@@ -442,7 +442,10 @@ namespace tachyon
                     first = false;
                     WriteQuoted(out, keyOf(id));
                 }
-                out += "],\"selected\":" + std::to_string(node.selectedTab) + "}";
+                out += "],\"selected\":" + std::to_string(node.selectedTab);
+                if (node.tabLayout == TabBarLayout::Rows)
+                    out += ",\"rows\":1";
+                out += '}';
                 return;
             }
             out += "{\"split\":\"";
@@ -539,7 +542,17 @@ namespace tachyon
                 const auto selectedKey = in.String();
                 if (!selectedKey || *selectedKey != "selected" || !in.Expect(':')) return nullptr;
                 const auto selected = in.Integer();
-                if (!selected || !in.Expect('}')) return nullptr;
+                if (!selected) return nullptr;
+                // Tabs on several rows; left out for one row.
+                if (in.Expect(','))
+                {
+                    const auto rowsKey = in.String();
+                    if (!rowsKey || *rowsKey != "rows" || !in.Expect(':')) return nullptr;
+                    const auto rows = in.Integer();
+                    if (!rows) return nullptr;
+                    leaf->tabLayout = *rows != 0 ? TabBarLayout::Rows : TabBarLayout::OneRow;
+                }
+                if (!in.Expect('}')) return nullptr;
                 // The selected panel keeps its selection; if it was dropped, the tab after
                 // it is selected (or the one before, when it was last), as when closing a tab.
                 const int savedIndex = std::clamp(*selected, 0, std::max(0, static_cast<int>(keptBefore.size()) - 1));

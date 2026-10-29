@@ -302,35 +302,7 @@ namespace tachyon
         }
 
 
-        // Deduplicate layout styles using hash map.
-        LayoutStyleIndex layoutIndex = LayoutStyleIndex::Invalid;
-        {
-            const uint64_t layoutHash = layoutStyle.GetHashCode();
-
-            auto layoutIterator = m_layoutHashMap.find(layoutHash);
-            if (!distinct && layoutIterator != m_layoutHashMap.end())
-            {
-                // Check collision bucket for an exact match.
-                for (auto index : layoutIterator->second)
-                {
-                    const auto& existing = m_layoutStyles[static_cast<size_t>(index) - 1];
-                    if (existing == layoutStyle)
-                    {
-                        layoutIndex = index;
-                        break;
-                    }
-                }
-            }
-
-            if (layoutIndex == LayoutStyleIndex::Invalid)
-            {
-                m_layoutStyles.push_back(layoutStyle);
-                int32_t idx = static_cast<int32_t>(m_layoutStyles.size()) - 1;
-                layoutIndex = static_cast<LayoutStyleIndex>(idx + 1);
-                if (!distinct)   // a distinct one is never handed to another registration
-                    m_layoutHashMap[layoutHash].push_back(layoutIndex);
-            }
-        }
+        const LayoutStyleIndex layoutIndex = RegisterLayoutStyle(layoutStyle, distinct);
 
 
 
@@ -414,6 +386,40 @@ namespace tachyon
         const auto visualTextIndex = static_cast<VisualTextStyleIndex>(idx + 1);
         m_visualTextHashMap[visualTextHash].push_back(visualTextIndex);
         return visualTextIndex;
+    }
+
+    // Deduplicate layout styles using hash map.
+    LayoutStyleIndex StyleManager::RegisterLayoutStyle(const LayoutStyle& layoutStyle, bool distinct) noexcept
+    {
+        const uint64_t layoutHash = layoutStyle.GetHashCode();
+
+        auto layoutIterator = m_layoutHashMap.find(layoutHash);
+        if (!distinct && layoutIterator != m_layoutHashMap.end())
+        {
+            // Check collision bucket for an exact match.
+            for (auto index : layoutIterator->second)
+            {
+                const auto& existing = m_layoutStyles[static_cast<size_t>(index) - 1];
+                if (existing == layoutStyle)
+                    return index;
+            }
+        }
+
+        m_layoutStyles.push_back(layoutStyle);
+        const auto layoutIndex = static_cast<LayoutStyleIndex>(m_layoutStyles.size());
+        if (!distinct)   // a distinct one is never handed to another registration
+            m_layoutHashMap[layoutHash].push_back(layoutIndex);
+        return layoutIndex;
+    }
+
+    StyleRef StyleManager::WithFlexWrap(StyleRef base, FlexWrap wrap) noexcept
+    {
+        const LayoutStyle* layout = GetLayoutStyle(base.layoutStyleIndex);
+        if (layout == nullptr || layout->layoutData.flex.wrap == wrap)
+            return base;
+        LayoutStyle variant = *layout;
+        variant.layoutData.flex.wrap = wrap;
+        return StyleRef{ RegisterLayoutStyle(variant, false), base.visualBoxStyleIndex, base.visualTextStyleIndex };
     }
 
     StyleRef StyleManager::WithTextOverride(StyleRef base, const TextOverride& textOverride) noexcept
