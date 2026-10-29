@@ -507,7 +507,10 @@ namespace tachyon
         RadialGradient           = 6, ///< ramp by angle around the center (CSS: radial-gradient)
         InterpolatedTriangle     = 7, ///< three colors blended by vertex weights
         InterpolatedBox          = 8, ///< four corner colors blended across the box
-        SDFGradient              = 9  ///< ramp by distance from the shape's edge
+        /// ramp by depth inside the shape: 0 on its edge, 1 at its deepest point (a box's
+        /// middle, a stroke's center line, a triangle's incenter); the transformation's first
+        /// row maps it (t = x.x * depth + x.z), so the identity runs the ramp edge to middle
+        SDFGradient              = 9
     };
 
     class VisualColorStyle;

@@ -31,7 +31,7 @@ space: (0, 0) is the top-left of its padding box, and pan / zoom of its ancestor
 | `RenderQuad(rect, colorStyle, cornerRadius, ...)` | A filled rectangle |
 | `RenderLine(p0, p1, lineStyle)` | A line (also a four-point form) |
 | `RenderPolyline(points, closed, lineStyle, cornerRadius)` | A polyline |
-| `RenderCircle`, `RenderDisc`, `RenderDot` | Circle outline, filled disc, dot |
+| `RenderCircle`, `RenderDisc`, `RenderDot` | Circle outline (exactly round; a gradient and dashes run clockwise from the right), filled disc, dot |
 | `RenderTriangle`, `RenderFilledPolygon` | Filled triangle, convex polygon |
 | `RenderText(textId, rect)` | Text registered with `textSystem->RegisterText` |
 

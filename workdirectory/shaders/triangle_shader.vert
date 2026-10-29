@@ -11,12 +11,11 @@
 layout (location = 0) out flat TriSurfaceData outSurface;
 layout (location = 4) out TriFragmentData outData;
 
-int triangleIndices[6] = { 0,1,3,  0,3,2 }; // two triangles covering the bounding quad; the fragment shader tests the interior
 
 void main()
 {
-	int triangleIndex = gl_VertexIndex / 6;
-	int vertexIndex = triangleIndices[gl_VertexIndex % 6];
+	int triangleIndex = gl_VertexIndex / 4; // the bounding quad; the fragment shader tests the interior
+	int vertexIndex = gl_VertexIndex % 4; // the corner, from the index buffer
 
 	Triangle triangle = PushConstants.triangleBuffer.triangles[triangleIndex];
 	
@@ -64,5 +63,5 @@ void main()
 	outSurface.textureIndex = triangle.textureIndex;
 	outData.position = position;
 
-	gl_Position = PushConstants.worldMatrix * vec4(position, 0.0, 1.0);
+	gl_Position = PrimitivePosition(position, triangle.transform0.w);
 }

@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "triangle_common.glsl"
 
 layout (location = 0) in flat TriSurfaceData inSurface;
@@ -71,7 +74,11 @@ void main()
 
     vec4 weights = vec4(w0, w1, w2, (w0+w1+w2)/3);
 
-    vec4 color = getSDFColor(int(triangle.colorIndex), localPos, triHalfSize, signedDistance, inSurface.textureIndex, boxSize, weights);
+    // The incircle's radius is the deepest a point gets: twice the area over the perimeter.
+    float perimeter = length(p1 - p0) + length(p2 - p1) + length(p0 - p2);
+    float inradius  = abs(area) / max(perimeter, 0.0001);
+    float depth     = saturate(-signedDistance / max(inradius, 0.0001));
+    vec4 color = getSDFColor(int(triangle.colorIndex), localPos, triHalfSize, depth, inSurface.textureIndex, boxSize, weights);
 
     color.a *= opacity;
     if (color.a <= (1.0 / 512.0))

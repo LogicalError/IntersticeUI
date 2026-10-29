@@ -29,6 +29,11 @@ First public preview. The API is not stable yet.
 - Every control has the four forms (an ID or the call site, a style or the theme's): style overloads for the fields, sliders, dropdowns, menu items, status text, command search and message dialog; call-site forms for the containers, tables and tree, grid and list views; `Checkbox` with a `bool&`; list and dictionary fields take an ID like the others. A control's parts get IDs under its own.
 - Sliders, slider fields, a number field's label drag, color, gradient and dropdown fields report a change (return value and `IsModified`) like the other fields; a clicked tab takes the focus; menu items' parts are no longer Tab stops.
 - Color and gradient swatches show keyboard focus with an accent border, like the fields next to them.
+- Rendering: circles are drawn exactly round, as a primitive of their own (they were four Bezier curves); dots are one triangle each, clipped per pixel; box-shaped primitives are drawn from an index buffer, four vertices each. `SDFGradient` runs from a shape's edge to its deepest point for every primitive.
+- A cached scope's output (`BeginCached`, docked panels) stays on the GPU: drawing it again, moved or not, uploads nothing.
+- Opaque boxes hide what was drawn under them on the GPU: the depth buffer now holds the draw order, and fragments an opaque box covers are skipped.
+- Uploads (each frame's primitives, cached scopes, images) are copied on a thread of their own while the frame's commands are recorded.
+- Each window's frame is timed on the GPU (`VulkanWindowContext::LastGpuFrameSeconds`).
 - Links in rich text take their cursor from `LinkStyle::cursor`, and `theme.linkStyle` from the theme's `.link` class (color, hover color, cursor). Links in padded or vertically centred text are found where they are drawn.
 - CSS `text-shadow`: up to two shadows or glows under text, its decorations and its icon, blurred from the glyph atlas' distance field (now wider, so a blur has room).
 - CSS `:first-child`, `:last-child` and `:only-child` for the box properties (backgrounds, borders, shadows, margin, padding, gap, cursor). Button and toggle group items use one class, `group-button` / `group-toggle`, in place of `first-`, `mid-` and `last-button` / `-toggle`; style the ends with `:first-child` and `:last-child`.

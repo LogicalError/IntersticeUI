@@ -11,12 +11,11 @@ layout (location = 0) out flat SurfaceData outSurface;
 layout (location = 9) out FragmentData outData;
 
 
-int boxIndices[6] = { 0,1,3,  0,3,2 };
 
 void main() 
 {
-	int boxIndex = gl_VertexIndex / 6;
-	int vertexIndex = boxIndices[gl_VertexIndex % 6];
+	int boxIndex = gl_VertexIndex / 4;
+	int vertexIndex = gl_VertexIndex % 4; // the corner, from the index buffer
 
 	Box box = PushConstants.boxBuffer.boxes[boxIndex];
 
@@ -75,5 +74,5 @@ void main()
 
 	outSurface.colorIndex = int(box.colorIndex);
 
-	gl_Position = PushConstants.worldMatrix * vec4(position, 0, 1.0f);
+	gl_Position = PrimitivePosition(position, box.transform0.w);
 }

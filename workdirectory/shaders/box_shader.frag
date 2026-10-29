@@ -6,6 +6,9 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 #extension GL_GOOGLE_include_directive : require
 
+// Depth is only tested here (occluders wrote it), so test it before shading.
+layout(early_fragment_tests) in;
+
 #include "box_common.glsl"
 
 layout (location = 0) in flat SurfaceData inSurface;
@@ -106,7 +109,7 @@ void AddPreStyle(inout CurrentStyle currentStyle, float weight, int styleIndex)
     currentStyle.dashOffset   += weight * float(boxStyle.borderDashOffset);
 }
 
-void AddPostStyle(inout CurrentStyle currentStyle, vec2 uv, vec2 sdfUv, vec2 uvsize, float outer_distance, float weight, int styleIndex, vec4 weights)
+void AddPostStyle(inout CurrentStyle currentStyle, vec2 uv, vec2 sdfUv, vec2 uvsize, float edgeDepth, float weight, int styleIndex, vec4 weights)
 {
     if (styleIndex < 0) return;
 	BoxStyle boxStyle = PushConstants.boxStyleBuffer.boxStyles[styleIndex];
@@ -125,11 +128,11 @@ void AddPostStyle(inout CurrentStyle currentStyle, vec2 uv, vec2 sdfUv, vec2 uvs
 
     // Premultiplied accumulation so a transparent endpoint adds no RGB (a fade from
     // transparent doesn't pass through its black RGB). Divided back out after the loop.
-    vec4 borderC = getSDFColor(int(edgeColorIndex), uv, uvsize, outer_distance, inSurface.textureIndex, inSurface.boxSize, weights);
+    vec4 borderC = getSDFColor(int(edgeColorIndex), uv, uvsize, edgeDepth, inSurface.textureIndex, inSurface.boxSize, weights);
     currentStyle.borderColor.rgb += weight * borderC.a * borderC.rgb;
     currentStyle.borderColor.a   += weight * borderC.a;
 
-    vec4 bgC = getSDFColor(int(boxStyle.backgroundColorIndex), uv, uvsize, outer_distance, inSurface.textureIndex, inSurface.boxSize, weights);
+    vec4 bgC = getSDFColor(int(boxStyle.backgroundColorIndex), uv, uvsize, edgeDepth, inSurface.textureIndex, inSurface.boxSize, weights);
     currentStyle.backgroundColor.rgb += weight * bgC.a * bgC.rgb;
     currentStyle.backgroundColor.a   += weight * bgC.a;
 }
@@ -222,15 +225,18 @@ void main()
     );
 
     
+    // Distances are in units of the box's smaller side, so its middle is half a unit deep.
+    float edgeDepth = saturate(-outer_distance * 2.0);
+
     // Blend colors across "from" and "to" states.
     for (int i = 0; i < 2; i++)
         if (inSurface.blendFactors[i] > 0.0)
-            AddPostStyle(currentStyle, uv, sdfUv, uvsize, outer_distance, inSurface.blendFactors[i], inSurface.styleIndex[i], weights);
+            AddPostStyle(currentStyle, uv, sdfUv, uvsize, edgeDepth, inSurface.blendFactors[i], inSurface.styleIndex[i], weights);
 
     // Per-element ColorStyle override: replaces the box style's background entirely so
     // a swatch element can paint a solid color or a gradient via colorIndex.
     if (inSurface.colorIndex != 0)
-        currentStyle.backgroundColor = getSDFColor(inSurface.colorIndex, uv, uvsize, outer_distance,
+        currentStyle.backgroundColor = getSDFColor(inSurface.colorIndex, uv, uvsize, edgeDepth,
                                                    inSurface.textureIndex, inSurface.boxSize, weights);
 
     // Un-premultiply RGB now that all weighted contributions are summed.

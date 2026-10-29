@@ -89,6 +89,9 @@ mutex, which only protects against its own threads. Presentation can block until
 vsync while the lock is held; a host with a second graphics queue can give the GUI
 its own queue to avoid that.
 
+The GUI copies its uploads into mapped memory on a thread of its own while it records
+commands, and waits for it before each submit. That thread never uses the queue.
+
 ## Showing a host-rendered image
 
 A host can render into an image it owns and show it in the UI, for example a 3D

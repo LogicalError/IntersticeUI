@@ -12,12 +12,11 @@ layout (location = 0) out SurfaceData outSurface;
 layout (location = 7) out FragmentData outData;
 
 
-int boxIndices[6] = { 0,1,3,  0,3,2 };
 
 void main() 
 {
-	int glyphIndex = gl_VertexIndex / 6;
-	int vertexIndex = boxIndices[gl_VertexIndex % 6];
+	int glyphIndex = gl_VertexIndex / 4;
+	int vertexIndex = gl_VertexIndex % 4; // the corner, from the index buffer
 		
 	Glyph glyph = PushConstants.glyphBuffer.glyphs[glyphIndex];
 
@@ -70,5 +69,5 @@ void main()
 	outSurface.textColorIndex = int(glyph.textColorIndex);
 	outSurface.shadowBlur = glyph.shadowBlur < 0 ? -1.0 : float(glyph.shadowBlur) / 8.0;
 
-	gl_Position = PushConstants.worldMatrix * vec4(position, 0, 1.0f);
+	gl_Position = PrimitivePosition(position, glyph.transform0.w);
 }

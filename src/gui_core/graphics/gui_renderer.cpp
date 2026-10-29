@@ -34,29 +34,6 @@ namespace tachyon
         RenderBox(rect, clipRect, styleIndexValue, styleIndexValue, 1.0f, colorStyleIndex, textureIndex, snappedPx);
     }
 
-    void GUIRenderer::RenderCircle(tachyon::int2 center, float radius, tachyon::IntRect clipRect, const LineStyle& lineStyle)
-    {
-        static constexpr float k = 0.5522847498f - 0.125f;
-        static constexpr float2 segments[4][4] =
-        {
-            { { 1,  0}, { 1,  k}, { k,  1}, { 0,  1} }, // Right -> Top
-            { { 0,  1}, {-k,  1}, {-1,  k}, {-1,  0} }, // Top -> Left
-            { {-1,  0}, {-1, -k}, {-k, -1}, { 0, -1} }, // Left -> Bottom
-            { { 0, -1}, { k, -1}, { 1, -k}, { 1,  0} }  // Bottom -> Right
-        };
-
-        for (int i = 0; i < 4; i++)
-        {
-            const auto& segment = segments[i];
-            const float2 f0 = (segment[0] * radius) + center, f1 = (segment[1] * radius) + center;
-            const float2 f2 = (segment[2] * radius) + center, f3 = (segment[3] * radius) + center;
-            LineStyle segStyle       = lineStyle;
-            segStyle.gradientOffset  = lineStyle.gradientOffset + (float(i)       / 4.0f) * lineStyle.gradientScale;
-            segStyle.gradientScale   =                            (1.0f           / 4.0f) * lineStyle.gradientScale;
-            RenderLine(int2{ (int)f0.x, (int)f0.y }, int2{ (int)f1.x, (int)f1.y }, int2{ (int)f2.x, (int)f2.y }, int2{ (int)f3.x, (int)f3.y }, clipRect, segStyle);
-        }
-    }
-
     void GUIRenderer::RenderFilledPolygon(std::span<const tachyon::float2> points, tachyon::IntRect clipRect,
                                           VisualColorStyleIndex colorIndex, tachyon::ImageIndex textureIndex)
     {

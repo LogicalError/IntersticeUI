@@ -29,6 +29,28 @@ namespace tachyon
 
     // Text metrics at the UI scale: sizes and spacing exactly, decorations to whole
     // pixels (a set thickness stays at least 1px).
+    // Whether `c` hides what's under it everywhere it paints: every stop it reads is opaque.
+    // Textures can have transparent pixels.
+    static bool IsOpaque(const ColorStyle& c) noexcept
+    {
+        int stops = 0;
+        switch (c.type)
+        {
+            case ColorType::SolidColor:           stops = 1; break;
+            case ColorType::StretchedTexture:
+            case ColorType::RepeatedTexture:      return false;
+            case ColorType::InterpolatedTriangle: stops = 3; break;
+            case ColorType::InterpolatedBox:      stops = 4; break;
+            default:                              stops = c.gradient.stopCount; break;
+        }
+        if (stops == 0)
+            return false;
+        for (int s = 0; s < stops; ++s)
+            if (c.gradient.stops[s].GetColor4b().a != 255)
+                return false;
+        return true;
+    }
+
     static TextStyle ScaledTextStyle(const TextStyle& in, float s) noexcept
     {
         TextStyle t = in;
@@ -174,6 +196,7 @@ namespace tachyon
 
         VisualBoxStyle visualBoxStyle[Style::kStateCount];
         VisualTextStyle visualTextStyle[Style::kStateCount];
+        bool opaqueBackground[Style::kStateCount];
 
         uint64_t visualBoxHash = 0;
         uint64_t visualTextHash = 0;
@@ -233,6 +256,7 @@ namespace tachyon
                                                         style.borderRadius),
             };
             visualBoxHash = Hash::Combine(visualBoxHash, visualBoxStyle[i].GetHashCode());
+            opaqueBackground[i] = IsOpaque(styleState.backgroundColor);
 
             visualTextStyle[i] = VisualTextStyle
             {
@@ -319,6 +343,7 @@ namespace tachyon
                 for (int i = 0; i < Style::kStateCount; i++)
                 {
                     m_visualBoxStyles.push_back(visualBoxStyle[i]);
+                    m_opaqueBoxBackgrounds.push_back(opaqueBackground[i]);
                 }
                 visualBoxStylesModified = true;
                 visualBoxIndex = static_cast<VisualBoxStyleIndex>(idx + 1);
@@ -532,6 +557,7 @@ namespace tachyon
         m_layoutHashMap.clear();
 
         m_visualBoxStyles.clear();
+        m_opaqueBoxBackgrounds.clear();
         m_visualBoxHashMap.clear();
         m_visualShadowStyles.clear();
 
@@ -604,6 +630,16 @@ namespace tachyon
         state &= ElementState::VisualMask;
         if ((state & ElementState::Disabled) != ElementState::None) state = ElementState::Disabled;
         return &m_visualTextStyles[(idx * Style::kStateCount) + (int)state];
+    }
+
+    const VisualBoxStyle* StyleManager::GetVisualBoxStyleAt(uint32_t gpuStyleIndex) const noexcept
+    {
+        return gpuStyleIndex < m_visualBoxStyles.size() ? &m_visualBoxStyles[gpuStyleIndex] : nullptr;
+    }
+
+    bool StyleManager::IsBoxBackgroundOpaque(uint32_t gpuStyleIndex) const noexcept
+    {
+        return gpuStyleIndex < m_opaqueBoxBackgrounds.size() && m_opaqueBoxBackgrounds[gpuStyleIndex];
     }
 
     const VisualShadowStyle* StyleManager::GetVisualShadowStyle(uint32_t gpuStyleIndex) const noexcept

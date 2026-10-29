@@ -655,6 +655,28 @@ namespace tachyon
                              .color  = t < 0.5f ? a.color : b.color };
     }
 
+    IntRect GUIApplication::OpaqueInterior(IntRect rectLayout, const TransitionState& ts) const
+    {
+        int32_t inset = 0;
+        for (const auto& [styleIndex, weight] : { std::pair{ ts.fromStyleIndex, 1.0f - ts.blendT }, std::pair{ ts.toStyleIndex, ts.blendT } })
+        {
+            if (weight <= 0.0f)
+                continue;
+            const VisualBoxStyle* box = styleManager.GetVisualBoxStyleAt(styleIndex);
+            if (box == nullptr || !styleManager.IsBoxBackgroundOpaque(styleIndex))
+                return {};
+            const BoxEdges&   b = box->borderWidths;
+            const BoxCorners& r = box->borderRadius;
+            inset = std::max<int32_t>(inset, std::max({ b.top, b.right, b.bottom, b.left }) +
+                                             std::max({ r.topLeft, r.topRight, r.bottomRight, r.bottomLeft }));
+        }
+        // Two more pixels: the box snaps its edges to whole pixels.
+        inset += 2;
+        if (rectLayout.w <= 2 * inset || rectLayout.h <= 2 * inset)
+            return {};
+        return IntRect{ rectLayout.x + inset, rectLayout.y + inset, rectLayout.w - 2 * inset, rectLayout.h - 2 * inset };
+    }
+
     void GUIApplication::RenderBoxShadows(IntRect rectLayout, IntRect clipRectScreen, const TransitionState& ts, bool ring)
     {
         const VisualShadowStyle* to   = styleManager.GetVisualShadowStyle(ts.toStyleIndex);
@@ -944,6 +966,12 @@ namespace tachyon
                                               guiStateManager.Interaction().IsFocusVisible();
                         if (!isWindow)
                             RenderBoxShadows(rectLayout, parentClipRectScreen, ts, ring);
+                        // What the box's opaque middle covers, drawn before it, isn't shaded on the GPU.
+                        // Under a zoom the box snaps in screen pixels, which a layout inset can't bound.
+                        if (!isWindow && !parentState.hasTransform && childElement.colorStyleIndex == VisualColorStyleIndex::Invalid &&
+                            childElement.backgroundImage == ImageIndex::Invalid)
+                            if (const IntRect covered = OpaqueInterior(rectLayout, ts); covered.w > 0 && covered.h > 0)
+                                guiRenderer->RenderOccluder(covered, parentClipRectScreen);
                         // rect is LAYOUT space (mapped by SetTransform), the scissor is SCREEN space.
                         guiRenderer->RenderBox(rectLayout, parentClipRectScreen, ts.fromStyleIndex, ts.toStyleIndex, ts.blendT,
                                                childElement.colorStyleIndex, childElement.backgroundImage, elementSnappedRect);

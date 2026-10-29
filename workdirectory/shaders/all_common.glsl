@@ -189,5 +189,15 @@ vec4 linearToSrgb(vec4 linear) {
 
 float saturate(float val) { return clamp(val,0.0,1.0); }
 
+// A vertex at window pixel `position` of the primitive drawn `order`-th (its transform0.w):
+// the world matrix maps the order to depth, later nearer, and past the depth range all
+// stay at the nearest depth.
+vec4 PrimitivePosition(vec2 position, float order)
+{
+    vec4 p = PushConstants.worldMatrix * vec4(position, order, 1.0);
+    p.z = min(p.z, p.w);
+    return p;
+}
+
 
 #include "bezier_sdf.glsl"

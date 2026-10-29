@@ -121,6 +121,9 @@ void SetDrawCacheEnabled(bool enabled);
 The ID must be stable (static, or salted). Default class: `collection`. Docked panels
 are cached already (see [Docking](tabs-docking-toolbars.md#docking)).
 
+The kept output stays on the GPU: once it is there, drawing it again, moved or not, uploads
+nothing. Output not drawn for 240 frames is dropped and built again when it's next shown.
+
 ```cpp
 if (BeginCached(listID, dataVersion))
 {

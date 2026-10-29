@@ -2447,6 +2447,10 @@ namespace tachyon
         void OnRender(float elapsedTimeSecs);
         /// The box style's CSS shadows (and the focus ring when `ring`), blended as the box is.
         void RenderBoxShadows(IntRect rectLayout, IntRect clipRectScreen, const TransitionState& ts, bool ring);
+        /// The part of a box drawn with `ts` that its opaque background surely covers: inside its
+        /// borders and corners, a little in from where it snaps to pixels. Empty when the
+        /// background isn't opaque.
+        IntRect OpaqueInterior(IntRect rectLayout, const TransitionState& ts) const;
         void OnFrame();
         Result<void> RecoverDevice();
 

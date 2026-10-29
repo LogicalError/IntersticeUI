@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 
 namespace tachyon
 {
@@ -11,56 +12,165 @@ namespace tachyon
 // saturates, it doesn't wrap around to the other side.
 static int16_t SaturateInt16(int32_t v) { return int16_t(std::clamp<int32_t>(v, INT16_MIN, INT16_MAX)); }
 
-void PrimitiveRenderer::Render(tachyon::ID id, RHI::RenderCommandList& cmdList,
-                               const PipelineSet& pipelines, GPUDrawPushConstants& push_constants)
+namespace
 {
-    auto& target = GetTarget(id);
-    target.Render(cmdList, pipelines, push_constants);
-}
-
-
-void PrimitiveRenderTarget::Render(RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
-                                   GPUDrawPushConstants& push_constants)
-{
-    FinishRenderPass();
-
-    std::array<RHI::UploadRequest, kPrimitiveKindCount> uploads{};
-    std::array<DeviceAddress, kPrimitiveKindCount> addresses{};
-    for (size_t k = 0; k < kPrimitiveKindCount; ++k)
+    // One upload request per kind's stream.
+    std::array<RHI::UploadRequest, kPrimitiveKindCount> StreamUploads(const PrimitiveRenderTarget& target, size_t& bytes)
     {
-        const auto& cpu = streams[k].cpu;
-        uploads[k] = RHI::UploadRequest{ cpu.data(), cpu.size(), 16 };
-    }
-    cmdList.UploadTransientBuffers(uploads, addresses);
-
-    // Pre-fill the canonical slots (Quad aliases Triangle's and is written
-    // per-pass below; pre-filling it here would clobber Triangle's address).
-    for (size_t k = 0; k < kPrimitiveKindCount; k++)
-    {
-        if (PrimitiveKind(k) == PrimitiveKind::Quad)
-            continue;
-        push_constants.primitiveAddresses[kPrimitiveSpecs[k].pushSlot] = addresses[k];
+        std::array<RHI::UploadRequest, kPrimitiveKindCount> uploads{};
+        for (size_t k = 0; k < kPrimitiveKindCount; ++k)
+        {
+            const auto& cpu = target.streams[k].cpu;
+            uploads[k] = RHI::UploadRequest{ cpu.data(), cpu.size(), 16 };
+            bytes += cpu.size();
+        }
+        return uploads;
     }
 
-    for (const auto& pass : renderPasses)
+    // Draws one same-kind pass; kinds share push-constant slots, so it writes its own address.
+    void DrawPass(const PrimitiveRenderPass& pass, const std::array<DeviceAddress, kPrimitiveKindCount>& addresses,
+                  RHI::RenderCommandList& cmdList, const PipelineSet& pipelines, GPUDrawPushConstants& push_constants)
     {
         const auto& spec = kPrimitiveSpecs[size_t(pass.kind)];
         push_constants.primitiveAddresses[spec.pushSlot] = addresses[size_t(pass.kind)];
         cmdList.DrawPrimitives(pipelines[size_t(pass.kind)], push_constants,
-                               uint32_t(pass.primitiveCount), uint32_t(pass.firstPrimitive));
+                               uint32_t(pass.primitiveCount), uint32_t(pass.firstPrimitive), spec.shape);
     }
+
+    // Moves everything drawn with `world` by `delta` window pixels and `orders` draw orders.
+    // The shaders clip and snap in window pixels before the world matrix, so a whole-pixel
+    // move keeps both.
+    tachyon::float4x4 Translated(tachyon::float4x4 world, tachyon::int2 delta, uint32_t orders)
+    {
+        // Column-major, as the shaders read it: the translation is the fourth column.
+        float m[16];
+        static_assert(sizeof(m) == sizeof(world));
+        std::memcpy(m, &world, sizeof(m));
+        m[12] += m[0] * float(delta.x) + m[4] * float(delta.y);
+        m[13] += m[1] * float(delta.x) + m[5] * float(delta.y);
+        m[14] += m[10] * float(orders);
+        std::memcpy(&world, m, sizeof(m));
+        return world;
+    }
+}
+
+void PrimitiveRenderer::Render(tachyon::ID id, RHI::RenderCommandList& cmdList,
+                               const PipelineSet& pipelines, GPUDrawPushConstants& push_constants)
+{
+    for (const RHI::ResidentBufferId resident : m_releasedResidents)
+        cmdList.ReleaseResidentBuffer(resident);
+    m_releasedResidents.clear();
+
+    auto& target = GetTarget(id);
+    target.FinishRenderPass();
+
+    size_t bytes = 0;
+    const auto uploads = StreamUploads(target, bytes);
+    std::array<DeviceAddress, kPrimitiveKindCount> addresses{};
+    cmdList.UploadTransientBuffers(uploads, addresses);
+    m_lastUploadBytes = bytes;
+
+    // Where each replayed capture is drawn from this frame.
+    struct ResolvedReplay { const PrimitiveRenderTarget* passes = nullptr; std::array<DeviceAddress, kPrimitiveKindCount> addresses{}; GPUDrawPushConstants push{}; };
+    std::vector<ResolvedReplay> replays(target.replays.size());
+    for (size_t r = 0; r < target.replays.size(); ++r)
+    {
+        const PrimitiveRenderTarget::ScopeReplay& replay = target.replays[r];
+        auto capture = scopeCaptures.find(replay.scope);
+        if (capture == scopeCaptures.end())
+            continue;
+        replays[r].passes    = &capture->second.target;
+        replays[r].addresses = CaptureAddresses(capture->second, cmdList);
+        replays[r].push      = push_constants;
+        replays[r].push.worldMatrix = Translated(push_constants.worldMatrix, replay.delta, replay.baseOrder);
+    }
+
+    // Occluders first, writing depth; then everything else in order, testing it.
+    for (const bool occluders : { true, false })
+    {
+        auto draws = [occluders](const PrimitiveRenderPass& pass) { return kPrimitiveSpecs[size_t(pass.kind)].depthOnly == occluders; };
+        for (const auto& pass : target.renderPasses)
+        {
+            if (pass.replay < 0)
+            {
+                if (draws(pass))
+                    DrawPass(pass, addresses, cmdList, pipelines, push_constants);
+                continue;
+            }
+            ResolvedReplay& replay = replays[size_t(pass.replay)];
+            if (replay.passes == nullptr)
+                continue;
+            for (const auto& capturePass : replay.passes->renderPasses)
+                if (draws(capturePass))
+                    DrawPass(capturePass, replay.addresses, cmdList, pipelines, replay.push);
+        }
+    }
+}
+
+std::array<DeviceAddress, kPrimitiveKindCount> PrimitiveRenderer::CaptureAddresses(ScopeCapture& capture, RHI::RenderCommandList& cmdList)
+{
+    size_t bytes = 0;
+    const auto uploads = StreamUploads(capture.target, bytes);
+
+    // Lost with its device, or never made: make the GPU copy (ready from a later frame).
+    if (capture.resident != 0 && cmdList.ResidentBufferState(capture.resident) == RHI::ResidentState::Gone)
+        capture.resident = 0;
+    if (capture.resident == 0)
+        capture.resident = cmdList.UploadResidentBuffers(uploads, capture.addresses);
+
+    std::array<DeviceAddress, kPrimitiveKindCount> addresses = capture.addresses;
+    if (cmdList.ResidentBufferState(capture.resident) != RHI::ResidentState::Ready)
+    {
+        cmdList.UploadTransientBuffers(uploads, addresses);
+        m_lastUploadBytes += bytes;
+    }
+    return addresses;
+}
+
+void PrimitiveRenderer::ReleaseResident(ScopeCapture& capture)
+{
+    if (capture.resident != 0)
+        m_releasedResidents.push_back(capture.resident);
+    capture.resident  = 0;
+    capture.addresses = {};
+}
+
+size_t PrimitiveRenderer::ResidentScopeCount() const
+{
+    return size_t(std::count_if(scopeCaptures.begin(), scopeCaptures.end(),
+                                [](const auto& entry) { return entry.second.resident != 0; }));
+}
+
+
+size_t PrimitiveRenderTarget::Render(RHI::RenderCommandList& cmdList, const PipelineSet& pipelines,
+                                     GPUDrawPushConstants& push_constants)
+{
+    FinishRenderPass();
+
+    size_t bytes = 0;
+    const auto uploads = StreamUploads(*this, bytes);
+    std::array<DeviceAddress, kPrimitiveKindCount> addresses{};
+    cmdList.UploadTransientBuffers(uploads, addresses);
+
+    for (const bool occluders : { true, false })
+        for (const auto& pass : renderPasses)
+            if (pass.replay < 0 && kPrimitiveSpecs[size_t(pass.kind)].depthOnly == occluders)
+                DrawPass(pass, addresses, cmdList, pipelines, push_constants);
+    return bytes;
 }
 
 
 void PrimitiveRenderTarget::Reset()
 {
     renderPasses.clear();
+    replays.clear();
     for (auto& stream : streams)
     {
         stream.cpu.clear();
         stream.passStart = 0;
     }
     currentKind = -1;
+    nextOrder   = 0;
 }
 
 
@@ -144,6 +254,21 @@ void PrimitiveRenderTarget::RenderShadow(tachyon::IntRect rect, tachyon::IntRect
                     });
 }
 
+void PrimitiveRenderTarget::RenderOccluder(tachyon::IntRect rect, tachyon::IntRect clipRect)
+{
+    if (rect.w <= 0 || rect.h <= 0)
+        return;
+    Append(PrimitiveKind::Occluder, Occluder
+                    {
+                        .transform0 = { currentTransform.r0.x, currentTransform.r0.y, currentTransform.r0.z, 0 },
+                        .transform1 = { currentTransform.r1.x, currentTransform.r1.y, currentTransform.r1.z, 0 },
+                        .clipMin = { clipRect.Min(0), clipRect.Min(1) },
+                        .clipMax = { clipRect.Max(0), clipRect.Max(1) },
+
+                        .pos = { rect.x, rect.y }, .size = { rect.w, rect.h },
+                    });
+}
+
 void PrimitiveRenderTarget::RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex, float shadowBlur)
 {
     Append(PrimitiveKind::Glyph, Glyph
@@ -192,6 +317,26 @@ void PrimitiveRenderTarget::RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachy
                     });
 }
 
+void PrimitiveRenderTarget::RenderCircle(tachyon::float2 center, float radius, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle)
+{
+    Append(PrimitiveKind::Circle, Circle
+                    {
+                        .transform0 = { currentTransform.r0.x, currentTransform.r0.y, currentTransform.r0.z, 0 },
+                        .transform1 = { currentTransform.r1.x, currentTransform.r1.y, currentTransform.r1.z, 0 },
+                        .clipMin = { clipRect.Min(0), clipRect.Min(1) },
+                        .clipMax = { clipRect.Max(0), clipRect.Max(1) },
+
+                        .center         = { center.x, center.y },
+                        .radius         = std::max(radius, 0.0f),
+                        .lineWidth      = lineStyle.lineWidth,
+                        .colorIndex     = int(lineStyle.colorStyleIndex),
+                        .dashSize       = lineStyle.dashSize,
+                        .dashOffset     = lineStyle.dashOffset,
+                        .gradientOffset = lineStyle.gradientOffset,
+                        .gradientScale  = lineStyle.gradientScale,
+                    });
+}
+
 void PrimitiveRenderTarget::RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color)
 {
     Append(PrimitiveKind::Dot, Dot
@@ -236,6 +381,15 @@ void PrimitiveRenderTarget::StartRenderPass(PrimitiveKind kind)
     currentKind = int(kind);
 }
 
+void PrimitiveRenderTarget::AddReplay(tachyon::ID scope, tachyon::int2 delta, uint32_t primitiveCount)
+{
+    FinishRenderPass();
+    renderPasses.push_back(PrimitiveRenderPass{ .firstPrimitive = 0, .primitiveCount = 0, .kind = PrimitiveKind::Box,
+                                                .replay = int(replays.size()) });
+    replays.push_back(ScopeReplay{ scope, delta, nextOrder });
+    nextOrder += primitiveCount;
+}
+
 void PrimitiveRenderTarget::AppendCaptured(const PrimitiveRenderTarget& src, tachyon::int2 delta)
 {
     TACHYON_PROFILE_SCOPE("AppendCaptured");
@@ -262,6 +416,9 @@ void PrimitiveRenderTarget::AppendCaptured(const PrimitiveRenderTarget& src, tac
         const size_t len      = size_t(pass.primitiveCount) * stride;
         const size_t base     = dstBytes.size();
         dstBytes.insert(dstBytes.end(), srcBytes.begin() + srcOff, srcBytes.begin() + srcOff + len);
+
+        for (int p = 0; p < pass.primitiveCount; p++)
+            reinterpret_cast<float*>(dstBytes.data() + base + size_t(p) * stride)[3] = float(nextOrder++); // transform0.w
 
         if (translate)
         {
@@ -302,6 +459,18 @@ void PrimitiveRenderer::Reset()
     } else
     {
         for (auto& target : idTargets) { target.second.Reset(); }
+
+        ++m_frame;
+        for (auto it = scopeCaptures.begin(); it != scopeCaptures.end(); )
+        {
+            if (m_frame - it->second.lastUsedFrame > kEvictAfterFrames)
+            {
+                ReleaseResident(it->second);
+                it = scopeCaptures.erase(it);
+            }
+            else
+                ++it;
+        }
     }
     currentTarget = nullptr;
 }
@@ -355,45 +524,54 @@ void PrimitiveRenderer::BeginScopeCapture(tachyon::ID scopeId)
     assert(currentTarget != nullptr);
     assert(m_captureSaved == nullptr && "nested scope capture is not supported");
     m_captureSaved = currentTarget;
-    PrimitiveRenderTarget& cap = scopeCaptures[scopeId];
-    cap.Reset();                 // fresh capture (CPU-only; never uploaded)
-    currentTarget = &cap;        // redirect emit calls into the capture buffer
+    ScopeCapture& cap = scopeCaptures[scopeId];
+    ReleaseResident(cap);        // the old primitives' GPU copy
+    cap.target.Reset();
+    cap.lastUsedFrame = m_frame;
+    currentTarget = &cap.target; // redirect emit calls into the capture
 }
 
 void PrimitiveRenderer::EndScopeCapture(tachyon::ID scopeId)
 {
     assert(m_captureSaved != nullptr);
-    PrimitiveRenderTarget& cap = scopeCaptures[scopeId];
-    cap.FinishRenderPass();
+    ScopeCapture& cap = scopeCaptures[scopeId];
+    cap.target.FinishRenderPass();
     currentTarget  = m_captureSaved;
     m_captureSaved = nullptr;
-    // Emit the just-captured subtree into the window this frame (no translation).
-    currentTarget->AppendCaptured(cap, tachyon::int2{ 0, 0 });
+    // Drawn into the window this frame too, where it was captured.
+    currentTarget->AddReplay(scopeId, tachyon::int2{ 0, 0 }, cap.target.nextOrder);
 }
 
 bool PrimitiveRenderer::ReplayScopeCapture(tachyon::ID scopeId, tachyon::int2 delta)
 {
     assert(currentTarget != nullptr);
     auto it = scopeCaptures.find(scopeId);
-    if (it == scopeCaptures.end() || it->second.renderPasses.empty())
+    if (it == scopeCaptures.end() || it->second.target.renderPasses.empty())
         return false;
-    currentTarget->AppendCaptured(it->second, delta);
+    it->second.lastUsedFrame = m_frame;
+    currentTarget->AddReplay(scopeId, delta, it->second.target.nextOrder);
     return true;
 }
 
 bool PrimitiveRenderer::HasScopeCapture(tachyon::ID scopeId) const
 {
     auto it = scopeCaptures.find(scopeId);
-    return it != scopeCaptures.end() && !it->second.renderPasses.empty();
+    return it != scopeCaptures.end() && !it->second.target.renderPasses.empty();
 }
 
 void PrimitiveRenderer::InvalidateScopeCapture(tachyon::ID scopeId)
 {
-    scopeCaptures.erase(scopeId);
+    if (auto it = scopeCaptures.find(scopeId); it != scopeCaptures.end())
+    {
+        ReleaseResident(it->second);
+        scopeCaptures.erase(it);
+    }
 }
 
 void PrimitiveRenderer::ClearScopeCaptures()
 {
+    for (auto& [id, capture] : scopeCaptures)
+        ReleaseResident(capture);
     scopeCaptures.clear();
 }
 
@@ -415,6 +593,12 @@ void PrimitiveRenderer::RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::
     currentTarget->RenderLine(p0, p1, p2, p3, clipRect, lineStyle);
 }
 
+void PrimitiveRenderer::RenderCircle(tachyon::float2 center, float radius, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle)
+{
+    assert(currentTarget != nullptr);
+    currentTarget->RenderCircle(center, radius, clipRect, lineStyle);
+}
+
 void PrimitiveRenderer::RenderDot(tachyon::float2 pos, tachyon::IntRect clipRect, float size, tachyon::color4f color)
 {
     assert(currentTarget != nullptr);
@@ -431,6 +615,12 @@ void PrimitiveRenderer::RenderQuad(tachyon::IntRect rect, tachyon::IntRect clipR
 {
     assert(currentTarget != nullptr);
     currentTarget->RenderQuad(rect, clipRect, colorStyleIndex, cornerRadius, textureIndex);
+}
+
+void PrimitiveRenderer::RenderOccluder(tachyon::IntRect rect, tachyon::IntRect clipRect)
+{
+    assert(currentTarget != nullptr);
+    currentTarget->RenderOccluder(rect, clipRect);
 }
 
 void PrimitiveRenderer::RenderShadow(tachyon::IntRect rect, tachyon::IntRect clipRect, tachyon::VisualColorStyleIndex colorStyleIndex, float cornerRadius, int blur)

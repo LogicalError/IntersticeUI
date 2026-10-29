@@ -101,12 +101,16 @@ namespace tachyon
             r.EndScopeCapture(scope); // emits into the window (delta 0) and stores the capture
 
             EXPECT_TRUE(r.HasScopeCapture(scope));
+            ASSERT_EQ(r.currentTarget->replays.size(), 1u) << "drawn where it was captured";
+            EXPECT_EQ(r.currentTarget->replays[0].delta, (tachyon::int2{ 0, 0 }));
 
-            // Replaying translated appends another, shifted copy.
+            // Replaying adds a pass that draws the capture moved, without copying its primitives.
             const size_t before = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
             EXPECT_TRUE(r.ReplayScopeCapture(scope, tachyon::int2{ 5, 7 }));
-            const size_t after = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size();
-            EXPECT_EQ(after, before + sizeof(Box));
+            EXPECT_EQ(r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu.size(), before);
+            ASSERT_EQ(r.currentTarget->replays.size(), 2u);
+            EXPECT_EQ(r.currentTarget->replays[1].delta, (tachyon::int2{ 5, 7 }));
+            EXPECT_EQ(r.currentTarget->renderPasses.back().replay, 1);
 
             r.EndWindow();
         }

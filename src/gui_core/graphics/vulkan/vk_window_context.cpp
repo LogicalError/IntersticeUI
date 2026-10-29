@@ -366,6 +366,15 @@ VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
 {
     WaitForFence(deviceContext->device, currentFrame.renderFence);
     currentFrame.flushQueue.flush();
+    if (currentFrame.timestampsWritten)
+    {
+        // That frame is done (its fence), so its timestamps are there.
+        uint64_t ticks[2] = {};
+        if (vkGetQueryPoolResults(deviceContext->device, currentFrame.timestamps, 0, 2, sizeof(ticks), ticks, sizeof(uint64_t),
+                                  VK_QUERY_RESULT_64_BIT) == VK_SUCCESS)
+            lastGpuFrameSeconds = double(ticks[1] - ticks[0]) * double(timestampPeriodNs) * 1e-9;
+        currentFrame.timestampsWritten = false;
+    }
     currentFrame.primitiveUploadOffset = 0;
     currentFrame.frameDescriptors.clear_pools(deviceContext->device);
     
@@ -389,6 +398,12 @@ VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
 
     VkCommandBufferBeginInfo cmdBeginInfo = tachyon::vulkan::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     TACHYON_VK_CHECK(vkBeginCommandBuffer(state.commandBuffer, &cmdBeginInfo));
+
+    if (currentFrame.timestamps != VK_NULL_HANDLE)
+    {
+        vkCmdResetQueryPool(state.commandBuffer, currentFrame.timestamps, 0, 2);
+        vkCmdWriteTimestamp2(state.commandBuffer, VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT, currentFrame.timestamps, 0);
+    }
 
     // Queued texture uploads (e.g. glyph atlas pages) run ahead of this frame's drawing.
     deviceContext->RecordPendingUploads(state.commandBuffer);
@@ -414,6 +429,10 @@ VkCommandBuffer VulkanWindowContext::BeginWindowFrame(FrameData& currentFrame)
 
 void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
 {
+    // What the frame reads from mapped memory was copied on the upload worker while its
+    // commands were recorded; the submit below needs it done. Part of building the frame.
+    deviceContext->WaitForUploads();
+
     // Build time = CPU work since the previous present returned, captured
     // before this frame blocks on its swapchain image and present.
     if (havePresentEnd)
@@ -424,6 +443,11 @@ void VulkanWindowContext::EndWindowFrame(FrameData& currentFrame)
             lastBuildSeconds = dt;
     }
     vkCmdEndRendering(state.commandBuffer);
+    if (currentFrame.timestamps != VK_NULL_HANDLE)
+    {
+        vkCmdWriteTimestamp2(state.commandBuffer, VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, currentFrame.timestamps, 1);
+        currentFrame.timestampsWritten = true;
+    }
 
     if (swapchain.swapchain != VK_NULL_HANDLE)
     {
@@ -918,11 +942,33 @@ VulkanWindowContext* VulkanWindowContext::Create(tachyon::ID id, void* nativeHan
                                                     });
     }
 
+    // GPU frame timing, where the graphics queue can time.
+    {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(context->deviceContext->chosenGPU, &properties);
+        uint32_t familyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(context->deviceContext->chosenGPU, &familyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> families(familyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(context->deviceContext->chosenGPU, &familyCount, families.data());
+        const uint32_t family = context->deviceContext->graphicsQueueFamily;
+        if (family < familyCount && families[family].timestampValidBits != 0 && properties.limits.timestampPeriod > 0.0f)
+            context->timestampPeriodNs = properties.limits.timestampPeriod;
+    }
+
     // Per frame data
 
     for (uint32_t i = 0; i < FRAME_OVERLAP; i++)
     {
         auto& frame = context->state.frames[i];
+        if (context->timestampPeriodNs > 0.0f)
+        {
+            const VkQueryPoolCreateInfo poolInfo{ .sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO, .queryType = VK_QUERY_TYPE_TIMESTAMP, .queryCount = 2 };
+            TACHYON_VK_CHECK(vkCreateQueryPool(context->deviceContext->device, &poolInfo, context->deviceContext->AllocationCallbacks(), &frame.timestamps));
+            frame.deletionQueue.push_function([=]()
+                                              {
+                                                  vkDestroyQueryPool(context->deviceContext->device, frame.timestamps, context->deviceContext->AllocationCallbacks());
+                                              });
+        }
         std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes =
         {
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
