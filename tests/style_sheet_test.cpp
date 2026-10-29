@@ -683,6 +683,41 @@ namespace tachyon
         }
     }
 
+    // A hovered row (table, tree, list, grid view) stands out plainly from the panel it lies
+    // on, in both themes: as far as the hover state layer (--text-1 at 8%) takes it, about 17
+    // steps of luminance on these panels. A hovered selected row keeps the selection's color.
+    TEST(StyleSheet, ShippedRowsShowTheirHover)
+    {
+        auto luminance = [](color4b c) { return 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b; };
+        for (const char* palette : { "themes/dark.css", "themes/light.css" })
+        {
+            std::ifstream paletteFile(palette), stylesFile("themes/styles.css");
+            ASSERT_TRUE(paletteFile.good() && stylesFile.good()) << palette;
+            std::ostringstream ss;
+            ss << paletteFile.rdbuf() << '\n' << stylesFile.rdbuf();
+            const StyleSheet s = ParseStyleSheet(ss.view());
+            const auto* panelProp = s.GetCustomProperty("--bg-panel");
+            ASSERT_TRUE(panelProp && panelProp->hasColor) << palette;
+            const color4b panel = panelProp->color;
+
+            for (const char* name : { "table-cell", "table-cell-number", "table-cell-compact", "table-row", "table-row-alt",
+                                      "list-row", "tree-table-cell", "list-item", "list-item-row", "grid-view-item",
+                                      "grid-view-list-item" })
+            {
+                const Style* style = s.GetStyle(name);
+                ASSERT_NE(style, nullptr) << name;
+                const color4b hover = style->states[ElementState::Hover].backgroundColor.GetFirstColor();
+                EXPECT_EQ(hover.a, 255) << palette << " ." << name;
+                EXPECT_GE(std::abs(luminance(hover) - luminance(panel)), 16.0f) << palette << " ." << name << ": the hover barely shows";
+
+                const color4b selected = style->states[ElementState::Selected].backgroundColor.GetFirstColor();
+                if (selected.a != 0)
+                    EXPECT_EQ(style->states[ElementState::Selected | ElementState::Hover].backgroundColor.GetFirstColor(), selected)
+                        << palette << " ." << name << ": a hovered selected row keeps the selection's color";
+            }
+        }
+    }
+
     // A node's header sits inside the node's border, so its rounded top must follow
     // the border's inner curve (outer radius minus border width); a larger radius
     // leaves the node background showing in the corners, visibly so when scaled.

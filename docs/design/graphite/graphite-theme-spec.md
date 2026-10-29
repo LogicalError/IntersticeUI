@@ -140,7 +140,7 @@ Mockup: `InspectorLists.dc.html` (prop `theme`).
 - Label column stays 116px but is **top-aligned** to the first row (padding-top 9), with a count caption under it (11px text-3: "3 items").
 - List container: 4px padding, 2px row gap, 1px line-subtle border, radius 6, bg #101216 (dark) / #F6F7F9 (light).
 - List row 26: grid 14 (grip, 6-dot, text-3) | 14 (index, mono 10.5 text-3, right-aligned) | field | 22 (remove ×, text-3).
-  Hover row: bg #1A1D23 / #EAECF0, remove turns error color on an error @ 12% chip.
+  Hover row: bg #232529 / #E9E9EB (--text-1 at 8% over the panel), remove turns error color on an error @ 12% chip.
 - Numeric list fields: mono value + type tag right (f32), same as the Numbers section.
 - Add button: inside the container, aligned with the fields (margin 2 24 0 42), 24 high, 1px dashed line-strong, "+ Add item".
 - Drag reorder: source row stays at 35% opacity; dragged copy floats with bg-control/white, drop shadow and 1px accent ring, grip in accent;

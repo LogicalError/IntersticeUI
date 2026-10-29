@@ -38,7 +38,7 @@
     --selection-inactive: #3A3F4A;   /* selected text in an unfocused field */
     --caret: #6B9BFF;
     --bg-list: #101216;     /* list and dictionary containers */
-    --bg-hover: #1A1D23;    /* a hovered list row */
+    --bg-hover: #232529;    /* a hovered row: --text-1 at 8% over --bg-panel (the hover state layer), opaque */
     --error-soft: #EF6A6A1F;   /* the error color at 12%: a remove button's hover */
     --bg-popup: #1A1D23;    /* menus */
     --checker-a: #2A2F39;   /* transparency checkerboard */
