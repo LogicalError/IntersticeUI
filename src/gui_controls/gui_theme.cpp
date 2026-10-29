@@ -377,7 +377,6 @@ namespace tachyon
         knobStyleRef                      = registerCSS("knob");
 
         sliderFieldTrackStyleRef          = registerCSS("slider-field-track");
-        colorGradientSliderRowStyleRef    = registerCSS("color-gradient-slider-row");
         sliderFieldBgStyleRef             = registerCSS("slider-field-bg");
         sliderFieldFillStyleRef           = registerCSS("slider-field-fill");
         sliderFieldTextStyleRef           = registerCSS("slider-field-text");
@@ -460,7 +459,6 @@ namespace tachyon
         colorPickerRecentStyleRef         = registerCSS("color-picker-recent");
         colorPickerPreviewStyleRef        = registerCSS("color-picker-preview");
         colorPickerNewStyleRef            = registerCSS("color-picker-new");
-        colorGradientSliderStyleRef       = registerCSS("color-gradient-slider");
         gradientSwatchStyleRef            = registerCSS("gradient-swatch");
         gradientEditorStyleRef            = registerCSS("gradient-editor");
         gradientEditorBarStyleRef         = registerCSS("gradient-editor-bar");

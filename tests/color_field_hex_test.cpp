@@ -263,4 +263,35 @@ namespace
         Open();
         EXPECT_EQ(FindByStyle(app.theme.dialogSquareButtonStyleRef), ID::Invalid());
     }
+    // Escape while dragging on the square puts the color back and leaves the dialog open.
+    TEST_F(ColorPickerDialog, EscapeDuringADragPutsTheColorBack)
+    {
+        const color4f original = color;
+        Open();
+        const ID square = FindByStyle(app.theme.colorPickerSquareStyleRef);
+        ASSERT_NE(square, ID::Invalid());
+        const IntRect r = app.GetElementRect(square);
+        const int2 from{ r.x + r.w / 4, r.y + r.h / 4 };
+        app.InjectMouseMove(from);
+        app.InjectMouseDown(from);
+        Emit();
+        app.InjectMouseMove({ r.x + r.w * 3 / 4, r.y + r.h * 3 / 4 }, MouseButtons::Left);
+        Emit();
+        Emit();
+        ASSERT_NE(color.r, original.r) << "test setup: the drag changes the color";
+
+        app.InjectKey(KeyCode::Escape);
+        Emit();
+        Emit();
+        EXPECT_NEAR(color.r, original.r, 1e-4f);
+        EXPECT_NEAR(color.g, original.g, 1e-4f);
+        EXPECT_NEAR(color.b, original.b, 1e-4f);
+        EXPECT_NE(FindByStyle(app.theme.colorPickerSquareStyleRef), ID::Invalid()) << "only the drag was cancelled";
+
+        app.InjectMouseMove({ r.x + r.w / 2, r.y + r.h / 2 }, MouseButtons::Left);
+        app.InjectMouseUp({ r.x + r.w / 2, r.y + r.h / 2 });
+        Emit();
+        Emit();
+        EXPECT_NEAR(color.r, original.r, 1e-4f) << "the moves after Escape are ignored";
+    }
 }

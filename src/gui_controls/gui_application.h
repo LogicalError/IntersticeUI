@@ -2590,12 +2590,6 @@ namespace tachyon
         /// Popup content for ColorField / GradientField.
         void EmitColorPicker(tachyon::color4f& outColor, bool allowHDR);
         void EmitGradientEditor(tachyon::Gradient& outGradient);
-        /// Horizontal gradient bar with a triangle indicator.
-        void GradientSlider(tachyon::ID id, float& value, float minVal, float maxVal,
-                            std::string_view label,
-                            tachyon::VisualColorStyleIndex gradientStyle,
-                            tachyon::VisualColorStyleIndex triangleStyle,
-                            LayoutOverride&& constraints = {});
 
         /// Column-boundary sizers for [colStart, colEnd), anchored to each header cell's right edge.
         /// skipDragged leaves out the dragged column's sizer; EmitDraggedColumnOnTop emits it last.

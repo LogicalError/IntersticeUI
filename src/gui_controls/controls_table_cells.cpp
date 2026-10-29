@@ -18,7 +18,7 @@ namespace tachyon
 
     namespace
     {
-        // 300 ms double-click toggle for `*isOpen`. Cell mode only - in
+        // Double-click toggle for `*isOpen`. Cell mode only - in
         // row mode the equivalent lives in BuildRowBackdropHandler (the
         // tree cell shares rowID with the backdrop, which catches dispatch first).
         tachyon::EventHandler MakeTreeCellDoubleClickToggle(DoubleClickTracker* tracker, bool* isOpen, tachyon::EventHandler inner)
@@ -28,7 +28,7 @@ namespace tachyon
                 if (event.type == tachyon::EventType::MouseDown && event.state.LeftPressed())
                 {
                     const auto r = tracker->Update(event.id);
-                    if (r.sameAsPrevious && r.elapsedMs < 300.0f && isOpen)
+                    if (r.sameAsPrevious && r.elapsedMs < DoubleClickMilliseconds() && isOpen)
                     {
                         *isOpen = !*isOpen;
                         tracker->Reset();
@@ -127,7 +127,7 @@ namespace tachyon
     }
 
     // Optional icon between arrow and text. On branches (isOpen != null) the
-    // icon is hittable: a < 300 ms double-click toggles the branch. Single
+    // icon is hittable: a double-click toggles the branch. Single
     // clicks return false so the row backdrop's selection / drag-prime still
     // sees them.
     void EmitTreeCellIcon(GUIApplication& app, IconID icon, bool* isOpen,
@@ -155,7 +155,7 @@ namespace tachyon
                 if (event.type != tachyon::EventType::MouseDown) return false;
                 if (!event.state.LeftPressed()) return false;
                 const auto r = tracker->Update(event.id);
-                if (r.sameAsPrevious && r.elapsedMs < 300.0f)
+                if (r.sameAsPrevious && r.elapsedMs < DoubleClickMilliseconds())
                 {
                     *isOpen = !*isOpen;
                     tracker->Reset();

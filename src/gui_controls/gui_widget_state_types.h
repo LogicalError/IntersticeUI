@@ -2,6 +2,7 @@
 
 #include <gui_core/gui_base_types.h>   // SteadyClockNowNanos, int2
 #include <gui_core/gui_id.h>
+#include <gui_core/input/gui_input_enums.h>   // DoubleClickMilliseconds
 #include <gui_core/state/gui_drag_drop_state.h>   // DragVisualizer
 
 #include <functional>
@@ -89,6 +90,18 @@ namespace tachyon
             lastID        = id;
             lastTimeNanos = now;
             return r;
+        }
+
+        /// Records a click on `id`: true when it is the second click of a double-click (the same
+        /// item, within DoubleClickMilliseconds()). A double-click is forgotten, so a third click
+        /// starts over.
+        bool IsDoubleClick(tachyon::ID id)
+        {
+            const Result r = Update(id);
+            if (!r.sameAsPrevious || r.elapsedMs >= DoubleClickMilliseconds())
+                return false;
+            Reset();
+            return true;
         }
 
         /// Forgets the previous click, so the next one never counts as a repeat.

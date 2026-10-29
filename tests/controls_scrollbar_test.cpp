@@ -419,5 +419,34 @@ namespace tachyon
         }
 
 
+        // Escape during a thumb drag scrolls back to where the press found it.
+        TEST_F(ScrollbarDragTest, EscapePutsTheScrollPositionBack)
+        {
+            Frame();
+            Frame();
+            const IntRect inner = Area().innerRect;
+            auto& scroll = app.guiStateManager.GetScrollManagement();
+            scroll.SetScrollOffset(scroll.GetOrCreateScrollOffsetHandle(areaID), int2{ 0, -100 });
+            Frame();
+            ASSERT_EQ(ScrollY(), 100);
+
+            // A press on the empty track below the thumb jumps there; Escape undoes that too.
+            const int2 press{ BarX(), inner.y + inner.h - 4 };
+            app.InjectMouseMove(press);
+            app.InjectMouseDown(press);
+            Frame();
+            ASSERT_GT(ScrollY(), 100) << "test setup: the press jumps";
+            app.InjectMouseMove({ press.x, press.y - 30 }, MouseButtons::Left);
+            Frame();
+
+            app.InjectKey(KeyCode::Escape);
+            Frame();
+            EXPECT_EQ(ScrollY(), 100);
+            app.InjectMouseMove({ press.x, press.y - 60 }, MouseButtons::Left);
+            app.InjectMouseUp({ press.x, press.y - 60 });
+            Frame();
+            EXPECT_EQ(ScrollY(), 100) << "the moves after Escape are ignored";
+        }
+
     } // namespace
 } // namespace tachyon

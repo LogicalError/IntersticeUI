@@ -1,4 +1,5 @@
 #include <gui_core/state/gui_drag_drop_state.h>
+#include <gui_core/input/gui_pointer_drag.h>
 #include <gui_core/input/gui_input_state.h>
 
 #include <cstdlib>
@@ -111,9 +112,7 @@ namespace tachyon
             return;
         }
 
-        const int32_t dx = std::abs(in.screenPos.x - m_dragStartScreenPos.x);
-        const int32_t dy = std::abs(in.screenPos.y - m_dragStartScreenPos.y);
-        if (dx >= m_startDistance || dy >= m_startDistance)
+        if (IsDragTravel(in.screenPos - m_dragStartScreenPos, m_startDistance))
         {
             m_draggedID           = m_pendingDragSourceID;
             m_pendingDragSourceID = ID::Invalid();

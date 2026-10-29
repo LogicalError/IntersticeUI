@@ -415,7 +415,7 @@ namespace tachyon
             sizer.styleRef = theme.dockSizerVertStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = tachyon::MakeVerticalSizerHandler(
-                guiStateManager, logDetailHeight, 48, 480, nullptr, nullptr, /*invert*/ true, styleManager.GetUIScale());
+                guiStateManager, elementStorage, logDetailHeight, 48, 480, nullptr, nullptr, /*invert*/ true, styleManager.GetUIScale());
             auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedHeight(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));

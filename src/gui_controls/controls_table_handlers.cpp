@@ -583,8 +583,8 @@ namespace tachyon
             if (event.type != tachyon::EventType::MouseDown) return false;
             if (!event.state.LeftPressed()) return false;
 
-            // One tracker for double-click (<300ms: toggle branch; in row mode the tree
-            // cell shares rowID, so it lands here) and slow re-click (500-3000ms: rename).
+            // One tracker for double-click (toggle branch; in row mode the tree cell shares
+            // rowID, so it lands here) and slow re-click (rename).
             const auto clickInfo = state->internal.rowClickTracker.Update(rowID);
             const bool  sameDbl = clickInfo.sameAsPrevious;
             const float dblMs   = clickInfo.elapsedMs;
@@ -608,7 +608,7 @@ namespace tachyon
             }
 
             // Double-click -> caller's row handler (if set) else toggle tree branch.
-            if (sameDbl && dblMs < 300.0f)
+            if (sameDbl && dblMs < DoubleClickMilliseconds())
             {
                 if (state->onRowDoubleClick)
                 {
@@ -626,11 +626,12 @@ namespace tachyon
                 }
             }
 
-            // Slow re-click (500-3000ms) on a selected renameable row -> rename.
+            // Slow re-click (after a double-click would have ended, within 3 s) on a selected
+            // renameable row -> rename.
             // Off with drag-and-drop (it would fire before the drag threshold);
             // F2 and Ctrl+Shift+Click still work.
             if (hasRename && wasSelected && sameDbl
-                && dblMs >= 500.0f && dblMs < 3000.0f
+                && dblMs >= std::max(500.0f, DoubleClickMilliseconds()) && dblMs < 3000.0f
                 && !dragDropEnabled)
             {
                 (*m_renameSub).Start(rowID, info->renameBuf, info->renameSeed);

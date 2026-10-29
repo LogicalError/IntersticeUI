@@ -157,12 +157,12 @@ namespace tachyon
                         guiStateManager.Interaction().SetFocusID(event.id);
                         guiStateManager.TextEditorFocus().Clear();
                         drag = {};
+                        drag.press.Press(event, elementStorage);
                         drag.tableID   = tableID;
                         drag.fromCol   = colIdx;
                         drag.toCol     = colIdx;
                         drag.minTarget = minTarget;
                         drag.maxTarget = maxTarget;
-                        drag.startPos  = event.state.screenPos;
                         drag.headerRects.reserve(colCount);
                         for (size_t i = 0; i < colCount; i++)
                         {
@@ -187,12 +187,11 @@ namespace tachyon
 
                     case tachyon::EventType::MouseMove:
                     {
-                        if (drag.tableID != tableID || drag.fromCol != colIdx) break;
-                        if (!event.state.LeftDown()) break;
-                        tachyon::int2 delta = event.state.screenPos - drag.startPos;
-                        drag.offset = delta;
-                        if (std::abs(delta.x) > styleManager.Px(kDragStartDistance)) drag.active = true;
-                        if (drag.active && !drag.headerRects.empty())
+                        if (drag.tableID != tableID || drag.fromCol != colIdx || !drag.press.IsPressed(event.id)) break;
+                        // headerRects and the body's rect are in layout space; the cursor too.
+                        const int32_t mouseX = event.LocalCursor(elementStorage).x;
+                        drag.offsetX = mouseX - drag.press.pressLocal.x;
+                        if (drag.press.Move(event, styleManager.Px(kDragStartDistance)) && !drag.headerRects.empty())
                         {
                             // Auto-scroll near the body's left/right edges, before
                             // resolving the drop target so it uses the new scroll.
@@ -205,8 +204,6 @@ namespace tachyon
                                     const auto& bodyRect = elementStorage.GetElementRectUnsafe(bodyRef);
                                     const int kEdgeZoneWidth      = styleManager.Px(30);
                                     const int kAutoScrollPerEvent = styleManager.Px(12);
-                                    // bodyRect.innerRect is in layout space - convert cursor too.
-                                    const int32_t mouseX    = event.LocalCursor(elementStorage).x;
                                     const int32_t innerLeft  = bodyRect.innerRect.x;
                                     const int32_t innerRight = bodyRect.innerRect.x + bodyRect.innerRect.w;
                                     int32_t scrollDelta = 0;
@@ -230,8 +227,7 @@ namespace tachyon
                                 }
                             }
                             // headerRects are from click time; undo the scroll delta on the cursor.
-                            const int32_t adjustedMouseX =
-                                event.state.screenPos.x - (curScrollX - drag.startScrollX);
+                            const int32_t adjustedMouseX = mouseX - (curScrollX - drag.startScrollX);
                             int target = TableHelpers::ComputeColumnInsertionIndex(
                                 adjustedMouseX, drag.fromCol,
                                 std::span<const tachyon::IntRect>(drag.headerRects.data(),
@@ -244,7 +240,7 @@ namespace tachyon
                     case tachyon::EventType::MouseUp:
                     {
                         if (drag.tableID != tableID || drag.fromCol != colIdx) break;
-                        const bool  committed = drag.active;
+                        const bool  committed = drag.press.Release(event) == PointerDrag::Ended::Drag;
                         const int   from      = drag.fromCol;
                         const int   to        = drag.toCol;
                         drag = {};
@@ -265,7 +261,7 @@ namespace tachyon
                     case tachyon::EventType::KeyDown:
                     {
                         if (drag.tableID == tableID && drag.fromCol == colIdx
-                            && event.state.lastKey == tachyon::KeyCode::Escape)
+                            && IsDragCancelKey(event.state) && drag.press.Cancel(event.id))
                         {
                             drag = {};
                             guiStateManager.Interaction().ReleaseCaptureID();
@@ -1039,7 +1035,7 @@ namespace tachyon
                 // By pointer: max content width is only final when the handler runs.
                 auto* maxWidth         = &vcol.internal.maxContentWidth;
                 sizerHandler = tachyon::MakeHorizontalSizerHandler(
-                    guiStateManager,
+                    guiStateManager, elementStorage,
                     state->columnWidths[c],
                     col.minWidth.value, std::numeric_limits<int>::max(),
                     nullptr,
@@ -1283,13 +1279,13 @@ namespace tachyon
         m_tableEmit->columnCount = columnCount;
         m_tableEmit->userState   = &state;
         TableEmit& emit = *m_tableEmit;
-        // A column drag can't finish if its column is gone (the column set shrank) or it
+        // A column press can't finish if its column is gone (the column set shrank) or it
         // lost its capture (the table wasn't shown when the button went up): cancel it.
-        if (m_columnDrag.active && m_columnDrag.tableID == id &&
+        if (m_columnDrag.tableID == id &&
             (m_columnDrag.fromCol >= int(columnCount) ||
              guiStateManager.Interaction().GetCaptureID() == tachyon::ID::Invalid()))
             m_columnDrag = {};
-        emit.dragActive       = m_columnDrag.active && m_columnDrag.tableID == id;
+        emit.dragActive       = m_columnDrag.IsDragging() && m_columnDrag.tableID == id;
         emit.cellMode         = (state.selectionMode == TableSelectionMode::Cell);
         emit.draggedCol       = emit.dragActive ? m_columnDrag.fromCol : -1;
         emit.showHeaders      = showHeaders;
@@ -1351,7 +1347,7 @@ namespace tachyon
                 int16_t ox = 0;
                 if (c == fromCol)
                 {
-                    const int32_t rawX     = draggedRect.x + drag.offset.x;
+                    const int32_t rawX     = draggedRect.x + drag.offsetX;
                     const int32_t clampedX = std::clamp(rawX, leftBound, rightBound - draggedRect.w);
                     ox = static_cast<int16_t>(clampedX - draggedRect.x);
                 }

@@ -102,6 +102,7 @@ list(APPEND GUI_CORE_TEST_FILES
   skribidi_editor_test.cpp
   text_shadow_test.cpp
   text_paint_test.cpp
+  pointer_drag_test.cpp
   link_cursor_test.cpp
   upload_worker_test.cpp
   table_scrollbar_test.cpp

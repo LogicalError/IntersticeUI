@@ -105,7 +105,6 @@ namespace tachyon
 
         StyleRef knobStyleRef {};           ///< .knob
         StyleRef sliderFieldTrackStyleRef {}; ///< SliderField: the track holding the parts below
-        StyleRef colorGradientSliderRowStyleRef {}; ///< GradientSlider: the row holding the bar and its field
         StyleRef sliderFieldBgStyleRef {};   ///< unfilled half painted by the slider's custom-draw
         StyleRef sliderFieldFillStyleRef {}; ///< filled half painted by the slider's custom-draw
         StyleRef sliderFieldTextStyleRef {}; ///< label text overlaid on the track
@@ -192,7 +191,6 @@ namespace tachyon
         StyleRef colorPickerRecentStyleRef {};          ///< color picker: a recent color
         StyleRef colorPickerPreviewStyleRef {};         ///< color picker: the color preview
         StyleRef colorPickerNewStyleRef{};              ///< color picker: the add-swatch button
-        StyleRef colorGradientSliderStyleRef {};        ///< the gradient bar of a color slider row
         StyleRef gradientSwatchStyleRef {};             ///< GradientField: the swatch
         StyleRef gradientEditorStyleRef {};             ///< gradient editor: the window
         StyleRef gradientEditorBarStyleRef {};          ///< gradient editor: the gradient bar with its stops

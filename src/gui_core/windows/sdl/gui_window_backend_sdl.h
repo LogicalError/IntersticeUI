@@ -74,6 +74,7 @@ namespace tachyon
         std::optional<color4b> ReadScreenPixel(int2 screenPos) override;
         bool TakeCloseRequest(OSWindowHandle window) override;
         MouseButtons GetMouseButtons() override;
+        float GetDoubleClickMilliseconds() override;
         
         void SetCursor(MouseCursor cursor) override;
         void SetTextInputArea(OSWindowHandle window, IntRect rect) override;

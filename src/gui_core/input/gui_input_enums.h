@@ -12,6 +12,14 @@ namespace tachyon
     constexpr float   kWheelScrollStep   = 30.0f; ///< scrolled per wheel notch (CSS px)
     constexpr int32_t kDragStartDistance = 4;     ///< pointer travel before a press becomes a drag (CSS px)
 
+    /// The OS's double-click time if the platform reports one, else this, milliseconds.
+    constexpr float kDefaultDoubleClickMs = 500.0f;
+    /// The most time between the two clicks of a double-click, milliseconds: the OS's setting,
+    /// which the application reads from its window backend every frame.
+    float DoubleClickMilliseconds() noexcept;
+    /// Sets DoubleClickMilliseconds; values of 0 or less are ignored.
+    void SetDoubleClickMilliseconds(float milliseconds) noexcept;
+
     /// Modifier keys held, combined with |. The Alt key reports as Option on macOS; Command is
     /// the Cmd key there and the Windows or Super key elsewhere.
     enum class KeyModifier : uint8_t

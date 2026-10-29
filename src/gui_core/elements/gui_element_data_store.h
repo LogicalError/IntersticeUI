@@ -51,8 +51,8 @@ namespace tachyon
         size_t EntryCount() const { return m_entries.size(); }
 
     private:
-        /// Fits all built-in handler states (largest: HorizontalSizerState, ~56 bytes).
-        static constexpr size_t kInlineSize = 64;
+        /// Fits all built-in handler states (largest: SizerState, ~72 bytes).
+        static constexpr size_t kInlineSize = 80;
 
         struct Entry
         {

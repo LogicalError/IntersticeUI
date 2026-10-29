@@ -3,6 +3,7 @@
 #include <gui_core/gui_base_types.h>     // int2, float3x2, color4f
 #include <gui_core/gui_id.h>
 #include <gui_core/input/gui_command_manager.h>          // CommandMode
+#include <gui_core/input/gui_pointer_drag.h>
 #include <gui_core/graphics/gui_custom_draw_context.h>   // VisualColorStyleIndex
 
 #include <gui_controls/gui_widget_state_types.h>          // DoubleClickTracker
@@ -67,9 +68,7 @@ namespace tachyon
         /// Top-left in canvas layout space (whole pixels relative to the canvas, before pan/zoom).
         tachyon::int2                  pos          = {};
         tachyon::int2                  startPos     = {};   ///< internal: pos at drag start
-        tachyon::int2                  startScreen  = {};   ///< internal: cursor at drag start
         tachyon::int2                  lastSize     = {};   ///< outer-rect size from last frame's layout
-        bool                       isDragging   = false;   ///< internal
         bool                       collapsed    = false;   ///< rows hidden, header only (double-click toggles)
         std::vector<NodeProperty>  properties;              ///< the rows, top to bottom
     };
@@ -169,11 +168,10 @@ namespace tachyon
     /// Segment drag via mouse capture rather than DnD, so the resize cursor sticks.
     struct WireSegmentDrag
     {
-        bool       active     = false;
+        tachyon::PointerDrag press;   ///< the handle's press, a drag from the start
         uint32_t   wireKey    = 0;
         WireHandle role       = WireHandle::None;
         bool       vertical   = false;
-        tachyon::int2  startScreen = {};
         int32_t    startValue  = 0;   ///< lane coordinate at drag start (node.pos space)
         WireRouteOverrides lanesBefore {}; ///< the wire's overrides at drag start, for the edit
     };
@@ -212,10 +210,9 @@ namespace tachyon
         /// Double-click-to-collapse, per view so views (and test frames) don't share it.
         DoubleClickTracker              nodeDoubleClick;
 
-        /// A marquee drag from the empty background is in progress; its points are screen space.
-        bool                            marqueeActive        = false;
-        bool                            marqueePastThreshold = false;
-        tachyon::int2                       marqueeStartScreen   {};
+        /// A press on the empty background: a marquee once it moves the drag distance. Its
+        /// points are screen space (marquee.pressScreen is the start).
+        tachyon::PointerDrag                marquee;
         tachyon::int2                       marqueeCurrentScreen {};
         std::unordered_set<tachyon::ID>     marqueeBaseSelection;     ///< selection snapshot before the drag
         bool                            marqueeShift = false;     ///< modifier snapshot at start
@@ -233,7 +230,11 @@ namespace tachyon
         /// Called once per finished user edit (a whole drag is one), after it is applied.
         std::function<void(const NodeViewEdit&)> onEdit;
         std::optional<uint32_t> wireMenuWire;          ///< the wire the open context menu is for
-        tachyon::int2        rightPressScreen {};   ///< a right press that pans isn't a click
+        tachyon::PointerDrag pan;                 ///< internal: a right press; once dragged, not a click
+        tachyon::float3x2    panStart {};         ///< internal: the transform before it; put back by Escape
+        tachyon::PointerDrag nodeDrag;            ///< internal: the press on a node; moves the selection once dragged
+        tachyon::PointerDrag minimapDrag;         ///< internal: a press in the minimap
+        tachyon::float3x2    minimapStart {};     ///< internal: the transform before it; put back by Escape
 
         /// Whether an output -> input wire is allowed; null allows any. Called only for
         /// bounds-checked, cross-node endpoints, so it may index view.nodes directly.

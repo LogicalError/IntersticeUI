@@ -7,6 +7,7 @@
 #include <gui_core/gui_id.h>
 #include <gui_core/gui_base_types.h>
 #include <gui_core/elements/gui_element.h>
+#include <gui_core/input/gui_pointer_drag.h>
 
 namespace tachyon
 {
@@ -19,8 +20,9 @@ namespace tachyon
     /// Persistent drag state; one drag at a time application-wide.
     struct ReorderableDragState
     {
-        bool     isDragging    = false;
-        bool     dragActivated = false; ///< true once movement exceeds the drag threshold
+        PointerDrag press;              ///< the item's press; a drag once it moves the drag distance
+        tachyon::int2 cursorLocal{};    ///< latest pointer, layout space (like originalRects, groupRect)
+        tachyon::int2 cursorScreen{};   ///< latest pointer, screen pixels
         bool     isWrapped     = false; ///< the group wraps its items onto several lines
         tachyon::ID  groupID       = tachyon::ID::Invalid();
         int      draggedIndex   = -1;   ///< slot the item was dragged from
@@ -30,10 +32,15 @@ namespace tachyon
         /// Child IDs at drag start, in slot order, so MouseUp can resolve slots by ID
         /// (storage is already visually reordered by then).
         std::vector<tachyon::ID> originalIDs;
-        tachyon::int2  dragStartMousePos{};
-        tachyon::int2  dragOffset{};       ///< cumulative mouse delta from drag start
         ReorderDirection direction = ReorderDirection::Vertical;
         tachyon::IntRect groupRect{};      ///< group bounds at drag start, layout space
+
+        /// An item is pressed (maybe not yet dragged).
+        bool IsPressed() const { return press.id != tachyon::ID::Invalid(); }
+        /// An item is pressed and has moved the drag distance.
+        bool IsDragging() const { return IsPressed() && press.dragging; }
+        /// The pointer's travel since the press, layout space.
+        tachyon::int2 Offset() const { return cursorLocal - press.pressLocal; }
     };
 
     /// Construction state of the current reorderable group. Valid only between

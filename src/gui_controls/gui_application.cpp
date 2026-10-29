@@ -567,6 +567,9 @@ namespace tachyon
             TACHYON_PROFILE_SCOPE("Input pump");
             windowManager->Update();
         }
+        // The OS setting can change while the app runs.
+        if (windowBackend)
+            SetDoubleClickMilliseconds(windowBackend->GetDoubleClickMilliseconds());
         return true;
     }
 

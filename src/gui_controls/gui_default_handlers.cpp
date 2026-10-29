@@ -231,7 +231,8 @@ namespace tachyon
                         const int32_t clickOffset = mousePos - geom.trackPos;
 
                         auto& state = store.GetOrCreate<ScrollbarDragState>(event.id);
-                        state.draggingID = event.id;
+                        state.drag.Press(event, elementStorage, MouseButtons::Left, /*atOnce*/ true);
+                        state.startScroll = currentScroll;
 
                         if (clickOffset >= currentThumbOffset &&
                             clickOffset <  currentThumbOffset + geom.thumbSize)
@@ -259,7 +260,7 @@ namespace tachyon
                 case EventType::MouseMove:
                 {
                     auto* state = store.Get<ScrollbarDragState>(event.id);
-                    if (!state || state->draggingID != event.id) return false;
+                    if (!state || !state->drag.Move(event, 0)) return false;
                     const auto* parentRect = getParentRect();
                     const auto* selfRect   = measureFromSelf ? getSelfRect() : nullptr;
                     const auto geom = ComputeScrollbarGeometry(parentRect, selfRect, vertical, minThumbLength);
@@ -280,9 +281,16 @@ namespace tachyon
                 case EventType::MouseUp:
                 {
                     auto* state = store.Get<ScrollbarDragState>(event.id);
-                    if (!state || state->draggingID != event.id) return false;
-                    state->draggingID = ID::Invalid();
+                    if (!state || state->drag.Release(event) == PointerDrag::Ended::No) return false;
                     guiStateManager.Interaction().ReleaseCaptureID();
+                    return true;
+                }
+
+                case EventType::KeyDown:
+                {
+                    auto* state = store.Get<ScrollbarDragState>(event.id);
+                    if (!state || !IsDragCancelKey(event.state) || !state->drag.Cancel(event.id)) return false;
+                    writeScroll(state->startScroll);
                     return true;
                 }
 

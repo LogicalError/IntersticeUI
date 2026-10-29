@@ -95,8 +95,9 @@ bool Field(ID id, T& value, TextEditBehavior textEditBehavior, StyleRef style,
 
 Shorter overloads leave out the behavior, the style or the config. For `float`,
 `double` and the 8- to 64-bit signed and unsigned integers, it is an editable number
-that also changes by dragging. `NumericFieldConfig` sets `minVal`, `maxVal` and
-`stepPerPixel` (the change per dragged pixel). A NaN shows in a warning color. Default
+that also changes by dragging its label, once the pointer has moved the drag distance
+(Ctrl: slower, Shift: faster; Escape puts the value back). `NumericFieldConfig` sets
+`minVal`, `maxVal` and `stepPerPixel` (the change per dragged pixel). A NaN shows in a warning color. Default
 class: `number-field` (`toolbar-number-field` in a toolbar).
 
 ```cpp

@@ -155,6 +155,8 @@ namespace tachyon
         virtual int2 GetScreenMousePos() = 0;
         /// The mouse buttons held down, wherever the mouse is (SDL: as of the last PollEvents).
         virtual MouseButtons GetMouseButtons() = 0;
+        /// The OS's double-click time in milliseconds, or 0 where the platform has none.
+        virtual float GetDoubleClickMilliseconds() { return 0.0f; }
         /// The color of a screen pixel, anywhere on the desktop (an eyedropper);
         /// nothing where the platform can't read the screen.
         virtual std::optional<color4b> ReadScreenPixel(int2 /*screenPos*/) { return std::nullopt; }

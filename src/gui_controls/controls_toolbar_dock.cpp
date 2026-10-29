@@ -218,13 +218,13 @@ namespace tachyon
             const auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
             const ID groupID = state.groupIDs[sideIdx];
             const bool draggingThisGroup =
-                drag.isDragging && drag.dragActivated && drag.groupID == groupID;
+                drag.IsDragging() && drag.groupID == groupID;
             bool hideDraggedItemBody = false;
             if (draggingThisGroup)
             {
                 const int mainAxis  = (drag.direction == ReorderDirection::Horizontal) ? 0 : 1;
                 const int crossAxis = 1 - mainAxis;
-                const int2 mouse    = drag.dragStartMousePos + drag.dragOffset;
+                const int2 mouse    = drag.cursorLocal;
                 const bool outsideCross = mouse[crossAxis] < drag.groupRect.position[crossAxis]
                                        || mouse[crossAxis] > drag.groupRect.position[crossAxis] + drag.groupRect.size[crossAxis];
                 const bool outsideMain  = mouse[mainAxis]  < drag.groupRect.position[mainAxis]
@@ -311,28 +311,20 @@ namespace tachyon
         std::function<void(ID, ToolbarSide)> dockBack = options ? options->onDockBack : nullptr;
 
         // The drag ends in the thumb's MouseUp handler. If that never runs (the window was
-        // closed mid-drag), drop the drag here - button up and no release still queued -
-        // or the drop overlay would keep showing.
-        if (m_toolbarWindowDrag.active && inputManager
-            && (inputManager->GetCurrentButtons() & MouseButtons::Left) == MouseButtons::None)
+        // closed mid-drag), drop the drag here, or the drop overlay would keep showing.
+        if (m_toolbarWindowDrag.Active() && inputManager && inputManager->IsDragAbandoned())
         {
-            bool releasePending = false;
-            for (const auto& e : inputManager->GetRecordedEvents())
-                if (e.type == EventType::MouseUp) { releasePending = true; break; }
-            if (!releasePending)
+            if (dockState && m_toolbarWindowDrag.sourceDockState == dockState)
             {
-                if (dockState && m_toolbarWindowDrag.sourceDockState == dockState)
-                {
-                    windowManager->RequestCloseAllowReopen(dockState->ghostWindowID);
-                    dockState->dropAnimHasTarget = false;
-                }
-                m_toolbarWindowDrag = {};
+                windowManager->RequestCloseAllowReopen(dockState->ghostWindowID);
+                dockState->dropAnimHasTarget = false;
             }
+            m_toolbarWindowDrag = {};
         }
 
         // ---- Drag visualization for floating-window thumb drags ----
         // Over a source-dock side: show the animated drop overlay (shares the dock's ghost window).
-        if (m_toolbarWindowDrag.active && m_toolbarWindowDrag.sourceDockState
+        if (m_toolbarWindowDrag.Active() && m_toolbarWindowDrag.sourceDockState
             && m_toolbarWindowDrag.sourceDockState == dockState)
         {
             int targetSide = FindToolbarSideAt(*dockState, m_toolbarWindowDrag.currentMousePos);
@@ -394,46 +386,49 @@ namespace tachyon
                 // ---- Drag-from-handle ----
                 // Moves the OS window; on release over a dock side, docks back (if enabled).
                 ID windowIDForHandler = fw.windowID;
+                // Escape puts the window back.
                 auto moveHandler = [this, windowIDForHandler, dockState, dockBack]
                                    (ElementEvent&& e) -> bool
                 {
-                    if (e.type == EventType::MouseDown && e.state.LeftPressed())
+                    auto& drag = m_toolbarWindowDrag;
+                    // Close the drop overlay and reset its animation.
+                    auto closeOverlay = [&]
                     {
-                        m_toolbarWindowDrag.active           = true;
-                        m_toolbarWindowDrag.windowID         = windowIDForHandler;
-                        m_toolbarWindowDrag.startMousePos    = e.state.screenPos;
-                        m_toolbarWindowDrag.currentMousePos  = e.state.screenPos;
-                        m_toolbarWindowDrag.startRect        = windowManager->GetWindowRect(windowIDForHandler);
-                        m_toolbarWindowDrag.sourceDockState  = dockState;
-                        guiStateManager.Interaction().SetCaptureID(e.id);
-                        return true;
-                    }
-                    if (e.type == EventType::MouseMove
-                        && e.state.LeftDown()
-                        && m_toolbarWindowDrag.active
-                        && m_toolbarWindowDrag.windowID == windowIDForHandler)
-                    {
-                        m_toolbarWindowDrag.currentMousePos = e.state.screenPos;
-                        int2 delta = e.state.screenPos - m_toolbarWindowDrag.startMousePos;
-                        IntRect newRect = m_toolbarWindowDrag.startRect;
-                        newRect.x += delta.x;
-                        newRect.y += delta.y;
-                        windowManager->SetWindowRect(windowIDForHandler, newRect);
-                        return true;
-                    }
-                    if (e.type == EventType::MouseUp && m_toolbarWindowDrag.active
-                        && m_toolbarWindowDrag.windowID == windowIDForHandler)
-                    {
-                        m_toolbarWindowDrag.active = false;
-                        guiStateManager.Interaction().ReleaseCaptureID();
-
-                        // Close the drop overlay and reset its animation.
                         if (dockState)
                         {
                             windowManager->RequestCloseAllowReopen(dockState->ghostWindowID);
                             dockState->dropAnimHasTarget = false;
                         }
-                        m_toolbarWindowDrag.sourceDockState = nullptr;
+                    };
+                    if (e.type == EventType::MouseDown && e.state.LeftPressed())
+                    {
+                        drag = {};
+                        drag.drag.Press(e, elementStorage, MouseButtons::Left, /*atOnce*/ true);
+                        drag.windowID         = windowIDForHandler;
+                        drag.currentMousePos  = e.state.screenPos;
+                        drag.startRect        = windowManager->GetWindowRect(windowIDForHandler);
+                        drag.sourceDockState  = dockState;
+                        guiStateManager.Interaction().SetCaptureID(e.id);
+                        return true;
+                    }
+                    if (drag.windowID != windowIDForHandler)
+                        return false;
+                    if (drag.drag.Move(e, 0))
+                    {
+                        // An OS window: it moves in screen pixels.
+                        drag.currentMousePos = e.state.screenPos;
+                        const int2 delta = drag.drag.ScreenDelta(e.state);
+                        IntRect newRect = drag.startRect;
+                        newRect.x += delta.x;
+                        newRect.y += delta.y;
+                        windowManager->SetWindowRect(windowIDForHandler, newRect);
+                        return true;
+                    }
+                    if (drag.drag.Release(e) != PointerDrag::Ended::No)
+                    {
+                        guiStateManager.Interaction().ReleaseCaptureID();
+                        closeOverlay();
+                        drag.sourceDockState = nullptr;
 
                         if (dockState && dockBack)
                         {
@@ -441,6 +436,14 @@ namespace tachyon
                             if (t >= 0)
                                 dockBack(windowIDForHandler, (ToolbarSide)t);
                         }
+                        return true;
+                    }
+                    if (e.type == EventType::KeyDown && IsDragCancelKey(e.state) && drag.drag.Cancel(e.id))
+                    {
+                        windowManager->SetWindowRect(windowIDForHandler, drag.startRect);
+                        guiStateManager.Interaction().ReleaseCaptureID();
+                        closeOverlay();
+                        drag.sourceDockState = nullptr;
                         return true;
                     }
                     return false;

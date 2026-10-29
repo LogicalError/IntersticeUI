@@ -3348,23 +3348,6 @@
     flex-grow: 1;
 }
 
-/* ---- Color picker / gradient editor row containers ----------------------- */
-/* Horizontal flex rows used inside ColorPicker / GradientEditor popups and the
-   color-gradient-slider control. Same default geometry; split selectors so any
-   one can diverge without touching the others. */
-.color-gradient-slider-row {
-    border-width: 0px;
-    padding: 0px;
-    margin: 0px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    overflow: visible;
-    background-color: transparent;
-    border-color: transparent;
-}
-
 /* ---- Slider field --------------------------------------------------------- */
 /* Single bar with a colored split fill drawn in SliderField's AddCustomDraw.
    The track itself is the click/drag hit region and parents the value/label

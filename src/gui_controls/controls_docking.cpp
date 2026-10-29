@@ -149,7 +149,7 @@ namespace tachyon
 
             // Grab offset: distance from tab left edge to mouse at drag start
             int grabOffset = drag.draggedIndex < (int)drag.originalRects.size()
-                ? drag.dragStartMousePos.x - drag.originalRects[drag.draggedIndex].x
+                ? drag.press.pressScreen.x - drag.originalRects[drag.draggedIndex].x
                 : 0;
             return static_cast<int16_t>(mousePos.x - grabOffset - estimatedX);
         }
@@ -288,14 +288,14 @@ namespace tachyon
             };
 
             // Snapshot the selection to restore on drag-out (MouseDown selected the dragged tab).
-            if (!GUIApplicationInternals::Reorderable(app).Drag().isDragging || GUIApplicationInternals::Reorderable(app).Drag().groupID != node->tabBarID)
+            if (!GUIApplicationInternals::Reorderable(app).Drag().IsPressed() || GUIApplicationInternals::Reorderable(app).Drag().groupID != node->tabBarID)
                 node->selectedTabBeforeDrag = node->selectedTab;
 
             // Publish cross-container drag info when this leaf is the drag source
             // (reset in BeginDockingFrame when no drag is active).
             {
                 auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
-                if (drag.isDragging && drag.dragActivated && drag.groupID == node->tabBarID
+                if (drag.IsDragging() && drag.groupID == node->tabBarID
                     && drag.draggedIndex >= 0 && drag.draggedIndex < (int)node->panelIds.size())
                 {
                     auto& info = GUIApplicationInternals::DockTabDrag(app).Info();
@@ -434,12 +434,12 @@ namespace tachyon
                 // insertion point so the real tabs shift apart, like within-bar reorder.
                 auto& drag = GUIApplicationInternals::Reorderable(app).Drag();
                 const auto& dragInfo = GUIApplicationInternals::DockTabDrag(app).Info();
-                tachyon::int2 mousePos = drag.dragStartMousePos + drag.dragOffset;
+                tachyon::int2 mousePos = drag.cursorScreen;
                 bool emitPhantom = false;
                 int phantomIdx = 0;
                 tachyon::ElementRef phantomRef {};
 
-                if (drag.isDragging && drag.groupID != node->tabBarID
+                if (drag.IsPressed() && drag.groupID != node->tabBarID
                     && dragInfo.panelID != tachyon::ID::Invalid()
                     && !node->cachedTabRects.empty()
                     && node->cachedTabBarRect.w > 0 && node->cachedTabBarRect.h > 0
@@ -595,14 +595,14 @@ namespace tachyon
                 if (horizontal)
                 {
                     sizer.eventHandler = MakeHorizontalSizerHandler(
-                        app.guiStateManager, node->splitSize.value, range.min, range.max,
+                        app.guiStateManager, app.elementStorage, node->splitSize.value, range.min, range.max,
                         nullptr, nullptr, pinSecond, uiScale);
                     app.RegisterElement(std::move(sizer), LayoutOverride::FixedWidth(CssPx(kSizerThickness)));
                 }
                 else
                 {
                     sizer.eventHandler = MakeVerticalSizerHandler(
-                        app.guiStateManager, node->splitSize.value, range.min, range.max,
+                        app.guiStateManager, app.elementStorage, node->splitSize.value, range.min, range.max,
                         nullptr, nullptr, pinSecond, uiScale);
                     app.RegisterElement(std::move(sizer), LayoutOverride::FixedHeight(CssPx(kSizerThickness)));
                 }
@@ -642,7 +642,7 @@ namespace tachyon
     {
         m_dockingLayoutsThisFrame.clear();
         m_toolbarDocksThisFrame.clear();
-        if (!m_reorderable->Drag().isDragging)
+        if (!m_reorderable->Drag().IsPressed())
             m_dockTabDragSub->Info() = {};
         return true;
     }

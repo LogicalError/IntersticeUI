@@ -215,7 +215,7 @@ namespace tachyon
                 sizer.styleRef = app.theme.dockSizerHorzStyleRef;
                 sizer.state    = app.guiStateManager.GetCurrentState(sizer.id);
                 sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
-                    app.guiStateManager, catWidth, 100, 400);
+                    app.guiStateManager, app.elementStorage, catWidth, 100, 400);
                 auto sRes = app.elementStorage.Add(std::move(sizer),
                                                    tachyon::LayoutOverride::FixedWidth(4));
                 VERIFY(sRes.status);

@@ -5,13 +5,19 @@
 #include <gui_core/gui_id_manager.h>
 
 #include <gui_core/elements/gui_element.h>
+#include <gui_core/elements/gui_element_storage.h>
 
 #include <gui_core/input/gui_input_state.h>
 #include <gui_core/input/gui_input_enums.h>
 
 #include <gui_core/state/gui_state_manager.h>
 
+#include <gui_core/style/gui_gradient_manager.h>
+#include <gui_core/style/gui_style_manager.h>
+
 #include <gui_controls/gui_default_handlers.h>
+
+#include "headless_gui_app.h"
 
 #include <thread>
 
@@ -19,7 +25,7 @@ namespace tachyon
 {
     namespace
     {
-        // The handler only reads id, type and state, so rect/elementRef stay empty.
+        // No rect or element: the cursor is in screen space (no ancestor transforms).
         ElementEvent MakeEvent(ID id, EventType type, InputState& state)
         {
             return ElementEvent{
@@ -72,6 +78,9 @@ namespace tachyon
     {
     protected:
         GUIStateManager guiStateManager;
+        GradientManager gradientManager{ 256 };
+        StyleManager    styleManager{ gradientManager };
+        ElementStorage  elementStorage{ styleManager };
         ID sizerID{};
 
         void SetUp() override
@@ -89,7 +98,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Horizontal_MouseDownRecordsStartAndCapturesFocus)
     {
         int size = 100;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300);
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300);
 
         InputState down = MakeMouseDownState(200, 50);
         EXPECT_TRUE(handler(MakeEvent(sizerID, EventType::MouseDown, down)));
@@ -104,7 +113,7 @@ namespace tachyon
         int size = 100;
         int changedCount = 0;
         int lastChanged = -1;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300,
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300,
             [&](int newSize) { changedCount++; lastChanged = newSize; });
 
         InputState down = MakeMouseDownState(200, 50);
@@ -130,7 +139,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Horizontal_MouseMoveClampsToMinAndMax)
     {
         int size = 100;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 200);
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 200);
 
         InputState down = MakeMouseDownState(200, 50);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -157,7 +166,7 @@ namespace tachyon
         prevFocus.value.dynamicParts.hashValue = 999;
         guiStateManager.Interaction().SetFocusID(prevFocus);
 
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300);
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300);
 
         InputState down = MakeMouseDownState(200, 50);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -187,7 +196,7 @@ namespace tachyon
         prevFocus.value.dynamicParts.hashValue = 7;
         guiStateManager.Interaction().SetFocusID(prevFocus);
 
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300);
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300);
 
         InputState down = MakeMouseDownState(200, 50);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -208,7 +217,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Horizontal_EventsOnDifferentIDIgnoredWhileDragging)
     {
         int size = 100;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300);
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300);
 
         InputState down = MakeMouseDownState(200, 50);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -236,7 +245,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Horizontal_SizeIsInCssPixels)
     {
         int size = 100;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300,
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300,
             nullptr, [&]() -> int { return 250; }, false, /*pixelsPerUnit*/ 2.0f);
 
         InputState down = MakeMouseDownState(200, 50);
@@ -255,7 +264,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Vertical_SizeIsInCssPixels)
     {
         int size = 100;
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 400,
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 400,
             nullptr, nullptr, false, /*pixelsPerUnit*/ 1.5f);
 
         InputState down = MakeMouseDownState(50, 200);
@@ -271,7 +280,7 @@ namespace tachyon
     {
         int size = 100;
         int autoCalls = 0;
-        auto handler = MakeHorizontalSizerHandler(guiStateManager, size, 50, 300,
+        auto handler = MakeHorizontalSizerHandler(guiStateManager, elementStorage, size, 50, 300,
             /*onChanged*/ nullptr,
             /*onAutoSize*/ [&]() -> int { autoCalls++; return 250; });
 
@@ -302,7 +311,7 @@ namespace tachyon
     {
         int size = 80;
         int changedCount = 0;
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 400,
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 400,
             [&](int) { changedCount++; });
 
         InputState down = MakeMouseDownState(50, 100);
@@ -327,7 +336,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Vertical_MouseMoveClampsToMinAndMax)
     {
         int size = 100;
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 50, 200);
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 50, 200);
 
         InputState down = MakeMouseDownState(50, 100);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -352,7 +361,7 @@ namespace tachyon
         prevFocus.value.dynamicParts.hashValue = 42;
         guiStateManager.Interaction().SetFocusID(prevFocus);
 
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 400);
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 400);
 
         InputState down = MakeMouseDownState(50, 100);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -379,7 +388,7 @@ namespace tachyon
         prevFocus.value.dynamicParts.hashValue = 7;
         guiStateManager.Interaction().SetFocusID(prevFocus);
 
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 400);
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 400);
 
         InputState down = MakeMouseDownState(50, 100);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -395,7 +404,7 @@ namespace tachyon
     TEST_F(SizerHandlerTest, Vertical_EventsOnDifferentIDIgnoredWhileDragging)
     {
         int size = 100;
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 400);
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 400);
 
         InputState down = MakeMouseDownState(50, 100);
         handler(MakeEvent(sizerID, EventType::MouseDown, down));
@@ -420,7 +429,7 @@ namespace tachyon
     {
         int size = 100;
         int autoCalls = 0;
-        auto handler = MakeVerticalSizerHandler(guiStateManager, size, 30, 500,
+        auto handler = MakeVerticalSizerHandler(guiStateManager, elementStorage, size, 30, 500,
             nullptr,
             [&]() -> int { autoCalls++; return 330; });
 
@@ -437,5 +446,48 @@ namespace tachyon
         InputState move = MakeMouseMoveState(50, 400);
         EXPECT_FALSE(handler(MakeEvent(sizerID, EventType::MouseMove, move)));
         EXPECT_EQ(size, 330);
+    }
+    // A sizer in a zoomed container follows the cursor: at 200%, 40 screen pixels are 20
+    // pixels of its layout.
+    TEST(SizerZoomTest, ASizerFollowsTheCursorWhenZoomed)
+    {
+        GUITest::HeadlessGUIApp app;
+        ASSERT_TRUE(app.Initialize());
+        const ID containerID = app.idManager.CreateStaticID();
+        const ID sizerID     = app.idManager.CreateStaticID();
+        int width = 100;
+        ElementRef containerRef = ElementRef::Invalid();
+        auto frame = [&] {
+            app.Frame([&] {
+                app.BeginRootWindow({ 800, 600 });
+                containerRef = app.RegisterElement(Element{ .id = containerID, .styleRef = app.theme.emptyVertStyleRef },
+                                                   LayoutOverride{}.Size(400, 300));
+                app.elementStorage.SetContentTransform(containerRef, float3x2::Scale(2.0f));
+                ASSERT_EQ(app.elementStorage.BeginChildren(), ElementStorageResult::Success);
+                app.RegisterElement(Element{ .id = sizerID,
+                                             .eventHandler = MakeHorizontalSizerHandler(app.guiStateManager, app.elementStorage, width, 0, 1000),
+                                             .styleRef = app.theme.emptyHorzStyleRef },
+                                    LayoutOverride{}.Size(8, 100));
+                ASSERT_EQ(app.elementStorage.EndChildren(), ElementStorageResult::Success);
+                app.EndRootWindow();
+            });
+        };
+        frame();
+        frame();
+        // The container scales its content around its inner rect's top-left.
+        const int2 pivot = app.elementStorage.GetElementRectUnsafe(containerRef).innerRect.position;
+        const IntRect sizer = app.GetElementRect(sizerID);
+        const int2 layoutCenter{ sizer.x + sizer.w / 2, sizer.y + sizer.h / 2 };
+        const int2 grab{ pivot.x + 2 * (layoutCenter.x - pivot.x), pivot.y + 2 * (layoutCenter.y - pivot.y) };
+
+        app.InjectMouseMove(grab);
+        app.InjectMouseDown(grab);
+        frame();
+        app.InjectMouseMove({ grab.x + 40, grab.y }, MouseButtons::Left);
+        frame();
+        EXPECT_EQ(width, 120);
+        app.InjectMouseUp({ grab.x + 40, grab.y });
+        frame();
+        app.Cleanup();
     }
 }

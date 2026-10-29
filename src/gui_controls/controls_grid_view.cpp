@@ -253,7 +253,7 @@ namespace tachyon
                         const auto clickInfo = clickTracker->Update(id);
                         *pendingRename = (canRename && wasSelected && !ctrl && !shift
                                           && clickInfo.sameAsPrevious
-                                          && clickInfo.elapsedMs >= 500.0f
+                                          && clickInfo.elapsedMs >= std::max(500.0f, DoubleClickMilliseconds())
                                           && clickInfo.elapsedMs < 3000.0f)
                                        ? id : tachyon::ID::Invalid();
                     }

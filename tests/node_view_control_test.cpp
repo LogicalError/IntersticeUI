@@ -265,11 +265,11 @@ namespace tachyon
             app.InjectMouseMove(from);
             app.InjectMouseDown(from);
             Frame();
-            EXPECT_TRUE(view.marqueeActive) << "background MouseDown starts a marquee";
+            EXPECT_TRUE(view.marquee.IsHeld()) << "background MouseDown starts a marquee";
 
             app.InjectMouseMove({ from.x - 80, from.y + 40 }, MouseButtons::Left);
             Frame();
-            EXPECT_TRUE(view.marqueePastThreshold)
+            EXPECT_TRUE(view.marquee.dragging)
                 << "dragging past the 4px threshold engages the marquee";
         }
 
@@ -421,5 +421,220 @@ namespace tachyon
             EXPECT_EQ(view.transform.r0.z, -5000.0f) << "focus that didn't move doesn't pan";
         }
 
+        // ---- Pressing and dragging: a click isn't a move, Escape puts things back ----
+
+        // A press that moves less than the drag distance is a click: the node stays where it
+        // was and nothing is recorded.
+        TEST_F(NodeViewControlTest, AClickOnANodeDoesNotMoveIt)
+        {
+            Settle();
+            int edits = 0;
+            view.onEdit = [&](const NodeViewEdit&) { edits++; };
+            const tachyon::int2 before = view.nodes[1].pos;
+            const tachyon::int2 from = HeaderOf(nodeB);
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            Frame();
+            app.InjectMouseMove({ from.x + 2, from.y + 1 }, MouseButtons::Left);
+            Frame();
+            EXPECT_TRUE(view.nodeDrag.IsPressed(nodeB));
+            EXPECT_FALSE(view.nodeDrag.dragging) << "under the drag distance it isn't a move yet";
+            app.InjectMouseUp({ from.x + 2, from.y + 1 });
+            Settle();
+            EXPECT_EQ(view.nodes[1].pos, before);
+            EXPECT_EQ(edits, 0);
+            EXPECT_TRUE(view.selectedNodeIDs.count(nodeB)) << "the click still selects it";
+        }
+
+        TEST_F(NodeViewControlTest, EscapeDuringANodeMovePutsItBack)
+        {
+            Settle();
+            int edits = 0;
+            view.onEdit = [&](const NodeViewEdit&) { edits++; };
+            const tachyon::int2 before = view.nodes[1].pos;
+            const tachyon::int2 from = HeaderOf(nodeB);
+            const tachyon::int2 to{ from.x + 6 * app.theme.nodeGridSize, from.y + 2 * app.theme.nodeGridSize };
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            Frame();
+            app.InjectMouseMove(to, MouseButtons::Left);
+            Frame();
+            ASSERT_NE(view.nodes[1].pos, before) << "test setup: the node follows the drag";
+
+            app.InjectKey(KeyCode::Escape);
+            Frame();
+            EXPECT_EQ(view.nodes[1].pos, before);
+            app.InjectMouseMove({ to.x + 40, to.y }, MouseButtons::Left);
+            app.InjectMouseUp({ to.x + 40, to.y });
+            Settle();
+            EXPECT_EQ(view.nodes[1].pos, before) << "the moves after Escape are ignored";
+            EXPECT_EQ(edits, 0) << "a cancelled move isn't recorded";
+        }
+
+        // The node follows the cursor at any zoom: twice as far on screen at 200%.
+        TEST_F(NodeViewControlTest, ANodeFollowsTheCursorWhenZoomed)
+        {
+            view.transform = tachyon::float3x2::Scale(2.0f);
+            Settle();
+            const int32_t grid = app.theme.nodeGridSize;
+            const tachyon::int2 before = view.nodes[0].pos;
+            // The canvas scales its content around its inner rect's top-left.
+            const tachyon::int2 pivot = CanvasInner().position;
+            const tachyon::int2 header = HeaderOf(nodeA);
+            const tachyon::int2 from{ pivot.x + 2 * (header.x - pivot.x), pivot.y + 2 * (header.y - pivot.y) };
+            Drag(from, { from.x + 2 * 4 * grid, from.y + 2 * 2 * grid });
+            Settle();
+            EXPECT_EQ(view.nodes[0].pos.x - before.x, 4 * grid);
+            EXPECT_EQ(view.nodes[0].pos.y - before.y, 2 * grid);
+        }
+
+        TEST_F(NodeViewControlTest, EscapeDuringAMarqueePutsTheSelectionBack)
+        {
+            Settle();
+            view.selectedNodeIDs = { nodeA };
+            const tachyon::int2 from = CanvasPoint();
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            Frame();
+            app.InjectMouseMove({ from.x + 30, from.y + 30 }, MouseButtons::Left);
+            Frame();
+            ASSERT_TRUE(view.marquee.dragging);
+            ASSERT_TRUE(view.selectedNodeIDs.empty()) << "test setup: the marquee selects what it covers, nothing";
+
+            app.InjectKey(KeyCode::Escape);
+            Frame();
+            EXPECT_EQ(view.selectedNodeIDs, (std::unordered_set<tachyon::ID>{ nodeA }));
+            EXPECT_FALSE(view.marquee.IsHeld());
+            app.InjectMouseUp({ from.x + 30, from.y + 30 });
+            Frame();
+            EXPECT_EQ(view.selectedNodeIDs, (std::unordered_set<tachyon::ID>{ nodeA })) << "the release isn't a click either";
+        }
+
+        TEST_F(NodeViewControlTest, EscapeDuringAPanPutsTheViewBack)
+        {
+            Settle();
+            const tachyon::float3x2 before = view.transform;
+            const tachyon::int2 from = CanvasPoint();
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from, MouseButtons::Right);
+            Frame();
+            app.InjectMouseMove({ from.x + 60, from.y + 25 }, MouseButtons::Right);
+            Frame();
+            ASSERT_NE(view.transform.r0.z, before.r0.z);
+
+            app.InjectKey(KeyCode::Escape);
+            Frame();
+            EXPECT_EQ(view.transform.r0.z, before.r0.z);
+            EXPECT_EQ(view.transform.r1.z, before.r1.z);
+            app.InjectMouseMove({ from.x + 90, from.y + 25 }, MouseButtons::Right);
+            app.InjectMouseUp({ from.x + 90, from.y + 25 }, MouseButtons::Right);
+            Frame();
+            EXPECT_EQ(view.transform.r0.z, before.r0.z) << "the moves after Escape don't pan";
+        }
+
+        // The minimap follows only a press of its own: a drag from the canvas that crosses it
+        // leaves the view alone.
+        TEST_F(NodeViewControlTest, TheMinimapFollowsOnlyItsOwnPress)
+        {
+            Settle();
+            const auto minimaps = RectsWithStyle(app.theme.nodeViewMinimapStyleRef);
+            ASSERT_EQ(minimaps.size(), 1u);
+            const tachyon::IntRect m = minimaps[0];
+            const tachyon::int2 inMinimap{ m.x + m.w / 4, m.y + m.h / 4 };
+            // Drawing sets the minimap's mapping; headless, nothing is drawn.
+            view.minimapScale  = 0.25f;
+            view.minimapOrigin = { -200.0f, -100.0f };
+            const tachyon::float3x2 before = view.transform;
+
+            const tachyon::int2 from = CanvasPoint();
+            app.InjectMouseMove(from);
+            app.InjectMouseDown(from);
+            Frame();
+            app.InjectMouseMove(inMinimap, MouseButtons::Left);
+            Frame();
+            EXPECT_EQ(view.transform.r0.z, before.r0.z);
+            EXPECT_EQ(view.transform.r1.z, before.r1.z);
+            app.InjectMouseUp(inMinimap);
+            Frame();
+
+            // Its own press centres the view there; Escape puts it back.
+            app.InjectMouseMove(inMinimap);
+            app.InjectMouseDown(inMinimap);
+            Frame();
+            ASSERT_NE(view.transform.r0.z, before.r0.z) << "a press in the minimap centres the view";
+            app.InjectMouseMove({ inMinimap.x + 10, inMinimap.y + 5 }, MouseButtons::Left);
+            Frame();
+            app.InjectKey(KeyCode::Escape);
+            Frame();
+            EXPECT_EQ(view.transform.r0.z, before.r0.z);
+            EXPECT_EQ(view.transform.r1.z, before.r1.z);
+            app.InjectMouseUp({ inMinimap.x + 10, inMinimap.y + 5 });
+            Frame();
+        }
+
+        // Dragging a wire's lane moves it; Escape puts it back and records nothing.
+        TEST_F(NodeViewControlTest, EscapeDuringALaneDragPutsTheLaneBack)
+        {
+            view.nodes[1].properties[0].input = PropertyEndpoint{ 0, 0 };
+            Settle();
+            int edits = 0;
+            view.onEdit = [&](const NodeViewEdit&) { edits++; };
+            const uint32_t key = WireKey(1, 0);
+            // Each frame's route pass caches the wires' draggable segments for the next one; this
+            // wire is straight, so the test gives it a vertical segment before every frame.
+            const CachedWireHandle handle{ .wireKey = key, .role = WireHandle::LaneX, .vertical = true,
+                                           .a = { 300, 100 }, .b = { 300, 300 } };
+            auto frame = [&] { view.wireHandleCache = { handle }; Frame(); };
+            frame();
+            // Node A's laid-out rect against its pos gives where node.pos space starts.
+            const tachyon::int2 origin = app.GetElementRect(nodeA).position - view.nodes[0].pos;
+            const tachyon::int2 grab = origin + tachyon::int2{ 300, 200 };
+            app.InjectMouseMove(grab);
+            app.InjectMouseDown(grab);
+            frame();
+            app.InjectMouseMove({ grab.x + 40, grab.y }, MouseButtons::Left);
+            frame();
+            const auto moved = view.wireOverrides.find(key);
+            ASSERT_NE(moved, view.wireOverrides.end()) << "test setup: the lane follows the drag";
+            EXPECT_EQ(moved->second.laneX, 340);
+
+            app.InjectKey(KeyCode::Escape);
+            frame();
+            EXPECT_EQ(view.wireOverrides.count(key), 0u) << "the wire had no lane of its own";
+            app.InjectMouseMove({ grab.x + 80, grab.y }, MouseButtons::Left);
+            app.InjectMouseUp({ grab.x + 80, grab.y });
+            frame();
+            EXPECT_EQ(view.wireOverrides.count(key), 0u);
+            EXPECT_EQ(edits, 0);
+        }
+
+        // A move with the button held over the minimap, from a press that went to an element
+        // that didn't take the mouse, leaves the view alone.
+        TEST_F(NodeViewControlTest, TheMinimapIgnoresAMoveWithoutItsPress)
+        {
+            Settle();
+            view.minimapScale  = 0.25f;
+            view.minimapOrigin = { -200.0f, -100.0f };
+            ElementRef minimapRef = ElementRef::Invalid();
+            for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels() && !minimapRef.IsValid(); d++)
+                for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
+                {
+                    const tachyon::ElementRef ref{ d, i };
+                    if (app.elementStorage.IsValidRef(ref) &&
+                        app.elementStorage.GetElementUnsafe(ref).styleRef == app.theme.nodeViewMinimapStyleRef) { minimapRef = ref; break; }
+                }
+            ASSERT_TRUE(minimapRef.IsValid());
+            const Element& minimap = app.elementStorage.GetElementUnsafe(minimapRef);
+            const ElementRect& rect = app.elementStorage.GetElementRectUnsafe(minimapRef);
+            InputState move{};
+            move.screenPos   = { rect.innerRect.x + 10, rect.innerRect.y + 10 };
+            move.buttons     = MouseButtons::Left;
+            move.prevButtons = MouseButtons::Left;
+            const tachyon::float3x2 before = view.transform;
+            EXPECT_FALSE(minimap.eventHandler(ElementEvent{ .id = minimap.id, .type = EventType::MouseMove, .state = move,
+                                                            .rect = &rect, .elementRef = minimapRef }));
+            EXPECT_EQ(view.transform.r0.z, before.r0.z);
+            EXPECT_EQ(view.transform.r1.z, before.r1.z);
+        }
     } // namespace
 }

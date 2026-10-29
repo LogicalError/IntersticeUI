@@ -68,6 +68,10 @@ namespace tachyon
 
         /// Mouse buttons held as of the last recorded button event.
         MouseButtons GetCurrentButtons() const { return m_currentButtons; }
+        /// Whether a drag held with `button` was left behind: the button is up and no release
+        /// is queued for this frame. Drops a drag whose release never reached it (its element
+        /// went away, the window lost the mouse).
+        bool IsDragAbandoned(MouseButtons button = MouseButtons::Left) const;
 
         /// Updates the drag position from the latest recorded mouse event; call before hover
         /// resolution and GUIStateManager::EndFrame.
