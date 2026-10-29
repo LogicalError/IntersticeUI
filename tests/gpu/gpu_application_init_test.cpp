@@ -338,6 +338,40 @@ namespace
         app.Cleanup();
     }
 
+    // Images made again while the upload worker is busy get their pixels when it reaches
+    // them, after the rebuild has returned and the memory it let go of is used again.
+    TEST(GpuApplicationInit, ImagesMadeAgainWhileTheUploadWorkerIsBusyKeepTheirPixels)
+    {
+        DeviceLossApp app;
+        if (!app.Start())
+        {
+            app.Cleanup();
+            GTEST_SKIP() << "no Vulkan device available";
+        }
+        ASSERT_TRUE(app.Frames(3));
+        ASSERT_TRUE(app.CenterIsRed());
+
+        auto* vulkan = static_cast<tachyon::vulkan::VulkanGraphicsContext*>(app.graphicsContext);
+        tachyon::vulkan::VulkanDeviceContext& device = vulkan->deviceContext;
+        device.WaitIdle();
+        device.ReleaseLiveImages();
+        std::vector<std::byte> scratch(8 * 1024 * 1024), source(scratch.size(), std::byte(1));
+        device.Uploads().Copy(scratch.data(), source.data(), source.size());
+        device.Uploads().Then([] { std::this_thread::sleep_for(std::chrono::milliseconds(200)); });
+        ASSERT_TRUE(device.Uploads().Busy());
+        device.RebuildLiveImages();
+        vulkan->vulkanImageSet->RefreshDescriptors();
+        std::vector<std::vector<uint8_t>> reused;
+        for (int i = 0; i < 64; i++)
+            reused.emplace_back(4 * 4 * 4, uint8_t(0));
+
+        ASSERT_TRUE(app.Frames(2));
+        EXPECT_TRUE(app.CenterIsRed()) << "the image is copied from its own pixels";
+
+        app.graphicsContext->DestroyImageAtEnd(app.image, tachyon::DeviceScope::Application);
+        app.Cleanup();
+    }
+
     // Input injected into a render-to-image window reaches its controls.
     TEST(GpuApplicationInit, InjectedClickReachesAButtonInARenderToImageWindow)
     {

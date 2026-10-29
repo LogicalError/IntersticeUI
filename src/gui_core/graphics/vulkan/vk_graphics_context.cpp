@@ -1210,6 +1210,7 @@ tachyon::Image* tachyon::vulkan::VulkanDeviceContext::CreateImage(const void* da
     if (data != nullptr)
         image->recipe.pixels.assign(static_cast<const uint8_t*>(data), static_cast<const uint8_t*>(data) + dataSize);
     m_uploads.Copy(staging.info.pMappedData, data != nullptr ? image->recipe.pixels.data() : nullptr, dataSize);
+    m_uploads.Then([allocator = allocator, allocation = staging.allocation]() { vmaFlushAllocation(allocator, allocation, 0, VK_WHOLE_SIZE); });
     m_liveImages.insert(image);
     return image;
 }
@@ -1349,15 +1350,18 @@ void tachyon::vulkan::VulkanDeviceContext::RebuildLiveImages()
 {
     for (VulkanImage* image : m_liveImages)
     {
-        const VulkanImage::Recipe recipe = std::move(image->recipe);
+        VulkanImage::Recipe recipe = std::move(image->recipe);
         const VkExtent3D extent = image->imageExtent;
         *image = CreateImage(extent, image->imageFormat, recipe.usage, ToVulkanSampler(recipe.sampler, this), recipe.mipmapped);
-        image->recipe = recipe;
-        if (recipe.pixels.empty())
+        image->recipe = std::move(recipe);
+        const std::vector<uint8_t>& pixels = image->recipe.pixels;
+        if (pixels.empty())
             continue;
-        Buffer staging = CreateBuffer(recipe.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-        m_uploads.Copy(staging.info.pMappedData, recipe.pixels.data(), recipe.pixels.size());
-        m_pendingUploads.push_back({ staging, image->image, extent, recipe.mipmapped });
+        // A busy worker copies later, so it reads the image's own pixels (DestroyImage waits for it).
+        Buffer staging = CreateBuffer(pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        m_uploads.Copy(staging.info.pMappedData, pixels.data(), pixels.size());
+        m_uploads.Then([allocator = allocator, allocation = staging.allocation]() { vmaFlushAllocation(allocator, allocation, 0, VK_WHOLE_SIZE); });
+        m_pendingUploads.push_back({ staging, image->image, extent, image->recipe.mipmapped });
     }
 }
 
