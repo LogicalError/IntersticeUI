@@ -94,7 +94,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: #ff8040; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 0xff);
         EXPECT_EQ(c.g, 0x80);
         EXPECT_EQ(c.b, 0x40);
@@ -105,7 +105,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: #ff804080; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 0xff);
         EXPECT_EQ(c.g, 0x80);
         EXPECT_EQ(c.b, 0x40);
@@ -116,7 +116,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: #f80; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 0xff);
         EXPECT_EQ(c.g, 0x88);
         EXPECT_EQ(c.b, 0x00);
@@ -126,7 +126,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: #f80f; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 0xff);
         EXPECT_EQ(c.g, 0x88);
         EXPECT_EQ(c.b, 0x00);
@@ -137,7 +137,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: rgb(10, 20, 30); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 10);
         EXPECT_EQ(c.g, 20);
         EXPECT_EQ(c.b, 30);
@@ -149,7 +149,7 @@ namespace tachyon
         // alpha 0.5 -> 128 (rounded)
         auto s = ParseStyleSheet(".a { color: rgba(100, 150, 200, 0.5); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 100);
         EXPECT_EQ(c.g, 150);
         EXPECT_EQ(c.b, 200);
@@ -161,14 +161,14 @@ namespace tachyon
         // alpha > 1 -> treated as 0-255
         auto s = ParseStyleSheet(".a { color: rgba(100, 150, 200, 64); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color.a, 64);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor().a, 64);
     }
 
     TEST(StyleSheet, NamedColorWhite)
     {
         auto s = ParseStyleSheet(".a { color: white; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 255); EXPECT_EQ(c.g, 255); EXPECT_EQ(c.b, 255); EXPECT_EQ(c.a, 255);
     }
 
@@ -176,14 +176,14 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: transparent; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color.a, 0);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor().a, 0);
     }
 
     TEST(StyleSheet, BackgroundColorSetsBothFields)
     {
         auto s = ParseStyleSheet(".a { background-color: #336699; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& state = s.GetStyle("a")->states[Style::kNormal];
+        const auto& state = s.GetStyle("a")->states[ElementState::None];
         EXPECT_EQ(state.backgroundColor.type, ColorType::SolidColor);
         EXPECT_TRUE(GradientColorEq(state.backgroundColor.gradient, 0, RGB(0x33, 0x66, 0x99)));
     }
@@ -196,7 +196,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { background-color: linear-gradient(90deg, #ff0000 0%, #0000ff 100%); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& bg = s.GetStyle("a")->states[Style::kNormal].backgroundColor;
+        const auto& bg = s.GetStyle("a")->states[ElementState::None].backgroundColor;
         EXPECT_EQ(bg.type, ColorType::LinearGradient);
         EXPECT_EQ(bg.gradient.stopCount, 2);
         EXPECT_TRUE(GradientColorEq(bg.gradient, 0, RGB(255, 0, 0)));
@@ -210,7 +210,7 @@ namespace tachyon
             const std::string src = std::string(".a { background-color: linear-gradient(") + angle + ", red 0%, blue 100%); }";
             auto s = ParseStyleSheet(src);
             EXPECT_FALSE(s.HasErrors()) << angle;
-            return s.GetStyle("a") ? s.GetStyle("a")->states[Style::kNormal].backgroundColor.gradient.value : uint16_t(0);
+            return s.GetStyle("a") ? s.GetStyle("a")->states[ElementState::None].backgroundColor.gradient.value : uint16_t(0);
         };
         const uint16_t deg90 = Gradient::Linear(90.0f).value;
         EXPECT_EQ(angleOf("90deg"), deg90);
@@ -223,7 +223,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { background-color: radial-gradient(white 0%, black 100%); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& bg = s.GetStyle("a")->states[Style::kNormal].backgroundColor;
+        const auto& bg = s.GetStyle("a")->states[ElementState::None].backgroundColor;
         EXPECT_EQ(bg.type, ColorType::RadialGradient);
         EXPECT_EQ(bg.gradient.stopCount, 2);
     }
@@ -232,7 +232,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { background-color: linear-gradient(45, red, blue); }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& bg = s.GetStyle("a")->states[Style::kNormal].backgroundColor;
+        const auto& bg = s.GetStyle("a")->states[ElementState::None].backgroundColor;
         EXPECT_EQ(bg.type, ColorType::LinearGradient);
     }
 
@@ -478,43 +478,43 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { font-size: 14; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.fontSize, 14.0f);
+        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.fontSize, 14.0f);
     }
 
     TEST(StyleSheet, FontWeightBold)
     {
         auto s = ParseStyleSheet(".a { font-weight: bold; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.weight, FontWeight::Bold);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.weight, FontWeight::Bold);
     }
 
     TEST(StyleSheet, FontWeightNumeric700)
     {
         auto s = ParseStyleSheet(".a { font-weight: 700; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.weight, FontWeight::Bold);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.weight, FontWeight::Bold);
     }
 
     TEST(StyleSheet, FontWeightNumeric400)
     {
         auto s = ParseStyleSheet(".a { font-weight: 400; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.weight, FontWeight::Normal);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.weight, FontWeight::Normal);
     }
 
     TEST(StyleSheet, FontStyleItalic)
     {
         auto s = ParseStyleSheet(".a { font-style: italic; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.style, FontStyle::Italic);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.style, FontStyle::Italic);
     }
 
     TEST(StyleSheet, FontFamilyMonospace)
     {
         auto s = ParseStyleSheet(".a { font-family: monospace; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.family, FontFamily::Monospace);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.fontId, FontID::Invalid);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.family, FontFamily::Monospace);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.fontId, FontID::Invalid);
     }
 
     // ============================================================================
@@ -534,7 +534,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a { font-family: \"Inter\", sans-serif; }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const TextStyle& t = s.GetStyle("a")->states[Style::kNormal].textStyle;
+        const TextStyle& t = s.GetStyle("a")->states[ElementState::None].textStyle;
         EXPECT_EQ(t.fontId, FontIDFromName("Inter"));
         EXPECT_EQ(t.family, FontFamily::SansSerif);
     }
@@ -544,7 +544,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a { font-family: Noto Sans Mono, monospace; }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const TextStyle& t = s.GetStyle("a")->states[Style::kNormal].textStyle;
+        const TextStyle& t = s.GetStyle("a")->states[ElementState::None].textStyle;
         EXPECT_EQ(t.fontId, FontIDFromName("Noto Sans Mono"));
         EXPECT_EQ(t.family, FontFamily::Monospace);
     }
@@ -554,7 +554,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a { font-family: serif, \"A\", 'B', monospace; }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const TextStyle& t = s.GetStyle("a")->states[Style::kNormal].textStyle;
+        const TextStyle& t = s.GetStyle("a")->states[ElementState::None].textStyle;
         EXPECT_EQ(t.fontId, FontIDFromName("A"));
         EXPECT_EQ(t.family, FontFamily::Serif);
     }
@@ -563,7 +563,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { font-family: \"serif\"; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const TextStyle& t = s.GetStyle("a")->states[Style::kNormal].textStyle;
+        const TextStyle& t = s.GetStyle("a")->states[ElementState::None].textStyle;
         EXPECT_EQ(t.fontId, FontIDFromName("serif"));
         EXPECT_EQ(t.family, FontFamily::Default);
     }
@@ -572,8 +572,8 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { font-family: \"Inter\"; } .a:hover { font-family: monospace; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.fontId, FontIDFromName("Inter"));
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kHover].textStyle.fontId, FontID::Invalid);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.fontId, FontIDFromName("Inter"));
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::Hover].textStyle.fontId, FontID::Invalid);
     }
 
     TEST(StyleSheet, FontFaceRulesCollectedInOrder)
@@ -598,9 +598,9 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { -tachyon-language: ja; } .b { -tachyon-language: \"zh-Hant\"; } .c { -tachyon-language: none; }");
         EXPECT_FALSE(s.HasErrors());
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.language.view(), "ja");
-        EXPECT_EQ(s.GetStyle("b")->states[Style::kHover].textStyle.language.view(), "zh-Hant");
-        EXPECT_TRUE(s.GetStyle("c")->states[Style::kNormal].textStyle.language.empty());
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.language.view(), "ja");
+        EXPECT_EQ(s.GetStyle("b")->states[ElementState::Hover].textStyle.language.view(), "zh-Hant");
+        EXPECT_TRUE(s.GetStyle("c")->states[ElementState::None].textStyle.language.empty());
 
         auto tooLong = ParseStyleSheet(".d { -tachyon-language: zh-Hant-TW-x-private; }");
         EXPECT_TRUE(tooLong.HasErrors());
@@ -614,7 +614,7 @@ namespace tachyon
             ".after  { font-size: 16px; }\n"
             ".own    { font-family: monospace; }");
         EXPECT_FALSE(s.HasErrors());
-        auto text = [&](const char* name) { return s.GetStyle(name)->states[Style::kNormal].textStyle; };
+        auto text = [&](const char* name) { return s.GetStyle(name)->states[ElementState::None].textStyle; };
         ASSERT_NE(s.GetStyle("before"), nullptr);
         ASSERT_NE(s.GetStyle("after"), nullptr);
         ASSERT_NE(s.GetStyle("own"), nullptr);
@@ -626,9 +626,9 @@ namespace tachyon
         EXPECT_EQ(text("own").fontId, FontID::Invalid);
         EXPECT_EQ(text("own").family, FontFamily::Monospace);
 
-        EXPECT_EQ(s.baseStyle.states[Style::kNormal].textStyle.fontId, FontIDFromName("Inter"))
+        EXPECT_EQ(s.baseStyle.states[ElementState::None].textStyle.fontId, FontIDFromName("Inter"))
             << "styles the sheet never names start from the base too";
-        EXPECT_EQ(s.baseStyle.states[Style::kDisabled].textStyle.fontId, FontIDFromName("Inter"));
+        EXPECT_EQ(s.baseStyle.states[ElementState::Disabled].textStyle.fontId, FontIDFromName("Inter"));
     }
 
     TEST(StyleSheet, UniversalRuleTakesPseudoStates)
@@ -636,9 +636,9 @@ namespace tachyon
         auto s = ParseStyleSheet("* , .a { color: red; } *:hover { color: blue; } .b { }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("b"), nullptr);
-        EXPECT_EQ(s.GetStyle("b")->states[Style::kNormal].textStyle.color, RGB(255, 0, 0));
-        EXPECT_EQ(s.GetStyle("b")->states[Style::kHover].textStyle.color, RGB(0, 0, 255));
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kHover].textStyle.color, RGB(0, 0, 255));
+        EXPECT_EQ(s.GetStyle("b")->states[ElementState::None].textColor.GetFirstColor(), RGB(255, 0, 0));
+        EXPECT_EQ(s.GetStyle("b")->states[ElementState::Hover].textColor.GetFirstColor(), RGB(0, 0, 255));
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::Hover].textColor.GetFirstColor(), RGB(0, 0, 255));
     }
 
     // The shipped theme (palette + shared styles + the showcase's, concatenated as LoadTheme
@@ -677,8 +677,8 @@ namespace tachyon
             {
                 const Style* style = s.GetStyle(name);
                 ASSERT_NE(style, nullptr) << name;
-                for (int state : { 0, int(Style::kHover), int(Style::kActive) })
-                    EXPECT_GT(style->states[state].textStyle.color.a, 0) << palette << " ." << name << " state " << state;
+                for (int state : { 0, int(ElementState::Hover), int(ElementState::Active) })
+                    EXPECT_GT(style->states[state].textColor.GetFirstColor().a, 0) << palette << " ." << name << " state " << state;
             }
         }
     }
@@ -843,14 +843,14 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { line-height: 1.5; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.lineHeight, 1.5f);
+        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.lineHeight, 1.5f);
     }
 
     TEST(StyleSheet, LetterSpacing)
     {
         auto s = ParseStyleSheet(".a { letter-spacing: 2; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.letterSpacing, 2.0f);
+        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[ElementState::None].textStyle.letterSpacing, 2.0f);
     }
 
     // ============================================================================
@@ -868,8 +868,9 @@ namespace tachyon
             }
         )");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& u = s.GetStyle("a")->states[Style::kNormal].textStyle.underLine;
-        EXPECT_EQ(u.color.r, 255); EXPECT_EQ(u.color.g, 0); EXPECT_EQ(u.color.b, 0);
+        const auto& u = s.GetStyle("a")->states[ElementState::None].textStyle.underLine;
+        const color4b uc = s.GetStyle("a")->states[ElementState::None].decorationColors[size_t(DecorationLine::Under)].GetFirstColor();
+        EXPECT_EQ(uc.r, 255); EXPECT_EQ(uc.g, 0); EXPECT_EQ(uc.b, 0);
         EXPECT_EQ(u.thickness, 2u);
         EXPECT_EQ(u.offset, 1u);
         EXPECT_EQ(u.style, DecorationStyle::Dotted);
@@ -886,8 +887,8 @@ namespace tachyon
             .btn:hover { background-color: #555555; }
         )");
         ASSERT_NE(s.GetStyle("btn"), nullptr);
-        const auto& normal = s.GetStyle("btn")->states[Style::kNormal];
-        const auto& hover  = s.GetStyle("btn")->states[Style::kHover];
+        const auto& normal = s.GetStyle("btn")->states[ElementState::None];
+        const auto& hover  = s.GetStyle("btn")->states[ElementState::Hover];
 
         EXPECT_TRUE(GradientColorEq(normal.backgroundColor.gradient, 0, RGB(0x33, 0x33, 0x33)));
         EXPECT_TRUE(GradientColorEq(hover.backgroundColor.gradient,  0, RGB(0x55, 0x55, 0x55)));
@@ -901,7 +902,7 @@ namespace tachyon
         )");
         ASSERT_NE(s.GetStyle("btn"), nullptr);
         EXPECT_TRUE(GradientColorEq(
-            s.GetStyle("btn")->states[Style::kActive].backgroundColor.gradient, 0,
+            s.GetStyle("btn")->states[ElementState::Active].backgroundColor.gradient, 0,
             RGB(0x11, 0x11, 0x11)));
     }
 
@@ -910,7 +911,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a { } .a:focus { border-color: #0078d7; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
         EXPECT_TRUE(GradientColorEq(
-            s.GetStyle("a")->states[Style::kFocus].borderColors[0].gradient, 0,
+            s.GetStyle("a")->states[ElementState::Focused].borderColors[0].gradient, 0,
             RGB(0x00, 0x78, 0xd7)));
     }
 
@@ -919,7 +920,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a::highlight(selected) { color: yellow; }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kSelected].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::Selected].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 255); EXPECT_EQ(c.g, 255); EXPECT_EQ(c.b, 0);
     }
 
@@ -928,7 +929,7 @@ namespace tachyon
         auto s = ParseStyleSheet(".a:selected { color: yellow; }");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kSelected].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::Selected].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 255); EXPECT_EQ(c.g, 255); EXPECT_EQ(c.b, 0);
     }
 
@@ -936,7 +937,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a:disabled { color: gray; }");
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kDisabled].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::Disabled].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 128); EXPECT_EQ(c.g, 128); EXPECT_EQ(c.b, 128);
     }
 
@@ -950,9 +951,9 @@ namespace tachyon
             .btn:hover { font-size: 30; }
         )");
         ASSERT_NE(s.GetStyle("btn"), nullptr);
-        const auto& disabled = s.GetStyle("btn")->states[Style::kDisabled].textStyle;
-        EXPECT_FLOAT_EQ(disabled.fontSize, 20.0f) << "base declaration missing from :disabled";
-        EXPECT_EQ(disabled.color.r, 128) << ":disabled must still override what it declares";
+        const StyleState& disabled = s.GetStyle("btn")->states[ElementState::Disabled];
+        EXPECT_FLOAT_EQ(disabled.textStyle.fontSize, 20.0f) << "base declaration missing from :disabled";
+        EXPECT_EQ(disabled.textColor.GetFirstColor().r, 128) << ":disabled must still override what it declares";
     }
 
     TEST(StyleSheet, PseudoStateDoesNotAffectNormal)
@@ -962,8 +963,8 @@ namespace tachyon
             .btn:hover { font-size: 14; }
         )");
         ASSERT_NE(s.GetStyle("btn"), nullptr);
-        EXPECT_FLOAT_EQ(s.GetStyle("btn")->states[Style::kNormal].textStyle.fontSize, 12.0f);
-        EXPECT_FLOAT_EQ(s.GetStyle("btn")->states[Style::kHover].textStyle.fontSize,  14.0f);
+        EXPECT_FLOAT_EQ(s.GetStyle("btn")->states[ElementState::None].textStyle.fontSize, 12.0f);
+        EXPECT_FLOAT_EQ(s.GetStyle("btn")->states[ElementState::Hover].textStyle.fontSize,  14.0f);
     }
 
     TEST(StyleSheet, LayoutPropertiesNotStateSpecific)
@@ -984,7 +985,7 @@ namespace tachyon
         EXPECT_TRUE(s.HasErrors());
         // color should still be parsed after the bad property
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color.r, 255);
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor().r, 255);
     }
 
     TEST(StyleSheet, UnknownColorIsError)
@@ -1049,11 +1050,11 @@ namespace tachyon
         const Style& btn = *s.GetStyle("button");
 
         // Base state
-        EXPECT_TRUE(GradientColorEq(btn.states[Style::kNormal].backgroundColor.gradient, 0, RGB(0x3a,0x3a,0x3a)));
-        EXPECT_EQ(btn.states[Style::kNormal].textStyle.color.r, 0xff);
-        EXPECT_FLOAT_EQ(btn.states[Style::kNormal].textStyle.fontSize, 14.0f);
-        EXPECT_EQ(btn.states[Style::kNormal].textStyle.weight, FontWeight::Bold);
-        EXPECT_EQ(btn.states[Style::kNormal].textStyle.family, FontFamily::SansSerif);
+        EXPECT_TRUE(GradientColorEq(btn.states[ElementState::None].backgroundColor.gradient, 0, RGB(0x3a,0x3a,0x3a)));
+        EXPECT_EQ(btn.states[ElementState::None].textColor.GetFirstColor().r, 0xff);
+        EXPECT_FLOAT_EQ(btn.states[ElementState::None].textStyle.fontSize, 14.0f);
+        EXPECT_EQ(btn.states[ElementState::None].textStyle.weight, FontWeight::Bold);
+        EXPECT_EQ(btn.states[ElementState::None].textStyle.family, FontFamily::SansSerif);
         EXPECT_EQ(btn.padding.top, 4u); EXPECT_EQ(btn.padding.right, 8u);
         EXPECT_EQ(btn.borderWidths.top, 1u);
         EXPECT_EQ(btn.borderRadius.topLeft, 4u);
@@ -1065,13 +1066,13 @@ namespace tachyon
         EXPECT_EQ(btn.overflowY, Overflow::Hidden);
 
         // Hover state
-        EXPECT_TRUE(GradientColorEq(btn.states[Style::kHover].backgroundColor.gradient, 0, RGB(0x4a,0x4a,0x4a)));
+        EXPECT_TRUE(GradientColorEq(btn.states[ElementState::Hover].backgroundColor.gradient, 0, RGB(0x4a,0x4a,0x4a)));
 
         // Active state
-        EXPECT_TRUE(GradientColorEq(btn.states[Style::kActive].backgroundColor.gradient, 0, RGB(0x2a,0x2a,0x2a)));
+        EXPECT_TRUE(GradientColorEq(btn.states[ElementState::Active].backgroundColor.gradient, 0, RGB(0x2a,0x2a,0x2a)));
 
         // Disabled state
-        EXPECT_EQ(btn.states[Style::kDisabled].textStyle.color.r, 0x88);
+        EXPECT_EQ(btn.states[ElementState::Disabled].textColor.GetFirstColor().r, 0x88);
     }
 
     // ============================================================================
@@ -1116,7 +1117,7 @@ namespace tachyon
         )");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& c = s.GetStyle("a")->states[Style::kNormal].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 0xaa);
         EXPECT_EQ(c.g, 0xbb);
         EXPECT_EQ(c.b, 0xcc);
@@ -1130,7 +1131,7 @@ namespace tachyon
         )");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& bg = s.GetStyle("a")->states[Style::kNormal].backgroundColor;
+        const auto& bg = s.GetStyle("a")->states[ElementState::None].backgroundColor;
         EXPECT_EQ(bg.type, ColorType::SolidColor);
         EXPECT_TRUE(GradientColorEq(bg.gradient, 0, RGB(0x33, 0x66, 0x99)));
     }
@@ -1151,7 +1152,7 @@ namespace tachyon
         )");
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
-        const auto& bg = s.GetStyle("a")->states[Style::kNormal].backgroundColor;
+        const auto& bg = s.GetStyle("a")->states[ElementState::None].backgroundColor;
         EXPECT_EQ(bg.type, ColorType::LinearGradient);
         EXPECT_GE(bg.gradient.stopCount, 2);
     }
@@ -1431,7 +1432,7 @@ namespace tachyon
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
         // Selection state (index 17) should have the color set
-        auto& c = s.GetStyle("a")->states[Style::kSelection].textStyle.color;
+        const auto c = s.GetStyle("a")->states[ElementState::Selection].textColor.GetFirstColor();
         EXPECT_EQ(c.r, 255); EXPECT_EQ(c.g, 0); EXPECT_EQ(c.b, 0);
     }
 
@@ -1455,10 +1456,10 @@ namespace tachyon
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
         // State 0 (normal, no hover) -> should have red
-        auto& c0 = s.GetStyle("a")->states[0].textStyle.color;
+        const auto c0 = s.GetStyle("a")->states[0].textColor.GetFirstColor();
         EXPECT_EQ(c0.r, 255); EXPECT_EQ(c0.g, 0); EXPECT_EQ(c0.b, 0);
         // State kHover (2) -> should still have black (not overridden by :not(:hover))
-        auto& ch = s.GetStyle("a")->states[Style::kHover].textStyle.color;
+        const auto ch = s.GetStyle("a")->states[ElementState::Hover].textColor.GetFirstColor();
         EXPECT_EQ(ch.r, 0); EXPECT_EQ(ch.g, 0); EXPECT_EQ(ch.b, 0);
     }
 
@@ -1472,10 +1473,10 @@ namespace tachyon
         EXPECT_FALSE(s.HasErrors());
         ASSERT_NE(s.GetStyle("a"), nullptr);
         // State kActive (1) -> active set, hover not set -> green
-        auto& ca = s.GetStyle("a")->states[Style::kActive].textStyle.color;
+        const auto ca = s.GetStyle("a")->states[ElementState::Active].textColor.GetFirstColor();
         EXPECT_EQ(ca.r, 0); EXPECT_EQ(ca.g, 255); EXPECT_EQ(ca.b, 0);
         // State kActive|kHover (3) -> active set, hover set -> should be black (not matched by :not(:hover))
-        auto& cah = s.GetStyle("a")->states[Style::kActive | Style::kHover].textStyle.color;
+        const auto cah = s.GetStyle("a")->states[ElementState::Active | ElementState::Hover].textColor.GetFirstColor();
         EXPECT_EQ(cah.r, 0); EXPECT_EQ(cah.g, 0); EXPECT_EQ(cah.b, 0);
     }
 
@@ -1553,20 +1554,20 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { box-shadow: 2px -3px 8px 1px rgba(16, 24, 40, .5); }");
         ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
-        const BoxShadow& b = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        const BoxShadow& b = s.GetStyle("a")->states[ElementState::None].boxShadow[0];
         EXPECT_EQ(b.x, 2);
         EXPECT_EQ(b.y, -3);
         EXPECT_EQ(b.blur, 8);
         EXPECT_EQ(b.spread, 1);
         EXPECT_EQ(b.color, RGB(16, 24, 40, 128));
-        EXPECT_TRUE(s.GetStyle("a")->states[Style::kNormal].boxShadow[1].IsNone());
+        EXPECT_TRUE(s.GetStyle("a")->states[ElementState::None].boxShadow[1].IsNone());
     }
 
     TEST(StyleSheet, BoxShadowColorMayComeFirstAndBlurIsOptional)
     {
         auto s = ParseStyleSheet(".a { box-shadow: #FF0000 0 1px; }");
         ASSERT_FALSE(s.HasErrors());
-        const BoxShadow& b = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        const BoxShadow& b = s.GetStyle("a")->states[ElementState::None].boxShadow[0];
         EXPECT_EQ(b.y, 1);
         EXPECT_EQ(b.blur, 0);
         EXPECT_EQ(b.color, RGB(255, 0, 0));
@@ -1581,11 +1582,11 @@ namespace tachyon
         )");
         ASSERT_FALSE(s.HasErrors());
         const Style* a = s.GetStyle("a");
-        EXPECT_EQ(a->states[Style::kNormal].boxShadow[0].spread, 3);
-        EXPECT_EQ(a->states[Style::kNormal].boxShadow[1].blur, 20);
-        EXPECT_TRUE(a->states[Style::kHover].boxShadow[0].IsNone());
-        EXPECT_TRUE(a->states[Style::kHover].boxShadow[1].IsNone());
-        EXPECT_FALSE(a->states[Style::kFocus].boxShadow[0].IsNone());
+        EXPECT_EQ(a->states[ElementState::None].boxShadow[0].spread, 3);
+        EXPECT_EQ(a->states[ElementState::None].boxShadow[1].blur, 20);
+        EXPECT_TRUE(a->states[ElementState::Hover].boxShadow[0].IsNone());
+        EXPECT_TRUE(a->states[ElementState::Hover].boxShadow[1].IsNone());
+        EXPECT_FALSE(a->states[ElementState::Focused].boxShadow[0].IsNone());
     }
 
     // Palettes keep shadows in variables: one layer, none, or a color for a layer.
@@ -1602,14 +1603,14 @@ namespace tachyon
             .c { box-shadow: 0 0 0 3px var(--ring-color), var(--shadow); }
         )");
         ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
-        const BoxShadow& a = s.GetStyle("a")->states[Style::kNormal].boxShadow[0];
+        const BoxShadow& a = s.GetStyle("a")->states[ElementState::None].boxShadow[0];
         EXPECT_EQ(a.y, 4);
         EXPECT_EQ(a.blur, 14);
         EXPECT_EQ(a.color, RGB(16, 24, 40, 26));
-        EXPECT_TRUE(s.GetStyle("b")->states[Style::kNormal].boxShadow[0].IsNone());
+        EXPECT_TRUE(s.GetStyle("b")->states[ElementState::None].boxShadow[0].IsNone());
         const Style* c = s.GetStyle("c");
-        EXPECT_EQ(c->states[Style::kNormal].boxShadow[0].color, RGB(0x6B, 0x9B, 0xFF, 0x4D));
-        EXPECT_EQ(c->states[Style::kNormal].boxShadow[1].blur, 14);
+        EXPECT_EQ(c->states[ElementState::None].boxShadow[0].color, RGB(0x6B, 0x9B, 0xFF, 0x4D));
+        EXPECT_EQ(c->states[ElementState::None].boxShadow[1].blur, 14);
     }
 
     TEST(StyleSheet, UnsupportedBoxShadowsAreErrors)
@@ -1638,7 +1639,7 @@ namespace tachyon
         const Style* a = s.GetStyle("a");
         EXPECT_EQ(a->focusRing.spread, 3);
         EXPECT_EQ(a->focusRing.color, RGB(0, 0, 255));
-        EXPECT_EQ(a->states[Style::kFocus].boxShadow[0].blur, 2) << ":focus keeps its own shadows";
+        EXPECT_EQ(a->states[ElementState::Focused].boxShadow[0].blur, 2) << ":focus keeps its own shadows";
     }
 
     TEST(StyleSheet, FocusVisibleTakesOneBoxShadowAndNoOtherState)
@@ -1681,7 +1682,7 @@ namespace tachyon
     {
         auto s = ParseStyleSheet(".a { color: rgba(0, 0, 0, .5); }");
         ASSERT_FALSE(s.HasErrors());
-        EXPECT_EQ(s.GetStyle("a")->states[Style::kNormal].textStyle.color, RGB(0, 0, 0, 128));
+        EXPECT_EQ(s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor(), RGB(0, 0, 0, 128));
     }
 
     // ============================================================================
@@ -1758,9 +1759,9 @@ namespace tachyon
         )");
         ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
         const ChildStyles& c = s.childStyles.at("a");
-        EXPECT_TRUE(GradientColorEq(c.first.states[Style::kNormal].backgroundColor.gradient, 0, RGB(0, 0, 0)));
-        EXPECT_TRUE(GradientColorEq(c.first.states[Style::kHover].backgroundColor.gradient,  0, RGB(255, 0, 0)));
-        EXPECT_TRUE(GradientColorEq(c.last.states[Style::kHover].backgroundColor.gradient,   0, RGB(0, 0, 0)));
+        EXPECT_TRUE(GradientColorEq(c.first.states[ElementState::None].backgroundColor.gradient, 0, RGB(0, 0, 0)));
+        EXPECT_TRUE(GradientColorEq(c.first.states[ElementState::Hover].backgroundColor.gradient,  0, RGB(255, 0, 0)));
+        EXPECT_TRUE(GradientColorEq(c.last.states[ElementState::Hover].backgroundColor.gradient,   0, RGB(0, 0, 0)));
     }
 
     TEST(StyleSheet, ChildRulesOnlyTakeBoxProperties)
@@ -1769,7 +1770,7 @@ namespace tachyon
         EXPECT_EQ(s.errors.size(), 2u);
         const ChildStyles& c = s.childStyles.at("a");
         EXPECT_EQ(c.first.padding.top, 6u);   // the box property is still taken
-        EXPECT_EQ(c.first.states[Style::kNormal].textStyle.color, s.GetStyle("a")->states[Style::kNormal].textStyle.color);
+        EXPECT_EQ(c.first.states[ElementState::None].textColor.GetFirstColor(), s.GetStyle("a")->states[ElementState::None].textColor.GetFirstColor());
         EXPECT_EQ(c.first.layoutData.width, s.GetStyle("a")->layoutData.width);
 
         for (const char* src : { ".a:first-child { font-size: 20; }",
@@ -1798,8 +1799,8 @@ namespace tachyon
         )");
         ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
         const Style& a = *s.GetStyle("a");
-        const BoxShadow& first  = a.states[Style::kNormal].textShadow[0];
-        const BoxShadow& second = a.states[Style::kNormal].textShadow[1];
+        const BoxShadow& first  = a.states[ElementState::None].textShadow[0];
+        const BoxShadow& second = a.states[ElementState::None].textShadow[1];
         EXPECT_EQ(first.x, 1);
         EXPECT_EQ(first.y, 2);
         EXPECT_EQ(first.blur, 3u);
@@ -1808,16 +1809,16 @@ namespace tachyon
         EXPECT_EQ(second.blur, 0u);
         EXPECT_EQ(second.color, RGB(0, 0, 255));
         // A box-shadow is a property of its own.
-        EXPECT_TRUE(a.states[Style::kNormal].boxShadow[0].IsNone());
+        EXPECT_TRUE(a.states[ElementState::None].boxShadow[0].IsNone());
 
-        const BoxShadow& glow = a.states[Style::kHover].textShadow[0];
+        const BoxShadow& glow = a.states[ElementState::Hover].textShadow[0];
         EXPECT_EQ(glow.x, 0);
         EXPECT_EQ(glow.blur, 6u);
         EXPECT_EQ(glow.color, RGB(0, 255, 0));
-        EXPECT_TRUE(a.states[Style::kHover].textShadow[1].IsNone());
+        EXPECT_TRUE(a.states[ElementState::Hover].textShadow[1].IsNone());
 
-        EXPECT_EQ(s.GetStyle("b")->states[Style::kNormal].textShadow[0].blur, 0u);
-        EXPECT_TRUE(s.GetStyle("b")->states[Style::kActive].textShadow[0].IsNone());
+        EXPECT_EQ(s.GetStyle("b")->states[ElementState::None].textShadow[0].blur, 0u);
+        EXPECT_TRUE(s.GetStyle("b")->states[ElementState::Active].textShadow[0].IsNone());
     }
 
     TEST(StyleSheet, TextShadowErrors)

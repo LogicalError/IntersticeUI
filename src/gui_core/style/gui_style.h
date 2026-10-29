@@ -534,6 +534,11 @@ namespace tachyon
         void SetAnimSpeed(float x, float y = 0.0f);
         /// The 2x3 gradient transform as floats.
         float3x2 GetTransformation() const;
+        /// The first stop's color, which is all of a SolidColor; transparent without stops.
+        color4b GetFirstColor() const noexcept
+        {
+            return gradient.stopCount != 0 ? gradient.stops[0].GetColor4b() : color4b{ 0, 0, 0, 0 };
+        }
 
         /// Bakes the GPU-facing style and acquires its atlas slot. The caller owns
         /// outHandle and must Release it (or hand it to RegisterVisualColorStyle).
@@ -643,8 +648,11 @@ namespace tachyon
 
         ColorStyle backgroundColor {};  ///< CSS: background
         ColorStyle borderColors[4] {};  ///< [0]=top, [1]=right, [2]=bottom, [3]=left
-        ColorStyle textColor {};        ///< CSS: color; when it has no stops, textStyle.color is used
+        ColorStyle textColor {};        ///< CSS: color; none = transparent
         ColorStyle iconColor {};        ///< -tachyon-icon-color; none = the text color
+        /// CSS: text-<under|bottom|over|through>line-color, in that order (see
+        /// DecorationLine); none = the text color.
+        ColorStyle decorationColors[4] {};
         BoxShadow  boxShadow[kMaxBoxShadows] {}; ///< CSS: box-shadow; the first is drawn on top
         /// CSS: text-shadow, under the text, its decorations and its icon; the first is drawn
         /// on top. No spread, never inset.
@@ -667,21 +675,27 @@ namespace tachyon
         static constexpr int16_t kAuto = -1;
 
         /// @name State slots
-        /// Indices into states: a combination of the ElementState bits Active, Hover,
-        /// Focused, Selected and Selection; Disabled has a slot of its own.
-        ///@{
-        static constexpr int kNormal    = 0;
-        static constexpr int kActive    = 1;
-        static constexpr int kHover     = 2;
-        static constexpr int kFocus     = 4;
-        static constexpr int kSelected  = 8;
-        static constexpr int kSelection = 16; ///< text-selection highlight; combines with the bits above (16..31)
-        static constexpr int kDisabled  = 32; ///< exclusive: slot 32 only, never combined
+        /// The state slots: one per combination of the ElementState bits Active, Hover,
+        /// Focused, Selected and Selection (0 to 31), and Disabled alone (32).
+        static constexpr int kStateCount = int(ElementState::Disabled) + 1;
 
-        static constexpr int kStateCount = kDisabled + 1;
-        ///@}
+        /// A style's states, indexed by ElementState (or by slot number).
+        struct States
+        {
+            StyleState slots[kStateCount] {};
 
-        StyleState      states[kStateCount] {}; ///< one per state slot (kNormal ... kDisabled)
+            StyleState&       operator[](ElementState state)       { return slots[size_t(state)]; }
+            const StyleState& operator[](ElementState state) const { return slots[size_t(state)]; }
+            StyleState&       operator[](int slot)                 { return slots[slot]; }
+            const StyleState& operator[](int slot) const           { return slots[slot]; }
+
+            StyleState*       begin()       { return slots; }
+            StyleState*       end()         { return slots + kStateCount; }
+            const StyleState* begin() const { return slots; }
+            const StyleState* end() const   { return slots + kStateCount; }
+        };
+
+        States          states {};              ///< one per state slot
         TextLayoutStyle textLayoutStyle {};     ///< shared by all states
 
         BoxEdges        margin{};       ///< CSS px
@@ -730,6 +744,7 @@ namespace tachyon
         BoxEdges        borderWidths{}; ///< pixels
 
         LayoutData      layoutData{};   ///< flex, grid and size properties, in pixels
+        TextLayoutStyle textLayoutStyle{}; ///< see Style::textLayoutStyle
 
         uint16_t        iconTextGap = 0; ///< space between icon and text, pixels
         uint16_t        iconSize    = 0; ///< icon size in pixels; 0 = its natural size
@@ -755,7 +770,7 @@ namespace tachyon
                                  ld.width, ld.height, ld.minWidth, ld.maxWidth, ld.minHeight, ld.maxHeight,
                                  iconTextGap, iconSize, iconOffsetY,
                                  uint8_t(display), uint8_t(visibility), uint8_t(overflowX), uint8_t(overflowY),
-                                 uint8_t(alignSelf), cursor);
+                                 uint8_t(alignSelf), cursor, textLayoutStyle.GetHashCode());
         }
 
         bool operator==(const LayoutStyle &other) const noexcept = default;
@@ -943,13 +958,16 @@ namespace tachyon
         }
     };
 
-    /// The text part of one state of a registered Style, in pixels.
+    /// The text part of one state of a registered Style, in pixels. How the text block sits
+    /// in its box is LayoutStyle::textLayoutStyle.
     struct VisualTextStyle
     {
         TextStyle             textStyle {};       ///< in pixels
-        TextLayoutStyle       textLayoutStyle {}; ///< shared by all states
         VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid; ///< registered text color
         VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid; ///< the text color unless set
+        /// Per DecorationLine; the text color unless set.
+        VisualColorStyleIndex decorationColorIndex[4] { VisualColorStyleIndex::Invalid, VisualColorStyleIndex::Invalid,
+                                                        VisualColorStyleIndex::Invalid, VisualColorStyleIndex::Invalid };
         uint16_t              iconTextGap = 0; ///< space between icon and text, pixels
         uint16_t              iconSize    = 0; ///< icon size in pixels; 0 = its natural size
         int16_t               iconOffsetY = 0; ///< vertical nudge of the icon in pixels; positive = up
@@ -959,8 +977,8 @@ namespace tachyon
         uint64_t GetHashCode() const noexcept
         {
             return Hash::Combine(Hash::CalculateBytes(textShadows, sizeof(textShadows)),
+                                 Hash::CalculateBytes(decorationColorIndex, sizeof(decorationColorIndex)),
                                  textStyle.GetHashCode(),
-                                 textLayoutStyle.GetHashCode(),
                                  Hash::Calculate(textColorIndex),
                                  Hash::Calculate(iconColorIndex),
                                  Hash::Calculate(iconTextGap),
@@ -972,9 +990,9 @@ namespace tachyon
         bool operator==(const VisualTextStyle& other) const noexcept
         {
             return textStyle         == other.textStyle &&
-                   textLayoutStyle   == other.textLayoutStyle &&
                    textColorIndex    == other.textColorIndex &&
                    iconColorIndex    == other.iconColorIndex &&
+                   std::ranges::equal(decorationColorIndex, other.decorationColorIndex) &&
                    iconTextGap       == other.iconTextGap &&
                    iconSize          == other.iconSize &&
                    iconOffsetY       == other.iconOffsetY &&

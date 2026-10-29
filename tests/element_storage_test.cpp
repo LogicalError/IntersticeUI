@@ -897,7 +897,7 @@ namespace tachyon
     {
         // An element's own text, as a text override gives it.
         Style redText;
-        redText.states[Style::kNormal].textStyle.color = { 255, 0, 0, 255 };
+        redText.states[ElementState::None].textColor = ColorStyle::Create(color4b{ 255, 0, 0, 255 });
         StyleRef textVariant = grouped;
         textVariant.visualTextStyleIndex = styleManager.Register(redText).visualTextStyleIndex;
         ASSERT_NE(textVariant.visualTextStyleIndex, grouped.visualTextStyleIndex);

@@ -624,23 +624,23 @@ namespace tachyon
                 boxStyle.states[i].backgroundColor = normal_border_color_style;
             }
 
-            StyleState& normalStyle = boxStyle.states[Style::kNormal];
+            StyleState& normalStyle = boxStyle.states[ElementState::None];
             normalStyle.SetBorderColor(normal_border_color_style);
             normalStyle.backgroundColor = normal_background_color_style;
 
-            StyleState& hoverStyle = boxStyle.states[Style::kHover];
+            StyleState& hoverStyle = boxStyle.states[ElementState::Hover];
             hoverStyle.SetBorderColor(hover_border_color_style);
             hoverStyle.backgroundColor = normal_background_color_style;
 
-            StyleState& activeStyle = boxStyle.states[Style::kActive];
+            StyleState& activeStyle = boxStyle.states[ElementState::Active];
             activeStyle.SetBorderColor(active_border_color_style);
             activeStyle.backgroundColor = normal_background_color_style;
 
-            StyleState& focusStyle = boxStyle.states[Style::kFocus];
+            StyleState& focusStyle = boxStyle.states[ElementState::Focused];
             focusStyle.SetBorderColor(active_border_color_style);
             focusStyle.backgroundColor = normal_background_color_style;
 
-            StyleState& selectedStyle = boxStyle.states[Style::kSelected];
+            StyleState& selectedStyle = boxStyle.states[ElementState::Selected];
             selectedStyle.SetBorderColor(normal_border_color_style);
             selectedStyle.backgroundColor = normal_background_color_style;
         }
@@ -708,15 +708,15 @@ namespace tachyon
             auto newStyle = boxStyle;
             newStyle.borderRadius = fullRadius;
             if (colorTypes[i] == ColorType::SolidColor)
-                newStyle.states[Style::kNormal].backgroundColor = normal_background_color_style;
+                newStyle.states[ElementState::None].backgroundColor = normal_background_color_style;
             else
                 if (colorTypes[i] == ColorType::InterpolatedTriangle)
-                    newStyle.states[Style::kNormal].backgroundColor = triangleFillColorStyle;
+                    newStyle.states[ElementState::None].backgroundColor = triangleFillColorStyle;
                 else
                     if (colorTypes[i] == ColorType::InterpolatedBox)
-                        newStyle.states[Style::kNormal].backgroundColor = quadFillColorStyle;
+                        newStyle.states[ElementState::None].backgroundColor = quadFillColorStyle;
                     else
-                        newStyle.states[Style::kNormal].backgroundColor = ColorStyle::Create(sunset, colorTypes[i]);
+                        newStyle.states[ElementState::None].backgroundColor = ColorStyle::Create(sunset, colorTypes[i]);
 
             newStyle.textureIndex = checkerboardIndex;
 
@@ -730,15 +730,15 @@ namespace tachyon
             newStyle.borderWidths = fullBorder;
             newStyle.borderRadius = fullRadius;
             if (colorTypes[i] == ColorType::SolidColor)
-                newStyle.states[Style::kNormal].SetBorderColor(normal_border_color_style);
+                newStyle.states[ElementState::None].SetBorderColor(normal_border_color_style);
             else
                 if (colorTypes[i] == ColorType::InterpolatedTriangle)
-                    newStyle.states[Style::kNormal].backgroundColor = triangleFillColorStyle;
+                    newStyle.states[ElementState::None].backgroundColor = triangleFillColorStyle;
                 else
                     if (colorTypes[i] == ColorType::InterpolatedBox)
-                        newStyle.states[Style::kNormal].backgroundColor = quadFillColorStyle;
+                        newStyle.states[ElementState::None].backgroundColor = quadFillColorStyle;
                     else
-                        newStyle.states[Style::kNormal].SetBorderColor(ColorStyle::Create(sunset, colorTypes[i]));
+                        newStyle.states[ElementState::None].SetBorderColor(ColorStyle::Create(sunset, colorTypes[i]));
 
             newStyle.textureIndex = checkerboardIndex;
 

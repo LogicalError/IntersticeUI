@@ -102,7 +102,7 @@ namespace tachyon
             auto textStyle           = m_skribidiContext->styleManager->GetVisualTextStyle(entry->styleIndex.visualTextStyleIndex, entry->state);
             auto selectedTextStyle = m_skribidiContext->styleManager->GetSelectionVisualTextStyle(entry->styleIndex.visualTextStyleIndex, entry->state);
             m_skribidiContext->editor = create_editor(m_skribidiContext, width,
-                                                      &textStyle->textLayoutStyle,
+                                                      &entry->textLayoutStyle,
                                                       &textStyle->textStyle,
                                                       &selectedTextStyle->textStyle,
                                                       keepEdit ? std::string_view(keptText) : std::string_view(entry->text));
@@ -290,7 +290,7 @@ namespace tachyon
                                                         view_transform_rect(&ctx->view, pat_quad.geom),
                                                         pat_quad.pattern, pat_quad.texture,
                                                         1.0f / pat_quad.scale, bpp, mode,
-                                                        isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
+                                                        isLinkDeco ? runColorIndex(paint) : entry->DecorationColor((skb_decoration_position_t)decoration->line.position),
                                                         (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
                                                         clipRect);
                         }
@@ -348,7 +348,7 @@ namespace tachyon
                     }
                 }
 
-                // Draw through lines.
+                // Draw overlines.
                 for (int32_t i = 0; i < decorations_count; i++)
                 {
                     const skb_decoration_t* decoration = &decorations[i];
@@ -373,7 +373,7 @@ namespace tachyon
                                                         view_transform_rect(&ctx->view, pat_quad.geom),
                                                         pat_quad.pattern, pat_quad.texture,
                                                         1.0f / pat_quad.scale, bpp, mode,
-                                                        entry->textColorIndex,
+                                                        entry->DecorationColor((skb_decoration_position_t)decoration->line.position),
                                                         (uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
                                                         clipRect);
                         }

@@ -40,7 +40,7 @@ namespace tachyon
         Style s1{};
         s1.margin.top = 2;
         s1.padding.left = 3;
-        s1.states[Style::kNormal].backgroundColor.gradient = MakeTwoStopGradient();
+        s1.states[ElementState::None].backgroundColor.gradient = MakeTwoStopGradient();
 
         // Register first time
         auto idx1 = sm.Register(s1);
@@ -70,9 +70,9 @@ namespace tachyon
 
         // Change visual (background) -> new visual index
         Style s3 = s1;
-        s3.states[Style::kNormal].backgroundColor.gradient = MakeTwoStopGradient();
+        s3.states[ElementState::None].backgroundColor.gradient = MakeTwoStopGradient();
         // modify a stop to produce different visual (toggle color)
-        auto& stop = s3.states[Style::kNormal].backgroundColor.gradient.stops[0];
+        auto& stop = s3.states[ElementState::None].backgroundColor.gradient.stops[0];
         auto c = stop.GetColor4f();
         c.r = 0.1f;
         stop.SetColor(c);
@@ -86,12 +86,12 @@ namespace tachyon
         StyleManager sm(gm);
 
         Style s{};
-        s.states[Style::kNormal].backgroundColor.gradient = MakeTwoStopGradient();
-        s.states[Style::kNormal].borderColors[0].gradient = MakeTwoStopGradient();
-        s.states[Style::kNormal].borderColors[1].gradient = MakeTwoStopGradient();
-        s.states[Style::kNormal].borderColors[2].gradient = MakeTwoStopGradient();
-        s.states[Style::kNormal].borderColors[3].gradient = MakeTwoStopGradient();
-        s.states[Style::kNormal].textColor.gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].backgroundColor.gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].borderColors[0].gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].borderColors[1].gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].borderColors[2].gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].borderColors[3].gradient = MakeTwoStopGradient();
+        s.states[ElementState::None].textColor.gradient = MakeTwoStopGradient();
 
         auto idx = sm.Register(s);
         ASSERT_GE(int(idx.visualBoxStyleIndex), 0);
@@ -172,7 +172,7 @@ namespace tachyon
             base.states[i].textStyle.fontSize = 14.0f;
             base.states[i].textStyle.fontId   = FontIDFromName("Inter");
         }
-        base.states[Style::kHover].textStyle.fontSize = 15.0f;
+        base.states[ElementState::Hover].textStyle.fontSize = 15.0f;
         const StyleRef ref = sm.Register(base);
 
         EXPECT_EQ(sm.WithTextOverride(ref, {}), ref) << "nothing to override";
@@ -383,7 +383,7 @@ namespace tachyon
         StyleManager sm(gm);
         Style plain{};
         Style shadowed{};
-        shadowed.states[Style::kNormal].boxShadow[0] = BoxShadow{ .y = 1, .blur = 2, .color = { 0, 0, 0, 40 } };
+        shadowed.states[ElementState::None].boxShadow[0] = BoxShadow{ .y = 1, .blur = 2, .color = { 0, 0, 0, 40 } };
         EXPECT_NE(sm.Register(plain).visualBoxStyleIndex, sm.Register(shadowed).visualBoxStyleIndex);
     }
 
@@ -392,7 +392,7 @@ namespace tachyon
     {
         GradientManager gm(16);
         StyleManager    sm(gm);
-        auto opaque = [&](const ColorStyle& background, int state = Style::kNormal) {
+        auto opaque = [&](const ColorStyle& background, int state = int(ElementState::None)) {
             Style s{};
             for (StyleState& st : s.states)
                 st.backgroundColor = background;
@@ -410,15 +410,15 @@ namespace tachyon
 
         // Per state: opaque only while hovered.
         Style s{};
-        s.states[Style::kHover].backgroundColor = ColorStyle::Create(color4b{ 10, 20, 30, 255 });
+        s.states[ElementState::Hover].backgroundColor = ColorStyle::Create(color4b{ 10, 20, 30, 255 });
         const StyleRef ref = sm.Register(s);
         const uint32_t base = (uint32_t(ref.visualBoxStyleIndex) - 1) * Style::kStateCount;
-        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + Style::kNormal));
-        EXPECT_TRUE (sm.IsBoxBackgroundOpaque(base + Style::kHover));
+        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + int(ElementState::None)));
+        EXPECT_TRUE (sm.IsBoxBackgroundOpaque(base + int(ElementState::Hover)));
         EXPECT_FALSE(sm.IsBoxBackgroundOpaque(1000000)) << "out of range";
 
         sm.ClearAll();
-        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + Style::kHover)) << "cleared with the styles";
+        EXPECT_FALSE(sm.IsBoxBackgroundOpaque(base + int(ElementState::Hover))) << "cleared with the styles";
     }
 
     // text-shadow goes with the state's text style, at the UI scale, its color registered.
@@ -429,8 +429,8 @@ namespace tachyon
         sm.SetUIScale(2.0f);
 
         Style s{};
-        s.states[Style::kHover].textShadow[0] = BoxShadow{ .x = 1, .y = -2, .blur = 3, .color = { 255, 0, 0, 255 } };
-        s.states[Style::kHover].textShadow[1] = BoxShadow{ .blur = 4, .color = { 0, 0, 255, 128 } };
+        s.states[ElementState::Hover].textShadow[0] = BoxShadow{ .x = 1, .y = -2, .blur = 3, .color = { 255, 0, 0, 255 } };
+        s.states[ElementState::Hover].textShadow[1] = BoxShadow{ .blur = 4, .color = { 0, 0, 255, 128 } };
         const StyleRef ref = sm.Register(s);
 
         const VisualTextStyle* normal = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::None);
@@ -449,5 +449,84 @@ namespace tachyon
 
         // Text styles that differ only in their shadows aren't shared.
         EXPECT_NE(sm.Register(Style{}).visualTextStyleIndex, ref.visualTextStyleIndex);
+    }
+
+    // A decoration line without a color of its own is drawn in the text color; a state
+    // without a text color draws it transparent.
+    TEST(StyleManagerTest, DecorationColorsArePerStateAndDefaultToTheTextColor)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+        const color4b red{ 255, 0, 0, 255 }, green{ 0, 255, 0, 255 };
+
+        Style s{};
+        s.states[ElementState::None].textColor = ColorStyle::Create(red);
+        s.states[ElementState::Hover].textColor = ColorStyle::Create(red);
+        s.states[ElementState::Hover].decorationColors[size_t(DecorationLine::Over)] = ColorStyle::Create(green);
+        const StyleRef ref = sm.Register(s);
+
+        const VisualTextStyle* normal = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::None);
+        const VisualTextStyle* hover  = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::Hover);
+        const VisualTextStyle* active = sm.GetVisualTextStyle(ref.visualTextStyleIndex, ElementState::Active);
+        ASSERT_TRUE(normal && hover && active);
+        EXPECT_EQ(normal->textColorIndex, sm.RegisterColorStyle(ColorStyle::Create(red)));
+        for (VisualColorStyleIndex line : normal->decorationColorIndex)
+            EXPECT_EQ(line, normal->textColorIndex);
+        EXPECT_EQ(hover->decorationColorIndex[size_t(DecorationLine::Over)], sm.RegisterColorStyle(ColorStyle::Create(green)));
+        EXPECT_EQ(hover->decorationColorIndex[size_t(DecorationLine::Under)], hover->textColorIndex);
+        EXPECT_EQ(active->textColorIndex, sm.RegisterColorStyle(ColorStyle::Create(color4b{ 0, 0, 0, 0 })));
+
+        // Text styles that differ only in a decoration color aren't shared.
+        Style other = s;
+        other.states[ElementState::Hover].decorationColors[size_t(DecorationLine::Over)] = ColorStyle::Create(red);
+        EXPECT_NE(sm.Register(other).visualTextStyleIndex, ref.visualTextStyleIndex);
+    }
+
+    // A box drawn without a style (GPU box style 0) gets the fallback style, which is
+    // registered first, and again after ClearAll.
+    TEST(StyleManagerTest, TheFallbackStyleIsRegisteredFirst)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+
+        for (int pass = 0; pass < 2; ++pass)
+        {
+            const StyleRef fallback = sm.FallbackStyle();
+            EXPECT_EQ(fallback.layoutStyleIndex, LayoutStyleIndex(1)) << "pass " << pass;
+            EXPECT_EQ(fallback.visualBoxStyleIndex, VisualBoxStyleIndex(1)) << "pass " << pass;
+            ASSERT_NE(sm.GetLayoutStyle(fallback.layoutStyleIndex), nullptr);
+            EXPECT_EQ(sm.GetLayoutStyle(fallback.layoutStyleIndex)->padding, BoxEdges(10));
+
+            const VisualBoxStyle* normal = sm.GetVisualBoxStyleAt(0);
+            const VisualBoxStyle* hover  = sm.GetVisualBoxStyleAt(uint32_t(ElementState::Hover));
+            ASSERT_TRUE(normal && hover);
+            const VisualColorStyleIndex background = sm.RegisterColorStyle(ColorStyle::Create(color4b(101, 133, 149, 255)));
+            const VisualColorStyleIndex border     = sm.RegisterColorStyle(ColorStyle::Create(color4b(121, 153, 169, 255)));
+            EXPECT_EQ(normal->backgroundColorIndex, background);
+            EXPECT_EQ(normal->borderColorIndex[0], border);
+            EXPECT_EQ(hover->backgroundColorIndex, border);
+
+            EXPECT_NE(sm.Register(Style{}).layoutStyleIndex, LayoutStyleIndex(1));
+            sm.ClearAll();
+        }
+    }
+
+    // How text sits in its box is part of the layout style; the text style is shared.
+    TEST(StyleManagerTest, TheTextLayoutIsPartOfTheLayoutStyle)
+    {
+        GradientManager gm(16);
+        StyleManager sm(gm);
+
+        Style start{}, centered{};
+        centered.textLayoutStyle.horizontalAlignment = TextAlign::Center;
+        centered.textLayoutStyle.textWrapping        = TextWrap::Wrap;
+        const StyleRef a = sm.Register(start);
+        const StyleRef b = sm.Register(centered);
+        EXPECT_NE(a.layoutStyleIndex, b.layoutStyleIndex);
+        EXPECT_EQ(a.visualTextStyleIndex, b.visualTextStyleIndex);
+        ASSERT_NE(sm.GetLayoutStyle(b.layoutStyleIndex), nullptr);
+        EXPECT_EQ(sm.GetLayoutStyle(b.layoutStyleIndex)->textLayoutStyle, centered.textLayoutStyle);
+        EXPECT_EQ(sm.GetLayoutStyle(a.layoutStyleIndex)->textLayoutStyle, TextLayoutStyle{});
+        EXPECT_EQ(sm.Register(centered).layoutStyleIndex, b.layoutStyleIndex);
     }
 }

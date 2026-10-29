@@ -31,33 +31,6 @@ namespace tachyon
         BoxEdges   noBorder = { 0, 0, 0, 0 };
         BoxCorners noRadius = { 0, 0, 0, 0 };
 
-        // Used for boxes rendered with an invalid style index.
-        {
-            Style invalidStyle{};
-            invalidStyle.textLayoutStyle = tachyon::TextLayoutStyle
-            {
-                .textDirection = tachyon::TextDirection::Auto,
-                .textWrapping = tachyon::TextWrap::WordChar,
-                .horizontalAlignment = tachyon::TextAlign::Start,
-                .baseline = tachyon::TextBaseline::Middle
-            };
-            invalidStyle.borderWidths = noBorder;
-            invalidStyle.borderRadius = noRadius;
-            invalidStyle.margin = BoxEdges(2);
-            invalidStyle.SetOverflow(tachyon::Overflow::Hidden);
-            invalidStyle.padding = tachyon::BoxEdges(10);
-            auto normal_border_color_style = ColorStyle::Create(color4b(121, 153, 169, 255));
-            auto normal_background_color_style = ColorStyle::Create(color4b(101, 133, 149, 255));
-            for (int i = 0; i < Style::kStateCount; i++)
-            {
-                invalidStyle.states[i].SetBorderColor({});
-                invalidStyle.states[i].backgroundColor = normal_border_color_style;
-            }
-            invalidStyle.states[Style::kNormal].SetBorderColor(normal_border_color_style);
-            invalidStyle.states[Style::kNormal].backgroundColor = normal_background_color_style;
-            styleManager.Register(invalidStyle);
-        }
-
         {
             Style newStyle{};
             newStyle.textLayoutStyle = {};
@@ -289,8 +262,8 @@ namespace tachyon
         if (const auto* prop = sheet.GetCustomProperty("--scrim"); prop && prop->hasColor) scrim = prop->color;
         else                                                                                  scrim = color4b{ 0, 0, 0, 140 };
         if (const Style* link = sheet.GetStyle("link"))
-            linkStyle = LinkStyle{ .color      = link->states[Style::kNormal].textStyle.color,
-                                   .hoverColor = link->states[Style::kHover].textStyle.color,
+            linkStyle = LinkStyle{ .color      = link->states[ElementState::None].textColor.GetFirstColor(),
+                                   .hoverColor = link->states[ElementState::Hover].textColor.GetFirstColor(),
                                    .cursor     = link->cursor };
         else
             linkStyle = LinkStyle{};

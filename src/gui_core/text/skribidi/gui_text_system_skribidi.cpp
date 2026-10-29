@@ -313,36 +313,47 @@ namespace tachyon
 		{
 			entry->textColorIndex = colors->textColorIndex;
 			entry->iconColorIndex = colors->iconColorIndex;
+			std::ranges::copy(colors->decorationColorIndex, entry->decorationColorIndex);
 			std::ranges::copy(colors->textShadows, entry->textShadows);
 		}
 		state = state & ~ElementState::Selected;
-
-		if (entry->styleIndex == styleIndex &&
-            entry->state == state)
-		{
-			return; // No change
-		}
-
 		entry->styleIndex = styleIndex;
 		entry->state = state;
+
+		const VisualTextStyle* visualTextStyle = styleManager->GetVisualTextStyle(styleIndex.visualTextStyleIndex, state);
+		const LayoutStyle*     layoutStyle     = styleManager->GetLayoutStyle(styleIndex.layoutStyleIndex);
+		const VisualTextStyle  text       = visualTextStyle ? *visualTextStyle : VisualTextStyle{};
+		const TextLayoutStyle  textLayout = layoutStyle ? layoutStyle->textLayoutStyle : TextLayoutStyle{};
+
+		// Only what the text is measured and laid out from decides whether it's laid out again.
+		if (entry->styled &&
+			entry->textStyle       == text.textStyle &&
+			entry->textLayoutStyle == textLayout &&
+			entry->iconSide        == text.iconSide &&
+			entry->iconTextGap     == text.iconTextGap &&
+			entry->iconSize        == text.iconSize &&
+			entry->iconOffsetY     == text.iconOffsetY)
+		{
+			return;
+		}
+		entry->styled          = true;
+		entry->textStyle       = text.textStyle;
+		entry->textLayoutStyle = textLayout;
 
 		entry->baseMeasurement = {};
 		m_skribidiContext->ResetLayout(entry);
 
-
-		auto visualTextStyle = styleManager->GetVisualTextStyle(entry->styleIndex.visualTextStyleIndex, entry->state);
-		entry->layout_attribute_count = style_to_attributes(&visualTextStyle->textLayoutStyle, entry->layout_attributes, 0);
-		entry->text_attribute_count   = style_to_attributes(&visualTextStyle->textStyle, entry->text_attributes,
+		entry->layout_attribute_count = style_to_attributes(&textLayout, entry->layout_attributes, 0);
+		entry->text_attribute_count   = style_to_attributes(&text.textStyle, entry->text_attributes,
 		                                                    m_skribidiContext->PushDefaultLanguage(entry->text_attributes), m_skribidiContext->m_fontIdToFamilyId);
-		entry->lineHeight			  = std::max(1, static_cast<int32_t>(std::ceil(visualTextStyle->textStyle.CalcLineHeight())));
-		entry->iconSide				  = visualTextStyle->iconSide;
-		entry->iconTextGap			  = visualTextStyle->iconTextGap;
-		entry->iconSize				  = visualTextStyle->iconSize;
-		entry->iconOffsetY			  = visualTextStyle->iconOffsetY;
-		entry->horizontalAlignment	  = visualTextStyle->textLayoutStyle.horizontalAlignment;
-		entry->verticalAlignment	  = visualTextStyle->textLayoutStyle.verticalAlignment;
-		entry->textWrapping			  = visualTextStyle->textLayoutStyle.textWrapping;
-
+		entry->lineHeight			  = std::max(1, static_cast<int32_t>(std::ceil(text.textStyle.CalcLineHeight())));
+		entry->iconSide				  = text.iconSide;
+		entry->iconTextGap			  = text.iconTextGap;
+		entry->iconSize				  = text.iconSize;
+		entry->iconOffsetY			  = text.iconOffsetY;
+		entry->horizontalAlignment	  = textLayout.horizontalAlignment;
+		entry->verticalAlignment	  = textLayout.verticalAlignment;
+		entry->textWrapping			  = textLayout.textWrapping;
 	}
 
 	// -------------------- Font Registration --------------------
@@ -448,6 +459,11 @@ namespace tachyon
 	{
 		if (!m_skribidiContext) return 0;
 		return m_skribidiContext->m_registry.size() - m_skribidiContext->m_freeTextSlots.size();
+	}
+
+	uint64_t SkribidiTextSystem::LayoutsMade() const
+	{
+		return m_skribidiContext ? m_skribidiContext->layoutsMade : 0;
 	}
 
 	TextID SkribidiTextSystem::RegisterRichText(ID elementId, const std::span<ContentRun>& runs,
@@ -670,8 +686,10 @@ namespace tachyon
 		}
 
 		TACHYON_PROFILE_SCOPE("UpdateLayoutWhenNecessary");
-		m_skribidiContext->ResetLayout(entry);
-		entry->wrap_width = 0;
+		// Another width only replaces the wrapped layout; the base measurement doesn't depend on it.
+		if (entry->wrap_layout != nullptr)
+			skb_layout_destroy(entry->wrap_layout);
+		entry->wrapMeasurement = {};
 
 		entry->wrap_width = width;
 		entry->wrap_layout = m_skribidiContext->CreateLayout(entry, width, 16384);
@@ -973,7 +991,7 @@ namespace tachyon
 					decoRect,
 					pat_quad.pattern, pat_quad.texture,
 					1.0f / pat_quad.scale, bpp, mode,
-					isLinkDeco ? runColorIndex(paint) : entry->textColorIndex,
+					isLinkDeco ? runColorIndex(paint) : entry->DecorationColor((skb_decoration_position_t)decoration->line.position),
 					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
 					clipRect);
 			}
@@ -1064,7 +1082,7 @@ namespace tachyon
 					view_transform_rect(&ctx->view, pat_quad.geom),
 					pat_quad.pattern, pat_quad.texture,
 					1.0f / pat_quad.scale, bpp, mode,
-					entry->textColorIndex,
+					entry->DecorationColor((skb_decoration_position_t)decoration->line.position),
 					(uint32_t)skb_image_atlas_get_texture_user_data(ctx->atlas, pat_quad.texture_idx),
 					clipRect);
 			}

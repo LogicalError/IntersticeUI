@@ -74,6 +74,8 @@ namespace tachyon
         void ClearCache() override;
         /// Number of registered texts held, for diagnostics.
         size_t RegisteredTextCount() const;
+        /// Number of text layouts made so far, for diagnostics.
+        uint64_t LayoutsMade() const;
 
 
 

@@ -84,7 +84,8 @@ have the form `inset 0 0 0 <width> <color>`:
 ## Text decoration
 
 There are four lines: `underline`, `overline`, `throughline` and `bottomline`. Each has four
-properties, all per state; a line is drawn when its thickness is above 0.
+properties, all per state; a line is drawn when its thickness is above 0, in the text color
+unless it has a color of its own.
 
 | Property | Values | |
 | --- | --- | --- |

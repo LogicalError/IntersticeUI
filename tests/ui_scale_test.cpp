@@ -54,10 +54,9 @@ namespace tachyon
         const std::string_view files[] = { "styles.css", "showcase.css" };
         app.SetStyleFiles(files);
         ASSERT_TRUE(app.Initialize());
-        const VisualTextStyle* text = app.styleManager.GetVisualTextStyle(
-            app.theme.GetStyle("log-cell").visualTextStyleIndex, ElementState::None);
-        ASSERT_NE(text, nullptr);
-        EXPECT_EQ(text->textLayoutStyle.verticalAlignment, TextAlign::Center);
+        const LayoutStyle* layout = app.styleManager.GetLayoutStyle(app.theme.GetStyle("log-cell").layoutStyleIndex);
+        ASSERT_NE(layout, nullptr);
+        EXPECT_EQ(layout->textLayoutStyle.verticalAlignment, TextAlign::Center);
     }
 
     // A label group's width is CSS pixels: it follows a live scale change, and an

@@ -216,12 +216,21 @@ namespace tachyon
 		}
 	};
 
+	/// The decoration lines of a TextStyle; indexes StyleState::decorationColors.
+	enum class DecorationLine : uint8_t
+	{
+		Under,   ///< TextStyle::underLine
+		Bottom,  ///< TextStyle::bottomLine
+		Over,    ///< TextStyle::overLine
+		Through  ///< TextStyle::throughLine
+	};
+
 	/// One text decoration line (underline, overline, ...). Drawn only when thickness > 0.
-	/// CSS: text-<under|over|through|bottom>line-<color|thickness|offset|style>.
+	/// CSS: text-<under|over|through|bottom>line-<thickness|offset|style>; its color is
+	/// StyleState::decorationColors.
 	class TextDecoration
 	{
 	public:
-		tachyon::color4b	color = tachyon::color4b{ 0,0,0,0 }; ///< line color
 		uint16_t		thickness = 0; ///< line thickness in CSS px; 0 = no line
 		uint16_t		offset = 0;    ///< CSS px from the default position; grows down for under / bottom lines, up otherwise
 		DecorationStyle	style = DecorationStyle::Solid; ///< line style
@@ -239,18 +248,17 @@ namespace tachyon
 			}
 			return style     == other.style &&
 				   thickness == other.thickness &&
-				   offset    == other.offset &&
-				   color     == other.color;
+				   offset    == other.offset;
 		}
 	};
 
-	/// Font and paint of text; one per state of a Style. Metrics are in CSS px until
-	/// StyleManager::Register (or ToPixels) scales them to the UI.
+	/// What text is measured and laid out from: font, metrics and decoration lines. One per
+	/// state of a Style; the colors it's drawn in are StyleState::textColor and
+	/// StyleState::decorationColors, so a state that only recolors keeps the layout. Metrics
+	/// are in CSS px until StyleManager::Register (or ToPixels) scales them to the UI.
 	class TextStyle
 	{
 	public:
-		/// Solid text color (CSS: color); used when the state has no textColor of its own.
-		tachyon::color4b		  color          = tachyon::color4b{ 0,0,0,0 };
 		float				  fontSize       = 0;              ///< CSS: font-size, in CSS px
 		/// CSS: line-height, read per lineHeightType (by default a multiple of fontSize).
 		/// A fixed pitch, so a fallback font with tall metrics can't stretch a line.
@@ -276,7 +284,6 @@ namespace tachyon
 		bool operator==(const TextStyle& other) const noexcept
 		{
 			return family         == other.family &&
-				   color          == other.color &&
 				   fontSize       == other.fontSize &&
 				   weight         == other.weight &&
 				   style          == other.style &&
