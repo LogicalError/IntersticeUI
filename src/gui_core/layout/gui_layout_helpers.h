@@ -228,12 +228,22 @@ namespace tachyon
         /// places children from the far edge (row-/column-reverse), whose main
         /// start is that edge - so flex-end packs toward the near one.
         template <int axis, bool reverse> requires(axis == 0 || axis == 1)
-        static void JustifyChildren(std::span<ElementRect> childRects, 
+        static void JustifyChildren(std::span<ElementRect> childRects,
                                           JustifyContent justify, int16_t gap, const IntRect &parentContentRect,
                                           int totalContentSize, int totalChildrenInFlow)
         {
-            const int32_t freeSpace = parentContentRect.size[axis] - totalContentSize;
-
+            const JustifySpacing s = Justify(justify, parentContentRect.size[axis] - totalContentSize, gap, totalChildrenInFlow);
+            if constexpr (reverse)
+                ReversePlace<axis>(childRects, parentContentRect.Max(axis) - s.offset, s.spacing);
+            else
+                Place<axis>(childRects, parentContentRect.position[axis] + s.offset, s.spacing);
+        }
+        
+        /// Where justify-content puts the first of `count` items, measured from the main start,
+        /// and the space between items, with `freeSpace` left over on the main axis.
+        struct JustifySpacing { int32_t offset; int32_t spacing; };
+        static JustifySpacing Justify(JustifyContent justify, int32_t freeSpace, int16_t gap, int count)
+        {
             // Without free space the distributing modes fall back as in CSS:
             // space-between to flex-start, space-around / space-evenly to center.
             if (freeSpace < 0)
@@ -242,32 +252,27 @@ namespace tachyon
                 else if (justify == JustifyContent::SpaceAround || justify == JustifyContent::SpaceEvenly) justify = JustifyContent::Center;
             }
 
-            // Offset of the first child from the main start, and the space between children.
             int32_t offset = 0, spacing = gap;
             switch (justify)
-            {                
+            {
                 default:
                 case JustifyContent::FlexStart:     break;
                 case JustifyContent::FlexEnd:       offset = freeSpace; break;
                 case JustifyContent::Center:        offset = freeSpace / 2; break;
                 case JustifyContent::SpaceBetween:
-                    if (totalChildrenInFlow > 1) spacing += freeSpace / (totalChildrenInFlow - 1);
+                    if (count > 1) spacing += freeSpace / (count - 1);
                     break;
                 case JustifyContent::SpaceAround:
-                    if (totalChildrenInFlow > 0) { spacing += freeSpace / totalChildrenInFlow; offset = (spacing - gap) / 2; }
+                    if (count > 0) { spacing += freeSpace / count; offset = (spacing - gap) / 2; }
                     break;
                 case JustifyContent::SpaceEvenly:
-                    offset   = freeSpace / (totalChildrenInFlow + 1);
+                    offset   = freeSpace / (count + 1);
                     spacing += offset;
                     break;
             }
-
-            if constexpr (reverse)
-                ReversePlace<axis>(childRects, parentContentRect.Max(axis) - offset, spacing);
-            else
-                Place<axis>(childRects, parentContentRect.position[axis] + offset, spacing);
+            return { offset, spacing };
         }
-        
+
         template <int axis> requires(axis == 0 || axis == 1)
         static void Align(AlignItems align, const IntRect &parentContentRect, ElementRect& childRect)
         {

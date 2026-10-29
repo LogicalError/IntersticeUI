@@ -183,4 +183,32 @@ namespace tachyon
         const ElementRect& child = storage.GetElementRectUnsafe(childRef);
         EXPECT_EQ(child.rect.w, 200); // Should span the full width of two 100px columns
     }
+    // A grid's content bounds reach back to its content box's top-left even when its content
+    // starts further in (centred in a taller row), as a flex container's do.
+    TEST_F(LayoutGridTest, ContentBoundsStartAtTheContentOrigin)
+    {
+        Style parentStyle;
+        parentStyle.display = Display::Grid;
+        parentStyle.layoutData.grid.alignItems = AlignItems::Center;
+        const StyleRef parentIdx = styleManager.Register(parentStyle);
+
+        Style childStyle;
+        childStyle.layoutData.grid.column.track = GridTrack::Fixed(100.0f);
+        childStyle.layoutData.grid.row.track    = GridTrack::Fixed(100.0f);
+        const StyleRef childIdx = styleManager.Register(childStyle);
+
+        EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        const ElementRef parentRef = storage.Add(Element{ .styleRef = parentIdx }, LayoutOverride::FixedSize(300, 300)).ref;
+        EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        const ElementRef childRef = storage.Add(Element{ .styleRef = childIdx }, LayoutOverride::FixedSize(100, 40)).ref;
+        EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        layoutEngine.Layout(*osWindowManager, storage);
+
+        ASSERT_EQ(storage.GetElementRectUnsafe(childRef).rect.y, 30);
+        const IntRect bounds = storage.GetElementRectUnsafe(parentRef).contentBounds;
+        EXPECT_EQ(bounds.y, 0);
+        EXPECT_EQ(bounds.h, 70);
+    }
 }

@@ -10,14 +10,16 @@ namespace tachyon
     class OSWindowManager;
     class ITextSystem;
 
-    /// Computes element sizes and positions from styles, content and constraints, in five
+    /// Computes element sizes and positions from styles, content and constraints, in four
     /// passes run after construction:
     ///
     ///     1. Horizontal sizing      - bottom-up natural widths
-    ///     2. Vertical sizing        - bottom-up natural heights (wrap rows approximate)
-    ///     3. Horizontal positioning - top-down flex distribution, X positions
-    ///     4. Vertical sizing        - natural heights again, with final widths
-    ///     5. Vertical positioning   - top-down flex distribution, Y positions
+    ///     2. Horizontal positioning - top-down flex distribution, X positions
+    ///     3. Vertical sizing        - bottom-up natural heights, with final widths
+    ///     4. Vertical positioning   - top-down flex distribution, Y positions
+    ///
+    /// A wrapping flex column breaks its lines on heights in pass 2, so pass 2 sizes its
+    /// subtree vertically first, from the widths so far (pass 3 sizes it again).
     ///
     /// Flex grow / shrink happens in the positioning passes, where the parent's final size
     /// is known; it cascades from ancestor to descendant.

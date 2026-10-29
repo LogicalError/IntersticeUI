@@ -141,6 +141,11 @@ Every box is a flex container unless it is `display: grid`.
 | `flex` | `none` (0 0 auto), `auto` (1 1 auto), or `<grow> [<shrink> [<basis> \| auto]]`; with one number, shrink is 1 and basis 0 |
 | `break-after` | `auto`, `always`/`right` (line break after this item), `left` (line break before it), `avoid` (keep it on the line with the next item) |
 
+A wrapping column (`flex-direction: column; flex-wrap: wrap`) starts a new column where its
+height runs out: a set `height`, or its content's height held to `max-height`. Each column
+shares out its own free height (`flex-grow`, `flex-shrink`) and is placed by `justify-content`,
+as each line of a wrapping row does across.
+
 ## Grid
 
 | Property | Values |

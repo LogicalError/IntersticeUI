@@ -1486,4 +1486,137 @@ namespace tachyon
         // b3 must have wrapped to a second line.
         EXPECT_GT(storage.GetElementRectUnsafe(b3.ref).rect.y, 12);
     }
+    // ---- Wrapping columns ----
+
+    // A wrapping column held to a max-height breaks its lines on the heights of children
+    // whose height comes from their own children: the column and its children are sized
+    // before it is positioned.
+    TEST_F(LayoutFlexTest, ColumnWrapUnderAMaxHeightWrapsOnItsChildrensHeights)
+    {
+        Style colStyle;
+        colStyle.layoutData.flex.direction = FlexDirection::Column;
+        colStyle.layoutData.flex.wrap = FlexWrap::Wrap;
+        const StyleRef colIdx = styleManager.Register(colStyle);
+
+        EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        const ElementRef rootRef = storage.Add(Element{ .styleRef = colIdx },
+                                               LayoutOverride{}.Width(Pixels{ 200 }).MaxHeight(Pixels{ 60 })).ref;
+        EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        ElementRef items[3];
+        for (ElementRef& item : items)
+        {
+            item = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride{}).ref;
+            EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            EXPECT_EQ(storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 30 }, Pixels{ 25 })).status, ElementStorageResult::Success);
+            EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        }
+        EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        layoutEngine.Layout(*osWindowManager, storage);
+
+        EXPECT_EQ(storage.GetElementRectUnsafe(rootRef).rect.h, 60);
+        EXPECT_EQ(storage.GetElementRectUnsafe(items[0]).rect.x, 0);
+        EXPECT_EQ(storage.GetElementRectUnsafe(items[1]).rect.x, 0);
+        EXPECT_EQ(storage.GetElementRectUnsafe(items[1]).rect.y, 25);
+        EXPECT_EQ(storage.GetElementRectUnsafe(items[2]).rect.x, 30) << "50 + 25 doesn't fit in 60: a second column";
+        EXPECT_EQ(storage.GetElementRectUnsafe(items[2]).rect.y, 0);
+    }
+
+    // Each column of a wrapping column shares out its own free height: a growing item fills
+    // what its column leaves, and the other column is left alone.
+    TEST_F(LayoutFlexTest, ColumnWrapDistributesEachColumnOnItsOwn)
+    {
+        Style colStyle;
+        colStyle.layoutData.flex.direction = FlexDirection::Column;
+        colStyle.layoutData.flex.wrap = FlexWrap::Wrap;
+        const StyleRef colIdx = styleManager.Register(colStyle);
+
+        EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.Add(Element{ .styleRef = colIdx }, LayoutOverride::FixedSize(Pixels{ 200 }, Pixels{ 60 })).status, ElementStorageResult::Success);
+        EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        const ElementRef a = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 30 }, Pixels{ 20 })).ref;
+        const ElementRef b = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride{}.Width(Pixels{ 30 }).FlexGrow(1)).ref;
+        EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 30 }, Pixels{ 20 })).status, ElementStorageResult::Success);
+        EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        const ElementRef c = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 30 }, Pixels{ 30 })).ref;
+        EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        layoutEngine.Layout(*osWindowManager, storage);
+
+        const IntRect& ra = storage.GetElementRectUnsafe(a).rect;
+        const IntRect& rb = storage.GetElementRectUnsafe(b).rect;
+        const IntRect& rc = storage.GetElementRectUnsafe(c).rect;
+        EXPECT_EQ(ra.y, 0);
+        EXPECT_EQ(ra.h, 20);
+        EXPECT_EQ(rb.x, 0);
+        EXPECT_EQ(rb.y, 20);
+        EXPECT_EQ(rb.h, 40) << "b grows into the 20 its column leaves";
+        EXPECT_EQ(rc.x, 30) << "c (30) doesn't fit after a and b: the second column";
+        EXPECT_EQ(rc.y, 0);
+        EXPECT_EQ(rc.h, 30);
+    }
+
+    // A container's content bounds reach back to its content box's top-left even when the
+    // content starts further in, so a scroll area can scroll the whole way to the content's end.
+    TEST_F(LayoutFlexTest, ContentBoundsStartAtTheContentOrigin)
+    {
+        Style colStyle;
+        colStyle.layoutData.flex.direction = FlexDirection::Column;
+        colStyle.layoutData.flex.justifyContent = JustifyContent::Center;
+        const StyleRef colIdx = styleManager.Register(colStyle);
+
+        EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+        const ElementRef rootRef = storage.Add(Element{ .styleRef = colIdx }, LayoutOverride::FixedSize(Pixels{ 100 }, Pixels{ 200 })).ref;
+        EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+        const ElementRef child = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 50 }, Pixels{ 40 })).ref;
+        EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+        EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+        layoutEngine.Layout(*osWindowManager, storage);
+
+        ASSERT_EQ(storage.GetElementRectUnsafe(child).rect.y, 80);
+        const IntRect bounds = storage.GetElementRectUnsafe(rootRef).contentBounds;
+        EXPECT_EQ(bounds.y, 0);
+        EXPECT_EQ(bounds.h, 120);
+        EXPECT_EQ(bounds.x, 0);
+        EXPECT_EQ(bounds.w, 50);
+    }
+    // justify-content places a column's rows: two 40 px rows in a 200 px column.
+    TEST_F(LayoutFlexTest, JustifyContentPlacesAColumnsRows)
+    {
+        struct Case { FlexDirection direction; JustifyContent justify; int y0, y1; };
+        const Case cases[] = {
+            { FlexDirection::Column,        JustifyContent::FlexStart,    0,  40 },
+            { FlexDirection::Column,        JustifyContent::FlexEnd,     120, 160 },
+            { FlexDirection::Column,        JustifyContent::Center,       60, 100 },
+            { FlexDirection::Column,        JustifyContent::SpaceBetween,  0, 160 },
+            { FlexDirection::Column,        JustifyContent::SpaceEvenly,  40, 120 },
+            { FlexDirection::ColumnReverse, JustifyContent::FlexStart,   160, 120 },
+            { FlexDirection::ColumnReverse, JustifyContent::FlexEnd,      40,   0 },
+            { FlexDirection::ColumnReverse, JustifyContent::SpaceBetween, 160,  0 },
+        };
+        for (const Case& c : cases)
+        {
+            Style colStyle;
+            colStyle.layoutData.flex.direction = c.direction;
+            colStyle.layoutData.flex.justifyContent = c.justify;
+            const StyleRef colIdx = styleManager.Register(colStyle);
+
+            EXPECT_EQ(storage.BeginConstruction(), ElementStorageResult::Success);
+            EXPECT_EQ(storage.Add(Element{ .styleRef = colIdx }, LayoutOverride::FixedSize(Pixels{ 100 }, Pixels{ 200 })).status, ElementStorageResult::Success);
+            EXPECT_EQ(storage.BeginChildren(), ElementStorageResult::Success);
+            const ElementRef a = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 50 }, Pixels{ 40 })).ref;
+            const ElementRef b = storage.Add(Element{ .styleRef = defaultStyleIndex }, LayoutOverride::FixedSize(Pixels{ 50 }, Pixels{ 40 })).ref;
+            EXPECT_EQ(storage.EndChildren(), ElementStorageResult::Success);
+            EXPECT_EQ(storage.EndConstruction(), ElementStorageResult::Success);
+
+            layoutEngine.Layout(*osWindowManager, storage);
+
+            EXPECT_EQ(storage.GetElementRectUnsafe(a).rect.y, c.y0) << "case " << (&c - cases);
+            EXPECT_EQ(storage.GetElementRectUnsafe(b).rect.y, c.y1) << "case " << (&c - cases);
+        }
+    }
 }
