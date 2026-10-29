@@ -38,19 +38,13 @@ namespace tachyon
         if (storage.Empty())
             return;
 
-        // See gui_layout_engine.h. The first VerticalSizingPass gives wrap-column containers
-        // a rough height for HorizontalPositioning; the second uses final widths.
+        // See gui_layout_engine.h.
 
         TACHYON_PROFILE_SCOPE("Layout");
 
         {
             //TACHYON_PROFILE_SCOPE("HorizontalSizingPass");
             HorizontalSizingPass(storage);
-        }
-
-        {
-            //TACHYON_PROFILE_SCOPE("VerticalSizingPass");
-            VerticalSizingPass(storage);
         }
 
         {
@@ -108,38 +102,57 @@ namespace tachyon
         }
     }
 
+    // A container's natural height (margin box) from its children's. Leaf heights come from
+    // HorizontalSizingPass.
+    static void SizeVertically(ElementRect& parentRect, std::span<ElementRect> childRects)
+    {
+        int32_t contentHeight = 0;
+        switch (parentRect.display)
+        {
+            default: assert(false && "Unsupported display type"); break;
+            case Display::Flex: contentHeight = LayoutFlexbox::VerticalSizing(parentRect, childRects); break;
+            case Display::Grid: contentHeight = LayoutGrid   ::VerticalSizing(parentRect, childRects); break;
+            case Display::None: break;
+        }
+
+        if (parentRect.constraints.HasFixedHeight())
+        {
+            contentHeight = parentRect.constraints.height.value;
+        }
+
+        LayoutHelpers::ApplyVerticalStyleSize(parentRect,
+                                              contentHeight);
+    }
+
+    // SizeVertically for an element and everything under it, children first.
+    static void SizeSubtreeVertically(ElementStorage& storage, const ElementRef& ref)
+    {
+        const IndexRange range = storage.GetChildRange(ref);
+        if (range.Empty())
+            return;
+        for (uint32_t i = range.begin; i < range.end; ++i)
+            SizeSubtreeVertically(storage, ElementRef{ ref.depth + 1, i });
+        SizeVertically(storage.GetElementRectUnsafe(ref), storage.GetChildRectSpanUnsafe(ref.depth + 1, range));
+    }
+
+    // A flex column that wraps breaks its lines on heights while it is positioned horizontally.
+    static bool IsWrappingColumn(const ElementRect& rect)
+    {
+        if (rect.display != Display::Flex || rect.layoutStyle == nullptr)
+            return false;
+        const FlexProperties& flex = rect.layoutStyle->layoutData.flex;
+        return flex.wrap != FlexWrap::NoWrap &&
+               (flex.direction == FlexDirection::Column || flex.direction == FlexDirection::ColumnReverse);
+    }
+
     void LayoutEngine::VerticalSizingPass(ElementStorage &storage)
     {
         for (auto &cursor : storage.BottomUpDepthScanRange())
         {
-            ElementRect &parentRect = cursor.CurrentElementRect(storage);
-
             if (cursor.HasChildren())
-            {
-                int32_t contentHeight = 0;
-                auto childRects = cursor.GetChildRects(storage);
-                switch (parentRect.display)
-                {
-                    default: assert(false && "Unsupported display type"); break;
-                    case Display::Flex: contentHeight = LayoutFlexbox::VerticalSizing(parentRect, childRects); break;
-                    case Display::Grid: contentHeight = LayoutGrid   ::VerticalSizing(parentRect, childRects); break;
-                    case Display::None: break;
-                }
-
-                if (parentRect.constraints.HasFixedHeight())
-                {
-                    contentHeight = parentRect.constraints.height.value;
-                }
-
-                LayoutHelpers::ApplyVerticalStyleSize(parentRect,
-                                                      contentHeight);
-            } else
-            // leaf element
-            {
-                // Leaf heights come from HorizontalSizingPass.
-            }
+                SizeVertically(cursor.CurrentElementRect(storage), cursor.GetChildRects(storage));
         }
-    }   
+    }
 
     // Top-down: X positions and flex distribution.
     // Entry: rect.w = margin box. Exit: rect.x/w = border box, rect.y/h still margin box.
@@ -149,6 +162,12 @@ namespace tachyon
         {
             ElementRect& parentRect = cursor.CurrentElementRect(storage);
             LayoutHelpers::ApplyHorizontalPositionConstraints(osWindowManager, storage, parentRect, cursor.CurrentRef());
+
+            // A wrapping column breaks its lines on its own height and its children's, which
+            // the vertical sizing pass only finds later: size its subtree now, from the widths
+            // its children have so far. Only these subtrees need heights this early.
+            if (cursor.HasChildren() && IsWrappingColumn(parentRect))
+                SizeSubtreeVertically(storage, cursor.CurrentRef());
 
             assert(parentRect.layoutStyle != nullptr);
             parentRect.innerRect = parentRect.layoutStyle->GetContentRect(parentRect.rect);

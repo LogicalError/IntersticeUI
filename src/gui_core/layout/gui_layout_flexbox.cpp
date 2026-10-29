@@ -408,9 +408,15 @@ namespace tachyon
             if (availableHeight <= 0 && parentRect.constraints.HasFixedHeight())
                 availableHeight = LayoutHelpers::FixedContentSize<1>(parentRect);
 
+            // VerticalPositioning reuses these line breaks: the X positions are given per line.
+            uint16_t lineIdx = 0;
             VisitLines(childRects, availableHeight, flexLayout.gap, true, 1, 0,
                        [&](size_t start, size_t count, int32_t, int32_t crossSize, int32_t)
                        {
+                           for (ElementRect& c : childRects.subspan(start, count))
+                               c.wrapLineIndex = lineIdx;
+                           lineIdx++;
+
                            int32_t lineStart = 0;
                            if (wrapReverse)
                            {
@@ -458,10 +464,9 @@ namespace tachyon
             if (availableHeight <= 0 && parentRect.constraints.HasFixedHeight())
                 availableHeight = LayoutHelpers::FixedContentSize<1>(parentRect);
 
-            // Main-axis flex distribution; the parent's final height is known here (top-down).
+            // Main-axis flex distribution; the parent's final height is known here (top-down). A
+            // wrapping column shares out each line's free height on its own.
             //
-            // Only NoWrap columns distribute on the main axis; wrap-columns would
-            // need it per wrap line (#64).
             // A column with any keep-with-next child is a stack of label/field rows ("form
             // mode") and skips main-axis distribution: flex-grow there usually comes from
             // row-oriented widget styles and would make every row tall.
@@ -493,14 +498,34 @@ namespace tachyon
                 LayoutHelpers::ResolveFlexibleLengths<1>(childRects, availableHeight - used);
             }
 
+            // Bounds start at the content box's top-left (the empty rect they grow from): what a
+            // scroll area can scroll over begins there, wherever the content starts.
             IntRect contentRect {};
             if (flexLayout.wrap == FlexWrap::NoWrap)
             {
-                // Stack rows vertically; a row is as tall as its tallest (post-grow) child.
+                // Stack rows vertically; a row is as tall as its tallest (post-grow) child, and
+                // justify-content places the stack.
+                int32_t stackHeight = 0;
+                int32_t numRows     = 0;
+                VisitColumnGroups(childRects, flexLayout.gap,
+                    [&](size_t start, size_t count, int32_t, int32_t, int32_t)
+                    {
+                        int32_t rowHeight = 0;
+                        for (const ElementRect& c : childRects.subspan(start, count))
+                            if (c.constraints.IsInFlow())
+                                rowHeight = std::max<int32_t>(rowHeight, c.rect.size[1]);
+                        stackHeight += rowHeight;
+                        numRows++;
+                    });
+                if (numRows > 1)
+                    stackHeight += (numRows - 1) * flexLayout.gap;
+                const LayoutHelpers::JustifySpacing justify = LayoutHelpers::Justify(
+                    flexLayout.justifyContent, parentContentRect.size[1] - stackHeight, flexLayout.gap, numRows);
+
                 const bool reverse = (flexLayout.direction == FlexDirection::ColumnReverse);
                 const int32_t parentMin = parentContentRect.position[1];
                 const int32_t parentMax = parentContentRect.position[1] + parentContentRect.size[1];
-                int32_t cursor = reverse ? parentMax : parentMin;
+                int32_t cursor = reverse ? parentMax - justify.offset : parentMin + justify.offset;
                 VisitColumnGroups(childRects, flexLayout.gap,
                     [&](size_t start, size_t count, int32_t, int32_t, int32_t)
                     {
@@ -516,12 +541,12 @@ namespace tachyon
                         {
                             cursor -= rowHeight;
                             rowY = cursor;
-                            cursor -= flexLayout.gap;
+                            cursor -= justify.spacing;
                         }
                         else
                         {
                             rowY = cursor;
-                            cursor += rowHeight + flexLayout.gap;
+                            cursor += rowHeight + justify.spacing;
                         }
                         // Align within the row like a flex-row line, so stretch gives a label
                         // its row's full height (the label-group resize dragger relies on it).
@@ -539,28 +564,43 @@ namespace tachyon
                 return contentRect;
             }
 
-            VisitLines(childRects, availableHeight, flexLayout.gap, flexLayout.wrap != FlexWrap::NoWrap, 1, 0,
-                       [&](size_t start, size_t count, int32_t mainSize, int32_t, int32_t totalChildrenInFlow)
-                       {
-                           auto lineSpan = childRects.subspan(start, count);
-                           if (flexLayout.direction == FlexDirection::Column)
-                           {
-                               LayoutHelpers::JustifyChildren<1, false>(lineSpan, flexLayout.justifyContent, flexLayout.gap,
-                                                                        parentContentRect, mainSize, totalChildrenInFlow);
-                           } else
-                           {
-                               LayoutHelpers::JustifyChildren<1, true>(lineSpan, flexLayout.justifyContent, flexLayout.gap,
-                                                                       parentContentRect, mainSize, totalChildrenInFlow);
-                           }
+            // The lines HorizontalPositioning broke (wrapLineIndex), each distributed on its own:
+            // breaking again on the final heights could put an item in another line than the
+            // one its X position was given for.
+            size_t lineStart = 0;
+            while (lineStart < childRects.size())
+            {
+                size_t lineEnd = lineStart + 1;
+                while (lineEnd < childRects.size() && childRects[lineEnd].wrapLineIndex == childRects[lineStart].wrapLineIndex)
+                    lineEnd++;
+                auto lineSpan = childRects.subspan(lineStart, lineEnd - lineStart);
+                lineStart = lineEnd;
 
-                           for (ElementRect& childElem : lineSpan)
-                           {
-                               if (!childElem.constraints.IsInFlow())
-                                   continue;
-                               childElem.clipRect = clipRect;
-                               contentRect = IntRect::Union(contentRect, childElem.rect - parentContentRect.position);
-                           }
-                       });
+                if (availableHeight >= 0 && !anyKeepWithNext)
+                    LayoutHelpers::ApplyFlexBasis<1>(lineSpan);
+                int32_t totalChildrenInFlow = 0;
+                int32_t mainSize = LayoutHelpers::CalcLayoutAdd<1>(lineSpan, totalChildrenInFlow);
+                if (totalChildrenInFlow == 0)
+                    continue;
+                mainSize += (totalChildrenInFlow - 1) * flexLayout.gap;
+                if (availableHeight >= 0 && !anyKeepWithNext)
+                    mainSize += LayoutHelpers::ResolveFlexibleLengths<1>(lineSpan, availableHeight - mainSize);
+
+                if (flexLayout.direction == FlexDirection::Column)
+                    LayoutHelpers::JustifyChildren<1, false>(lineSpan, flexLayout.justifyContent, flexLayout.gap,
+                                                             parentContentRect, mainSize, totalChildrenInFlow);
+                else
+                    LayoutHelpers::JustifyChildren<1, true>(lineSpan, flexLayout.justifyContent, flexLayout.gap,
+                                                            parentContentRect, mainSize, totalChildrenInFlow);
+
+                for (ElementRect& childElem : lineSpan)
+                {
+                    if (!childElem.constraints.IsInFlow())
+                        continue;
+                    childElem.clipRect = clipRect;
+                    contentRect = IntRect::Union(contentRect, childElem.rect - parentContentRect.position);
+                }
+            }
             return contentRect;
         } else // Row or RowReverse
         {

@@ -699,7 +699,8 @@ namespace tachyon
 
             LayoutHelpers::Align<1>(gridLayout.alignItems, cellRect, childRects[i]);
 
-            // Assumes (0,0) is inside the content area (#64).
+            // Bounds start at the content box's top-left (the empty rect they grow from): what a
+            // scroll area can scroll over begins there, wherever the content starts.
             contentRect = IntRect::Union(contentRect, childRects[i].rect - areaRect.position);
         }
 
