@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cmath>
 
-// Gradient controls: GradientSlider, GradientField, EmitGradientEditor.
+// Gradient controls: GradientField, EmitGradientEditor.
 
 namespace
 {
@@ -29,125 +29,6 @@ namespace
 
 namespace tachyon
 {
-    // ---------------------------------------------------------------------------
-    // Gradient slider: horizontal gradient bar + triangle indicator
-    // ---------------------------------------------------------------------------
-
-    void GUIApplication::GradientSlider(ID id, float& value, float minVal, float maxVal,
-                                        std::string_view label,
-                                        VisualColorStyleIndex gradientStyle,
-                                        VisualColorStyleIndex triangleStyle,
-                                        LayoutOverride&& constraints)
-    {
-        const float range = maxVal - minVal;
-        if (range <= 0.0f) return;
-
-        // Label
-        DragLabel(label, LayoutOverride{}.FixedWidth(40).NoShrink().NoGrow());
-
-        // Outer wrapper (horizontal row: gradient bar + numeric field)
-        Element wrap {};
-        wrap.id       = idManager.AllocateDynamicID("gs_wrap");
-        wrap.styleRef = theme.colorGradientSliderRowStyleRef;
-        wrap.state    = guiStateManager.GetCurrentState(wrap.id);
-        RegisterElement(std::move(wrap), std::move(constraints));
-        VERIFY(elementStorage.BeginChildren());
-
-        // ---- Gradient bar ----
-        {
-            Element bar {};
-            bar.id       = id;
-            bar.styleRef = theme.colorGradientSliderStyleRef;
-            bar.state    = guiStateManager.GetCurrentState(id);
-
-            float* valuePtr = &value;
-            bar.eventHandler = [this, id, valuePtr, minVal, maxVal](ElementEvent&& event) -> bool
-            {
-                auto setFromMouse = [&]()
-                {
-                    if (!event.rect) return;
-                    auto& r = event.rect->rect;
-                    if (r.w <= 0) return;
-                    const int32_t cursorX = event.LocalCursor(elementStorage).x;
-                    float t = std::clamp(float(cursorX - r.x) / float(r.w), 0.0f, 1.0f);
-                    *valuePtr = minVal + t * (maxVal - minVal);
-                };
-                switch (event.type)
-                {
-                    case EventType::MouseDown:
-                        if (!event.state.LeftPressed()) break;
-                        guiStateManager.Interaction().SetCaptureID(id);
-                        guiStateManager.Interaction().SetFocusID(id);
-                        setFromMouse();
-                        return true;
-                    case EventType::MouseMove:
-                        if (!event.state.LeftDown()) break;
-                        setFromMouse();
-                        return true;
-                    case EventType::MouseUp:
-                        guiStateManager.Interaction().ReleaseCaptureID();
-                        return true;
-                    case EventType::KeyDown:
-                    {
-                        float step = (maxVal - minVal) * 0.01f;
-                        float bigStep = (maxVal - minVal) * 0.1f;
-                        switch (event.state.lastKey)
-                        {
-                            case KeyCode::Left:     *valuePtr = std::clamp(*valuePtr - step, minVal, maxVal); return true;
-                            case KeyCode::Right:    *valuePtr = std::clamp(*valuePtr + step, minVal, maxVal); return true;
-                            case KeyCode::Home:     *valuePtr = minVal; return true;
-                            case KeyCode::End:      *valuePtr = maxVal; return true;
-                            case KeyCode::PageUp:   *valuePtr = std::clamp(*valuePtr - bigStep, minVal, maxVal); return true;
-                            case KeyCode::PageDown: *valuePtr = std::clamp(*valuePtr + bigStep, minVal, maxVal); return true;
-                            default: break;
-                        }
-                        break;
-                    }
-                    default: break;
-                }
-                return false;
-            };
-
-            auto ref = RegisterControl(std::move(bar), LayoutOverride{}.FlexGrow(1));
-
-            // Custom draw: gradient fill + triangle indicator hanging below the bar.
-            // Relies on overflow:visible on .color-gradient-slider and its row so the triangle isn't clipped.
-            float currentT = std::clamp((value - minVal) / range, 0.0f, 1.0f);
-            VERIFY(elementStorage.AddCustomDraw(ref,
-                [gradientStyle, triangleStyle, currentT, triSize = styleManager.Px(5)](CustomDrawContext& ctx)
-                {
-                    // Fill the FULL outer bar with the gradient; indicator sits just
-                    // outside the outer bottom edge.
-                    const auto outer = ctx.ElementRect();
-                    const auto inner = ctx.ElementInnerRect();
-                    const int w = outer.w;
-                    const int h = outer.h;
-                    if (w <= 0 || h <= 0) return;
-                    const int X = outer.x - inner.x;
-                    const int Y = outer.y - inner.y;
-
-                    // Gradient fill
-                    ctx.RenderQuad(IntRect{ .position = { X, Y }, .size = { w, h } }, gradientStyle);
-
-                    // Upward-pointing triangle indicator below the bar.
-                    int triX = X + int(currentT * float(w));
-                    int triY = Y + h;
-                    ctx.RenderTriangle(
-                        { float(triX),           float(triY)           },
-                        { float(triX - triSize), float(triY + triSize) },
-                        { float(triX + triSize), float(triY + triSize) },
-                        triangleStyle);
-                }));
-        }
-
-        // ---- Numeric field ----
-        Field(value, TextEditBehavior::ContinuousUpdate,
-                NumericFieldConfig<float>{ .minVal = minVal, .maxVal = maxVal },
-                LayoutOverride{}.FixedWidth(55).NoGrow());
-
-        VERIFY(elementStorage.EndChildren());
-    }
-
     // ---------------------------------------------------------------------------
     // GradientField - gradient swatch + editor popup
     // ---------------------------------------------------------------------------
@@ -207,7 +88,8 @@ namespace tachyon
                 ge.originalGradient = value;
                 ge.context = context;
                 ge.selectedStop = 0;
-                ge.drag = GradientEditorState::DragTarget::None;
+                ge.press.Reset();
+                ge.dragOff = false;
             }
         });
 
@@ -476,9 +358,13 @@ namespace tachyon
                         const int hit = hitStop();
                         if (hit >= 0)
                         {
+                            ge.beforeDrag         = g;
+                            ge.selectedBeforeDrag = ge.selectedStop;
                             ge.selectedStop  = hit;
-                            ge.drag          = GradientEditorState::DragTarget::Stop;
+                            ge.press.Press(event, elementStorage, MouseButtons::Left, /*atOnce*/ true);
                             ge.dragStopIndex = hit;
+                            ge.dragGrab      = t - g.stops[size_t(hit)].GetOffset();
+                            ge.dragOff       = false;
                             guiStateManager.Interaction().SetCaptureID(barID);
                             return true;
                         }
@@ -494,16 +380,18 @@ namespace tachyon
                         break;
                     }
                     case EventType::MouseMove:
-                        if (ge.drag == GradientEditorState::DragTarget::Stop && ge.dragStopIndex >= 0 && ge.dragStopIndex < g.stopCount)
+                        if (ge.dragStopIndex >= 0 && ge.dragStopIndex < g.stopCount && ge.press.Move(event, 0))
                         {
-                            g.stops[size_t(ge.dragStopIndex)].SetOffset(t);
+                            // The cursor in the bar's own units, without the barW clamp's dead zone.
+                            const float cursorT = float(c.x - r.x - inset) / float(barW);
+                            g.stops[size_t(ge.dragStopIndex)].SetOffset(std::clamp(cursorT - ge.dragGrab, 0.0f, 1.0f));
                             ge.dragStopIndex = ge.selectedStop = SortStops(g, ge.dragStopIndex);
                             ge.dragOff = (c.y > top + barH + pointer + stopBox + removeDistance) && g.stopCount > 2;
                             return true;
                         }
                         break;
                     case EventType::MouseUp:
-                        if (ge.drag != GradientEditorState::DragTarget::None)
+                        if (ge.press.Release(event) != PointerDrag::Ended::No)
                         {
                             // Dragged well below the bar: the stop goes.
                             if (ge.dragOff)
@@ -511,13 +399,23 @@ namespace tachyon
                                 RemoveStop(g, ge.dragStopIndex);
                                 ge.selectedStop = std::min(ge.dragStopIndex, g.stopCount - 1);
                             }
-                            ge.drag = GradientEditorState::DragTarget::None;
+                            ge.dragStopIndex = -1;
                             ge.dragOff = false;
                             guiStateManager.Interaction().ReleaseCaptureID();
                             return true;
                         }
                         break;
                     case EventType::KeyDown:
+                        // Escape during a drag puts the gradient back.
+                        if (IsDragCancelKey(event.state) && ge.press.Cancel(barID))
+                        {
+                            g = ge.beforeDrag;
+                            ge.selectedStop  = ge.selectedBeforeDrag;
+                            ge.dragStopIndex = -1;
+                            ge.dragOff       = false;
+                            guiStateManager.Interaction().ReleaseCaptureID();
+                            return true;
+                        }
                         if (event.state.lastKey == KeyCode::Delete && g.stopCount > 2)
                         {
                             RemoveStop(g, ge.selectedStop);

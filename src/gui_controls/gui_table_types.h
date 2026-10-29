@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui_core/gui_id.h>
+#include <gui_core/input/gui_pointer_drag.h>
 #include <gui_core/gui_units.h>
 #include <gui_core/gui_base_types.h>
 #include <gui_core/style/gui_style.h>
@@ -378,13 +379,12 @@ namespace tachyon
     // column gets a Relative() offset. On drop, onReorderColumns fires.
     /// Column-reorder drag in progress; internal, owned by the application.
     struct ColumnDragState {
-        bool                      active    = false; ///< committed past click threshold
+        tachyon::PointerDrag          press;               ///< the header's press; a drag once it moves the drag distance
         tachyon::ID                   tableID   = tachyon::ID::Invalid();
         int                       fromCol   = -1;
         int                       toCol     = -1;
-        tachyon::int2                 startPos{};
-        tachyon::int2                 offset{};
-        /// Header rects at drag start (screen space), for edge-crossing.
+        int32_t                   offsetX   = 0;       ///< pointer travel since the press, layout space
+        /// Header rects at drag start (layout space), for edge-crossing.
         std::vector<tachyon::IntRect> headerRects;
         /// Inclusive target range, bounded by locked columns.
         int                       minTarget = 0;
@@ -393,6 +393,9 @@ namespace tachyon
         tachyon::ID                   sectionBodyID = tachyon::ID::Invalid();
         /// Scroll-X at drag start, to correct the cursor for mid-drag scrolling.
         int32_t                   startScrollX  = 0;
+
+        /// The press has moved the drag distance: a column move, not a sort click.
+        bool IsDragging() const { return press.dragging; }
     };
 
     // ---- Persistent tree reorder drop state (survives across frames) ----

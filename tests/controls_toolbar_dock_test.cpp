@@ -422,5 +422,65 @@ namespace tachyon
         app.idManager.ReleaseStaticID(buttonID);
     }
 
+    // Dragging a floating toolbar's thumb moves its window; Escape ends the drag. (Headless
+    // windows have no rect, so where the window goes isn't seen here.)
+    TEST_F(ToolbarDockTest, EscapeEndsAFloatingToolbarDrag)
+    {
+        std::vector<FloatingToolbarItem> floating;
+        ID windowID = app.idManager.CreateStaticID();
+        ID buttonID = app.idManager.CreateStaticID();
+        FloatingToolbarItem fw;
+        fw.windowID      = windowID;
+        fw.spawnPosition = { 300, 200 };
+        fw.item.id        = buttonID;
+        fw.item.debugName = "Floating";
+        fw.item.renderBody = [&]() { app.Button(buttonID, "X", []{}, LayoutOverride{}.Size(40, 24)); };
+        floating.push_back(std::move(fw));
+        auto frame = [&] { app.Frame([&] { app.EmitFloatingToolbarWindows(floating, nullptr); }); };
+        frame();
+        frame();
+
+        // The thumb's handler, called as the window it lives in would.
+        ElementRef thumbRef = ElementRef::Invalid();
+        for (uint32_t d = 0; d < app.elementStorage.NumberOfDepthLevels() && !thumbRef.IsValid(); d++)
+            for (uint32_t i = 0; i < app.elementStorage.DepthSizeOf(d); i++)
+            {
+                const ElementRef ref{ d, i };
+                if (!app.elementStorage.IsValidRef(ref)) continue;
+                const Element& e = app.elementStorage.GetElementUnsafe(ref);
+                if (e.styleRef == app.theme.toolbarThumbHorzStyleRef && e.eventHandler) { thumbRef = ref; break; }
+            }
+        ASSERT_TRUE(thumbRef.IsValid());
+        const Element& thumb = app.elementStorage.GetElementUnsafe(thumbRef);
+        const ElementRect& thumbRect = app.elementStorage.GetElementRectUnsafe(thumbRef);
+        auto send = [&](EventType type, const InputState& s)
+        {
+            return thumb.eventHandler(ElementEvent{ .id = thumb.id, .type = type, .state = s, .rect = &thumbRect, .elementRef = thumbRef });
+        };
+        InputState down{};
+        down.screenPos = { 310, 210 };
+        down.buttons   = MouseButtons::Left;
+        ASSERT_TRUE(send(EventType::MouseDown, down));
+        InputState move = down;
+        move.prevButtons = MouseButtons::Left;
+        move.screenPos   = { 370, 250 };
+        ASSERT_TRUE(send(EventType::MouseMove, move));
+        ASSERT_TRUE(app.m_toolbarWindowDrag.Active());
+        ASSERT_EQ(app.m_toolbarWindowDrag.currentMousePos, (int2{ 370, 250 }));
+
+        InputState escape{};
+        escape.lastKey       = KeyCode::Escape;
+        escape.lastKeyAction = KeyAction::KeyDown;
+        EXPECT_TRUE(send(EventType::KeyDown, escape));
+        EXPECT_FALSE(app.m_toolbarWindowDrag.Active());
+
+        move.screenPos = { 420, 300 };
+        EXPECT_FALSE(send(EventType::MouseMove, move)) << "the moves after Escape are ignored";
+        EXPECT_EQ(app.m_toolbarWindowDrag.currentMousePos, (int2{ 370, 250 }));
+
+        app.idManager.ReleaseStaticID(windowID);
+        app.idManager.ReleaseStaticID(buttonID);
+    }
+
     } // anonymous namespace
 } // namespace tachyon

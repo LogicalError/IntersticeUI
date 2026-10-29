@@ -320,9 +320,8 @@ namespace tachyon
                                         std::function<void(intptr_t)> onLinkActivate,
                                         StyleRef style, LayoutOverride&& constraints)
     {
-        // Per-element press position, so a press+release without movement reads as a click
-        // (activate the link under it) while a drag is a text selection.
-        struct PressState { int2 pressPos {}; };
+        // A press released before it became a drag is a click (it activates the link under
+        // it); a drag selects text.
 
         tachyon::EventHandler handler =
             [this, id, onLinkActivate = std::move(onLinkActivate)](tachyon::ElementEvent&& ev) -> bool
@@ -337,6 +336,7 @@ namespace tachyon
             switch (ev.type)
             {
                 case tachyon::EventType::MouseMove:
+                    store.GetOrCreate<PointerDrag>(id).Move(ev, styleManager.Px(kDragStartDistance));
                     if (textID != TextID::Invalid)
                         textSystem->SetHoveredContent(textID, textSystem->HitTestContent(textID, localPos.x, localPos.y));
                     break;
@@ -351,22 +351,17 @@ namespace tachyon
                             guiStateManager.Interaction().SetFocusID(id);
                             guiStateManager.TextEditorFocus().Set(id);
                         }
-                        store.GetOrCreate<PressState>(id).pressPos = ev.state.screenPos;
+                        store.GetOrCreate<PointerDrag>(id).Press(ev, elementStorage);
                         return true;
                     }
                     break;
                 case tachyon::EventType::MouseUp:
-                    if (onLinkActivate && textID != TextID::Invalid)
-                        if (auto* press = store.Get<PressState>(id))
-                        {
-                            const int2 d = ev.state.screenPos - press->pressPos;
-                            const int32_t slop = styleManager.Px(kDragStartDistance);
-                            if (d.x * d.x + d.y * d.y < slop * slop) // a click, not a drag
-                            {
-                                const intptr_t hit = textSystem->HitTestContent(textID, localPos.x, localPos.y);
-                                if (hit != 0) onLinkActivate(hit);
-                            }
-                        }
+                    if (auto* press = store.Get<PointerDrag>(id);
+                        press && press->Release(ev) == PointerDrag::Ended::Click && onLinkActivate && textID != TextID::Invalid)
+                    {
+                        const intptr_t hit = textSystem->HitTestContent(textID, localPos.x, localPos.y);
+                        if (hit != 0) onLinkActivate(hit);
+                    }
                     break;
                 case tachyon::EventType::KeyDown:
                 case tachyon::EventType::KeyUp:
@@ -1370,8 +1365,16 @@ namespace tachyon
 
     namespace
     {
+        // Per-element state of the integer slider's drag (element data store).
+        struct IntSliderState
+        {
+            PointerDrag drag;
+            int         startValue = 0;   // put back by Escape
+        };
+
         // Drag handler for the integer Slider / SliderField. Writes the caller's int
-        // (must be stable storage) from the cursor X, rounded to a whole number.
+        // (must be stable storage) from the cursor X, rounded to a whole number. Escape
+        // during the drag puts the value back.
         tachyon::EventHandler MakeIntSliderDrag(GUIStateManager& gsm, const ElementStorage& es,
                                             int* valuePtr, int minVal, int maxVal, int trackWidth)
         {
@@ -1396,21 +1399,28 @@ namespace tachyon
                         {
                             gsm.Interaction().SetFocusID(event.id);
                             gsm.TextEditorFocus().Clear();
-                            store.GetOrCreate<SliderState>(event.id).draggingID = event.id;
+                            auto& s = store.GetOrCreate<IntSliderState>(event.id);
+                            s.drag.Press(event, es, MouseButtons::Left, /*atOnce*/ true);
+                            s.startValue = *valuePtr;
                             setFromMouse();
                             return true;
                         }
                         break;
                     case tachyon::EventType::MouseMove:
-                        if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
+                        if (auto* s = store.Get<IntSliderState>(event.id); s && s->drag.Move(event, 0))
                         { setFromMouse(); return true; }
                         break;
                     case tachyon::EventType::MouseUp:
-                        if (auto* s = store.Get<SliderState>(event.id); s && s->draggingID == event.id)
-                        { s->draggingID = tachyon::ID::Invalid(); return true; }
+                        if (auto* s = store.Get<IntSliderState>(event.id); s && s->drag.Release(event) != PointerDrag::Ended::No)
+                            return true;
                         break;
                     case tachyon::EventType::KeyDown:
                     {
+                        if (auto* s = store.Get<IntSliderState>(event.id); s && IsDragCancelKey(event.state) && s->drag.Cancel(event.id))
+                        {
+                            *valuePtr = s->startValue;
+                            return true;
+                        }
                         // Arrows step 1, Page Up / Down a tenth of the range, Home / End to its ends.
                         if (gsm.Interaction().GetFocusedID() != event.id || event.state.consumed)
                             break;

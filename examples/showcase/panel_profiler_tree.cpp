@@ -498,7 +498,7 @@ namespace tachyon
             flameSizer.state        = guiStateManager.GetCurrentState(flameSizer.id);
             const float uiScale = styleManager.GetUIScale();
             const int   rowUnits = int(std::ceil(float(rowH) / uiScale));   // rowH is pixels; flameHeight CSS px
-            flameSizer.eventHandler = tachyon::MakeVerticalSizerHandler(guiStateManager, flameHeight, rowUnits, 40 * rowUnits,
+            flameSizer.eventHandler = tachyon::MakeVerticalSizerHandler(guiStateManager, elementStorage, flameHeight, rowUnits, 40 * rowUnits,
                                                                     nullptr, nullptr, false, uiScale);
             RegisterElement(std::move(flameSizer), LayoutOverride::FixedHeight(5));
         }

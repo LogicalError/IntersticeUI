@@ -111,15 +111,15 @@ namespace tachyon
                     auto childRange = elementStorage.GetChildRange(groupRef);
                     if (childRange.Empty()) break;
 
-                    drag.isDragging = true;
-                    drag.dragActivated = false;
+                    drag = {};
+                    drag.press.Press(event, elementStorage);
+                    drag.cursorLocal  = drag.press.pressLocal;
+                    drag.cursorScreen = drag.press.pressScreen;
                     drag.isWrapped = isWrapped;
                     drag.groupID = groupID;
                     drag.draggedIndex = itemIndex;
                     drag.insertionIndex = itemIndex;
                     drag.itemCount = static_cast<int>(childRange.Size());
-                    drag.dragStartMousePos = event.state.screenPos;
-                    drag.dragOffset = {0, 0};
                     drag.direction = direction;
 
                     // Snapshot group rect for drag-out detection
@@ -146,27 +146,18 @@ namespace tachyon
 
                 case tachyon::EventType::MouseMove:
                 {
-                    if (!drag.isDragging || drag.draggedIndex != itemIndex) break;
-                    if (!event.state.LeftDown()) break;
+                    if (!drag.press.IsPressed(id) || drag.draggedIndex != itemIndex) break;
 
-                    // Update drag offset
-                    tachyon::int2 delta = event.state.screenPos - drag.dragStartMousePos;
-
-                    // Drag threshold: ignore tiny movements so an accidental
+                    // Under the drag distance a press is still a click: an accidental
                     // cursor jitter during a click doesn't start reordering.
-                    if (!drag.dragActivated)
-                    {
-                        const int threshold = styleManager.Px(kDragStartDistance);
-                        if (delta.x * delta.x + delta.y * delta.y < threshold * threshold)
-                            return true;
-                        drag.dragActivated = true;
-                    }
-
-                    drag.dragOffset = delta;
+                    if (!drag.press.Move(event, styleManager.Px(kDragStartDistance)))
+                        return true;
 
                     // Cursor in layout space (like originalRects/groupRect), not screenPos,
                     // so an ancestor contentTransform doesn't skew the hit-test.
                     const tachyon::int2 localMouse = event.LocalCursor(elementStorage);
+                    drag.cursorLocal  = localMouse;
+                    drag.cursorScreen = event.state.screenPos;
 
                     // Outside the group with drag-out enabled: no in-place reorder.
                     if (onDragOut)
@@ -269,7 +260,8 @@ namespace tachyon
 
                 case tachyon::EventType::MouseUp:
                 {
-                    if (!drag.isDragging || drag.draggedIndex != itemIndex) break;
+                    if (!drag.press.IsPressed(id) || drag.draggedIndex != itemIndex) break;
+                    const bool wasDragged = drag.press.Release(event) == PointerDrag::Ended::Drag;
 
                     // Focus the first control of the row at slot `targetIndex`. Resolved via the
                     // MouseDown ID snapshot, not the current slot, since EndReorderableItem may
@@ -291,30 +283,25 @@ namespace tachyon
                         }
                     };
 
-                    // Threshold never crossed -> treat as a click, not a drag.
-                    if (!drag.dragActivated)
+                    // Never dragged: a click, not a reorder.
+                    if (!wasDragged)
                     {
                         guiStateManager.Interaction().ReleaseCaptureID();
-                        // Plain click: focus this row's first control (before originalIDs is cleared).
+                        // Plain click: focus this row's first control (before the state is cleared).
                         focusFirstControlAt(itemIndex);
-                        drag.isDragging = false;
-                        drag.dragActivated = false;
-                        drag.draggedIndex = -1;
-                        drag.insertionIndex = -1;
-                        drag.originalRects.clear();
-                        drag.originalIDs.clear();
-                        drag.dragOffset = {0, 0};
+                        drag = {};
                         return true;
                     }
 
                     int from = drag.draggedIndex;
                     int to = drag.insertionIndex;
 
-                    // Drag-out: released outside the group (plus a margin) on either axis.
-                    // The release position lets the caller hit-test other containers.
+                    // Drag-out: released outside the group (plus a margin) on either axis. The
+                    // group's rect is in layout space; the caller gets the screen position to
+                    // hit-test other containers with.
                     if (onDragOut)
                     {
-                        const tachyon::int2 mouse  = event.state.screenPos;
+                        const tachyon::int2 mouse  = event.LocalCursor(elementStorage);
                         const tachyon::IntRect& r  = drag.groupRect;
                         const int dragOutThreshold = styleManager.Px(8);
                         const bool outsideX = mouse.x < r.x - dragOutThreshold
@@ -324,15 +311,9 @@ namespace tachyon
 
                         if (outsideX || outsideY)
                         {
-                            drag.isDragging = false;
-                            drag.dragActivated = false;
-                            drag.draggedIndex = -1;
-                            drag.insertionIndex = -1;
-                            drag.originalRects.clear();
-                            drag.originalIDs.clear();
-                            drag.dragOffset = {0, 0};
+                            drag = {};
                             guiStateManager.Interaction().ReleaseCaptureID();
-                            onDragOut(from, mouse);
+                            onDragOut(from, event.state.screenPos);
                             return true;
                         }
                     }
@@ -359,29 +340,16 @@ namespace tachyon
                         focusFirstControlAt(itemIndex);
                     }
 
-                    drag.isDragging = false;
-                    drag.dragActivated = false;
-                    drag.draggedIndex = -1;
-                    drag.insertionIndex = -1;
-                    drag.originalRects.clear();
-                    drag.originalIDs.clear();
-                    drag.dragOffset = {0, 0};
-
+                    drag = {};
                     return true;
                 }
 
                 case tachyon::EventType::KeyDown:
                 {
-                    if (drag.isDragging && drag.draggedIndex == itemIndex
-                        && event.state.lastKey == tachyon::KeyCode::Escape)
+                    // Escape: the items go back to their places (the reorder is only applied on release).
+                    if (drag.draggedIndex == itemIndex && IsDragCancelKey(event.state) && drag.press.Cancel(id))
                     {
-                        drag.isDragging = false;
-                        drag.dragActivated = false;
-                        drag.draggedIndex = -1;
-                        drag.insertionIndex = -1;
-                        drag.originalRects.clear();
-                        drag.originalIDs.clear();
-                        drag.dragOffset = {0, 0};
+                        drag = {};
                         guiStateManager.Interaction().ReleaseCaptureID();
                         return true;
                     }
@@ -437,7 +405,7 @@ namespace tachyon
             }
         }
 
-        if (drag.isDragging && drag.dragActivated && drag.groupID == m_reorderable->Construction().groupID)
+        if (drag.IsDragging() && drag.groupID == m_reorderable->Construction().groupID)
         {
             int from = drag.draggedIndex;
             int to = drag.insertionIndex;
@@ -462,7 +430,7 @@ namespace tachyon
         auto& drag = m_reorderable->Drag();
         // The item list can change under a drag (data edited mid-drag): only touch slots that still exist.
         const size_t itemCount = m_reorderable->Construction().itemRefs.size();
-        if (drag.isDragging && drag.dragActivated && drag.groupID == m_reorderable->Construction().groupID
+        if (drag.IsDragging() && drag.groupID == m_reorderable->Construction().groupID
             && !drag.originalRects.empty() && itemCount > 0
             && size_t(drag.draggedIndex) < itemCount && size_t(drag.insertionIndex) < itemCount
             && size_t(drag.draggedIndex) < drag.originalRects.size() && size_t(drag.insertionIndex) < drag.originalRects.size())
@@ -481,7 +449,7 @@ namespace tachyon
             // Ghost hand-off checks both axes; the in-place cross-axis pull-out only needs the
             // cross axis (the main axis stays constrained to the group's siblings).
             int crossAxis = 1 - mainAxis;
-            const tachyon::int2 mouse = drag.dragStartMousePos + drag.dragOffset;
+            const tachyon::int2 mouse = drag.cursorLocal;
             const bool outsideCross = mouse[crossAxis] < drag.groupRect.position[crossAxis]
                                    || mouse[crossAxis] > drag.groupRect.position[crossAxis] + drag.groupRect.size[crossAxis];
             const bool outsideMain  = mouse[mainAxis]  < drag.groupRect.position[mainAxis]
@@ -494,14 +462,15 @@ namespace tachyon
             const bool useGhost = fullyOutside && m_reorderable->Construction().dragVisualizer != nullptr;
             if (useGhost)
             {
-                m_reorderable->Construction().dragVisualizer(from, mouse);
+                m_reorderable->Construction().dragVisualizer(from, drag.cursorScreen);
             }
 
             if (!useGhost)
             {
                 // For groups without drag-out, clamp the main-axis offset so the
                 // dragged item stays within the group bounds.
-                int mainDragOffset = drag.dragOffset[mainAxis];
+                const tachyon::int2 dragOffset = drag.Offset();
+                int mainDragOffset = dragOffset[mainAxis];
                 if (!m_reorderable->Construction().onDragOut)
                 {
                     int origPos  = drag.originalRects[from].position[mainAxis];
@@ -532,7 +501,7 @@ namespace tachyon
                     // Offset = desired position (original + mouse delta) - layout flow position
                     int16_t mainOffset = static_cast<int16_t>(
                         drag.originalRects[from].position[mainAxis] + mainDragOffset - flowPos);
-                    int16_t crossOffset = (outsideGroup && canLeaveAxis) ? static_cast<int16_t>(drag.dragOffset[crossAxis]) : static_cast<int16_t>(0);
+                    int16_t crossOffset = (outsideGroup && canLeaveAxis) ? static_cast<int16_t>(dragOffset[crossAxis]) : static_cast<int16_t>(0);
                     int16_t offsetX = (mainAxis == 0) ? mainOffset : crossOffset;
                     int16_t offsetY = (mainAxis == 1) ? mainOffset : crossOffset;
 
@@ -545,7 +514,7 @@ namespace tachyon
                 {
                     // from == to: just apply drag offset directly
                     int16_t mainOffset = static_cast<int16_t>(mainDragOffset);
-                    int16_t crossOffset = (outsideGroup && canLeaveAxis) ? static_cast<int16_t>(drag.dragOffset[crossAxis]) : static_cast<int16_t>(0);
+                    int16_t crossOffset = (outsideGroup && canLeaveAxis) ? static_cast<int16_t>(dragOffset[crossAxis]) : static_cast<int16_t>(0);
                     int16_t offsetX = (mainAxis == 0) ? mainOffset : crossOffset;
                     int16_t offsetY = (mainAxis == 1) ? mainOffset : crossOffset;
 

@@ -2,6 +2,7 @@
 
 #include <gui_core/input/gui_input_state.h>
 #include <gui_core/input/gui_input_handler_func.h>
+#include <gui_core/input/gui_pointer_drag.h>
 
 #include <gui_core/state/gui_state_manager.h>
 
@@ -11,6 +12,7 @@
 #include <gui_core/text/gui_numeric_field_config.h>
 
 #include <gui_controls/gui_type_dimensions.h>
+#include <gui_controls/gui_widget_state_types.h>
 
 #include <algorithm>
 #include <cmath>
@@ -48,57 +50,41 @@ namespace tachyon
     EventHandler MakeTextBoxHandler(GUIStateManager& guiStateManager);
 
 
-    /// Per-element state of MakeHorizontalSizerHandler (element data store); internal.
-    struct HorizontalSizerState
+    /// Per-element state of the sizer handlers (element data store); internal.
+    struct SizerState
     {
-		ID previousFocusID = ID::Invalid();
-        ID previousTextFocusID = ID::Invalid();
-        ID draggingID = ID::Invalid();
-        tachyon::int2 dragStartLocal{0,0};
-        int startSize = 0;
-        int startScreenX = 0;
-        int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
-        ID lastClickID = ID::Invalid();
+        PointerDrag        drag;                              ///< a drag from the press on
+        ID                 previousFocusID     = ID::Invalid(); ///< focus to give back after the drag
+        ID                 previousTextFocusID = ID::Invalid();
+        int                startSize = 0;                     ///< put back by Escape
+        DoubleClickTracker clicks;                            ///< a double-click auto-sizes
     };
 
     /// Sizer handler that drags `sizeValue` within [`minSize`, `maxSize`], calling `onChanged`
-    /// with each new size. Sizes are in units of `pixelsPerUnit` screen pixels (for CSS px pass
-    /// StyleManager::GetUIScale()). `onAutoSize` runs on double-click and returns the desired
-    /// size in screen pixels, or -1 to skip. `invertMouseDelta` grows the size when dragging left.
-    EventHandler MakeHorizontalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
+    /// with each new size. Sizes are in units of `pixelsPerUnit` pixels of the sizer's layout
+    /// (for CSS px pass StyleManager::GetUIScale()). `onAutoSize` runs on double-click and
+    /// returns the desired size in pixels, or -1 to skip. `invertMouseDelta` grows the size when
+    /// dragging left. Escape during the drag puts the size back.
+    EventHandler MakeHorizontalSizerHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage,
+                                            int& sizeValue, int minSize, int maxSize,
                                             std::function<void(int)> onChanged = nullptr,
                                             std::function<int()> onAutoSize = nullptr,
                                             bool invertMouseDelta = false, float pixelsPerUnit = 1.0f);
 
-    /// Per-element state of MakeVerticalSizerHandler (element data store); internal.
-    struct VerticalSizerState
-    {
-        ID previousFocusID = ID::Invalid();
-        ID previousTextFocusID = ID::Invalid();
-        ID draggingID = ID::Invalid();
-        tachyon::int2 dragStartLocal{0,0};
-        int startSize = 0;
-        int startScreenY = 0;
-        int64_t lastClickTimeNanos = 0;   ///< steady-clock ns; see SteadyClockNowNanos()
-        ID lastClickID = ID::Invalid();
-    };
-
     /// Y-axis counterpart of MakeHorizontalSizerHandler; `invertMouseDelta` grows the size when
     /// dragging up.
-    EventHandler MakeVerticalSizerHandler(GUIStateManager& guiStateManager, int& sizeValue, int minSize, int maxSize,
+    EventHandler MakeVerticalSizerHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage,
+                                          int& sizeValue, int minSize, int maxSize,
                                           std::function<void(int)> onChanged = nullptr,
                                           std::function<int()> onAutoSize = nullptr,
                                           bool invertMouseDelta = false, float pixelsPerUnit = 1.0f);
 
-    /// Per-element state of MakeSliderHandler (element data store); internal.
+    /// Per-element state of MakeSliderHandler and the integer slider (element data store); internal.
     struct SliderState
     {
-        ID draggingID = ID::Invalid();
-        tachyon::int2 dragStartLocal{ 0,0 }; ///< mouse screen pos at MouseDown (click-vs-drag origin)
-        float startValue = 0.0f;
-        bool cancelDrag = false;
-        bool movedPastThreshold = false;
-        bool editMode = false;           ///< set by a clean click: in-place text editing
+        PointerDrag drag;               ///< the press on the bar
+        float startValue = 0.0f;        ///< put back by Escape and a cancelled label drag
+        bool  editMode   = false;       ///< set by a clean click: in-place text editing
     };
 
     /// What pressing a slider does: Edit - a click (no drag) opens its value for typing;
@@ -114,18 +100,14 @@ namespace tachyon
                                    float minVal = 0.0f, float maxVal = 1.0f,
                                    SliderPress press = SliderPress::Edit);
 
-    /// Phase of a label drag: idle, pressed but under the drag threshold, or dragging.
-    enum class DragScalarMode { Idle, Pressing, Dragging };
-
     /// Per-element state of a draggable label (element data store); internal.
     struct DragLabelState
     {
-        ID             activeID;
-        DragScalarMode mode = DragScalarMode::Idle;
-        tachyon::int2      dragStartPos{ 0, 0 };
+        PointerDrag drag;   ///< the press; a drag once it moves the drag distance
     };
 
     /// Turns mouse drags on a label into LabelDrag* events sent to the next sibling element.
+    /// A press released without dragging focuses that control; Escape during a drag cancels it.
     EventHandler MakeDraggableLabelHandler(GUIStateManager& guiStateManager, const ElementStorage& elementStorage);
 
     /// Label handler: a left click focuses the control bound to the label (else the label).
@@ -158,8 +140,9 @@ namespace tachyon
     /// Per-element state of MakeScrollbarHandler (element data store); internal.
     struct ScrollbarDragState
     {
-        ID  draggingID = ID::Invalid();
-        int thumbGrabOffset = 0; ///< cursor offset from the thumb's near edge at drag start, pixels
+        PointerDrag drag;            ///< a drag from the press on
+        int thumbGrabOffset = 0;     ///< cursor offset from the thumb's near edge at drag start, pixels
+        int startScroll     = 0;     ///< scroll position before the press; put back by Escape
     };
 
     /// Minimum thumb length in CSS pixels (scale with StyleManager::Px), so the thumb
@@ -167,7 +150,7 @@ namespace tachyon
     constexpr int32_t kScrollbarMinThumbLength = 20;
 
     /// Scrollbar track/thumb handler; writes the scroll offset of `containerID` (the scrollable
-    /// parent). `trackLength` = 0: span-and-clip, the bar spans kScrollbarAxisSpan and the track
+    /// parent). Escape during a drag puts the scroll position back. `trackLength` = 0: span-and-clip, the bar spans kScrollbarAxisSpan and the track
     /// is the parent's innerRect. `trackLength` > 0: the bar is sized explicitly (to leave room
     /// for a corner cap, say) and the track is its own rect.
     EventHandler MakeScrollbarHandler(GUIStateManager& guiStateManager,

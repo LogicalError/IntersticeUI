@@ -148,4 +148,74 @@ namespace
         EXPECT_TRUE(returned) << "the field reports the change";
         EXPECT_TRUE(modified);
     }
+    // A label drag starts once the pointer moves the drag distance, and Escape puts the value
+    // back; the moves after it are ignored.
+    TEST_F(NumberFieldEdit, ALabelDragStartsPastTheDragDistanceAndEscapePutsTheValueBack)
+    {
+        const ID labelID = app.idManager.CreateStaticID();
+        float number = 50.0f;
+        auto frame = [&] {
+            app.Frame([&] {
+                app.BeginRootWindow({ 800, 600 });
+                app.BeginLabelGroup(120, 40, 300);
+                app.DragLabel(labelID, "Number");
+                app.Field(fieldID, number);
+                app.EndLabelGroup();
+                app.EndRootWindow();
+            });
+        };
+        frame();
+        const int2 from = app.CenterOf(labelID);
+        app.InjectMouseMove(from);
+        frame();
+        app.InjectMouseDown(from);
+        frame();
+        app.InjectMouseMove({ from.x + 2, from.y }, MouseButtons::Left);
+        frame();
+        EXPECT_EQ(number, 50.0f) << "under the drag distance the press is still a click";
+
+        app.InjectMouseMove({ from.x + 40, from.y }, MouseButtons::Left);
+        frame();
+        ASSERT_GT(number, 50.0f);
+
+        app.InjectKey(KeyCode::Escape);
+        frame();
+        EXPECT_EQ(number, 50.0f);
+        app.InjectMouseMove({ from.x + 80, from.y }, MouseButtons::Left);
+        frame();
+        app.InjectMouseUp({ from.x + 80, from.y });
+        frame();
+        EXPECT_EQ(number, 50.0f) << "the moves after Escape are ignored";
+    }
+
+    // Escape while dragging an integer slider puts the value back.
+    TEST_F(NumberFieldEdit, EscapeDuringAnIntegerSliderDragPutsTheValueBack)
+    {
+        const ID sliderID = app.idManager.CreateStaticID();
+        int level = 2;
+        auto frame = [&] {
+            app.Frame([&] {
+                app.BeginRootWindow({ 800, 600 });
+                app.Slider(sliderID, level, 0, 10, LayoutOverride{}.Width(200));
+                app.EndRootWindow();
+            });
+        };
+        frame();
+        const IntRect bar = app.GetElementRect(sliderID);
+        const int2 from{ bar.x + bar.w * 2 / 10, bar.y + bar.h / 2 };
+        app.InjectMouseMove(from);
+        app.InjectMouseDown(from);
+        frame();
+        app.InjectMouseMove({ bar.x + bar.w * 8 / 10, from.y }, MouseButtons::Left);
+        frame();
+        ASSERT_EQ(level, 8);
+
+        app.InjectKey(KeyCode::Escape);
+        frame();
+        EXPECT_EQ(level, 2);
+        app.InjectMouseMove({ bar.x + bar.w - 2, from.y }, MouseButtons::Left);
+        app.InjectMouseUp({ bar.x + bar.w - 2, from.y });
+        frame();
+        EXPECT_EQ(level, 2) << "the moves after Escape are ignored";
+    }
 }

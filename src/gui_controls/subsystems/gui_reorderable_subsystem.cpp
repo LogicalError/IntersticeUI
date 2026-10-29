@@ -19,11 +19,8 @@ namespace tachyon
     // being displaced. So a drag with no button held and no release still queued is dead.
     void ReorderableSubsystem::OnPreConstruct(FrameContext& ctx)
     {
-        if (!m_drag.isDragging || ctx.inputManager == nullptr) return;
-        if ((ctx.inputManager->GetCurrentButtons() & MouseButtons::Left) != MouseButtons::None) return;
-        for (const auto& e : ctx.inputManager->GetRecordedEvents())
-            if (e.type == EventType::MouseUp) return; // dispatched at the end of this frame
-        m_drag = {};
+        if (m_drag.IsPressed() && ctx.inputManager != nullptr && ctx.inputManager->IsDragAbandoned())
+            m_drag = {};
     }
 
     void ReorderableSubsystem::OnEndFrame()

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <gui_core/gui_id.h>
+#include <gui_core/input/gui_pointer_drag.h>
 #include <gui_core/style/gui_style.h>
 #include <gui_core/style/gui_color_conversions.h>
 
@@ -34,7 +35,7 @@ namespace tachyon
         tachyon::ColorSpace activeSpace = tachyon::ColorSpace::HSV;
 
         /// Components of the active space (H/S/V, R/G/B, L/a/b, ...). Members, since
-        /// GradientSlider handlers keep pointers to them until dispatch.
+        /// the channel tracks' handlers keep pointers to them until dispatch.
         float comp[3]     = { 0, 0, 0 };
         /// comp as last built; a difference next frame means a slider edited it.
         float snapComp[3] = { 0, 0, 0 };
@@ -68,7 +69,12 @@ namespace tachyon
         /// The original color without its alpha, for the preview's top half.
         tachyon::VisualColorStyleIndex originalOpaque = tachyon::VisualColorStyleIndex::Invalid;
 
-        enum class DragTarget { None, Square, Hue, Alpha } drag = DragTarget::None;
+        /// What a press on the square or a strip changes.
+        enum class DragTarget { None, Square, Hue, Alpha };
+        /// The press on the square or a strip, a drag from the start.
+        tachyon::PointerDrag press;
+        /// The color before it; put back by Escape.
+        float startH = 0.0f, startS = 0.0f, startV = 0.0f, startA = 1.0f;
 
         static constexpr int kNumGradientSliders = 4;
         tachyon::VisualColorStyleIndex gradientStyles[kNumGradientSliders] = {};

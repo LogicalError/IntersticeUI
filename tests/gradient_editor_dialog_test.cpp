@@ -135,4 +135,37 @@ namespace
         ASSERT_NE(ge.stopHaloColor, VisualColorStyleIndex::Invalid);
         EXPECT_NE(ge.stopHaloColor, app.theme.accentColor);
     }
+    // A stop grabbed off its centre doesn't jump to the cursor; dragging moves it from there,
+    // and Escape puts the gradient back with the dialog still open.
+    TEST_F(GradientEditorDialog, AGrabbedStopMovesFromWhereItWasAndEscapePutsItBack)
+    {
+        Open();
+        const auto& working = GUIApplicationInternals::GradientEditor(app).State().workingCopy;
+        ASSERT_EQ(working.stopCount, 2);
+        const int2 bar = OnTheBar(0.0f);
+        // The stops' handles hang under the bar (44 px), past its pointer (6 px), 18 px tall.
+        const int2 grab{ bar.x + app.styleManager.Px(5), bar.y - app.styleManager.Px(20) + app.styleManager.Px(44 + 6 + 9) };
+        app.InjectMouseMove(grab);
+        app.InjectMouseDown(grab);
+        Emit();
+        app.InjectMouseMove(grab, MouseButtons::Left);
+        Emit();
+        EXPECT_FLOAT_EQ(working.stops[0].GetOffset(), 0.0f) << "grabbed 5 px to the right, the stop stays put";
+
+        const int2 to = { OnTheBar(0.25f).x + app.styleManager.Px(5), grab.y };
+        app.InjectMouseMove(to, MouseButtons::Left);
+        Emit();
+        EXPECT_NEAR(working.stops[0].GetOffset(), 0.25f, 0.01f) << "and moves as far as the cursor does";
+
+        app.InjectKey(KeyCode::Escape);
+        Emit();
+        EXPECT_FLOAT_EQ(working.stops[0].GetOffset(), 0.0f);
+        EXPECT_EQ(working.stopCount, 2);
+        EXPECT_NE(FindByStyle(app.theme.gradientEditorBarStyleRef), ID::Invalid()) << "only the drag was cancelled";
+
+        app.InjectMouseMove({ to.x + 30, to.y }, MouseButtons::Left);
+        app.InjectMouseUp({ to.x + 30, to.y });
+        Emit();
+        EXPECT_FLOAT_EQ(working.stops[0].GetOffset(), 0.0f) << "the moves after Escape are ignored";
+    }
 }

@@ -1343,7 +1343,19 @@ namespace tachyon
     {
         return m_mouseButtons;
     }
-    
+
+    float SDLWindowBackend::GetDoubleClickMilliseconds()
+    {
+        // As SDL's own click counting: its hint when set, else the OS's time where there is one.
+        if (const char* hint = SDL_GetHint(SDL_HINT_MOUSE_DOUBLE_CLICK_TIME); hint != nullptr && *hint != '\0')
+            return float(SDL_atoi(hint));
+#ifdef _WIN32
+        return float(GetDoubleClickTime());
+#else
+        return 0.0f;
+#endif
+    }
+
     static_assert(SDL_SYSTEM_CURSOR_COUNT <= 32, "grow SDLWindowBackend::kSystemCursorSlots");
 
     float SDLWindowBackend::GetWindowDisplayScale(OSWindowHandle window)

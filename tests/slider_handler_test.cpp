@@ -323,4 +323,29 @@ namespace tachyon
         InputState up = MakeMouseUpState(50, 0);
         handler(MakeEvent(sliderID, EventType::MouseUp, up));
     }
+    // Escape during a drag puts the value back; the moves and the release after it change
+    // nothing and don't open the value for typing.
+    TEST_F(SliderHandlerTest, EscapeDuringADragPutsTheValueBack)
+    {
+        float v = 0.5f;
+        auto handler = MakeSliderHandler(guiStateManager, elementStorage, &v, /*elementWidth*/100);
+        InputState down = MakeMouseDownState(50, 0);
+        ASSERT_TRUE(handler(MakeEvent(sliderID, EventType::MouseDown, down)));
+        InputState move = MakeMouseMoveState(80, 0);
+        handler(MakeEvent(sliderID, EventType::MouseMove, move));
+        ASSERT_FLOAT_EQ(v, 0.8f);
+
+        InputState escape = MakeKeyState(KeyCode::Escape);
+        EXPECT_TRUE(handler(MakeEvent(sliderID, EventType::KeyDown, escape)));
+        EXPECT_FLOAT_EQ(v, 0.5f);
+
+        InputState later = MakeMouseMoveState(20, 0);
+        EXPECT_FALSE(handler(MakeEvent(sliderID, EventType::MouseMove, later)));
+        InputState up = MakeMouseUpState(20, 0);
+        handler(MakeEvent(sliderID, EventType::MouseUp, up));
+        EXPECT_FLOAT_EQ(v, 0.5f);
+        auto* state = guiStateManager.GetElementDataStore().Get<SliderState>(sliderID);
+        ASSERT_NE(state, nullptr);
+        EXPECT_FALSE(state->editMode);
+    }
 }

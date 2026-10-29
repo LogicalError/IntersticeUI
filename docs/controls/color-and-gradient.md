@@ -6,7 +6,8 @@ A swatch, the color as hex and its alpha in percent. Clicking the swatch opens t
 picker; OK keeps the color, Cancel, Escape and the close button restore the original, and
 Escape puts the keyboard back on the swatch. In the picker the square and the hue and
 alpha strips take the arrow keys (1% a step, with Shift 10%), Page Up / Down and Home /
-End. `allowHDR` allows values above 1.
+End; Escape while dragging on one puts back the color from before the press and leaves the
+picker open. `allowHDR` allows values above 1.
 
 ```cpp
 bool ColorField(ID id, color4f& value, bool allowHDR, StyleRef style, LayoutOverride&& constraints = {});
@@ -25,7 +26,8 @@ ColorField(color);
 ## GradientField
 
 A gradient swatch; clicking it opens the gradient editor, with the same OK / Cancel /
-Escape behavior.
+Escape behavior. A stop dragged off the bar is removed on release; Escape while dragging a
+stop puts the gradient back.
 
 ```cpp
 bool GradientField(ID id, Gradient& value, StyleRef style, LayoutOverride&& constraints = {});

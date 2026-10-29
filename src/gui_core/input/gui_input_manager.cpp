@@ -13,6 +13,7 @@
 
 #include <optional>
 #include <algorithm>
+#include <atomic>
 
 namespace tachyon
 {
@@ -300,6 +301,33 @@ namespace tachyon
                 return;
             }
         }
+    }
+
+    namespace
+    {
+        std::atomic<float> g_doubleClickMs{ kDefaultDoubleClickMs };
+    }
+
+    float DoubleClickMilliseconds() noexcept
+    {
+        return g_doubleClickMs.load(std::memory_order_relaxed);
+    }
+
+    void SetDoubleClickMilliseconds(float milliseconds) noexcept
+    {
+        if (milliseconds > 0.0f)
+            g_doubleClickMs.store(milliseconds, std::memory_order_relaxed);
+    }
+
+    bool InputManager::IsDragAbandoned(MouseButtons button) const
+    {
+        if ((m_currentButtons & button) != MouseButtons::None)
+            return false;
+        for (const RecordedInputEvent& e : m_recordedEvents)
+            if (e.type == EventType::MouseUp && (e.state.prevButtons & button) != MouseButtons::None &&
+                (e.state.buttons & button) == MouseButtons::None)
+                return false;   // dispatched at the end of this frame
+        return true;
     }
 
     // ---------------------------------------------------------------------------

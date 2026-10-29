@@ -230,7 +230,7 @@ namespace tachyon
             sizer.styleRef = theme.dockSizerHorzStyleRef;
             sizer.state    = guiStateManager.GetCurrentState(sizerID);
             sizer.eventHandler = tachyon::MakeHorizontalSizerHandler(
-                guiStateManager, showcase.settingsShortcutsCategoryWidth, 100, 400, nullptr, nullptr, false, styleManager.GetUIScale());
+                guiStateManager, elementStorage, showcase.settingsShortcutsCategoryWidth, 100, 400, nullptr, nullptr, false, styleManager.GetUIScale());
             auto sRes = elementStorage.Add(std::move(sizer), tachyon::LayoutOverride::FixedWidth(4));
             VERIFY(sRes.status);
             VERIFY(windowRegistry.Add(sRes.ref));

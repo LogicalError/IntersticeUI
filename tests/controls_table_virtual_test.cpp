@@ -1294,11 +1294,11 @@ namespace tachyon
             app.Frame(emit);
             app.Frame(emit);
             BeginColumnDrag(app, state, columns, 1, emit);
-            ASSERT_TRUE(app.m_columnDrag.active);
+            ASSERT_TRUE(app.m_columnDrag.IsDragging());
 
             columns.resize(1);   // the dragged column (and the ones after it) went away
             app.Frame(emit);
-            EXPECT_FALSE(app.m_columnDrag.active);
+            EXPECT_FALSE(app.m_columnDrag.IsDragging());
         }
 
         TEST_F(TableVirtualScrollTest, ColumnDragIsCancelledAfterTheTableWasHidden)
@@ -1310,7 +1310,7 @@ namespace tachyon
             app.Frame(emit);
             app.Frame(emit);
             BeginColumnDrag(app, state, columns, 1, emit);
-            ASSERT_TRUE(app.m_columnDrag.active);
+            ASSERT_TRUE(app.m_columnDrag.IsDragging());
 
             // The table is not emitted while the button is released elsewhere.
             auto empty = [&]{ app.BeginRootWindow(); app.EndRootWindow(); };
@@ -1319,7 +1319,7 @@ namespace tachyon
             app.Frame(empty);
 
             app.Frame(emit);
-            EXPECT_FALSE(app.m_columnDrag.active);
+            EXPECT_FALSE(app.m_columnDrag.IsDragging());
         }
 
         TEST_F(TableVirtualScrollTest, SortAscendingBuildsPermutationAndKeepsSelection)

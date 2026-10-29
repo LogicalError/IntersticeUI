@@ -195,6 +195,30 @@ namespace tachyon
 
         // ---- Wrapped (multi-line) groups, as used by tab bars ----
 
+        // Escape during a drag puts the item back: the release reorders nothing.
+        TEST_F(ReorderableTest, EscapeDuringADragPutsTheItemBack)
+        {
+            app.Frame([&] { EmitGroup(); });
+            const auto row2 = ItemRect(itemIDs[2]);
+            const auto thumb = ThumbCenter(itemIDs[0]);
+            app.InjectMouseMove(thumb);
+            app.InjectMouseDown(thumb);
+            app.Frame([&] { EmitGroup(); });
+            app.InjectMouseMove({ thumb.x, row2.y + row2.h * 3 / 4 }, tachyon::MouseButtons::Left);
+            app.Frame([&] { EmitGroup(); });
+            app.Frame([&] { EmitGroup(); });   // the move is laid out the frame after
+            ASSERT_GT(ItemRect(itemIDs[0]).y, ItemRect(itemIDs[1]).y) << "test setup: the item follows the drag";
+
+            app.InjectKey(tachyon::KeyCode::Escape);
+            app.Frame([&] { EmitGroup(); });
+            app.Frame([&] { EmitGroup(); });
+            EXPECT_LT(ItemRect(itemIDs[0]).y, ItemRect(itemIDs[1]).y) << "back in its place";
+
+            app.InjectMouseUp({ thumb.x, row2.y + row2.h * 3 / 4 });
+            app.Frame([&] { EmitGroup(); });
+            EXPECT_EQ(reorderCalls, 0);
+        }
+
         class WrappedReorderableTest : public ReorderableTest
         {
         protected:

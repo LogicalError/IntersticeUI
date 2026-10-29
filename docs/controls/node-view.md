@@ -34,6 +34,11 @@ selected nodes a grid step (Shift: four) as one edit, or pan the view when none 
 selected; + and - zoom; Ctrl+A selects every node and Escape none; Enter collapses or
 expands the selected nodes. Wires are made and removed with the mouse.
 
+A press on a node moves it (and the rest of the selection) once the pointer has moved the
+drag distance; less is a click, which only selects. Escape during a drag puts things back:
+the nodes during a move, a wire's lane, the selection during a box select, the view during a
+right-button pan or a drag in the minimap.
+
 Classes: `node-view`, `node`, `node-header`, `node-title`, `node-category`,
 `node-row`, `node-socket`, `node-view-overlay`, `node-view-minimap`.
 

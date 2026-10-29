@@ -3,6 +3,7 @@
 #include <gui_core/style/gui_style_manager.h>
 
 #include <gui_core/state/gui_state_manager.h>
+#include <gui_core/input/gui_pointer_drag.h>
 
 #include <gui_core/text/gui_text_atlas_manager.h>
 #include <gui_core/text/gui_clipboard.h>
@@ -249,12 +250,8 @@ namespace tachyon
         if (m_textDragArmed && !m_skribidiContext->drag_text)
         {
             const int32_t dragThreshold = int32_t(m_skribidiContext->Px(float(kDragStartDistance)));
-            const int32_t dx = screenPos.x - m_textDragStartScreenPos.x;
-            const int32_t dy = screenPos.y - m_textDragStartScreenPos.y;
-            if ((dx * dx + dy * dy) >= (dragThreshold * dragThreshold))
-            {
+            if (IsDragTravel(screenPos - m_textDragStartScreenPos, dragThreshold))
                 m_skribidiContext->drag_text = true;
-            }
         }
 
         if (!m_skribidiContext->editor_drag_active)

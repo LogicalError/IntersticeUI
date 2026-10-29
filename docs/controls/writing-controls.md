@@ -132,6 +132,27 @@ A control that opens a popup (a list, a picker, a menu):
       has one; added to `KeyboardFocusTest`.
 - [ ] A row in the showcase, so it can be tried by hand.
 
+## Press and drag
+
+A control that can be pressed and dragged keeps a `PointerDrag` (`gui_core/input/gui_pointer_drag.h`)
+in its state and gives it the element's events, so every drag in the library behaves the same:
+
+- `Press` on the button going down records where; return true from the handler, and set the
+  capture when the press comes in without it, so the moves, the release and Escape come to the
+  element wherever the pointer goes.
+- `Move` returns true for a drag move: once the pointer has gone `Px(kDragStartDistance)` in a
+  straight line (`IsDragTravel`), or from the press on for a drag that is never a click (a
+  sizer, a scrollbar thumb: `Press(..., atOnce = true)`).
+- `Release` says whether the press ended as a click or a drag.
+- On `IsDragCancelKey` (Escape going down), `Cancel` drops the press: put back the value the
+  control kept at the press. The moves and the release after it are ignored.
+- `LocalDelta` is the travel in the element's layout space, which follows a zoomed canvas;
+  `ScreenDelta` is in screen pixels (for moving an OS window).
+
+A drag kept outside an element's events (a whole group's, an app-wide one) is dropped when
+`InputManager::IsDragAbandoned` says its release won't come. A double-click is
+`DoubleClickTracker::IsDoubleClick`, which uses the OS's double-click time.
+
 ## Decide for each control
 
 These don't apply to every control. Decide them deliberately, the same way as the controls
@@ -139,7 +160,7 @@ like it:
 
 | Feature | When | How |
 | --- | --- | --- |
-| Drag to change | Numbers, sliders, colors | Press, a threshold (`kDragStartDistance`), then drag; Escape during the drag restores the value |
+| Drag to change | Numbers, sliders, colors | A `PointerDrag` (below): press, then drag past the drag distance; Escape during the drag restores the value |
 | Edit as text | A value that also has a text form (a slider's number) | Click to type; Enter commits, Escape cancels |
 | Context menu | Anything with actions beyond the main one | `BeginContextMenu(id)`: right-click, Shift+F10, the Menu key |
 | Move in a list | Items the user orders (rows, tabs, columns) | Drag, and Alt + an arrow on the focused item (a reorderable group does both) |

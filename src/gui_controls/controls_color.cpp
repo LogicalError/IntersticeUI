@@ -403,10 +403,10 @@ namespace tachyon
         // ---- Left: the square and the strips ----
         BeginHorizontal(idManager.AllocateDynamicID("cp_planes"), theme.colorPickerPlanesStyleRef, LayoutOverride{}.NoShrink());
         {
-            // One handler for the three: a press picks the target, the drag follows it. With the
-            // focus, the arrows move the point (1%, with Shift 10%), Page Up / Down a strip's
-            // by 10% and Home / End to its ends. `at` is where the point is now, as fractions
-            // of the width and height.
+            // One handler for the three: a press picks the target, the drag follows it and
+            // Escape puts the color back. With the focus, the arrows move the point (1%, with
+            // Shift 10%), Page Up / Down a strip's by 10% and Home / End to its ends. `at` is
+            // where the point is now, as fractions of the width and height.
             auto planeHandler = [this](ColorPickerState::DragTarget target, ID id, float2 at) {
                 return [this, target, id, at](ElementEvent&& event) -> bool {
                     auto& cp = m_colorPickerSub->State();
@@ -429,16 +429,22 @@ namespace tachyon
                     switch (event.type)
                     {
                         case EventType::MouseDown:
-                            if (!event.state.LeftPressed()) break;
+                            if (!cp.press.Press(event, elementStorage, MouseButtons::Left, /*atOnce*/ true)) break;
                             guiStateManager.Interaction().SetFocusID(id);
                             guiStateManager.TextEditorFocus().Clear();
-                            cp.drag = target;
+                            cp.startH = cp.h; cp.startS = cp.s; cp.startV = cp.v; cp.startA = cp.a;
                             guiStateManager.Interaction().SetCaptureID(id);
                             apply();
                             return true;
                         case EventType::KeyDown:
                         {
-                            if (guiStateManager.Interaction().GetFocusedID() != id || cp.drag != ColorPickerState::DragTarget::None)
+                            if (IsDragCancelKey(event.state) && cp.press.Cancel(id))
+                            {
+                                cp.h = cp.startH; cp.s = cp.startS; cp.v = cp.startV; cp.a = cp.startA;
+                                guiStateManager.Interaction().ReleaseCaptureID();
+                                return true;
+                            }
+                            if (guiStateManager.Interaction().GetFocusedID() != id || cp.press.IsHeld())
                                 break;
                             const bool  square = target == ColorPickerState::DragTarget::Square;
                             const float step   = (event.state.modifiers & KeyModifier::Shift) != KeyModifier::None ? 0.1f : 0.01f;
@@ -459,12 +465,11 @@ namespace tachyon
                             return true;
                         }
                         case EventType::MouseMove:
-                            if (cp.drag != target || !event.state.LeftDown()) break;
+                            if (!cp.press.Move(event, 0)) break;
                             apply();
                             return true;
                         case EventType::MouseUp:
-                            if (cp.drag != target) break;
-                            cp.drag = ColorPickerState::DragTarget::None;
+                            if (cp.press.Release(event) == PointerDrag::Ended::No) break;
                             guiStateManager.Interaction().ReleaseCaptureID();
                             return true;
                         default: break;
