@@ -122,7 +122,7 @@ namespace tachyon
         void RenderText(TextID textId, IntRect rect, IntRect innerRect, IntRect clipRect, float pixelScale = 1.f,
                         const float3x2& screenToLayout = float3x2::Identity()) override;
 
-        bool HitTestClickable(ID elementId, int32_t localX, int32_t localY) const override;
+        std::optional<MouseCursor> LinkCursorAt(ID elementId, int32_t localX, int32_t localY) const override;
         intptr_t HitTestContent(TextID textId, int32_t localX, int32_t localY) const override;
         void SetHoveredContent(TextID textId, intptr_t contentId) override;
 

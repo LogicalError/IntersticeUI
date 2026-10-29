@@ -40,12 +40,14 @@ namespace tachyon
         using GUIApplication::RegisterFrameBalanceChecks;
         using GUIApplication::ReportMisuse;
         using GUIApplication::m_inFrame;
+        using GUIApplication::m_themePath;
         using GUIApplication::RegisterFrameHooks;
         using GUIApplication::ApplyPendingStyleReload;
         using GUIApplication::InvalidateCachedScopesForInput;
         using GUIApplication::CollectPropagatedAncestors;
         using GUIApplication::NoteTargetAncestors;
         using GUIApplication::RunPressOutsideWatches;
+        using GUIApplication::UpdateMouseCursor;
         using GUIApplication::BeginDockingFrame;
         using GUIApplication::EndDockingFrame;
         using GUIApplication::OnFrame;

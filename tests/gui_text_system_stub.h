@@ -175,13 +175,13 @@ namespace tachyon
             // No-op for stub
         }
 
-        // Any non-negative local coordinate inside a known element is "on the text"
-        // (editable widgets route clicks into the editor with it).
-        bool HitTestClickable(ID elementId, int32_t localX, int32_t localY) const override
+        // Any non-negative local coordinate inside a known element is on a link with this cursor.
+        std::optional<MouseCursor> linkCursor = MouseCursor::Pointer;
+        std::optional<MouseCursor> LinkCursorAt(ID elementId, int32_t localX, int32_t localY) const override
         {
-            if (localX < 0 || localY < 0) return false;
-            // If we've ever seen this element, treat the coordinate as on-text.
-            return m_elementTextIdMap.find(Hash::Calculate(elementId)) != m_elementTextIdMap.end();
+            if (localX < 0 || localY < 0) return std::nullopt;
+            if (m_elementTextIdMap.find(Hash::Calculate(elementId)) == m_elementTextIdMap.end()) return std::nullopt;
+            return linkCursor;
         }
         // Character index for a local x, at m_defaultCharWidth per character.
         intptr_t HitTestContent(TextID textId, int32_t localX, int32_t /*localY*/) const override

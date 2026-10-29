@@ -15,8 +15,8 @@ namespace GUITest
 {
 
 HeadlessGUIApp::HeadlessGUIApp(std::string themePath)
-    : m_themePath(std::move(themePath))
 {
+    m_themePath = std::move(themePath);
     m_rootWindowID.value.dynamicParts.mode      = tachyon::IDMode::Static;
     m_rootWindowID.value.dynamicParts.hashValue = 0xBEEF;
 }
@@ -178,6 +178,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
 
     VERIFY(elementStorage.BeginConstruction());
     windowRegistry.Clear();
+    guiStateManager.Cursor().Clear();
 
     m_frame.RunStage(tachyon::FrameStage::PreConstruct, ctx);
 
@@ -251,6 +252,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
         CollectPropagatedAncestors(elementStorage, guiStateManager.Interaction().GetHoveredID()));
     guiStateManager.Interaction().SetPropagatedFocusedIDs(
         CollectPropagatedAncestors(elementStorage, guiStateManager.Interaction().GetFocusedID()));
+    UpdateMouseCursor(guiStateManager.Interaction().GetHoveredID(), m_rootWindowID, m_mousePos);
 
     menuManager.CloseOnInputOutside(*inputManager, elementStorage, guiStateManager);
     RunPressOutsideWatches();

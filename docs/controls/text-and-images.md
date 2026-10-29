@@ -53,6 +53,21 @@ void SelectableText(ID id, const std::span<ContentRun>& runs,
 
 There is no default style; pass one.
 
+A link run draws and behaves by its `linkStyle`: its color, its hover color (with an
+underline) and the cursor over it, the pointer unless set. `theme.linkStyle` holds the
+theme's, from the `.link` class (`color`, `:hover` `color` and `cursor`):
+
+```cpp
+ContentRun runs[] =
+{
+    { .type = ContentRun::Text, .text = "See " },
+    { .type = ContentRun::Text, .text = "the docs", .contentId = 1, .isLink = true, .linkStyle = theme.linkStyle },
+};
+```
+
+A run takes the style it was given, so pass `theme.linkStyle` again each frame: after a
+theme reload the runs follow the new theme.
+
 ## Image
 
 Draws an image registered with `graphicsContext->RegisterImage`, stretched over the

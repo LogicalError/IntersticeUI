@@ -122,8 +122,8 @@ namespace tachyon
 		// Content ID currently being hovered (0 = none); drives hover paint state in RenderText
 		intptr_t hoveredContentId = 0;
 
-		// Offset from element outer-rect local space to content-rect local space.
-		// Computed from layout style (margin + border + padding) and used by HitTestContent.
+		// Where RenderText last drew the layout, from the top-left of the element's content
+		// box (vertical alignment and an icon move it). Hit tests take content-box positions.
 		int2 renderOrigin = {};
 
 		// Inner rect (absolute layout space) and the screen-to-layout mapping (inverse

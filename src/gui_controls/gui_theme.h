@@ -4,6 +4,7 @@
 #include <gui_core/style/gui_style.h>
 
 #include <gui_core/gui_result.h>
+#include <gui_core/text/gui_text_system.h>
 
 #include <map>
 #include <set>
@@ -472,6 +473,9 @@ namespace tachyon
         tachyon::VisualColorStyleIndex dividerHoverLineStyle; ///< a hovered divider drawn as a line (label sizer)
         tachyon::VisualColorStyleIndex nanTextColor;          ///< a number field's NaN
         tachyon::color4b               scrim {};              ///< dims a window under its modal dialog (fading in and out)
+        /// The .link class: its color, :hover color and cursor, for a ContentRun's linkStyle.
+        /// The LinkStyle defaults when the theme has no such class.
+        tachyon::LinkStyle             linkStyle {};
         tachyon::VisualColorStyleIndex checkerAColor, checkerBColor;     ///< transparency checkerboard
         tachyon::VisualColorStyleIndex alphaTrackColor, alphaFillColor;  ///< a color's alpha bar
         tachyon::VisualColorStyleIndex accentColor, panelColor;          ///< a selected swatch's ring and gap

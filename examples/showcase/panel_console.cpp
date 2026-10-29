@@ -53,6 +53,7 @@ namespace tachyon
         // links. Runs point into the entry's stored text, valid until it is cleared.
         struct DetailLink { intptr_t id; std::string file; int line; };
         int                          logDetailSel    = -1;  // entry index the runs were built for
+        tachyon::LinkStyle           logDetailLinkStyle;    // the theme's link style the runs were built with
         int                          logDetailHeight = 132; // pane height (CSS px); driven by the sizer
         std::vector<tachyon::ContentRun> logDetailRuns;
         std::vector<DetailLink>      logDetailLinks;
@@ -139,11 +140,12 @@ namespace tachyon
 
         // Splits the entry's text into runs; a path containing '.' followed by
         // ':<digits>' becomes a link run, mapped back via logDetailLinks.
-        void RebuildLogDetail(int entryIdx)
+        void RebuildLogDetail(int entryIdx, const tachyon::LinkStyle& linkStyle)
         {
             logDetailRuns.clear();
             logDetailLinks.clear();
             logDetailSel = entryIdx;
+            logDetailLinkStyle = linkStyle;
             if (entryIdx < 0 || entryIdx >= int(logEntries.size())) return;
 
             const std::string& text = logEntries[entryIdx].details.empty()
@@ -173,7 +175,7 @@ namespace tachyon
                         const intptr_t id = nextLinkId++;
                         logDetailRuns.push_back({ .type = tachyon::ContentRun::Text,
                                                   .text = std::string_view(d + p, e - p),
-                                                  .contentId = id, .isLink = true });
+                                                  .contentId = id, .isLink = true, .linkStyle = linkStyle });
                         logDetailLinks.push_back({ id, std::string(path), std::atoi(d + i + 1) });
                         segStart = e;
                         i = e;
@@ -426,7 +428,7 @@ namespace tachyon
                       tachyon::LayoutOverride::Auto().FixedHeight(CssPx(logDetailHeight)).NoGrow().NoShrink());
         {
             const int sel = SelectedLogEntry();
-            if (sel != logDetailSel) RebuildLogDetail(sel);
+            if (sel != logDetailSel || logDetailLinkStyle != theme.linkStyle) RebuildLogDetail(sel, theme.linkStyle);
 
             // No selection (or the entry has no text) -> leave the pane empty.
             if (!logDetailRuns.empty())

@@ -1101,6 +1101,56 @@ namespace tachyon
     }
 
 
+    void GUIApplication::UpdateMouseCursor(ID hoverID, ID hoverWindowID, int2 mousePosition)
+    {
+        MouseCursor textDragCursor = MouseCursor::Default;
+        const bool hasTextDragCursorOverride =
+            (textSystem != nullptr) &&
+            textSystem->TryGetTextDragCursor(hoverWindowID, mousePosition, textDragCursor);
+
+        if (guiStateManager.Drag().IsDragging())
+        {
+            guiStateManager.Cursor().Request(MouseCursor::Default);
+        } else
+        if (hasTextDragCursorOverride)
+        {
+            guiStateManager.Cursor().Request(textDragCursor);
+        } else
+        {
+            if (hoverID != ID::Invalid())
+            {
+                // Default arrow over selected text (it can be dragged).
+                if (textSystem && textSystem->IsTextEditor(hoverID) &&
+                    textSystem->IsHoveringSelectedText(hoverID, hoverWindowID, mousePosition))
+                {
+                    guiStateManager.Cursor().Request(MouseCursor::Default);
+                } else
+                {
+                    ElementRef ref = elementStorage.FindElementRefByID(hoverID);
+                    ElementRef cur = ref;
+                    while (cur.IsValid())
+                    {
+                        ElementRect& rect = elementStorage.GetElementRectUnsafe(cur);
+
+                        if (rect.layoutStyle != nullptr)
+                        {
+                            int2 pos = mousePosition - rect.innerRect.position;
+                            if (const auto linkCursor = textSystem ? textSystem->LinkCursorAt(hoverID, pos.x, pos.y) : std::nullopt)
+                            {
+                                guiStateManager.Cursor().Request(*linkCursor);
+                            } else
+                                if (rect.layoutStyle->cursor != MouseCursor::Default)
+                                    guiStateManager.Cursor().Request(rect.layoutStyle->cursor);
+                            break;
+                        }
+
+                        cur = elementStorage.GetParentRef(cur);
+                    }
+                }
+            }
+    }
+    }
+
     void GUIApplication::OnFrame()
     {
         // A frame run from inside a frame (a callback calling OnFrame) would dispatch the same
@@ -1370,53 +1420,7 @@ namespace tachyon
             guiStateManager.Interaction().SetPropagatedHoverIDs(std::move(newHoverProp));
             guiStateManager.Interaction().SetPropagatedFocusedIDs(std::move(newFocusedProp));
             
-            MouseCursor textDragCursor = MouseCursor::Default;
-            const bool hasTextDragCursorOverride =
-                (textSystem != nullptr) &&
-                textSystem->TryGetTextDragCursor(hoverWindowID, mousePosition, textDragCursor);
-
-            if (guiStateManager.Drag().IsDragging())
-            {
-                guiStateManager.Cursor().Request(MouseCursor::Default);
-            } else
-            if (hasTextDragCursorOverride)
-            {
-                guiStateManager.Cursor().Request(textDragCursor);
-            } else
-            {
-                if (hoverID != ID::Invalid())
-                {
-                    // Default arrow over selected text (it can be dragged).
-                    if (textSystem && textSystem->IsTextEditor(hoverID) &&
-                        textSystem->IsHoveringSelectedText(hoverID, hoverWindowID, mousePosition))
-                    {
-                        guiStateManager.Cursor().Request(MouseCursor::Default);
-                    } else
-                    {
-                        ElementRef ref = elementStorage.FindElementRefByID(hoverID);
-                        ElementRef cur = ref;
-                        while (cur.IsValid())
-                        {
-                            ElementRect& rect = elementStorage.GetElementRectUnsafe(cur);
-
-                            if (rect.layoutStyle != nullptr)
-                            {
-                                int2 pos = mousePosition - rect.innerRect.position;
-                                if (textSystem->HitTestClickable(hoverID, pos.x, pos.y))
-                                {
-                                    guiStateManager.Cursor().Request(MouseCursor::Pointer);
-                                } else
-                                    if (rect.layoutStyle->cursor != MouseCursor::Default)
-                                        guiStateManager.Cursor().Request(rect.layoutStyle->cursor);
-                                break;
-                            }
-
-                            cur = elementStorage.GetParentRef(cur);
-                        }
-                    }
-                }
-            }
-
+            UpdateMouseCursor(hoverID, hoverWindowID, mousePosition);
 
             menuManager.EndFrame(elementStorage, guiStateManager);
 

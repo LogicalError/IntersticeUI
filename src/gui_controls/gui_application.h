@@ -2440,6 +2440,10 @@ namespace tachyon
         /// display scale changed. Runs before the managers begin their frame.
         void ApplyPendingStyleReload();
 
+        /// Requests the cursor for the mouse at `mousePosition` over `hoverID`: a link's own
+        /// cursor over a link, else the element's (CSS cursor), the arrow while dragging.
+        void UpdateMouseCursor(ID hoverID, ID hoverWindowID, int2 mousePosition);
+
         void OnRender(float elapsedTimeSecs);
         /// The box style's CSS shadows (and the focus ring when `ring`), blended as the box is.
         void RenderBoxShadows(IntRect rectLayout, IntRect clipRectScreen, const TransitionState& ts, bool ring);
