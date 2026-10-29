@@ -36,20 +36,17 @@ namespace tachyon
         {
             static uint64_t defaultEmptyHash = Hash::Combine(Hash::Calculate(DecorationStyle::Solid),
                                                                 Hash::Calculate(0),
-                                                                Hash::Calculate(0),
-                                                                Hash::Calculate(tachyon::color4b { 0,0,0,0 }));
+                                                                Hash::Calculate(0));
             return defaultEmptyHash;
         }
         return Hash::Combine(Hash::Calculate(style),
                                 Hash::Calculate(thickness),
-                                Hash::Calculate(offset),
-                                Hash::Calculate(color));
+                                Hash::Calculate(offset));
     }
 
     uint64_t TextStyle::GetHashCode() const noexcept
     {
         return Hash::Combine(Hash::Calculate(family),
-                                Hash::Calculate(color),
                                 Hash::Calculate(fontSize),
                                 Hash::Calculate(weight),
                                 Hash::Calculate(style),

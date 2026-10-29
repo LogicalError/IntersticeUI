@@ -135,7 +135,7 @@ namespace tachyon
 
         TEST_F(TextShadowTest, ShadowsFollowTheState)
         {
-            const StyleRef style = ShadowedStyle({ BoxShadow{ .blur = 3, .color = kRed } }, Style::kHover);
+            const StyleRef style = ShadowedStyle({ BoxShadow{ .blur = 3, .color = kRed } }, int(ElementState::Hover));
             EXPECT_EQ(Render(style, "ab", ElementState::None).size(), 2u);
             EXPECT_EQ(Render(style, "ab", ElementState::Hover).size(), 4u);
             EXPECT_EQ(Render(style, "ab", ElementState::None).size(), 2u);

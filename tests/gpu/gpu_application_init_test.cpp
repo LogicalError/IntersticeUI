@@ -36,7 +36,7 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device or window system available";
         }
-        EXPECT_GT(app.styleManager.LayoutStyleCount(), 0u) << "the theme is loaded";
+        EXPECT_GT(app.styleManager.LayoutStyleCount(), 1u) << "the theme is loaded, not only the fallback style";
         EXPECT_TRUE(static_cast<bool>(app.onGui)) << "windows repaint during an OS resize";
         EXPECT_TRUE(app.inputManager->PopGlobalHandler()) << "command shortcuts are routed";
         app.Cleanup();
@@ -80,7 +80,7 @@ namespace
             app.Cleanup();
             GTEST_SKIP() << "no Vulkan device or window system available";
         }
-        EXPECT_EQ(app.styleManager.LayoutStyleCount(), 0u);
+        EXPECT_EQ(app.styleManager.LayoutStyleCount(), 1u) << "only the fallback style";
         EXPECT_FALSE(static_cast<bool>(app.onGui));
         EXPECT_FALSE(app.inputManager->PopGlobalHandler());
         app.Cleanup();
@@ -105,7 +105,7 @@ namespace
         std::filesystem::current_path(resources);
 
         EXPECT_TRUE(initialized);
-        EXPECT_GT(app.styleManager.LayoutStyleCount(), 0u) << "the theme is loaded";
+        EXPECT_GT(app.styleManager.LayoutStyleCount(), 1u) << "the theme is loaded, not only the fallback style";
         app.Cleanup();
     }
 
@@ -728,7 +728,7 @@ namespace
             {
                 state.backgroundColor    = tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 0, 255 });
                 state.textStyle.fontSize = fontSize;
-                state.textStyle.color    = { 0, 0, 0, 0 };
+                state.textColor          = tachyon::ColorStyle::Create(tachyon::color4b{ 0, 0, 0, 0 });
                 state.textShadow[0]      = shadow;
             }
             return styleManager.Register(s);

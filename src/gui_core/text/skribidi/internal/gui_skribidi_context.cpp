@@ -356,6 +356,7 @@ namespace tachyon
 
 	skb_layout_t* SkribidiContext::CreateLayout(RegisteredText* entry, float layoutWidth, float layoutHeight) const
 	{
+		++layoutsMade;
 		skb_attribute_set_t text_attribute_set = { .attributes = entry->text_attributes,   .attributes_count = entry->text_attribute_count };
 		skb_attribute_set_t layout_attribute_set = { .attributes = entry->layout_attributes, .attributes_count = entry->layout_attribute_count };
 
@@ -421,6 +422,9 @@ namespace tachyon
 			LINE_UNDER = SKB_TAG('u', 'l', 'i', 'n'),
 			LINE_OVER = SKB_TAG('o', 'v', 'e', 'r')
 		};
+		// A decoration is drawn only where its paint tag is set. The color drawn is the
+		// state's decoration color (StyleState::decorationColors), so this one is unused.
+		const skb_color_t kDecorationPaint = skb_rgba(255, 255, 255, 255);
 
 		// fontId overrides generic family; fall back to family if fontId is not registered.
 		const auto registered = textStyle->fontId != FontID::Invalid
@@ -442,28 +446,27 @@ namespace tachyon
 			push(skb_attribute_make_font_stretch((skb_stretch_t)textStyle->stretch));
 		}
 		push(skb_attribute_make_font_size(textStyle->fontSize));
-		push(skb_attribute_make_paint_color(SKB_PAINT_TEXT, SKB_PAINT_STATE_DEFAULT, toSKBColor(textStyle->color)));
 		push(skb_attribute_make_line_height((skb_line_height_t)textStyle->lineHeightType, textStyle->lineHeight));
 		if (!textStyle->language.empty())
 			push(skb_attribute_make_lang(textStyle->language.c_str()));
 		if (textStyle->throughLine.thickness > 0)
 		{
-			push(skb_attribute_make_paint_color(LINE_THROUGH, SKB_PAINT_STATE_DEFAULT, skb_rgba(textStyle->throughLine.color.r, textStyle->throughLine.color.g, textStyle->throughLine.color.b, textStyle->throughLine.color.a)));
+			push(skb_attribute_make_paint_color(LINE_THROUGH, SKB_PAINT_STATE_DEFAULT, kDecorationPaint));
 			push(skb_attribute_make_decoration(SKB_DECORATION_LINE_THROUGH, (skb_decoration_style_t)textStyle->throughLine.style, textStyle->throughLine.thickness, textStyle->throughLine.offset, LINE_THROUGH));
 		}
 		if (textStyle->bottomLine.thickness > 0)
 		{
-			push(skb_attribute_make_paint_color(LINE_BOTTOM, SKB_PAINT_STATE_DEFAULT, skb_rgba(textStyle->bottomLine.color.r, textStyle->bottomLine.color.g, textStyle->bottomLine.color.b, textStyle->bottomLine.color.a)));
+			push(skb_attribute_make_paint_color(LINE_BOTTOM, SKB_PAINT_STATE_DEFAULT, kDecorationPaint));
 			push(skb_attribute_make_decoration(SKB_DECORATION_LINE_BOTTOM, (skb_decoration_style_t)textStyle->bottomLine.style, textStyle->bottomLine.thickness, textStyle->bottomLine.offset, LINE_BOTTOM));
 		}
 		if (textStyle->underLine.thickness > 0)
 		{
-			push(skb_attribute_make_paint_color(LINE_UNDER, SKB_PAINT_STATE_DEFAULT, skb_rgba(textStyle->underLine.color.r, textStyle->underLine.color.g, textStyle->underLine.color.b, textStyle->underLine.color.a)));
+			push(skb_attribute_make_paint_color(LINE_UNDER, SKB_PAINT_STATE_DEFAULT, kDecorationPaint));
 			push(skb_attribute_make_decoration(SKB_DECORATION_LINE_UNDER, (skb_decoration_style_t)textStyle->underLine.style, textStyle->underLine.thickness, textStyle->underLine.offset, LINE_UNDER));
 		}
 		if (textStyle->overLine.thickness > 0)
 		{
-			push(skb_attribute_make_paint_color(LINE_OVER, SKB_PAINT_STATE_DEFAULT, skb_rgba(textStyle->overLine.color.r, textStyle->overLine.color.g, textStyle->overLine.color.b, textStyle->overLine.color.a)));
+			push(skb_attribute_make_paint_color(LINE_OVER, SKB_PAINT_STATE_DEFAULT, kDecorationPaint));
 			push(skb_attribute_make_decoration(SKB_DECORATION_LINE_OVER, (skb_decoration_style_t)textStyle->overLine.style, textStyle->overLine.thickness, textStyle->overLine.offset, LINE_OVER));
 		}
 		return attribute_count - attribute_offset;

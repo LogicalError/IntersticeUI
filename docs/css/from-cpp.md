@@ -30,15 +30,40 @@ tachyon::Style s;
 s.padding      = tachyon::BoxEdges(4, 8);
 s.borderWidths = tachyon::BoxEdges(1);
 s.borderRadius = tachyon::BoxCorners(4);
-s.states[tachyon::Style::kNormal].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 30, 33, 40, 255 });
-s.states[tachyon::Style::kHover].backgroundColor  = tachyon::ColorStyle::Create(tachyon::color4b{ 35, 39, 47, 255 });
+s.states[tachyon::ElementState::None].backgroundColor  = tachyon::ColorStyle::Create(tachyon::color4b{ 30, 33, 40, 255 });
+s.states[tachyon::ElementState::Hover].backgroundColor = tachyon::ColorStyle::Create(tachyon::color4b{ 35, 39, 47, 255 });
 tachyon::StyleRef ref = styleManager.Register(s);
 ```
 
-Each of the 33 state slots in `Style::states` is set separately: the bits are `kActive` (1),
-`kHover` (2), `kFocus` (4), `kSelected` (8) and `kSelection` (16), combined, plus `kDisabled`
-(32) on its own. Register such styles again in `OnStylesReloaded`. A code style doesn't get
-the font scale.
+Each of the 33 state slots in `Style::states` is set separately. They are indexed by
+`ElementState`: any combination of `Active`, `Hover`, `Focused`, `Selected` and `Selection`
+(`ElementState::Active | ElementState::Hover`, say), plus `Disabled` on its own. Register
+such styles again in `OnStylesReloaded`. A code style doesn't get the font scale.
+
+Text is set in three places:
+
+- `Style::textLayoutStyle`, for all states: direction, wrapping, alignment, baseline and
+  overflow.
+- Each state's `textStyle`: the font, its size and spacing, the line height, the language
+  and the decoration lines (`underLine`, `overLine`, ...) with their thickness, offset and
+  line style.
+- Each state's colors: `textColor` (CSS `color`; text without one is transparent) and
+  `decorationColors`, indexed by `DecorationLine` (a line without one takes the text
+  color).
+
+A state that changes only colors keeps the text's layout; one that changes its `textStyle`
+lays it out again.
+
+```cpp
+for (tachyon::StyleState& state : s.states)
+{
+    state.textStyle.fontSize            = 14.0f;
+    state.textStyle.underLine.thickness = 1;
+    state.textColor = tachyon::ColorStyle::Create(tachyon::color4b{ 220, 223, 228, 255 });
+}
+s.states[tachyon::ElementState::Hover].decorationColors[size_t(tachyon::DecorationLine::Under)] =
+    tachyon::ColorStyle::Create(tachyon::color4b{ 106, 156, 255, 255 });
+```
 
 ## UI scale
 

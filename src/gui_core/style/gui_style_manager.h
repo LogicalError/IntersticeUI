@@ -39,7 +39,12 @@ namespace tachyon
     {
     public:
         /// Gradients of registered color styles are allocated from `gm`, which must outlive it.
+        /// Registers the fallback style (FallbackStyle) first.
         explicit StyleManager(GradientManager& gm) noexcept;
+
+        /// The style registered first, again after every ClearAll: the one a box drawn without
+        /// a style (GPU box style 0) gets. A plain blue-grey box, so a missing style shows.
+        StyleRef FallbackStyle() const noexcept { return m_fallbackStyle; }
         ~StyleManager();
 
         /// Bakes `s` into the pools, reusing identical entries, and returns its indices.
@@ -179,6 +184,8 @@ namespace tachyon
 
     private:
         float m_uiScale = 1.0f;
+        StyleRef m_fallbackStyle {};
+        void RegisterFallbackStyle() noexcept;
         /// Register; `distinct` gives the style a layout style of its own, which no other
         /// registration will share.
         StyleRef RegisterImpl(const Style& s, StyleUnits units, bool distinct) noexcept;

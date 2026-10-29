@@ -15,6 +15,29 @@ namespace tachyon
         : m_gradientManager(gradientManager)
         , visualBoxStylesModified(true)
     {
+        RegisterFallbackStyle();
+    }
+
+    void StyleManager::RegisterFallbackStyle() noexcept
+    {
+        Style fallback{};
+        fallback.textLayoutStyle = TextLayoutStyle
+        {
+            .textDirection       = TextDirection::Auto,
+            .textWrapping        = TextWrap::WordChar,
+            .horizontalAlignment = TextAlign::Start,
+            .baseline            = TextBaseline::Middle
+        };
+        fallback.margin  = BoxEdges(2);
+        fallback.padding = BoxEdges(10);
+        fallback.SetOverflow(Overflow::Hidden);
+        const ColorStyle border     = ColorStyle::Create(color4b(121, 153, 169, 255));
+        const ColorStyle background = ColorStyle::Create(color4b(101, 133, 149, 255));
+        for (StyleState& state : fallback.states)
+            state.backgroundColor = border;
+        fallback.states[ElementState::None].SetBorderColor(border);
+        fallback.states[ElementState::None].backgroundColor = background;
+        m_fallbackStyle = Register(fallback);
     }
 
     StyleManager::~StyleManager()
@@ -178,6 +201,7 @@ namespace tachyon
             .borderWidths    = style.borderWidths,
 
             .layoutData      = style.layoutData,
+            .textLayoutStyle = style.textLayoutStyle,
 
             .iconTextGap     = style.iconTextGap,
             .iconSize        = style.iconSize,
@@ -204,22 +228,11 @@ namespace tachyon
         {
             auto& styleState = style.states[i];
 
-            // If no explicit textColor is set, derive it from textStyle.color as a solid color fallback.
+            // A state without a text color draws its text transparent.
             GradientHandle textColorHandle;
-            VisualColorStyle textColor;
-            if (styleState.textColor.gradient.stopCount == 0)
-            {
-                ColorStyle fallbackTextColor;
-                fallbackTextColor.type = ColorType::SolidColor;
-                auto& c = styleState.textStyle.color;
-                fallbackTextColor.gradient.stops[0] = ColorStop{}.SetColor(c);
-                fallbackTextColor.gradient.stopCount = 1;
-                textColor = fallbackTextColor.ToVisualStyle(m_gradientManager, style.textureIndex, textColorHandle);
-            }
-            else
-            {
-                textColor = styleState.textColor.ToVisualStyle(m_gradientManager, style.textureIndex, textColorHandle);
-            }
+            const ColorStyle& textColorStyle = styleState.textColor.gradient.stopCount != 0
+                                             ? styleState.textColor : ColorStyle::Create(color4b{ 0, 0, 0, 0 });
+            VisualColorStyle textColor = textColorStyle.ToVisualStyle(m_gradientManager, style.textureIndex, textColorHandle);
             GradientHandle backgroundHandle;
             VisualColorStyle backgroundColor = styleState.backgroundColor.ToVisualStyle(m_gradientManager, style.textureIndex, backgroundHandle);
 
@@ -234,6 +247,17 @@ namespace tachyon
                 iconColorIndex = RegisterVisualColorStyle(iconColor, iconHandle);
             }
 
+            VisualColorStyleIndex decorationColorIndices[4];
+            for (int d = 0; d < 4; d++)
+            {
+                decorationColorIndices[d] = textColorIndex;
+                if (styleState.decorationColors[d].gradient.stopCount == 0)
+                    continue;
+                GradientHandle decorationHandle;
+                VisualColorStyle decorationColor = styleState.decorationColors[d].ToVisualStyle(m_gradientManager, style.textureIndex, decorationHandle);
+                decorationColorIndices[d] = RegisterVisualColorStyle(decorationColor, decorationHandle);
+            }
+
             VisualColorStyleIndex borderColorIndices[4];
             for (int e = 0; e < 4; e++)
             {
@@ -244,15 +268,15 @@ namespace tachyon
 
             visualBoxStyle[i] = VisualBoxStyle
             {
-                .borderWidths         = ((i & Style::kSelection) != 0) ? BoxEdges{}   : style.borderWidths,
-                .borderRadius         = ((i & Style::kSelection) != 0) ? BoxCorners{} : style.borderRadius,
+                .borderWidths         = ((ElementState(i) & ElementState::Selection) != ElementState::None) ? BoxEdges{}   : style.borderWidths,
+                .borderRadius         = ((ElementState(i) & ElementState::Selection) != ElementState::None) ? BoxCorners{} : style.borderRadius,
 
                 .borderColorIndex     = { borderColorIndices[0], borderColorIndices[1], borderColorIndices[2], borderColorIndices[3] },
                 .backgroundColorIndex = backgroundColorIndex,
                 .borderDashSize       = (uint16_t)std::clamp((int)style.borderDashSize,   0, 65535),
                 .borderDashOffset     = (uint16_t)std::clamp((int)style.borderDashOffset, 0, 65535),
                 .shadowIndex          = RegisterShadows(styleState.boxShadow,
-                                                        (i & Style::kFocus) != 0 ? style.focusRing : BoxShadow{},
+                                                        (ElementState(i) & ElementState::Focused) != ElementState::None ? style.focusRing : BoxShadow{},
                                                         style.borderRadius),
             };
             visualBoxHash = Hash::Combine(visualBoxHash, visualBoxStyle[i].GetHashCode());
@@ -260,14 +284,15 @@ namespace tachyon
 
             visualTextStyle[i] = VisualTextStyle
             {
-                .textStyle         = styleState.textStyle,
-                .textLayoutStyle   = style.textLayoutStyle,
-				.textColorIndex    = textColorIndex,
-                .iconColorIndex    = iconColorIndex,
-                .iconTextGap       = style.iconTextGap,
-                .iconSize          = style.iconSize,
-                .iconOffsetY       = style.iconOffsetY,
-                .iconSide          = style.iconSide
+                .textStyle            = styleState.textStyle,
+                .textColorIndex       = textColorIndex,
+                .iconColorIndex       = iconColorIndex,
+                .decorationColorIndex = { decorationColorIndices[0], decorationColorIndices[1],
+                                          decorationColorIndices[2], decorationColorIndices[3] },
+                .iconTextGap          = style.iconTextGap,
+                .iconSize             = style.iconSize,
+                .iconOffsetY          = style.iconOffsetY,
+                .iconSide             = style.iconSide
             };
             for (int t = 0; t < kMaxTextShadows; ++t)
                 if (const BoxShadow& b = styleState.textShadow[t]; !b.IsNone())
@@ -568,6 +593,8 @@ namespace tachyon
         visualColorStylesModified = true;
         visualBoxStylesModified = true;
         ++m_generation;
+
+        RegisterFallbackStyle();
     }
 
     const LayoutStyle* StyleManager::GetLayoutStyle(LayoutStyleIndex index) const noexcept

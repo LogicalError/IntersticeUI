@@ -501,9 +501,9 @@ namespace tachyon
         int32_t nodeGridSize = 0;
 
     public:
-        /// Registers the styles built in code (the fallback for an invalid style index,
-        /// fieldElementGroupStyleRef, the empty*StyleRefs) and the built-in icons; textSystem
-        /// must be valid. Call before LoadTheme, and again after StyleManager::ClearAll.
+        /// Registers the styles built in code (fieldElementGroupStyleRef, the empty*StyleRefs)
+        /// and the built-in icons; textSystem must be valid. Call before LoadTheme, and again
+        /// after StyleManager::ClearAll.
         void InitializeDefaultStyles(StyleManager& styleManager, ITextSystem* textSystem);
         /// Parses the palette file `themePath` followed by `styleFiles` (in order; relative
         /// paths are next to the palette file) and registers every class, the palette colors

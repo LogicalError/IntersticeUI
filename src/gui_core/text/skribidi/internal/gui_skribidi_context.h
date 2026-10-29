@@ -82,7 +82,23 @@ namespace tachyon
 		TextWrap  textWrapping = TextWrap::NoWrap;
 		VisualColorStyleIndex textColorIndex = VisualColorStyleIndex::Invalid;
 		VisualColorStyleIndex iconColorIndex = VisualColorStyleIndex::Invalid;
+		VisualColorStyleIndex decorationColorIndex[4] {}; // per DecorationLine
 		VisualShadow          textShadows[kMaxTextShadows] {}; // the state's text-shadow, the first on top
+
+		// The color of a decoration line drawn at `position`.
+		VisualColorStyleIndex DecorationColor(skb_decoration_position_t position) const
+		{
+			static_assert(int(SKB_DECORATION_LINE_UNDER)   == int(DecorationLine::Under) &&
+			              int(SKB_DECORATION_LINE_BOTTOM)  == int(DecorationLine::Bottom) &&
+			              int(SKB_DECORATION_LINE_OVER)    == int(DecorationLine::Over) &&
+			              int(SKB_DECORATION_LINE_THROUGH) == int(DecorationLine::Through));
+			return size_t(position) < std::size(decorationColorIndex) ? decorationColorIndex[position] : textColorIndex;
+		}
+
+		// What the attributes below were built from; a state that keeps them keeps the layout.
+		bool            styled = false;
+		TextStyle       textStyle {};
+		TextLayoutStyle textLayoutStyle {};
 
 		skb_attribute_t		text_attributes[kMaxTextAttributeCount] {};
 		int32_t				text_attribute_count = 0;
@@ -225,6 +241,7 @@ namespace tachyon
 		void ResetLayout(TextID textID);
 		void ResetLayout(RegisteredText* entry);
 		skb_layout_t* CreateLayout(RegisteredText* entry, float layoutWidth, float layoutHeight) const;
+		mutable uint64_t layoutsMade = 0; // CreateLayout calls, for diagnostics
 
 		// TextID = slot index + 1. Evicted entries leave a free slot (textId
 		// Invalid) that the next registration reuses.

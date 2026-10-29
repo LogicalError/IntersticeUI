@@ -528,8 +528,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     }
     if (ICEq(p,"color"))
     {
-        s.states[si].textColor       = d.colorStyleVal;
-        s.states[si].textStyle.color = d.color4bVal;
+        s.states[si].textColor = d.colorStyleVal;
         return;
     }
 
@@ -547,24 +546,24 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"word-spacing"))    { s.states[si].textStyle.wordSpacing   = d.fVal;                return; }
 
     // Text decorations
-    auto setDecoC = [&](TextDecoration& dec){ dec.color     = d.color4bVal; };
+    auto setDecoC = [&](DecorationLine line){ s.states[si].decorationColors[size_t(line)] = ColorStyle::Create(d.color4bVal); };
     auto setDecoT = [&](TextDecoration& dec){ dec.thickness = (uint16_t)std::clamp((int)d.fVal,0,65535); };
     auto setDecoO = [&](TextDecoration& dec){ dec.offset    = (uint16_t)std::clamp((int)d.fVal,0,65535); };
     auto setDecoS = [&](TextDecoration& dec){ dec.style     = (DecorationStyle)d.enumVal; };
 
-    if (ICEq(p,"text-underline-color"))       { setDecoC(s.states[si].textStyle.underLine);   return; }
+    if (ICEq(p,"text-underline-color"))       { setDecoC(DecorationLine::Under);              return; }
     if (ICEq(p,"text-underline-thickness"))   { setDecoT(s.states[si].textStyle.underLine);   return; }
     if (ICEq(p,"text-underline-offset"))      { setDecoO(s.states[si].textStyle.underLine);   return; }
     if (ICEq(p,"text-underline-style"))       { setDecoS(s.states[si].textStyle.underLine);   return; }
-    if (ICEq(p,"text-overline-color"))        { setDecoC(s.states[si].textStyle.overLine);    return; }
+    if (ICEq(p,"text-overline-color"))        { setDecoC(DecorationLine::Over);               return; }
     if (ICEq(p,"text-overline-thickness"))    { setDecoT(s.states[si].textStyle.overLine);    return; }
     if (ICEq(p,"text-overline-offset"))       { setDecoO(s.states[si].textStyle.overLine);    return; }
     if (ICEq(p,"text-overline-style"))        { setDecoS(s.states[si].textStyle.overLine);    return; }
-    if (ICEq(p,"text-throughline-color"))     { setDecoC(s.states[si].textStyle.throughLine); return; }
+    if (ICEq(p,"text-throughline-color"))     { setDecoC(DecorationLine::Through);            return; }
     if (ICEq(p,"text-throughline-thickness")) { setDecoT(s.states[si].textStyle.throughLine); return; }
     if (ICEq(p,"text-throughline-offset"))    { setDecoO(s.states[si].textStyle.throughLine); return; }
     if (ICEq(p,"text-throughline-style"))     { setDecoS(s.states[si].textStyle.throughLine); return; }
-    if (ICEq(p,"text-bottomline-color"))      { setDecoC(s.states[si].textStyle.bottomLine);  return; }
+    if (ICEq(p,"text-bottomline-color"))      { setDecoC(DecorationLine::Bottom);             return; }
     if (ICEq(p,"text-bottomline-thickness"))  { setDecoT(s.states[si].textStyle.bottomLine);  return; }
     if (ICEq(p,"text-bottomline-offset"))     { setDecoO(s.states[si].textStyle.bottomLine);  return; }
     if (ICEq(p,"text-bottomline-style"))      { setDecoS(s.states[si].textStyle.bottomLine);  return; }

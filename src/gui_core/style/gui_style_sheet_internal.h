@@ -614,14 +614,14 @@ private:
                     if (!m_lex.Check(TT::Ident)) { Error("Expected pseudo-element name after '::'"); break; }
                     std::string pseudo = m_lex.Consume().text;
                     if (ICEq(pseudo, "selection"))
-                        sel.stateIndex |= Style::kSelection;
+                        sel.stateIndex |= int(ElementState::Selection);
                     else if (ICEq(pseudo, "highlight"))
                     {
                         if (!m_lex.Consume(TT::OpenParen)) { Error("Expected '(' after '::highlight'"); continue; }
                         if (!m_lex.Check(TT::Ident))       { Error("Expected highlight name"); m_lex.Consume(TT::CloseParen); continue; }
                         std::string name = m_lex.Consume().text;
                         if (ICEq(name, "selected"))
-                            sel.stateIndex |= Style::kSelected;
+                            sel.stateIndex |= int(ElementState::Selected);
                         else
                             Error("Unknown highlight name '" + name + "'");
                         if (!m_lex.Consume(TT::CloseParen)) Error("Expected ')' after '::highlight(" + name + "'");
@@ -654,7 +654,7 @@ private:
                     if (!m_lex.Check(TT::Ident))       { Error("Expected pseudo-state inside ':not()'"); m_lex.Consume(TT::CloseParen); break; }
                     std::string inner = m_lex.Consume().text;
                     int bit = PseudoToBit(inner);
-                    if (bit < 0 || bit >= Style::kDisabled)
+                    if (bit < 0 || bit >= int(ElementState::Disabled))
                         Error("Cannot negate ':" + inner + "' - :not() takes :hover, :active, :focus or :selected");
                     else
                         sel.notMask |= bit;
@@ -664,9 +664,9 @@ private:
 
                 int bit = PseudoToBit(pseudo);
                 if (bit < 0) Error("Unknown pseudo-state ':" + pseudo + "'");
-                else if (bit == Style::kDisabled)
+                else if (bit == int(ElementState::Disabled))
                     sel.stateIndex = bit; // exclusive special state, cannot combine
-                else if (sel.stateIndex < Style::kDisabled)
+                else if (sel.stateIndex < int(ElementState::Disabled))
                     sel.stateIndex |= bit;
             }
             selectors.push_back(std::move(sel));
@@ -748,10 +748,10 @@ private:
     {
         for (const StyleDecl& d : decls)
         {
-            if (stateIndex == Style::kDisabled)
+            if (stateIndex == int(ElementState::Disabled))
             {
                 // Disabled cannot be combined with other states
-                ApplyDecl(style, Style::kDisabled, d);
+                ApplyDecl(style, int(ElementState::Disabled), d);
             }
             else
             {
@@ -761,7 +761,7 @@ private:
                 //     ::selection     -> slots 16..31 (all selection-modifier slots)
                 //     :focus::selection -> slots 20,21,22,23,28,29,30,31
                 // Ordering in the CSS file is what controls priority.
-                for (int i = 0; i < Style::kDisabled; ++i)
+                for (int i = 0; i < int(ElementState::Disabled); ++i)
                 {
                     if ((i & stateIndex) == stateIndex && (i & notMask) == 0)
                     {
@@ -771,7 +771,7 @@ private:
                 // The disabled slot has no other state bits: a rule without any
                 // (the base rule, or a :not(...)) applies to it as well.
                 if (stateIndex == 0)
-                    ApplyDecl(style, Style::kDisabled, d);
+                    ApplyDecl(style, int(ElementState::Disabled), d);
             }
         }
     }
@@ -796,11 +796,11 @@ private:
     static int PseudoToBit(const std::string& p)
     {
         if (ICEq(p, "normal"))    return 0;
-        if (ICEq(p, "active"))    return Style::kActive;
-        if (ICEq(p, "hover"))     return Style::kHover;
-        if (ICEq(p, "focus"))     return Style::kFocus;
-        if (ICEq(p, "disabled"))  return Style::kDisabled;
-        if (ICEq(p, "selected"))  return Style::kSelected;
+        if (ICEq(p, "active"))    return int(ElementState::Active);
+        if (ICEq(p, "hover"))     return int(ElementState::Hover);
+        if (ICEq(p, "focus"))     return int(ElementState::Focused);
+        if (ICEq(p, "disabled"))  return int(ElementState::Disabled);
+        if (ICEq(p, "selected"))  return int(ElementState::Selected);
         return -1;
     }
 
