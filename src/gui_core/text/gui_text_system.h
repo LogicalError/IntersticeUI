@@ -113,8 +113,11 @@ namespace tachyon
     /// Colors of a link run, normal and hovered.
     struct LinkStyle
     {
-        color4b color      { 64, 148, 255, 255 };
-        color4b hoverColor { 128, 200, 255, 255 };
+        color4b     color      { 64, 148, 255, 255 };
+        color4b     hoverColor { 128, 200, 255, 255 };
+        MouseCursor cursor     = MouseCursor::Pointer; ///< over the link
+
+        bool operator==(const LinkStyle&) const noexcept = default;
     };
 
     /// One run of rich text: a piece of text or an inline icon.
@@ -156,6 +159,9 @@ namespace tachyon
                 }
             }
             hash = Hash::Combine(hash, static_cast<uint64_t>(contentId), isLink ? 1u : 0u);
+            if (isLink)
+                hash = Hash::Combine(hash, Hash::Calculate(linkStyle.color), Hash::Calculate(linkStyle.hoverColor),
+                                     Hash::Calculate(linkStyle.cursor));
             if (textStyleOverride)
                 hash = Hash::Combine(hash, textStyleOverride->GetHashCode());
             return hash;
@@ -333,8 +339,9 @@ namespace tachyon
         virtual void RenderText(TextID textId, IntRect rect, IntRect innerRect, IntRect clipRect, float pixelScale = 1.f,
                                 const float3x2& screenToLayout = float3x2::Identity()) = 0;
 
-        /// True when the run at (`localX`, `localY`), element-local, is a link.
-        virtual bool HitTestClickable(ID elementId, int32_t localX, int32_t localY) const = 0;
+        /// The cursor of the link at (`localX`, `localY`), element-local (its LinkStyle::cursor);
+        /// none when there's no link there.
+        virtual std::optional<MouseCursor> LinkCursorAt(ID elementId, int32_t localX, int32_t localY) const = 0;
 
         /// The contentId of the run at (`localX`, `localY`), element-local; 0 if none.
         virtual intptr_t HitTestContent(TextID textId, int32_t localX, int32_t localY) const = 0;

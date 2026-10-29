@@ -343,20 +343,6 @@ namespace tachyon
 		entry->verticalAlignment	  = visualTextStyle->textLayoutStyle.verticalAlignment;
 		entry->textWrapping			  = visualTextStyle->textLayoutStyle.textWrapping;
 
-		// Hit-test coordinates come in outer-rect local space from input dispatch.
-		// Precompute the style-derived content origin offset (outer -> inner).
-		if (const LayoutStyle* layoutStyle = styleManager->GetLayoutStyle(entry->styleIndex.layoutStyleIndex))
-		{
-			entry->renderOrigin = int2
-			{
-				layoutStyle->margin.left + layoutStyle->borderWidths.left + layoutStyle->padding.left,
-				layoutStyle->margin.top + layoutStyle->borderWidths.top + layoutStyle->padding.top
-			};
-		}
-		else
-		{
-			entry->renderOrigin = {};
-		}
 	}
 
 	// -------------------- Font Registration --------------------
@@ -748,26 +734,26 @@ namespace tachyon
 		}
 	}
 
-	bool SkribidiTextSystem::HitTestClickable(ID elementId, int32_t localX, int32_t localY) const
+	std::optional<MouseCursor> SkribidiTextSystem::LinkCursorAt(ID elementId, int32_t localX, int32_t localY) const
 	{
-		if (!m_skribidiContext) return 0;
+		if (!m_skribidiContext) return std::nullopt;
 		uint64_t key = Hash::Calculate(elementId);
 		auto it = m_elementIdToTextIdMap.find(key);
 		if (it == m_elementIdToTextIdMap.end())
-			return false;
+			return std::nullopt;
 		auto* entry = m_skribidiContext->GetRegisteredText(it->second);
-		if (!entry || !entry->wrap_layout) return 0;
+		if (!entry || !entry->wrap_layout) return std::nullopt;
 		intptr_t contentId = skb_layout_hit_test_content(entry->wrap_layout,
 			float(localX - entry->renderOrigin.x),
 			float(localY - entry->renderOrigin.y)).content_id;
+		if (contentId == 0)
+			return std::nullopt;
 		for (const auto& run : entry->inputRuns)
 		{
-			if (run.contentId == contentId)
-			{
-				return run.isLink;
-			}
+			if (run.contentId == contentId && run.isLink)
+				return run.linkStyle.cursor;
 		}
-		return false;
+		return std::nullopt;
 	}
 
 	intptr_t SkribidiTextSystem::HitTestContent(TextID textId, int32_t localX, int32_t localY) const
@@ -920,6 +906,8 @@ namespace tachyon
 			const int32_t textHeight = static_cast<int32_t>(std::ceil(textBounds.height));
 			textRect.position.y = rect.position.y + VerticalAlignOffset(entry->verticalAlignment, rect.size.y, textHeight);
 		}
+
+		entry->renderOrigin = textRect.position - rect.position;
 
 		float prev_x = ctx->view.cx;
 		float prev_y = ctx->view.cy;

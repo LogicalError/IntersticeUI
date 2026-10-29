@@ -51,6 +51,7 @@ knob, a table's header) have their own classes, listed with the control above.
 | `CommandSearch` | `command-search` |
 | `RenderSettingsPanel` | `settings-page` |
 | `RenderNodeView` | `node-view` |
+| Links in rich text (`theme.linkStyle`) | `link` (`color`, `:hover` `color`, `cursor`) |
 
 The classes are defined in `workdirectory/themes/styles.css`, with colors from the
 palette in `dark.css` or `light.css`. See [CSS and theming](../css.md) for how to change them or add

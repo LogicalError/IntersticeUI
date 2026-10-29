@@ -161,7 +161,6 @@ public:
     tachyon::StubTextSystem                    ownedTextSystem{};
 
 private:
-    std::string m_themePath;
     tachyon::ID     m_rootWindowID       = tachyon::ID::Invalid();
     bool        m_rootWindowOpen     = false;
     tachyon::int2   m_mousePos           { 0, 0 }; // last injected mouse position

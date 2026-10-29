@@ -58,6 +58,10 @@
     font-size: var(--font-size);
 }
 
+/* A link in rich text (GUITheme::linkStyle): its color, hover color and cursor. */
+.link       { color: var(--text-link); cursor: pointer; }
+.link:hover { color: var(--text-link-hover); }
+
 /* ---- textStyle ------------------------------------------------------------ */
 .text-style {
     border-width: var(--border);

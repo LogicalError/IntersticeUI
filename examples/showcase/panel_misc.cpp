@@ -262,16 +262,15 @@ namespace tachyon
             tachyon::ID linkTextId = idManager.AllocateDynamicID();
             tachyon::ElementState state = guiStateManager.GetCurrentState(linkTextId);
 
-            static tachyon::ContentRun linkContent[] =
+            // The links take the theme's .link style; a theme reload changes it.
+            tachyon::ContentRun linkContent[] =
             {
                 { .type = tachyon::ContentRun::Text, .text = "Learn about " },
                 { .type = tachyon::ContentRun::Text, .text = "our documentation",
-                  .contentId = 1, .isLink = true,
-                  .linkStyle = { .color = { 64, 148, 255, 255 }, .hoverColor = { 128, 200, 255, 255 } } },
+                  .contentId = 1, .isLink = true, .linkStyle = theme.linkStyle },
                 { .type = tachyon::ContentRun::Text, .text = " or check " },
                 { .type = tachyon::ContentRun::Text, .text = "the source",
-                  .contentId = 2, .isLink = true,
-                  .linkStyle = { .color = { 64, 148, 255, 255 }, .hoverColor = { 128, 200, 255, 255 } } },
+                  .contentId = 2, .isLink = true, .linkStyle = theme.linkStyle },
                 { .type = tachyon::ContentRun::Text, .text = " for more info." },
             };
 
