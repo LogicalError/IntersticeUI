@@ -89,7 +89,7 @@ Frame graph bars #3E8F6B, over-budget #E5B454, current frame = accent; 16.7 ms b
 | Panel | radius 6, 1px panel-border, overflow clipped |
 | Panel header | 34 high, padding 0 4 0 5, tabs gap 2 |
 | Tab | 24 high, padding 0 10, radius 4, icon 14 + 6 gap; active = bg-active + text-1 + accent-colored icon |
-| Tab overflow | show first N tabs, then "+N ▾" button instead of wrapping to a second row |
+| Tab overflow | show first N tabs, then "+N ▾" button instead of wrapping to a second row; the tab strip's context menu can put a group's tabs on several rows instead |
 | Icon | 14px, stroke 2, round caps/joins (Lucide-style) |
 | Icon button | 24 × 24, radius 4 |
 | Control height | 24 (inputs, buttons, number fields), radius 4, padding 0 8 |

@@ -10,25 +10,38 @@ it. The tabs can be dragged into a new order (`onReorder(from, to)`), and with
 keyboard) and close on Ctrl+W or Ctrl+F4 while focused. A click focuses the tab; Alt+Left /
 Right moves the focused one.
 
-When the tabs don't fit, the bar shows the first ones and a "+N" button that lists the
-rest; picking one there selects it. The selected tab is always in the bar, in place of
-the last ones that fit, so the arrow keys and Home/End also reach the listed tabs. A
-`Tab` that is in the list builds nothing and returns false. Which tabs fit is decided
-from the sizes of the frame before, so a resize settles a frame later. `onDragOut` and `dragVisualizer` work as in the reorderable group. The content
-under the bar is up to the app.
+What happens to tabs that don't fit on one row is the bar's layout (`TabBarLayout`), which
+the context menu of the strip, of any tab or of the "+N" button switches ("Collapse Rows" or
+"Multiple Rows"), for that bar only:
+
+- **One row** (the default, "Collapse Rows"): the bar shows the first tabs and a "+N" button that lists the
+  rest; picking one there selects it. The selected tab is always in the bar, in place of
+  the last ones that fit, so the arrow keys and Home/End also reach the listed tabs. A
+  `Tab` that is in the list builds nothing and returns false. Which tabs fit is decided
+  from the sizes of the frame before, so a resize settles a frame later.
+- **Several rows** ("Multiple Rows"): every tab is shown, wrapping onto as many rows as they take. Dragging
+  a tab onto another row puts it there; the arrow keys and Alt + the arrows go on from the
+  end of a row to the next.
+
+Pass `layout` to keep the choice yourself; without it the bar keeps it by its ID for the
+session. A docked tab group keeps it on its dock node, in the saved layout. `onDragOut` and
+`dragVisualizer` work as in the reorderable group. The content under the bar is up to the
+app.
 
 ```cpp
 bool BeginTabBar(ID id, int* selectedIndex, std::function<void(int, int)> onReorder,
                  std::function<void(int)> onClose = nullptr,
                  std::function<void(int, int2)> onDragOut = nullptr,
                  std::function<void(int, int2)> dragVisualizer = nullptr,
-                 StyleRef style = {}, LayoutOverride&& constraints = {});
+                 StyleRef style = {}, LayoutOverride&& constraints = {},
+                 TabBarLayout* layout = nullptr);
 void EndTabBar();
 bool Tab(ID id, const GUIContent& content, StyleRef style, LayoutOverride&& constraints = {});
 ```
 
-`BeginTabBar` has no form without an ID. Classes: `tab-bar`, `tab`, `tab-content`,
-`tab-overflow` (the "+N" button; its list uses the menu classes).
+The form without an ID uses the call site. Classes: `tab-bar`, `tab`, `tab-content`,
+`tab-overflow` (the "+N" button; its list uses the menu classes). On several rows the bar's
+style is used with `flex-wrap: wrap` (`StyleManager::WithFlexWrap`), on one row with `nowrap`.
 
 ```cpp
 BeginTabBar(idManager.AllocateDynamicID("tabs"), &selectedTab, nullptr);

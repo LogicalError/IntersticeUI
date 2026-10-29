@@ -3057,15 +3057,15 @@
 }
 
 /* ---- tabBarStyle: horizontal tab container -------------------------------- */
-/* flex-wrap: wrap lets tabs flow onto a second row when the bar is too
-   narrow to fit them all on one line. flex-shrink: 0 keeps tabs at their
-   natural widths instead of being squashed. */
+/* One row of tabs; a bar the user puts on several rows wraps (TabBarLayout::Rows
+   sets flex-wrap: wrap). flex-shrink: 0 keeps tabs at their natural widths
+   instead of being squashed. */
 .tab-bar {
     border-width: 0px;
     padding: 5px 4px 5px 5px;
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;   /* the tabs that don't fit go behind the overflow button */
+    flex-wrap: nowrap;   /* on one row the tabs that don't fit go behind the overflow button */
     align-items: stretch;
     gap: 2px;
     overflow: visible;

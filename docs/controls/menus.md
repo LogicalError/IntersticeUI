@@ -98,8 +98,8 @@ EndMenuBar();
 
 ## Context menus
 
-A menu that opens below the target element on a right-click on it, or on Shift+F10 or the
-Menu key while it has the focus. Without a target it attaches to the control just drawn
+A menu that opens at the pointer on a right-click on the target element, or below it on
+Shift+F10 or the Menu key while it has the focus. Without a target it attaches to the control just drawn
 (as `SetTooltip` does); a control made of several parts opens it from any of them. When
 several targets match (a control in a table row that has a menu too), the first
 `BeginContextMenu` of the frame wins: the control's, declared right after it.

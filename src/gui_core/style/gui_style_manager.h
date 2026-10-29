@@ -83,6 +83,11 @@ namespace tachyon
         /// (ClearAll) drops the variants, so derive from the current base each frame.
         StyleRef WithTextOverride(StyleRef base, const TextOverride& textOverride) noexcept;
 
+        /// A variant of `base` whose flex container wraps as `wrap` says (a tab bar that puts its
+        /// tabs on several rows, say); the box and text styles are shared. `base` itself when it
+        /// already wraps that way. Cheap to call every frame; ClearAll drops the variants.
+        StyleRef WithFlexWrap(StyleRef base, FlexWrap wrap) noexcept;
+
         /// @name Lookups
         /// Each returns nullptr for an out-of-range index. The per-state getters ignore
         /// non-visual state bits; Disabled overrides every other state.
@@ -193,6 +198,9 @@ namespace tachyon
         /// Deduplication helpers used by Register / RegisterVisualColorStyle.
         VisualColorStyleIndex TryDedupVisualColorStyle(const VisualColorStyle& s,
                                                        uint64_t hash) const noexcept;
+        /// The index of `layoutStyle`, registering it when no equal one is; `distinct` always
+        /// registers a new one, never shared.
+        LayoutStyleIndex RegisterLayoutStyle(const LayoutStyle& layoutStyle, bool distinct) noexcept;
         VisualTextStyleIndex RegisterVisualTextStyles(const VisualTextStyle (&states)[Style::kStateCount],
                                                       uint64_t hash) noexcept;
         /// 1-based index of the deduplicated shadow style, 0 when there are no shadows.

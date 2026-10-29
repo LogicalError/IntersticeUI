@@ -359,5 +359,30 @@ namespace tachyon
             EXPECT_EQ(right->panelIds, (std::vector<ID>{ panelC }));
         }
 
+        // A docked tab group's context menu puts its tabs on several rows; the dock node keeps
+        // that, and the other group stays as it was.
+        TEST_F(DockingTest, ATabGroupsMenuPutsItsTabsOnSeveralRows)
+        {
+            Frame();
+            Frame();
+            const ID tabB = app.FindByText("B");
+            ASSERT_NE(tabB, ID::Invalid());
+            const int2 at = app.CenterOf(tabB);
+            app.InjectMouseMove(at);
+            Frame();
+            app.InjectMouseDown(at, MouseButtons::Right);
+            app.InjectMouseUp(at, MouseButtons::Right);
+            Frame();
+            ASSERT_NE(app.FindByText("Multiple Rows"), ID::Invalid());
+            // From the keyboard: headless, the menu over the panel's content doesn't take the
+            // click from it. Up from the first item wraps to the last, "Multiple Rows".
+            app.InjectKey(KeyCode::Up);
+            Frame();
+            app.InjectKey(KeyCode::Return);
+            Frame();
+            Frame();
+            EXPECT_EQ(layout.root->second->tabLayout, TabBarLayout::Rows);
+            EXPECT_EQ(layout.root->first->tabLayout, TabBarLayout::OneRow);
+        }
     } // namespace
 }

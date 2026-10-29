@@ -51,6 +51,13 @@ namespace tachyon
         Center      ///< the interior, not near any edge
     };
 
+    /// How a tab bar lays out tabs that don't fit on one row.
+    enum class TabBarLayout : uint8_t
+    {
+        OneRow,  ///< one row; the tabs that don't fit are listed by a "+N" button after the others
+        Rows     ///< every tab shown, on as many rows as they take
+    };
+
     /// Docking tree node: a leaf with panel tabs, or a split with two children where
     /// splitSize applies to the pinned child. No application dependencies, so it's unit-testable.
     struct DockNode
@@ -67,6 +74,7 @@ namespace tachyon
         std::vector<ID> panelIds;       ///< the leaf's tabs, in order (Panel IDs in the DockingLayout)
         int selectedTab = 0;            ///< index into panelIds of the visible panel
         int selectedTabBeforeDrag = 0; ///< restored on drag-out
+        TabBarLayout tabLayout = TabBarLayout::OneRow;   ///< picked from the tab bar's context menu; saved
 
         /// Content element of the visible tab; written during construction, read by
         /// SyncDockingScrollOffsets after dispatch.
