@@ -764,7 +764,7 @@
        over per-cell. */
     background-color: transparent;
 }
-.table-cell:hover { background-color: var(--bg-header); }
+.table-cell:hover { background-color: var(--bg-hover); }
 .table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* A number in a table: .table-cell, right-aligned in the monospace font. For
@@ -784,7 +784,7 @@
     line-height: 16px;   /* the text cells' line, so rows stay one height */
     background-color: transparent;
 }
-.table-cell-number:hover { background-color: var(--bg-header); }
+.table-cell-number:hover { background-color: var(--bg-hover); }
 .table-cell-number::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* Compact cell - like .table-cell with tighter vertical padding, for dense
@@ -801,7 +801,7 @@
     font-size: var(--font-size);
     background-color: transparent;
 }
-.table-cell-compact:hover { background-color: var(--bg-header); }
+.table-cell-compact:hover { background-color: var(--bg-hover); }
 .table-cell-compact::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* ---- Table row backdrop ---------------------------------------------------
@@ -818,7 +818,7 @@
     overflow: visible;
     background-color: var(--bg-panel);
 }
-.table-row:hover { background-color: var(--bg-header); }
+.table-row:hover { background-color: var(--bg-hover); }
 .table-row::highlight(selected) { background-color: var(--accent-soft); }
 
 .table-row-alt {
@@ -827,7 +827,7 @@
     overflow: visible;
     background-color: var(--row-stripe);
 }
-.table-row-alt:hover { background-color: var(--bg-header); }
+.table-row-alt:hover { background-color: var(--bg-hover); }
 .table-row-alt::highlight(selected) { background-color: var(--accent-soft); }
 
 /* A rounded list row without stripes: tree views' rows, and any table's through
@@ -839,7 +839,7 @@
     border-radius: var(--radius-md);
     background-color: transparent;
 }
-.list-row:hover { background-color: var(--bg-header); }
+.list-row:hover { background-color: var(--bg-hover); }
 .list-row::highlight(selected) { background-color: var(--accent-soft); }
 
 /* The accent bar on a selected row's left, drawn over its cells. */
@@ -896,7 +896,7 @@
     background-color: transparent;
     gap: 0px;
 }
-.tree-table-cell:hover { background-color: var(--bg-header); }
+.tree-table-cell:hover { background-color: var(--bg-hover); }
 .tree-table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* Row-mode variant: identical layout to .tree-table-cell but transparent
@@ -2716,9 +2716,9 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.list-item:hover  { background-color: var(--bg-header); color: var(--text-1); }
-.list-item:active { background-color: var(--bg-header); color: var(--text-1); }
-.list-item:focus  { background-color: var(--bg-header); color: var(--text-1); }
+.list-item:hover  { background-color: var(--bg-hover); color: var(--text-1); }
+.list-item:active { background-color: var(--bg-hover); color: var(--text-1); }
+.list-item:focus  { background-color: var(--bg-hover); color: var(--text-1); }
 .list-item::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* .list-item-row: outer container for a reorderable list item. Holds the
@@ -2738,9 +2738,9 @@
     flex-shrink: 0;
     overflow: visible;
 }
-.list-item-row:hover  { background-color: var(--bg-header); }
-.list-item-row:active { background-color: var(--bg-header); }
-.list-item-row:focus  { background-color: var(--bg-header); }
+.list-item-row:hover  { background-color: var(--bg-hover); }
+.list-item-row:active { background-color: var(--bg-hover); }
+.list-item-row:focus  { background-color: var(--bg-hover); }
 .list-item-row::highlight(selected) { background-color: var(--accent-soft); }
 
 /* .list-item-drag-knob-horz / -vert: small drag handle for reorderable items.
@@ -2875,7 +2875,7 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.grid-view-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
+.grid-view-item:hover  { background-color: var(--bg-hover); border-color: var(--bg-hover); }
 .grid-view-item:active { background-color: var(--accent-soft); border-color: var(--accent); }   /* pressed, or the target of a drop */
 .grid-view-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 
@@ -2898,7 +2898,7 @@
     flex-grow: 0;
     flex-shrink: 0;
 }
-.grid-view-list-item:hover  { background-color: var(--bg-header); border-color: var(--bg-header); }
+.grid-view-list-item:hover  { background-color: var(--bg-hover); border-color: var(--bg-hover); }
 .grid-view-list-item:active { background-color: var(--accent-soft); border-color: var(--accent); }
 .grid-view-list-item::highlight(selected) { background-color: var(--accent-soft); border-color: var(--accent-soft); color: var(--text-1); }
 

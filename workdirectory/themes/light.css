@@ -37,7 +37,7 @@
     --selection-inactive: #DCDFE5;
     --caret: #2F6FEB;
     --bg-list: #F6F7F9;
-    --bg-hover: #EAECF0;
+    --bg-hover: #E9E9EB;    /* a hovered row: --text-1 at 8% over --bg-panel (the hover state layer), opaque */
     --error-soft: #D645451F;
     --bg-popup: #FFFFFF;
     --checker-a: #FFFFFF;

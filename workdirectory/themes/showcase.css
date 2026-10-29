@@ -58,7 +58,7 @@
     font-size: var(--font-size);
     background-color: transparent;
 }
-.data-table-cell:hover { background-color: var(--bg-header); }
+.data-table-cell:hover { background-color: var(--bg-hover); }
 .data-table-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 .data-table-number {
@@ -75,7 +75,7 @@
     line-height: 16px;
     background-color: transparent;
 }
-.data-table-number:hover { background-color: var(--bg-header); }
+.data-table-number:hover { background-color: var(--bg-hover); }
 .data-table-number::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* Shortcuts list rows: 27 high. */
@@ -90,7 +90,7 @@
     font-size: var(--font-size);
     background-color: transparent;
 }
-.shortcut-cell:hover { background-color: var(--bg-header); }
+.shortcut-cell:hover { background-color: var(--bg-hover); }
 .shortcut-cell::highlight(selected) { background-color: var(--accent-soft); color: var(--text-1); }
 
 /* The log list: rows inset 4 px, rounded, without stripes. */
