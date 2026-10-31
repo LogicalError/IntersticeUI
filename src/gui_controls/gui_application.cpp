@@ -567,9 +567,10 @@ namespace tachyon
             TACHYON_PROFILE_SCOPE("Input pump");
             windowManager->Update();
         }
-        // The OS setting can change while the app runs.
+        // The OS settings can change while the app runs.
         if (windowBackend)
             SetDoubleClickMilliseconds(windowBackend->GetDoubleClickMilliseconds());
+        SetReducedMotion(m_reducedMotion);
         return true;
     }
 
@@ -629,6 +630,12 @@ namespace tachyon
         const int n = int(out.size()) < kFrameHistoryCount ? int(out.size()) : kFrameHistoryCount;
         for (int i = 0; i < n; ++i)
             out[size_t(i)] = frameTimingHistory[(frameTimingHead + i) % kFrameHistoryCount];
+    }
+
+    void GUIApplication::SetReducedMotion(std::optional<bool> reduced)
+    {
+        m_reducedMotion = reduced;
+        transitionManager.SetReducedMotion(reduced.value_or(windowBackend && windowBackend->PrefersReducedMotion()));
     }
 
     void GUIApplication::SetUIScale(float scale)

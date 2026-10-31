@@ -71,6 +71,13 @@ namespace tachyon
         SliderField(showcase.settingsFontScalePct, 100.0f, 300.0f, /*label*/ "");
         RequestReloadTheme(GetThemePath(), showcase.settingsFontScalePct / 100.0f);
 
+        // Reduced motion: changes of state show at once.
+        Label("Motion");
+        static constexpr std::string_view motionNames[] = { "As the system", "Reduced", "Full" };
+        if (Dropdown(idManager.AllocateDynamicID("settingsMotionMenu"), showcase.settingsMotionIndex, motionNames))
+            SetReducedMotion(showcase.settingsMotionIndex == 0 ? std::nullopt
+                                                               : std::optional<bool>(showcase.settingsMotionIndex == 1));
+
         EndLabelGroup();
     }
 

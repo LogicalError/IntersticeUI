@@ -362,6 +362,7 @@ list(APPEND GUI_CONTROLS_FILES
   gui_controls/gui_label_binding.h
   gui_controls/gui_label_binding.cpp
 
+  gui_controls/gui_easing.h
   gui_controls/gui_transition_manager.h
   gui_controls/gui_transition_manager.cpp
 

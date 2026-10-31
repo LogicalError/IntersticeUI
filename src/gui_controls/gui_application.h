@@ -441,6 +441,13 @@ namespace tachyon
         void  SetUIScale(float scale);
         float GetUIScale() const { return m_uiScale; }
 
+        /// Reduced motion: changes of state show at once instead of blending. By default it
+        /// follows the OS (on Windows, "Animation effects" turned off); true or false sets it,
+        /// nullopt follows the OS again.
+        void SetReducedMotion(std::optional<bool> reduced);
+        /// Whether changes of state show at once now.
+        bool IsReducedMotion() const { return transitionManager.IsReducedMotion(); }
+
         ///@}
 
         /// @name The frame
@@ -2507,6 +2514,7 @@ namespace tachyon
         std::vector<std::string> m_styleFiles { "styles.css" };
         float       m_globalFontScale { 1.0f };
         float       m_uiScale { 1.0f };
+        std::optional<bool> m_reducedMotion;   ///< set by SetReducedMotion; else the OS's
         float       m_displayScale { 1.0f };
         FrameClock  m_frameClock;   ///< animation time, vsync-paced
         bool        m_themeReloadPending { false };

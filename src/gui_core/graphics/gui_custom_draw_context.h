@@ -111,6 +111,11 @@ namespace tachyon
                        VisualColorStyleIndex colorStyleIndex = {},
                        ImageIndex textureIndex = ImageIndex::Invalid) const;
 
+        /// A styled box part way from its `fromState` variant to its `toState` one: t = 0 is
+        /// all fromState, 1 all toState.
+        void RenderBox(IntRect rect, VisualBoxStyleIndex styleIndex,
+                       ElementState fromState, ElementState toState, float t) const;
+
         /// RenderBox variants with a sub-clip. Final scissor = ClipRect() & subClip.
         /// subClip is in the same space as `rect`.
         void RenderBox(IntRect rect, IntRect subClip,

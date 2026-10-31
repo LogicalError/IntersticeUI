@@ -1356,6 +1356,16 @@ namespace tachyon
 #endif
     }
 
+    bool SDLWindowBackend::PrefersReducedMotion()
+    {
+#ifdef _WIN32
+        BOOL animations = TRUE;
+        return SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animations, 0) && !animations;
+#else
+        return false;
+#endif
+    }
+
     static_assert(SDL_SYSTEM_CURSOR_COUNT <= 32, "grow SDLWindowBackend::kSystemCursorSlots");
 
     float SDLWindowBackend::GetWindowDisplayScale(OSWindowHandle window)

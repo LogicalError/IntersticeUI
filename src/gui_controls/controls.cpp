@@ -25,8 +25,14 @@ namespace tachyon
     tachyon::ElementRef GUIApplication::RegisterElementInternal(tachyon::Element&& element, LayoutOverride&& constraints, bool updateState)
     {
         if (updateState) element.state |= guiStateManager.GetCurrentState(element.id);
+        const bool animatesSelected = (element.flags & ElementFlags::AnimatesSelected) != ElementFlags::None;
         auto addRes = elementStorage.Add(std::move(element), std::move(constraints));
         VERIFY(addRes.status);
+        if (animatesSelected && addRes.ref.IsValid())
+        {
+            const Element& added = elementStorage.GetElementUnsafe(addRes.ref);
+            transitionManager.OnSelectedSeen(added.id, added.state, guiStateManager.Interaction().GetFrameTime());
+        }
         VERIFY(windowRegistry.Add(addRes.ref));
         return addRes.ref;
     }
@@ -785,7 +791,7 @@ namespace tachyon
             box.id       = idManager.AllocateDynamicID("checkboxBox");
             box.state    = partState;
             box.styleRef = theme.checkboxBoxStyleRef;
-            box.flags    = tachyon::ElementFlags::NoInput;
+            box.flags    = tachyon::ElementFlags::NoInput | tachyon::ElementFlags::AnimatesSelected;
             box.iconID   = value ? theme.menuCheckIcon : IconID::Invalid;
             RegisterElement(std::move(box), LayoutOverride{});
             if (!text.empty())
@@ -839,25 +845,37 @@ namespace tachyon
             track.id       = idManager.AllocateDynamicID("switchTrack");
             track.state    = state;
             track.styleRef = theme.switchTrackStyleRef;
-            track.flags    = tachyon::ElementFlags::NoInput;
+            track.flags    = tachyon::ElementFlags::NoInput | tachyon::ElementFlags::AnimatesSelected;
+            const ID trackID = track.id;
             const auto trackRef = RegisterElement(std::move(track), LayoutOverride{});
 
-            // The knob, inset evenly, at the track's left when off and its right when on.
+            // The knob, inset evenly, at the track's left when off and its right when on. While
+            // the track turns on or off, the knob slides and changes color with it.
             const LayoutStyle* knobLayout = styleManager.GetLayoutStyle(theme.switchKnobStyleRef.layoutStyleIndex);
             const int knobSize = (knobLayout && knobLayout->layoutData.width != LayoutData::kAutoSize)
                                ? int(knobLayout->layoutData.width) : styleManager.Px(12);
-            // Drawn as a disc in the knob style's background color.
             const tachyon::ElementState knobState = value ? (state | tachyon::ElementState::Selected) : state;
-            const VisualBoxStyle* knobBox = styleManager.GetVisualBoxStyle(theme.switchKnobStyleRef.visualBoxStyleIndex, knobState);
-            const VisualColorStyleIndex knobColor = knobBox ? knobBox->backgroundColorIndex : VisualColorStyleIndex::Invalid;
+            const VisualBoxStyleIndex knobStyle = theme.switchKnobStyleRef.visualBoxStyleIndex;
+            float on = value ? 1.0f : 0.0f;
+            tachyon::ElementState knobFrom = knobState;
+            float knobT = 1.0f;
+            if (const auto blend = transitionManager.Find(trackID, guiStateManager.Interaction().GetFrameTime());
+                blend && ((blend->fromState ^ blend->toState) & tachyon::ElementState::Selected) != tachyon::ElementState::None)
+            {
+                const bool toOn = (blend->toState & tachyon::ElementState::Selected) != tachyon::ElementState::None;
+                on       = toOn ? blend->t : 1.0f - blend->t;
+                knobFrom = knobState ^ tachyon::ElementState::Selected;
+                knobT    = blend->t;
+            }
             VERIFY(elementStorage.AddCustomDraw(trackRef,
-                [knobColor, knobSize, value](tachyon::CustomDrawContext& ctx)
+                [knobStyle, knobFrom, knobState, knobT, knobSize, on](tachyon::CustomDrawContext& ctx)
                 {
                     const auto outer = ctx.ElementRect();
                     const int inset = std::max(0, (outer.h - knobSize) / 2);
-                    const int x = value ? outer.x + outer.w - inset - knobSize : outer.x + inset;
-                    ctx.RenderQuad({ .position = { x, outer.y + inset }, .size = { knobSize, knobSize } },
-                                   knobColor, float(knobSize) * 0.5f);
+                    const int travel = std::max(0, outer.w - 2 * inset - knobSize);
+                    const int x = outer.x + inset + int(std::lround(on * float(travel)));
+                    ctx.RenderBox({ .position = { x, outer.y + inset }, .size = { knobSize, knobSize } },
+                                  knobStyle, knobFrom, knobState, knobT);
                 }));
 
             if (!text.empty())
@@ -898,7 +916,8 @@ namespace tachyon
                                                        { 
                                                            onToggle(!value); 
                                                        }), 
-                .styleRef = style 
+                .styleRef = style,
+                .flags = tachyon::ElementFlags::AnimatesSelected
             },
             [this, icon, text](tachyon::Element& element) {
                 return textSystem->RegisterText(element.id, icon, text, element.styleRef, element.state);
