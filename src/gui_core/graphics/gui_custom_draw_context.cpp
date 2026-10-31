@@ -81,6 +81,14 @@ namespace tachyon
         m_renderer->RenderBox(rect, m_clipRect, styleIndex, colorStyleIndex, textureIndex, SnappedPixelRect(rect));
     }
 
+    void CustomDrawContext::RenderBox(IntRect rect, VisualBoxStyleIndex styleIndex,
+                                      ElementState fromState, ElementState toState, float t) const
+    {
+        m_renderer->RenderBox(rect, m_clipRect, GUIRenderer::StyleIndex(styleIndex, fromState),
+                              GUIRenderer::StyleIndex(styleIndex, toState), t, {}, ImageIndex::Invalid,
+                              SnappedPixelRect(rect));
+    }
+
     void CustomDrawContext::RenderBox(IntRect rect, IntRect subClip,
                                       VisualBoxStyleIndex styleIndex, ElementState state,
                                       VisualColorStyleIndex colorStyleIndex, ImageIndex textureIndex) const

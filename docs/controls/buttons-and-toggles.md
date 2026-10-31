@@ -37,6 +37,7 @@ bool Toggle(ID id, bool& value, const GUIContent& content, StyleRef style, Layou
 
 The `bool&` form toggles `value` itself. `onToggle` gets the new value. Returns `true`
 in the frame after a click. Default class: `toggle` (`toolbar-toggle` in a toolbar).
+Turning on or off blends over 120 ms (see [Changing state](../css/syntax.md#changing-state)).
 
 ```cpp
 Toggle(bold, "B");
@@ -47,7 +48,8 @@ Toggle(mode == Mode::Row, "Row", [this](bool) { mode = Mode::Row; });
 
 ## Switch
 
-An on/off switch (track and knob) with an optional label after it.
+An on/off switch (track and knob) with an optional label after it. Turning it on or off
+slides the knob across over 120 ms, as the track and knob change color.
 
 ```cpp
 bool Switch(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle, StyleRef style,
@@ -64,7 +66,7 @@ Switch(enabled, enabled ? "On" : "Off");
 ## Checkbox
 
 A box with a tick, and its label. A click calls onToggle with the new value; the forms with
-a `bool&` change it themselves.
+a `bool&` change it themselves. The box's color blends over 120 ms; the tick shows at once.
 
 ```cpp
 bool Checkbox(ID id, bool value, std::string_view text, std::function<void(bool)> onToggle,

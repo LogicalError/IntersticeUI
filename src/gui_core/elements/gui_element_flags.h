@@ -47,6 +47,9 @@ namespace tachyon
         IsCachedScope             = 1u << 20, ///< BeginCached scope; blits its cached primitives while clean
         /// Has an earlier element's ID on purpose: a part of it, e.g. a row's tree cell.
         SharesID                  = 1u << 22,
+        /// Turning Selected on or off blends like a toggle (a switch's track, a check box's
+        /// box); without it Selected changes at once, as a row's selection does.
+        AnimatesSelected          = 1u << 23,
 
         IsMenuWindow = IsWindow | WindowUserControlled | WindowNoCaption | WindowIsPopup | Shadows
     };

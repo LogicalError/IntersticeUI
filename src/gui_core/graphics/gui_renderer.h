@@ -47,6 +47,9 @@ namespace tachyon
                                tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid,
                                tachyon::IntRect snappedPx = {}) = 0;
 
+        /// The flat GPU style index of `boxStyleIndex` in `state`, as RenderBox takes it.
+        static uint32_t StyleIndex(VisualBoxStyleIndex boxStyleIndex, tachyon::ElementState state);
+
         void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
                        tachyon::ElementState state, tachyon::VisualColorStyleIndex colorStyleIndex = {},
                        tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {});

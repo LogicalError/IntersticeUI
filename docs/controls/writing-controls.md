@@ -173,4 +173,4 @@ like it:
 | Icon | Buttons, toggles, list items, menu items | `GUIContent`, with `-tachyon-icon-side` |
 | Mixed value | Multi-selection editors | Indeterminate (above) |
 | Read-only | Values shown but not edited | Focusable and selectable, not editable |
-| Transition | State changes worth animating | The style's states; transitions blend between them |
+| Transition | State changes worth animating | The style's states; transitions blend between them. A part that turns on and off (Selected) blends only with `ElementFlags::AnimatesSelected` |

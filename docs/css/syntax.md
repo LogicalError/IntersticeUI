@@ -58,6 +58,30 @@ Only per-state properties (marked "state" in the tables below) differ between sl
 layout property such as `padding` or `border-style` written in a `:hover` rule changes the
 whole style, for every state.
 
+### Changing state
+
+When an element's state changes, its box (background and border) blends from the old
+state's slot to the new one; text, icons and shadows change at once. Each change has its
+own timing. Ease-out is `cubic-bezier(0.2, 0, 0, 1)`, ease-in-out is `cubic-bezier(0.4, 0, 0.2, 1)`:
+
+| Change | Time | Easing |
+| --- | --- | --- |
+| Hover in | 70 ms | ease-out |
+| Hover out | 140 ms | ease-out |
+| Press | at once | |
+| Release | 120 ms | ease-out |
+| Focus in or out | 100 ms | ease-out |
+| Selected (a row) | at once | |
+| A switch, check box or toggle turning on or off | 120 ms | ease-in-out |
+| Disabled | at once | |
+
+A change that comes back before the blend has finished (out again during a hover in) carries
+on from what is shown, in the new change's timing. A control part blends its on / off flip
+only when it has `ElementFlags::AnimatesSelected`; other selection changes are instant.
+
+With reduced motion every change is instant. It follows the OS setting (on Windows, the
+"Animation effects" switch); `GUIApplication::SetReducedMotion` sets it for the app.
+
 ## Child position
 
 `:first-child`, `:last-child` and `:only-child` style an element by where it is among its

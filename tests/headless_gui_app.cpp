@@ -268,6 +268,7 @@ void HeadlessGUIApp::Frame(std::function<void()> onGuiFn)
     // No render pass, but fire PreRender/PostRender for subsystems that hook them.
     m_frame.RunStage(tachyon::FrameStage::PreRender,  ctx);
     m_frame.RunStage(tachyon::FrameStage::PostRender, ctx);
+    transitionManager.Purge(static_cast<float>(m_timeMs) / 1000.0f);
 
     guiStateManager.GetScrollManagement().EndFrame(idManager);
     tabChainManager.EndFrame();

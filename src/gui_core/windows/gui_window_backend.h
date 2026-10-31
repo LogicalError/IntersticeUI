@@ -157,6 +157,9 @@ namespace tachyon
         virtual MouseButtons GetMouseButtons() = 0;
         /// The OS's double-click time in milliseconds, or 0 where the platform has none.
         virtual float GetDoubleClickMilliseconds() { return 0.0f; }
+        /// Whether the OS asks for less motion (animations turned off); false where the
+        /// platform has no such setting.
+        virtual bool PrefersReducedMotion() { return false; }
         /// The color of a screen pixel, anywhere on the desktop (an eyedropper);
         /// nothing where the platform can't read the screen.
         virtual std::optional<color4b> ReadScreenPixel(int2 /*screenPos*/) { return std::nullopt; }

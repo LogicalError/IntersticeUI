@@ -5,21 +5,22 @@
 
 namespace tachyon
 {
+    uint32_t GUIRenderer::StyleIndex(VisualBoxStyleIndex boxStyleIndex, tachyon::ElementState state)
+    {
+        if (boxStyleIndex == tachyon::VisualBoxStyleIndex::Invalid)
+            return 0;
+        // Match StyleManager::GetVisualBoxStyle: Disabled stands for every state it is in.
+        state &= tachyon::ElementState::VisualMask;
+        if ((state & tachyon::ElementState::Disabled) != tachyon::ElementState::None)
+            state = tachyon::ElementState::Disabled;
+        return (((int)boxStyleIndex - 1) * tachyon::Style::kStateCount) + (int)state;
+    }
+
     void GUIRenderer::RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, VisualBoxStyleIndex boxStyleIndex,
                                 tachyon::ElementState state, tachyon::VisualColorStyleIndex colorStyleIndex, tachyon::ImageIndex textureIndex,
                                 tachyon::IntRect snappedPx)
     {
-        uint32_t styleIndexValue = 0;
-        if (boxStyleIndex != tachyon::VisualBoxStyleIndex::Invalid)
-        {
-            // Match StyleManager::GetVisualBoxStyle - collapse Disabled so the
-            // GPU pool lookup stays inside this style's 33-slot block.
-            state &= tachyon::ElementState::VisualMask;
-            if ((state & tachyon::ElementState::Disabled) != tachyon::ElementState::None)
-                state = tachyon::ElementState::Disabled;
-            styleIndexValue = (((int)boxStyleIndex - 1) * tachyon::Style::kStateCount) + (int)state;
-        }
-
+        const uint32_t styleIndexValue = StyleIndex(boxStyleIndex, state);
         RenderBox(rect, clipRect, styleIndexValue, styleIndexValue, 1.0f, colorStyleIndex, textureIndex, snappedPx);
     }
 

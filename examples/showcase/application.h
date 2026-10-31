@@ -406,6 +406,7 @@ namespace tachyon
 
             // Appearance page bound values
             int     settingsThemeIndex = 0; // 0 = Dark, 1 = Light
+            int     settingsMotionIndex = 0; // 0 = as the OS, 1 = reduced, 2 = full
             float   settingsFontScalePct = 100.0f; // percent; 100 = unscaled
 
             // Misc dummy page values
