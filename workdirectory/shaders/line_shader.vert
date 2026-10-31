@@ -9,6 +9,7 @@
 
 layout (location = 0) out flat SurfaceData outSurface;
 layout (location = 12) out FragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 
 
@@ -108,4 +109,5 @@ void main()
 	outData.UV = clipped_uv;
 
 	gl_Position = PrimitivePosition(position, line.transform0.w);
+	outOpacity  = PrimitiveOpacity(line.transform1);
 }

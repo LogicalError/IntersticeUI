@@ -51,7 +51,8 @@ The [Common conventions](conventions.md) page describes the API shape this build
 - [ ] Hover, active (pressed), focused, disabled and, where it applies, selected each have a
       style: the state comes from `guiStateManager.GetCurrentState(id)` and is set on the
       element and on every part drawn in it.
-- [ ] Disabled (`BeginDisabled`): drawn dimmed, takes no input and isn't a Tab stop. The
+- [ ] Disabled (`BeginDisabled`): drawn faded as a whole (the theme's `--disabled-opacity`;
+      no `:disabled` colors needed), takes no input and isn't a Tab stop. The
       mouse is handled for you (a disabled element absorbs hits); a handler that acts on
       keys or callbacks must not act while disabled.
 - [ ] Indeterminate (`BeginIndeterminate`), for a field showing several objects' values: it

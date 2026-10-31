@@ -25,6 +25,9 @@
     --font-size:         12px;
     --font-size-sm:      11px; /* captions, column headers */
     --font-size-tooltip: 12px;
+
+    /* A disabled control, with all its parts, is drawn this opaque (GUITheme::disabledOpacity). */
+    --disabled-opacity:  0.4;
 }
 
 /* ---- Fonts ------------------------------------------------------------------
@@ -2016,8 +2019,8 @@
 .menu-item-row:hover  { background-color: var(--bg-menu-hover); }
 .menu-item-row:focus  { background-color: var(--bg-menu-hover); }
 .menu-item-row:active { background-color: var(--bg-pressed); }
-/* Disabled: dimmed (the text at 45%), no hover. */
-.menu-item-row:disabled { background-color: transparent; }
+/* Disabled: the whole item at 45%, no hover. */
+.menu-item-row:disabled { background-color: transparent; opacity: 0.45; }
 
 /* Fixed icon column; reserved for every item in a menu that uses icons so the
    labels line up whether or not a given item supplies an icon. Width is the
@@ -2063,8 +2066,6 @@
     background-color: transparent;
 }
 
-.menu-item-label:disabled { color: var(--text-disabled); }
-.menu-item-icon:disabled  { color: var(--text-disabled); -tachyon-icon-color: var(--text-disabled); }
 
 /* A destructive item (Delete, Discard): label and icon in the error color. */
 .menu-item-icon-destructive {
@@ -2099,8 +2100,6 @@
     font-size: var(--font-size);
     background-color: transparent;
 }
-.menu-item-label-destructive:disabled { color: var(--text-disabled); }
-.menu-item-icon-destructive:disabled  { color: var(--text-disabled); -tachyon-icon-color: var(--text-disabled); }
 
 /* Trailing keyboard shortcut: dimmed, pinned to the right edge. */
 .menu-item-shortcut {
@@ -2117,7 +2116,6 @@
     font-size: 10.5px;
     background-color: transparent;
 }
-.menu-item-shortcut:disabled { color: var(--text-disabled); }
 
 /* Submenu arrow: dimmed, pinned to the right edge (used instead of a shortcut
    for items that open a child menu). */
@@ -3934,7 +3932,6 @@
     overflow: hidden;
     cursor: text;
 }
-.color-picker-hdr-value:disabled { color: var(--text-3); }
 .color-picker-hdr-value::selection { color: var(--text-1); background-color: var(--selection); }
 .color-picker-hdr-value:not(:focus)::selection { background-color: var(--selection-inactive); }   /* the app in the background */
 .color-picker-swatches {

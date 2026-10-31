@@ -198,6 +198,7 @@ namespace tachyon
         float3x2           afterDrawRenderTransform    = {};  ///< inner-rect-local LAYOUT -> SCREEN pixels
         float4             afterDrawPixelRect          = {};  ///< the element's border box in window pixels
         IntRect            afterDrawSnappedRect        = {};  ///< snapped pixel rect custom-draw boxes snap to
+        float              afterDrawOpacity            = 1.0f; ///< how opaque the owner is drawn
     };
 
     /// @}

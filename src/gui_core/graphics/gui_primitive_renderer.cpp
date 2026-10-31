@@ -171,6 +171,7 @@ void PrimitiveRenderTarget::Reset()
     }
     currentKind = -1;
     nextOrder   = 0;
+    currentOpacity = 1.0f;
 }
 
 
@@ -256,7 +257,7 @@ void PrimitiveRenderTarget::RenderShadow(tachyon::IntRect rect, tachyon::IntRect
 
 void PrimitiveRenderTarget::RenderOccluder(tachyon::IntRect rect, tachyon::IntRect clipRect)
 {
-    if (rect.w <= 0 || rect.h <= 0)
+    if (rect.w <= 0 || rect.h <= 0 || currentOpacity < 1.0f)
         return;
     Append(PrimitiveKind::Occluder, Occluder
                     {
@@ -479,6 +480,12 @@ void PrimitiveRenderer::SetTransform(tachyon::float3x2 transform)
 {
     assert(currentTarget != nullptr);
     currentTarget->SetTransform(transform);
+}
+
+void PrimitiveRenderer::SetOpacity(float opacity)
+{
+    assert(currentTarget != nullptr);
+    currentTarget->SetOpacity(std::clamp(opacity, 0.0f, 1.0f));
 }
 
 void PrimitiveRenderer::ReleaseTarget(tachyon::ID id)

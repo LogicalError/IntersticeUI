@@ -1884,4 +1884,25 @@ namespace tachyon
         EXPECT_EQ(s.childStyles.at("c").first.margin.top, 1u);
         EXPECT_EQ(s.GetStyle("c")->margin.top, 0u);
     }
+    // ============================================================================
+    // opacity
+    // ============================================================================
+
+    TEST(StyleSheet, OpacityIsSetPerState)
+    {
+        auto s = ParseStyleSheet(":root { --faded: 0.4; } .a:disabled { opacity: 0.45; } .b { opacity: var(--faded); }");
+        ASSERT_FALSE(s.HasErrors()) << s.errors[0].message;
+        EXPECT_FLOAT_EQ(s.GetStyle("a")->states[ElementState::Disabled].opacity, 0.45f);
+        EXPECT_LT(s.GetStyle("a")->states[ElementState::None].opacity, 0.0f) << "not set";
+        EXPECT_LT(s.GetStyle("a")->states[ElementState::Hover].opacity, 0.0f);
+        EXPECT_FLOAT_EQ(s.GetStyle("b")->states[ElementState::Hover].opacity, 0.4f) << "a fraction from var()";
+    }
+
+    TEST(StyleSheet, OpacityIsFromZeroToOne)
+    {
+        EXPECT_TRUE(ParseStyleSheet(".a { opacity: 1.5; }").HasErrors());
+        EXPECT_TRUE(ParseStyleSheet(".a { opacity: -0.1; }").HasErrors());
+        EXPECT_TRUE(ParseStyleSheet(".a { opacity: red; }").HasErrors());
+        EXPECT_FALSE(ParseStyleSheet(".a { opacity: 0; } .b { opacity: 1; }").HasErrors());
+    }
 }

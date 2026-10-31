@@ -204,5 +204,34 @@ namespace tachyon
             EXPECT_EQ((ownerSnapped.x + ownerSnapped.w) - b->snappedPx[2], 2);
             r.EndWindow();
         }
+        // Opacity goes into every primitive drawn after it is set (as transparency, so 0 is
+        // opaque), and while faded no occluder is drawn: what is under shows through.
+        TEST(PrimitiveRenderer, OpacityIsStampedAndDropsOccluders)
+        {
+            PrimitiveRenderer r;
+            r.BeginWindow(tachyon::ID::Invalid());
+            const tachyon::IntRect clip{ 0, 0, 500, 500 };
+            r.RenderBox(tachyon::IntRect{ 0, 0, 10, 10 }, clip, 0, 0, 1.0f);
+            r.RenderOccluder(tachyon::IntRect{ 0, 0, 10, 10 }, clip);
+            r.SetOpacity(0.4f);
+            r.RenderBox(tachyon::IntRect{ 0, 0, 10, 10 }, clip, 0, 0, 1.0f);
+            r.RenderQuad(tachyon::IntRect{ 0, 0, 10, 10 }, clip, tachyon::VisualColorStyleIndex{});
+            r.RenderOccluder(tachyon::IntRect{ 0, 0, 10, 10 }, clip);
+            r.SetOpacity(2.0f);
+            r.RenderBox(tachyon::IntRect{ 0, 0, 10, 10 }, clip, 0, 0, 1.0f);
+            r.currentTarget->FinishRenderPass();
+
+            const auto& boxes = r.currentTarget->streams[size_t(PrimitiveKind::Box)].cpu;
+            ASSERT_EQ(boxes.size() / sizeof(Box), 3u);
+            const Box* b = reinterpret_cast<const Box*>(boxes.data());
+            EXPECT_FLOAT_EQ(b[0].transform1.w, 0.0f) << "opaque until set";
+            EXPECT_FLOAT_EQ(b[1].transform1.w, 0.6f);
+            EXPECT_FLOAT_EQ(b[2].transform1.w, 0.0f) << "clamped to 1";
+            const Quad* q = reinterpret_cast<const Quad*>(r.currentTarget->streams[size_t(PrimitiveKind::Quad)].cpu.data());
+            EXPECT_FLOAT_EQ(q->transform1.w, 0.6f);
+            EXPECT_EQ(r.currentTarget->streams[size_t(PrimitiveKind::Occluder)].cpu.size() / sizeof(Occluder), 1u)
+                << "only the opaque one";
+            r.EndWindow();
+        }
     }
 }

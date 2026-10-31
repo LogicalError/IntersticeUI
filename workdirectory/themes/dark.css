@@ -27,7 +27,6 @@
     --line-section: #1E2128; /* section divider */
     /* ---- Text ------------------------------------------------------------- */
     --text-1: #E8EAEF;      /* values, active labels, titles */
-    --text-disabled: #77797F; /* text-1 at 45% over a menu: disabled items */
     --text-2: #AEB4C0;      /* default UI text, property labels */
     --text-3: #8E96A7;      /* captions, placeholders, column headers */
     --text-link: #8FB3FF;

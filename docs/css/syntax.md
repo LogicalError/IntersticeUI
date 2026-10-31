@@ -31,7 +31,7 @@ include the selector's bits:
 | `:focus` | Has keyboard focus |
 | `:selected` or `::highlight(selected)` | Selected or checked (a selected row, a toggle that is on) |
 | `::selection` | Selected text in the element (its `background-color` is the highlight) |
-| `:disabled` | Disabled. Exclusive: it can't combine with other states |
+| `:disabled` | Disabled. Exclusive: it can't combine with other states. A disabled control is also drawn faded (see `opacity`) |
 | `:not(:hover)`, `:not(:active)`, `:not(:focus)`, `:not(:selected)` | Slots without that bit |
 | `:focus-visible` | The focus ring, shown while focus came from the keyboard. Only `box-shadow`, see below |
 | `:normal` | Same as no pseudo-class |

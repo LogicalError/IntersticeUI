@@ -12,6 +12,7 @@
 #include <gui_core/input/gui_input_enums.h>
 #include <gui_core/input/gui_input_state.h>
 #include <gui_core/elements/gui_element_storage.h>
+#include <gui_core/graphics/gui_renderer.h>
 #include <gui_controls/gui_menu_manager.h>
 
 namespace tachyon
@@ -694,6 +695,16 @@ namespace tachyon
                 << "Small menu should stay X-aligned with its trigger (InsideLeft anchor).";
             EXPECT_GE(windowRect.y, triggerRect.y + triggerRect.h)
                 << "Small menu should appear below the trigger.";
+        }
+
+        // A disabled control is drawn at the theme's --disabled-opacity; a menu item at 45%.
+        TEST_F(ControlsMenuTest, TheThemeSetsHowFadedDisabledThingsAre)
+        {
+            EXPECT_FLOAT_EQ(app.theme.disabledOpacity, 0.4f);
+            const uint32_t row = GUIRenderer::StyleIndex(app.theme.menuItemRowStyleRef.visualBoxStyleIndex, ElementState::Disabled);
+            EXPECT_FLOAT_EQ(app.styleManager.GetOpacity(row), 0.45f);
+            const uint32_t label = GUIRenderer::StyleIndex(app.theme.menuItemLabelStyleRef.visualBoxStyleIndex, ElementState::Disabled);
+            EXPECT_LT(app.styleManager.GetOpacity(label), 0.0f) << "the row fades its parts";
         }
 
     } // namespace

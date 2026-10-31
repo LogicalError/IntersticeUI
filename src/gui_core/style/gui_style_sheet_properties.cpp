@@ -27,6 +27,17 @@ bool Parser::ParseDeclValue(StyleDecl& d)
 
     if (ICEq(p,"box-shadow"))
         return ParseShadowList(d.shadowVal);
+    if (ICEq(p,"opacity"))
+    {
+        if (m_lex.Check(TT::Number))
+            d.fVal = ConsumeFloat();
+        else if (!TryParseNumericVar(d.fVal))
+        {
+            Error("Expected a number from 0 to 1 or var() for 'opacity'"); return false;
+        }
+        if (d.fVal < 0.0f || d.fVal > 1.0f) { Error("'opacity' is from 0 to 1"); return false; }
+        return true;
+    }
     if (ICEq(p,"text-shadow"))
     {
         if (!ParseShadowList(d.shadowVal, nullptr, 0, "text-shadow")) return false;
@@ -514,6 +525,7 @@ void Parser::ApplyDecl(Style& s, int si, const StyleDecl& d)
     if (ICEq(p,"border-bottom-color")) { s.states[si].borderColors[2] = d.colorStyleVal; return; }
     if (ICEq(p,"border-left-color"))   { s.states[si].borderColors[3] = d.colorStyleVal; return; }
     if (ICEq(p,"-tachyon-icon-color")) { s.states[si].iconColor = d.colorStyleVal; return; }
+    if (ICEq(p,"opacity"))             { s.states[si].opacity = d.fVal; return; }
     if (ICEq(p,"box-shadow"))
     {
         for (int i = 0; i < kMaxBoxShadows; ++i)

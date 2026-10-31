@@ -261,6 +261,10 @@ namespace tachyon
         nanTextColor          = lineColorFromCSS("--warn-text", color4f{ 0.9f, 0.7f, 0.33f, 1.0f });
         if (const auto* prop = sheet.GetCustomProperty("--scrim"); prop && prop->hasColor) scrim = prop->color;
         else                                                                                  scrim = color4b{ 0, 0, 0, 140 };
+        if (const auto* prop = sheet.GetCustomProperty("--disabled-opacity"); prop && prop->hasNumber && prop->dimCount == 1)
+            disabledOpacity = std::clamp(prop->number, 0.0f, 1.0f);
+        else
+            disabledOpacity = 0.4f;
         if (const Style* link = sheet.GetStyle("link"))
             linkStyle = LinkStyle{ .color      = link->states[ElementState::None].textColor.GetFirstColor(),
                                    .hoverColor = link->states[ElementState::Hover].textColor.GetFirstColor(),

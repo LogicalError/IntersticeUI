@@ -9,6 +9,7 @@
 
 layout (location = 0) out flat SurfaceData outSurface;
 layout (location = 9) out FragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 
 
@@ -75,4 +76,5 @@ void main()
 	outSurface.colorIndex = int(box.colorIndex);
 
 	gl_Position = PrimitivePosition(position, box.transform0.w);
+	outOpacity  = PrimitiveOpacity(box.transform1);
 }

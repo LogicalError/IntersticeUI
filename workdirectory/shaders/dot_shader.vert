@@ -9,6 +9,7 @@
 
 layout (location = 0) out SurfaceData outSurface;
 layout (location = 7) out FragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 // An equilateral triangle around a circle of radius 1: its corners are twice the
 // radius out, at the top and lower right and left.
@@ -43,4 +44,5 @@ void main()
 	outSurface.clip    = vec4(dot.clipMin, dot.clipMax);
 
 	gl_Position = PrimitivePosition(corner + 0.5, dot.transform0.w);
+	outOpacity  = PrimitiveOpacity(dot.transform1);
 }

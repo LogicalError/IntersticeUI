@@ -450,7 +450,7 @@ private:
                     continue;
                 }
                 m_lex.Consume(TT::Semicolon);
-                prop.number    = prop.dims[0];
+                prop.number    = values[0];
                 prop.hasNumber = (prop.dimCount >= 1);
                 m_result.customProperties[name] = prop;
                 continue;

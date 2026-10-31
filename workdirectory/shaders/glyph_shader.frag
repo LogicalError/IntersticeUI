@@ -13,6 +13,7 @@ layout(early_fragment_tests) in;
 
 layout (location = 0) in flat SurfaceData inSurface;
 layout (location = 7) in FragmentData inData;
+layout (location = 16) in flat float inOpacity;
 
 layout(set = 0, binding = 0) uniform sampler2D allTextures[];
 
@@ -103,5 +104,5 @@ void main()
     // pre-multiply alpha
     color.rgb *= color.a;
 
-    outFragColor = color;
+    outFragColor = color * inOpacity;   // premultiplied: the whole color fades
 }

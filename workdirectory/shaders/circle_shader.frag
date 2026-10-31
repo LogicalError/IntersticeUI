@@ -17,6 +17,7 @@ layout(set = 0, binding = 0) uniform sampler2D allTextures[];
 
 layout (location = 0) in flat SurfaceData inSurface;
 layout (location = 12) in FragmentData inData;
+layout (location = 16) in flat float inOpacity;
 
 layout (location = 0) out vec4 outFragColor;
 
@@ -61,5 +62,5 @@ void main()
 
     color.a = clamp(color.a, 0, 1);
     color.rgb *= color.a;
-    outFragColor = color;
+    outFragColor = color * inOpacity;   // premultiplied: the whole color fades
 }

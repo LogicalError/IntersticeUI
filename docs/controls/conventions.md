@@ -57,7 +57,7 @@ pixels when given as `Pixels{ n }` or an `int2`. The builders are in
 
 | Pair | Effect |
 | --- | --- |
-| `BeginDisabled()` / `EndDisabled()` | Dimmed, no input; menu items can't be chosen |
+| `BeginDisabled()` / `EndDisabled()` | Drawn at 40% opacity (menu items 45%), no input; menu items can't be chosen |
 | `BeginSelected()` / `EndSelected()` | Drawn selected; a menu item shows a check mark |
 | `BeginIndeterminate()` / `EndIndeterminate()` | Fields show a dash for mixed values and return `false` |
 

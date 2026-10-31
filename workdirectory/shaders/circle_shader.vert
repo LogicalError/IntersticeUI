@@ -9,6 +9,7 @@
 
 layout (location = 0) out flat SurfaceData outSurface;
 layout (location = 12) out FragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 void main()
 {
@@ -54,4 +55,5 @@ void main()
     outSurface.gradientScale  = circle.gradientScale;
 
     gl_Position = PrimitivePosition(position, circle.transform0.w);
+	outOpacity  = PrimitiveOpacity(circle.transform1);
 }

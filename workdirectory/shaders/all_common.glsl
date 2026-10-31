@@ -199,5 +199,11 @@ vec4 PrimitivePosition(vec2 position, float order)
     return p;
 }
 
+// How opaque the primitive is, from its transform1.w (how transparent it is, so 0 is opaque).
+float PrimitiveOpacity(vec4 transform1)
+{
+    return 1.0 - transform1.w;
+}
+
 
 #include "bezier_sdf.glsl"
