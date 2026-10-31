@@ -731,6 +731,8 @@ namespace tachyon
             bool     hasTransform         = false;  // contentTransformAccum != identity
             float4   pixelRect            {};  // this element's border box in window pixels, before snapping
             IntRect  snappedPixelRect     {};  // ...and snapped (children snap relative to it; gui_pixel_snap.h)
+            float    opacity              = 1.0f;   // how opaque this element and its subtree are drawn
+            bool     disabled             = false;  // the element is disabled
         };
         constexpr uint32_t kMaxRenderDepth = 64;
         RenderDepthState depthStates[kMaxRenderDepth]{};
@@ -746,6 +748,7 @@ namespace tachyon
                 continue;
 
             guiRenderer->SetTransform(tachyon::float3x2::Identity());
+            guiRenderer->SetOpacity(1.0f);
 
             // Element state plus OS window state: Focused = OS-active window, Hover = window under the mouse.
             ElementState windowState = guiStateManager.GetCurrentState(windowElement.id);
@@ -777,6 +780,8 @@ namespace tachyon
             depthStates[windowDepth].hasTransform          = !windowElementRect.contentTransform.IsIdentity();
             depthStates[windowDepth].pixelRect             = windowPixelRect;
             depthStates[windowDepth].snappedPixelRect      = windowSnappedRect;
+            depthStates[windowDepth].opacity               = 1.0f;
+            depthStates[windowDepth].disabled              = false;
 
             const auto& nodes = windowEntry.members;
             // While capturing, a cached scope's children render into its capture (until captureEndIdx).
@@ -799,6 +804,7 @@ namespace tachyon
                 windowDraw.afterDrawRenderTransform   = float3x2::Identity();
                 windowDraw.afterDrawPixelRect         = windowPixelRect;
                 windowDraw.afterDrawSnappedRect       = windowSnappedRect;
+                windowDraw.afterDrawOpacity           = 1.0f;
                 pendingAfter.push_back({ static_cast<uint32_t>(nodes.size()), windowRef });
             }
             auto fireAfterDraws = [&](uint32_t passed, size_t keep)
@@ -809,6 +815,7 @@ namespace tachyon
                     pendingAfter.pop_back();
                     const auto& ownerDraw = elementStorage.GetElementCustomDrawUnsafe(owner);
                     guiRenderer->SetTransform(ownerDraw.afterDrawRenderTransform);
+                    guiRenderer->SetOpacity(ownerDraw.afterDrawOpacity);
                     for (uint32_t idx = ownerDraw.afterHead; idx != UINT32_MAX; )
                     {
                         auto& entry = elementStorage.GetPostDrawEntryUnsafe(idx);
@@ -926,6 +933,18 @@ namespace tachyon
                                                             : innerRectLayout.position;
                 depthStates[depth].hasTransform          = !childContentTransformAccum.IsIdentity();
 
+                // Opacity multiplies down the tree. A disabled control fades as a whole: its
+                // topmost disabled element takes --disabled-opacity, unless its style sets one.
+                {
+                    const Element& element = elementStorage.GetElementUnsafe(childRef);
+                    const bool disabled = (element.state & ElementState::Disabled) != ElementState::None;
+                    float own = styleManager.GetOpacity(ComputeGPUStyleIndex(element.styleRef.visualBoxStyleIndex, element.state));
+                    if (own < 0.0f)
+                        own = disabled && !parentState.disabled ? theme.disabledOpacity : 1.0f;
+                    depthStates[depth].opacity  = parentState.opacity * own;
+                    depthStates[depth].disabled = disabled;
+                }
+
                 // LAYOUT -> SCREEN: T(pivot) * contentTransformAccum * T(-pivot), for the element's own box and text.
                 float3x2 elementRenderTransform = float3x2::Identity();
                 if (parentState.hasTransform)
@@ -947,6 +966,7 @@ namespace tachyon
                 if (!displayNone)
                 {
                     guiRenderer->SetTransform(elementRenderTransform);
+                    guiRenderer->SetOpacity(depthStates[depth].opacity);
 
                     // The box clips to the parent scissor; content additionally clips to the padding box.
                     // innerRectLayout may carry a leaf-scroll offset, so the clip inner rect is
@@ -1069,6 +1089,7 @@ namespace tachyon
                             draw.afterDrawRenderTransform   = customDrawRenderTransform;
                             draw.afterDrawPixelRect         = elementPixelRect;
                             draw.afterDrawSnappedRect       = elementSnappedRect;
+                            draw.afterDrawOpacity           = depthStates[depth].opacity;
                         }
                     }
                 }
@@ -1134,6 +1155,7 @@ namespace tachyon
             }
             fireAfterDraws(end, 0);
 
+            guiRenderer->SetOpacity(1.0f);
             guiRenderer->EndWindow();
         }
     }

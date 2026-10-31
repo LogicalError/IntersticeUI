@@ -184,6 +184,7 @@ if(TACHYON_SDL)
     gpu/gpu_readback_smoke_test.cpp
     gpu/gpu_external_device_test.cpp
     gpu/gpu_application_init_test.cpp
+    gpu/gpu_disabled_opacity_test.cpp
     gpu/gpu_sdl_host_event_loop_test.cpp
     gpu/gpu_sdl_single_copy_test.cpp
     gpu/gpu_zero_setup_test.cpp

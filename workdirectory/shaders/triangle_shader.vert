@@ -10,6 +10,7 @@
 
 layout (location = 0) out flat TriSurfaceData outSurface;
 layout (location = 4) out TriFragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 
 void main()
@@ -64,4 +65,5 @@ void main()
 	outData.position = position;
 
 	gl_Position = PrimitivePosition(position, triangle.transform0.w);
+	outOpacity  = PrimitiveOpacity(triangle.transform1);
 }

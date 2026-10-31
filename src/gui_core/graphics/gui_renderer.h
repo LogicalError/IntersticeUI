@@ -36,6 +36,9 @@ namespace tachyon
 
 
         virtual void SetTransform(tachyon::float3x2 transformation) = 0;
+        /// How opaque what is drawn from now on is, 0 to 1 (1 until set). Below 1, occluders
+        /// are dropped: what is under the drawing shows through it.
+        virtual void SetOpacity(float /*opacity*/) {}
 
         /// Draws a styled box, blended from `fromStyleIndex` to `toStyleIndex` (flat GPU style
         /// indices) by `blendT` in [0, 1]. `colorStyleIndex` overrides the background (Invalid:

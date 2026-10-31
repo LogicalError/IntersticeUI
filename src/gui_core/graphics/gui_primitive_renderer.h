@@ -50,6 +50,7 @@ namespace tachyon
         std::vector<PrimitiveRenderPass> renderPasses;
         int           currentKind = -1; ///< kind of the open pass; -1 when none
         tachyon::float3x2 currentTransform;
+        float             currentOpacity = 1.0f; ///< 0 to 1, stamped into each primitive
 
         /// A cached scope drawn here, moved `delta` window pixels from where it was captured;
         /// its primitives' draw orders start at `baseOrder`.
@@ -75,6 +76,7 @@ namespace tachyon
         void Reset();
 
         void SetTransform(tachyon::float3x2 transform);
+        void SetOpacity(float opacity) { currentOpacity = opacity; }
         void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex = {}, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {});
         void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, float shadowBlur = -1.0f);
         void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle);
@@ -99,6 +101,7 @@ namespace tachyon
             auto& cpu = streams[size_t(kind)].cpu;
             T ordered = primitive;
             ordered.transform0.w = float(nextOrder++);
+            ordered.transform1.w = 1.0f - currentOpacity;   // transparency: 0 is opaque
             const auto* bytes = reinterpret_cast<const std::byte*>(&ordered);
             cpu.insert(cpu.end(), bytes, bytes + sizeof(T));
         }
@@ -114,6 +117,7 @@ namespace tachyon
     public:
         void Reset() override;
         void SetTransform(tachyon::float3x2 transform) override;
+        void SetOpacity(float opacity) override;
         void RenderBox(tachyon::IntRect rect, tachyon::IntRect clipRect, uint32_t fromStyleIndex, uint32_t toStyleIndex, float blendT, tachyon::VisualColorStyleIndex colorStyleIndex = {}, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, tachyon::IntRect snappedPx = {}) override;
         void RenderGlyph(tachyon::float2 pos, tachyon::float2 size, tachyon::float2 uvMin, tachyon::float2 uvMax, float scale, int bpp, int mode, tachyon::VisualColorStyleIndex textColorIndex, tachyon::IntRect clipRect, tachyon::ImageIndex textureIndex = tachyon::ImageIndex::Invalid, float shadowBlur = -1.0f) override;
         void RenderLine(tachyon::int2 p0, tachyon::int2 p1, tachyon::int2 p2, tachyon::int2 p3, tachyon::IntRect clipRect, const tachyon::LineStyle& lineStyle) override;

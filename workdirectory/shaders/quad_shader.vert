@@ -9,6 +9,7 @@
 
 layout (location = 0) out flat QuadSurfaceData outSurface;
 layout (location = 5) out QuadFragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 
 void main()
@@ -54,4 +55,5 @@ void main()
     outSurface.cornerRadius = quad.cornerRadius;
 
     gl_Position = PrimitivePosition(position, quad.transform0.w);
+	outOpacity  = PrimitiveOpacity(quad.transform1);
 }

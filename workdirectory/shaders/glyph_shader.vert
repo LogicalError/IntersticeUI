@@ -10,6 +10,7 @@
 
 layout (location = 0) out SurfaceData outSurface;
 layout (location = 7) out FragmentData outData;
+layout (location = 16) out flat float outOpacity;
 
 
 
@@ -70,4 +71,5 @@ void main()
 	outSurface.shadowBlur = glyph.shadowBlur < 0 ? -1.0 : float(glyph.shadowBlur) / 8.0;
 
 	gl_Position = PrimitivePosition(position, glyph.transform0.w);
+	outOpacity  = PrimitiveOpacity(glyph.transform1);
 }

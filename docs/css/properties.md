@@ -35,6 +35,25 @@ There is no `border` shorthand; set width, color and style separately.
 | `color` | color or gradient: the text color | state |
 | `-tachyon-icon-color` | color or gradient: the icon color. Unset = the text color | state |
 
+## Opacity
+
+| Property | Values | |
+| --- | --- | --- |
+| `opacity` | a number from 0 to 1, or `var()` | state |
+
+The element and everything in it are drawn that opaque, and an element inside a faded one
+multiplies its own opacity with it. Each part is faded on its own, so where a control's
+parts overlap (its text over its background) they show through each other a little.
+
+A disabled control fades as a whole without any rule: its topmost disabled element takes
+`--disabled-opacity` from `:root` (0.4 in the default theme), and the parts inside it don't
+fade again. A `:disabled` rule with an `opacity` sets it for that class instead:
+
+```css
+:root                   { --disabled-opacity: 0.4; }
+.menu-item-row:disabled { opacity: 0.45; }
+```
+
 ## Box shadow and focus ring
 
 | Property | Values | |
@@ -223,7 +242,7 @@ Compared with browser CSS, these are not implemented and are errors or ignored:
 - `!important`, `inherit`, `initial` (except `direction: initial`), `unset`.
 - Units other than px (`%`, `rem`, `vw`, ...; `em` only in `line-height`), `calc()`,
   `hsl()`, keyword gradient directions.
-- `position`, `top`/`left`/..., `z-index`, `opacity`, `transform`, `transition`,
+- `position`, `top`/`left`/..., `z-index`, `transform`, `transition`,
   `animation`, `outline`, `background-image`, the `border`, `background`, `font` and
   `text-decoration` shorthands, `grid-template-*`.
 
